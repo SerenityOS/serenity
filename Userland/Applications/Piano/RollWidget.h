@@ -1,39 +1,20 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include "KeysWidget.h"
 #include "Music.h"
-#include <LibGUI/ScrollableWidget.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 
 class TrackManager;
 
-class RollWidget final : public GUI::ScrollableWidget {
+class RollWidget final : public GUI::AbstractScrollableWidget {
     C_OBJECT(RollWidget)
 public:
     virtual ~RollWidget() override;
@@ -49,6 +30,7 @@ private:
     virtual void mousemove_event(GUI::MouseEvent& event) override;
     virtual void mouseup_event(GUI::MouseEvent& event) override;
     virtual void mousewheel_event(GUI::MouseEvent&) override;
+    bool viewport_changed() const;
 
     TrackManager& m_track_manager;
     const KeysWidget* m_keys_widget;
@@ -61,4 +43,9 @@ private:
     Optional<Gfx::IntPoint> m_note_drag_start;
     Optional<RollNote> m_note_drag_location;
     int m_drag_note;
+
+    RefPtr<Gfx::Bitmap> m_background;
+    int m_prev_zoom_level { m_zoom_level };
+    int m_prev_scroll_x { horizontal_scrollbar().value() };
+    int m_prev_scroll_y { vertical_scrollbar().value() };
 };

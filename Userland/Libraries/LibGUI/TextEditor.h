@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -31,8 +11,8 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/Timer.h>
+#include <LibGUI/AbstractScrollableWidget.h>
 #include <LibGUI/Forward.h>
-#include <LibGUI/ScrollableWidget.h>
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextRange.h>
 #include <LibGfx/TextAlignment.h>
@@ -42,7 +22,7 @@
 namespace GUI {
 
 class TextEditor
-    : public ScrollableWidget
+    : public AbstractScrollableWidget
     , public TextDocument::Client
     , public Syntax::HighlighterClient {
     C_OBJECT(TextEditor);
@@ -150,10 +130,11 @@ public:
     void do_delete();
     void delete_current_line();
     void select_all();
-    virtual void undo() { document().undo(); }
-    virtual void redo() { document().redo(); }
+    virtual void undo();
+    virtual void redo();
 
     Function<void()> on_change;
+    Function<void(bool modified)> on_modified_change;
     Function<void()> on_mousedown;
     Function<void()> on_return_pressed;
     Function<void()> on_escape_pressed;
@@ -198,7 +179,7 @@ public:
 
     void add_code_point(u32 code_point);
     void reset_cursor_blink();
-    void toggle_selection_if_needed_for_event(bool is_selecting);
+    void update_selection(bool is_selecting);
 
     int number_of_visible_lines() const;
     Gfx::IntRect cursor_content_rect() const;
@@ -243,6 +224,7 @@ private:
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
     virtual void document_did_set_cursor(const TextPosition&) override;
+    virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
@@ -303,12 +285,12 @@ private:
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
         command->perform_formatting(*this);
-        on_edit_action(*command);
+        will_execute(*command);
         command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
     }
 
-    virtual void on_edit_action(const Command&) { }
+    virtual void will_execute(TextDocumentUndoCommand const&) { }
 
     Type m_type { MultiLine };
     Mode m_mode { Editable };

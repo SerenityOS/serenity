@@ -1,32 +1,15 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "IndividualSampleModel.h"
 #include "Profile.h"
-#include "ProfileTimelineWidget.h"
+#include "TimelineContainer.h"
+#include "TimelineHeader.h"
+#include "TimelineTrack.h"
+#include "TimelineView.h"
 #include <LibCore/ArgsParser.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/EventLoop.h>
@@ -44,12 +27,15 @@
 #include <LibGUI/Model.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <serenity.h>
 #include <string.h>
+
+using namespace Profiler;
 
 static bool generate_profile(pid_t& pid);
 
@@ -105,9 +91,44 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
 
-    main_widget.add<ProfileTimelineWidget>(*profile);
+    auto timeline_header_container = GUI::Widget::construct();
+    timeline_header_container->set_layout<GUI::VerticalBoxLayout>();
+    timeline_header_container->set_fill_with_background_color(true);
+    timeline_header_container->set_shrink_to_fit(true);
 
-    auto& tab_widget = main_widget.add<GUI::TabWidget>();
+    auto timeline_view = TimelineView::construct(*profile);
+    for (auto& process : profile->processes()) {
+        bool matching_event_found = false;
+        for (auto& event : profile->events()) {
+            if (event.pid == process.pid && process.valid_at(event.timestamp)) {
+                matching_event_found = true;
+                break;
+            }
+        }
+        if (!matching_event_found)
+            continue;
+        auto& timeline_header = timeline_header_container->add<TimelineHeader>(*profile, process);
+        timeline_header.set_shrink_to_fit(true);
+        timeline_header.on_selection_change = [&](bool selected) {
+            auto end_valid = process.end_valid == 0 ? profile->last_timestamp() : process.end_valid;
+            if (selected)
+                profile->add_process_filter(process.pid, process.start_valid, end_valid);
+            else
+                profile->remove_process_filter(process.pid, process.start_valid, end_valid);
+
+            timeline_header_container->for_each_child_widget([](auto& other_timeline_header) {
+                static_cast<TimelineHeader&>(other_timeline_header).update_selection();
+                return IterationDecision::Continue;
+            });
+        };
+        timeline_view->add<TimelineTrack>(*timeline_view, *profile, process);
+    }
+
+    auto& main_splitter = main_widget.add<GUI::VerticalSplitter>();
+
+    [[maybe_unused]] auto& timeline_container = main_splitter.add<TimelineContainer>(*timeline_header_container, *timeline_view);
+
+    auto& tab_widget = main_splitter.add<GUI::TabWidget>();
 
     auto& tree_tab = tab_widget.add_tab<GUI::Widget>("Call Tree");
     tree_tab.set_layout<GUI::VerticalBoxLayout>();
@@ -140,9 +161,31 @@ int main(int argc, char** argv)
         individual_sample_view.set_model(move(model));
     };
 
+    const u64 start_of_trace = profile->first_timestamp();
+    const u64 end_of_trace = start_of_trace + profile->length_in_ms();
+    const auto clamp_timestamp = [start_of_trace, end_of_trace](u64 timestamp) -> u64 {
+        return min(end_of_trace, max(timestamp, start_of_trace));
+    };
+
+    auto& statusbar = main_widget.add<GUI::Statusbar>();
+    timeline_view->on_selection_change = [&] {
+        auto& view = *timeline_view;
+        StringBuilder builder;
+        u64 normalized_start_time = clamp_timestamp(min(view.select_start_time(), view.select_end_time()));
+        u64 normalized_end_time = clamp_timestamp(max(view.select_start_time(), view.select_end_time()));
+        u64 normalized_hover_time = clamp_timestamp(view.hover_time());
+        builder.appendff("Time: {} ms", normalized_hover_time - start_of_trace);
+        if (normalized_start_time != normalized_end_time) {
+            auto start = normalized_start_time - start_of_trace;
+            auto end = normalized_end_time - start_of_trace;
+            builder.appendff(", Selection: {} - {} ms", start, end);
+        }
+        statusbar.set_text(builder.to_string());
+    };
+
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& view_menu = menubar->add_menu("&View");
 

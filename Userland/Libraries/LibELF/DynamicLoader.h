@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2019-2020, Andrew Kaster <andrewdkaster@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,6 +12,7 @@
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibC/elf.h>
+#include <LibDl/dlfcn_integration.h>
 #include <LibELF/DynamicObject.h>
 #include <LibELF/Image.h>
 #include <sys/mman.h>
@@ -54,9 +35,14 @@ private:
     size_t m_size;
 };
 
+enum class ShouldInitializeWeak {
+    Yes,
+    No
+};
+
 class DynamicLoader : public RefCounted<DynamicLoader> {
 public:
-    static RefPtr<DynamicLoader> try_create(int fd, String filename);
+    static Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> try_create(int fd, String filename);
     ~DynamicLoader();
 
     const String& filename() const { return m_filename; }
@@ -68,22 +54,19 @@ public:
     // Note that the DynamicObject will not be linked yet. Callers are responsible for calling link() to finish it.
     RefPtr<DynamicObject> map();
 
-    bool link(unsigned flags, size_t total_tls_size);
+    bool link(unsigned flags);
 
     // Stage 2 of loading: dynamic object loading and primary relocations
-    bool load_stage_2(unsigned flags, size_t total_tls_size);
+    bool load_stage_2(unsigned flags);
 
     // Stage 3 of loading: lazy relocations
-    RefPtr<DynamicObject> load_stage_3(unsigned flags, size_t total_tls_size);
+    Result<NonnullRefPtr<DynamicObject>, DlErrorMessage> load_stage_3(unsigned flags);
 
     // Stage 4 of loading: initializers
     void load_stage_4();
 
-    // Intended for use by dlsym or other internal methods
-    void* symbol_for_name(const StringView&);
-
     void set_tls_offset(size_t offset) { m_tls_offset = offset; };
-    size_t tls_size() const { return m_tls_size; }
+    size_t tls_size_of_current_object() const { return m_tls_size_of_current_object; }
     size_t tls_offset() const { return m_tls_offset; }
     const ELF::Image& image() const { return m_elf_image; }
 
@@ -95,6 +78,7 @@ public:
     bool is_dynamic() const { return m_elf_image.is_dynamic(); }
 
     static Optional<DynamicObject::SymbolLookupResult> lookup_symbol(const ELF::DynamicObject::Symbol&);
+    void copy_initial_tls_data_into(ByteBuffer& buffer) const;
 
 private:
     DynamicLoader(int fd, String filename, void* file_data, size_t file_size);
@@ -129,10 +113,10 @@ private:
     void load_program_headers();
 
     // Stage 2
-    void do_main_relocations(size_t total_tls_size);
+    void do_main_relocations();
 
     // Stage 3
-    void do_lazy_relocations(size_t total_tls_size);
+    void do_lazy_relocations();
     void setup_plt_trampoline();
 
     // Stage 4
@@ -145,8 +129,9 @@ private:
         Success = 1,
         ResolveLater = 2,
     };
-    RelocationResult do_relocation(size_t total_tls_size, const DynamicObject::Relocation&);
+    RelocationResult do_relocation(const DynamicObject::Relocation&, ShouldInitializeWeak should_initialize_weak);
     size_t calculate_tls_size() const;
+    ssize_t negative_offset_from_tls_block_end(size_t value_of_symbol, size_t tls_offset, size_t symbol_size) const;
 
     String m_filename;
     String m_program_interpreter;
@@ -167,7 +152,7 @@ private:
     VirtualAddress m_dynamic_section_address;
 
     size_t m_tls_offset { 0 };
-    size_t m_tls_size { 0 };
+    size_t m_tls_size_of_current_object { 0 };
 
     Vector<DynamicObject::Relocation> m_unresolved_relocations;
 

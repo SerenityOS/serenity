@@ -1,0 +1,63 @@
+#compdef serenity serenity.sh
+
+_serenity() {
+    local args
+    args=(
+        '1:command:->commands'
+        '2:target:->targets'
+        '*:: :->args'
+    )
+
+    local commands
+    commands=(
+        'build'
+        'install'
+        'image'
+        'run'
+        'gdb'
+        'test'
+        'delete'
+        'recreate'
+        'rebuild'
+        'kaddr2line'
+        'addr2line'
+        'rebuild-toolchain'
+        'rebuild-world'
+    )
+
+    local targets
+    targets=(
+        'i686:Target i686 (default)'
+        'x86_64:Target x86_64'
+        'lagom:Target host machine'
+    )
+
+    _arguments -C -S "$args[@]"
+
+    local command
+    command="$line[1]"
+
+    local target
+    target="$line[2]"
+
+    case "$state" in
+        commands)
+            _describe 'command' commands
+            ;;
+        targets)
+            case "$command" in
+                install|image|kaddr2line|rebuild-toolchain|rebuild-world)
+                    # lagom target is not supported for these, remove from targets
+                    targets[$targets[(i)lagom]]=()
+                    ;;
+            esac
+            _describe 'target' targets
+            ;;
+        args)
+            ;;
+    esac
+
+    return 0
+}
+
+_serenity

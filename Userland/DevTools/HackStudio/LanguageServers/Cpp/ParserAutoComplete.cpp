@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ParserAutoComplete.h"
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
+#include <AK/OwnPtr.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
@@ -69,9 +50,8 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     for (auto& path : document_data->preprocessor().included_paths()) {
         get_or_create_document_data(document_path_from_include_path(path));
     }
-#ifdef CPP_LANGUAGE_SERVER_DEBUG
-    root->dump(0);
-#endif
+    if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
+        root->dump(0);
 
     update_declared_symbols(*document_data);
 
@@ -320,7 +300,6 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(con
 
 String ParserAutoComplete::document_path_from_include_path(const StringView& include_path) const
 {
-
     static Regex<PosixExtended> library_include("<(.+)>");
     static Regex<PosixExtended> user_defined_include("\"(.+)\"");
 
@@ -358,9 +337,9 @@ void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
     set_document_data(file, create_document_data_for(file));
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& file_name, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
 {
-    const auto* document_ptr = get_or_create_document_data(file_name);
+    const auto* document_ptr = get_or_create_document_data(filename);
     if (!document_ptr)
         return {};
 

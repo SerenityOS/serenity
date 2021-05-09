@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Benoit Lormeau <blormeau@outlook.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,29 +12,95 @@ namespace AK {
 
 class GenericLexer {
 public:
-    explicit GenericLexer(const StringView& input);
-    virtual ~GenericLexer();
+    constexpr explicit GenericLexer(const StringView& input)
+        : m_input(input)
+    {
+    }
 
-    size_t tell() const { return m_index; }
-    size_t tell_remaining() const { return m_input.length() - m_index; }
+    constexpr size_t tell() const { return m_index; }
+    constexpr size_t tell_remaining() const { return m_input.length() - m_index; }
 
     StringView remaining() const { return m_input.substring_view(m_index); }
 
-    bool is_eof() const;
+    constexpr bool is_eof() const { return m_index >= m_input.length(); }
 
-    char peek(size_t offset = 0) const;
+    constexpr char peek(size_t offset = 0) const
+    {
+        return (m_index + offset < m_input.length()) ? m_input[m_index + offset] : '\0';
+    }
 
-    bool next_is(char) const;
-    bool next_is(StringView) const;
-    bool next_is(const char*) const;
+    constexpr bool next_is(char expected) const
+    {
+        return peek() == expected;
+    }
 
-    void retreat();
+    constexpr bool next_is(StringView expected) const
+    {
+        for (size_t i = 0; i < expected.length(); ++i)
+            if (peek(i) != expected[i])
+                return false;
+        return true;
+    }
 
-    char consume();
-    bool consume_specific(char);
-    bool consume_specific(StringView);
-    bool consume_specific(const char*);
-    char consume_escaped_character(char escape_char = '\\', const StringView& escape_map = "n\nr\rt\tb\bf\f");
+    constexpr bool next_is(const char* expected) const
+    {
+        for (size_t i = 0; expected[i] != '\0'; ++i)
+            if (peek(i) != expected[i])
+                return false;
+        return true;
+    }
+
+    constexpr void retreat()
+    {
+        VERIFY(m_index > 0);
+        --m_index;
+    }
+
+    constexpr char consume()
+    {
+        VERIFY(!is_eof());
+        return m_input[m_index++];
+    }
+
+    template<typename T>
+    constexpr bool consume_specific(const T& next)
+    {
+        if (!next_is(next))
+            return false;
+
+        if constexpr (requires { next.length(); }) {
+            ignore(next.length());
+        } else {
+            ignore(sizeof(next));
+        }
+        return true;
+    }
+
+    bool consume_specific(const String& next)
+    {
+        return consume_specific(StringView { next });
+    }
+
+    constexpr bool consume_specific(const char* next)
+    {
+        return consume_specific(StringView { next });
+    }
+
+    constexpr char consume_escaped_character(char escape_char = '\\', const StringView& escape_map = "n\nr\rt\tb\bf\f")
+    {
+        if (!consume_specific(escape_char))
+            return consume();
+
+        auto c = consume();
+
+        for (size_t i = 0; i < escape_map.length(); i += 2) {
+            if (c == escape_map[i])
+                return escape_map[i + 1];
+        }
+
+        return c;
+    }
+
     StringView consume(size_t count);
     StringView consume_all();
     StringView consume_line();
@@ -63,9 +109,27 @@ public:
     StringView consume_quoted_string(char escape_char = 0);
     String consume_and_unescape_string(char escape_char = '\\');
 
-    void ignore(size_t count = 1);
-    void ignore_until(char);
-    void ignore_until(const char*);
+    constexpr void ignore(size_t count = 1)
+    {
+        count = min(count, m_input.length() - m_index);
+        m_index += count;
+    }
+
+    constexpr void ignore_until(char stop)
+    {
+        while (!is_eof() && peek() != stop) {
+            ++m_index;
+        }
+        ignore();
+    }
+
+    constexpr void ignore_until(const char* stop)
+    {
+        while (!is_eof() && !next_is(stop)) {
+            ++m_index;
+        }
+        ignore(__builtin_strlen(stop));
+    }
 
     /*
      * Conditions are used to match arbitrary characters. You can use lambdas,
@@ -77,19 +141,19 @@ public:
      */
 
     // Test the next character against a Condition
-    template<typename C>
-    bool next_is(C condition) const
+    template<typename TPredicate>
+    constexpr bool next_is(TPredicate pred) const
     {
-        return condition(peek());
+        return pred(peek());
     }
 
-    // Consume and return characters while `condition` returns true
-    template<typename C>
-    StringView consume_while(C condition)
+    // Consume and return characters while `pred` returns true
+    template<typename TPredicate>
+    StringView consume_while(TPredicate pred)
     {
         size_t start = m_index;
-        while (!is_eof() && condition(peek()))
-            m_index++;
+        while (!is_eof() && pred(peek()))
+            ++m_index;
         size_t length = m_index - start;
 
         if (length == 0)
@@ -97,13 +161,13 @@ public:
         return m_input.substring_view(start, length);
     }
 
-    // Consume and return characters until `condition` return true
-    template<typename C>
-    StringView consume_until(C condition)
+    // Consume and return characters until `pred` return true
+    template<typename TPredicate>
+    StringView consume_until(TPredicate pred)
     {
         size_t start = m_index;
-        while (!is_eof() && !condition(peek()))
-            m_index++;
+        while (!is_eof() && !pred(peek()))
+            ++m_index;
         size_t length = m_index - start;
 
         if (length == 0)
@@ -111,21 +175,21 @@ public:
         return m_input.substring_view(start, length);
     }
 
-    // Ignore characters while `condition` returns true
-    template<typename C>
-    void ignore_while(C condition)
+    // Ignore characters while `pred` returns true
+    template<typename TPredicate>
+    constexpr void ignore_while(TPredicate pred)
     {
-        while (!is_eof() && condition(peek()))
-            m_index++;
+        while (!is_eof() && pred(peek()))
+            ++m_index;
     }
 
-    // Ignore characters until `condition` return true
+    // Ignore characters until `pred` return true
     // We don't skip the stop character as it may not be a unique value
-    template<typename C>
-    void ignore_until(C condition)
+    template<typename TPredicate>
+    constexpr void ignore_until(TPredicate pred)
     {
-        while (!is_eof() && !condition(peek()))
-            m_index++;
+        while (!is_eof() && !pred(peek()))
+            ++m_index;
     }
 
 protected:

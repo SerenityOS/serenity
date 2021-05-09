@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Tobias Christiansen <tobi@tobyase.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "MallocTracer.h"
@@ -330,9 +310,8 @@ void MallocTracer::populate_memory_graph()
             auto value = m_emulator.mmu().read32({ 0x23, mallocation.address + i * sizeof(u32) });
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
-#if REACHABLE_DEBUG
-                reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
-#endif
+                if constexpr (REACHABLE_DEBUG)
+                    reportln("region/mallocation {:p} is reachable from other mallocation {:p}", other_address, mallocation.address);
                 edges_from_mallocation.edges_from_node.append(other_address);
             }
         }
@@ -359,9 +338,8 @@ void MallocTracer::populate_memory_graph()
             auto value = region.read32(i * sizeof(u32));
             auto other_address = value.value();
             if (!value.is_uninitialized() && m_memory_graph.contains(value.value())) {
-#if REACHABLE_DEBUG
-                reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
-#endif
+                if constexpr (REACHABLE_DEBUG)
+                    reportln("region/mallocation {:p} is reachable from region {:p}-{:p}", other_address, region.base(), region.end() - 1);
                 m_memory_graph.find(other_address)->value.is_reachable = true;
                 reachable_mallocations.append(other_address);
             }
@@ -408,9 +386,8 @@ void MallocTracer::dump_leak_report()
 
     populate_memory_graph();
 
-#if REACHABLE_DEBUG
-    dump_memory_graph();
-#endif
+    if constexpr (REACHABLE_DEBUG)
+        dump_memory_graph();
 
     for_each_mallocation([&](auto& mallocation) {
         if (mallocation.freed)

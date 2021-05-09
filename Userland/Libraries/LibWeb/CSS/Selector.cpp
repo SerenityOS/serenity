@@ -1,30 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Selector.h"
+#include <AK/StringUtils.h>
 #include <LibWeb/CSS/Selector.h>
+#include <ctype.h>
 
 namespace Web::CSS {
 
@@ -62,6 +45,75 @@ u32 Selector::specificity() const
     }
 
     return ids * 0x10000 + classes * 0x100 + tag_names;
+}
+
+Selector::SimpleSelector::NthChildPattern Selector::SimpleSelector::NthChildPattern::parse(const StringView& args)
+{
+    CSS::Selector::SimpleSelector::NthChildPattern pattern;
+    if (args.equals_ignoring_case("odd")) {
+        pattern.step_size = 2;
+        pattern.offset = 1;
+    } else if (args.equals_ignoring_case("even")) {
+        pattern.step_size = 2;
+    } else {
+        const auto consume_int = [](GenericLexer& lexer) -> Optional<int> {
+            return AK::StringUtils::convert_to_int(lexer.consume_while([](char c) -> bool {
+                return isdigit(c) || c == '+' || c == '-';
+            }));
+        };
+
+        // Try to match any of following patterns:
+        // 1. An+B
+        // 2. An
+        // 3. B
+        // ...where "A" is "step_size", "B" is "offset" and rest are literals.
+        // "A" can be omitted, in that case "A" = 1.
+        // "A" may have "+" or "-" sign, "B" always must be predated by sign for pattern (1).
+
+        int step_size_or_offset = 0;
+        GenericLexer lexer { args };
+
+        // "When a=1, or a=-1, the 1 may be omitted from the rule."
+        if (lexer.consume_specific("n") || lexer.consume_specific("+n")) {
+            step_size_or_offset = +1;
+            lexer.retreat();
+        } else if (lexer.consume_specific("-n")) {
+            step_size_or_offset = -1;
+            lexer.retreat();
+        } else {
+            const auto value = consume_int(lexer);
+            if (!value.has_value())
+                return {};
+            step_size_or_offset = value.value();
+        }
+
+        if (lexer.consume_specific("n")) {
+            lexer.ignore_while(isspace);
+            if (lexer.next_is('+') || lexer.next_is('-')) {
+                const auto sign = lexer.next_is('+') ? 1 : -1;
+                lexer.ignore();
+                lexer.ignore_while(isspace);
+
+                // "An+B" pattern
+                const auto offset = consume_int(lexer);
+                if (!offset.has_value())
+                    return {};
+                pattern.step_size = step_size_or_offset;
+                pattern.offset = sign * offset.value();
+            } else {
+                // "An" pattern
+                pattern.step_size = step_size_or_offset;
+            }
+        } else {
+            // "B" pattern
+            pattern.offset = step_size_or_offset;
+        }
+
+        if (lexer.remaining().length() > 0)
+            return {};
+    }
+
+    return pattern;
 }
 
 }

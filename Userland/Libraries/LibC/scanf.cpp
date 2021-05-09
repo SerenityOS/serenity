@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -84,7 +64,7 @@ struct ReadElementConcrete<int, ApT, kind> {
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -107,7 +87,8 @@ struct ReadElementConcrete<int, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        *ptr = value;
+        if (ptr)
+            *ptr = value;
         return true;
     }
 };
@@ -118,13 +99,14 @@ struct ReadElementConcrete<char, ApT, kind> {
     {
         static_assert(kind == ReadKind::Normal, "Can't read a non-normal character");
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
 
         if (lexer.is_eof())
             return false;
 
         auto ch = lexer.consume();
-        *ptr = ch;
+        if (ptr)
+            *ptr = ch;
         return true;
     }
 };
@@ -135,7 +117,7 @@ struct ReadElementConcrete<unsigned, ApT, kind> {
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         unsigned long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -158,7 +140,8 @@ struct ReadElementConcrete<unsigned, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        *ptr = value;
+        if (ptr)
+            *ptr = value;
         return true;
     }
 };
@@ -169,7 +152,7 @@ struct ReadElementConcrete<long long, ApT, kind> {
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -192,7 +175,8 @@ struct ReadElementConcrete<long long, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        *ptr = value;
+        if (ptr)
+            *ptr = value;
         return true;
     }
 };
@@ -203,7 +187,7 @@ struct ReadElementConcrete<unsigned long long, ApT, kind> {
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
         unsigned long long value = 0;
         char* endptr = nullptr;
         auto nptr = lexer.remaining().characters_without_null_termination();
@@ -226,7 +210,8 @@ struct ReadElementConcrete<unsigned long long, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        *ptr = value;
+        if (ptr)
+            *ptr = value;
         return true;
     }
 };
@@ -237,7 +222,7 @@ struct ReadElementConcrete<float, ApT, kind> {
     {
         lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, ApT*);
+        auto* ptr = ap ? va_arg(*ap, ApT*) : nullptr;
 
         double value = 0;
         char* endptr = nullptr;
@@ -257,7 +242,8 @@ struct ReadElementConcrete<float, ApT, kind> {
         VERIFY(diff > 0);
         lexer.ignore((size_t)diff);
 
-        *ptr = value;
+        if (ptr)
+            *ptr = value;
         return true;
     }
 };
@@ -322,7 +308,7 @@ struct ReadElement<char*, ReadKind::Normal> {
         if (was_null)
             input_lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, char*);
+        auto* ptr = ap ? va_arg(*ap, char*) : nullptr;
         auto str = input_lexer.consume_while([this](auto c) { return this->matches(c); });
         if (str.is_empty())
             return false;
@@ -353,7 +339,7 @@ struct ReadElement<void*, ReadKind::Normal> {
 
         input_lexer.ignore_while(isspace);
 
-        auto* ptr = va_arg(*ap, void**);
+        auto* ptr = ap ? va_arg(*ap, void**) : nullptr;
         auto str = input_lexer.consume_while([this](auto c) { return this->should_consume(c); });
 
         if (count != 8) {
@@ -417,6 +403,12 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
         }
 
         format_lexer.ignore(); // '%'
+
+        bool suppress_assignment = false;
+        if (format_lexer.next_is('*')) {
+            suppress_assignment = true;
+            format_lexer.ignore();
+        }
 
         // Parse width specification
         [[maybe_unused]] int width_specifier = 0;
@@ -545,6 +537,8 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             }
         }
 
+        auto* ap_or_null = !suppress_assignment ? (va_list*)&ap : nullptr;
+
         // Now try to read.
         switch (conversion_specifier) {
         case Invalid:
@@ -554,69 +548,70 @@ extern "C" int vsscanf(const char* input, const char* format, va_list ap)
             dbgln("Invalid conversion specifier {} in scanf!", (int)conversion_specifier);
             VERIFY_NOT_REACHED();
         case Decimal:
-            if (!ReadElement<int, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<int, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Integer:
-            if (!ReadElement<int, ReadKind::Infer> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<int, ReadKind::Infer> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Octal:
-            if (!ReadElement<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<unsigned, ReadKind::Octal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Unsigned:
-            if (!ReadElement<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<unsigned, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Hex:
-            if (!ReadElement<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<unsigned, ReadKind::Hex> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Floating:
-            if (!ReadElement<float, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<float, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case String:
-            if (!ReadElement<char*, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<char*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case UseScanList:
-            if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<char*, ReadKind::Normal> { scanlist, invert_scanlist }(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Character:
-            if (!ReadElement<char, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<char, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case Pointer:
-            if (!ReadElement<void*, ReadKind::Normal> {}(length_modifier, input_lexer, (va_list*)&ap))
+            if (!ReadElement<void*, ReadKind::Normal> {}(length_modifier, input_lexer, ap_or_null))
                 format_lexer.consume_all();
             else
                 ++elements_matched;
             break;
         case OutputNumberOfBytes: {
-            auto* ptr = va_arg(ap, int*);
-            *ptr = input_lexer.tell();
-            ++elements_matched;
+            if (!suppress_assignment) {
+                auto* ptr = va_arg(ap, int*);
+                *ptr = input_lexer.tell();
+            }
             break;
         }
         }

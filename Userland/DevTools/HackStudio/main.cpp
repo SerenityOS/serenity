@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Editor.h"
@@ -101,6 +81,12 @@ int main(int argc, char** argv)
     s_hack_studio_widget->initialize_menubar(menubar);
     s_window->set_menubar(menubar);
 
+    s_window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
+            return GUI::Window::CloseRequestDecision::Close;
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
+
     s_window->show();
 
     s_hack_studio_widget->update_actions();
@@ -152,14 +138,14 @@ GUI::TextEditor& current_editor()
     return s_hack_studio_widget->current_editor();
 }
 
-void open_file(const String& file_name)
+void open_file(const String& filename)
 {
-    s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(filename);
 }
 
-void open_file(const String& file_name, size_t line, size_t column)
+void open_file(const String& filename, size_t line, size_t column)
 {
-    s_hack_studio_widget->open_file(file_name);
+    s_hack_studio_widget->open_file(filename);
     s_hack_studio_widget->current_editor_wrapper().editor().set_cursor({ line, column });
 }
 
@@ -179,7 +165,7 @@ String currently_open_file()
 {
     if (!s_hack_studio_widget)
         return {};
-    return s_hack_studio_widget->currently_open_file();
+    return s_hack_studio_widget->active_file();
 }
 
 void set_current_editor_wrapper(RefPtr<EditorWrapper> wrapper)

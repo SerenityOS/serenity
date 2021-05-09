@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -82,6 +62,7 @@ public:
         WM_WindowRectChanged,
         WM_WindowIconBitmapChanged,
         WM_AppletAreaSizeChanged,
+        WM_SuperKeyPressed,
         __End_WM_Events,
     };
 
@@ -113,6 +94,14 @@ private:
     int m_window_id { -1 };
 };
 
+class WMSuperKeyPressedEvent : public WMEvent {
+public:
+    explicit WMSuperKeyPressedEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperKeyPressed, client_id, 0)
+    {
+    }
+};
+
 class WMAppletAreaSizeChangedEvent : public WMEvent {
 public:
     explicit WMAppletAreaSizeChangedEvent(const Gfx::IntSize& size)
@@ -137,7 +126,7 @@ public:
 
 class WMWindowStateChangedEvent : public WMEvent {
 public:
-    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, int progress)
+    WMWindowStateChangedEvent(int client_id, int window_id, int parent_client_id, int parent_window_id, const StringView& title, const Gfx::IntRect& rect, bool is_active, bool is_modal, WindowType window_type, bool is_minimized, bool is_frameless, Optional<int> progress)
         : WMEvent(Event::Type::WM_WindowStateChanged, client_id, window_id)
         , m_parent_client_id(parent_client_id)
         , m_parent_window_id(parent_window_id)
@@ -161,7 +150,7 @@ public:
     WindowType window_type() const { return m_window_type; }
     bool is_minimized() const { return m_minimized; }
     bool is_frameless() const { return m_frameless; }
-    int progress() const { return m_progress; }
+    Optional<int> progress() const { return m_progress; }
 
 private:
     int m_parent_client_id;
@@ -173,7 +162,7 @@ private:
     bool m_modal;
     bool m_minimized;
     bool m_frameless;
-    int m_progress;
+    Optional<int> m_progress;
 };
 
 class WMWindowRectChangedEvent : public WMEvent {

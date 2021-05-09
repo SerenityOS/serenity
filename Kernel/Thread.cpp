@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Demangle.h>
@@ -61,7 +41,7 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
     if (!kernel_stack_region)
         return ENOMEM;
     kernel_stack_region->set_stack(true);
-    return adopt(*new Thread(move(process), kernel_stack_region.release_nonnull()));
+    return adopt_ref(*new Thread(move(process), kernel_stack_region.release_nonnull()));
 }
 
 Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region)
@@ -330,7 +310,7 @@ void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 
     if (previous_locked != LockMode::Unlocked) {
         // We've unblocked, relock the process if needed and carry on.
-        RESTORE_LOCK(process().big_lock(), previous_locked, lock_count_to_restore);
+        process().big_lock().restore_lock(previous_locked, lock_count_to_restore);
     }
 }
 
@@ -380,8 +360,10 @@ void Thread::finalize()
     if (lock_count() > 0) {
         dbgln("Thread {} leaking {} Locks!", *this, lock_count());
         ScopedSpinLock list_lock(m_holding_locks_lock);
-        for (auto& info : m_holding_locks_list)
-            dbgln(" - {} @ {} locked at {}:{} count: {}", info.lock->name(), info.lock, info.file, info.line, info.count);
+        for (auto& info : m_holding_locks_list) {
+            const auto& location = info.source_location;
+            dbgln(" - Lock: \"{}\" @ {} locked in function \"{}\" at \"{}:{}\" with a count of: {}", info.lock->name(), info.lock, location.function_name(), location.filename(), location.line_number(), info.count);
+        }
         VERIFY_NOT_REACHED();
     }
 #endif

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/WeakPtr.h>
@@ -178,42 +158,42 @@ NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, C
 
 NonnullRefPtr<Action> Action::create(String text, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(callback), parent));
+    return adopt_ref(*new Action(move(text), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(icon), move(callback), parent));
+    return adopt_ref(*new Action(move(text), move(icon), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(callback), parent));
+    return adopt_ref(*new Action(move(text), shortcut, move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent));
+    return adopt_ref(*new Action(move(text), shortcut, move(icon), move(callback), parent));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), move(icon), move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), shortcut, move(callback), parent, true));
 }
 
 NonnullRefPtr<Action> Action::create_checkable(String text, const Shortcut& shortcut, RefPtr<Gfx::Bitmap> icon, Function<void(Action&)> callback, Core::Object* parent)
 {
-    return adopt(*new Action(move(text), shortcut, move(icon), move(callback), parent, true));
+    return adopt_ref(*new Action(move(text), shortcut, move(icon), move(callback), parent, true));
 }
 
 Action::Action(String text, Function<void(Action&)> on_activation_callback, Core::Object* parent, bool checkable)
@@ -361,6 +341,16 @@ void Action::set_group(Badge<ActionGroup>, ActionGroup* group)
 void Action::set_icon(const Gfx::Bitmap* icon)
 {
     m_icon = icon;
+}
+
+void Action::set_text(String text)
+{
+    if (m_text == text)
+        return;
+    m_text = move(text);
+    for_each_menu_item([&](auto& menu_item) {
+        menu_item.update_from_action({});
+    });
 }
 
 }

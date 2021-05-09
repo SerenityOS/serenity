@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
@@ -41,7 +21,6 @@
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
-#include <LibCore/SyscallUtils.h>
 #include <LibThread/Lock.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -414,9 +393,7 @@ void EventLoop::pump(WaitMode mode)
                 break;
             }
         } else if (event.type() == Event::Type::DeferredInvoke) {
-#if DEFERRED_INVOKE_DEBUG
-            dbgln("DeferredInvoke: receiver = {}", *receiver);
-#endif
+            dbgln_if(DEFERRED_INVOKE_DEBUG, "DeferredInvoke: receiver = {}", *receiver);
             static_cast<DeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
             NonnullRefPtr<Object> protector(*receiver);
@@ -546,7 +523,7 @@ int EventLoop::register_signal(int signo, Function<void(int)> handler)
     auto& info = *signals_info();
     auto handlers = info.signal_handlers.find(signo);
     if (handlers == info.signal_handlers.end()) {
-        auto signal_handlers = adopt(*new SignalHandlers(signo, EventLoop::handle_signal));
+        auto signal_handlers = adopt_ref(*new SignalHandlers(signo, EventLoop::handle_signal));
         auto handler_id = signal_handlers->add(move(handler));
         info.signal_handlers.set(signo, move(signal_handlers));
         return handler_id;
@@ -658,8 +635,6 @@ try_select_again:
             goto try_select_again;
         }
         dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::wait_for_event: {} ({}: {})", marked_fd_count, saved_errno, strerror(saved_errno));
-
-        // Blow up, similar to Core::safe_syscall.
         VERIFY_NOT_REACHED();
     }
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {

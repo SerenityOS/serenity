@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -58,7 +38,7 @@ constexpr const char* posix1_tar_version = ""; // POSIX.1-1988 format version
 
 class [[gnu::packed]] TarFileHeader {
 public:
-    const StringView file_name() const { return m_file_name; }
+    const StringView filename() const { return m_filename; }
     mode_t mode() const { return get_tar_field(m_mode); }
     uid_t uid() const { return get_tar_field(m_uid); }
     gid_t gid() const { return get_tar_field(m_gid); }
@@ -77,7 +57,7 @@ public:
     // FIXME: support ustar filename prefix
     const StringView prefix() const { return m_prefix; }
 
-    void set_file_name(const String& file_name) { VERIFY(file_name.copy_characters_to_buffer(m_file_name, sizeof(m_file_name))); }
+    void set_filename(const String& filename) { VERIFY(filename.copy_characters_to_buffer(m_filename, sizeof(m_filename))); }
     void set_mode(mode_t mode) { VERIFY(String::formatted("{:o}", mode).copy_characters_to_buffer(m_mode, sizeof(m_mode))); }
     void set_uid(uid_t uid) { VERIFY(String::formatted("{:o}", uid).copy_characters_to_buffer(m_uid, sizeof(m_uid))); }
     void set_gid(gid_t gid) { VERIFY(String::formatted("{:o}", gid).copy_characters_to_buffer(m_gid, sizeof(m_gid))); }
@@ -97,7 +77,7 @@ public:
     void calculate_checksum();
 
 private:
-    char m_file_name[100];
+    char m_filename[100];
     char m_mode[8];
     char m_uid[8];
     char m_gid[8];

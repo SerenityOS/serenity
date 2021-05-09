@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Debug.h>
@@ -49,12 +29,20 @@ static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Tim
 static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
 
+static Thread* network_task = nullptr;
+
 [[noreturn]] static void NetworkTask_main(void*);
 
 void NetworkTask::spawn()
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main, nullptr);
+    network_task = thread;
+}
+
+bool NetworkTask::is_current()
+{
+    return Thread::current() == network_task;
 }
 
 void NetworkTask_main(void*)
@@ -119,7 +107,7 @@ void NetworkTask_main(void*)
             // ignore
             break;
         default:
-            dbgln("NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
+            dbgln_if(ETHERNET_DEBUG, "NetworkTask: Unknown ethernet type {:#04x}", eth.ether_type());
         }
     }
 }
@@ -195,6 +183,15 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
 
     dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
+    NetworkAdapter::for_each([&](auto& adapter) {
+        if (adapter.link_up()) {
+            auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
+            auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
+            if (my_net == their_net)
+                update_arp_table(packet.source(), eth.source());
+        }
+    });
+
     switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
         return handle_icmp(eth, packet, packet_timestamp);
@@ -203,7 +200,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
     case IPv4Protocol::TCP:
         return handle_tcp(packet, packet_timestamp);
     default:
-        dbgln("handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
+        dbgln_if(IPV4_DEBUG, "handle_ipv4: Unhandled protocol {:#02x}", packet.protocol());
         break;
     }
 }
@@ -216,7 +213,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
     {
         NonnullRefPtrVector<IPv4Socket> icmp_sockets;
         {
-            LOCKER(IPv4Socket::all_sockets().lock(), Lock::Mode::Shared);
+            Locker locker(IPv4Socket::all_sockets().lock(), Lock::Mode::Shared);
             for (auto* socket : IPv4Socket::all_sockets().resource()) {
                 if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
                     continue;
@@ -261,12 +258,6 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         return;
     }
 
-    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
-    if (!adapter && ipv4_packet.destination() != IPv4Address(255, 255, 255, 255)) {
-        dbgln("handle_udp: this packet is not for me, it's for {}", ipv4_packet.destination());
-        return;
-    }
-
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     dbgln_if(UDP_DEBUG, "handle_udp: source={}:{}, destination={}:{}, length={}",
         ipv4_packet.source(), udp_packet.source_port(),
@@ -275,13 +266,17 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
     if (!socket) {
-        dbgln("handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
+        dbgln_if(UDP_DEBUG, "handle_udp: No local UDP socket for {}:{}", ipv4_packet.destination(), udp_packet.destination_port());
         return;
     }
 
     VERIFY(socket->type() == SOCK_DGRAM);
     VERIFY(socket->local_port() == udp_packet.destination_port());
-    socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+
+    auto& destination = ipv4_packet.destination();
+
+    if (destination == IPv4Address(255, 255, 255, 255) || NetworkAdapter::from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
+        socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
 }
 
 void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
@@ -350,7 +345,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         return;
     }
 
-    LOCKER(socket->lock());
+    Locker locker(socket->lock());
 
     VERIFY(socket->type() == SOCK_STREAM);
     VERIFY(socket->local_port() == tcp_packet.destination_port());
@@ -381,7 +376,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
                 dmesgln("handle_tcp: couldn't create client socket");
                 return;
             }
-            LOCKER(client->lock());
+            Locker locker(client->lock());
             dbgln_if(TCP_DEBUG, "handle_tcp: created new client socket with tuple {}", client->tuple().to_string());
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
@@ -531,6 +526,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             return;
         }
     case TCPSocket::State::Established:
+        if (tcp_packet.has_rst()) {
+            socket->set_state(TCPSocket::State::Closed);
+            return;
+        }
+
         if (tcp_packet.has_fin()) {
             if (payload_size != 0)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);

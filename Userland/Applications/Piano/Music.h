@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -49,7 +29,7 @@ constexpr int buffer_size = sample_count * sizeof(Sample);
 
 constexpr double sample_rate = 44100;
 
-constexpr double volume = 1800;
+constexpr double volume_factor = 1800;
 
 enum Switch {
     Off,
@@ -202,6 +182,14 @@ constexpr int white_keys_per_octave = 7;
 constexpr int black_keys_per_octave = 5;
 constexpr int octave_min = 1;
 constexpr int octave_max = 7;
+
+// These values represent the user-side bounds, the application may use a different scale.
+constexpr int attack_max = 1000;
+constexpr int decay_max = 1000;
+constexpr int sustain_max = 1000;
+constexpr int release_max = 1000;
+constexpr int volume_max = 1000;
+constexpr int delay_max = 8;
 
 constexpr double beats_per_minute = 60;
 constexpr int beats_per_bar = 4;

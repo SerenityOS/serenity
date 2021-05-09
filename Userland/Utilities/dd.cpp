@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, János Tóth <toth-janos@outlook.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Optional.h>
@@ -42,7 +22,7 @@ const char* usage = "usage:\n"
                     "options:\n"
                     "\tif=<file>\tinput file (default: stdin)\n"
                     "\tof=<file>\toutput file (default: stdout)\n"
-                    "\tbs=<size>\tblocks size (default: 512)\n"
+                    "\tbs=<size>\tblocks size may be followed by multiplicate suffixes: k=1024, M=1024*1024, G=1024*1024*1024 (default: 512)\n"
                     "\tcount=<size>\t<size> blocks to copy (default: 0 (until end-of-file))\n"
                     "\tseek=<size>\tskip <size> blocks at start of output (default: 0)\n"
                     "\tskip=<size>\tskip <size> blocks at start of input (default: 0)\n"
@@ -78,7 +58,7 @@ static int handle_io_file_arguments(int& fd, int flags, const char* argument)
         return -1;
     }
 
-    fd = open(value.characters(), flags);
+    fd = open(value.characters(), flags, 0666);
     if (fd == -1) {
         fprintf(stderr, "Unable to open: %s\n", value.characters());
         return -1;
@@ -94,13 +74,29 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
         return -1;
     }
 
+    unsigned suffix_multiplier = 1;
+    switch (value.to_lowercase()[value.length() - 1]) {
+    case 'k':
+        suffix_multiplier = KiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    case 'm':
+        suffix_multiplier = MiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    case 'g':
+        suffix_multiplier = GiB;
+        value = value.substring(0, value.length() - 1);
+        break;
+    }
+
     Optional<unsigned> numeric_optional = value.to_uint();
     if (!numeric_optional.has_value()) {
         fprintf(stderr, "Invalid size-value: %s\n", value.characters());
         return -1;
     }
 
-    numeric_value = numeric_optional.value();
+    numeric_value = numeric_optional.value() * suffix_multiplier;
     if (numeric_value < 1) {
         fprintf(stderr, "Invalid size-value: %lu\n", numeric_value);
         return -1;

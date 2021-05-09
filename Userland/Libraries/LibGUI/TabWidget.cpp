@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/JsonObject.h>
@@ -217,7 +197,7 @@ void TabWidget::paint_event(PaintEvent& event)
         if (!icon)
             return;
         Gfx::IntRect icon_rect { button_rect.x(), button_rect.y(), 16, 16 };
-        icon_rect.move_by(4, 3);
+        icon_rect.translate_by(4, 3);
         painter.draw_scaled_bitmap(icon_rect, *icon, icon->rect());
         text_rect.set_x(icon_rect.right() + 1 + 4);
         text_rect.intersect(button_rect);
@@ -301,13 +281,13 @@ Gfx::IntRect TabWidget::button_rect(int index) const
     }
     Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
-        rect.move_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
+        rect.translate_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
         rect.set_height(rect.height() - 2);
     } else {
-        rect.move_by(-2, 0);
+        rect.translate_by(-2, 0);
         rect.set_width(rect.width() + 4);
     }
-    rect.move_by(bar_rect().location());
+    rect.translate_by(bar_rect().location());
     return rect;
 }
 

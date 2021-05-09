@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -537,7 +517,7 @@ public:
 
     const String to_string() const
     {
-        return String::format("[0x%02X] %s", (int)opcode_id(), name(opcode_id()));
+        return String::formatted("[0x{:02X}] {}", (int)opcode_id(), name(opcode_id()));
     }
 
     virtual const String arguments_string() const = 0;
@@ -623,7 +603,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu]", offset(), state().instruction_position + size() + offset());
+        return String::formatted("offset={} [&{}]", offset(), state().instruction_position + size() + offset());
     }
 };
 
@@ -639,7 +619,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu], sp: %zu", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -655,7 +635,7 @@ public:
     ALWAYS_INLINE ssize_t offset() const { return argument(0); }
     const String arguments_string() const override
     {
-        return String::format("offset=%zd [&%zu], sp: %zu", offset(), state().instruction_position + size() + offset(), state().string_position);
+        return String::formatted("offset={} [&{}], sp: {}", offset(), state().instruction_position + size() + offset(), state().string_position);
     }
 };
 
@@ -694,7 +674,7 @@ public:
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t arguments_count() const { return 1; }
     ALWAYS_INLINE BoundaryCheckType type() const { return static_cast<BoundaryCheckType>(argument(0)); }
-    const String arguments_string() const override { return String::format("kind=%lu (%s)", (long unsigned int)argument(0), boundary_check_type_name(type())); }
+    const String arguments_string() const override { return String::formatted("kind={} ({})", (long unsigned int)argument(0), boundary_check_type_name(type())); }
 };
 
 class OpCode_SaveLeftCaptureGroup final : public OpCode {
@@ -707,7 +687,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveLeftCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::format("id=%lu", id()); }
+    const String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveRightCaptureGroup final : public OpCode {
@@ -720,7 +700,7 @@ public:
     ALWAYS_INLINE OpCodeId opcode_id() const override { return OpCodeId::SaveRightCaptureGroup; }
     ALWAYS_INLINE size_t size() const override { return 2; }
     ALWAYS_INLINE size_t id() const { return argument(0); }
-    const String arguments_string() const override { return String::format("id=%lu", id()); }
+    const String arguments_string() const override { return String::formatted("id={}", id()); }
 };
 
 class OpCode_SaveLeftNamedCaptureGroup final : public OpCode {
@@ -736,7 +716,7 @@ public:
     ALWAYS_INLINE size_t length() const { return argument(1); }
     const String arguments_string() const override
     {
-        return String::format("name=%s, length=%lu", name().to_string().characters(), length());
+        return String::formatted("name={}, length={}", name(), length());
     }
 };
 
@@ -753,7 +733,7 @@ public:
     ALWAYS_INLINE size_t length() const { return argument(1); }
     const String arguments_string() const override
     {
-        return String::format("name=%s, length=%zu", name().to_string().characters(), length());
+        return String::formatted("name={}, length={}", name(), length());
     }
 };
 

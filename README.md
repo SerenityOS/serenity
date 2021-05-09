@@ -4,6 +4,7 @@ Graphical Unix-like operating system for x86 computers.
 
 [![Build status](https://github.com/SerenityOS/serenity/workflows/Build,%20lint,%20and%20test/badge.svg)](https://github.com/SerenityOS/serenity/actions?query=workflow%3A"Build%2C%20lint%2C%20and%20test")
 [![Fuzzing Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/serenity.svg)](https://bugs.chromium.org/p/oss-fuzz/issues/list?sort=-opened&can=1&q=proj:serenity)
+[![Discord](https://img.shields.io/discord/830522505605283862.svg?logo=discord&logoColor=white&logoWidth=20&labelColor=7289DA&label=Discord&color=17cf48)](https://discord.gg/29gCcKsXkF)  
 
 ## About
 
@@ -42,7 +43,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Compositing window server (WindowServer)
 * Text console manager (TTYServer)
 * DNS client (LookupServer)
-* Network protocols server (ProtocolServer)
+* Network protocols server (RequestServer and WebSocket)
 * Software-mixing sound daemon (AudioServer)
 * Desktop notifications (NotificationServer)
 * HTTP server (WebServer)
@@ -84,9 +85,9 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ## How do I read the documentation?
 
-Man pages are browsable outside of SerenityOS under [Base/usr/share/man](https://github.com/SerenityOS/serenity/tree/master/Base/usr/share/man).
+Man pages are available online at [man.serenityos.org](https://man.serenityos.org). These pages are generated from the Markdown source files in [`Base/usr/share/man`](https://github.com/SerenityOS/serenity/tree/master/Base/usr/share/man) and updated automatically.
 
-When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI interface.
+When running SerenityOS you can use `man` for the terminal interface, or `help` for the GUI.
 
 ## How do I build and run this?
 
@@ -96,12 +97,13 @@ See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/b
 
 Please see the [issue policy](https://github.com/SerenityOS/serenity/blob/master/CONTRIBUTING.md#issue-policy).
 
+FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/master/Documentation/FAQ.md)
+
 ## Get in touch
 
 IRC: `#serenityos` on the Freenode IRC network.
 
 Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
-
 
 ## Author
 
@@ -130,6 +132,7 @@ Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 * **thankyouverycool** - [thankyouverycool](https://github.com/thankyouverycool)
 * **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
 * **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
+* **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 

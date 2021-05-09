@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Emulator.h"
@@ -51,9 +31,8 @@ namespace UserspaceEmulator {
 
 u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
-#if SPAM_DEBUG
-    reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
-#endif
+    if constexpr (SPAM_DEBUG)
+        reportln("Syscall: {} ({:x})", Syscall::to_string((Syscall::Function)function), function);
     switch (function) {
     case SC_chdir:
         return virt$chdir(arg1, arg2);
@@ -252,7 +231,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_ptsname:
         return virt$ptsname(arg1, arg2, arg3);
     case SC_allocate_tls:
-        return virt$allocate_tls(arg1);
+        return virt$allocate_tls(arg1, arg2);
     case SC_beep:
         return virt$beep();
     case SC_ftruncate:
@@ -263,6 +242,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$chown(arg1);
     case SC_msyscall:
         return virt$msyscall(arg1);
+    case SC_futex:
+        return virt$futex(arg1);
     default:
         reportln("\n=={}==  \033[31;1mUnimplemented syscall: {}\033[0m, {:p}", getpid(), Syscall::to_string((Syscall::Function)function), function);
         dump_backtrace();
@@ -1449,12 +1430,21 @@ int Emulator::virt$readlink(FlatPtr params_addr)
     return rc;
 }
 
-u32 Emulator::virt$allocate_tls(size_t size)
+u32 Emulator::virt$allocate_tls(FlatPtr initial_data, size_t size)
 {
-    // TODO: Why is this needed? without this, the loader overflows the bounds of the TLS region.
-    constexpr size_t TLS_SIZE_HACK = 8;
-    auto tcb_region = make<SimpleRegion>(0x20000000, size + TLS_SIZE_HACK);
-    bzero(tcb_region->data(), size);
+    // TODO: This matches what Thread::make_thread_specific_region does. The kernel
+    // ends up allocating one more page. Figure out if this is intentional.
+    auto region_size = align_up_to(size, PAGE_SIZE) + PAGE_SIZE;
+    auto tcb_region = make<SimpleRegion>(0x20000000, region_size);
+
+    size_t offset = 0;
+    while (size - offset > 0) {
+        u8 buffer[512];
+        size_t read_bytes = min(sizeof(buffer), size - offset);
+        mmu().copy_from_vm(buffer, initial_data + offset, read_bytes);
+        memcpy(tcb_region->data() + offset, buffer, read_bytes);
+        offset += read_bytes;
+    }
     memset(tcb_region->shadow_data(), 0x01, size);
 
     auto tls_region = make<SimpleRegion>(0, 4);
@@ -1484,4 +1474,12 @@ int Emulator::virt$msyscall(FlatPtr)
     return 0;
 }
 
+int Emulator::virt$futex(FlatPtr params_addr)
+{
+    Syscall::SC_futex_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    // FIXME: Implement this.
+    return 0;
+}
 }

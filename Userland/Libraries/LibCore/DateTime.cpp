@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -104,7 +84,6 @@ void DateTime::set_time(unsigned year, unsigned month, unsigned day, unsigned ho
 
 String DateTime::to_string(const String& format) const
 {
-
     const char wday_short_names[7][4] = {
         "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
     };
@@ -146,34 +125,34 @@ String DateTime::to_string(const String& format) const
                 builder.append(mon_long_names[tm.tm_mon]);
                 break;
             case 'C':
-                builder.appendf("%02d", (tm.tm_year + 1900) / 100);
+                builder.appendff("{:02}", (tm.tm_year + 1900) / 100);
                 break;
             case 'd':
-                builder.appendf("%02d", tm.tm_mday);
+                builder.appendff("{:02}", tm.tm_mday);
                 break;
             case 'D':
-                builder.appendf("%02d/%02d/%02d", tm.tm_mon + 1, tm.tm_mday, (tm.tm_year + 1900) % 100);
+                builder.appendff("{:02}/{:02}/{:02}", tm.tm_mon + 1, tm.tm_mday, (tm.tm_year + 1900) % 100);
                 break;
             case 'e':
-                builder.appendf("%2d", tm.tm_mday);
+                builder.appendff("{:2}", tm.tm_mday);
                 break;
             case 'h':
                 builder.append(mon_short_names[tm.tm_mon]);
                 break;
             case 'H':
-                builder.appendf("%02d", tm.tm_hour);
+                builder.appendff("{:02}", tm.tm_hour);
                 break;
             case 'I':
-                builder.appendf("%02d", tm.tm_hour % 12);
+                builder.appendff("{:02}", tm.tm_hour % 12);
                 break;
             case 'j':
-                builder.appendf("%03d", tm.tm_yday + 1);
+                builder.appendff("{:03}", tm.tm_yday + 1);
                 break;
             case 'm':
-                builder.appendf("%02d", tm.tm_mon + 1);
+                builder.appendff("{:02}", tm.tm_mon + 1);
                 break;
             case 'M':
-                builder.appendf("%02d", tm.tm_min);
+                builder.appendff("{:02}", tm.tm_min);
                 break;
             case 'n':
                 builder.append('\n');
@@ -182,27 +161,27 @@ String DateTime::to_string(const String& format) const
                 builder.append(tm.tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'r':
-                builder.appendf("%02d:%02d:%02d %s", tm.tm_hour % 12, tm.tm_min, tm.tm_sec, tm.tm_hour < 12 ? "a.m." : "p.m.");
+                builder.appendff("{:02}:{:02}:{:02} {}", tm.tm_hour % 12, tm.tm_min, tm.tm_sec, tm.tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'R':
-                builder.appendf("%02d:%02d", tm.tm_hour, tm.tm_min);
+                builder.appendff("{:02}:{:02}", tm.tm_hour, tm.tm_min);
                 break;
             case 'S':
-                builder.appendf("%02d", tm.tm_sec);
+                builder.appendff("{:02}", tm.tm_sec);
                 break;
             case 't':
                 builder.append('\t');
                 break;
             case 'T':
-                builder.appendf("%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
+                builder.appendff("{:02}:{:02}:{:02}", tm.tm_hour, tm.tm_min, tm.tm_sec);
                 break;
             case 'u':
-                builder.appendf("%d", tm.tm_wday ? tm.tm_wday : 7);
+                builder.appendff("{}", tm.tm_wday ? tm.tm_wday : 7);
                 break;
             case 'U': {
                 const int wday_of_year_beginning = (tm.tm_wday + 6 * tm.tm_yday) % 7;
                 const int week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'V': {
@@ -219,23 +198,23 @@ String DateTime::to_string(const String& format) const
                             --week_number;
                     }
                 }
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'w':
-                builder.appendf("%d", tm.tm_wday);
+                builder.appendff("{}", tm.tm_wday);
                 break;
             case 'W': {
                 const int wday_of_year_beginning = (tm.tm_wday + 6 + 6 * tm.tm_yday) % 7;
                 const int week_number = (tm.tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'y':
-                builder.appendf("%02d", (tm.tm_year + 1900) % 100);
+                builder.appendff("{:02}", (tm.tm_year + 1900) % 100);
                 break;
             case 'Y':
-                builder.appendf("%d", tm.tm_year + 1900);
+                builder.appendff("{}", tm.tm_year + 1900);
                 break;
             case '%':
                 builder.append('%');
@@ -247,12 +226,6 @@ String DateTime::to_string(const String& format) const
     }
 
     return builder.build();
-}
-
-bool DateTime::is_before(const String& other) const
-{
-    auto now_string = String::formatted("{:04}{:02}{:02}{:02}{:02}{:02}Z", year(), month(), weekday(), hour(), minute(), second());
-    return __builtin_strcasecmp(now_string.characters(), other.characters()) < 0;
 }
 
 }

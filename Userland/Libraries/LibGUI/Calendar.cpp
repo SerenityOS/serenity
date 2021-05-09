@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2019-2020, Ryan Grieb <ryan.m.grieb@gmail.com>
- * Copyright (c) 2020-2021, the SerenityOS developers
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/DateTime.h>
@@ -55,8 +35,8 @@ static const char* short_month_names[] = {
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 };
 
-static const auto extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/LizaRegular36.font");
-static const auto large_font = Gfx::BitmapFont::load_from_file("/res/fonts/LizaRegular24.font");
+static const auto extra_large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular36.font");
+static const auto large_font = Gfx::BitmapFont::load_from_file("/res/fonts/MarietaRegular24.font");
 static const auto medium_font = Gfx::BitmapFont::load_from_file("/res/fonts/PebbletonRegular14.font");
 static const auto small_font = Gfx::BitmapFont::load_from_file("/res/fonts/KaticaRegular10.font");
 
@@ -497,7 +477,7 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                 auto text_rect = Gfx::IntRect(
                     x_offset,
                     y_offset + 4,
-                    m_tiles[0][i].width,
+                    m_tiles[0][i].width - 4,
                     font().glyph_height() + 4);
 
                 if (width > 150 && height > 150) {
@@ -506,10 +486,8 @@ void Calendar::paint_event(GUI::PaintEvent& event)
                     set_font(large_font);
                 } else if (width > 50 && height > 50) {
                     set_font(medium_font);
-                    text_rect.set_width(m_tiles[0][i].width - 4);
                 } else if (width >= 30 && height >= 30) {
                     set_font(small_font);
-                    text_rect.set_width(m_tiles[0][i].width - 4);
                 } else {
                     set_font(small_font);
                     text_alignment = Gfx::TextAlignment::Center;

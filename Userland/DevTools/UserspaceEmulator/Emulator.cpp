@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Emulator.h"
@@ -294,7 +274,7 @@ const MmapRegion* Emulator::find_text_region(FlatPtr address)
 
 String Emulator::create_backtrace_line(FlatPtr address)
 {
-    String minimal = String::format("=={%d}==    %p", getpid(), (void*)address);
+    auto minimal = String::formatted("=={{{}}}==    {:p}", getpid(), (void*)address);
     const auto* region = find_text_region(address);
     if (!region)
         return minimal;
@@ -320,11 +300,11 @@ String Emulator::create_backtrace_line(FlatPtr address)
     auto& elf = it->value.debug_info->elf();
     String symbol = elf.symbolicate(address - region->base());
 
-    auto line_without_source_info = String::format("=={%d}==    %p  [%s]: %s", getpid(), (void*)address, lib_name.characters(), symbol.characters());
+    auto line_without_source_info = String::formatted("=={{{}}}==    {:p}  [{}]: {}", getpid(), (void*)address, lib_name, symbol);
 
     auto source_position = it->value.debug_info->get_source_position(address - region->base());
     if (source_position.has_value())
-        return String::format("=={%d}==    %p  [%s]: %s (\033[34;1m%s\033[0m:%zu)", getpid(), (void*)address, lib_name.characters(), symbol.characters(), LexicalPath(source_position.value().file_path).basename().characters(), source_position.value().line_number);
+        return String::formatted("=={{{}}}==    {:p}  [{}]: {} (\e[34;1m{}\e[0m:{})", getpid(), (void*)address, lib_name, symbol, LexicalPath(source_position.value().file_path).basename(), source_position.value().line_number);
 
     return line_without_source_info;
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -39,8 +19,7 @@
 namespace WebContent {
 
 class ClientConnection final
-    : public IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint>
-    , public WebContentServerEndpoint {
+    : public IPC::ClientConnection<WebContentClientEndpoint, WebContentServerEndpoint> {
     C_OBJECT(ClientConnection);
 
 public:
@@ -53,24 +32,24 @@ private:
     Web::Page& page();
     const Web::Page& page() const;
 
-    virtual OwnPtr<Messages::WebContentServer::GreetResponse> handle(const Messages::WebContentServer::Greet&) override;
-    virtual void handle(const Messages::WebContentServer::UpdateSystemTheme&) override;
-    virtual void handle(const Messages::WebContentServer::UpdateScreenRect&) override;
-    virtual void handle(const Messages::WebContentServer::LoadURL&) override;
-    virtual void handle(const Messages::WebContentServer::LoadHTML&) override;
-    virtual void handle(const Messages::WebContentServer::Paint&) override;
-    virtual void handle(const Messages::WebContentServer::SetViewportRect&) override;
-    virtual void handle(const Messages::WebContentServer::MouseDown&) override;
-    virtual void handle(const Messages::WebContentServer::MouseMove&) override;
-    virtual void handle(const Messages::WebContentServer::MouseUp&) override;
-    virtual void handle(const Messages::WebContentServer::MouseWheel&) override;
-    virtual void handle(const Messages::WebContentServer::KeyDown&) override;
-    virtual void handle(const Messages::WebContentServer::AddBackingStore&) override;
-    virtual void handle(const Messages::WebContentServer::RemoveBackingStore&) override;
-    virtual void handle(const Messages::WebContentServer::DebugRequest&) override;
-    virtual void handle(const Messages::WebContentServer::GetSource&) override;
-    virtual void handle(const Messages::WebContentServer::JSConsoleInitialize&) override;
-    virtual void handle(const Messages::WebContentServer::JSConsoleInput&) override;
+    virtual void greet() override;
+    virtual void update_system_theme(Core::AnonymousBuffer const&) override;
+    virtual void update_screen_rect(Gfx::IntRect const&) override;
+    virtual void load_url(URL const&) override;
+    virtual void load_html(String const&, URL const&) override;
+    virtual void paint(Gfx::IntRect const&, i32) override;
+    virtual void set_viewport_rect(Gfx::IntRect const&) override;
+    virtual void mouse_down(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_move(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_up(Gfx::IntPoint const&, unsigned, unsigned, unsigned) override;
+    virtual void mouse_wheel(Gfx::IntPoint const&, unsigned, unsigned, unsigned, i32) override;
+    virtual void key_down(i32, unsigned, u32) override;
+    virtual void add_backing_store(i32, Gfx::ShareableBitmap const&) override;
+    virtual void remove_backing_store(i32) override;
+    virtual void debug_request(String const&, String const&) override;
+    virtual void get_source() override;
+    virtual void js_console_initialize() override;
+    virtual void js_console_input(String const&) override;
 
     void flush_pending_paint_requests();
 

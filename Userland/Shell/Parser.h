@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -66,6 +46,13 @@ private:
         ShouldReadMoreSequences decision;
     };
 
+    struct HeredocInitiationRecord {
+        String end;
+        RefPtr<AST::Heredoc> node;
+        bool interpolate { false };
+        bool deindent { false };
+    };
+
     constexpr static size_t max_allowed_nested_rule_depth = 2048;
     RefPtr<AST::Node> parse_toplevel();
     SequenceParseResult parse_sequence();
@@ -101,11 +88,19 @@ private:
     RefPtr<AST::Node> parse_brace_expansion();
     RefPtr<AST::Node> parse_brace_expansion_spec();
     RefPtr<AST::Node> parse_immediate_expression();
+    RefPtr<AST::Node> parse_heredoc_initiation_record();
+    bool parse_heredoc_entries();
 
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
 
-    bool at_end() const { return m_input.length() <= m_offset; }
+    void set_end_condition(Function<bool()> condition) { m_end_condition = move(condition); }
+    bool at_end() const
+    {
+        if (m_end_condition && m_end_condition())
+            return true;
+        return m_input.length() <= m_offset;
+    }
     char peek();
     char consume();
     bool expect(char);
@@ -164,6 +159,8 @@ private:
     Vector<size_t> m_rule_start_offsets;
     Vector<AST::Position::Line> m_rule_start_lines;
 
+    Function<bool()> m_end_condition;
+    Vector<HeredocInitiationRecord> m_heredoc_initiations;
     Vector<char> m_extra_chars_not_allowed_in_barewords;
     bool m_is_in_brace_expansion_spec { false };
     bool m_continuation_controls_allowed { false };
@@ -189,7 +186,9 @@ and_logical_sequence :: pipe_sequence '&' '&' and_logical_sequence
                       | pipe_sequence
 
 terminator :: ';'
-            | '\n'
+            | '\n' [?!heredoc_stack.is_empty] heredoc_entries
+
+heredoc_entries :: { .*? (heredoc_entry) '\n' } [each heredoc_entries]
 
 variable_decls :: identifier '=' expression (' '+ variable_decls)? ' '*
                 | identifier '=' '(' pipe_sequence ')' (' '+ variable_decls)? ' '*
@@ -253,6 +252,12 @@ string_composite :: string string_composite?
                   | bareword string_composite?
                   | glob string_composite?
                   | brace_expansion string_composite?
+                  | heredoc_initiator string_composite?    {append to heredoc_entries}
+
+heredoc_initiator :: '<' '<' '-' bareword         {*bareword, interpolate, no deindent}
+                   | '<' '<' '-' "'" [^']* "'"    {*string, no interpolate, no deindent}
+                   | '<' '<' '~' bareword         {*bareword, interpolate, deindent}
+                   | '<' '<' '~' "'" [^']* "'"    {*bareword, no interpolate, deindent}
 
 string :: '"' dquoted_string_inner '"'
         | "'" [^']* "'"

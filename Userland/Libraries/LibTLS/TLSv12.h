@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -503,36 +483,5 @@ private:
 
     RefPtr<Core::Timer> m_handshake_timeout_timer;
 };
-
-namespace Constants {
-constexpr static const u32 version_id[] { 1, 1, 1, 0 };
-constexpr static const u32 pk_id[] { 1, 1, 7, 0 };
-constexpr static const u32 serial_id[] { 1, 1, 2, 1, 0 };
-constexpr static const u32 issurer_id[] { 1, 1, 4, 0 };
-constexpr static const u32 owner_id[] { 1, 1, 6, 0 };
-constexpr static const u32 validity_id[] { 1, 1, 5, 0 };
-constexpr static const u32 algorithm_id[] { 1, 1, 3, 0 };
-constexpr static const u32 sign_id[] { 1, 3, 2, 1, 0 };
-constexpr static const u32 priv_id[] { 1, 4, 0 };
-constexpr static const u32 priv_der_id[] { 1, 3, 1, 0 };
-constexpr static const u32 ecc_priv_id[] { 1, 2, 0 };
-
-constexpr static const u8 country_oid[] { 0x55, 0x04, 0x06, 0x00 };
-constexpr static const u8 state_oid[] { 0x55, 0x04, 0x08, 0x00 };
-constexpr static const u8 location_oid[] { 0x55, 0x04, 0x07, 0x00 };
-constexpr static const u8 entity_oid[] { 0x55, 0x04, 0x0A, 0x00 };
-constexpr static const u8 subject_oid[] { 0x55, 0x04, 0x03, 0x00 };
-constexpr static const u8 unit_oid[] { 0x55, 0x04, 0x0B, 0x00 };
-constexpr static const u8 san_oid[] { 0x55, 0x1D, 0x11, 0x00 };
-constexpr static const u8 ocsp_oid[] { 0x2B, 0x06, 0x01, 0x05, 0x05, 0x07, 0x30, 0x01, 0x00 };
-
-static constexpr const u8 RSA_SIGN_RSA_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01, 0x00 };
-static constexpr const u8 RSA_SIGN_MD5_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x04, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA1_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x05, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA256_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA384_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0c, 0x00 };
-static constexpr const u8 RSA_SIGN_SHA512_OID[] = { 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0d, 0x00 };
-
-}
 
 }

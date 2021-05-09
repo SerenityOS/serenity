@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
@@ -37,7 +17,7 @@ namespace Kernel {
 
 void UDPSocket::for_each(Function<void(const UDPSocket&)> callback)
 {
-    LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
+    Locker locker(sockets_by_port().lock(), Lock::Mode::Shared);
     for (auto it : sockets_by_port().resource())
         callback(*it.value);
 }
@@ -53,7 +33,7 @@ SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 {
     RefPtr<UDPSocket> socket;
     {
-        LOCKER(sockets_by_port().lock(), Lock::Mode::Shared);
+        Locker locker(sockets_by_port().lock(), Lock::Mode::Shared);
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end())
             return {};
@@ -70,13 +50,13 @@ UDPSocket::UDPSocket(int protocol)
 
 UDPSocket::~UDPSocket()
 {
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     sockets_by_port().resource().remove(local_port());
 }
 
 NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
 {
-    return adopt(*new UDPSocket(protocol));
+    return adopt_ref(*new UDPSocket(protocol));
 }
 
 KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
@@ -84,10 +64,10 @@ KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
     auto& ipv4_packet = *(const IPv4Packet*)(raw_ipv4_packet.data());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());
     VERIFY(udp_packet.length() >= sizeof(UDPPacket)); // FIXME: This should be rejected earlier.
-    VERIFY(buffer_size >= (udp_packet.length() - sizeof(UDPPacket)));
-    if (!buffer.write(udp_packet.payload(), udp_packet.length() - sizeof(UDPPacket)))
+    size_t read_size = min(buffer_size, udp_packet.length() - sizeof(UDPPacket));
+    if (!buffer.write(udp_packet.payload(), read_size))
         return EFAULT;
-    return udp_packet.length() - sizeof(UDPPacket);
+    return read_size;
 }
 
 KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
@@ -117,14 +97,14 @@ KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
     return KSuccess;
 }
 
-int UDPSocket::protocol_allocate_local_port()
+KResultOr<u16> UDPSocket::protocol_allocate_local_port()
 {
     static const u16 first_ephemeral_port = 32768;
     static const u16 last_ephemeral_port = 60999;
     static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     for (u16 port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
@@ -138,12 +118,12 @@ int UDPSocket::protocol_allocate_local_port()
         if (port == first_scan_port)
             break;
     }
-    return -EADDRINUSE;
+    return EADDRINUSE;
 }
 
 KResult UDPSocket::protocol_bind()
 {
-    LOCKER(sockets_by_port().lock());
+    Locker locker(sockets_by_port().lock());
     if (sockets_by_port().resource().contains(local_port()))
         return EADDRINUSE;
     sockets_by_port().resource().set(local_port(), this);

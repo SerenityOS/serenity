@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Bitmap.h>
@@ -271,6 +251,147 @@ Optional<DecodeError> Decoder::leave()
     m_current_tag.clear();
 
     return {};
+}
+
+void pretty_print(Decoder& decoder, OutputStream& stream, int indent)
+{
+    while (!decoder.eof()) {
+        auto tag = decoder.peek();
+        if (tag.is_error()) {
+            dbgln("PrettyPrint error: {}", tag.error());
+            return;
+        }
+
+        StringBuilder builder;
+        for (int i = 0; i < indent; ++i)
+            builder.append(' ');
+        builder.appendff("<{}> ", class_name(tag.value().class_));
+        if (tag.value().type == Type::Constructed) {
+            builder.appendff("[{}] {} ({})", type_name(tag.value().type), static_cast<u8>(tag.value().kind), kind_name(tag.value().kind));
+            if (auto error = decoder.enter(); error.has_value()) {
+                dbgln("Constructed PrettyPrint error: {}", error.value());
+                return;
+            }
+
+            builder.append('\n');
+            stream.write(builder.string_view().bytes());
+
+            pretty_print(decoder, stream, indent + 2);
+
+            if (auto error = decoder.leave(); error.has_value()) {
+                dbgln("Constructed PrettyPrint error: {}", error.value());
+                return;
+            }
+
+            continue;
+        } else {
+            if (tag.value().class_ != Class::Universal)
+                builder.appendff("[{}] {} {}", type_name(tag.value().type), static_cast<u8>(tag.value().kind), kind_name(tag.value().kind));
+            else
+                builder.appendff("[{}] {}", type_name(tag.value().type), kind_name(tag.value().kind));
+            switch (tag.value().kind) {
+            case Kind::Eol: {
+                auto value = decoder.read<ReadonlyBytes>();
+                if (value.is_error()) {
+                    dbgln("EOL PrettyPrint error: {}", value.error());
+                    return;
+                }
+                break;
+            }
+            case Kind::Boolean: {
+                auto value = decoder.read<bool>();
+                if (value.is_error()) {
+                    dbgln("Bool PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.appendff(" {}", value.value());
+                break;
+            }
+            case Kind::Integer: {
+                auto value = decoder.read<ReadonlyBytes>();
+                if (value.is_error()) {
+                    dbgln("Integer PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.append(" 0x");
+                for (auto ch : value.value())
+                    builder.appendff("{:0>2x}", ch);
+                break;
+            }
+            case Kind::BitString: {
+                auto value = decoder.read<const BitmapView>();
+                if (value.is_error()) {
+                    dbgln("BitString PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.append(" 0b");
+                for (size_t i = 0; i < value.value().size(); ++i)
+                    builder.append(value.value().get(i) ? '1' : '0');
+                break;
+            }
+            case Kind::OctetString: {
+                auto value = decoder.read<StringView>();
+                if (value.is_error()) {
+                    dbgln("OctetString PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.append(" 0x");
+                for (auto ch : value.value())
+                    builder.appendff("{:0>2x}", ch);
+                break;
+            }
+            case Kind::Null: {
+                auto value = decoder.read<decltype(nullptr)>();
+                if (value.is_error()) {
+                    dbgln("Bool PrettyPrint error: {}", value.error());
+                    return;
+                }
+                break;
+            }
+            case Kind::ObjectIdentifier: {
+                auto value = decoder.read<Vector<int>>();
+                if (value.is_error()) {
+                    dbgln("Identifier PrettyPrint error: {}", value.error());
+                    return;
+                }
+                for (auto& id : value.value())
+                    builder.appendff(" {}", id);
+                break;
+            }
+            case Kind::UTCTime:
+            case Kind::GeneralizedTime:
+            case Kind::IA5String:
+            case Kind::PrintableString: {
+                auto value = decoder.read<StringView>();
+                if (value.is_error()) {
+                    dbgln("String PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.append(' ');
+                builder.append(value.value());
+                break;
+            }
+            case Kind::Utf8String: {
+                auto value = decoder.read<Utf8View>();
+                if (value.is_error()) {
+                    dbgln("UTF8 PrettyPrint error: {}", value.error());
+                    return;
+                }
+                builder.append(' ');
+                for (auto cp : value.value())
+                    builder.append_code_point(cp);
+                break;
+            }
+            case Kind::Sequence:
+            case Kind::Set:
+                dbgln("Seq/Sequence PrettyPrint error: Unexpected Primtive");
+                return;
+            }
+        }
+
+        builder.append('\n');
+        stream.write(builder.string_view().bytes());
+    }
 }
 
 }

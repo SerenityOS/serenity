@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -73,22 +53,22 @@ bool TLSv12::expand_key()
     auto server_iv = key + offset;
     offset += iv_size;
 
-#if TLS_DEBUG
-    dbgln("client key");
-    print_buffer(client_key, key_size);
-    dbgln("server key");
-    print_buffer(server_key, key_size);
-    dbgln("client iv");
-    print_buffer(client_iv, iv_size);
-    dbgln("server iv");
-    print_buffer(server_iv, iv_size);
-    if (!is_aead) {
-        dbgln("client mac key");
-        print_buffer(m_context.crypto.local_mac, mac_size);
-        dbgln("server mac key");
-        print_buffer(m_context.crypto.remote_mac, mac_size);
+    if constexpr (TLS_DEBUG) {
+        dbgln("client key");
+        print_buffer(client_key, key_size);
+        dbgln("server key");
+        print_buffer(server_key, key_size);
+        dbgln("client iv");
+        print_buffer(client_iv, iv_size);
+        dbgln("server iv");
+        print_buffer(server_iv, iv_size);
+        if (!is_aead) {
+            dbgln("client mac key");
+            print_buffer(m_context.crypto.local_mac, mac_size);
+            dbgln("server mac key");
+            print_buffer(m_context.crypto.remote_mac, mac_size);
+        }
     }
-#endif
 
     if (is_aead) {
         memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
@@ -173,10 +153,10 @@ bool TLSv12::compute_master_secret(size_t length)
         ReadonlyBytes { m_context.remote_random, sizeof(m_context.remote_random) });
 
     m_context.premaster_key.clear();
-#if TLS_DEBUG
-    dbgln("master key:");
-    print_buffer(m_context.master_key);
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("master key:");
+        print_buffer(m_context.master_key);
+    }
     expand_key();
     return true;
 }
@@ -215,9 +195,7 @@ ByteBuffer TLSv12::build_certificate()
     builder.append((u8)HandshakeType::CertificateMessage);
 
     if (!total_certificate_size) {
-#if TLS_DEBUG
-        dbgln("No certificates, sending empty certificate message");
-#endif
+        dbgln_if(TLS_DEBUG, "No certificates, sending empty certificate message");
         builder.append_u24(certificate_vector_header_size);
         builder.append_u24(total_certificate_size);
     } else {

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/HashMap.h>
@@ -40,6 +20,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>
+#include <inttypes.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>
@@ -145,49 +126,31 @@ int main(int argc, char** argv)
         return do_file_system_object_short(path);
     };
 
-    int status = 0;
     if (paths.is_empty()) {
-        status = do_file_system_object(".");
-    } else if (paths.size() == 1) {
-        status = do_file_system_object(paths[0]);
-    } else {
-        Vector<const char*> directories;
-        Vector<String> names;
-        size_t longest_name = 0;
-        for (auto& path : paths) {
-            if (Core::File::exists(path)) {
-                if (Core::File::is_directory(path)) {
-                    directories.append(path);
-                } else {
-                    names.append(path);
-                    if (names.last().length() > longest_name)
-                        longest_name = names.last().length();
-                }
-            } else {
-                status = do_file_system_object(path);
-            }
-        }
+        paths.append(".");
+    }
 
-        quick_sort(names);
-        if (print_names(".", longest_name, names)) {
-            printf("\n");
-        }
+    quick_sort(paths, [](const String& a, const String& b) {
+        return a < b;
+    });
 
-        if (names.size() > 0) {
-            printf("\n");
-        }
+    int status = 0;
 
-        quick_sort(directories, [](String a, String b) { return a < b; });
-        for (size_t i = 0; i < directories.size(); ++i) {
-            auto path = directories.at(i);
+    for (size_t i = 0; i < paths.size(); i++) {
+        auto path = paths[i];
+
+        bool show_dir_separator = paths.size() > 1 && Core::File::is_directory(path) && !flag_list_directories_only;
+        if (show_dir_separator) {
             printf("%s:\n", path);
-            status = do_file_system_object(path);
-
-            if (i < directories.size() - 1) {
-                printf("\n");
-            }
+        }
+        auto rc = do_file_system_object(path);
+        if (rc != 0)
+            status = rc;
+        if (show_dir_separator && i != paths.size() - 1) {
+            puts("");
         }
     }
+
     return status;
 }
 
@@ -351,7 +314,7 @@ static bool print_filesystem_object(const String& path, const String& name, cons
         if (flag_human_readable) {
             printf(" %10s ", human_readable_size(st.st_size).characters());
         } else {
-            printf(" %10lld ", st.st_size);
+            printf(" %10" PRIu64 " ", (uint64_t)st.st_size);
         }
     }
 

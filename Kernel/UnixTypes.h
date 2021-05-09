@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -66,9 +46,18 @@ enum {
     _SC_CLK_TCK,
 };
 
-#define PERF_EVENT_SAMPLE 0
-#define PERF_EVENT_MALLOC 1
-#define PERF_EVENT_FREE 2
+enum {
+    PERF_EVENT_SAMPLE,
+    PERF_EVENT_MALLOC,
+    PERF_EVENT_FREE,
+    PERF_EVENT_MMAP,
+    PERF_EVENT_MUNMAP,
+    PERF_EVENT_PROCESS_CREATE,
+    PERF_EVENT_PROCESS_EXEC,
+    PERF_EVENT_PROCESS_EXIT,
+    PERF_EVENT_THREAD_CREATE,
+    PERF_EVENT_THREAD_EXIT
+};
 
 #define WNOHANG 1
 #define WUNTRACED 2
@@ -507,6 +496,7 @@ struct pollfd {
 
 #define MSG_TRUNC 0x1
 #define MSG_CTRUNC 0x2
+#define MSG_PEEK 0x4
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1
@@ -535,6 +525,9 @@ enum {
 #define IPPROTO_UDP 17
 
 #define IP_TTL 2
+#define IP_MULTICAST_LOOP 3
+#define IP_ADD_MEMBERSHIP 4
+#define IP_DROP_MEMBERSHIP 5
 
 struct ucred {
     pid_t pid;
@@ -558,6 +551,7 @@ struct sockaddr_un {
 struct in_addr {
     uint32_t s_addr;
 };
+typedef uint32_t in_addr_t;
 
 struct sockaddr_in {
     int16_t sin_family;
@@ -565,6 +559,15 @@ struct sockaddr_in {
     struct in_addr sin_addr;
     char sin_zero[8];
 };
+
+struct ip_mreq {
+    struct in_addr imr_multiaddr;
+    struct in_addr imr_interface;
+};
+
+#define INADDR_ANY ((in_addr_t)0)
+#define INADDR_NONE ((in_addr_t)-1)
+#define INADDR_LOOPBACK 0x7f000001
 
 typedef u32 __u32;
 typedef u16 __u16;
@@ -690,6 +693,8 @@ struct rtentry {
 #define PT_PEEK 7
 #define PT_POKE 8
 #define PT_SETREGS 9
+#define PT_POKEDEBUG 10
+#define PT_PEEKDEBUG 11
 
 // Used in struct dirent
 enum {

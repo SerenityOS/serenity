@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClientConnection.h"
@@ -66,95 +46,90 @@ void ClientConnection::die()
 
 void ClientConnection::did_finish_playing_buffer(Badge<BufferQueue>, int buffer_id)
 {
-    post_message(Messages::AudioClient::FinishedPlayingBuffer(buffer_id));
+    async_finished_playing_buffer(buffer_id);
 }
 
 void ClientConnection::did_change_muted_state(Badge<Mixer>, bool muted)
 {
-    post_message(Messages::AudioClient::MutedStateChanged(muted));
+    async_muted_state_changed(muted);
 }
 
 void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
 {
-    post_message(Messages::AudioClient::MainMixVolumeChanged(volume));
+    async_main_mix_volume_changed(volume);
 }
 
-OwnPtr<Messages::AudioServer::GreetResponse> ClientConnection::handle(const Messages::AudioServer::Greet&)
+void ClientConnection::greet()
 {
-    return make<Messages::AudioServer::GreetResponse>();
 }
 
-OwnPtr<Messages::AudioServer::GetMainMixVolumeResponse> ClientConnection::handle(const Messages::AudioServer::GetMainMixVolume&)
+Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::get_main_mix_volume()
 {
-    return make<Messages::AudioServer::GetMainMixVolumeResponse>(m_mixer.main_volume());
+    return m_mixer.main_volume();
 }
 
-OwnPtr<Messages::AudioServer::SetMainMixVolumeResponse> ClientConnection::handle(const Messages::AudioServer::SetMainMixVolume& message)
+void ClientConnection::set_main_mix_volume(i32 volume)
 {
-    m_mixer.set_main_volume(message.volume());
-    return make<Messages::AudioServer::SetMainMixVolumeResponse>();
+    m_mixer.set_main_volume(volume);
 }
 
-OwnPtr<Messages::AudioServer::EnqueueBufferResponse> ClientConnection::handle(const Messages::AudioServer::EnqueueBuffer& message)
+Messages::AudioServer::EnqueueBufferResponse ClientConnection::enqueue_buffer(Core::AnonymousBuffer const& buffer, i32 buffer_id, int sample_count)
 {
     if (!m_queue)
         m_queue = m_mixer.create_queue(*this);
 
     if (m_queue->is_full())
-        return make<Messages::AudioServer::EnqueueBufferResponse>(false);
+        return false;
 
-    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(message.buffer(), message.buffer_id(), message.sample_count()));
-    return make<Messages::AudioServer::EnqueueBufferResponse>(true);
+    m_queue->enqueue(Audio::Buffer::create_with_anonymous_buffer(buffer, buffer_id, sample_count));
+    return true;
 }
 
-OwnPtr<Messages::AudioServer::GetRemainingSamplesResponse> ClientConnection::handle(const Messages::AudioServer::GetRemainingSamples&)
+Messages::AudioServer::GetRemainingSamplesResponse ClientConnection::get_remaining_samples()
 {
     int remaining = 0;
     if (m_queue)
         remaining = m_queue->get_remaining_samples();
 
-    return make<Messages::AudioServer::GetRemainingSamplesResponse>(remaining);
+    return remaining;
 }
 
-OwnPtr<Messages::AudioServer::GetPlayedSamplesResponse> ClientConnection::handle(const Messages::AudioServer::GetPlayedSamples&)
+Messages::AudioServer::GetPlayedSamplesResponse ClientConnection::get_played_samples()
 {
     int played = 0;
     if (m_queue)
         played = m_queue->get_played_samples();
 
-    return make<Messages::AudioServer::GetPlayedSamplesResponse>(played);
+    return played;
 }
 
-OwnPtr<Messages::AudioServer::SetPausedResponse> ClientConnection::handle(const Messages::AudioServer::SetPaused& message)
+void ClientConnection::set_paused(bool paused)
 {
     if (m_queue)
-        m_queue->set_paused(message.paused());
-    return make<Messages::AudioServer::SetPausedResponse>();
+        m_queue->set_paused(paused);
 }
 
-OwnPtr<Messages::AudioServer::ClearBufferResponse> ClientConnection::handle(const Messages::AudioServer::ClearBuffer& message)
+void ClientConnection::clear_buffer(bool paused)
 {
     if (m_queue)
-        m_queue->clear(message.paused());
-    return make<Messages::AudioServer::ClearBufferResponse>();
+        m_queue->clear(paused);
 }
 
-OwnPtr<Messages::AudioServer::GetPlayingBufferResponse> ClientConnection::handle(const Messages::AudioServer::GetPlayingBuffer&)
+Messages::AudioServer::GetPlayingBufferResponse ClientConnection::get_playing_buffer()
 {
     int id = -1;
     if (m_queue)
         id = m_queue->get_playing_buffer();
-    return make<Messages::AudioServer::GetPlayingBufferResponse>(id);
+    return id;
 }
 
-OwnPtr<Messages::AudioServer::GetMutedResponse> ClientConnection::handle(const Messages::AudioServer::GetMuted&)
+Messages::AudioServer::GetMutedResponse ClientConnection::get_muted()
 {
-    return make<Messages::AudioServer::GetMutedResponse>(m_mixer.is_muted());
+    return m_mixer.is_muted();
 }
 
-OwnPtr<Messages::AudioServer::SetMutedResponse> ClientConnection::handle(const Messages::AudioServer::SetMuted& message)
+void ClientConnection::set_muted(bool muted)
 {
-    m_mixer.set_muted(message.muted());
-    return make<Messages::AudioServer::SetMutedResponse>();
+    m_mixer.set_muted(muted);
 }
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GlyphEditorWidget.h"
@@ -30,6 +10,9 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
+
+static int x_offset;
+static int y_offset;
 
 GlyphEditorWidget::~GlyphEditorWidget()
 {
@@ -54,10 +37,14 @@ void GlyphEditorWidget::set_glyph(int glyph)
 
 void GlyphEditorWidget::delete_glyph()
 {
+    if (on_undo_event)
+        on_undo_event(false);
     auto bitmap = font().glyph(m_glyph).glyph_bitmap();
     for (int x = 0; x < bitmap.width(); x++)
         for (int y = 0; y < bitmap.height(); y++)
             bitmap.set_bit_at(x, y, false);
+    if (on_undo_event)
+        on_undo_event(true);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
@@ -81,7 +68,10 @@ void GlyphEditorWidget::copy_glyph()
 
     StringBuilder glyph_builder;
     if (m_glyph < 128) {
-        glyph_builder.append(m_glyph);
+        if (m_glyph == 10)
+            glyph_builder.append("LF");
+        else
+            glyph_builder.append(m_glyph);
     } else {
         glyph_builder.append(128 | 64 | (m_glyph / 64));
         glyph_builder.append(128 | (m_glyph % 64));
@@ -89,8 +79,8 @@ void GlyphEditorWidget::copy_glyph()
 
     HashMap<String, String> metadata;
     metadata.set("char", glyph_builder.to_string());
-    metadata.set("width", String::format("%d", bitmap.width()));
-    metadata.set("height", String::format("%d", bitmap.height()));
+    metadata.set("width", String::number(bitmap.width()));
+    metadata.set("height", String::number(bitmap.height()));
 
     auto data = ByteBuffer::copy(&bits[0], bitmap.width() * bitmap.height());
     GUI::Clipboard::the().set_data(data, "glyph/x-fonteditor", metadata);
@@ -101,6 +91,9 @@ void GlyphEditorWidget::paste_glyph()
     auto mime_type = GUI::Clipboard::the().mime_type();
     if (!mime_type.starts_with("glyph/"))
         return;
+
+    if (on_undo_event)
+        on_undo_event(false);
 
     auto byte_buffer = GUI::Clipboard::the().data();
     auto buffer_height = GUI::Clipboard::the().data_and_type().metadata.get("height").value().to_int();
@@ -122,6 +115,8 @@ void GlyphEditorWidget::paste_glyph()
                 bitmap.set_bit_at(x, y, bits[x][y]);
         }
     }
+    if (on_undo_event)
+        on_undo_event(true);
     if (on_glyph_altered)
         on_glyph_altered(m_glyph);
     update();
@@ -152,7 +147,7 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     for (int y = 0; y < font().glyph_height(); ++y) {
         for (int x = 0; x < font().max_glyph_width(); ++x) {
             Gfx::IntRect rect { x * m_scale, y * m_scale, m_scale, m_scale };
-            if (x >= font().glyph_width(m_glyph)) {
+            if (x >= font().raw_glyph_width(m_glyph)) {
                 painter.fill_rect(rect, palette().threed_shadow1());
             } else {
                 if (bitmap.bit_at(x, y))
@@ -162,15 +157,66 @@ void GlyphEditorWidget::paint_event(GUI::PaintEvent& event)
     }
 }
 
+bool GlyphEditorWidget::is_glyph_empty()
+{
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    for (int x = 0; x < bitmap.width(); x++)
+        for (int y = 0; y < bitmap.height(); y++)
+            if (bitmap.bit_at(x, y))
+                return false;
+    return true;
+}
+
 void GlyphEditorWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    draw_at_mouse(event);
+    if ((event.x() - 1) / m_scale + 1 > font().raw_glyph_width(m_glyph))
+        return;
+    if (mode() == Move && is_glyph_empty())
+        return;
+    m_is_clicking_valid_cell = true;
+    if (on_undo_event)
+        on_undo_event(false);
+    if (mode() == Paint) {
+        draw_at_mouse(event);
+    } else {
+        memset(m_movable_bits, 0, sizeof(m_movable_bits));
+        auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+        for (int x = s_max_width; x < s_max_width + bitmap.width(); x++)
+            for (int y = s_max_height; y < s_max_height + bitmap.height(); y++)
+                m_movable_bits[x][y] = bitmap.bit_at(x - s_max_width, y - s_max_height);
+        x_offset = (event.x() - 1) / m_scale;
+        y_offset = (event.y() - 1) / m_scale;
+        move_at_mouse(event);
+    }
+}
+
+void GlyphEditorWidget::mouseup_event(GUI::MouseEvent&)
+{
+    if (!m_is_clicking_valid_cell)
+        return;
+    m_is_clicking_valid_cell = false;
+    if (on_undo_event)
+        on_undo_event(true);
 }
 
 void GlyphEditorWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    if (event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right))
+    if (!m_is_clicking_valid_cell)
+        return;
+    if (!(event.buttons() & (GUI::MouseButton::Left | GUI::MouseButton::Right)))
+        return;
+    if (mode() == Paint)
         draw_at_mouse(event);
+    else
+        move_at_mouse(event);
+}
+
+void GlyphEditorWidget::enter_event(Core::Event&)
+{
+    if (mode() == Move)
+        set_override_cursor(Gfx::StandardCursor::Move);
+    else
+        set_override_cursor(Gfx::StandardCursor::None);
 }
 
 void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
@@ -194,6 +240,23 @@ void GlyphEditorWidget::draw_at_mouse(const GUI::MouseEvent& event)
     update();
 }
 
+void GlyphEditorWidget::move_at_mouse(const GUI::MouseEvent& event)
+{
+    int x_delta = ((event.x() - 1) / m_scale) - x_offset;
+    int y_delta = ((event.y() - 1) / m_scale) - y_offset;
+    auto bitmap = font().glyph(m_glyph).glyph_bitmap();
+    if (abs(x_delta) > bitmap.width() || abs(y_delta) > bitmap.height())
+        return;
+    for (int x = 0; x < bitmap.width(); x++) {
+        for (int y = 0; y < bitmap.height(); y++) {
+            bitmap.set_bit_at(x, y, m_movable_bits[s_max_width + x - x_delta][s_max_height + y - y_delta]);
+        }
+    }
+    if (on_glyph_altered)
+        on_glyph_altered(m_glyph);
+    update();
+}
+
 int GlyphEditorWidget::preferred_width() const
 {
     return frame_thickness() * 2 + font().max_glyph_width() * m_scale - 1;
@@ -202,4 +265,12 @@ int GlyphEditorWidget::preferred_width() const
 int GlyphEditorWidget::preferred_height() const
 {
     return frame_thickness() * 2 + font().glyph_height() * m_scale - 1;
+}
+
+void GlyphEditorWidget::set_scale(int scale)
+{
+    if (m_scale == scale)
+        return;
+    m_scale = clamp(scale, 1, 15);
+    update();
 }

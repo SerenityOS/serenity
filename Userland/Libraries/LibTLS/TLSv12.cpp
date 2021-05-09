@@ -1,34 +1,17 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/Endian.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DateTime.h>
+#include <LibCore/File.h>
+#include <LibCore/FileStream.h>
 #include <LibCore/Timer.h>
+#include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/ASN1/PEM.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
@@ -39,407 +22,470 @@
 #    include <sys/ioctl.h>
 #endif
 
-namespace {
-struct OIDChain {
-    OIDChain* root { nullptr };
-    u8* oid { nullptr };
-};
-}
-
 namespace TLS {
 
-// "for now" q&d implementation of ASN1
-namespace {
+constexpr static Array<int, 4>
+    common_name_oid { 2, 5, 4, 3 },
+    country_name_oid { 2, 5, 4, 6 },
+    locality_name_oid { 2, 5, 4, 7 },
+    organization_name_oid { 2, 5, 4, 10 },
+    organizational_unit_name_oid { 2, 5, 4, 11 };
 
-static bool _asn1_is_field_present(const u32* fields, const u32* prefix)
-{
-    size_t i = 0;
-    while (prefix[i]) {
-        if (fields[i] != prefix[i])
-            return false;
-        ++i;
-    }
-    return true;
-}
+constexpr static Array<int, 7>
+    rsa_encryption_oid { 1, 2, 840, 113549, 1, 1, 1 },
+    rsa_md5_encryption_oid { 1, 2, 840, 113549, 1, 1, 4 },
+    rsa_sha1_encryption_oid { 1, 2, 840, 113549, 1, 1, 5 },
+    rsa_sha256_encryption_oid { 1, 2, 840, 113549, 1, 1, 11 },
+    rsa_sha512_encryption_oid { 1, 2, 840, 113549, 1, 1, 13 };
 
-static bool _asn1_is_oid(const u8* oid, const u8* compare, size_t length = 3)
-{
-    size_t i = 0;
-    while (oid[i] && i < length) {
-        if (oid[i] != compare[i])
-            return false;
-        ++i;
-    }
-    return true;
-}
-
-static bool _asn1_is_oid_in_chain(OIDChain* reference_chain, const u8* lookup, size_t lookup_length = 3)
-{
-    auto is_oid = [](const u8* oid, size_t oid_length, const u8* compare, size_t compare_length) {
-        if (oid_length < compare_length)
-            compare_length = oid_length;
-        for (size_t i = 0; i < compare_length; i++) {
-            if (oid[i] != compare[i])
-                return false;
-        }
-        return true;
-    };
-    for (; reference_chain; reference_chain = reference_chain->root) {
-        if (reference_chain->oid)
-            if (is_oid(reference_chain->oid, 16, lookup, lookup_length))
-                return true;
-    }
-    return false;
-}
-
-static bool _set_algorithm(CertificateKeyAlgorithm& algorithm, const u8* value, size_t length)
-{
-    if (length == 7) {
-        // Elliptic Curve pubkey
-        dbgln("Cert.algorithm: EC, unsupported");
-        return false;
-    }
-
-    if (length == 8) {
-        // named EC key
-        dbgln("Cert.algorithm: Named EC ({}), unsupported", *value);
-        return false;
-    }
-
-    if (length == 5) {
-        // named EC SECP key
-        dbgln("Cert.algorithm: Named EC secp ({}), unsupported", *value);
-        return false;
-    }
-
-    if (length != 9) {
-        dbgln("Invalid certificate algorithm");
-        return false;
-    }
-
-    if (_asn1_is_oid(value, Constants::RSA_SIGN_RSA_OID, 9)) {
-        algorithm = CertificateKeyAlgorithm::RSA_RSA;
-        return true;
-    }
-
-    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA256_OID, 9)) {
-        algorithm = CertificateKeyAlgorithm::RSA_SHA256;
-        return true;
-    }
-
-    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA512_OID, 9)) {
-        algorithm = CertificateKeyAlgorithm::RSA_SHA512;
-        return true;
-    }
-
-    if (_asn1_is_oid(value, Constants::RSA_SIGN_SHA1_OID, 9)) {
-        algorithm = CertificateKeyAlgorithm::RSA_SHA1;
-        return true;
-    }
-
-    if (_asn1_is_oid(value, Constants::RSA_SIGN_MD5_OID, 9)) {
-        algorithm = CertificateKeyAlgorithm::RSA_MD5;
-        return true;
-    }
-
-    dbgln("Unsupported RSA Signature mode {}", value[8]);
-    return false;
-}
-
-static size_t _get_asn1_length(const u8* buffer, size_t length, size_t& octets)
-{
-    octets = 0;
-    if (length < 1)
-        return 0;
-
-    u8 size = buffer[0];
-    if (size & 0x80) {
-        octets = size & 0x7f;
-        if (octets > length - 1) {
-            return 0;
-        }
-        auto reference_octets = octets;
-        if (octets > 4)
-            reference_octets = 4;
-        size_t long_size = 0, coeff = 1;
-        for (auto i = reference_octets; i > 0; --i) {
-            long_size += buffer[i] * coeff;
-            coeff *= 0x100;
-        }
-        ++octets;
-        return long_size;
-    }
-    ++octets;
-    return size;
-}
-
-static ssize_t _parse_asn1(const Context& context, Certificate& cert, const u8* buffer, size_t size, int level, u32* fields, u8* has_key, int client_cert, u8* root_oid, OIDChain* chain)
-{
-    OIDChain local_chain;
-    local_chain.root = chain;
-    size_t position = 0;
-
-    // parse DER...again
-    size_t index = 0;
-    u8 oid[16] { 0 };
-
-    local_chain.oid = oid;
-    if (has_key)
-        *has_key = 0;
-
-    u8 local_has_key = 0;
-    const u8* cert_data = nullptr;
-    size_t cert_length = 0;
-    while (position < size) {
-        size_t start_position = position;
-        if (size - position < 2) {
-            dbgln("not enough data for certificate size");
-            return (i8)Error::NeedMoreData;
-        }
-        u8 first = buffer[position++];
-        u8 type = first & 0x1f;
-        u8 constructed = first & 0x20;
-        size_t octets = 0;
-        u32 temp;
-        index++;
-
-        if (level <= 0xff)
-            fields[level - 1] = index;
-
-        size_t length = _get_asn1_length((const u8*)&buffer[position], size - position, octets);
-
-        if (octets > 4 || octets > size - position) {
-#if TLS_DEBUG
-            dbgln("could not read the certificate");
-#endif
-            return position;
-        }
-
-        position += octets;
-        if (size - position < length) {
-#if TLS_DEBUG
-            dbgln("not enough data for sequence");
-#endif
-            return (i8)Error::NeedMoreData;
-        }
-
-        if (length && constructed) {
-            switch (type) {
-            case 0x03:
-                break;
-            case 0x10:
-                if (level == 2 && index == 1) {
-                    cert_length = length + position - start_position;
-                    cert_data = buffer + start_position;
-                }
-                // public key data
-                if (!cert.version && _asn1_is_field_present(fields, Constants::priv_der_id)) {
-                    temp = length + position - start_position;
-                    if (cert.der.size() < temp) {
-                        cert.der.grow(temp);
-                    } else {
-                        cert.der.trim(temp);
-                    }
-                    cert.der.overwrite(0, buffer + start_position, temp);
-                }
-                break;
-
-            default:
-                break;
-            }
-            local_has_key = false;
-            _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-            if ((local_has_key && (!context.is_server || client_cert)) || (client_cert || _asn1_is_field_present(fields, Constants::pk_id))) {
-                temp = length + position - start_position;
-                if (cert.der.size() < temp) {
-                    cert.der.grow(temp);
-                } else {
-                    cert.der.trim(temp);
-                }
-                cert.der.overwrite(0, buffer + start_position, temp);
-            }
-        } else {
-            switch (type) {
-            case 0x00:
-                return position;
-                break;
-            case 0x01:
-                temp = buffer[position];
-                break;
-            case 0x02:
-                if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                    if (has_key)
-                        *has_key = true;
-
-                    if (index == 1)
-                        cert.public_key.set(
-                            Crypto::UnsignedBigInteger::import_data(buffer + position, length),
-                            cert.public_key.public_exponent());
-                    else if (index == 2)
-                        cert.public_key.set(
-                            cert.public_key.modulus(),
-                            Crypto::UnsignedBigInteger::import_data(buffer + position, length));
-                } else if (_asn1_is_field_present(fields, Constants::serial_id)) {
-                    cert.serial_number = Crypto::UnsignedBigInteger::import_data(buffer + position, length);
-                }
-                if (_asn1_is_field_present(fields, Constants::version_id)) {
-                    if (length == 1)
-                        cert.version = buffer[position];
-                }
-                if (chain && length > 2) {
-                    if (_asn1_is_oid_in_chain(chain, Constants::san_oid)) {
-                        StringView alt_name { &buffer[position], length };
-                        cert.SAN.append(alt_name);
-                    }
-                }
-                // print_buffer(ReadonlyBytes { buffer + position, length });
-                break;
-            case 0x03:
-                if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                    if (has_key)
-                        *has_key = true;
-                }
-                if (_asn1_is_field_present(fields, Constants::sign_id)) {
-                    auto* value = buffer + position;
-                    auto len = length;
-                    if (!value[0] && len % 2) {
-                        ++value;
-                        --len;
-                    }
-                    cert.sign_key = ByteBuffer::copy(value, len);
-                } else {
-                    if (buffer[position] == 0 && length > 256) {
-                        _parse_asn1(context, cert, buffer + position + 1, length - 1, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                    } else {
-                        _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                    }
-                }
-                break;
-            case 0x04:
-                _parse_asn1(context, cert, buffer + position, length, level + 1, fields, &local_has_key, client_cert, root_oid, &local_chain);
-                break;
-            case 0x05:
-                break;
-            case 0x06:
-                if (_asn1_is_field_present(fields, Constants::pk_id)) {
-                    _set_algorithm(cert.key_algorithm, buffer + position, length);
-                }
-                if (_asn1_is_field_present(fields, Constants::algorithm_id)) {
-                    _set_algorithm(cert.algorithm, buffer + position, length);
-                }
-
-                if (length < 16)
-                    memcpy(oid, buffer + position, length);
-                else
-                    memcpy(oid, buffer + position, 16);
-                if (root_oid)
-                    memcpy(root_oid, oid, 16);
-                break;
-            case 0x09:
-                break;
-            case 0x17:
-            case 0x018:
-                // time
-                // ignore
-                break;
-            case 0x013:
-            case 0x0c:
-            case 0x14:
-            case 0x15:
-            case 0x16:
-            case 0x19:
-            case 0x1a:
-            case 0x1b:
-            case 0x1c:
-            case 0x1d:
-            case 0x1e:
-                // printable string and such
-                if (_asn1_is_field_present(fields, Constants::issurer_id)) {
-                    if (_asn1_is_oid(oid, Constants::country_oid)) {
-                        cert.issuer_country = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::state_oid)) {
-                        cert.issuer_state = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::location_oid)) {
-                        cert.issuer_location = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
-                        cert.issuer_entity = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
-                        cert.issuer_subject = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::unit_oid)) {
-                        cert.issuer_unit = String { (const char*)buffer + position, length };
-                    }
-                } else if (_asn1_is_field_present(fields, Constants::owner_id)) {
-                    if (_asn1_is_oid(oid, Constants::country_oid)) {
-                        cert.country = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::state_oid)) {
-                        cert.state = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::location_oid)) {
-                        cert.location = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::entity_oid)) {
-                        cert.entity = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::subject_oid)) {
-                        cert.subject = String { (const char*)buffer + position, length };
-                    } else if (_asn1_is_oid(oid, Constants::unit_oid)) {
-                        cert.unit = String { (const char*)buffer + position, length };
-                    }
-                }
-                break;
-            default:
-                break;
-            }
-        }
-        position += length;
-    }
-    if (level == 2 && cert.sign_key.size() && cert_length && cert_data) {
-        cert.fingerprint.clear();
-        Crypto::Hash::Manager hash;
-        switch (cert.key_algorithm) {
-        case CertificateKeyAlgorithm::RSA_MD5:
-            hash.initialize(Crypto::Hash::HashKind::MD5);
-            break;
-        case CertificateKeyAlgorithm::RSA_SHA1:
-            hash.initialize(Crypto::Hash::HashKind::SHA1);
-            break;
-        case CertificateKeyAlgorithm::RSA_SHA256:
-            hash.initialize(Crypto::Hash::HashKind::SHA256);
-            break;
-        case CertificateKeyAlgorithm::RSA_SHA512:
-            hash.initialize(Crypto::Hash::HashKind::SHA512);
-            break;
-        default:
-            dbgln_if(TLS_DEBUG, "Unsupported hash mode {}", (u32)cert.key_algorithm);
-            // fallback to md5, it will fail later
-            hash.initialize(Crypto::Hash::HashKind::MD5);
-            break;
-        }
-        hash.update(cert_data, cert_length);
-        auto fingerprint = hash.digest();
-        cert.fingerprint.grow(fingerprint.data_length());
-        cert.fingerprint.overwrite(0, fingerprint.immutable_data(), fingerprint.data_length());
-#if TLS_DEBUG
-        dbgln("Certificate fingerprint:");
-        print_buffer(cert.fingerprint);
-#endif
-    }
-    return position;
-}
-}
+constexpr static Array<int, 4>
+    subject_alternative_name_oid { 2, 5, 29, 17 };
 
 Optional<Certificate> TLSv12::parse_asn1(ReadonlyBytes buffer, bool) const
 {
-    // FIXME: Our ASN.1 parser is not quite up to the task of
-    //        parsing this X.509 certificate, so for the
-    //        time being, we will "parse" the certificate
-    //        manually right here.
+#define ENTER_SCOPE_WITHOUT_TYPECHECK(scope)                                               \
+    do {                                                                                   \
+        if (auto result = decoder.enter(); result.has_value()) {                           \
+            dbgln_if(TLS_DEBUG, "Failed to enter object (" scope "): {}", result.value()); \
+            return {};                                                                     \
+        }                                                                                  \
+    } while (0)
 
-    Certificate cert;
-    u32 fields[0xff];
+#define ENTER_SCOPE_OR_FAIL(kind_name, scope)                                                                 \
+    do {                                                                                                      \
+        if (auto tag = decoder.peek(); tag.is_error() || tag.value().kind != Crypto::ASN1::Kind::kind_name) { \
+            if constexpr (TLS_DEBUG) {                                                                        \
+                if (tag.is_error())                                                                           \
+                    dbgln(scope " data was invalid: {}", tag.error());                                        \
+                else                                                                                          \
+                    dbgln(scope " data was not of kind " #kind_name);                                         \
+            }                                                                                                 \
+            return {};                                                                                        \
+        }                                                                                                     \
+        ENTER_SCOPE_WITHOUT_TYPECHECK(scope);                                                                 \
+    } while (0)
 
-    _parse_asn1(m_context, cert, buffer.data(), buffer.size(), 1, fields, nullptr, 0, nullptr, nullptr);
+#define EXIT_SCOPE(scope)                                                                  \
+    do {                                                                                   \
+        if (auto error = decoder.leave(); error.has_value()) {                             \
+            dbgln_if(TLS_DEBUG, "Error while exiting scope " scope ": {}", error.value()); \
+            return {};                                                                     \
+        }                                                                                  \
+    } while (0)
 
-    dbgln_if(TLS_DEBUG, "Certificate issued for {} by {}", cert.subject, cert.issuer_subject);
+#define ENSURE_OBJECT_KIND(_kind_name, scope)                                                                                   \
+    do {                                                                                                                        \
+        if (auto tag = decoder.peek(); tag.is_error() || tag.value().kind != Crypto::ASN1::Kind::_kind_name) {                  \
+            if constexpr (TLS_DEBUG) {                                                                                          \
+                if (tag.is_error())                                                                                             \
+                    dbgln(scope " data was invalid: {}", tag.error());                                                          \
+                else                                                                                                            \
+                    dbgln(scope " data was not of kind " #_kind_name ", it was {}", Crypto::ASN1::kind_name(tag.value().kind)); \
+            }                                                                                                                   \
+            return {};                                                                                                          \
+        }                                                                                                                       \
+    } while (0)
 
-    return cert;
+#define READ_OBJECT_OR_FAIL(kind_name, type_name, value_name, scope)                                                   \
+    auto value_name##_result = decoder.read<type_name>(Crypto::ASN1::Class::Universal, Crypto::ASN1::Kind::kind_name); \
+    if (value_name##_result.is_error()) {                                                                              \
+        dbgln_if(TLS_DEBUG, scope " read of kind " #kind_name " failed: {}", value_name##_result.error());             \
+        return {};                                                                                                     \
+    }                                                                                                                  \
+    auto value_name = value_name##_result.release_value();
+
+#define DROP_OBJECT_OR_FAIL(scope)                                        \
+    do {                                                                  \
+        if (auto error = decoder.drop(); error.has_value()) {             \
+            dbgln_if(TLS_DEBUG, scope " read failed: {}", error.value()); \
+        }                                                                 \
+    } while (0)
+
+    Certificate certificate;
+    Crypto::ASN1::Decoder decoder { buffer };
+    // Certificate ::= Sequence {
+    //     certificate          TBSCertificate,
+    //     signature_algorithm  AlgorithmIdentifier,
+    //     signature_value      BitString
+    // }
+    ENTER_SCOPE_OR_FAIL(Sequence, "Certificate");
+
+    // TBSCertificate ::= Sequence {
+    //     version                  (0) EXPLICIT Version DEFAULT v1,
+    //     serial_number                CertificateSerialNumber,
+    //     signature                    AlgorithmIdentifier,
+    //     issuer                       Name,
+    //     validity                     Validity,
+    //     subject                      Name,
+    //     subject_public_key_info      SubjectPublicKeyInfo,
+    //     issuer_unique_id         (1) IMPLICIT UniqueIdentifer OPTIONAL (if present, version > v1),
+    //     subject_unique_id        (2) IMPLICIT UniqueIdentiier OPTIONAL (if present, version > v1),
+    //     extensions               (3) EXPLICIT Extensions OPTIONAL      (if present, version > v2)
+    // }
+    ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate");
+
+    // version
+    {
+        // Version :: Integer { v1(0), v2(1), v3(2) } (Optional)
+        if (auto tag = decoder.peek(); !tag.is_error() && tag.value().type == Crypto::ASN1::Type::Constructed) {
+            ENTER_SCOPE_WITHOUT_TYPECHECK("Certificate::version");
+            READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, value, "Certificate::version");
+            if (!(value < 3)) {
+                dbgln_if(TLS_DEBUG, "Certificate::version Invalid value for version: {}", value.to_base10());
+                return {};
+            }
+            certificate.version = value.words()[0];
+            EXIT_SCOPE("Certificate::version");
+        } else {
+            certificate.version = 0;
+        }
+    }
+
+    // serial_number
+    {
+        // CertificateSerialNumber :: Integer
+        READ_OBJECT_OR_FAIL(Integer, Crypto::UnsignedBigInteger, value, "Certificate::serial_number");
+        certificate.serial_number = move(value);
+    }
+
+    auto parse_algorithm_identifier = [&](CertificateKeyAlgorithm& field) -> Optional<bool> {
+        // AlgorithmIdentifier ::= Sequence {
+        //     algorithm   ObjectIdentifier,
+        //     parameters  ANY OPTIONAL
+        // }
+        ENTER_SCOPE_OR_FAIL(Sequence, "AlgorithmIdentifier");
+        READ_OBJECT_OR_FAIL(ObjectIdentifier, Vector<int>, identifier, "AlgorithmIdentifier::algorithm");
+        if (identifier == rsa_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_RSA;
+        else if (identifier == rsa_md5_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_MD5;
+        else if (identifier == rsa_sha1_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_SHA1;
+        else if (identifier == rsa_sha256_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_SHA256;
+        else if (identifier == rsa_sha512_encryption_oid)
+            field = CertificateKeyAlgorithm ::RSA_SHA512;
+        else
+            return {};
+
+        EXIT_SCOPE("AlgorithmIdentifier");
+        return true;
+    };
+
+    // signature
+    {
+        if (!parse_algorithm_identifier(certificate.algorithm).has_value())
+            return {};
+    }
+
+    auto parse_name = [&](auto& name_struct) -> Optional<bool> {
+        // Name ::= Choice {
+        //     rdn_sequence RDNSequence
+        // } // NOTE: since this is the only alternative, there's no index
+        // RDNSequence ::= Sequence OF RelativeDistinguishedName
+        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::issuer/subject");
+
+        // RelativeDistinguishedName ::= Set OF AttributeTypeAndValue
+        // AttributeTypeAndValue ::= Sequence {
+        //     type   AttributeType,
+        //     value  AttributeValue
+        // }
+        // AttributeType ::= ObjectIdentifier
+        // AttributeValue ::= Any
+        while (!decoder.eof()) {
+            // Parse only the the required fields, and ignore the rest.
+            ENTER_SCOPE_OR_FAIL(Set, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName");
+            while (!decoder.eof()) {
+                ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue");
+                ENSURE_OBJECT_KIND(ObjectIdentifier, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::type");
+
+                if (auto type_identifier_or_error = decoder.read<Vector<int>>(); !type_identifier_or_error.is_error()) {
+                    // Figure out what type of identifier this is
+                    auto& identifier = type_identifier_or_error.value();
+                    if (identifier == common_name_oid) {
+                        READ_OBJECT_OR_FAIL(PrintableString, StringView, name,
+                            "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::Value");
+                        name_struct.subject = name;
+                    } else if (identifier == country_name_oid) {
+                        READ_OBJECT_OR_FAIL(PrintableString, StringView, name,
+                            "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::Value");
+                        name_struct.country = name;
+                    } else if (identifier == locality_name_oid) {
+                        READ_OBJECT_OR_FAIL(PrintableString, StringView, name,
+                            "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::Value");
+                        name_struct.location = name;
+                    } else if (identifier == organization_name_oid) {
+                        READ_OBJECT_OR_FAIL(PrintableString, StringView, name,
+                            "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::Value");
+                        name_struct.entity = name;
+                    } else if (identifier == organizational_unit_name_oid) {
+                        READ_OBJECT_OR_FAIL(PrintableString, StringView, name,
+                            "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::Value");
+                        name_struct.unit = name;
+                    }
+                } else {
+                    dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue::type data was invalid: {}", type_identifier_or_error.error());
+                    return {};
+                }
+
+                EXIT_SCOPE("Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName::$::AttributeTypeAndValue");
+            }
+            EXIT_SCOPE("Certificate::TBSCertificate::issuer/subject::$::RelativeDistinguishedName");
+        }
+
+        EXIT_SCOPE("Certificate::TBSCertificate::issuer/subject");
+        return true;
+    };
+
+    // issuer
+    {
+        if (!parse_name(certificate.issuer).has_value())
+            return {};
+    }
+
+    // validity
+    {
+        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Validity");
+
+        auto parse_time = [&](Core::DateTime& datetime) -> Optional<bool> {
+            // Time ::= Choice {
+            //     utc_time     UTCTime,
+            //     general_time GeneralizedTime
+            // }
+            auto tag = decoder.peek();
+            if (tag.is_error()) {
+                dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time failed to read tag: {}", tag.error());
+                return {};
+            };
+
+            if (tag.value().kind == Crypto::ASN1::Kind::UTCTime) {
+                READ_OBJECT_OR_FAIL(UTCTime, StringView, time, "Certificate::TBSCertificate::Validity::$");
+                auto result = Crypto::ASN1::parse_utc_time(time);
+                if (!result.has_value()) {
+                    dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time Invalid UTC Time: {}", time);
+                    return {};
+                }
+                datetime = result.release_value();
+                return true;
+            }
+
+            if (tag.value().kind == Crypto::ASN1::Kind::GeneralizedTime) {
+                READ_OBJECT_OR_FAIL(UTCTime, StringView, time, "Certificate::TBSCertificate::Validity::$");
+                auto result = Crypto::ASN1::parse_generalized_time(time);
+                if (!result.has_value()) {
+                    dbgln_if(1, "Certificate::TBSCertificate::Validity::$::Time Invalid Generalized Time: {}", time);
+                    return {};
+                }
+                datetime = result.release_value();
+                return true;
+            }
+
+            dbgln_if(1, "Unrecognised Time format {}", Crypto::ASN1::kind_name(tag.value().kind));
+            return {};
+        };
+
+        if (!parse_time(certificate.not_before).has_value())
+            return {};
+
+        if (!parse_time(certificate.not_after).has_value())
+            return {};
+
+        EXIT_SCOPE("Certificate::TBSCertificate::Validity");
+    }
+
+    // subject
+    {
+        if (!parse_name(certificate.subject).has_value())
+            return {};
+    }
+
+    // subject_public_key_info
+    {
+        // SubjectPublicKeyInfo ::= Sequence {
+        //     algorithm           AlgorithmIdentifier,
+        //     subject_public_key  BitString
+        // }
+        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::subject_public_key_info");
+
+        if (!parse_algorithm_identifier(certificate.key_algorithm).has_value())
+            return {};
+
+        READ_OBJECT_OR_FAIL(BitString, const BitmapView, value, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info");
+        // Note: Once we support other kinds of keys, make sure to check the kind here!
+        auto key = Crypto::PK::RSA::parse_rsa_key({ value.data(), value.size_in_bytes() });
+        if (!key.public_key.length()) {
+            dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::subject_public_key_info::subject_public_key_info: Invalid key");
+            return {};
+        }
+        certificate.public_key = move(key.public_key);
+        EXIT_SCOPE("Certificate::TBSCertificate::subject_public_key_info");
+    }
+
+    auto parse_unique_identifier = [&]() -> Optional<bool> {
+        if (certificate.version == 0)
+            return true;
+
+        auto tag = decoder.peek();
+        if (tag.is_error()) {
+            dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
+            return {};
+        }
+
+        // The spec says to just ignore these.
+        if (static_cast<u8>(tag.value().kind) == 1 || static_cast<u8>(tag.value().kind) == 2)
+            DROP_OBJECT_OR_FAIL("UniqueIdentifier");
+
+        return true;
+    };
+
+    // issuer_unique_identifier
+    {
+        if (!parse_unique_identifier().has_value())
+            return {};
+    }
+
+    // subject_unique_identifier
+    {
+        if (!parse_unique_identifier().has_value())
+            return {};
+    }
+
+    // extensions
+    {
+        if (certificate.version == 2) {
+            auto tag = decoder.peek();
+            if (tag.is_error()) {
+                dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::*::UniqueIdentifier could not read tag: {}", tag.error());
+                return {};
+            }
+            if (static_cast<u8>(tag.value().kind) == 3) {
+                // Extensions ::= Sequence OF Extension
+                // Extension ::= Sequence {
+                //     extension_id     ObjectIdentifier,
+                //     critical         Boolean DEFAULT false,
+                //     extension_value  OctetString (DER-encoded)
+                // }
+                ENTER_SCOPE_WITHOUT_TYPECHECK("Certificate::TBSCertificate::Extensions(IMPLICIT)");
+                ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Extensions");
+
+                while (!decoder.eof()) {
+                    ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Extensions::$::Extension");
+                    READ_OBJECT_OR_FAIL(ObjectIdentifier, Vector<int>, extension_id, "Certificate::TBSCertificate::Extensions::$::Extension::extension_id");
+                    bool is_critical = false;
+                    if (auto tag = decoder.peek(); !tag.is_error() && tag.value().kind == Crypto::ASN1::Kind::Boolean) {
+                        // Read the 'critical' property
+                        READ_OBJECT_OR_FAIL(Boolean, bool, critical, "Certificate::TBSCertificate::Extensions::$::Extension::critical");
+                        is_critical = critical;
+                    }
+                    READ_OBJECT_OR_FAIL(OctetString, StringView, extension_value, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value");
+
+                    // Figure out what this extension is.
+                    if (extension_id == subject_alternative_name_oid) {
+                        Crypto::ASN1::Decoder decoder { extension_value.bytes() };
+                        // SubjectAlternativeName ::= GeneralNames
+                        // GeneralNames ::= Sequence OF GeneralName
+                        // GeneralName ::= CHOICE {
+                        //     other_name     (0) OtherName,
+                        //     rfc_822_name   (1) IA5String,
+                        //     dns_name       (2) IA5String,
+                        //     x400Address    (3) ORAddress,
+                        //     directory_name (4) Name,
+                        //     edi_party_name (5) EDIPartyName,
+                        //     uri            (6) IA5String,
+                        //     ip_address     (7) OctetString,
+                        //     registered_id  (8) ObjectIdentifier,
+                        // }
+                        ENTER_SCOPE_OR_FAIL(Sequence, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName");
+
+                        while (!decoder.eof()) {
+                            auto tag = decoder.peek();
+                            if (tag.is_error()) {
+                                dbgln_if(TLS_DEBUG, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$ could not read tag: {}", tag.error());
+                                return {};
+                            }
+
+                            auto tag_value = static_cast<u8>(tag.value().kind);
+                            switch (tag_value) {
+                            case 0:
+                                // OtherName
+                                // We don't know how to use this.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::OtherName");
+                                break;
+                            case 1:
+                                // RFC 822 name
+                                // We don't know how to use this.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::RFC822Name");
+                                break;
+                            case 2: {
+                                // DNS Name
+                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::DNSName");
+                                certificate.SAN.append(name);
+                                break;
+                            }
+                            case 3:
+                                // x400Address
+                                // We don't know how to use this.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::X400Adress");
+                                break;
+                            case 4:
+                                // Directory name
+                                // We don't know how to use this.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::DirectoryName");
+                                break;
+                            case 5:
+                                // edi party name
+                                // We don't know how to use this.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::EDIPartyName");
+                                break;
+                            case 6: {
+                                // URI
+                                READ_OBJECT_OR_FAIL(IA5String, StringView, name, "Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::URI");
+                                certificate.SAN.append(name);
+                                break;
+                            }
+                            case 7:
+                                // IP Address
+                                // We can't handle these.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::IPAddress");
+                                break;
+                            case 8:
+                                // Registered ID
+                                // We can't handle these.
+                                DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::RegisteredID");
+                                break;
+                            default:
+                                dbgln_if(TLS_DEBUG, "Unknown tag in SAN choice {}", tag_value);
+                                if (is_critical)
+                                    return {};
+                                else
+                                    DROP_OBJECT_OR_FAIL("Certificate::TBSCertificate::Extensions::$::Extension::extension_value::SubjectAlternativeName::$::???");
+                            }
+                        }
+                    }
+
+                    EXIT_SCOPE("Certificate::TBSCertificate::Extensions::$::Extension");
+                }
+
+                EXIT_SCOPE("Certificate::TBSCertificate::Extensions");
+                EXIT_SCOPE("Certificate::TBSCertificate::Extensions(IMPLICIT)");
+            }
+        }
+    }
+
+    // Just ignore the rest of the data for now.
+    EXIT_SCOPE("Certificate::TBSCertificate");
+    EXIT_SCOPE("Certificate");
+
+    dbgln_if(TLS_DEBUG, "Certificate issued for {} by {}", certificate.subject.subject, certificate.issuer.subject);
+
+    return certificate;
+
+#undef DROP_OBJECT_OR_FAIL
+#undef ENSURE_OBJECT_KIND
+#undef ENTER_SCOPE_OR_FAIL
+#undef ENTER_SCOPE_WITHOUT_TYPECHECK
+#undef EXIT_SCOPE
+#undef READ_OBJECT_OR_FAIL
 }
 
 ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
@@ -447,9 +493,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     ssize_t res = 0;
 
     if (buffer.size() < 3) {
-#if TLS_DEBUG
-        dbgln("not enough certificate header data");
-#endif
+        dbgln_if(TLS_DEBUG, "not enough certificate header data");
         return (i8)Error::NeedMoreData;
     }
 
@@ -463,9 +507,7 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     res += 3;
 
     if (certificate_total_length > buffer.size() - res) {
-#if TLS_DEBUG
-        dbgln("not enough data for claimed total cert length");
-#endif
+        dbgln_if(TLS_DEBUG, "not enough data for claimed total cert length");
         return (i8)Error::NeedMoreData;
     }
     size_t size = certificate_total_length;
@@ -476,18 +518,14 @@ ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
     while (size > 0) {
         ++index;
         if (buffer.size() - res < 3) {
-#if TLS_DEBUG
-            dbgln("not enough data for certificate length");
-#endif
+            dbgln_if(TLS_DEBUG, "not enough data for certificate length");
             return (i8)Error::NeedMoreData;
         }
         size_t certificate_size = buffer[res] * 0x10000 + buffer[res + 1] * 0x100 + buffer[res + 2];
         res += 3;
 
         if (buffer.size() - res < certificate_size) {
-#if TLS_DEBUG
-            dbgln("not enough data for certificate body");
-#endif
+            dbgln_if(TLS_DEBUG, "not enough data for certificate body");
             return (i8)Error::NeedMoreData;
         }
 
@@ -644,18 +682,14 @@ bool Certificate::is_valid() const
 {
     auto now = Core::DateTime::now();
 
-    if (!not_before.is_empty()) {
-        if (now.is_before(not_before)) {
-            dbgln("certificate expired (not yet valid, signed for {})", not_before);
-            return false;
-        }
+    if (now < not_before) {
+        dbgln("certificate expired (not yet valid, signed for {})", not_before.to_string());
+        return false;
     }
 
-    if (!not_after.is_empty()) {
-        if (!now.is_before(not_after)) {
-            dbgln("certificate expired (expiry date {})", not_after);
-            return false;
-        }
+    if (not_after < now) {
+        dbgln("certificate expired (expiry date {})", not_after.to_string());
+        return false;
     }
 
     return true;
@@ -729,7 +763,7 @@ void TLSv12::set_root_certificates(Vector<Certificate> certificates)
 
     for (auto& cert : certificates) {
         if (!cert.is_valid())
-            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject, cert.issuer_subject);
+            dbgln("Certificate for {} by {} is invalid, things may or may not work!", cert.subject.subject, cert.issuer.subject);
         // FIXME: Figure out what we should do when our root certs are invalid.
     }
     m_context.root_ceritificates = move(certificates);
@@ -753,14 +787,14 @@ bool Context::verify_chain() const
     HashTable<String> roots;
     // First, walk the root certs.
     for (auto& cert : root_ceritificates) {
-        roots.set(cert.subject);
-        chain.set(cert.subject, cert.issuer_subject);
+        roots.set(cert.subject.subject);
+        chain.set(cert.subject.subject, cert.issuer.subject);
     }
 
     // Then, walk the local certs.
     for (auto& cert : *local_chain) {
-        auto& issuer_unique_name = cert.issuer_unit.is_empty() ? cert.issuer_subject : cert.issuer_unit;
-        chain.set(cert.subject, issuer_unique_name);
+        auto& issuer_unique_name = cert.issuer.unit.is_empty() ? cert.issuer.subject : cert.issuer.unit;
+        chain.set(cert.subject.subject, issuer_unique_name);
     }
 
     // Then verify the chain.
@@ -805,7 +839,7 @@ Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringV
 
     for (size_t i = 0; i < m_context.certificates.size(); ++i) {
         auto& cert = m_context.certificates[i];
-        if (wildcard_matches(host, cert.subject))
+        if (wildcard_matches(host, cert.subject.subject))
             return i;
         for (auto& san : cert.SAN) {
             if (wildcard_matches(host, san))
@@ -867,13 +901,17 @@ DefaultRootCACertificates::DefaultRootCACertificates()
 {
     // FIXME: This might not be the best format, find a better way to represent CA certificates.
     auto config = Core::ConfigFile::get_for_system("ca_certs");
+    auto now = Core::DateTime::now();
+    auto last_year = Core::DateTime::create(now.year() - 1);
+    auto next_year = Core::DateTime::create(now.year() + 1);
     for (auto& entity : config->groups()) {
         Certificate cert;
-        cert.subject = entity;
-        cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-        cert.country = config->read_entry(entity, "country");
+        cert.subject.subject = entity;
+        cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+        cert.subject.country = config->read_entry(entity, "country");
+        cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+        cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
         m_ca_certificates.append(move(cert));
     }
 }
-
 }

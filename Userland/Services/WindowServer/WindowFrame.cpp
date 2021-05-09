@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClientConnection.h"
@@ -58,6 +38,7 @@ static Gfx::Bitmap* s_minimize_icon;
 static Gfx::Bitmap* s_maximize_icon;
 static Gfx::Bitmap* s_restore_icon;
 static Gfx::Bitmap* s_close_icon;
+static Gfx::Bitmap* s_close_modified_icon;
 
 static String s_last_title_button_icons_path;
 static int s_last_title_button_icons_scale;
@@ -85,14 +66,14 @@ WindowFrame::WindowFrame(Window& window)
     : m_window(window)
 {
     auto button = make<Button>(*this, [this](auto&) {
-        m_window.request_close();
+        m_window.handle_window_menu_action(WindowMenuAction::Close);
     });
     m_close_button = button.ptr();
     m_buttons.append(move(button));
 
     if (window.is_resizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            WindowManager::the().maximize_windows(m_window, !m_window.is_maximized());
+            m_window.handle_window_menu_action(WindowMenuAction::MaximizeOrRestore);
         });
         button->on_middle_click = [&](auto&) {
             m_window.set_vertically_maximized();
@@ -103,7 +84,7 @@ WindowFrame::WindowFrame(Window& window)
 
     if (window.is_minimizable()) {
         auto button = make<Button>(*this, [this](auto&) {
-            WindowManager::the().minimize_windows(m_window, true);
+            m_window.handle_window_menu_action(WindowMenuAction::MinimizeOrUnminimize);
         });
         m_minimize_button = button.ptr();
         m_buttons.append(move(button));
@@ -122,7 +103,7 @@ void WindowFrame::set_button_icons()
     if (m_window.is_frameless())
         return;
 
-    m_close_button->set_icon(*s_close_icon);
+    m_close_button->set_icon(m_window.is_modified() ? *s_close_modified_icon : *s_close_icon);
     if (m_window.is_minimizable())
         m_minimize_button->set_icon(*s_minimize_icon);
     if (m_window.is_resizable())
@@ -169,6 +150,15 @@ void WindowFrame::reload_config()
             s_close_icon->unref();
         if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
             s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale).leak_ref();
+        full_path.clear();
+    }
+    if (!s_close_modified_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
+        full_path.append(icons_path);
+        full_path.append("window-close-modified.png");
+        if (s_close_modified_icon)
+            s_close_modified_icon->unref();
+        if (!(s_close_modified_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
+            s_close_modified_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close-modified.png", icons_scale).leak_ref();
         full_path.clear();
     }
 
@@ -243,19 +233,19 @@ Gfx::IntRect WindowFrame::menubar_rect() const
     return Gfx::WindowTheme::current().menubar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette(), menu_row_count());
 }
 
-Gfx::IntRect WindowFrame::title_bar_rect() const
+Gfx::IntRect WindowFrame::titlebar_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
-Gfx::IntRect WindowFrame::title_bar_icon_rect() const
+Gfx::IntRect WindowFrame::titlebar_icon_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_icon_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
-Gfx::IntRect WindowFrame::title_bar_text_rect() const
+Gfx::IntRect WindowFrame::titlebar_text_rect() const
 {
-    return Gfx::WindowTheme::current().title_bar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
+    return Gfx::WindowTheme::current().titlebar_text_rect(to_theme_window_type(m_window.type()), m_window.rect(), WindowManager::the().palette());
 }
 
 Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
@@ -311,7 +301,7 @@ void WindowFrame::paint_menubar(Gfx::Painter& painter)
         auto text_rect = menu.rect_in_window_menubar();
         Color text_color = palette.window_text();
         if (MenuManager::the().is_open(menu))
-            text_rect.move_by(1, 1);
+            text_rect.translate_by(1, 1);
         bool paint_as_pressed = MenuManager::the().is_open(menu);
         bool paint_as_hovered = !paint_as_pressed && &menu == MenuManager::the().hovered_menu();
         if (paint_as_pressed || paint_as_hovered) {
@@ -326,7 +316,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), m_window.icon(), palette, leftmost_button_rect, menu_row_count());
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), m_window.icon(), palette, leftmost_button_rect, menu_row_count(), m_window.is_modified());
 
     if (m_window.menubar() && m_window.should_show_menubar())
         paint_menubar(painter);
@@ -539,10 +529,10 @@ Gfx::IntRect WindowFrame::render_rect() const
     return inflated_for_shadow(rect());
 }
 
-void WindowFrame::invalidate_title_bar()
+void WindowFrame::invalidate_titlebar()
 {
     m_dirty = true;
-    invalidate(title_bar_rect());
+    invalidate(titlebar_rect());
 }
 
 void WindowFrame::invalidate()
@@ -556,7 +546,7 @@ void WindowFrame::invalidate(Gfx::IntRect relative_rect)
 {
     auto frame_rect = rect();
     auto window_rect = m_window.rect();
-    relative_rect.move_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
+    relative_rect.translate_by(frame_rect.x() - window_rect.x(), frame_rect.y() - window_rect.y());
     m_dirty = true;
     m_window.invalidate(relative_rect, true);
 }
@@ -604,17 +594,29 @@ bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
     u8 alpha = 0xff;
     auto relative_point = point.translated(-render_rect().location());
     if (point.y() < window_rect.y()) {
-        if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point * m_top_bottom->scale()).alpha();
+        if (m_top_bottom) {
+            auto scaled_relative_point = relative_point * m_top_bottom->scale();
+            if (m_top_bottom->rect().contains(scaled_relative_point))
+                alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.y() > window_rect.bottom()) {
-        if (m_top_bottom)
-            alpha = m_top_bottom->get_pixel(relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1).alpha();
+        if (m_top_bottom) {
+            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1 };
+            if (m_top_bottom->rect().contains(scaled_relative_point))
+                alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.x() < window_rect.x()) {
-        if (m_left_right)
-            alpha = m_left_right->get_pixel(relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
+        if (m_left_right) {
+            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            if (m_left_right->rect().contains(scaled_relative_point))
+                alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
+        }
     } else if (point.x() > window_rect.right()) {
-        if (m_left_right)
-            alpha = m_left_right->get_pixel(m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale()).alpha();
+        if (m_left_right) {
+            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            if (m_left_right->rect().contains(scaled_relative_point))
+                alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
+        }
     } else {
         return false;
     }
@@ -636,7 +638,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         if (m_window.blocking_modal_window())
             return;
 
-        if (title_bar_icon_rect().contains(event.position())) {
+        if (titlebar_icon_rect().contains(event.position())) {
             if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
                 // Manually start a potential double click. Since we're opening
                 // a menu, we will only receive the MouseDown event, so we
@@ -650,7 +652,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 auto& wm = WindowManager::the();
                 wm.start_menu_doubleclick(m_window, event);
 
-                m_window.popup_window_menu(title_bar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
+                m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
                 return;
             } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
                 // Since the MouseDown event opened a menu, another MouseUp
@@ -670,10 +672,10 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
     // This is slightly hackish, but expand the title bar rect by two pixels downwards,
     // so that mouse events between the title bar and window contents don't act like
     // mouse events on the border.
-    auto adjusted_title_bar_rect = title_bar_rect();
-    adjusted_title_bar_rect.set_height(adjusted_title_bar_rect.height() + 2);
+    auto adjusted_titlebar_rect = titlebar_rect();
+    adjusted_titlebar_rect.set_height(adjusted_titlebar_rect.height() + 2);
 
-    if (adjusted_title_bar_rect.contains(event.position())) {
+    if (adjusted_titlebar_rect.contains(event.position())) {
         wm.clear_resize_candidate();
 
         if (event.type() == Event::MouseDown)
@@ -778,7 +780,7 @@ void WindowFrame::start_flash_animation()
     if (!m_flash_timer) {
         m_flash_timer = Core::Timer::construct(100, [this] {
             VERIFY(m_flash_counter);
-            invalidate_title_bar();
+            invalidate_titlebar();
             if (!--m_flash_counter)
                 m_flash_timer->stop();
         });

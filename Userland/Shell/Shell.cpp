@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Shell.h"
@@ -97,8 +77,8 @@ String Shell::prompt() const
                 return "# ";
 
             StringBuilder builder;
-            builder.appendf("\033]0;%s@%s:%s\007", username.characters(), hostname, cwd.characters());
-            builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", username.characters(), hostname, cwd.characters());
+            builder.appendff("\033]0;{}@{}:{}\007", username, hostname, cwd);
+            builder.appendff("\033[31;1m{}\033[0m@\033[37;1m{}\033[0m:\033[32;1m{}\033[0m$> ", username, hostname, cwd);
             return builder.to_string();
         }
 
@@ -171,9 +151,9 @@ String Shell::expand_tilde(const String& expression)
         if (!home) {
             auto passwd = getpwuid(getuid());
             VERIFY(passwd && passwd->pw_dir);
-            return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+            return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
         }
-        return String::format("%s/%s", home, path.to_string().characters());
+        return String::formatted("{}/{}", home, path.to_string());
     }
 
     auto passwd = getpwnam(login_name.to_string().characters());
@@ -181,7 +161,7 @@ String Shell::expand_tilde(const String& expression)
         return expression;
     VERIFY(passwd->pw_dir);
 
-    return String::format("%s/%s", passwd->pw_dir, path.to_string().characters());
+    return String::formatted("{}/{}", passwd->pw_dir, path.to_string());
 }
 
 bool Shell::is_glob(const StringView& s)
@@ -317,9 +297,9 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
                         subcommand_ast = ast->command();
                     }
                     auto subcommand_nonnull = subcommand_ast.release_nonnull();
-                    NonnullRefPtr<AST::Node> substitute = adopt(*new AST::Join(subcommand_nonnull->position(),
+                    NonnullRefPtr<AST::Node> substitute = adopt_ref(*new AST::Join(subcommand_nonnull->position(),
                         subcommand_nonnull,
-                        adopt(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
+                        adopt_ref(*new AST::CommandLiteral(subcommand_nonnull->position(), command))));
                     auto res = substitute->run(*this);
                     for (auto& subst_command : res->resolve_as_commands(*this)) {
                         if (!subst_command.argv.is_empty() && subst_command.argv.first() == argv0) // Disallow an alias resolving to itself.
@@ -347,7 +327,7 @@ Vector<AST::Command> Shell::expand_aliases(Vector<AST::Command> initial_commands
 String Shell::resolve_path(String path) const
 {
     if (!path.starts_with('/'))
-        path = String::format("%s/%s", cwd.characters(), path.characters());
+        path = String::formatted("{}/{}", cwd, path);
 
     return Core::File::real_path_for(path);
 }
@@ -376,7 +356,7 @@ RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
 RefPtr<AST::Value> Shell::get_argument(size_t index)
 {
     if (index == 0)
-        return adopt(*new AST::StringValue(current_script));
+        return adopt_ref(*new AST::StringValue(current_script));
 
     --index;
     if (auto argv = lookup_local_variable("ARGV")) {
@@ -472,12 +452,12 @@ bool Shell::invoke_function(const AST::Command& command, int& retval)
     size_t index = 0;
     for (auto& arg : function.arguments) {
         ++index;
-        set_local_variable(arg, adopt(*new AST::StringValue(command.argv[index])), true);
+        set_local_variable(arg, adopt_ref(*new AST::StringValue(command.argv[index])), true);
     }
 
     auto argv = command.argv;
     argv.take_first();
-    set_local_variable("ARGV", adopt(*new AST::ListValue(move(argv))), true);
+    set_local_variable("ARGV", adopt_ref(*new AST::ListValue(move(argv))), true);
 
     Core::EventLoop loop;
     setup_signals();
@@ -531,12 +511,14 @@ String Shell::resolve_alias(const String& name) const
 
 bool Shell::is_runnable(const StringView& name)
 {
-    if (access(name.to_string().characters(), X_OK) == 0)
+    auto parts = name.split_view('/');
+    auto path = name.to_string();
+    if (parts.size() > 1 && access(path.characters(), X_OK) == 0)
         return true;
 
     return binary_search(
         cached_path.span(),
-        name.to_string(),
+        path,
         nullptr,
         [](auto& name, auto& program) { return strcmp(name.characters(), program.characters()); });
 }
@@ -615,7 +597,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         auto rewiring_result = redirection.apply();
         if (rewiring_result.is_error()) {
             if (!rewiring_result.error().is_empty())
-                fprintf(stderr, "error: %s\n", rewiring_result.error().characters());
+                warnln("error: {}", rewiring_result.error());
             return IterationDecision::Break;
         }
         auto& rewiring = rewiring_result.value();
@@ -822,10 +804,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             perror("setpgid");
 
         if (!m_is_subshell) {
-            if (tcsetpgrp(STDOUT_FILENO, pgid) != 0 && m_is_interactive)
-                perror("tcsetpgrp(OUT)");
-            if (tcsetpgrp(STDIN_FILENO, pgid) != 0 && m_is_interactive)
-                perror("tcsetpgrp(IN)");
+            // There's no reason to care about the errors here
+            // either we're in a tty, we're interactive, and this works
+            // or we're not, and it fails - in which case, we don't need
+            // stdin/stdout handoff to child processes anyway.
+            tcsetpgrp(STDOUT_FILENO, pgid);
+            tcsetpgrp(STDIN_FILENO, pgid);
         }
     }
 
@@ -855,9 +839,9 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
             return;
 
         if (job->is_running_in_background() && job->should_announce_exit())
-            warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd().characters());
+            warnln("Shell: Job {} ({}) exited\n", job->job_id(), job->cmd());
         else if (job->signaled() && job->should_announce_signal())
-            warnln("Shell: Job {} ({}) {}\n", job->job_id(), job->cmd().characters(), strsignal(job->termination_signal()));
+            warnln("Shell: Job {} ({}) {}\n", job->job_id(), job->cmd(), strsignal(job->termination_signal()));
 
         last_return_code = job->exit_code();
         job->disown();
@@ -874,39 +858,50 @@ void Shell::execute_process(Vector<const char*>&& argv)
 {
     int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
     if (rc < 0) {
+        auto parts = StringView { argv[0] }.split_view('/');
+        if (parts.size() == 1) {
+            // If this is a path in the current directory and it caused execvp() to fail,
+            // simply don't attempt to execute it, see #6774.
+            warnln("{}: Command not found.", argv[0]);
+            _exit(127);
+        }
         int saved_errno = errno;
         struct stat st;
         if (stat(argv[0], &st)) {
-            fprintf(stderr, "stat(%s): %s\n", argv[0], strerror(errno));
+            warnln("stat({}): {}", argv[0], strerror(errno));
             // Return code 127 on command not found.
             _exit(127);
         }
         if (!(st.st_mode & S_IXUSR)) {
-            fprintf(stderr, "%s: Not executable\n", argv[0]);
+            warnln("{}: Not executable", argv[0]);
             // Return code 126 when file is not executable.
             _exit(126);
         }
         if (saved_errno == ENOENT) {
-            int shebang_fd = open(argv[0], O_RDONLY);
-            auto close_argv = ScopeGuard([shebang_fd]() { if (shebang_fd >= 0)  close(shebang_fd); });
-            char shebang[256] {};
-            ssize_t num_read = -1;
-            if ((shebang_fd >= 0) && ((num_read = read(shebang_fd, shebang, sizeof(shebang))) >= 2) && (StringView(shebang).starts_with("#!"))) {
-                StringView shebang_path_view(&shebang[2], num_read - 2);
-                Optional<size_t> newline_pos = shebang_path_view.find_first_of("\n\r");
-                shebang[newline_pos.has_value() ? (newline_pos.value() + 2) : num_read] = '\0';
-                argv[0] = shebang;
+            do {
+                auto file_result = Core::File::open(argv[0], Core::IODevice::OpenMode::ReadOnly);
+                if (file_result.is_error())
+                    break;
+                auto& file = file_result.value();
+                auto line = file->read_line();
+                if (!line.starts_with("#!"))
+                    break;
+                GenericLexer shebang_lexer { line.substring_view(2) };
+                auto shebang = shebang_lexer.consume_until(is_any_of("\n\r")).to_string();
+                argv.prepend(shebang.characters());
                 int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
-                if (rc < 0)
-                    fprintf(stderr, "%s: Invalid interpreter \"%s\": %s\n", argv[0], &shebang[2], strerror(errno));
-            } else
-                fprintf(stderr, "%s: Command not found.\n", argv[0]);
+                if (rc < 0) {
+                    warnln("{}: Invalid interpreter \"{}\": {}", argv[0], shebang.characters(), strerror(errno));
+                    _exit(126);
+                }
+            } while (false);
+            warnln("{}: Command not found.", argv[0]);
         } else {
             if (S_ISDIR(st.st_mode)) {
-                fprintf(stderr, "Shell: %s: Is a directory\n", argv[0]);
+                warnln("Shell: {}: Is a directory", argv[0]);
                 _exit(126);
             }
-            fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(saved_errno));
+            warnln("execvp({}): {}", argv[0], strerror(saved_errno));
         }
         _exit(126);
     }
@@ -928,8 +923,8 @@ void Shell::run_tail(const AST::Command& invoking_command, const AST::NodeWithAc
         }
         auto node = next_in_chain.node;
         if (!invoking_command.should_wait)
-            node = adopt(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
-        adopt(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
+            node = adopt_ref(static_cast<AST::Node&>(*new AST::Background(next_in_chain.node->position(), move(node))));
+        adopt_ref(static_cast<AST::Node&>(*new AST::Execute(next_in_chain.node->position(), move(node))))->run(*this);
     };
     switch (next_in_chain.action) {
     case AST::NodeWithAction::And:
@@ -1212,6 +1207,27 @@ String Shell::unescape_token(const String& token)
     return builder.build();
 }
 
+String Shell::find_in_path(const StringView& program_name)
+{
+    String path = getenv("PATH");
+    if (!path.is_empty()) {
+        auto directories = path.split(':');
+        for (const auto& directory : directories) {
+            Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
+            while (programs.has_next()) {
+                auto program = programs.next_path();
+                auto program_path = String::formatted("{}/{}", directory, program);
+                if (access(program_path.characters(), X_OK) != 0)
+                    continue;
+                if (program == program_name)
+                    return program_path;
+            }
+        }
+    }
+
+    return {};
+}
+
 void Shell::cache_path()
 {
     if (!m_is_interactive)
@@ -1247,7 +1263,7 @@ void Shell::cache_path()
             Core::DirIterator programs(directory.characters(), Core::DirIterator::SkipDots);
             while (programs.has_next()) {
                 auto program = programs.next_path();
-                String program_path = String::format("%s/%s", directory.characters(), program.characters());
+                auto program_path = String::formatted("{}/{}", directory, program);
                 auto escaped_name = escape_token(program);
                 if (cached_path.contains_slow(escaped_name))
                     continue;
@@ -1302,7 +1318,8 @@ Vector<Line::CompletionSuggestion> Shell::complete()
     return ast->complete_for_editor(*this, line.length());
 }
 
-Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, const String& part, size_t offset)
+Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base,
+    const String& part, size_t offset, ExecutableOnly executable_only)
 {
     auto token = offset ? part.substring_view(0, offset) : "";
     String path;
@@ -1315,6 +1332,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
     auto init_slash_part = token.substring_view(0, last_slash + 1);
     auto last_slash_part = token.substring_view(last_slash + 1, token.length() - last_slash - 1);
 
+    bool allow_direct_children = true;
+
     // Depending on the base, we will have to prepend cwd.
     if (base.is_empty()) {
         // '' /foo -> absolute
@@ -1323,6 +1342,8 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
             path_builder.append(cwd);
         path_builder.append('/');
         path_builder.append(init_slash_part);
+        if (executable_only == ExecutableOnly::Yes && init_slash_part.is_empty())
+            allow_direct_children = false;
     } else {
         // /foo * -> absolute
         // foo * -> relative
@@ -1354,12 +1375,14 @@ Vector<Line::CompletionSuggestion> Shell::complete_path(const String& base, cons
         auto file = files.next_path();
         if (file.starts_with(token)) {
             struct stat program_status;
-            String file_path = String::format("%s/%s", path.characters(), file.characters());
+            auto file_path = String::formatted("{}/{}", path, file);
             int stat_error = stat(file_path.characters(), &program_status);
-            if (!stat_error) {
+            if (!stat_error && (executable_only == ExecutableOnly::No || access(file_path.characters(), X_OK) == 0)) {
                 if (S_ISDIR(program_status.st_mode)) {
                     suggestions.append({ escape_token(file), "/" });
                 } else {
+                    if (!allow_direct_children && !file.contains("/"))
+                        continue;
                     suggestions.append({ escape_token(file), " " });
                 }
                 suggestions.last().input_offset = token_length;
@@ -1379,7 +1402,7 @@ Vector<Line::CompletionSuggestion> Shell::complete_program_name(const String& na
         [](auto& name, auto& program) { return strncmp(name.characters(), program.characters(), name.length()); });
 
     if (!match)
-        return complete_path("", name, offset);
+        return complete_path("", name, offset, ExecutableOnly::Yes);
 
     String completion = *match;
     auto token_length = escape_token(name).length();
@@ -1823,11 +1846,16 @@ u64 Shell::find_last_job_id() const
     return job_id;
 }
 
-const Job* Shell::find_job(u64 id)
+const Job* Shell::find_job(u64 id, bool is_pid)
 {
     for (auto& entry : jobs) {
-        if (entry.value->job_id() == id)
-            return entry.value;
+        if (is_pid) {
+            if (entry.value->pid() == static_cast<int>(id))
+                return entry.value;
+        } else {
+            if (entry.value->job_id() == id)
+                return entry.value;
+        }
     }
     return nullptr;
 }
@@ -1956,6 +1984,29 @@ void Shell::possibly_print_error() const
         }
     }
     warnln();
+}
+
+Optional<int> Shell::resolve_job_spec(const String& str)
+{
+    if (!str.starts_with('%'))
+        return {};
+
+    // %number -> job id <number>
+    if (auto number = str.substring_view(1).to_uint(); number.has_value())
+        return number.value();
+
+    // '%?str' -> iterate jobs and pick one with `str' in its command
+    // Note: must be quoted, since '?' will turn it into a glob - pretty ugly...
+    GenericLexer lexer { str.substring_view(1) };
+    if (!lexer.consume_specific('?'))
+        return {};
+    auto search_term = lexer.remaining();
+    for (auto& it : jobs) {
+        if (it.value->cmd().contains(search_term))
+            return it.key;
+    }
+
+    return {};
 }
 
 void FileDescriptionCollector::collect()

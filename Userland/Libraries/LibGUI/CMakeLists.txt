@@ -4,6 +4,7 @@ compile_gml(FilePickerDialog.gml FilePickerDialogGML.h file_picker_dialog_gml)
 set(SOURCES
     AboutDialog.cpp
     AbstractButton.cpp
+    AbstractScrollableWidget.cpp
     AbstractSlider.cpp
     AbstractTableView.cpp
     AbstractView.cpp
@@ -20,6 +21,7 @@ set(SOURCES
     ColorInput.cpp
     ColorPicker.cpp
     ColumnsView.cpp
+    CommonLocationsProvider.cpp
     ComboBox.cpp
     Command.cpp
     Desktop.cpp
@@ -72,8 +74,8 @@ set(SOURCES
     RegularEditingEngine.cpp
     ResizeCorner.cpp
     RunningProcessesModel.cpp
+    ScrollableContainerWidget.cpp
     Scrollbar.cpp
-    ScrollableWidget.cpp
     SeparatorWidget.cpp
     Shortcut.cpp
     Slider.cpp

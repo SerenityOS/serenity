@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Peter Elliott <pelliott@ualberta.ca>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Base64.h>
@@ -29,9 +9,17 @@
 #include <AK/ScopeGuard.h>
 #include <LibCore/Account.h>
 #include <LibCore/File.h>
+#ifndef AK_OS_MACOS
+#    include <crypt.h>
+#endif
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
+#ifndef AK_OS_MACOS
+#    include <shadow.h>
+#else
+#    include <LibC/shadow.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -51,10 +39,14 @@ static String get_salt()
     return builder.build();
 }
 
-static Vector<gid_t> get_gids(const StringView& username)
+static Vector<gid_t> get_extra_gids(const passwd& pwd)
 {
+    StringView username { pwd.pw_name };
     Vector<gid_t> extra_gids;
+    setgrent();
     for (auto* group = getgrent(); group; group = getgrent()) {
+        if (group->gr_gid == pwd.pw_gid)
+            continue;
         for (size_t i = 0; group->gr_mem[i]; ++i) {
             if (username == group->gr_mem[i]) {
                 extra_gids.append(group->gr_gid);
@@ -66,39 +58,60 @@ static Vector<gid_t> get_gids(const StringView& username)
     return extra_gids;
 }
 
-Result<Account, String> Account::from_passwd(const passwd& pwd)
+Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd)
 {
-    Account account(pwd, get_gids(pwd.pw_name));
+    Account account(pwd, spwd, get_extra_gids(pwd));
     endpwent();
+#ifndef AK_OS_MACOS
+    endspent();
+#endif
     return account;
 }
 
 Result<Account, String> Account::from_name(const char* username)
 {
-    struct passwd* pwd = nullptr;
     errno = 0;
-    pwd = getpwnam(username);
+    auto* pwd = getpwnam(username);
     if (!pwd) {
         if (errno == 0)
             return String("No such user");
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd);
+    spwd spwd_dummy = {};
+    spwd_dummy.sp_namp = const_cast<char*>(username);
+    spwd_dummy.sp_pwdp = const_cast<char*>("");
+#ifndef AK_OS_MACOS
+    auto* spwd = getspnam(username);
+    if (!spwd)
+        spwd = &spwd_dummy;
+#else
+    auto* spwd = &spwd_dummy;
+#endif
+    return from_passwd(*pwd, *spwd);
 }
 
 Result<Account, String> Account::from_uid(uid_t uid)
 {
-    struct passwd* pwd = nullptr;
     errno = 0;
-    pwd = getpwuid(uid);
+    auto* pwd = getpwuid(uid);
     if (!pwd) {
         if (errno == 0)
             return String("No such user");
 
         return String(strerror(errno));
     }
-    return from_passwd(*pwd);
+    spwd spwd_dummy = {};
+    spwd_dummy.sp_namp = pwd->pw_name;
+    spwd_dummy.sp_pwdp = const_cast<char*>("");
+#ifndef AK_OS_MACOS
+    auto* spwd = getspnam(pwd->pw_name);
+    if (!spwd)
+        spwd = &spwd_dummy;
+#else
+    auto* spwd = &spwd_dummy;
+#endif
+    return from_passwd(*pwd, *spwd);
 }
 
 bool Account::authenticate(const char* password) const
@@ -152,16 +165,16 @@ void Account::delete_password()
     m_password_hash = "";
 }
 
-Account::Account(const passwd& pwd, Vector<gid_t> extra_gids)
+Account::Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids)
     : m_username(pwd.pw_name)
+    , m_password_hash(spwd.sp_pwdp)
     , m_uid(pwd.pw_uid)
     , m_gid(pwd.pw_gid)
     , m_gecos(pwd.pw_gecos)
     , m_home_directory(pwd.pw_dir)
     , m_shell(pwd.pw_shell)
-    , m_extra_gids(extra_gids)
+    , m_extra_gids(move(extra_gids))
 {
-    load_shadow_file();
 }
 
 String Account::generate_passwd_file() const
@@ -198,64 +211,57 @@ String Account::generate_passwd_file() const
     return builder.to_string();
 }
 
-void Account::load_shadow_file()
-{
-    auto file_or_error = Core::File::open("/etc/shadow", Core::File::ReadOnly);
-    VERIFY(!file_or_error.is_error());
-    auto shadow_file = file_or_error.release_value();
-    VERIFY(shadow_file->is_open());
-
-    Vector<ShadowEntry> entries;
-
-    for (;;) {
-        auto line = shadow_file->read_line();
-        if (line.is_null())
-            break;
-        auto parts = line.split(':', true);
-        if (parts.size() != 2) {
-            dbgln("Malformed shadow entry, ignoring.");
-            continue;
-        }
-        const auto& username = parts[0];
-        const auto& password_hash = parts[1];
-        entries.append({ username, password_hash });
-
-        if (username == m_username) {
-            m_password_hash = password_hash;
-        }
-    }
-
-    m_shadow_entries = move(entries);
-}
-
+#ifndef AK_OS_MACOS
 String Account::generate_shadow_file() const
 {
     StringBuilder builder;
-    bool updated_entry_in_place = false;
-    for (auto& entry : m_shadow_entries) {
-        if (entry.username == m_username) {
-            updated_entry_in_place = true;
-            builder.appendff("{}:{}\n", m_username, m_password_hash);
+
+    setspent();
+
+    struct spwd* p;
+    errno = 0;
+    while ((p = getspent())) {
+        if (p->sp_namp == m_username) {
+            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
+                m_username, m_password_hash,
+                p->sp_lstchg, p->sp_min,
+                p->sp_max, p->sp_warn,
+                p->sp_inact, p->sp_expire,
+                p->sp_flag);
+
         } else {
-            builder.appendff("{}:{}\n", entry.username, entry.password_hash);
+            builder.appendff("{}:{}:{}:{}:{}:{}:{}:{}:{}\n",
+                p->sp_namp, p->sp_pwdp,
+                p->sp_lstchg, p->sp_min,
+                p->sp_max, p->sp_warn,
+                p->sp_inact, p->sp_expire,
+                p->sp_flag);
         }
     }
-    if (!updated_entry_in_place)
-        builder.appendff("{}:{}\n", m_username, m_password_hash);
+    endspent();
+
+    if (errno) {
+        dbgln("errno was non-zero after generating new passwd file.");
+        return {};
+    }
+
     return builder.to_string();
 }
+#endif
 
 bool Account::sync()
 {
     auto new_passwd_file_content = generate_passwd_file();
+    VERIFY(!new_passwd_file_content.is_null());
+#ifndef AK_OS_MACOS
     auto new_shadow_file_content = generate_shadow_file();
-
-    if (new_passwd_file_content.is_null() || new_shadow_file_content.is_null()) {
-        VERIFY_NOT_REACHED();
-    }
+    VERIFY(!new_shadow_file_content.is_null());
+#endif
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
+#ifndef AK_OS_MACOS
     char new_shadow_name[] = "/etc/shadow.XXXXXX";
+#endif
 
     {
         auto new_passwd_fd = mkstemp(new_passwd_name);
@@ -264,12 +270,14 @@ bool Account::sync()
             VERIFY_NOT_REACHED();
         }
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
+#ifndef AK_OS_MACOS
         auto new_shadow_fd = mkstemp(new_shadow_name);
         if (new_shadow_fd < 0) {
             perror("mkstemp");
             VERIFY_NOT_REACHED();
         }
         ScopeGuard new_shadow_fd_guard = [new_shadow_fd] { close(new_shadow_fd); };
+#endif
 
         if (fchmod(new_passwd_fd, 0644) < 0) {
             perror("fchmod");
@@ -283,12 +291,14 @@ bool Account::sync()
         }
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
+#ifndef AK_OS_MACOS
         nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
         if (nwritten < 0) {
             perror("write");
             VERIFY_NOT_REACHED();
         }
         VERIFY(static_cast<size_t>(nwritten) == new_shadow_file_content.length());
+#endif
     }
 
     if (rename(new_passwd_name, "/etc/passwd") < 0) {
@@ -296,10 +306,12 @@ bool Account::sync()
         return false;
     }
 
+#ifndef AK_OS_MACOS
     if (rename(new_shadow_name, "/etc/shadow") < 0) {
         perror("Failed to install new /etc/shadow");
         return false;
     }
+#endif
 
     return true;
     // FIXME: Sync extra groups.

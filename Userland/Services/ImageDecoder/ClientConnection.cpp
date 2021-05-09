@@ -1,35 +1,14 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Badge.h>
+#include <AK/Debug.h>
 #include <ImageDecoder/ClientConnection.h>
 #include <ImageDecoder/ImageDecoderClientEndpoint.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
-#include <LibGfx/SystemTheme.h>
 
 namespace ImageDecoder {
 
@@ -51,28 +30,22 @@ void ClientConnection::die()
     exit(0);
 }
 
-OwnPtr<Messages::ImageDecoderServer::GreetResponse> ClientConnection::handle(const Messages::ImageDecoderServer::Greet&)
+void ClientConnection::greet()
 {
-    return make<Messages::ImageDecoderServer::GreetResponse>();
 }
 
-OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::handle(const Messages::ImageDecoderServer::DecodeImage& message)
+Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image(Core::AnonymousBuffer const& encoded_buffer)
 {
-    auto encoded_buffer = message.data();
     if (!encoded_buffer.is_valid()) {
-#if IMAGE_DECODER_DEBUG
-        dbgln("Encoded data is invalid");
-#endif
-        return {};
+        dbgln_if(IMAGE_DECODER_DEBUG, "Encoded data is invalid");
+        return nullptr;
     }
 
     auto decoder = Gfx::ImageDecoder::create(encoded_buffer.data<u8>(), encoded_buffer.size());
 
     if (!decoder->frame_count()) {
-#if IMAGE_DECODER_DEBUG
-        dbgln("Could not decode image from encoded data");
-#endif
-        return make<Messages::ImageDecoderServer::DecodeImageResponse>(false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {});
+        dbgln_if(IMAGE_DECODER_DEBUG, "Could not decode image from encoded data");
+        return { false, 0, Vector<Gfx::ShareableBitmap> {}, Vector<u32> {} };
     }
 
     Vector<Gfx::ShareableBitmap> bitmaps;
@@ -93,7 +66,7 @@ OwnPtr<Messages::ImageDecoderServer::DecodeImageResponse> ClientConnection::hand
         durations.append(frame.duration);
     }
 
-    return make<Messages::ImageDecoderServer::DecodeImageResponse>(decoder->is_animated(), decoder->loop_count(), bitmaps, durations);
+    return { decoder->is_animated(), decoder->loop_count(), bitmaps, durations };
 }
 
 }

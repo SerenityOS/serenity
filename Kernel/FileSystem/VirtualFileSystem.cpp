@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
@@ -70,7 +50,7 @@ InodeIdentifier VFS::root_inode_id() const
 
 KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     auto& inode = mount_point.inode();
     dbgln("VFS: Mounting {} at {} (inode: {}) with flags {}",
@@ -86,7 +66,7 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 
 KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     dbgln("VFS: Bind-mounting {} at {}", source.absolute_path(), mount_point.absolute_path());
     // FIXME: check that this is not already a mount point
@@ -97,7 +77,7 @@ KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 
 KResult VFS::remount(Custody& mount_point, int new_flags)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
 
     dbgln("VFS: Remounting {}", mount_point.absolute_path());
 
@@ -111,7 +91,7 @@ KResult VFS::remount(Custody& mount_point, int new_flags)
 
 KResult VFS::unmount(Inode& guest_inode)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     dbgln("VFS: unmount called with inode {}", guest_inode.identifier());
 
     for (size_t i = 0; i < m_mounts.size(); ++i) {
@@ -229,12 +209,10 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
     if (custody.is_readonly())
         return EROFS;
 
-    int error = inode.set_atime(atime);
-    if (error < 0)
-        return KResult((ErrnoCode)-error);
-    error = inode.set_mtime(mtime);
-    if (error < 0)
-        return KResult((ErrnoCode)-error);
+    if (auto result = inode.set_atime(atime); result.is_error())
+        return result;
+    if (auto result = inode.set_mtime(mtime); result.is_error())
+        return result;
     return KSuccess;
 }
 
@@ -339,10 +317,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         return EROFS;
 
     if (should_truncate_file) {
-        KResult result = inode.truncate(0);
-        if (result.is_error())
+        if (auto result = inode.truncate(0); result.is_error())
             return result;
-        inode.set_mtime(kgettimeofday().to_truncated_seconds());
+        if (auto result = inode.set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
+            return result;
     }
     auto description = FileDescription::create(custody);
     if (!description.is_error()) {
@@ -518,6 +496,10 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error() != -ENOENT || !new_parent_custody)
             return new_custody_or_error.error();
+    }
+
+    if (!old_parent_custody || !new_parent_custody) {
+        return EPERM;
     }
 
     auto& old_parent_inode = old_parent_custody->inode();
@@ -732,9 +714,9 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
         return inode_or_error.error();
     auto& inode = inode_or_error.value();
     auto target_buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>((const u8*)target.characters_without_null_termination()));
-    ssize_t nwritten = inode->write_bytes(0, target.length(), target_buffer, nullptr);
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
+    auto result = inode->write_bytes(0, target.length(), target_buffer, nullptr);
+    if (result.is_error())
+        return result.error();
     return KSuccess;
 }
 

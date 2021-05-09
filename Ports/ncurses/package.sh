@@ -8,3 +8,7 @@ https://ftpmirror.gnu.org/gnu/ncurses/ncurses-${version}.tar.gz.sig ncurses-${ve
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
 auth_type="sig"
 auth_opts="--keyring ./gnu-keyring.gpg ncurses-${version}.tar.gz.sig"
+
+pre_configure() {
+    export CPPFLAGS="-P"
+}

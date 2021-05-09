@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <WindowServer/AppletManager.h>
@@ -53,26 +33,25 @@ void WMClientConnection::die()
     });
 }
 
-OwnPtr<Messages::WindowManagerServer::SetAppletAreaPositionResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetAppletAreaPosition& message)
+void WMClientConnection::set_applet_area_position(Gfx::IntPoint const& position)
 {
     if (m_window_id < 0) {
         did_misbehave("SetAppletAreaPosition: WM didn't assign window as manager yet");
         // FIXME: return ok boolean?
-        return make<Messages::WindowManagerServer::SetAppletAreaPositionResponse>();
+        return;
     }
 
-    AppletManager::the().set_position(message.position());
-    return make<Messages::WindowManagerServer::SetAppletAreaPositionResponse>();
+    AppletManager::the().set_position(position);
 }
 
-void WMClientConnection::handle(const Messages::WindowManagerServer::SetActiveWindow& message)
+void WMClientConnection::set_active_window(i32 client_id, i32 window_id)
 {
-    auto* client = WindowServer::ClientConnection::from_client_id(message.client_id());
+    auto* client = WindowServer::ClientConnection::from_client_id(client_id);
     if (!client) {
         did_misbehave("SetActiveWindow: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(message.window_id());
+    auto it = client->m_windows.find(window_id);
     if (it == client->m_windows.end()) {
         did_misbehave("SetActiveWindow: Bad window ID");
         return;
@@ -82,34 +61,34 @@ void WMClientConnection::handle(const Messages::WindowManagerServer::SetActiveWi
     WindowManager::the().move_to_front_and_make_active(window);
 }
 
-void WMClientConnection::handle(const Messages::WindowManagerServer::PopupWindowMenu& message)
+void WMClientConnection::popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint const& screen_position)
 {
-    auto* client = WindowServer::ClientConnection::from_client_id(message.client_id());
+    auto* client = WindowServer::ClientConnection::from_client_id(client_id);
     if (!client) {
         did_misbehave("PopupWindowMenu: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(message.window_id());
+    auto it = client->m_windows.find(window_id);
     if (it == client->m_windows.end()) {
         did_misbehave("PopupWindowMenu: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
     if (auto* modal_window = window.blocking_modal_window()) {
-        modal_window->popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+        modal_window->popup_window_menu(screen_position, WindowMenuDefaultAction::BasedOnWindowState);
     } else {
-        window.popup_window_menu(message.screen_position(), WindowMenuDefaultAction::BasedOnWindowState);
+        window.popup_window_menu(screen_position, WindowMenuDefaultAction::BasedOnWindowState);
     }
 }
 
-void WMClientConnection::handle(const Messages::WindowManagerServer::StartWindowResize& request)
+void WMClientConnection::start_window_resize(i32 client_id, i32 window_id)
 {
-    auto* client = WindowServer::ClientConnection::from_client_id(request.client_id());
+    auto* client = WindowServer::ClientConnection::from_client_id(client_id);
     if (!client) {
         did_misbehave("WM_StartWindowResize: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(request.window_id());
+    auto it = client->m_windows.find(window_id);
     if (it == client->m_windows.end()) {
         did_misbehave("WM_StartWindowResize: Bad window ID");
         return;
@@ -120,55 +99,52 @@ void WMClientConnection::handle(const Messages::WindowManagerServer::StartWindow
     WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
 }
 
-void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowMinimized& message)
+void WMClientConnection::set_window_minimized(i32 client_id, i32 window_id, bool minimized)
 {
-    auto* client = WindowServer::ClientConnection::from_client_id(message.client_id());
+    auto* client = WindowServer::ClientConnection::from_client_id(client_id);
     if (!client) {
         did_misbehave("WM_SetWindowMinimized: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(message.window_id());
+    auto it = client->m_windows.find(window_id);
     if (it == client->m_windows.end()) {
         did_misbehave("WM_SetWindowMinimized: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    WindowManager::the().minimize_windows(window, message.minimized());
+    WindowManager::the().minimize_windows(window, minimized);
 }
 
-OwnPtr<Messages::WindowManagerServer::SetEventMaskResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetEventMask& message)
+void WMClientConnection::set_event_mask(u32 event_mask)
 {
-    m_event_mask = message.event_mask();
-    return make<Messages::WindowManagerServer::SetEventMaskResponse>();
+    m_event_mask = event_mask;
 }
 
-OwnPtr<Messages::WindowManagerServer::SetManagerWindowResponse> WMClientConnection::handle(const Messages::WindowManagerServer::SetManagerWindow& message)
+void WMClientConnection::set_manager_window(i32 window_id)
 {
-    m_window_id = message.window_id();
+    m_window_id = window_id;
 
     // Let the window manager know that we obtained a manager window, and should
     // receive information about other windows.
     WindowManager::the().greet_window_manager(*this);
-
-    return make<Messages::WindowManagerServer::SetManagerWindowResponse>();
 }
 
-void WMClientConnection::handle(const Messages::WindowManagerServer::SetWindowTaskbarRect& message)
+void WMClientConnection::set_window_taskbar_rect(i32 client_id, i32 window_id, Gfx::IntRect const& rect)
 {
     // Because the Taskbar (which should be the only user of this API) does not own the
     // window or the client id, there is a possibility that it may send this message for
     // a window or client that may have been destroyed already. This is not an error,
     // and we should not call did_misbehave() for either.
-    auto* client = WindowServer::ClientConnection::from_client_id(message.client_id());
+    auto* client = WindowServer::ClientConnection::from_client_id(client_id);
     if (!client)
         return;
 
-    auto it = client->m_windows.find(message.window_id());
+    auto it = client->m_windows.find(window_id);
     if (it == client->m_windows.end())
         return;
 
     auto& window = *(*it).value;
-    window.set_taskbar_rect(message.rect());
+    window.set_taskbar_rect(rect);
 }
 
 }

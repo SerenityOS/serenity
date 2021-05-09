@@ -9,7 +9,6 @@ if [ "$#" -eq "0" ]; then
     mapfile -t files < <(
         git ls-files -- \
             '*.sh' \
-            ':!:Toolchain' \
             ':!:Ports' \
             ':!:Userland/Shell/Tests' \
             ':!:Base/home/anon/tests'

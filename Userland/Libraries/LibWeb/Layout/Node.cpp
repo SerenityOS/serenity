@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Demangle.h>
@@ -85,6 +65,18 @@ const BlockBox* Node::containing_block() const
         return &root();
 
     return nearest_block_ancestor();
+}
+
+bool Node::establishes_stacking_context() const
+{
+    if (!has_style())
+        return false;
+    if (dom_node() == document().root())
+        return true;
+    auto position = computed_values().position();
+    if (position == CSS::Position::Absolute || position == CSS::Position::Relative || position == CSS::Position::Fixed || position == CSS::Position::Sticky)
+        return true;
+    return false;
 }
 
 void Node::paint(PaintContext& context, PaintPhase phase)
@@ -339,7 +331,7 @@ bool Node::handle_mousewheel(Badge<EventHandler>, const Gfx::IntPoint&, unsigned
         if (!containing_block->is_scrollable())
             return false;
         auto new_offset = containing_block->scroll_offset();
-        new_offset.move_by(0, wheel_delta);
+        new_offset.translate_by(0, wheel_delta);
         containing_block->set_scroll_offset(new_offset);
         return true;
     }
@@ -366,7 +358,7 @@ bool Node::is_inline_block() const
 
 NonnullRefPtr<NodeWithStyle> NodeWithStyle::create_anonymous_wrapper() const
 {
-    auto wrapper = adopt(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
+    auto wrapper = adopt_ref(*new BlockBox(const_cast<DOM::Document&>(document()), nullptr, m_computed_values.clone_inherited_values()));
     wrapper->m_font = m_font;
     wrapper->m_font_size = m_font_size;
     wrapper->m_line_height = m_line_height;

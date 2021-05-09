@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
@@ -33,6 +13,8 @@
 #include <sys/stat.h>
 
 static int perform_copy(const String& source, const String& destination);
+static void report_error(String message);
+static void report_warning(String message);
 
 int main(int argc, char** argv)
 {
@@ -49,7 +31,7 @@ int main(int argc, char** argv)
     if (operation == "Copy")
         return perform_copy(source, destination);
 
-    warnln("Unknown operation '{}'", operation);
+    report_warning(String::formatted("Unknown operation '{}'", operation));
     return 0;
 }
 
@@ -64,11 +46,22 @@ struct WorkItem {
     off_t size;
 };
 
+static void report_error(String message)
+{
+    outln("ERROR {}", message);
+}
+
+static void report_warning(String message)
+{
+    outln("WARN {}", message);
+}
+
 static bool collect_work_items(const String& source, const String& destination, Vector<WorkItem>& items)
 {
     struct stat st = {};
     if (stat(source.characters(), &st) < 0) {
-        perror("stat");
+        auto original_errno = errno;
+        report_error(String::formatted("stat: {}", strerror(original_errno)));
         return false;
     }
 
@@ -127,7 +120,8 @@ int perform_copy(const String& source, const String& destination)
         if (item.type == WorkItem::Type::CreateDirectory) {
             outln("MKDIR {}", item.destination);
             if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST) {
-                perror("mkdir");
+                auto original_errno = errno;
+                report_error(String::formatted("mkdir: {}", strerror(original_errno)));
                 return 1;
             }
             continue;
@@ -135,12 +129,12 @@ int perform_copy(const String& source, const String& destination)
         VERIFY(item.type == WorkItem::Type::CopyFile);
         auto source_file_or_error = Core::File::open(item.source, Core::File::ReadOnly);
         if (source_file_or_error.is_error()) {
-            warnln("Failed to open {} for reading: {}", item.source, source_file_or_error.error());
+            report_warning(String::formatted("Failed to open {} for reading: {}", item.source, source_file_or_error.error()));
             return 1;
         }
         auto destination_file_or_error = Core::File::open(item.destination, (Core::IODevice::OpenMode)(Core::File::WriteOnly | Core::File::Truncate));
         if (destination_file_or_error.is_error()) {
-            warnln("Failed to open {} for write: {}", item.destination, destination_file_or_error.error());
+            report_warning(String::formatted("Failed to open {} for write: {}", item.destination, destination_file_or_error.error()));
             return 1;
         }
         auto& source_file = *source_file_or_error.value();
@@ -152,7 +146,7 @@ int perform_copy(const String& source, const String& destination)
             if (buffer.is_null())
                 break;
             if (!destination_file.write(buffer)) {
-                warnln("Failed to write to destination file: {}", destination_file.error_string());
+                report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
                 return 1;
             }
             item_done += buffer.size();

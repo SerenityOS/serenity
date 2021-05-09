@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -182,8 +162,11 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
     if (s_log_malloc)
         dbgln("LibC: malloc({})", size);
 
-    if (!size)
-        return nullptr;
+    if (!size) {
+        // Legally we could just return a null pointer here, but this is more
+        // compatible with existing software.
+        size = 1;
+    }
 
     g_malloc_stats.number_of_malloc_calls++;
 
@@ -264,8 +247,13 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
 
     --block->m_free_chunks;
     void* ptr = block->m_freelist;
+    if (ptr) {
+        block->m_freelist = block->m_freelist->next;
+    } else {
+        ptr = block->m_slot + block->m_next_lazy_freelist_index * block->m_size;
+        block->m_next_lazy_freelist_index++;
+    }
     VERIFY(ptr);
-    block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
         dbgln_if(MALLOC_DEBUG, "Block {:p} is now full in size class {}", block, good_size);

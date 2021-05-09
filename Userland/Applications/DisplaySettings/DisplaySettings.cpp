@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DisplaySettings.h"
@@ -195,7 +175,7 @@ void DisplaySettingsWidget::create_frame()
 
 void DisplaySettingsWidget::load_current_settings()
 {
-    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
     auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
 
     /// Wallpaper path ////////////////////////////////////////////////////////////////////////////
@@ -273,7 +253,7 @@ void DisplaySettingsWidget::load_current_settings()
 void DisplaySettingsWidget::send_settings_to_window_server()
 {
     // Store the current screen resolution and scale factor in case the user wants to revert to it.
-    auto ws_config(Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini"));
+    auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
     Gfx::IntSize current_resolution;
     current_resolution.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
     current_resolution.set_height(ws_config->read_num_entry("Screen", "Height", 768));
@@ -284,9 +264,9 @@ void DisplaySettingsWidget::send_settings_to_window_server()
     }
 
     if (current_resolution != m_monitor_widget->desktop_resolution() || current_scale_factor != m_monitor_widget->desktop_scale_factor()) {
-        auto result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
-        if (!result->success()) {
-            GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
+        auto result = GUI::WindowServerConnection::the().set_resolution(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
+        if (!result.success()) {
+            GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                 "Unable to set resolution", GUI::MessageBox::Type::Error);
         } else {
             auto box = GUI::MessageBox::construct(window(), String::formatted("Do you want to keep the new settings? They will be reverted after 10 seconds."),
@@ -302,9 +282,9 @@ void DisplaySettingsWidget::send_settings_to_window_server()
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() != GUI::MessageBox::ExecYes) {
-                result = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetResolution>(current_resolution, current_scale_factor);
-                if (!result->success()) {
-                    GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result->resolution().width(), result->resolution().height(), result->scale_factor()),
+                result = GUI::WindowServerConnection::the().set_resolution(current_resolution, current_scale_factor);
+                if (!result.success()) {
+                    GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                         "Unable to set resolution", GUI::MessageBox::Type::Error);
                 }
             }

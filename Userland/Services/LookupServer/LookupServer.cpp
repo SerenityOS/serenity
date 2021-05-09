@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "LookupServer.h"
@@ -57,7 +37,7 @@ LookupServer::LookupServer()
     s_the = this;
 
     auto config = Core::ConfigFile::get_for_system("LookupServer");
-    dbgln("Using network config file at {}", config->file_name());
+    dbgln("Using network config file at {}", config->filename());
     m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();
@@ -66,6 +46,7 @@ LookupServer::LookupServer()
         m_dns_server = DNSServer::construct(this);
         // TODO: drop root privileges here.
     }
+    m_mdns = MulticastDNS::construct(this);
 
     m_local_server = Core::LocalServer::construct(this);
     m_local_server->on_ready_to_accept = [this]() {
@@ -133,9 +114,7 @@ void LookupServer::load_etc_hosts()
 
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short record_type)
 {
-#if LOOKUPSERVER_DEBUG
-    dbgln("Got request for '{}'", name.as_string());
-#endif
+    dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
 
     Vector<DNSAnswer> answers;
     auto add_answer = [&](const DNSAnswer& answer) {
@@ -164,9 +143,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
         for (auto& answer : cached_answers.value()) {
             // TODO: Actually remove expired answers from the cache.
             if (answer.type() == record_type && !answer.has_expired()) {
-#if LOOKUPSERVER_DEBUG
-                dbgln("Cache hit: {} -> {}", name.as_string(), answer.record_data());
-#endif
+                dbgln_if(LOOKUPSERVER_DEBUG, "Cache hit: {} -> {}", name.as_string(), answer.record_data());
                 add_answer(answer);
             }
         }
@@ -174,11 +151,17 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, unsigned short recor
             return answers;
     }
 
+    // Look up .local names using mDNS instead of DNS nameservers.
+    if (name.as_string().ends_with(".local")) {
+        answers = m_mdns->lookup(name, record_type);
+        for (auto& answer : answers)
+            put_in_cache(answer);
+        return answers;
+    }
+
     // Third, ask the upstream nameservers.
     for (auto& nameserver : m_nameservers) {
-#if LOOKUPSERVER_DEBUG
-        dbgln("Doing lookup using nameserver '{}'", nameserver);
-#endif
+        dbgln_if(LOOKUPSERVER_DEBUG, "Doing lookup using nameserver '{}'", nameserver);
         bool did_get_response = false;
         int retries = 3;
         Vector<DNSAnswer> upstream_answers;

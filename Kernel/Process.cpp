@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Demangle.h>
@@ -41,6 +21,7 @@
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/StdLib.h>
@@ -163,10 +144,13 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     if (!cwd)
         cwd = VFS::the().root_custody();
 
-    auto process = adopt(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
+    auto process = adopt_ref(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
     if (!first_thread)
         return {};
-    process->m_fds.resize(m_max_open_file_descriptors);
+    if (!process->m_fds.try_resize(m_max_open_file_descriptors)) {
+        first_thread = nullptr;
+        return {};
+    }
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
     auto description = device_to_use_as_tty.open(O_RDWR).value();
     process->m_fds[0].set(*description);
@@ -191,7 +175,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
 {
-    auto process = adopt(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
+    auto process = adopt_ref(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
     if (!first_thread)
         return {};
     first_thread->tss().eip = (FlatPtr)entry;
@@ -262,15 +246,17 @@ Process::~Process()
     VERIFY(thread_count() == 0); // all threads should have been finalized
     VERIFY(!m_alarm_timer);
 
+    PerformanceManager::add_process_exit_event(*this);
+
     {
-        ScopedSpinLock processses_lock(g_processes_lock);
+        ScopedSpinLock processes_lock(g_processes_lock);
         if (prev() || next())
             g_processes->remove(this);
     }
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
-extern void signal_trampoline_dummy();
+extern void signal_trampoline_dummy() __attribute__((used));
 void signal_trampoline_dummy()
 {
 #if ARCH(I386)
@@ -301,7 +287,7 @@ void signal_trampoline_dummy()
 #endif
 }
 
-extern "C" void asm_signal_trampoline(void);
+extern "C" void asm_signal_trampoline(void) __attribute__((used));
 extern "C" void asm_signal_trampoline_end(void);
 
 void create_signal_trampoline()
@@ -695,9 +681,15 @@ bool Process::create_perf_events_buffer_if_needed()
 {
     if (!m_perf_event_buffer) {
         m_perf_event_buffer = PerformanceEventBuffer::try_create_with_size(4 * MiB);
-        m_perf_event_buffer->add_process(*this);
+        m_perf_event_buffer->add_process(*this, ProcessEventType::Create);
     }
     return !!m_perf_event_buffer;
+}
+
+void Process::delete_perf_events_buffer()
+{
+    if (m_perf_event_buffer)
+        m_perf_event_buffer = nullptr;
 }
 
 bool Process::remove_thread(Thread& thread)

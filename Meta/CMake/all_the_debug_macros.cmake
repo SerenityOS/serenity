@@ -69,6 +69,7 @@ set(MARKDOWN_DEBUG ON)
 set(REGEX_DEBUG ON)
 set(TLS_DEBUG ON)
 set(SPAM_DEBUG ON)
+set(SQL_DEBUG ON)
 set(PARSER_DEBUG ON)
 set(TOKENIZER_TRACE_DEBUG ON)
 set(IMAGE_LOADER_DEBUG ON)
@@ -166,7 +167,6 @@ set(VOLATILE_PAGE_RANGES_DEBUG ON)
 set(WSMESSAGELOOP_DEBUG ON)
 set(GPT_DEBUG ON)
 set(CPP_DEBUG ON)
-set(DEBUG_SPAM ON)
 set(DEBUG_CPP_LANGUAGE_SERVER ON)
 set(DEBUG_AUTOCOMPLETE ON)
 set(FILE_WATCHER_DEBUG ON)
@@ -174,6 +174,8 @@ set(SYSCALL_1_DEBUG ON)
 set(RSA_PARSE_DEBUG ON)
 set(LINE_EDITOR_DEBUG ON)
 set(LANGUAGE_SERVER_DEBUG ON)
+set(GL_DEBUG ON)
+set(WASM_BINPARSER_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)
@@ -187,5 +189,11 @@ set(LANGUAGE_SERVER_DEBUG ON)
 # set(LOG_DEBUG ON)
 # False positive: UHCI_USBCMD_SOFTWARE_DEBUG is a flag, but for a bitset, not a feature.
 # set(UHCI_USBCMD_SOFTWARE_DEBUG ON)
+# False positive: DEBUG_CONTROL_REGISTER represents a specification constant.
+# set(DEBUG_CONTROL_REGISTER ON)
+# False positive: DEBUG_STATUS_REGISTER represents a specification constant.
+# set(DEBUG_STATUS_REGISTER ON)
+# False positive: DEFINE_DEBUG_REGISTER is used to define read/write methods for debug registers.
+# set(DEFINE_DEBUG_REGISTER ON)
 # Clogs up build: The WrapperGenerator stuff is run at compile time.
 # set(WRAPPER_GENERATOR_DEBUG ON)

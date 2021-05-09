@@ -14,9 +14,18 @@ interface Document : Node {
     attribute DOMString cookie;
 
     Element? getElementById(DOMString id);
-    ArrayFromVector getElementsByName(DOMString name);
-    ArrayFromVector getElementsByTagName(DOMString tagName);
-    ArrayFromVector getElementsByClassName(DOMString className);
+    HTMLCollection getElementsByName(DOMString name);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByClassName(DOMString className);
+
+    readonly attribute HTMLCollection applets;
+    readonly attribute HTMLCollection anchors;
+    readonly attribute HTMLCollection images;
+    readonly attribute HTMLCollection embeds;
+    readonly attribute HTMLCollection plugins;
+    readonly attribute HTMLCollection links;
+    readonly attribute HTMLCollection forms;
+    readonly attribute HTMLCollection scripts;
 
     Element createElement(DOMString tagName);
     Element createElementNS(DOMString? namespace, DOMString qualifiedName);

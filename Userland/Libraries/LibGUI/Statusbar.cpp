@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/BoxLayout.h>
@@ -44,20 +24,11 @@ Statusbar::Statusbar(int label_count)
     layout()->set_margins({ 0, 0, 0, 0 });
     layout()->set_spacing(2);
 
-    if (label_count < 1)
-        label_count = 1;
-
-    for (auto i = 0; i < label_count; i++) {
-        m_segments.append(Segment {
-            .label = create_label(),
-            .text = {},
-            .override_text = {},
-        });
-    }
-
     m_corner = add<ResizeCorner>();
+    set_label_count(label_count);
 
     REGISTER_STRING_PROPERTY("text", text, set_text);
+    REGISTER_INT_PROPERTY("label_count", label_count, set_label_count);
 }
 
 Statusbar::~Statusbar()
@@ -66,11 +37,12 @@ Statusbar::~Statusbar()
 
 NonnullRefPtr<Label> Statusbar::create_label()
 {
-    auto& label = add<Label>();
-    label.set_frame_shadow(Gfx::FrameShadow::Sunken);
-    label.set_frame_shape(Gfx::FrameShape::Panel);
-    label.set_frame_thickness(1);
-    label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
+    auto label = Label::construct();
+    insert_child_before(*label, *m_corner);
+    label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+    label->set_frame_shape(Gfx::FrameShape::Panel);
+    label->set_frame_thickness(1);
+    label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     return label;
 }
 
@@ -90,10 +62,33 @@ void Statusbar::set_text(size_t index, String text)
     update_label(index);
 }
 
+void Statusbar::set_label_count(size_t label_count)
+{
+    if (label_count <= 1)
+        label_count = 1;
+
+    for (auto i = m_segments.size(); i < label_count; i++) {
+        m_segments.append(Segment {
+            .label = create_label(),
+            .text = {},
+            .override_text = {},
+        });
+    }
+}
+
 void Statusbar::update_label(size_t index)
 {
     auto& segment = m_segments.at(index);
-    segment.label->set_text(segment.override_text.is_null() ? segment.text : segment.override_text);
+
+    if (segment.override_text.is_null()) {
+        segment.label->set_frame_shadow(Gfx::FrameShadow::Sunken);
+        segment.label->set_frame_shape(Gfx::FrameShape::Panel);
+        segment.label->set_text(segment.text);
+    } else {
+        segment.label->set_frame_shadow(Gfx::FrameShadow::Plain);
+        segment.label->set_frame_shape(Gfx::FrameShape::NoFrame);
+        segment.label->set_text(segment.override_text);
+    }
 }
 
 String Statusbar::text(size_t index) const
@@ -121,8 +116,9 @@ void Statusbar::paint_event(PaintEvent& event)
 
 void Statusbar::resize_event(ResizeEvent& event)
 {
-    if (window())
-        m_corner->set_visible(window()->is_maximized() ? false : true);
+    if (auto* window = this->window()) {
+        m_corner->set_visible(window->is_resizable() && !window->is_maximized());
+    }
 
     Widget::resize_event(event);
 }

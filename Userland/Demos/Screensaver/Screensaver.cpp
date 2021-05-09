@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGUI/Application.h>
@@ -43,6 +23,7 @@ public:
 private:
     Screensaver(int width = 64, int height = 48, int interval = 10000);
     RefPtr<Gfx::Bitmap> m_bitmap;
+    Gfx::IntPoint m_mouse_origin;
 
     void draw();
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -65,9 +46,14 @@ Screensaver::~Screensaver()
 {
 }
 
-void Screensaver::mousemove_event(GUI::MouseEvent&)
+void Screensaver::mousemove_event(GUI::MouseEvent& event)
 {
-    ::exit(0);
+    constexpr float max_distance_move = 10;
+    if (m_mouse_origin.is_null()) {
+        m_mouse_origin = event.position();
+    } else if (event.position().distance_from(m_mouse_origin) > max_distance_move) {
+        ::exit(0);
+    }
 }
 
 void Screensaver::mousedown_event(GUI::MouseEvent&)
@@ -83,7 +69,8 @@ void Screensaver::keydown_event(GUI::KeyEvent&)
 void Screensaver::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
-    painter.draw_scaled_bitmap(event.rect(), *m_bitmap, m_bitmap->rect());
+    painter.add_clip_rect(event.rect());
+    painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
 }
 
 void Screensaver::timer_event(Core::TimerEvent&)

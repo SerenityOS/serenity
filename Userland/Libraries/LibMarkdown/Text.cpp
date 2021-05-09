@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -92,7 +72,7 @@ String Text::render_to_html() const
                     current_style.img = {};
                     continue;
                 }
-                builder.appendf("</%s>", tag.characters());
+                builder.appendff("</{}>", tag);
                 if (tag == "a") {
                     current_style.href = {};
                     continue;
@@ -105,16 +85,16 @@ String Text::render_to_html() const
         }
         if (current_style.href.is_null() && !span.style.href.is_null()) {
             open_tags.append("a");
-            builder.appendf("<a href=\"%s\">", span.style.href.characters());
+            builder.appendff("<a href=\"{}\">", span.style.href);
         }
         if (current_style.img.is_null() && !span.style.img.is_null()) {
             open_tags.append("img");
-            builder.appendf("<img src=\"%s\" alt=\"", span.style.img.characters());
+            builder.appendff("<img src=\"{}\" alt=\"", span.style.img);
         }
         for (auto& tag_and_flag : tags_and_flags) {
             if (current_style.*tag_and_flag.flag != span.style.*tag_and_flag.flag) {
                 open_tags.append(tag_and_flag.tag);
-                builder.appendf("<%s>", tag_and_flag.tag.characters());
+                builder.appendff("<{}>", tag_and_flag.tag);
             }
         }
 
@@ -128,7 +108,7 @@ String Text::render_to_html() const
             builder.append("\" />");
             continue;
         }
-        builder.appendf("</%s>", tag.characters());
+        builder.appendff("</{}>", tag);
     }
 
     return builder.build();
@@ -173,13 +153,13 @@ String Text::render_for_terminal() const
             // non-absolute links, because the user has no
             // chance to follow them anyway.
             if (strstr(span.style.href.characters(), "://") != nullptr) {
-                builder.appendf(" <%s>", span.style.href.characters());
+                builder.appendff(" <{}>", span.style.href);
                 builder.append("\033]8;;\033\\");
             }
         }
         if (!span.style.img.is_null()) {
             if (strstr(span.style.img.characters(), "://") != nullptr) {
-                builder.appendf(" <%s>", span.style.img.characters());
+                builder.appendff(" <{}>", span.style.img);
             }
         }
     }
@@ -242,17 +222,15 @@ Optional<Text> Text::parse(const StringView& str)
             current_link_is_actually_img = true;
             break;
         case '[':
-#if MARKDOWN_DEBUG
-            if (first_span_in_the_current_link != -1)
-                dbgln("Dropping the outer link");
-#endif
+            if constexpr (MARKDOWN_DEBUG) {
+                if (first_span_in_the_current_link != -1)
+                    dbgln("Dropping the outer link");
+            }
             first_span_in_the_current_link = spans.size();
             break;
         case ']': {
             if (first_span_in_the_current_link == -1) {
-#if MARKDOWN_DEBUG
-                dbgln("Unmatched ]");
-#endif
+                dbgln_if(MARKDOWN_DEBUG, "Unmatched ]");
                 continue;
             }
             ScopeGuard guard = [&] {

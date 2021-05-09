@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -110,6 +90,7 @@ struct Parameter {
     String name;
     bool optional { false };
     String optional_default_value {};
+    HashMap<String, String> extended_attributes;
 };
 
 struct Function {
@@ -287,13 +268,16 @@ static OwnPtr<Interface> parse_interface(StringView filename, const StringView& 
         for (;;) {
             if (lexer.next_is(')'))
                 break;
+            HashMap<String, String> extended_attributes;
+            if (lexer.consume_specific('['))
+                extended_attributes = parse_extended_attributes();
             bool optional = lexer.consume_specific("optional");
             if (optional)
                 consume_whitespace();
             auto type = parse_type();
             consume_whitespace();
             auto name = lexer.consume_until([](auto ch) { return isspace(ch) || ch == ',' || ch == ')' || ch == '='; });
-            Parameter parameter = { move(type), move(name), optional };
+            Parameter parameter = { move(type), move(name), optional, {}, extended_attributes };
             consume_whitespace();
             if (lexer.next_is(')')) {
                 parameters.append(parameter);
@@ -515,6 +499,8 @@ static bool is_wrappable_type(const IDL::Type& type)
         return true;
     if (type.name.ends_with("Element"))
         return true;
+    if (type.name.ends_with("Event"))
+        return true;
     if (type.name == "ImageData")
         return true;
     return false;
@@ -573,7 +559,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
             @return_statement@
         }
-        @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+        @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
     }
 )~~~");
         } else {
@@ -582,7 +568,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Function");
         @return_statement@
     }
-    auto @cpp_name@ = adopt(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
+    auto @cpp_name@ = adopt_ref(*new EventListener(JS::make_handle(&@js_name@@js_suffix@.as_function())));
 )~~~");
         }
     } else if (is_wrappable_type(parameter.type)) {
@@ -666,6 +652,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (vm.exception())
         @return_statement@
 )~~~");
+    } else if (parameter.type.name == "unsigned short") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = (u16)@js_name@@js_suffix@.to_u32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
     } else if (parameter.type.name == "EventHandler") {
         // x.onfoo = function() { ... }
         scoped_generator.append(R"~~~(
@@ -722,8 +714,8 @@ static void generate_arguments(SourceGenerator& generator, const Vector<IDL::Par
         arguments_generator.append(R"~~~(
     auto arg@argument.index@ = vm.argument(@argument.index@);
 )~~~");
-        // FIXME: Parameters can have [LegacyNullToEmptyString] attached.
-        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, false, parameter.optional, parameter.optional_default_value);
+        bool legacy_null_to_empty_string = parameter.extended_attributes.contains("LegacyNullToEmptyString");
+        generate_to_cpp(generator, parameter, "arg", String::number(argument_index), parameter.name.to_snakecase(), return_void, legacy_null_to_empty_string, parameter.optional, parameter.optional_default_value);
         ++argument_index;
     }
 
@@ -776,7 +768,7 @@ static void generate_header(const IDL::Interface& interface)
 namespace Web::Bindings {
 
 class @wrapper_class@ : public @wrapper_base_class@ {
-    JS_OBJECT(@wrapper_class@, @wrapper_base_class@);
+    JS_OBJECT(@name@, @wrapper_base_class@);
 public:
     static @wrapper_class@* create(JS::GlobalObject&, @fully_qualified_name@&);
 
@@ -788,6 +780,11 @@ public:
     if (interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
     virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
+)~~~");
+    }
+    if (interface.extended_attributes.contains("CustomGetByIndex")) {
+        generator.append(R"~~~(
+    virtual JS::Value get_by_index(u32 property_index) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomPut")) {
@@ -865,6 +862,8 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
+#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
@@ -990,6 +989,7 @@ void generate_constructor_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/@constructor_class@.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
+#include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/WindowObject.h>
 #if __has_include(<LibWeb/CSS/@name@.h>)
 #    include <LibWeb/CSS/@name@.h>
@@ -1063,15 +1063,17 @@ JS::Value @constructor_class@::construct(Function&)
             generator.set(".constructor_arguments", arguments_builder.string_view());
 
             generator.append(R"~~~(
-    auto impl = @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@);
+    auto impl = throw_dom_exception_if_needed(vm, global_object, [&] { return @fully_qualified_name@::create_with_global_object(window, @.constructor_arguments@); });
 )~~~");
         } else {
             generator.append(R"~~~(
-    auto impl = @fully_qualified_name@::create_with_global_object(window);
+    auto impl = throw_dom_exception_if_needed(vm, global_object, [&] { return @fully_qualified_name@::create_with_global_object(window); });
 )~~~");
         }
         generator.append(R"~~~(
-    return @wrapper_class@::create(global_object, impl);
+    if (should_return_empty(impl))
+        return JS::Value();
+    return @wrapper_class@::create(global_object, impl.release_value());
 )~~~");
     } else {
         // Multiple constructor overloads - can't do that yet.
@@ -1205,6 +1207,8 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/EventWrapperFactory.h>
 #include <LibWeb/Bindings/ExceptionOrUtils.h>
 #include <LibWeb/Bindings/HTMLCanvasElementWrapper.h>
+#include <LibWeb/Bindings/HTMLCollectionWrapper.h>
+#include <LibWeb/Bindings/HTMLFormElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>

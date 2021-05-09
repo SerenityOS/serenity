@@ -1,34 +1,15 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * Copyright (c) 2021, Idan Horowitz <idan.horowitz@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCompress/Gzip.h>
 
 #include <AK/MemoryStream.h>
 #include <AK/String.h>
+#include <LibCore/DateTime.h>
 
 namespace Compress {
 
@@ -158,6 +139,19 @@ size_t GzipDecompressor::read(Bytes bytes)
         }
     }
     return total_read;
+}
+
+Optional<String> GzipDecompressor::describe_header(ReadonlyBytes bytes)
+{
+    if (bytes.size() < sizeof(BlockHeader))
+        return {};
+
+    auto& header = *(reinterpret_cast<const BlockHeader*>(bytes.data()));
+    if (!header.valid_magic_number() || !header.supported_by_implementation())
+        return {};
+
+    LittleEndian<u32> original_size = *reinterpret_cast<const u32*>(bytes.offset(bytes.size() - sizeof(u32)));
+    return String::formatted("last modified: {}, original size {}", Core::DateTime::from_timestamp(header.modification_time).to_string(), (u32)original_size);
 }
 
 bool GzipDecompressor::read_or_error(Bytes bytes)

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/IntrusiveList.h>
@@ -136,7 +116,7 @@ BlockBasedFS::~BlockBasedFS()
 
 KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& data, size_t count, size_t offset, bool allow_cache)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_block {}, size={}", index, count);
@@ -171,7 +151,7 @@ KResult BlockBasedFS::write_block(BlockIndex index, const UserOrKernelBuffer& da
 
 bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     u32 base_offset = index.value() * m_logical_block_size;
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
@@ -183,7 +163,7 @@ bool BlockBasedFS::raw_read(BlockIndex index, UserOrKernelBuffer& buffer)
 
 bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     size_t base_offset = index.value() * m_logical_block_size;
     auto seek_result = file_description().seek(base_offset, SEEK_SET);
     VERIFY(!seek_result.is_error());
@@ -195,7 +175,7 @@ bool BlockBasedFS::raw_write(BlockIndex index, const UserOrKernelBuffer& buffer)
 
 bool BlockBasedFS::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelBuffer& buffer)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     auto current = buffer;
     for (unsigned block = index.value(); block < (index.value() + count); block++) {
         if (!raw_read(BlockIndex { block }, current))
@@ -207,7 +187,7 @@ bool BlockBasedFS::raw_read_blocks(BlockIndex index, size_t count, UserOrKernelB
 
 bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOrKernelBuffer& buffer)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     auto current = buffer;
     for (unsigned block = index.value(); block < (index.value() + count); block++) {
         if (!raw_write(block, current))
@@ -219,7 +199,7 @@ bool BlockBasedFS::raw_write_blocks(BlockIndex index, size_t count, const UserOr
 
 KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserOrKernelBuffer& data, bool allow_cache)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::write_blocks {}, count={}", index, count);
     for (unsigned i = 0; i < count; ++i) {
@@ -232,7 +212,7 @@ KResult BlockBasedFS::write_blocks(BlockIndex index, unsigned count, const UserO
 
 KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, size_t count, size_t offset, bool allow_cache) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     VERIFY(offset + count <= block_size());
     dbgln_if(BBFS_DEBUG, "BlockBasedFileSystem::read_block {}", index);
@@ -270,7 +250,7 @@ KResult BlockBasedFS::read_block(BlockIndex index, UserOrKernelBuffer* buffer, s
 
 KResult BlockBasedFS::read_blocks(BlockIndex index, unsigned count, UserOrKernelBuffer& buffer, bool allow_cache) const
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(m_logical_block_size);
     if (!count)
         return EINVAL;
@@ -289,7 +269,7 @@ KResult BlockBasedFS::read_blocks(BlockIndex index, unsigned count, UserOrKernel
 
 void BlockBasedFS::flush_specific_block_if_needed(BlockIndex index)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (!cache().is_dirty())
         return;
     Vector<CacheEntry*, 32> cleaned_entries;
@@ -312,7 +292,7 @@ void BlockBasedFS::flush_specific_block_if_needed(BlockIndex index)
 
 void BlockBasedFS::flush_writes_impl()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (!cache().is_dirty())
         return;
     u32 count = 0;

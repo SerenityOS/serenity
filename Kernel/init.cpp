@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Types.h>
@@ -91,7 +71,7 @@ extern "C" u8* end_of_safemem_text;
 extern "C" u8* start_of_safemem_atomic_text;
 extern "C" u8* end_of_safemem_atomic_text;
 
-extern "C" FlatPtr end_of_kernel_image;
+extern "C" u8* end_of_kernel_image;
 
 multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
@@ -105,7 +85,7 @@ static void setup_serial_debug();
 
 // boot.S expects these functions to exactly have the following signatures.
 // We declare them here to ensure their signatures don't accidentally change.
-extern "C" void init_finished(u32 cpu);
+extern "C" void init_finished(u32 cpu) __attribute__((used));
 extern "C" [[noreturn]] void init_ap(u32 cpu, Processor* processor_info);
 extern "C" [[noreturn]] void init();
 

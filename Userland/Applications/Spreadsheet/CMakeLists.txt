@@ -37,3 +37,8 @@ set(GENERATED_SOURCES
 
 serenity_app(Spreadsheet ICON app-spreadsheet)
 target_link_libraries(Spreadsheet LibGUI LibJS LibWeb)
+
+serenity_test(Writers/Test/TestXSVWriter.cpp Spreadsheet)
+
+serenity_test(Readers/Test/TestXSV.cpp Spreadsheet)
+target_sources(TestXSV PRIVATE Readers/XSV.cpp)

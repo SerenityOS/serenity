@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -124,6 +104,8 @@ enum InstructionFormat {
     OP_RM16_reg16_CL,
     OP_RM32_reg32_CL,
     OP_mm1_mm2m64,
+    OP_mm1_mm2m32,
+    OP_mm1_imm8,
     OP_mm1m64_mm2,
     __EndFormatsWithRMByte,
 
@@ -400,6 +382,10 @@ public:
     void write32(CPU&, const Instruction&, T);
     template<typename CPU, typename T>
     void write64(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write128(CPU&, const Instruction&, T);
+    template<typename CPU, typename T>
+    void write256(CPU&, const Instruction&, T);
 
     template<typename CPU>
     typename CPU::ValueWithShadowType8 read8(CPU&, const Instruction&);
@@ -409,6 +395,10 @@ public:
     typename CPU::ValueWithShadowType32 read32(CPU&, const Instruction&);
     template<typename CPU>
     typename CPU::ValueWithShadowType64 read64(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType128 read128(CPU&, const Instruction&);
+    template<typename CPU>
+    typename CPU::ValueWithShadowType256 read256(CPU&, const Instruction&);
 
     template<typename CPU>
     LogicalAddress resolve(const CPU&, const Instruction&);
@@ -700,6 +690,22 @@ ALWAYS_INLINE void MemoryOrRegisterReference::write64(CPU& cpu, const Instructio
     cpu.write_memory64(address, value);
 }
 
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write128(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory128(address, value);
+}
+
+template<typename CPU, typename T>
+ALWAYS_INLINE void MemoryOrRegisterReference::write256(CPU& cpu, const Instruction& insn, T value)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    cpu.write_memory256(address, value);
+}
+
 template<typename CPU>
 ALWAYS_INLINE typename CPU::ValueWithShadowType8 MemoryOrRegisterReference::read8(CPU& cpu, const Instruction& insn)
 {
@@ -736,6 +742,22 @@ ALWAYS_INLINE typename CPU::ValueWithShadowType64 MemoryOrRegisterReference::rea
     VERIFY(!is_register());
     auto address = resolve(cpu, insn);
     return cpu.read_memory64(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType128 MemoryOrRegisterReference::read128(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory128(address);
+}
+
+template<typename CPU>
+ALWAYS_INLINE typename CPU::ValueWithShadowType256 MemoryOrRegisterReference::read256(CPU& cpu, const Instruction& insn)
+{
+    VERIFY(!is_register());
+    auto address = resolve(cpu, insn);
+    return cpu.read_memory256(address);
 }
 
 template<typename InstructionStreamType>

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Compositor.h"
@@ -158,7 +138,7 @@ void Compositor::compose()
             auto invalidate_rect = dirty_rect.intersected(frame_rect);
             if (!invalidate_rect.is_empty()) {
                 auto inner_rect_offset = window.rect().location() - frame_rect.location();
-                invalidate_rect.move_by(-(frame_rect.location() + inner_rect_offset));
+                invalidate_rect.translate_by(-(frame_rect.location() + inner_rect_offset));
                 window.invalidate_no_notify(invalidate_rect);
                 m_invalidated_window = true;
             }
@@ -469,7 +449,7 @@ void Compositor::compose()
             if (!wm.dnd_text().is_empty()) {
                 auto text_rect = dnd_rect;
                 if (wm.dnd_bitmap())
-                    text_rect.move_by(wm.dnd_bitmap()->width() + 8, 0);
+                    text_rect.translate_by(wm.dnd_bitmap()->width() + 8, 0);
                 back_painter.draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
             }
             if (wm.dnd_bitmap()) {
@@ -885,9 +865,7 @@ void Compositor::recompute_occlusions()
         return IterationDecision::Continue;
     });
 
-#if OCCLUSIONS_DEBUG
-    dbgln("OCCLUSIONS:");
-#endif
+    dbgln_if(OCCLUSIONS_DEBUG, "OCCLUSIONS:");
 
     auto screen_rect = Screen::the().rect();
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -46,6 +26,11 @@ static in_addr_t* __gethostbyname_address_list_buffer[2];
 
 static hostent __gethostbyaddr_buffer;
 static in_addr_t* __gethostbyaddr_address_list_buffer[2];
+// XXX: IPCCompiler depends on LibC. Because of this, it cannot be compiled
+// before LibC is. However, the lookup magic can only be obtained from the
+// endpoint itself if IPCCompiler has compiled the IPC file, so this creates
+// a chicken-and-egg situation. Because of this, the LookupServer endpoint magic
+// is hardcoded here.
 static constexpr i32 lookup_server_endpoint_magic = 9001;
 
 // Get service entry buffers and file information for the getservent() family of functions.
@@ -206,7 +191,6 @@ static String gethostbyaddr_name_buffer;
 
 hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 {
-
     if (type != AF_INET) {
         errno = EAFNOSUPPORT;
         return nullptr;
@@ -666,6 +650,13 @@ int getaddrinfo(const char* __restrict node, const char* __restrict service, con
 
     if (hints && hints->ai_family != AF_INET && hints->ai_family != AF_UNSPEC)
         return EAI_FAMILY;
+
+    if (!node) {
+        if (hints && hints->ai_flags & AI_PASSIVE)
+            node = "0.0.0.0";
+        else
+            node = "127.0.0.1";
+    }
 
     auto host_ent = gethostbyname(node);
     if (!host_ent)

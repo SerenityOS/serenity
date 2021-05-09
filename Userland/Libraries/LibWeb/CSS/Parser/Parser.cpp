@@ -1,32 +1,10 @@
 /*
- * Copyright (c) 2020-2021, SerenityOS developers
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/NonnullOwnPtrVector.h>
-#include <AK/Vector.h>
-#include <LibWeb/CSS/CSSStyleRule.h>
+#include <AK/SourceLocation.h>
 #include <LibWeb/CSS/Parser/AtStyleRule.h>
 #include <LibWeb/CSS/Parser/DeclarationOrAtRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
@@ -35,13 +13,14 @@
 #include <LibWeb/CSS/Parser/StyleComponentValueRule.h>
 #include <LibWeb/CSS/Parser/StyleFunctionRule.h>
 #include <LibWeb/CSS/Selector.h>
+#include <LibWeb/Dump.h>
 
 #define CSS_PARSER_TRACE 1
 
-#define PARSE_ERROR()                                                                           \
-    do {                                                                                        \
-        dbgln_if(CSS_PARSER_TRACE, "Parse error (CSS) {} @ {}", __PRETTY_FUNCTION__, __LINE__); \
-    } while (0)
+static void log_parse_error(const SourceLocation& location = SourceLocation::current())
+{
+    dbgln_if(CSS_PARSER_TRACE, "Parse error (CSS) {}", location);
+}
 
 namespace Web::CSS {
 
@@ -98,6 +77,8 @@ Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
         dbgln("");
 
         auto selectors = parse_selectors(rule.m_prelude);
+        CSS::Selector selector = Selector(move(selectors));
+        dump_selector(selector);
     }
 
     return rules;
@@ -105,8 +86,211 @@ Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
 
 Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> parts)
 {
-    (void)parts;
+    // TODO:
+    // This is a mess because the prelude is parsed as a string.
+    // It should really be parsed as its class, but the cpp gods have forsaken me
+    // and i cant make it work due to cyclic includes.
+
     Vector<CSS::Selector::ComplexSelector> selectors;
+
+    size_t index = 0;
+    auto parse_simple_selector = [&]() -> Optional<CSS::Selector::SimpleSelector> {
+        if (index >= parts.size()) {
+            return {};
+        }
+
+        auto currentToken = parts.at(index);
+        CSS::Selector::SimpleSelector::Type type;
+        if (currentToken == "*") {
+            type = CSS::Selector::SimpleSelector::Type::Universal;
+            index++;
+            CSS::Selector::SimpleSelector result;
+            result.type = type;
+            return result;
+        }
+
+        if (currentToken == ".") {
+            type = CSS::Selector::SimpleSelector::Type::Class;
+        } else if (currentToken == "#") {
+            type = CSS::Selector::SimpleSelector::Type::Id;
+        } else if (currentToken == "*") {
+            type = CSS::Selector::SimpleSelector::Type::Universal;
+        } else {
+            type = CSS::Selector::SimpleSelector::Type::TagName;
+        }
+
+        index++;
+        auto value = currentToken;
+
+        if (type == CSS::Selector::SimpleSelector::Type::TagName) {
+            value = value.to_lowercase();
+        }
+
+        CSS::Selector::SimpleSelector simple_selector;
+        simple_selector.type = type;
+        simple_selector.value = value;
+
+        if (index >= parts.size()) {
+            return simple_selector;
+        }
+
+        currentToken = parts.at(index);
+        if (currentToken.starts_with('[')) {
+            auto adjusted = currentToken.substring(1, currentToken.length() - 2);
+
+            // TODO: split on String :^)
+            Vector<String> attribute_parts = adjusted.split(',');
+
+            simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::HasAttribute;
+            simple_selector.attribute_name = attribute_parts.first();
+
+            size_t attribute_index = 1;
+            if (attribute_index >= attribute_parts.size()) {
+                return simple_selector;
+            }
+
+            if (attribute_parts.at(attribute_index) == " =") {
+                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
+                attribute_index++;
+            }
+
+            if (attribute_parts.at(attribute_index) == " ~") {
+                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::Contains;
+                attribute_index += 2;
+            }
+
+            if (attribute_parts.at(attribute_index) == " |") {
+                simple_selector.attribute_match_type = CSS::Selector::SimpleSelector::AttributeMatchType::StartsWith;
+                attribute_index += 2;
+            }
+
+            simple_selector.attribute_value = attribute_parts.at(attribute_index);
+            return simple_selector;
+        }
+
+        if (currentToken == ":") {
+            bool is_pseudo = false;
+            index++;
+
+            if (index >= parts.size()) {
+                return {};
+            }
+
+            currentToken = parts.at(index);
+            if (currentToken == ":") {
+                is_pseudo = true;
+                index++;
+            }
+
+            if (index >= parts.size()) {
+                return {};
+            }
+
+            currentToken = parts.at(index);
+            auto pseudo_name = currentToken;
+            index++;
+
+            // Ignore for now, otherwise we produce a "false positive" selector
+            // and apply styles to the element itself, not its pseudo element
+            if (is_pseudo) {
+                return {};
+            }
+
+            if (pseudo_name.equals_ignoring_case("link")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
+            } else if (pseudo_name.equals_ignoring_case("visited")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
+            } else if (pseudo_name.equals_ignoring_case("hover")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
+            } else if (pseudo_name.equals_ignoring_case("focus")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Focus;
+            } else if (pseudo_name.equals_ignoring_case("first-child")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstChild;
+            } else if (pseudo_name.equals_ignoring_case("last-child")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastChild;
+            } else if (pseudo_name.equals_ignoring_case("only-child")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::OnlyChild;
+            } else if (pseudo_name.equals_ignoring_case("empty")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Empty;
+            } else if (pseudo_name.equals_ignoring_case("root")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Root;
+            } else if (pseudo_name.equals_ignoring_case("first-of-type")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::FirstOfType;
+            } else if (pseudo_name.equals_ignoring_case("last-of-type")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::LastOfType;
+            } else if (pseudo_name.equals_ignoring_case("before")) {
+                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
+            } else if (pseudo_name.equals_ignoring_case("after")) {
+                simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
+            } else {
+                dbgln("Unknown pseudo class: '{}'", pseudo_name);
+                return simple_selector;
+            }
+        }
+
+        return simple_selector;
+    };
+
+    auto parse_complex_selector = [&]() -> Optional<CSS::Selector::ComplexSelector> {
+        auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
+
+        auto currentToken = parts.at(index);
+        if (is_combinator(currentToken)) {
+            if (currentToken == ">") {
+                relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
+            }
+            if (currentToken == "+") {
+                relation = CSS::Selector::ComplexSelector::Relation::AdjacentSibling;
+            }
+            if (currentToken == "~") {
+                relation = CSS::Selector::ComplexSelector::Relation::GeneralSibling;
+            }
+            if (currentToken == "||") {
+                relation = CSS::Selector::ComplexSelector::Relation::Column;
+            }
+            index++;
+        }
+
+        Vector<CSS::Selector::SimpleSelector> simple_selectors;
+
+        for (;;) {
+            auto component = parse_simple_selector();
+            if (!component.has_value()) {
+                break;
+            }
+            simple_selectors.append(component.value());
+        }
+
+        if (simple_selectors.is_empty())
+            return {};
+
+        return CSS::Selector::ComplexSelector { relation, move(simple_selectors) };
+    };
+
+    for (;;) {
+        auto complex = parse_complex_selector();
+        if (complex.has_value()) {
+            selectors.append(complex.value());
+        }
+
+        if (index >= parts.size()) {
+            break;
+        }
+
+        auto currentToken = parts.at(index);
+        if (currentToken != ",") {
+            break;
+        }
+
+        index++;
+    }
+
+    if (selectors.is_empty()) {
+        return {};
+    }
+
+    selectors.first().relation = CSS::Selector::ComplexSelector::Relation::None;
+
     return selectors;
 }
 
@@ -120,6 +304,11 @@ void Parser::dump_all_tokens()
 void Parser::reconsume_current_input_token()
 {
     --m_iterator_offset;
+}
+
+bool Parser::is_combinator(String input)
+{
+    return input == ">" || input == "+" || input == "~" || input == "||";
 }
 
 Vector<QualifiedStyleRule> Parser::consume_a_list_of_rules(bool top_level)
@@ -181,7 +370,7 @@ AtStyleRule Parser::consume_an_at_rule()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return rule;
         }
 
@@ -211,7 +400,7 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
         auto token = next_token();
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return {};
         }
 
@@ -271,7 +460,7 @@ StyleBlockRule Parser::consume_a_simple_block()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return block;
         }
 
@@ -298,7 +487,7 @@ StyleFunctionRule Parser::consume_a_function()
         }
 
         if (token.is_eof()) {
-            PARSE_ERROR();
+            log_parse_error();
             return function;
         }
 
@@ -336,7 +525,7 @@ Optional<StyleDeclarationRule> Parser::consume_a_declaration()
     auto colon = next_token();
 
     if (!colon.is_colon()) {
-        PARSE_ERROR();
+        log_parse_error();
         return {};
     }
 
@@ -422,7 +611,7 @@ Vector<DeclarationOrAtRule> Parser::consume_a_list_of_declarations()
             }
         }
 
-        PARSE_ERROR();
+        log_parse_error();
         reconsume_current_input_token();
         auto peek = peek_token();
         if (!(peek.is_semicolon() || peek.is_eof())) {

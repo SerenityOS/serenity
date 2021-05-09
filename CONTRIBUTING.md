@@ -1,14 +1,16 @@
-# Contributing to Serenity
+# Contributing to SerenityOS
 
-When contributing to the Serenity operating system, please be sure that the change(s) you wish to make are in line with the project vision. If you are unsure about this, open an issue first, so we can discuss it. If you are already confident that it's a good fit, you can proceed directly to a Pull Request.
+When contributing to SerenityOS, make sure that the changes you wish to make are in line with the project direction. If you are not sure about this, open an issue first, so we can discuss it.
+
+For your first PR, start with something small to get familiar with the project and its development processes.
 
 Everyone is welcome to work on the project, and while we have lots of fun, it's a serious kind of fun. :^)
 
 ## Communication
 
-IRC: `#serenityos` on the Freenode IRC network.
-
 Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
+
+IRC: `#serenityos` on the Freenode IRC network.
 
 ## Issue policy
 
@@ -18,16 +20,19 @@ That said, please do file any bugs you find, keeping the following in mind:
 
 * One issue per bug. Putting multiple things in the same issue makes both discussion and completion unnecessarily complicated.
 * No build issues (or other support requests). If the GitHub Actions CI build succeeds, the build problem is most likely on your side. Work it out locally, or ask in the `#build-problems` channel on Discord.
+* Don't comment on issues just to add a joke or irrelevant commentary. Hundreds of people get notified about comments so let's keep them relevant.
 
-## Feature policy
+## Human language policy
 
-As a labor of love, Serenity is strongly user-focused. When proposing or building a new feature, you should start by imagining how a person would use it. Like a tree falling in the woods with nobody around, does a feature with no user impact really provide value?
+In SerenityOS, we treat human language as seriously as we do programming language.
 
-Maybe your feature involves a GUI application, or maybe it's more suited to a CLI program. Either way, a useful exercise is to imagine what the user interface would be for your idea. Let's say you want to implement a fan speed monitor in the kernel because you recently read about how the related hardware interfaces work - rather than diving right into the kernel implementation, it would be good to imagine how that might be exposed to a user. You might want to build a simple taskbar widget, or maybe a command-line program, or even something as simple as a `/proc` interface, and fill it with mock data to begin with. Whatever your interface is, it should "fit" with the rest of the system, and it should provide some utility to a user.
+The following applies to all user-facing strings, code, comments, and commit messages:
 
-Sometimes there is no obvious user-facing interface for a feature. In those cases you should still think about the impact that your feature or change will have on a user. If possible, you should devise a way to measure your feature - maybe it reduces memory consumption, maybe it results in fewer page faults, maybe it makes more efficient use of network resources. Whatever that metric is, try to capture it, and provide a summary in your proposal or pull request. If your numbers win, you have a good chance of getting your feature into the system. If your numbers don't win, you have valuable data that you can use to improve your feature.
+* The official project language is American English.
+* Use proper spelling, grammar, and punctuation.
+* Write in an authoritative and technical tone.
 
-If you can think of no user-facing interface for your feature, and no user impact at all, please do feel free to start a discussion about it. But please don't spend your precious time building a feature or implementing a change if there's no way for someone to use it and no way to quantify the overall improvement.
+Everyone is encouraged to make use of tooling (spell checkers, etc) to make this easier.
 
 ## Code submission policy
 
@@ -35,8 +40,8 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 **Do:**
 
-* Write in idiomatic Serenity C++20, using the `AK` containers in all code.
-* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Please use `clang-format` (version 11 or later) to automatically format C++ files.
+* Write in idiomatic SerenityOS C++20, using the `AK` containers in all code.
+* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 11 or later) to automatically format C++ files.
 * Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
 * Split your changes into separate, atomic commits.
 * Make sure your commits are rebased on the master branch.
@@ -45,6 +50,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Write your commit messages in proper English, with care and punctuation.
 * Squash your commits when making revisions after a patch review.
 * Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
+* Check the spelling of your code, comments and commit messages.
 
 **Don't:**
 
@@ -53,4 +59,5 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Iterate excessively on your design across multiple commits.
 * Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
 * Include commented-out code.
-* Write in C.
+* Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
+* Attempt large architectural changes until you are familiar with the system and have worked on it for a while.

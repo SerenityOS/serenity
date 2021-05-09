@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringView.h>
@@ -51,13 +31,14 @@ KResultOr<size_t> InodeFile::read(FileDescription& description, u64 offset, User
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    ssize_t nread = m_inode->read_bytes(offset, count, buffer, &description);
+    auto result = m_inode->read_bytes(offset, count, buffer, &description);
+    if (result.is_error())
+        return result.error();
+    auto nread = result.value();
     if (nread > 0) {
         Thread::current()->did_file_read(nread);
         evaluate_block_conditions();
     }
-    if (nread < 0)
-        return KResult((ErrnoCode)-nread);
     return nread;
 }
 
@@ -66,14 +47,18 @@ KResultOr<size_t> InodeFile::write(FileDescription& description, u64 offset, con
     if (Checked<off_t>::addition_would_overflow(offset, count))
         return EOVERFLOW;
 
-    ssize_t nwritten = m_inode->write_bytes(offset, count, data, &description);
+    auto result = m_inode->write_bytes(offset, count, data, &description);
+    if (result.is_error())
+        return result.error();
+
+    auto nwritten = result.value();
     if (nwritten > 0) {
-        m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
+        auto mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
         Thread::current()->did_file_write(nwritten);
         evaluate_block_conditions();
+        if (mtime_result.is_error())
+            return mtime_result;
     }
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
     return nwritten;
 }
 
@@ -129,12 +114,10 @@ String InodeFile::absolute_path(const FileDescription& description) const
 
 KResult InodeFile::truncate(u64 size)
 {
-    auto truncate_result = m_inode->truncate(size);
-    if (truncate_result.is_error())
-        return truncate_result;
-    int mtime_result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds());
-    if (mtime_result < 0)
-        return KResult((ErrnoCode)-mtime_result);
+    if (auto result = m_inode->truncate(size); result.is_error())
+        return result;
+    if (auto result = m_inode->set_mtime(kgettimeofday().to_truncated_seconds()); result.is_error())
+        return result;
     return KSuccess;
 }
 

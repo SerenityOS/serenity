@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/HashTable.h>
@@ -48,16 +28,16 @@ static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 
 void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto& it : all_adapters().resource())
         callback(*it);
 }
 
 RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
-    LOCKER(all_adapters().lock());
+    Locker locker(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
-        if (adapter->ipv4_address() == address)
+        if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
             return adapter;
     }
     if (address[0] == 127)
@@ -180,6 +160,11 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
 
     Optional<KBuffer> buffer;
 
+    if (m_packet_queue_size == max_packet_buffers) {
+        // FIXME: Keep track of the number of dropped packets
+        return;
+    }
+
     if (m_unused_packet_buffers.is_empty()) {
         buffer = KBuffer::copy(payload.data(), payload.size());
     } else {
@@ -194,6 +179,7 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     }
 
     m_packet_queue.append({ buffer.value(), kgettimeofday() });
+    m_packet_queue_size++;
 
     if (on_receive)
         on_receive();
@@ -205,6 +191,7 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     if (m_packet_queue.is_empty())
         return 0;
     auto packet_with_timestamp = m_packet_queue.take_first();
+    m_packet_queue_size--;
     packet_timestamp = packet_with_timestamp.timestamp;
     auto packet = move(packet_with_timestamp.packet);
     size_t packet_size = packet.size();

@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
@@ -91,11 +71,13 @@ UNMAP_AFTER_INIT void Parser::init_fadt()
     m_fadt = find_table("FACP");
     VERIFY(!m_fadt.is_null());
 
-    auto sdt = map_typed<Structures::FADT>(m_fadt);
+    // FIXME: We need at least two pages for mapping, since we can be on the "edge" of one page...
+    auto sdt = map_typed<const volatile Structures::FADT>(m_fadt, PAGE_SIZE * 2);
 
     dbgln_if(ACPI_DEBUG, "ACPI: FADT @ V{}, {}", &sdt, m_fadt);
 
-    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", sdt->h.revision, sdt->h.length);
+    auto* header = &sdt.ptr()->h;
+    dmesgln("ACPI: Fixed ACPI data, Revision {}, length: {} bytes", (size_t)header->revision, (size_t)header->length);
     dmesgln("ACPI: DSDT {}", PhysicalAddress(sdt->dsdt_ptr));
     m_x86_specific_flags.cmos_rtc_not_present = (sdt->ia_pc_boot_arch_flags & (u8)FADTFlags::IA_PC_Flags::CMOS_RTC_Not_Present);
 
@@ -235,26 +217,20 @@ void Parser::try_acpi_shutdown()
 size_t Parser::get_table_size(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking SDT Length");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Length");
     return map_typed<Structures::SDTHeader>(table_header)->length;
 }
 
 u8 Parser::get_table_revision(PhysicalAddress table_header)
 {
     InterruptDisabler disabler;
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking SDT Revision");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking SDT Revision");
     return map_typed<Structures::SDTHeader>(table_header)->revision;
 }
 
 UNMAP_AFTER_INIT void Parser::initialize_main_system_description_table()
 {
-#if ACPI_DEBUG
-    dbgln("ACPI: Checking Main SDT Length to choose the correct mapping size");
-#endif
+    dbgln_if(ACPI_DEBUG, "ACPI: Checking Main SDT Length to choose the correct mapping size");
     VERIFY(!m_main_system_description_table.is_null());
     auto length = get_table_size(m_main_system_description_table);
     auto revision = get_table_revision(m_main_system_description_table);

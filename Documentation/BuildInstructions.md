@@ -114,10 +114,13 @@ Make sure you have all the dependencies installed:
 # core
 brew install coreutils qemu bash gcc@10 ninja cmake
 
-# Fuse + ex2
-brew install osxfuse e2fsprogs m4 autoconf automake libtool
+# (option 1) fuse + ext2
+brew install e2fsprogs m4 autoconf automake libtool
 brew install --cask osxfuse
 Toolchain/BuildFuseExt2.sh
+
+# (option 2) genext2fs
+brew install genext2fs
 ```
 
 Notes:
@@ -224,20 +227,17 @@ To add a package from the ports collection to Serenity, for example curl, go int
 
 ## Customize disk image
 
-To add, modify or remove files of the disk image's file system, e.g. to change the default keyboard layout, you can create a file with the exact name `sync-local.sh` in the project root (the same directory as `.clang-format`), with content like this:
+To add, modify or remove files of the disk image's file system, e.g. to change the default keyboard layout, you can create a shell script with the name `sync-local.sh` in the project root, with content like this:
 
 ```sh
 #!/bin/sh
 
 set -e
 
-cat << 'EOF' >> mnt/etc/SystemServer.ini
-
-[keymap]
-Executable=/bin/keymap
-Arguments=de
-User=anon
+cat << 'EOF' > mnt/etc/Keyboard.ini
+[Mapping]
+Keymap=de
 EOF
 ```
 
-This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list.
+This will configure your keymap to German (`de`) instead of US English. See [`Base/res/keymaps/`](../Base/res/keymaps/) for a full list. Note that the `keymap` program itself will also modify the `/etc/Keyboard.ini` config file, but this way the change will persist across image rebuilds.

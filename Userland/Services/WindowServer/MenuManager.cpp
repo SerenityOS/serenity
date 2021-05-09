@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
@@ -90,11 +70,11 @@ void MenuManager::event(Core::Event& event)
             && ((key_event.key() >= Key_A && key_event.key() <= Key_Z)
                 || (key_event.key() >= Key_0 && key_event.key() <= Key_9))) {
 
-            if (auto* shortcut_item_indexes = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
-                VERIFY(!shortcut_item_indexes->is_empty());
+            if (auto* shortcut_item_indices = m_current_menu->items_with_alt_shortcut(key_event.code_point())) {
+                VERIFY(!shortcut_item_indices->is_empty());
                 // FIXME: If there are multiple items with the same Alt shortcut, we should cycle through them
                 //        with each keypress instead of activating immediately.
-                auto index = shortcut_item_indexes->at(0);
+                auto index = shortcut_item_indices->at(0);
                 auto& item = m_current_menu->item(index);
                 m_current_menu->set_hovered_index(index);
                 if (item.is_submenu())
@@ -275,7 +255,7 @@ void MenuManager::close_menus(const Vector<Menu*>& menus)
 static void collect_menu_subtree(Menu& menu, Vector<Menu*>& menus)
 {
     menus.append(&menu);
-    for (int i = 0; i < menu.item_count(); ++i) {
+    for (size_t i = 0; i < menu.item_count(); ++i) {
         auto& item = menu.item(i);
         if (!item.is_submenu())
             continue;

@@ -31,8 +31,24 @@
                 layout: @GUI::VerticalBoxLayout {
                 }
 
-                @GUI::SpinBox {
-                    name: "glyph_editor_width_spinbox"
+                @GUI::Widget {
+                    layout: @GUI::HorizontalBoxLayout {
+                    }
+
+                    @GUI::SpinBox {
+                        name: "glyph_editor_width_spinbox"
+                    }
+
+                    @GUI::CheckBox {
+                        name: "glyph_editor_present_checkbox"
+                        text: "Show"
+                    }
+
+                    @GUI::Button {
+                        name: "move_glyph_button"
+                        fixed_width: 22
+                        button_style: "Coolbar"
+                    }
                 }
             }
 
@@ -159,7 +175,6 @@
                     @GUI::SpinBox {
                         name: "mean_line_spinbox"
                         min: 0
-                        max: 32
                     }
                 }
 
@@ -177,7 +192,6 @@
                     @GUI::SpinBox {
                         name: "baseline_spinbox"
                         min: 0
-                        max: 32
                     }
                 }
 

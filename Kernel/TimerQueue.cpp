@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
@@ -64,7 +44,7 @@ Time Timer::now(bool is_firing) const
             break;
         }
     }
-    return TimeManagement::the().current_time(clock_id).value();
+    return TimeManagement::the().current_time(clock_id);
 }
 
 TimerQueue& TimerQueue::the()
@@ -79,7 +59,7 @@ UNMAP_AFTER_INIT TimerQueue::TimerQueue()
 
 RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    if (deadline <= TimeManagement::the().current_time(clock_id).value())
+    if (deadline <= TimeManagement::the().current_time(clock_id))
         return {};
 
     // Because timer handlers can execute on any processor and there is
@@ -87,7 +67,7 @@ RefPtr<Timer> TimerQueue::add_timer_without_id(clockid_t clock_id, const Time& d
     // *must* be a RefPtr<Timer>. Otherwise calling cancel_timer() could
     // inadvertently cancel another timer that has been created between
     // returning from the timer handler and a call to cancel_timer().
-    auto timer = adopt(*new Timer(clock_id, deadline, move(callback)));
+    auto timer = adopt_ref(*new Timer(clock_id, deadline, move(callback)));
 
     ScopedSpinLock lock(g_timerqueue_lock);
     timer->m_id = 0; // Don't generate a timer id
@@ -137,9 +117,9 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
 TimerId TimerQueue::add_timer(clockid_t clock_id, const Time& deadline, Function<void()>&& callback)
 {
-    auto expires = TimeManagement::the().current_time(clock_id).value();
+    auto expires = TimeManagement::the().current_time(clock_id);
     expires = expires + deadline;
-    return add_timer(adopt(*new Timer(clock_id, expires, move(callback))));
+    return add_timer(adopt_ref(*new Timer(clock_id, expires, move(callback))));
 }
 
 bool TimerQueue::cancel_timer(TimerId id)

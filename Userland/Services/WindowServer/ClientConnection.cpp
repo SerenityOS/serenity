@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
@@ -96,358 +76,332 @@ void ClientConnection::die()
     });
 }
 
-void ClientConnection::notify_about_new_screen_rect(const Gfx::IntRect& rect)
+void ClientConnection::notify_about_new_screen_rect(Gfx::IntRect const& rect)
 {
-    post_message(Messages::WindowClient::ScreenRectChanged(rect));
+    async_screen_rect_changed(rect);
 }
 
-OwnPtr<Messages::WindowServer::CreateMenubarResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenubar&)
+Messages::WindowServer::CreateMenubarResponse ClientConnection::create_menubar()
 {
     int menubar_id = m_next_menubar_id++;
     auto menubar = Menubar::create(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
-    return make<Messages::WindowServer::CreateMenubarResponse>(menubar_id);
+    return menubar_id;
 }
 
-OwnPtr<Messages::WindowServer::DestroyMenubarResponse> ClientConnection::handle(const Messages::WindowServer::DestroyMenubar& message)
+void ClientConnection::destroy_menubar(i32 menubar_id)
 {
-    int menubar_id = message.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
         did_misbehave("DestroyMenubar: Bad menubar ID");
-        return {};
+        return;
     }
     m_menubars.remove(it);
-    return make<Messages::WindowServer::DestroyMenubarResponse>();
 }
 
-OwnPtr<Messages::WindowServer::CreateMenuResponse> ClientConnection::handle(const Messages::WindowServer::CreateMenu& message)
+Messages::WindowServer::CreateMenuResponse ClientConnection::create_menu(String const& menu_title)
 {
     int menu_id = m_next_menu_id++;
-    auto menu = Menu::construct(this, menu_id, message.menu_title());
+    auto menu = Menu::construct(this, menu_id, menu_title);
     m_menus.set(menu_id, move(menu));
-    return make<Messages::WindowServer::CreateMenuResponse>(menu_id);
+    return menu_id;
 }
 
-OwnPtr<Messages::WindowServer::DestroyMenuResponse> ClientConnection::handle(const Messages::WindowServer::DestroyMenu& message)
+void ClientConnection::destroy_menu(i32 menu_id)
 {
-    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("DestroyMenu: Bad menu ID");
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
     menu.close();
     m_menus.remove(it);
     remove_child(menu);
-    return make<Messages::WindowServer::DestroyMenuResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowMenubarResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowMenubar& message)
+void ClientConnection::set_window_menubar(i32 window_id, i32 menubar_id)
 {
     RefPtr<Window> window;
     {
-        auto it = m_windows.find(message.window_id());
+        auto it = m_windows.find(window_id);
         if (it == m_windows.end()) {
             did_misbehave("SetWindowMenubar: Bad window ID");
-            return {};
+            return;
         }
         window = it->value;
     }
     RefPtr<Menubar> menubar;
-    if (message.menubar_id() != -1) {
-        auto it = m_menubars.find(message.menubar_id());
+    if (menubar_id != -1) {
+        auto it = m_menubars.find(menubar_id);
         if (it == m_menubars.end()) {
             did_misbehave("SetWindowMenubar: Bad menubar ID");
-            return {};
+            return;
         }
         menubar = *(*it).value;
     }
     window->set_menubar(menubar);
-    return make<Messages::WindowServer::SetWindowMenubarResponse>();
 }
 
-OwnPtr<Messages::WindowServer::AddMenuToMenubarResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuToMenubar& message)
+void ClientConnection::add_menu_to_menubar(i32 menubar_id, i32 menu_id)
 {
-    int menubar_id = message.menubar_id();
-    int menu_id = message.menu_id();
     auto it = m_menubars.find(menubar_id);
     auto jt = m_menus.find(menu_id);
     if (it == m_menubars.end()) {
         did_misbehave("AddMenuToMenubar: Bad menubar ID");
-        return {};
+        return;
     }
     if (jt == m_menus.end()) {
         did_misbehave("AddMenuToMenubar: Bad menu ID");
-        return {};
+        return;
     }
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
     menubar.add_menu(menu);
-    return make<Messages::WindowServer::AddMenuToMenubarResponse>();
 }
 
-OwnPtr<Messages::WindowServer::AddMenuItemResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuItem& message)
+void ClientConnection::add_menu_item(i32 menu_id, i32 identifier, i32 submenu_id,
+    String const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    String const& shortcut, Gfx::ShareableBitmap const& icon, bool exclusive)
 {
-    int menu_id = message.menu_id();
-    unsigned identifier = message.identifier();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         dbgln("AddMenuItem: Bad menu ID: {}", menu_id);
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
-    auto menu_item = make<MenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
-    if (message.is_default())
+    auto menu_item = make<MenuItem>(menu, identifier, text, shortcut, enabled, checkable, checked);
+    if (is_default)
         menu_item->set_default(true);
-    menu_item->set_icon(message.icon().bitmap());
-    menu_item->set_submenu_id(message.submenu_id());
-    menu_item->set_exclusive(message.exclusive());
+    menu_item->set_icon(icon.bitmap());
+    menu_item->set_submenu_id(submenu_id);
+    menu_item->set_exclusive(exclusive);
     menu.add_item(move(menu_item));
-    return make<Messages::WindowServer::AddMenuItemResponse>();
 }
 
-OwnPtr<Messages::WindowServer::PopupMenuResponse> ClientConnection::handle(const Messages::WindowServer::PopupMenu& message)
+void ClientConnection::popup_menu(i32 menu_id, Gfx::IntPoint const& screen_position)
 {
-    int menu_id = message.menu_id();
-    auto position = message.screen_position();
+    auto position = screen_position;
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("PopupMenu: Bad menu ID");
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
     menu.popup(position);
-    return make<Messages::WindowServer::PopupMenuResponse>();
 }
 
-OwnPtr<Messages::WindowServer::DismissMenuResponse> ClientConnection::handle(const Messages::WindowServer::DismissMenu& message)
+void ClientConnection::dismiss_menu(i32 menu_id)
 {
-    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("DismissMenu: Bad menu ID");
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
     menu.close();
-    return make<Messages::WindowServer::DismissMenuResponse>();
 }
 
-OwnPtr<Messages::WindowServer::UpdateMenuItemResponse> ClientConnection::handle(const Messages::WindowServer::UpdateMenuItem& message)
+void ClientConnection::update_menu_item(i32 menu_id, i32 identifier, [[maybe_unused]] i32 submenu_id,
+    String const& text, bool enabled, bool checkable, bool checked, bool is_default,
+    String const& shortcut)
 {
-    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("UpdateMenuItem: Bad menu ID");
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
-    auto* menu_item = menu.item_with_identifier(message.identifier());
+    auto* menu_item = menu.item_with_identifier(identifier);
     if (!menu_item) {
         did_misbehave("UpdateMenuItem: Bad menu item identifier");
-        return {};
+        return;
     }
-    menu_item->set_text(message.text());
-    menu_item->set_shortcut_text(message.shortcut());
-    menu_item->set_enabled(message.enabled());
-    menu_item->set_checkable(message.checkable());
-    menu_item->set_default(message.is_default());
-    if (message.checkable())
-        menu_item->set_checked(message.checked());
-    return make<Messages::WindowServer::UpdateMenuItemResponse>();
+    menu_item->set_text(text);
+    menu_item->set_shortcut_text(shortcut);
+    menu_item->set_enabled(enabled);
+    menu_item->set_checkable(checkable);
+    menu_item->set_default(is_default);
+    if (checkable)
+        menu_item->set_checked(checked);
 }
 
-OwnPtr<Messages::WindowServer::AddMenuSeparatorResponse> ClientConnection::handle(const Messages::WindowServer::AddMenuSeparator& message)
+void ClientConnection::add_menu_separator(i32 menu_id)
 {
-    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         did_misbehave("AddMenuSeparator: Bad menu ID");
-        return {};
+        return;
     }
     auto& menu = *(*it).value;
     menu.add_item(make<MenuItem>(menu, MenuItem::Separator));
-    return make<Messages::WindowServer::AddMenuSeparatorResponse>();
 }
 
-OwnPtr<Messages::WindowServer::MoveWindowToFrontResponse> ClientConnection::handle(const Messages::WindowServer::MoveWindowToFront& message)
+void ClientConnection::move_window_to_front(i32 window_id)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("MoveWindowToFront: Bad window ID");
-        return {};
+        return;
     }
     WindowManager::the().move_to_front_and_make_active(*(*it).value);
-    return make<Messages::WindowServer::MoveWindowToFrontResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetFullscreenResponse> ClientConnection::handle(const Messages::WindowServer::SetFullscreen& message)
+void ClientConnection::set_fullscreen(i32 window_id, bool fullscreen)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetFullscreen: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_fullscreen(message.fullscreen());
-    return make<Messages::WindowServer::SetFullscreenResponse>();
+    it->value->set_fullscreen(fullscreen);
 }
 
-OwnPtr<Messages::WindowServer::SetFramelessResponse> ClientConnection::handle(const Messages::WindowServer::SetFrameless& message)
+void ClientConnection::set_frameless(i32 window_id, bool frameless)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetFrameless: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_frameless(message.frameless());
+    it->value->set_frameless(frameless);
     WindowManager::the().tell_wms_window_state_changed(*it->value);
-    return make<Messages::WindowServer::SetFramelessResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowOpacityResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowOpacity& message)
+void ClientConnection::set_window_opacity(i32 window_id, float opacity)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowOpacity: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_opacity(message.opacity());
-    return make<Messages::WindowServer::SetWindowOpacityResponse>();
+    it->value->set_opacity(opacity);
 }
 
-void ClientConnection::handle(const Messages::WindowServer::AsyncSetWallpaper& message)
+void ClientConnection::set_wallpaper(String const& path)
 {
-    Compositor::the().set_wallpaper(message.path(), [&](bool success) {
-        post_message(Messages::WindowClient::AsyncSetWallpaperFinished(success));
+    Compositor::the().set_wallpaper(path, [&](bool success) {
+        async_set_wallpaper_finished(success);
     });
 }
 
-OwnPtr<Messages::WindowServer::SetBackgroundColorResponse> ClientConnection::handle(const Messages::WindowServer::SetBackgroundColor& message)
+void ClientConnection::set_background_color(String const& background_color)
 {
-    Compositor::the().set_background_color(message.background_color());
-    return make<Messages::WindowServer::SetBackgroundColorResponse>();
+    Compositor::the().set_background_color(background_color);
 }
 
-OwnPtr<Messages::WindowServer::SetWallpaperModeResponse> ClientConnection::handle(const Messages::WindowServer::SetWallpaperMode& message)
+void ClientConnection::set_wallpaper_mode(String const& mode)
 {
-    Compositor::the().set_wallpaper_mode(message.mode());
-    return make<Messages::WindowServer::SetWallpaperModeResponse>();
+    Compositor::the().set_wallpaper_mode(mode);
 }
 
-OwnPtr<Messages::WindowServer::GetWallpaperResponse> ClientConnection::handle(const Messages::WindowServer::GetWallpaper&)
+Messages::WindowServer::GetWallpaperResponse ClientConnection::get_wallpaper()
 {
-    return make<Messages::WindowServer::GetWallpaperResponse>(Compositor::the().wallpaper_path());
+    return Compositor::the().wallpaper_path();
 }
 
-OwnPtr<Messages::WindowServer::SetResolutionResponse> ClientConnection::handle(const Messages::WindowServer::SetResolution& message)
+Messages::WindowServer::SetResolutionResponse ClientConnection::set_resolution(Gfx::IntSize const& resolution, int scale_factor)
 {
-    return make<Messages::WindowServer::SetResolutionResponse>(WindowManager::the().set_resolution(message.resolution().width(), message.resolution().height(), message.scale_factor()), WindowManager::the().resolution(), WindowManager::the().scale_factor());
+    return { WindowManager::the().set_resolution(resolution.width(), resolution.height(), scale_factor), WindowManager::the().resolution(), WindowManager::the().scale_factor() };
 }
 
-OwnPtr<Messages::WindowServer::SetWindowTitleResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowTitle& message)
+void ClientConnection::set_window_title(i32 window_id, String const& title)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowTitle: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_title(message.title());
-    return make<Messages::WindowServer::SetWindowTitleResponse>();
+    it->value->set_title(title);
 }
 
-OwnPtr<Messages::WindowServer::GetWindowTitleResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowTitle& message)
+Messages::WindowServer::GetWindowTitleResponse ClientConnection::get_window_title(i32 window_id)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetWindowTitle: Bad window ID");
-        return {};
+        return nullptr;
     }
-    return make<Messages::WindowServer::GetWindowTitleResponse>(it->value->title());
+    return it->value->title();
 }
 
-OwnPtr<Messages::WindowServer::IsMaximizedResponse> ClientConnection::handle(const Messages::WindowServer::IsMaximized& message)
+Messages::WindowServer::IsMaximizedResponse ClientConnection::is_maximized(i32 window_id)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("IsMaximized: Bad window ID");
-        return {};
+        return nullptr;
     }
-    return make<Messages::WindowServer::IsMaximizedResponse>(it->value->is_maximized());
+    return it->value->is_maximized();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowIconBitmapResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowIconBitmap& message)
+void ClientConnection::set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap const& icon)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowIconBitmap: Bad window ID");
-        return {};
+        return;
     }
     auto& window = *(*it).value;
 
-    if (message.icon().is_valid()) {
-        window.set_icon(*message.icon().bitmap());
+    if (icon.is_valid()) {
+        window.set_icon(*icon.bitmap());
     } else {
         window.set_default_icon();
     }
 
-    window.frame().invalidate_title_bar();
+    window.frame().invalidate_titlebar();
     WindowManager::the().tell_wms_window_icon_changed(window);
-    return make<Messages::WindowServer::SetWindowIconBitmapResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowRectResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowRect& message)
+Messages::WindowServer::SetWindowRectResponse ClientConnection::set_window_rect(i32 window_id, Gfx::IntRect const& rect)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowRect: Bad window ID");
-        return {};
+        return nullptr;
     }
     auto& window = *(*it).value;
     if (window.is_fullscreen()) {
         dbgln("ClientConnection: Ignoring SetWindowRect request for fullscreen window");
-        return {};
+        return nullptr;
     }
 
-    if (message.rect().location() != window.rect().location()) {
+    if (rect.location() != window.rect().location()) {
         window.set_default_positioned(false);
     }
-    auto rect = message.rect();
-    window.apply_minimum_size(rect);
-    window.set_rect(rect);
+    auto new_rect = rect;
+    window.apply_minimum_size(new_rect);
+    window.set_rect(new_rect);
     window.nudge_into_desktop();
     window.request_update(window.rect());
-    return make<Messages::WindowServer::SetWindowRectResponse>(window.rect());
+    return window.rect();
 }
 
-OwnPtr<Messages::WindowServer::GetWindowRectResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowRect& message)
+Messages::WindowServer::GetWindowRectResponse ClientConnection::get_window_rect(i32 window_id)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetWindowRect: Bad window ID");
-        return {};
+        return nullptr;
     }
-    return make<Messages::WindowServer::GetWindowRectResponse>(it->value->rect());
+    return it->value->rect();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowMinimumSizeResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowMinimumSize& message)
+void ClientConnection::set_window_minimum_size(i32 window_id, Gfx::IntSize const& size)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowMinimumSize: Bad window ID");
-        return {};
+        return;
     }
     auto& window = *(*it).value;
     if (window.is_fullscreen()) {
         dbgln("ClientConnection: Ignoring SetWindowMinimumSize request for fullscreen window");
-        return {};
+        return;
     }
 
-    window.set_minimum_size(message.size());
+    window.set_minimum_size(size);
 
     if (window.width() < window.minimum_size().width() || window.height() < window.minimum_size().height()) {
         // New minimum size is larger than the current window size, resize accordingly.
@@ -460,35 +414,31 @@ OwnPtr<Messages::WindowServer::SetWindowMinimumSizeResponse> ClientConnection::h
         if (did_size_clamp)
             window.refresh_client_size();
     }
-
-    return make<Messages::WindowServer::SetWindowMinimumSizeResponse>();
 }
 
-OwnPtr<Messages::WindowServer::GetWindowMinimumSizeResponse> ClientConnection::handle(const Messages::WindowServer::GetWindowMinimumSize& message)
+Messages::WindowServer::GetWindowMinimumSizeResponse ClientConnection::get_window_minimum_size(i32 window_id)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetWindowMinimumSize: Bad window ID");
-        return {};
+        return nullptr;
     }
-    return make<Messages::WindowServer::GetWindowMinimumSizeResponse>(it->value->minimum_size());
+    return it->value->minimum_size();
 }
 
-OwnPtr<Messages::WindowServer::GetAppletRectOnScreenResponse> ClientConnection::handle(const Messages::WindowServer::GetAppletRectOnScreen& message)
+Messages::WindowServer::GetAppletRectOnScreenResponse ClientConnection::get_applet_rect_on_screen(i32 window_id)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("GetAppletRectOnScreen: Bad window ID");
-        return {};
+        return nullptr;
     }
 
     Gfx::IntRect applet_area_rect;
     if (auto* applet_area_window = AppletManager::the().window())
         applet_area_rect = applet_area_window->rect();
 
-    return make<Messages::WindowServer::GetAppletRectOnScreenResponse>(it->value->rect_in_applet_area().translated(applet_area_rect.location()));
+    return it->value->rect_in_applet_area().translated(applet_area_rect.location());
 }
 
 Window* ClientConnection::window_from_id(i32 window_id)
@@ -499,31 +449,35 @@ Window* ClientConnection::window_from_id(i32 window_id)
     return it->value.ptr();
 }
 
-OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(const Messages::WindowServer::CreateWindow& message)
+Messages::WindowServer::CreateWindowResponse ClientConnection::create_window(Gfx::IntRect const& rect,
+    bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool resizable,
+    bool fullscreen, bool frameless, bool accessory, float opacity, float alpha_hit_threshold,
+    Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment, Gfx::IntSize const& minimum_size,
+    Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, String const& title, i32 parent_window_id)
 {
     Window* parent_window = nullptr;
-    if (message.parent_window_id()) {
-        parent_window = window_from_id(message.parent_window_id());
+    if (parent_window_id) {
+        parent_window = window_from_id(parent_window_id);
         if (!parent_window) {
             did_misbehave("CreateWindow with bad parent_window_id");
-            return {};
+            return nullptr;
         }
     }
 
     int window_id = m_next_window_id++;
-    auto window = Window::construct(*this, (WindowType)message.type(), window_id, message.modal(), message.minimizable(), message.frameless(), message.resizable(), message.fullscreen(), message.accessory(), parent_window);
+    auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, frameless, resizable, fullscreen, accessory, parent_window);
 
-    window->set_has_alpha_channel(message.has_alpha_channel());
-    window->set_title(message.title());
-    if (!message.fullscreen()) {
-        auto rect = message.rect();
-        if (message.auto_position() && window->is_movable()) {
-            rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), message.rect().size() };
+    window->set_has_alpha_channel(has_alpha_channel);
+    window->set_title(title);
+    if (!fullscreen) {
+        Gfx::IntRect new_rect = rect;
+        if (auto_position && window->is_movable()) {
+            new_rect = { WindowManager::the().get_recommended_window_position({ 100, 100 }), rect.size() };
             window->set_default_positioned(true);
         }
-        window->set_minimum_size(message.minimum_size());
-        bool did_size_clamp = window->apply_minimum_size(rect);
-        window->set_rect(rect);
+        window->set_minimum_size(minimum_size);
+        bool did_size_clamp = window->apply_minimum_size(new_rect);
+        window->set_rect(new_rect);
         window->nudge_into_desktop();
 
         if (did_size_clamp)
@@ -533,16 +487,16 @@ OwnPtr<Messages::WindowServer::CreateWindowResponse> ClientConnection::handle(co
         window->set_rect(WindowManager::the().desktop_rect());
         window->recalculate_rect();
     }
-    window->set_opacity(message.opacity());
-    window->set_alpha_hit_threshold(message.alpha_hit_threshold());
-    window->set_size_increment(message.size_increment());
-    window->set_base_size(message.base_size());
-    window->set_resize_aspect_ratio(message.resize_aspect_ratio());
+    window->set_opacity(opacity);
+    window->set_alpha_hit_threshold(alpha_hit_threshold);
+    window->set_size_increment(size_increment);
+    window->set_base_size(base_size);
+    window->set_resize_aspect_ratio(resize_aspect_ratio);
     window->invalidate(true, true);
     if (window->type() == WindowType::Applet)
         AppletManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
-    return make<Messages::WindowServer::CreateWindowResponse>(window_id);
+    return window_id;
 }
 
 void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_window_ids)
@@ -571,17 +525,17 @@ void ClientConnection::destroy_window(Window& window, Vector<i32>& destroyed_win
     m_windows.remove(window.window_id());
 }
 
-OwnPtr<Messages::WindowServer::DestroyWindowResponse> ClientConnection::handle(const Messages::WindowServer::DestroyWindow& message)
+Messages::WindowServer::DestroyWindowResponse ClientConnection::destroy_window(i32 window_id)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("DestroyWindow: Bad window ID");
-        return {};
+        return nullptr;
     }
     auto& window = *(*it).value;
     Vector<i32> destroyed_window_ids;
     destroy_window(window, destroyed_window_ids);
-    return make<Messages::WindowServer::DestroyWindowResponse>(destroyed_window_ids);
+    return destroyed_window_ids;
 }
 
 void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
@@ -590,31 +544,30 @@ void ClientConnection::post_paint_message(Window& window, bool ignore_occlusion)
     if (window.is_minimized() || (!ignore_occlusion && window.is_occluded()))
         return;
 
-    post_message(Messages::WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
+    async_paint(window.window_id(), window.size(), rect_set.rects());
 }
 
-void ClientConnection::handle(const Messages::WindowServer::InvalidateRect& message)
+void ClientConnection::invalidate_rect(i32 window_id, Vector<Gfx::IntRect> const& rects, bool ignore_occlusion)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("InvalidateRect: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    for (size_t i = 0; i < message.rects().size(); ++i)
-        window.request_update(message.rects()[i].intersected({ {}, window.size() }), message.ignore_occlusion());
+    for (size_t i = 0; i < rects.size(); ++i)
+        window.request_update(rects[i].intersected({ {}, window.size() }), ignore_occlusion);
 }
 
-void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& message)
+void ClientConnection::did_finish_painting(i32 window_id, Vector<Gfx::IntRect> const& rects)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("DidFinishPainting: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    for (auto& rect : message.rects())
+    for (auto& rect : rects)
         window.invalidate(rect);
     if (window.has_alpha_channel() && window.alpha_hit_threshold() > 0.0f)
         WindowManager::the().reevaluate_hovered_window(&window);
@@ -622,177 +575,170 @@ void ClientConnection::handle(const Messages::WindowServer::DidFinishPainting& m
     WindowSwitcher::the().refresh_if_needed();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowBackingStoreResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBackingStore& message)
+void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] i32 bpp,
+    [[maybe_unused]] i32 pitch, IPC::File const& anon_file, i32 serial, bool has_alpha_channel,
+    Gfx::IntSize const& size, bool flush_immediately)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowBackingStore: Bad window ID");
-        return {};
+        return;
     }
     auto& window = *(*it).value;
-    if (window.last_backing_store() && window.last_backing_store_serial() == message.serial()) {
+    if (window.last_backing_store() && window.last_backing_store_serial() == serial) {
         window.swap_backing_stores();
     } else {
         // FIXME: Plumb scale factor here eventually.
         auto backing_store = Gfx::Bitmap::create_with_anon_fd(
-            message.has_alpha_channel() ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
-            message.anon_file().take_fd(),
-            message.size(),
+            has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
+            anon_file.take_fd(),
+            size,
             1,
             {},
             Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
-        window.set_backing_store(move(backing_store), message.serial());
+        window.set_backing_store(move(backing_store), serial);
     }
 
-    if (message.flush_immediately())
+    if (flush_immediately)
         window.invalidate(false);
-
-    return make<Messages::WindowServer::SetWindowBackingStoreResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetGlobalCursorTrackingResponse> ClientConnection::handle(const Messages::WindowServer::SetGlobalCursorTracking& message)
+void ClientConnection::set_global_cursor_tracking(i32 window_id, bool enabled)
 {
-    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetGlobalCursorTracking: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_global_cursor_tracking_enabled(message.enabled());
-    return make<Messages::WindowServer::SetGlobalCursorTrackingResponse>();
+    it->value->set_global_cursor_tracking_enabled(enabled);
 }
 
-OwnPtr<Messages::WindowServer::SetWindowCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCursor& message)
+void ClientConnection::set_window_cursor(i32 window_id, i32 cursor_type)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowCursor: Bad window ID");
-        return {};
+        return;
     }
     auto& window = *(*it).value;
-    if (message.cursor_type() < 0 || message.cursor_type() >= (i32)Gfx::StandardCursor::__Count) {
+    if (cursor_type < 0 || cursor_type >= (i32)Gfx::StandardCursor::__Count) {
         did_misbehave("SetWindowCursor: Bad cursor type");
-        return {};
+        return;
     }
-    window.set_cursor(Cursor::create((Gfx::StandardCursor)message.cursor_type()));
+    window.set_cursor(Cursor::create((Gfx::StandardCursor)cursor_type));
     if (&window == WindowManager::the().hovered_window())
         Compositor::the().invalidate_cursor();
-    return make<Messages::WindowServer::SetWindowCursorResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowCustomCursorResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowCustomCursor& message)
+void ClientConnection::set_window_custom_cursor(i32 window_id, Gfx::ShareableBitmap const& cursor)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowCustomCursor: Bad window ID");
-        return {};
+        return;
     }
 
     auto& window = *(*it).value;
-    if (!message.cursor().is_valid()) {
+    if (!cursor.is_valid()) {
         did_misbehave("SetWindowCustomCursor: Bad cursor");
-        return {};
+        return;
     }
 
-    window.set_cursor(Cursor::create(*message.cursor().bitmap()));
+    window.set_cursor(Cursor::create(*cursor.bitmap()));
     Compositor::the().invalidate_cursor();
-    return make<Messages::WindowServer::SetWindowCustomCursorResponse>();
 }
 
-OwnPtr<Messages::WindowServer::SetWindowHasAlphaChannelResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowHasAlphaChannel& message)
+void ClientConnection::set_window_has_alpha_channel(i32 window_id, bool has_alpha_channel)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowHasAlphaChannel: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_has_alpha_channel(message.has_alpha_channel());
-    return make<Messages::WindowServer::SetWindowHasAlphaChannelResponse>();
+    it->value->set_has_alpha_channel(has_alpha_channel);
 }
 
-OwnPtr<Messages::WindowServer::SetWindowAlphaHitThresholdResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowAlphaHitThreshold& message)
+void ClientConnection::set_window_alpha_hit_threshold(i32 window_id, float threshold)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowAlphaHitThreshold: Bad window ID");
-        return {};
+        return;
     }
-    it->value->set_alpha_hit_threshold(message.threshold());
-    return make<Messages::WindowServer::SetWindowAlphaHitThresholdResponse>();
+    it->value->set_alpha_hit_threshold(threshold);
 }
 
-void ClientConnection::handle(const Messages::WindowServer::StartWindowResize& request)
+void ClientConnection::start_window_resize(i32 window_id)
 {
-    auto it = m_windows.find(request.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("WM_StartWindowResize: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
+    if (!window.is_resizable()) {
+        dbgln("Client wants to start resizing a non-resizable window");
+        return;
+    }
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
     WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
 }
 
-OwnPtr<Messages::WindowServer::GreetResponse> ClientConnection::handle(const Messages::WindowServer::Greet&)
+Messages::WindowServer::GreetResponse ClientConnection::greet()
 {
-    return make<Messages::WindowServer::GreetResponse>(Screen::the().rect(), Gfx::current_system_theme_buffer());
+    return { Screen::the().rect(), Gfx::current_system_theme_buffer() };
 }
 
-OwnPtr<Messages::WindowServer::StartDragResponse> ClientConnection::handle(const Messages::WindowServer::StartDrag& message)
+Messages::WindowServer::StartDragResponse ClientConnection::start_drag(String const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
 {
     auto& wm = WindowManager::the();
     if (wm.dnd_client())
-        return make<Messages::WindowServer::StartDragResponse>(false);
+        return false;
 
-    wm.start_dnd_drag(*this, message.text(), message.drag_bitmap().bitmap(), Core::MimeData::construct(message.mime_data()));
-    return make<Messages::WindowServer::StartDragResponse>(true);
+    wm.start_dnd_drag(*this, text, drag_bitmap.bitmap(), Core::MimeData::construct(mime_data));
+    return true;
 }
 
-OwnPtr<Messages::WindowServer::SetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::SetSystemTheme& message)
+Messages::WindowServer::SetSystemThemeResponse ClientConnection::set_system_theme(String const& theme_path, String const& theme_name)
 {
-    bool success = WindowManager::the().update_theme(message.theme_path(), message.theme_name());
-    return make<Messages::WindowServer::SetSystemThemeResponse>(success);
+    bool success = WindowManager::the().update_theme(theme_path, theme_name);
+    return success;
 }
 
-OwnPtr<Messages::WindowServer::GetSystemThemeResponse> ClientConnection::handle(const Messages::WindowServer::GetSystemTheme&)
+Messages::WindowServer::GetSystemThemeResponse ClientConnection::get_system_theme()
 {
-    auto wm_config = Core::ConfigFile::open("/etc/WindowServer/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     auto name = wm_config->read_entry("Theme", "Name");
-    return make<Messages::WindowServer::GetSystemThemeResponse>(name);
+    return name;
 }
 
-OwnPtr<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowBaseSizeAndSizeIncrement& message)
+void ClientConnection::set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowBaseSizeAndSizeIncrementResponse: Bad window ID");
-        return {};
+        return;
     }
 
     auto& window = *it->value;
-    window.set_base_size(message.base_size());
-    window.set_size_increment(message.size_increment());
-
-    return make<Messages::WindowServer::SetWindowBaseSizeAndSizeIncrementResponse>();
+    window.set_base_size(base_size);
+    window.set_size_increment(size_increment);
 }
 
-OwnPtr<Messages::WindowServer::SetWindowResizeAspectRatioResponse> ClientConnection::handle(const Messages::WindowServer::SetWindowResizeAspectRatio& message)
+void ClientConnection::set_window_resize_aspect_ratio(i32 window_id, Optional<Gfx::IntSize> const& resize_aspect_ratio)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowResizeAspectRatioResponse: Bad window ID");
-        return {};
+        return;
     }
 
     auto& window = *it->value;
-    window.set_resize_aspect_ratio(message.resize_aspect_ratio());
-
-    return make<Messages::WindowServer::SetWindowResizeAspectRatioResponse>();
+    window.set_resize_aspect_ratio(resize_aspect_ratio);
 }
 
-void ClientConnection::handle(const Messages::WindowServer::EnableDisplayLink&)
+void ClientConnection::enable_display_link()
 {
     if (m_has_display_link)
         return;
@@ -800,7 +746,7 @@ void ClientConnection::handle(const Messages::WindowServer::EnableDisplayLink&)
     Compositor::the().increment_display_link_count({});
 }
 
-void ClientConnection::handle(const Messages::WindowServer::DisableDisplayLink&)
+void ClientConnection::disable_display_link()
 {
     if (!m_has_display_link)
         return;
@@ -813,77 +759,77 @@ void ClientConnection::notify_display_link(Badge<Compositor>)
     if (!m_has_display_link)
         return;
 
-    post_message(Messages::WindowClient::DisplayLinkNotification());
+    async_display_link_notification();
 }
 
-void ClientConnection::handle(const Messages::WindowServer::SetWindowProgress& message)
+void ClientConnection::set_window_progress(i32 window_id, Optional<i32> const& progress)
 {
-    auto it = m_windows.find(message.window_id());
+    auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         did_misbehave("SetWindowProgress with bad window ID");
         return;
     }
-    it->value->set_progress(message.progress());
+    it->value->set_progress(progress);
 }
 
-void ClientConnection::handle(const Messages::WindowServer::RefreshSystemTheme&)
+void ClientConnection::refresh_system_theme()
 {
     // Post the client an UpdateSystemTheme message to refresh its theme.
-    post_message(Messages::WindowClient::UpdateSystemTheme(Gfx::current_system_theme_buffer()));
+    async_update_system_theme(Gfx::current_system_theme_buffer());
 }
 
-void ClientConnection::handle(const Messages::WindowServer::Pong&)
+void ClientConnection::pong()
 {
     m_ping_timer = nullptr;
     set_unresponsive(false);
 }
 
-OwnPtr<Messages::WindowServer::GetGlobalCursorPositionResponse> ClientConnection::handle(const Messages::WindowServer::GetGlobalCursorPosition&)
+Messages::WindowServer::GetGlobalCursorPositionResponse ClientConnection::get_global_cursor_position()
 {
-    return make<Messages::WindowServer::GetGlobalCursorPositionResponse>(Screen::the().cursor_location());
+    return Screen::the().cursor_location();
 }
 
-OwnPtr<Messages::WindowServer::SetMouseAccelerationResponse> ClientConnection::handle(const Messages::WindowServer::SetMouseAcceleration& message)
+void ClientConnection::set_mouse_acceleration(float factor)
 {
-    double factor = message.factor();
-    if (factor < mouse_accel_min || factor > mouse_accel_max) {
+    double dbl_factor = (double)factor;
+    if (dbl_factor < mouse_accel_min || dbl_factor > mouse_accel_max) {
         did_misbehave("SetMouseAcceleration with bad acceleration factor");
-        return {};
+        return;
     }
-    WindowManager::the().set_acceleration_factor(factor);
-    return make<Messages::WindowServer::SetMouseAccelerationResponse>();
+    WindowManager::the().set_acceleration_factor(dbl_factor);
 }
 
-OwnPtr<Messages::WindowServer::GetMouseAccelerationResponse> ClientConnection::handle(const Messages::WindowServer::GetMouseAcceleration&)
+Messages::WindowServer::GetMouseAccelerationResponse ClientConnection::get_mouse_acceleration()
 {
-    return make<Messages::WindowServer::GetMouseAccelerationResponse>(Screen::the().acceleration_factor());
+    return Screen::the().acceleration_factor();
 }
 
-OwnPtr<Messages::WindowServer::SetScrollStepSizeResponse> ClientConnection::handle(const Messages::WindowServer::SetScrollStepSize& message)
+void ClientConnection::set_scroll_step_size(u32 step_size)
 {
-    if (message.step_size() < scroll_step_size_min) {
+    if (step_size < scroll_step_size_min) {
         did_misbehave("SetScrollStepSize with bad scroll step size");
-        return {};
+        return;
     }
-    WindowManager::the().set_scroll_step_size(message.step_size());
-    return make<Messages::WindowServer::SetScrollStepSizeResponse>();
+    WindowManager::the().set_scroll_step_size(step_size);
 }
-OwnPtr<Messages::WindowServer::GetScrollStepSizeResponse> ClientConnection::handle(const Messages::WindowServer::GetScrollStepSize&)
+
+Messages::WindowServer::GetScrollStepSizeResponse ClientConnection::get_scroll_step_size()
 {
-    return make<Messages::WindowServer::GetScrollStepSizeResponse>(Screen::the().scroll_step_size());
+    return Screen::the().scroll_step_size();
 }
-OwnPtr<Messages::WindowServer::SetDoubleClickSpeedResponse> ClientConnection::handle(const Messages::WindowServer::SetDoubleClickSpeed& message)
+
+void ClientConnection::set_double_click_speed(i32 speed)
 {
-    if (message.speed() < double_click_speed_min || message.speed() > double_click_speed_max) {
+    if (speed < double_click_speed_min || speed > double_click_speed_max) {
         did_misbehave("SetDoubleClickSpeed with bad speed");
-        return {};
+        return;
     }
-    WindowManager::the().set_double_click_speed(message.speed());
-    return make<Messages::WindowServer::SetDoubleClickSpeedResponse>();
+    WindowManager::the().set_double_click_speed(speed);
 }
-OwnPtr<Messages::WindowServer::GetDoubleClickSpeedResponse> ClientConnection::handle(const Messages::WindowServer::GetDoubleClickSpeed&)
+
+Messages::WindowServer::GetDoubleClickSpeedResponse ClientConnection::get_double_click_speed()
 {
-    return make<Messages::WindowServer::GetDoubleClickSpeedResponse>(WindowManager::the().double_click_speed());
+    return WindowManager::the().double_click_speed();
 }
 
 void ClientConnection::set_unresponsive(bool unresponsive)
@@ -905,7 +851,7 @@ void ClientConnection::set_unresponsive(bool unresponsive)
 
 void ClientConnection::may_have_become_unresponsive()
 {
-    post_message(Messages::WindowClient::Ping());
+    async_ping();
     m_ping_timer = Core::Timer::create_single_shot(1000, [this] {
         set_unresponsive(true);
     });
@@ -917,10 +863,32 @@ void ClientConnection::did_become_responsive()
     set_unresponsive(false);
 }
 
-OwnPtr<Messages::WindowServer::GetScreenBitmapResponse> ClientConnection::handle(const Messages::WindowServer::GetScreenBitmap&)
+Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap()
 {
     auto& bitmap = Compositor::the().front_bitmap_for_screenshot({});
-    return make<Messages::WindowServer::GetScreenBitmapResponse>(bitmap.to_shareable_bitmap());
+    return bitmap.to_shareable_bitmap();
+}
+
+Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_modified(i32 window_id)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("IsWindowModified: Bad window ID");
+        return nullptr;
+    }
+    auto& window = *it->value;
+    return window.is_modified();
+}
+
+void ClientConnection::set_window_modified(i32 window_id, bool modified)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetWindowModified: Bad window ID");
+        return;
+    }
+    auto& window = *it->value;
+    window.set_modified(modified);
 }
 
 }

@@ -11,6 +11,7 @@ test("basic eval() functionality", () => {
 
 test("returns value of last value-producing statement", () => {
     // See https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation
+    expect(eval("")).toBeUndefined();
     expect(eval("1;;;;;")).toBe(1);
     expect(eval("1;{}")).toBe(1);
     expect(eval("1;var a;")).toBe(1);

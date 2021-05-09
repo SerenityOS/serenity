@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
@@ -30,7 +10,7 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
@@ -41,9 +21,6 @@
 #define SCHEDULE_ON_ALL_PROCESSORS 0
 
 namespace Kernel {
-
-extern bool g_profiling_all_threads;
-extern PerformanceEventBuffer* g_global_perf_events;
 
 class SchedulerPerProcessorData {
     AK_MAKE_NONCOPYABLE(SchedulerPerProcessorData);
@@ -62,7 +39,7 @@ RecursiveSpinLock g_scheduler_lock;
 static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 4ms (assuming 250 ticks/second)
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return 1;
     return 2;
 }
@@ -79,6 +56,7 @@ static SpinLock<u8> g_ready_queues_lock;
 static u32 g_ready_queues_mask;
 static constexpr u32 g_ready_queue_buckets = sizeof(g_ready_queues_mask) * 8;
 READONLY_AFTER_INIT static ThreadReadyQueue* g_ready_queues; // g_ready_queue_buckets entries
+static void dump_thread_list();
 
 static inline u32 thread_priority_to_priority_index(u32 thread_priority)
 {
@@ -127,12 +105,12 @@ Thread& Scheduler::pull_next_runnable_thread()
         }
         priority_mask &= ~(1u << priority);
     }
-    return *Processor::current().idle_thread();
+    return *Processor::idle_thread();
 }
 
 bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 {
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return true;
     ScopedSpinLock lock(g_ready_queues_lock);
     auto priority = thread.m_runnable_priority;
@@ -156,7 +134,7 @@ bool Scheduler::dequeue_runnable_thread(Thread& thread, bool check_affinity)
 void Scheduler::queue_runnable_thread(Thread& thread)
 {
     VERIFY(g_scheduler_lock.own_lock());
-    if (&thread == Processor::current().idle_thread())
+    if (thread.is_idle_thread())
         return;
     auto priority = thread_priority_to_priority_index(thread.priority());
 
@@ -182,9 +160,8 @@ UNMAP_AFTER_INIT void Scheduler::start()
     auto& processor = Processor::current();
     processor.set_scheduler_data(*new SchedulerPerProcessorData());
     VERIFY(processor.is_initialized());
-    auto& idle_thread = *processor.idle_thread();
+    auto& idle_thread = *Processor::idle_thread();
     VERIFY(processor.current_thread() == &idle_thread);
-    VERIFY(processor.idle_thread() == &idle_thread);
     idle_thread.set_ticks_left(time_slice_for(idle_thread));
     idle_thread.did_schedule();
     idle_thread.set_initialized(true);
@@ -235,29 +212,7 @@ bool Scheduler::pick_next()
     }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
-        dbgln("Scheduler thread list for processor {}:", Processor::id());
-        Thread::for_each([&](Thread& thread) -> IterationDecision {
-            switch (thread.state()) {
-            case Thread::Dying:
-                dbgln("  {:12} {} @ {:04x}:{:08x} Finalizable: {}",
-                    thread.state_string(),
-                    thread,
-                    thread.tss().cs,
-                    thread.tss().eip,
-                    thread.is_finalizable());
-                break;
-            default:
-                dbgln("  {:12} Pr:{:2} {} @ {:04x}:{:08x}",
-                    thread.state_string(),
-                    thread.priority(),
-                    thread,
-                    thread.tss().cs,
-                    thread.tss().eip);
-                break;
-            }
-
-            return IterationDecision::Continue;
-        });
+        dump_thread_list();
     }
 
     auto pending_beneficiary = scheduler_data.m_pending_beneficiary.strong_ref();
@@ -511,6 +466,7 @@ UNMAP_AFTER_INIT void Scheduler::initialize()
 
 UNMAP_AFTER_INIT void Scheduler::set_idle_thread(Thread* idle_thread)
 {
+    idle_thread->set_idle_thread();
     Processor::current().set_idle_thread(*idle_thread);
     Processor::current().set_current_thread(*idle_thread);
 }
@@ -519,10 +475,10 @@ UNMAP_AFTER_INIT Thread* Scheduler::create_ap_idle_thread(u32 cpu)
 {
     VERIFY(cpu != 0);
     // This function is called on the bsp, but creates an idle thread for another AP
-    VERIFY(Processor::id() == 0);
+    VERIFY(Processor::is_bootstrap_processor());
 
     VERIFY(s_colonel_process);
-    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::format("idle thread #%u", cpu), 1 << cpu, false);
+    Thread* idle_thread = s_colonel_process->create_kernel_thread(idle_loop, nullptr, THREAD_PRIORITY_MIN, String::formatted("idle thread #{}", cpu), 1 << cpu, false);
     VERIFY(idle_thread);
     return idle_thread;
 }
@@ -541,34 +497,11 @@ void Scheduler::timer_tick(const RegisterState& regs)
     VERIFY(current_thread->current_trap()->regs == &regs);
 
 #if !SCHEDULE_ON_ALL_PROCESSORS
-    bool is_bsp = Processor::id() == 0;
-    if (!is_bsp)
+    if (!Processor::is_bootstrap_processor())
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
 
-    PerformanceEventBuffer* perf_events = nullptr;
-
-    if (g_profiling_all_threads) {
-        VERIFY(g_global_perf_events);
-        // FIXME: We currently don't collect samples while idle.
-        //        That will be an interesting mode to add in the future. :^)
-        if (current_thread != Processor::current().idle_thread()) {
-            perf_events = g_global_perf_events;
-            if (current_thread->process().space().enforces_syscall_regions()) {
-                // FIXME: This is very nasty! We dump the current process's address
-                //        space layout *every time* it's sampled. We should figure out
-                //        a way to do this less often.
-                perf_events->add_process(current_thread->process());
-            }
-        }
-    } else if (current_thread->process().is_profiling()) {
-        VERIFY(current_thread->process().perf_events());
-        perf_events = current_thread->process().perf_events();
-    }
-
-    if (perf_events) {
-        [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0);
-    }
+    PerformanceManager::add_cpu_sample_event(*current_thread, regs);
 
     if (current_thread->tick())
         return;
@@ -631,6 +564,53 @@ void Scheduler::idle_loop(void*)
             yield();
 #endif
     }
+}
+
+void Scheduler::dump_scheduler_state()
+{
+    dump_thread_list();
+}
+
+void dump_thread_list()
+{
+    dbgln("Scheduler thread list for processor {}:", Processor::id());
+
+    auto get_cs = [](Thread& thread) -> u16 {
+        if (!thread.current_trap())
+            return thread.tss().cs;
+        return thread.get_register_dump_from_stack().cs;
+    };
+
+    auto get_eip = [](Thread& thread) -> u32 {
+        if (!thread.current_trap())
+            return thread.tss().eip;
+        return thread.get_register_dump_from_stack().eip;
+    };
+
+    Thread::for_each([&](Thread& thread) -> IterationDecision {
+        switch (thread.state()) {
+        case Thread::Dying:
+            dbgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
+                thread.state_string(),
+                thread,
+                get_cs(thread),
+                get_eip(thread),
+                thread.is_finalizable(),
+                thread.times_scheduled());
+            break;
+        default:
+            dbgln("  {:14} Pr:{:2} {:30} @ {:04x}:{:08x} (nsched: {})",
+                thread.state_string(),
+                thread.priority(),
+                thread,
+                get_cs(thread),
+                get_eip(thread),
+                thread.times_scheduled());
+            break;
+        }
+
+        return IterationDecision::Continue;
+    });
 }
 
 }

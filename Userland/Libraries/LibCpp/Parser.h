@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -69,6 +49,7 @@ private:
         Enum,
         Struct,
         Namespace,
+        Class,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
@@ -80,6 +61,7 @@ private:
     bool match_expression();
     bool match_secondary_expression();
     bool match_enum_declaration();
+    bool match_class_declaration();
     bool match_struct_declaration();
     bool match_literal();
     bool match_unary_expression();
@@ -157,7 +139,7 @@ private:
     NonnullRefPtr<T>
     create_ast_node(ASTNode& parent, const Position& start, Optional<Position> end, Args&&... args)
     {
-        auto node = adopt(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
+        auto node = adopt_ref(*new T(&parent, start, end, m_filename, forward<Args>(args)...));
         if (!parent.is_dummy_node()) {
             m_state.nodes.append(node);
         }
@@ -167,7 +149,7 @@ private:
     NonnullRefPtr<TranslationUnit>
     create_root_ast_node(const Position& start, Position end)
     {
-        auto node = adopt(*new TranslationUnit(nullptr, start, end, m_filename));
+        auto node = adopt_ref(*new TranslationUnit(nullptr, start, end, m_filename));
         m_state.nodes.append(node);
         m_root_node = node;
         return node;
@@ -175,7 +157,7 @@ private:
 
     DummyAstNode& get_dummy_node()
     {
-        static NonnullRefPtr<DummyAstNode> dummy = adopt(*new DummyAstNode(nullptr, {}, {}, {}));
+        static NonnullRefPtr<DummyAstNode> dummy = adopt_ref(*new DummyAstNode(nullptr, {}, {}, {}));
         return dummy;
     }
 

@@ -1,8 +1,13 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=imgcat
 version=2.5.0
-useconfigure=false
-files="https://github.com/eddieantonio/imgcat/releases/download/v${version}/imgcat-${version}.tar.gz imgcat-v${version}.tar.gz 1b5d45ccafc6fbb7a7ee685d4a5110101418d48b"
-auth_type=md5
-
 depends="ncurses"
+files="https://github.com/eddieantonio/imgcat/releases/download/v${version}/imgcat-${version}.tar.gz imgcat-v${version}.tar.gz 8f18e10464ed1426b29a5b11aee766a43db92be17ba0a17fd127dd9cf9fb544b"
+auth_type=sha256
+
+build() {
+    run make \
+        production=true
+}
+
+export CPPFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/ncurses"

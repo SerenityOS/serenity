@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers
- * All rights reserved.
+ * Copyright (c) 2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -33,7 +13,7 @@
 
 class MouseCursorModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<MouseCursorModel> create() { return adopt(*new MouseCursorModel); }
+    static NonnullRefPtr<MouseCursorModel> create() { return adopt_ref(*new MouseCursorModel); }
     virtual ~MouseCursorModel() override { }
 
     enum Column {
@@ -78,17 +58,14 @@ public:
         Core::DirIterator iterator("/res/cursors", Core::DirIterator::Flags::SkipDots);
 
         while (iterator.has_next()) {
-            auto path = iterator.next_path();
+            auto path = iterator.next_full_path();
             if (path.contains("2x"))
                 continue;
             Cursor cursor;
-            StringBuilder full_path;
-            full_path.append("/res/cursors/");
-            full_path.append(path);
-            cursor.path = full_path.to_string();
+            cursor.path = move(path);
             cursor.bitmap = Gfx::Bitmap::load_from_file(cursor.path);
-            auto filename_split = path.split('.');
-            cursor.name = filename_split[0];
+            auto filename_split = cursor.path.split('/');
+            cursor.name = filename_split[2];
             m_cursors.append(move(cursor));
         }
 
@@ -109,7 +86,7 @@ private:
 
 class FileIconsModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<MouseCursorModel> create() { return adopt(*new FileIconsModel); }
+    static NonnullRefPtr<FileIconsModel> create() { return adopt_ref(*new FileIconsModel); }
     virtual ~FileIconsModel() override { }
 
     enum Column {
@@ -161,16 +138,13 @@ public:
         Core::DirIterator big_iterator("/res/icons/32x32", Core::DirIterator::Flags::SkipDots);
 
         while (big_iterator.has_next()) {
-            auto path = big_iterator.next_path();
+            auto path = big_iterator.next_full_path();
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            StringBuilder full_path;
-            full_path.append("/res/icons/32x32/");
-            full_path.append(path);
-            icon_set.big_icon = Gfx::Bitmap::load_from_file(full_path.to_string());
-            auto filename_split = path.split('.');
-            icon_set.name = filename_split[0];
+            icon_set.big_icon = Gfx::Bitmap::load_from_file(path);
+            auto filename_split = path.split('/');
+            icon_set.name = filename_split[3];
             m_icon_sets.append(move(icon_set));
         }
 
@@ -179,16 +153,13 @@ public:
         Core::DirIterator little_iterator("/res/icons/16x16", Core::DirIterator::Flags::SkipDots);
 
         while (little_iterator.has_next()) {
-            auto path = little_iterator.next_path();
+            auto path = little_iterator.next_full_path();
             if (!path.contains("filetype-") && !path.contains("app-"))
                 continue;
             IconSet icon_set;
-            StringBuilder full_path;
-            full_path.append("/res/icons/16x16/");
-            full_path.append(path);
-            icon_set.little_icon = Gfx::Bitmap::load_from_file(full_path.to_string());
-            auto filename_split = path.split('.');
-            icon_set.name = filename_split[0];
+            icon_set.little_icon = Gfx::Bitmap::load_from_file(path);
+            auto filename_split = path.split('/');
+            icon_set.name = filename_split[3];
             for (size_t i = 0; i < big_icons_found; i++) {
                 if (icon_set.name == m_icon_sets[i].name) {
                     m_icon_sets[i].little_icon = icon_set.little_icon;

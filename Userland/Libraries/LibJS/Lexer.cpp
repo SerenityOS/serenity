@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
- * Copyright (c) 2020, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Lexer.h"
@@ -172,18 +152,18 @@ void Lexer::consume()
         return;
 
     if (is_line_terminator()) {
-#if LEXER_DEBUG
-        String type;
-        if (m_current_char == '\n')
-            type = "LINE FEED";
-        else if (m_current_char == '\r')
-            type = "CARRIAGE RETURN";
-        else if (m_source[m_position + 1] == (char)0xa8)
-            type = "LINE SEPARATOR";
-        else
-            type = "PARAGRAPH SEPARATOR";
-        dbgln("Found a line terminator: {}", type);
-#endif
+        if constexpr (LEXER_DEBUG) {
+            String type;
+            if (m_current_char == '\n')
+                type = "LINE FEED";
+            else if (m_current_char == '\r')
+                type = "CARRIAGE RETURN";
+            else if (m_source[m_position + 1] == (char)0xa8)
+                type = "LINE SEPARATOR";
+            else
+                type = "PARAGRAPH SEPARATOR";
+            dbgln("Found a line terminator: {}", type);
+        }
         // This is a three-char line terminator, we need to increase m_position some more.
         // We might reach EOF and need to check again.
         if (m_current_char != '\n' && m_current_char != '\r') {
@@ -201,11 +181,9 @@ void Lexer::consume()
         if (!second_char_of_crlf) {
             m_line_number++;
             m_line_column = 1;
-#if LEXER_DEBUG
-            dbgln("Incremented line number, now at: line {}, column 1", m_line_number);
+            dbgln_if(LEXER_DEBUG, "Incremented line number, now at: line {}, column 1", m_line_number);
         } else {
-            dbgln("Previous was CR, this is LF - not incrementing line number again.");
-#endif
+            dbgln_if(LEXER_DEBUG, "Previous was CR, this is LF - not incrementing line number again.");
         }
     } else {
         m_line_column++;
@@ -642,14 +620,14 @@ Token Lexer::next()
         value_start_line_number,
         value_start_column_number);
 
-#if LEXER_DEBUG
-    dbgln("------------------------------");
-    dbgln("Token: {}", m_current_token.name());
-    dbgln("Trivia: _{}_", m_current_token.trivia());
-    dbgln("Value: _{}_", m_current_token.value());
-    dbgln("Line: {}, Column: {}", m_current_token.line_number(), m_current_token.line_column());
-    dbgln("------------------------------");
-#endif
+    if constexpr (LEXER_DEBUG) {
+        dbgln("------------------------------");
+        dbgln("Token: {}", m_current_token.name());
+        dbgln("Trivia: _{}_", m_current_token.trivia());
+        dbgln("Value: _{}_", m_current_token.value());
+        dbgln("Line: {}, Column: {}", m_current_token.line_number(), m_current_token.line_column());
+        dbgln("------------------------------");
+    }
 
     return m_current_token;
 }

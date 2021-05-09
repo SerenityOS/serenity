@@ -20,12 +20,16 @@ set(LIBC_SOURCES
     mntent.cpp
     netdb.cpp
     poll.cpp
+    pthread_forward.cpp
     pthread_integration.cpp
+    pthread_tls.cpp
+    pty.cpp
     pwd.cpp
     qsort.cpp
     scanf.cpp
     sched.cpp
     serenity.cpp
+    shadow.cpp
     signal.cpp
     spawn.cpp
     stat.cpp

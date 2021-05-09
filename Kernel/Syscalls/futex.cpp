@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
@@ -104,14 +84,18 @@ void Process::clear_futex_queues_on_exec()
 
 KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
-    REQUIRE_PROMISE(thread);
-
     Syscall::SC_futex_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
     Thread::BlockTimeout timeout;
     u32 cmd = params.futex_op & FUTEX_CMD_MASK;
+
+    bool use_realtime_clock = (params.futex_op & FUTEX_CLOCK_REALTIME) != 0;
+    if (use_realtime_clock && cmd != FUTEX_WAIT && cmd != FUTEX_WAIT_BITSET) {
+        return ENOSYS;
+    }
+
     switch (cmd) {
     case FUTEX_WAIT:
     case FUTEX_WAIT_BITSET:
@@ -121,8 +105,8 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
             auto timeout_time = copy_time_from_user(params.timeout);
             if (!timeout_time.has_value())
                 return EFAULT;
-            clockid_t clock_id = (params.futex_op & FUTEX_CLOCK_REALTIME) ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             bool is_absolute = cmd != FUTEX_WAIT;
+            clockid_t clock_id = use_realtime_clock ? CLOCK_REALTIME_COARSE : CLOCK_MONOTONIC_COARSE;
             timeout = Thread::BlockTimeout(is_absolute, &timeout_time.value(), nullptr, clock_id);
         }
         if (cmd == FUTEX_WAIT_BITSET && params.val3 == FUTEX_BITSET_MATCH_ANY)
@@ -189,7 +173,7 @@ KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> use
         if (it != queues->end())
             return it->value;
         if (create_if_not_found) {
-            auto futex_queue = adopt(*new FutexQueue(user_address_or_offset, vmobject));
+            auto futex_queue = adopt_ref(*new FutexQueue(user_address_or_offset, vmobject));
             auto result = queues->set(user_address_or_offset, futex_queue);
             VERIFY(result == AK::HashSetResult::InsertedNewEntry);
             return futex_queue;

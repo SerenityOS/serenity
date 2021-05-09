@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -40,6 +20,7 @@
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
 #include <Kernel/Lock.h>
+#include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Thread.h>
@@ -343,6 +324,7 @@ public:
     KResultOr<int> sys$setegid(gid_t);
     KResultOr<int> sys$setuid(uid_t);
     KResultOr<int> sys$setgid(gid_t);
+    KResultOr<int> sys$setreuid(uid_t, uid_t);
     KResultOr<int> sys$setresuid(uid_t, uid_t, uid_t);
     KResultOr<int> sys$setresgid(gid_t, gid_t, gid_t);
     KResultOr<unsigned> sys$alarm(unsigned seconds);
@@ -374,6 +356,7 @@ public:
     KResultOr<int> sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
     KResultOr<int> sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
     KResultOr<int> sys$getpeername(Userspace<const Syscall::SC_getpeername_params*>);
+    KResultOr<int> sys$socketpair(Userspace<const Syscall::SC_socketpair_params*>);
     KResultOr<int> sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     KResultOr<int> sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
     KResultOr<int> sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
@@ -394,6 +377,7 @@ public:
     KResultOr<int> sys$module_unload(Userspace<const char*> name, size_t name_length);
     KResultOr<int> sys$profiling_enable(pid_t);
     KResultOr<int> sys$profiling_disable(pid_t);
+    KResultOr<int> sys$profiling_free_buffer(pid_t);
     KResultOr<int> sys$futex(Userspace<const Syscall::SC_futex_params*>);
     KResultOr<int> sys$chroot(Userspace<const char*> path, size_t path_length, int mount_flags);
     KResultOr<int> sys$pledge(Userspace<const Syscall::SC_pledge_params*>);
@@ -405,7 +389,7 @@ public:
     KResultOr<int> sys$recvfd(int sockfd, int options);
     KResultOr<long> sys$sysconf(int name);
     KResultOr<int> sys$disown(ProcessID);
-    KResultOr<FlatPtr> sys$allocate_tls(size_t);
+    KResultOr<FlatPtr> sys$allocate_tls(Userspace<const char*> initial_data, size_t);
     KResultOr<int> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     KResultOr<int> sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
     KResultOr<int> sys$anon_create(size_t, int options);
@@ -508,6 +492,7 @@ private:
     friend class MemoryManager;
     friend class Scheduler;
     friend class Region;
+    friend class PerformanceManager;
 
     bool add_thread(Thread&);
     bool remove_thread(Thread&);
@@ -520,6 +505,7 @@ private:
     bool dump_core();
     bool dump_perfcore();
     bool create_perf_events_buffer_if_needed();
+    void delete_perf_events_buffer();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
@@ -545,6 +531,13 @@ private:
     bool has_tracee_thread(ProcessID tracer_pid);
 
     void clear_futex_queues_on_exec();
+
+    void setup_socket_fd(int fd, NonnullRefPtr<FileDescription> description, int type);
+
+    inline PerformanceEventBuffer* current_perf_events_buffer()
+    {
+        return g_profiling_all_threads ? g_global_perf_events : m_perf_event_buffer.ptr();
+    }
 
     Process* m_prev { nullptr };
     Process* m_next { nullptr };

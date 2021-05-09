@@ -10,11 +10,11 @@ MISSING_FILES=n
 while IFS= read -r FILENAME; do
     # Simply search whether the CMakeLists.txt *ever* mention the test files.
     if ! grep -qP "${FILENAME}" AK/Tests/CMakeLists.txt ; then
-        echo "AK/Tests/CMakeLists.txt is missing the test file ${FILENAME}"
+        echo "Tests/AK/CMakeLists.txt is missing the test file ${FILENAME}"
         MISSING_FILES=y
     fi
 done < <(
-    git ls-files 'AK/Tests/Test*.cpp' | xargs -i basename {}
+    git ls-files 'Test/AK/Test*.cpp' | xargs -i basename {}
 )
 
 if [ "n" != "${MISSING_FILES}" ] ; then

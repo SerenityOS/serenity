@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -578,7 +558,7 @@ void Terminal::execute_xterm_command()
         } else {
             m_current_attribute.href = params[2];
             // FIXME: Respect the provided ID
-            m_current_attribute.href_id = String::format("%u", m_next_href_id++);
+            m_current_attribute.href_id = String::number(m_next_href_id++);
         }
         break;
     case 9:
@@ -787,7 +767,7 @@ void Terminal::DSR(const ParamVector& params)
         emit_string("\033[0n"); // Terminal status OK!
     } else if (params.size() == 1 && params[0] == 6) {
         // Cursor position query
-        emit_string(String::format("\033[%d;%dR", m_cursor_row + 1, m_cursor_column + 1));
+        emit_string(String::formatted("\e[{};{}R", m_cursor_row + 1, m_cursor_column + 1));
     } else {
         dbgln("Unknown DSR");
     }
@@ -817,9 +797,7 @@ void Terminal::ICH(const ParamVector& params)
 
 void Terminal::on_input(u8 ch)
 {
-#if TERMINAL_DEBUG
-    dbgln("Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
-#endif
+    dbgln_if(TERMINAL_DEBUG, "Terminal::on_input: {:#02x} ({:c}), fg={}, bg={}\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 
     auto fail_utf8_parse = [this] {
         m_parser_state = Normal;
@@ -1024,15 +1002,15 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
 
     auto emit_final_with_modifier = [this, modifier_mask](char final) {
         if (modifier_mask)
-            emit_string(String::format("\e[1;%d%c", modifier_mask + 1, final));
+            emit_string(String::formatted("\e[1;{}{:c}", modifier_mask + 1, final));
         else
-            emit_string(String::format("\e[%c", final));
+            emit_string(String::formatted("\e[{:c}", final));
     };
     auto emit_tilde_with_modifier = [this, modifier_mask](unsigned num) {
         if (modifier_mask)
-            emit_string(String::format("\e[%d;%d~", num, modifier_mask + 1));
+            emit_string(String::formatted("\e[{};{}~", num, modifier_mask + 1));
         else
-            emit_string(String::format("\e[%d~", num));
+            emit_string(String::formatted("\e[{}~", num));
     };
 
     switch (key) {

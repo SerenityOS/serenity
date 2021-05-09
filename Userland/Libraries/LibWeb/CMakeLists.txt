@@ -3,6 +3,7 @@ set(SOURCES
     Bindings/EventListenerWrapper.cpp
     Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
+    Bindings/HTMLCollectionWrapperCustom.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LocationObject.cpp
     Bindings/MainThreadVM.cpp
@@ -48,6 +49,7 @@ set(SOURCES
     DOM/Element.cpp
     DOM/ElementFactory.cpp
     DOM/Event.cpp
+    DOM/HTMLCollection.cpp
     DOM/Range.cpp
     DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
@@ -67,6 +69,7 @@ set(SOURCES
     HTML/AttributeNames.cpp
     HTML/CanvasRenderingContext2D.cpp
     HTML/EventNames.cpp
+    HTML/FormAssociatedElement.cpp
     HTML/FrameHostElement.cpp
     HTML/GlobalEventHandlers.cpp
     HTML/HTMLAnchorElement.cpp
@@ -150,6 +153,7 @@ set(SOURCES
     HTML/Parser/StackOfOpenElements.cpp
     HTML/SubmitEvent.cpp
     HTML/TagNames.cpp
+    HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp
     InProcessWebView.cpp
     Layout/BlockBox.cpp
@@ -221,8 +225,8 @@ set(SOURCES
 )
 
 set(GENERATED_SOURCES
-    ../../Services/ProtocolServer/ProtocolClientEndpoint.h
-    ../../Services/ProtocolServer/ProtocolServerEndpoint.h
+    ../../Services/RequestServer/RequestClientEndpoint.h
+    ../../Services/RequestServer/RequestServerEndpoint.h
     ../../Services/WebContent/WebContentClientEndpoint.h
     ../../Services/WebContent/WebContentServerEndpoint.h
 )
@@ -308,12 +312,14 @@ libweb_js_wrapper(DOM/DOMImplementation)
 libweb_js_wrapper(DOM/Element)
 libweb_js_wrapper(DOM/Event)
 libweb_js_wrapper(DOM/EventTarget)
+libweb_js_wrapper(DOM/HTMLCollection)
 libweb_js_wrapper(DOM/ProcessingInstruction)
 libweb_js_wrapper(DOM/ShadowRoot)
 libweb_js_wrapper(DOM/Node)
 libweb_js_wrapper(DOM/Range)
 libweb_js_wrapper(DOM/Text)
 libweb_js_wrapper(HTML/CanvasRenderingContext2D)
+libweb_js_wrapper(HTML/CloseEvent)
 libweb_js_wrapper(HTML/HTMLAnchorElement)
 libweb_js_wrapper(HTML/HTMLAreaElement)
 libweb_js_wrapper(HTML/HTMLAudioElement)
@@ -386,7 +392,9 @@ libweb_js_wrapper(HTML/HTMLUListElement)
 libweb_js_wrapper(HTML/HTMLUnknownElement)
 libweb_js_wrapper(HTML/HTMLVideoElement)
 libweb_js_wrapper(HTML/ImageData)
+libweb_js_wrapper(HTML/MessageEvent)
 libweb_js_wrapper(HTML/SubmitEvent)
+libweb_js_wrapper(HTML/WebSocket)
 libweb_js_wrapper(HighResolutionTime/Performance)
 libweb_js_wrapper(NavigationTiming/PerformanceTiming)
 libweb_js_wrapper(SVG/SVGElement)

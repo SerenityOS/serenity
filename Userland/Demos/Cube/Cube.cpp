@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/ArgsParser.h>
@@ -98,9 +78,7 @@ void Cube::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-
-    /* Blit it! */
-    painter.draw_scaled_bitmap(event.rect(), *m_bitmap, m_bitmap->rect());
+    painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
 }
 
 void Cube::timer_event(Core::TimerEvent&)
@@ -264,22 +242,22 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
     auto show_window_frame_action = GUI::Action::create_checkable("Show window frame", [&](auto& action) {
         cube.set_show_window_frame(action.is_checked());
     });
 
     cube.set_show_window_frame(!flag_hide_window_frame);
     show_window_frame_action->set_checked(cube.show_window_frame());
-    app_menu.add_action(move(show_window_frame_action));
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    file_menu.add_action(move(show_window_frame_action));
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Cube Demo", app_icon, window));
     window->set_menubar(move(menubar));
 
     cube.on_context_menu_request = [&](auto& event) {
-        app_menu.popup(event.screen_position());
+        file_menu.popup(event.screen_position());
     };
 
     window->show();

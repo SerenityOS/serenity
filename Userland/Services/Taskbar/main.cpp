@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ShutdownDialog.h"
@@ -126,7 +106,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
     const Vector<String> sorted_app_categories = discover_apps_and_categories();
     auto system_menu = GUI::Menu::construct("\xE2\x9A\xA1"); // HIGH VOLTAGE SIGN
 
-    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladybug.png"), [](auto&) {
+    system_menu->add_action(GUI::Action::create("About SerenityOS", Gfx::Bitmap::load_from_file("/res/icons/16x16/ladyball.png"), [](auto&) {
         pid_t child_pid;
         const char* argv[] = { "/bin/About", nullptr };
         if ((errno = posix_spawn(&child_pid, "/bin/About", nullptr, nullptr, const_cast<char**>(argv), environ))) {
@@ -164,7 +144,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
                 dbgln("App {} has icon with size {}", app.name, icon->size());
         }
 
-        auto parent_menu = app_category_menus.get(app.category).value_or(*system_menu);
+        auto parent_menu = app_category_menus.get(app.category).value_or(system_menu.ptr());
         parent_menu->add_action(GUI::Action::create(app.name, icon, [app_identifier](auto&) {
             dbgln("Activated app with ID {}", app_identifier);
             const auto& bin = g_apps[app_identifier].executable;
@@ -198,7 +178,7 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
         quick_sort(g_themes, [](auto& a, auto& b) { return a.name < b.name; });
     }
 
-    auto current_theme_name = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::GetSystemTheme>()->theme_name();
+    auto current_theme_name = GUI::WindowServerConnection::the().get_system_theme();
 
     {
         int theme_identifier = 0;
@@ -206,8 +186,8 @@ NonnullRefPtr<GUI::Menu> build_system_menu()
             auto action = GUI::Action::create_checkable(theme.name, [theme_identifier](auto&) {
                 auto& theme = g_themes[theme_identifier];
                 dbgln("Theme switched to {} at path {}", theme.name, theme.path);
-                auto response = GUI::WindowServerConnection::the().send_sync<Messages::WindowServer::SetSystemTheme>(theme.path, theme.name);
-                VERIFY(response->success());
+                auto success = GUI::WindowServerConnection::the().set_system_theme(theme.path, theme.name);
+                VERIFY(success);
             });
             if (theme.name == current_theme_name)
                 action->set_checked(true);

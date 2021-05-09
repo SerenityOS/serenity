@@ -1,12 +1,26 @@
-FROM ubuntu:20.10
+FROM ubuntu:21.04
 
-RUN DEBIAN_FRONTEND="noninteractive" apt-get update -y && apt-get install -y tzdata
+ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get install -y build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-utils wget genext2fs sudo ninja-build
-
-RUN mkdir /serenity
+RUN apt-get update -y \
+    && apt-get install -y \
+        build-essential \
+        cmake \
+        curl \
+        genext2fs \
+        git \
+        libmpfr-dev \
+        libmpc-dev \
+        libgmp-dev \
+        e2fsprogs \
+        ninja-build \
+        qemu-utils \
+        rsync \
+        sudo \
+        tzdata \
+        unzip \
+        wget
 
 WORKDIR /serenity
 
 RUN /bin/bash
-

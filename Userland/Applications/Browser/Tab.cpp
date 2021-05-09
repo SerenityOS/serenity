@@ -1,27 +1,8 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, Maciej Zygmanowski <sppmacd@pm.me>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Tab.h"
@@ -33,6 +14,7 @@
 #include "WindowActions.h"
 #include <AK/StringBuilder.h>
 #include <Applications/Browser/TabGML.h>
+#include <LibCore/ConfigFile.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -58,8 +40,14 @@
 
 namespace Browser {
 
+String g_search_engine = {};
+
 URL url_from_user_input(const String& input)
 {
+    if (input.starts_with("?") && !g_search_engine.is_null()) {
+        return URL(String::formatted(g_search_engine, urlencode(input.substring(1))));
+    }
+
     auto url = URL(input);
     if (url.is_valid())
         return url;
@@ -298,8 +286,8 @@ Tab::Tab(Type type)
 
     m_menubar = GUI::Menubar::construct();
 
-    auto& app_menu = m_menubar->add_menu("&File");
-    app_menu.add_action(WindowActions::the().create_new_tab_action());
+    auto& file_menu = m_menubar->add_menu("&File");
+    file_menu.add_action(WindowActions::the().create_new_tab_action());
 
     auto close_tab_action = GUI::Action::create(
         "&Close Tab", { Mod_Ctrl, Key_W }, Gfx::Bitmap::load_from_file("/res/icons/16x16/close-tab.png"), [this](auto&) {
@@ -307,10 +295,10 @@ Tab::Tab(Type type)
         },
         this);
     close_tab_action->set_status_tip("Close current tab");
-    app_menu.add_action(close_tab_action);
+    file_menu.add_action(close_tab_action);
 
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
@@ -416,6 +404,47 @@ Tab::Tab(Type type)
         this);
     js_console_action->set_status_tip("Open JavaScript console for this page");
     inspect_menu.add_action(js_console_action);
+
+    auto& settings_menu = m_menubar->add_menu("&Settings");
+
+    m_search_engine_actions.set_exclusive(true);
+    auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
+
+    auto add_search_engine = [&](auto& name, auto& url_format) {
+        auto action = GUI::Action::create_checkable(
+            name, [&](auto&) {
+                g_search_engine = url_format;
+                auto m_config = Core::ConfigFile::get_for_app("Browser");
+                m_config->write_entry("Preferences", "SearchEngine", g_search_engine);
+            },
+            this);
+        search_engine_menu.add_action(action);
+        m_search_engine_actions.add_action(action);
+
+        if (g_search_engine == url_format) {
+            action->set_checked(true);
+        }
+        action->set_status_tip(url_format);
+    };
+
+    auto disable_search_engine_action = GUI::Action::create_checkable(
+        "Disable", [this](auto&) {
+            g_search_engine = {};
+            auto m_config = Core::ConfigFile::get_for_app("Browser");
+            m_config->write_entry("Preferences", "SearchEngine", g_search_engine);
+        },
+        this);
+    search_engine_menu.add_action(disable_search_engine_action);
+    m_search_engine_actions.add_action(disable_search_engine_action);
+    disable_search_engine_action->set_checked(true);
+
+    // FIXME: Support adding custom search engines
+    add_search_engine("Bing", "https://www.bing.com/search?q={}");
+    add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
+    add_search_engine("FrogFind", "http://frogfind.com/?q={}");
+    add_search_engine("GitHub", "https://github.com/search?q={}");
+    add_search_engine("Google", "https://google.com/search?q={}");
+    add_search_engine("Yandex", "https://yandex.com/search/?text={}");
 
     auto& debug_menu = m_menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
@@ -651,7 +680,7 @@ void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
     m_tab_context_menu->popup(screen_position);
 }
 
-GUI::ScrollableWidget& Tab::view()
+GUI::AbstractScrollableWidget& Tab::view()
 {
     if (m_type == Type::InProcessWebView)
         return *m_page_view;

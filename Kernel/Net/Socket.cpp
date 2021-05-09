@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -71,7 +51,7 @@ void Socket::set_setup_state(SetupState new_setup_state)
 
 RefPtr<Socket> Socket::accept()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (m_pending.is_empty())
         return nullptr;
     dbgln_if(SOCKET_DEBUG, "Socket({}) de-queueing connection", this);
@@ -89,10 +69,11 @@ RefPtr<Socket> Socket::accept()
 KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
     dbgln_if(SOCKET_DEBUG, "Socket({}) queueing connection", this);
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     if (m_pending.size() >= m_backlog)
         return ECONNREFUSED;
-    m_pending.append(peer);
+    if (!m_pending.try_append(peer))
+        return ENOMEM;
     evaluate_block_conditions();
     return KSuccess;
 }
@@ -260,7 +241,7 @@ KResultOr<size_t> Socket::write(FileDescription& description, u64, const UserOrK
 
 KResult Socket::shutdown(int how)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     if (type() == SOCK_STREAM && !is_connected())
         return ENOTCONN;
     if (m_role == Role::Listener)
@@ -283,7 +264,7 @@ KResult Socket::stat(::stat& st) const
 
 void Socket::set_connected(bool connected)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     if (m_connected == connected)
         return;
     m_connected = connected;

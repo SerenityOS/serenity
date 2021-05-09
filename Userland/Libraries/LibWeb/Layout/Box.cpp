@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Painter.h>
@@ -61,8 +41,6 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
         Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
     }
-
-    Layout::NodeWithStyleAndBoxModelMetrics::paint(context, phase);
 
     if (phase == PaintPhase::Overlay && dom_node() && document().inspected_node() == dom_node()) {
         auto content_rect = absolute_rect();
@@ -174,7 +152,7 @@ const Gfx::FloatRect Box::absolute_rect() const
 {
     Gfx::FloatRect rect { effective_offset(), size() };
     for (auto* block = containing_block(); block; block = block->containing_block()) {
-        rect.move_by(block->effective_offset());
+        rect.translate_by(block->effective_offset());
     }
     return rect;
 }
@@ -197,23 +175,6 @@ StackingContext* Box::enclosing_stacking_context()
     }
     // We should always reach the Layout::InitialContainingBlockBox stacking context.
     VERIFY_NOT_REACHED();
-}
-
-bool Box::establishes_stacking_context() const
-{
-    if (!has_style())
-        return false;
-    if (dom_node() == document().root())
-        return true;
-    auto position = computed_values().position();
-    auto z_index = computed_values().z_index();
-    if (position == CSS::Position::Absolute || position == CSS::Position::Relative) {
-        if (z_index.has_value())
-            return true;
-    }
-    if (position == CSS::Position::Fixed || position == CSS::Position::Sticky)
-        return true;
-    return false;
 }
 
 LineBox& Box::ensure_last_line_box()

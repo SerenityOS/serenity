@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/MACAddress.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/PCI/IDs.h>
 
 namespace Kernel {
 
@@ -180,12 +161,12 @@ UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;
-        if (id.vendor_id != 0x8086)
+        if (id.vendor_id != (u16)PCIVendorID::Intel)
             return;
         if (!is_valid_device_id(id.device_id))
             return;
         u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt(*new E1000NetworkAdapter(address, irq)).leak_ref();
+        [[maybe_unused]] auto& unused = adopt_ref(*new E1000NetworkAdapter(address, irq)).leak_ref();
     });
 }
 
@@ -224,8 +205,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    out32(REG_INTERRUPT_MASK_SET, 0x1f6dc);
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0);
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
     in32(REG_INTERRUPT_CAUSE_READ);
 
     enable_irq();
@@ -237,26 +217,27 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 
 void E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
-    out32(REG_INTERRUPT_MASK_CLEAR, 0xffffffff);
-
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
     m_entropy_source.add_random_event(status);
 
-    if (status & 4) {
+    if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
-    if (status & 0x80) {
-        receive();
-    }
-    if (status & 0x10) {
+    if (status & INTERRUPT_RXDMT0) {
         // Threshold OK?
+    }
+    if (status & INTERRUPT_RXO) {
+        dbgln_if(E1000_DEBUG, "E1000: RX buffer overrun");
+    }
+    if (status & INTERRUPT_RXT0) {
+        receive();
     }
 
     m_wait_queue.wake_all();
 
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
+    out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()
@@ -447,8 +428,6 @@ void E1000NetworkAdapter::receive()
     u32 rx_current;
     for (;;) {
         rx_current = in32(REG_RXDESCTAIL) % number_of_rx_descriptors;
-        if (rx_current == (in32(REG_RXDESCHEAD) % number_of_rx_descriptors))
-            return;
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(rx_descriptors[rx_current].status & 1))
             break;

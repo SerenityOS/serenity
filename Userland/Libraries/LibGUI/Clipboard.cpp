@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
@@ -39,7 +19,7 @@ class ClipboardServerConnection : public IPC::ServerConnection<ClipboardClientEn
 public:
     virtual void handshake() override
     {
-        send_sync<Messages::ClipboardServer::Greet>();
+        greet();
     }
 
 private:
@@ -47,7 +27,7 @@ private:
         : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")
     {
     }
-    virtual void handle(const Messages::ClipboardClient::ClipboardDataChanged&) override;
+    virtual void clipboard_data_changed(String const& mime_type) override;
 };
 
 Clipboard& Clipboard::the()
@@ -76,12 +56,12 @@ Clipboard::Clipboard()
 
 Clipboard::DataAndType Clipboard::data_and_type() const
 {
-    auto response = connection().send_sync<Messages::ClipboardServer::GetClipboardData>();
-    if (!response->data().is_valid())
+    auto response = connection().get_clipboard_data();
+    if (!response.data().is_valid())
         return {};
-    auto data = ByteBuffer::copy(response->data().data<void>(), response->data().size());
-    auto type = response->mime_type();
-    auto metadata = response->metadata().entries();
+    auto data = ByteBuffer::copy(response.data().data<void>(), response.data().size());
+    auto type = response.mime_type();
+    auto metadata = response.metadata().entries();
     return { data, type, metadata };
 }
 
@@ -95,14 +75,14 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<S
     if (!data.is_empty())
         memcpy(buffer.data<void>(), data.data(), data.size());
 
-    connection().send_sync<Messages::ClipboardServer::SetClipboardData>(move(buffer), type, metadata);
+    connection().set_clipboard_data(move(buffer), type, metadata);
 }
 
-void ClipboardServerConnection::handle(const Messages::ClipboardClient::ClipboardDataChanged& message)
+void ClipboardServerConnection::clipboard_data_changed(String const& mime_type)
 {
     auto& clipboard = Clipboard::the();
     if (clipboard.on_change)
-        clipboard.on_change(message.mime_type());
+        clipboard.on_change(mime_type);
 }
 
 RefPtr<Gfx::Bitmap> Clipboard::bitmap() const

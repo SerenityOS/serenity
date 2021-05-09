@@ -20,7 +20,7 @@
 
         @GUI::Frame {
             name: "common_locations_frame"
-            fixed_width: 90
+            fixed_width: 95
             fill_with_background_color: true
 
             layout: @GUI::VerticalBoxLayout {
@@ -30,7 +30,7 @@
         }
 
         @GUI::Label {
-            text: "File name:"
+            text: "Filename:"
             text_alignment: "CenterRight"
             fixed_height: 24
         }

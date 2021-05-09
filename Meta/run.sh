@@ -91,9 +91,9 @@ cd -P -- "$SERENITY_BUILD" || die "Could not cd to \"$SERENITY_BUILD\""
 if [ "$SERENITY_RUN" = "b" ]; then
     # Meta/run.sh b: bochs
     [ -z "$SERENITY_BOCHSRC" ] && {
-        # Make sure that SERENITY_ROOT is set and not empty
-        [ -z "$SERENITY_ROOT" ] && die 'SERENITY_ROOT not set or empty'
-        SERENITY_BOCHSRC="$SERENITY_ROOT/Meta/bochsrc"
+        # Make sure that SERENITY_SOURCE_DIR is set and not empty
+        [ -z "$SERENITY_SOURCE_DIR" ] && die 'SERENITY_SOURCE_DIR not set or empty'
+        SERENITY_BOCHSRC="$SERENITY_SOURCE_DIR/Meta/bochsrc"
     }
     "$SERENITY_BOCHS_BIN" -q -f "$SERENITY_BOCHSRC"
 elif [ "$SERENITY_RUN" = "qn" ]; then
@@ -105,7 +105,9 @@ elif [ "$SERENITY_RUN" = "qn" ]; then
         -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$SERENITY_RUN" = "qtap" ]; then
     # Meta/run.sh qtap: qemu with tap
-    sudo "$SERENITY_QEMU_BIN" \
+    sudo ip tuntap del dev tap0 mode tap || true
+    sudo ip tuntap add dev tap0 mode tap user "$(id -u)"
+    "$SERENITY_QEMU_BIN" \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_VIRT_TECH_ARG \
         $SERENITY_PACKET_LOGGING_ARG \
@@ -113,6 +115,7 @@ elif [ "$SERENITY_RUN" = "qtap" ]; then
         -device e1000,netdev=br0 \
         -kernel Kernel/Kernel \
         -append "${SERENITY_KERNEL_CMDLINE}"
+    sudo ip tuntap del dev tap0 mode tap
 elif [ "$SERENITY_RUN" = "qgrub" ]; then
     # Meta/run.sh qgrub: qemu with grub
     "$SERENITY_QEMU_BIN" \

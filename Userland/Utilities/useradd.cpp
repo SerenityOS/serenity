@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
@@ -107,21 +87,22 @@ int main(int argc, char** argv)
 
     String home;
     if (!home_path)
-        home = String::format("/home/%s", username);
+        home = String::formatted("/home/{}", username);
     else
         home = home_path;
 
     if (create_home_dir) {
         if (mkdir(home.characters(), 0700) < 0) {
-            perror(String::format("failed to create directory %s", home.characters()).characters());
+            auto saved_errno = errno;
+            warnln("Failed to create directory {}: {}", home, strerror(saved_errno));
             return 12;
         }
 
         if (chown(home.characters(), static_cast<uid_t>(uid), static_cast<gid_t>(gid)) < 0) {
-            perror(String::format("failed to chown %s to %u:%u", home.characters(), uid, gid).characters());
+            warnln("Failed to change owner of {} to {}:{}: {}", home, uid, gid, strerror(errno));
 
             if (rmdir(home.characters()) < 0) {
-                perror(String::format("failed to rmdir %s", home.characters()).characters());
+                warnln("Failed to remove directory {}: {}", home, strerror(errno));
                 return 12;
             }
             return 12;

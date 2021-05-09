@@ -1,30 +1,11 @@
 /*
- * Copyright (c) 2020, Matthew Olsson <matthewcolsson@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
+#include <AK/ExtraMathConstants.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/Path.h>
@@ -390,8 +371,34 @@ float PathDataParser::parse_fractional_constant()
 float PathDataParser::parse_number()
 {
     auto number = parse_fractional_constant();
-    if (match('e') || match('E'))
-        TODO();
+
+    if (!match('e') && !match('E'))
+        return number;
+    consume();
+
+    auto exponent_sign = parse_sign();
+
+    StringBuilder exponent_builder;
+    while (!done() && isdigit(ch()))
+        exponent_builder.append(consume());
+    VERIFY(exponent_builder.length() > 0);
+
+    auto exponent = exponent_builder.to_string().to_int().value();
+
+    // Fast path: If the number is 0, there's no point in computing the exponentiation.
+    if (number == 0)
+        return number;
+
+    if (exponent_sign < 0) {
+        for (int i = 0; i < exponent; ++i) {
+            number /= 10;
+        }
+    } else if (exponent_sign > 0) {
+        for (int i = 0; i < exponent; ++i) {
+            number *= 10;
+        }
+    }
+
     return number;
 }
 
@@ -441,7 +448,7 @@ RefPtr<Layout::Node> SVGPathElement::create_layout_node()
     auto style = document().style_resolver().resolve_style(*this);
     if (style->display() == CSS::Display::None)
         return nullptr;
-    return adopt(*new Layout::SVGPathBox(document(), *this, move(style)));
+    return adopt_ref(*new Layout::SVGPathBox(document(), *this, move(style)));
 }
 
 void SVGPathElement::parse_attribute(const FlyString& name, const String& value)

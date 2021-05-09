@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "MmapRegion.h"
@@ -149,6 +129,40 @@ ValueWithShadow<u64> MmapRegion::read64(u32 offset)
     return { *reinterpret_cast<const u64*>(m_data + offset), *reinterpret_cast<const u64*>(m_shadow_data + offset) };
 }
 
+ValueWithShadow<u128> MmapRegion::read128(u32 offset)
+{
+    if (!is_readable()) {
+        reportln("128-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        emulator().dump_backtrace();
+        TODO();
+    }
+
+    if (is_malloc_block()) {
+        if (auto* tracer = emulator().malloc_tracer())
+            tracer->audit_read(*this, base() + offset, 16);
+    }
+
+    VERIFY(offset + 15 < size());
+    return { *reinterpret_cast<const u128*>(m_data + offset), *reinterpret_cast<const u128*>(m_shadow_data + offset) };
+}
+
+ValueWithShadow<u256> MmapRegion::read256(u32 offset)
+{
+    if (!is_readable()) {
+        reportln("256-bit read from unreadable MmapRegion @ {:p}", base() + offset);
+        emulator().dump_backtrace();
+        TODO();
+    }
+
+    if (is_malloc_block()) {
+        if (auto* tracer = emulator().malloc_tracer())
+            tracer->audit_read(*this, base() + offset, 32);
+    }
+
+    VERIFY(offset + 31 < size());
+    return { *reinterpret_cast<const u256*>(m_data + offset), *reinterpret_cast<const u256*>(m_shadow_data + offset) };
+}
+
 void MmapRegion::write8(u32 offset, ValueWithShadow<u8> value)
 {
     if (!is_writable()) {
@@ -221,6 +235,44 @@ void MmapRegion::write64(u32 offset, ValueWithShadow<u64> value)
     VERIFY(m_data != m_shadow_data);
     *reinterpret_cast<u64*>(m_data + offset) = value.value();
     *reinterpret_cast<u64*>(m_shadow_data + offset) = value.shadow();
+}
+
+void MmapRegion::write128(u32 offset, ValueWithShadow<u128> value)
+{
+    if (!is_writable()) {
+        reportln("128-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        emulator().dump_backtrace();
+        TODO();
+    }
+
+    if (is_malloc_block()) {
+        if (auto* tracer = emulator().malloc_tracer())
+            tracer->audit_write(*this, base() + offset, 16);
+    }
+
+    VERIFY(offset + 15 < size());
+    VERIFY(m_data != m_shadow_data);
+    *reinterpret_cast<u128*>(m_data + offset) = value.value();
+    *reinterpret_cast<u128*>(m_shadow_data + offset) = value.shadow();
+}
+
+void MmapRegion::write256(u32 offset, ValueWithShadow<u256> value)
+{
+    if (!is_writable()) {
+        reportln("256-bit write from unwritable MmapRegion @ {:p}", base() + offset);
+        emulator().dump_backtrace();
+        TODO();
+    }
+
+    if (is_malloc_block()) {
+        if (auto* tracer = emulator().malloc_tracer())
+            tracer->audit_write(*this, base() + offset, 32);
+    }
+
+    VERIFY(offset + 31 < size());
+    VERIFY(m_data != m_shadow_data);
+    *reinterpret_cast<u256*>(m_data + offset) = value.value();
+    *reinterpret_cast<u256*>(m_shadow_data + offset) = value.shadow();
 }
 
 NonnullOwnPtr<MmapRegion> MmapRegion::split_at(VirtualAddress offset)

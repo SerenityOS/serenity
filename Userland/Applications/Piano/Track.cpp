@@ -1,28 +1,9 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Track.h"
@@ -33,6 +14,7 @@
 Track::Track(const u32& time)
     : m_time(time)
 {
+    set_volume(volume_max);
     set_sustain_impl(1000);
     set_attack(5);
     set_decay(1000);
@@ -101,7 +83,7 @@ void Track::fill_sample(Sample& sample)
             note_sample = triangle(note);
             break;
         case Wave::Noise:
-            note_sample = noise();
+            note_sample = noise(note);
             break;
         case Wave::RecordedSample:
             note_sample = recorded_sample(note);
@@ -109,8 +91,8 @@ void Track::fill_sample(Sample& sample)
         default:
             VERIFY_NOT_REACHED();
         }
-        new_sample.left += note_sample.left * m_power[note] * volume;
-        new_sample.right += note_sample.right * m_power[note] * volume;
+        new_sample.left += note_sample.left * m_power[note] * volume_factor * (static_cast<double>(volume()) / volume_max);
+        new_sample.right += note_sample.right * m_power[note] * volume_factor * (static_cast<double>(volume()) / volume_max);
     }
 
     if (m_delay) {
@@ -208,11 +190,17 @@ Audio::Frame Track::triangle(size_t note)
     return w;
 }
 
-Audio::Frame Track::noise() const
+Audio::Frame Track::noise(size_t note)
 {
-    double random_percentage = static_cast<double>(rand()) / RAND_MAX;
-    double w = (random_percentage * 2) - 1;
-    return w;
+    double step = note_frequencies[note] / sample_rate;
+    // m_pos keeps track of the time since the last random sample
+    m_pos[note] += step;
+    if (m_pos[note] > 0.05) {
+        double random_percentage = static_cast<double>(rand()) / RAND_MAX;
+        m_last_w[note] = (random_percentage * 2) - 1;
+        m_pos[note] = 0;
+    }
+    return m_last_w[note];
 }
 
 Audio::Frame Track::recorded_sample(size_t note)
@@ -326,6 +314,12 @@ void Track::set_wave(Direction direction)
         if (--m_wave < first_wave)
             m_wave = last_wave;
     }
+}
+
+void Track::set_volume(int volume)
+{
+    VERIFY(volume >= 0);
+    m_volume = volume;
 }
 
 void Track::set_attack(int attack)

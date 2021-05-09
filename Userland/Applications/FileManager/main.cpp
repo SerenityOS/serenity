@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DesktopWidget.h"
@@ -69,6 +49,7 @@
 #include <spawn.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 using namespace FileManager;
@@ -78,6 +59,7 @@ static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_locatio
 static void do_copy(const Vector<String>& selected_file_paths, FileUtils::FileOperation file_operation);
 static void do_paste(const String& target_directory, GUI::Window* window);
 static void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* window);
+static void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* window);
 static void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window);
 static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, const DirectoryView& directory_view, const String& full_path, RefPtr<GUI::Action>& default_action, NonnullRefPtrVector<LauncherHandler>& current_file_launch_handlers);
 
@@ -212,6 +194,32 @@ void do_create_link(const Vector<String>& selected_file_paths, GUI::Window* wind
     }
 }
 
+void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* window)
+{
+    String archive_file_path = selected_file_paths.first();
+    String output_directory_path = archive_file_path.substring(0, archive_file_path.length() - 4);
+
+    pid_t unzip_pid = fork();
+    if (unzip_pid < 0) {
+        perror("fork");
+        VERIFY_NOT_REACHED();
+    }
+
+    if (!unzip_pid) {
+        int rc = execlp("/bin/unzip", "/bin/unzip", "-o", output_directory_path.characters(), archive_file_path.characters(), nullptr);
+        if (rc < 0) {
+            perror("execlp");
+            _exit(1);
+        }
+    } else {
+        // FIXME: this could probably be tied in with the new file operation progress tracking
+        int status;
+        int rc = waitpid(unzip_pid, &status, 0);
+        if (rc < 0 || !WIFEXITED(status) || WEXITSTATUS(status) != 0)
+            GUI::MessageBox::show(window, "Could not extract archive", "Extract Archive Error", GUI::MessageBox::Type::Error);
+    }
+}
+
 void show_properties(const String& container_dir_path, const String& path, const Vector<String>& selected, GUI::Window* window)
 {
     RefPtr<PropertiesWindow> properties;
@@ -305,6 +313,18 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
         window);
     cut_action->set_enabled(false);
 
+    auto unzip_archive_action
+        = GUI::Action::create(
+            "E&xtract Here",
+            [&](const GUI::Action&) {
+                auto paths = directory_view.selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_unzip_archive(paths, directory_view.window());
+            },
+            window);
+
     directory_view.on_selection_change = [&](const GUI::AbstractView& view) {
         copy_action->set_enabled(!view.selection().is_empty());
         cut_action->set_enabled(!view.selection().is_empty());
@@ -373,6 +393,11 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
                 file_context_menu->add_action(paste_action);
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_separator();
+
+                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                    file_context_menu->add_action(unzip_archive_action);
+                    file_context_menu->add_separator();
+                }
 
                 bool added_open_menu_items = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_open_menu_items)
@@ -447,6 +472,17 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     tree_view.toggle_index(directories_model->index(0, 0, {}));
 
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+
+    GUI::Application::the()->on_action_enter = [&statusbar](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    GUI::Application::the()->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     auto& progressbar = *widget.find_descendant_of_type_named<GUI::Progressbar>("progressbar");
     progressbar.set_format(GUI::Progressbar::Format::ValueSlashMax);
@@ -657,6 +693,19 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             },
             window);
 
+    auto unzip_archive_action
+        = GUI::Action::create(
+            "E&xtract Here",
+            [&](const GUI::Action&) {
+                auto paths = directory_view.selected_file_paths();
+                if (paths.is_empty())
+                    return;
+
+                do_unzip_archive(paths, directory_view.window());
+                refresh_tree_view();
+            },
+            window);
+
     auto properties_action = GUI::CommonActions::make_properties_action(
         [&](auto& action) {
             String container_dir_path;
@@ -753,18 +802,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(mkdir_action);
-    app_menu.add_action(touch_action);
-    app_menu.add_action(copy_action);
-    app_menu.add_action(cut_action);
-    app_menu.add_action(paste_action);
-    app_menu.add_action(focus_dependent_delete_action);
-    app_menu.add_action(directory_view.open_terminal_action());
-    app_menu.add_separator();
-    app_menu.add_action(properties_action);
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(mkdir_action);
+    file_menu.add_action(touch_action);
+    file_menu.add_action(copy_action);
+    file_menu.add_action(cut_action);
+    file_menu.add_action(paste_action);
+    file_menu.add_action(focus_dependent_delete_action);
+    file_menu.add_action(directory_view.open_terminal_action());
+    file_menu.add_separator();
+    file_menu.add_action(properties_action);
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
@@ -973,6 +1022,11 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 file_context_menu->add_action(directory_view.delete_action());
                 file_context_menu->add_action(shortcut_action);
                 file_context_menu->add_separator();
+
+                if (node.full_path().ends_with(".zip", AK::CaseSensitivity::CaseInsensitive)) {
+                    file_context_menu->add_action(unzip_archive_action);
+                    file_context_menu->add_separator();
+                }
 
                 bool added_launch_file_handlers = add_launch_handler_actions_to_menu(file_context_menu, directory_view, node.full_path(), file_context_menu_action_default_action, current_file_handlers);
                 if (added_launch_file_handlers)

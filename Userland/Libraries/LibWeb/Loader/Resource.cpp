@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -35,8 +15,8 @@ namespace Web {
 NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
 {
     if (type == Type::Image)
-        return adopt(*new ImageResource(request));
-    return adopt(*new Resource(type, request));
+        return adopt_ref(*new ImageResource(request));
+    return adopt_ref(*new Resource(type, request));
 }
 
 Resource::Resource(Type type, const LoadRequest& request)
@@ -95,9 +75,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 
     auto content_type = headers.get("Content-Type");
     if (content_type.has_value()) {
-#if RESOURCE_DEBUG
-        dbgln("Content-Type header: '{}'", content_type.value());
-#endif
+        dbgln_if(RESOURCE_DEBUG, "Content-Type header: '{}'", content_type.value());
         m_encoding = encoding_from_content_type(content_type.value());
         m_mime_type = mime_type_from_content_type(content_type.value());
     } else if (url().protocol() == "data" && !url().data_mime_type().is_empty()) {
@@ -105,9 +83,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = url().data_mime_type();
     } else {
-#if RESOURCE_DEBUG
-        dbgln("No Content-Type header to go on! Guessing based on filename...");
-#endif
+        dbgln_if(RESOURCE_DEBUG, "No Content-Type header to go on! Guessing based on filename...");
         m_encoding = "utf-8"; // FIXME: This doesn't seem nice.
         m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
     }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -45,12 +25,12 @@ public:
     {
     }
 
-    int size() const { return m_indexes.size(); }
-    bool is_empty() const { return m_indexes.is_empty(); }
-    bool contains(const ModelIndex& index) const { return m_indexes.contains(index); }
+    int size() const { return m_indices.size(); }
+    bool is_empty() const { return m_indices.is_empty(); }
+    bool contains(const ModelIndex& index) const { return m_indices.contains(index); }
     bool contains_row(int row) const
     {
-        for (auto& index : m_indexes) {
+        for (auto& index : m_indices) {
             if (index.row() == row)
                 return true;
         }
@@ -67,33 +47,33 @@ public:
     template<typename Callback>
     void for_each_index(Callback callback)
     {
-        for (auto& index : indexes())
+        for (auto& index : indices())
             callback(index);
     }
 
     template<typename Callback>
     void for_each_index(Callback callback) const
     {
-        for (auto& index : indexes())
+        for (auto& index : indices())
             callback(index);
     }
 
-    Vector<ModelIndex> indexes() const
+    Vector<ModelIndex> indices() const
     {
-        Vector<ModelIndex> selected_indexes;
+        Vector<ModelIndex> selected_indices;
 
-        for (auto& index : m_indexes)
-            selected_indexes.append(index);
+        for (auto& index : m_indices)
+            selected_indices.append(index);
 
-        return selected_indexes;
+        return selected_indices;
     }
 
     // FIXME: This doesn't guarantee that what you get is the lowest or "first" index selected..
     ModelIndex first() const
     {
-        if (m_indexes.is_empty())
+        if (m_indices.is_empty())
             return {};
-        return *m_indexes.begin();
+        return *m_indices.begin();
     }
 
     void remove_matching(Function<bool(const ModelIndex&)>);
@@ -114,7 +94,7 @@ private:
     void notify_selection_changed();
 
     AbstractView& m_view;
-    HashTable<ModelIndex> m_indexes;
+    HashTable<ModelIndex> m_indices;
     bool m_disable_notify { false };
     bool m_notify_pending { false };
 };

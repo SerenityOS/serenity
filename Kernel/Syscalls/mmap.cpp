@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Leon Albrecht <leon2002.la@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/WeakPtr.h>
+#include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
@@ -69,8 +50,8 @@ static bool should_make_executable_exception_for_dynamic_loader(bool make_readab
 
     Elf32_Ehdr header;
     auto buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&header);
-    auto nread = inode.read_bytes(0, sizeof(header), buffer, nullptr);
-    if (nread != sizeof(header))
+    auto result = inode.read_bytes(0, sizeof(header), buffer, nullptr);
+    if (result.is_error() || result.value() != sizeof(header))
         return false;
 
     // The file is a valid ELF binary
@@ -266,6 +247,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (!region)
         return ENOMEM;
+
     region->set_mmap(true);
     if (map_shared)
         region->set_shared(true);
@@ -273,6 +255,9 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         region->set_stack(true);
     if (!name.is_null())
         region->set_name(name);
+
+    PerformanceManager::add_mmap_perf_event(*this, *region);
+
     return region->vaddr().get();
 }
 
@@ -450,7 +435,10 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
         return EINVAL;
     if (!region->is_mmap())
         return EPERM;
+
     region->set_name(move(name));
+    PerformanceManager::add_mmap_perf_event(*this, *region);
+
     return 0;
 }
 
@@ -473,6 +461,9 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     if (auto* whole_region = space().find_region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return EPERM;
+
+        PerformanceManager::add_unmap_perf_event(*this, whole_region->range());
+
         bool success = space().deallocate_region(*whole_region);
         VERIFY(success);
         return 0;
@@ -499,6 +490,11 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         for (auto* new_region : new_regions) {
             new_region->map(space().page_directory());
         }
+
+        if (auto* event_buffer = current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, range_to_unmap.base().get(), range_to_unmap.size(), nullptr);
+        }
+
         return 0;
     }
 
@@ -506,7 +502,7 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     // slow: without caching
     const auto& regions = space().find_regions_intersecting(range_to_unmap);
 
-    // check if any of the regions is not mmapped, to not accientally
+    // Check if any of the regions is not mmapped, to not accidentally
     // error-out with just half a region map left
     for (auto* region : regions) {
         if (!region->is_mmap())
@@ -531,8 +527,9 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
-        // otherwise just split the regions and collect them for future mapping
-        new_regions.append(space().split_region_around_range(*region, range_to_unmap));
+        // Otherwise just split the regions and collect them for future mapping
+        if (new_regions.try_append(space().split_region_around_range(*region, range_to_unmap)))
+            return ENOMEM;
     }
     // Instead we give back the unwanted VM manually at the end.
     space().page_directory().range_allocator().deallocate(range_to_unmap);
@@ -540,6 +537,8 @@ KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
     for (auto* new_region : new_regions) {
         new_region->map(space().page_directory());
     }
+
+    PerformanceManager::add_unmap_perf_event(*this, range_to_unmap);
 
     return 0;
 }
@@ -591,11 +590,11 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
     return ENOTIMPL;
 }
 
-KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
+KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
-    if (!size)
+    if (!size || size % PAGE_SIZE != 0)
         return EINVAL;
 
     if (!m_master_tls_region.is_null())
@@ -615,13 +614,20 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(size_t size)
     if (!range.has_value())
         return ENOMEM;
 
-    auto region_or_error = space().allocate_region(range.value(), String(), PROT_READ | PROT_WRITE);
+    auto region_or_error = space().allocate_region(range.value(), String("Master TLS"), PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error().error();
 
     m_master_tls_region = region_or_error.value()->make_weak_ptr();
     m_master_tls_size = size;
     m_master_tls_alignment = PAGE_SIZE;
+
+    {
+        Kernel::SmapDisabler disabler;
+        void* fault_at;
+        if (!Kernel::safe_memcpy((char*)m_master_tls_region.unsafe_ptr()->vaddr().as_ptr(), (char*)initial_data.ptr(), size, fault_at))
+            return EFAULT;
+    }
 
     auto tsr_result = main_thread->make_thread_specific_region({});
     if (tsr_result.is_error())

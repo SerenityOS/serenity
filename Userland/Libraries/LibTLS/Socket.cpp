@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -77,9 +57,7 @@ String TLSv12::read_line(size_t max_size)
 bool TLSv12::write(ReadonlyBytes buffer)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
-#if TLS_DEBUG
-        dbgln("write request while not connected");
-#endif
+        dbgln_if(TLS_DEBUG, "write request while not connected");
         return false;
     }
 
@@ -160,16 +138,29 @@ bool TLSv12::common_connect(const struct sockaddr* saddr, socklen_t length)
 
 void TLSv12::read_from_socket()
 {
-    if (m_context.application_buffer.size() > 0) {
-        deferred_invoke([&](auto&) { read_from_socket(); });
-        if (on_tls_ready_to_read)
-            on_tls_ready_to_read(*this);
-    }
+    auto did_schedule_read = false;
+    auto notify_client_for_app_data = [&] {
+        if (m_context.application_buffer.size() > 0) {
+            if (!did_schedule_read) {
+                deferred_invoke([&](auto&) { read_from_socket(); });
+                did_schedule_read = true;
+            }
+            if (on_tls_ready_to_read)
+                on_tls_ready_to_read(*this);
+        }
+    };
+
+    // If there's anything before we consume stuff, let the client know
+    // since we won't be consuming things if the connection is terminated.
+    notify_client_for_app_data();
 
     if (!check_connection_state(true))
         return;
 
     consume(Core::Socket::read(4096));
+
+    // If anything new shows up, tell the client about the event.
+    notify_client_for_app_data();
 }
 
 void TLSv12::write_into_socket()
@@ -193,9 +184,7 @@ bool TLSv12::check_connection_state(bool read)
 {
     if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
         // an abrupt closure (the server is a jerk)
-#if TLS_DEBUG
-        dbgln("Socket not open, assuming abrupt closure");
-#endif
+        dbgln_if(TLS_DEBUG, "Socket not open, assuming abrupt closure");
         m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
@@ -216,9 +205,7 @@ bool TLSv12::check_connection_state(bool read)
                 m_context.application_buffer.size());
         } else {
             m_context.connection_finished = false;
-#if TLS_DEBUG
-            dbgln("FINISHED");
-#endif
+            dbgln_if(TLS_DEBUG, "FINISHED");
         }
         if (!m_context.application_buffer.size()) {
             m_context.connection_status = ConnectionStatus::Disconnected;
@@ -237,10 +224,10 @@ bool TLSv12::flush()
     if (out_buffer_length == 0)
         return true;
 
-#if TLS_DEBUG
-    dbgln("SENDING...");
-    print_buffer(out_buffer, out_buffer_length);
-#endif
+    if constexpr (TLS_DEBUG) {
+        dbgln("SENDING...");
+        print_buffer(out_buffer, out_buffer_length);
+    }
     if (Core::Socket::write(&out_buffer[out_buffer_index], out_buffer_length)) {
         write_buffer().clear();
         return true;

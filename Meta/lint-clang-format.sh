@@ -12,8 +12,7 @@ if [ "$#" -eq "1" ]; then
             '*.h' \
             ':!:Base' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
-            ':!:Userland/Libraries/LibC/syslog.h' \
-            ':!:Userland/Libraries/LibELF/exec_elf.h'
+            ':!:Userland/Libraries/LibC/syslog.h'
     )
 else
     files=()

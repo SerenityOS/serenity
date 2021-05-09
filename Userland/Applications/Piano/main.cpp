@@ -1,28 +1,9 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "MainWidget.h"
@@ -84,7 +65,6 @@ int main(int argc, char** argv)
         while (!Core::EventLoop::current().was_exit_requested()) {
             track_manager.fill_buffer(buffer);
             audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
-            Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
             Core::EventLoop::wake();
 
             if (need_to_write_wav) {
@@ -104,10 +84,15 @@ int main(int argc, char** argv)
     });
     audio_thread->start();
 
+    auto main_widget_updater = Core::Timer::construct(150, [&] {
+        Core::EventLoop::current().post_event(main_widget, make<Core::CustomEvent>(0));
+    });
+    main_widget_updater->start();
+
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::Action::create("Export", { Mod_Ctrl, Key_E }, [&](const GUI::Action&) {
         save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "wav");
         if (!save_path.has_value())
             return;
@@ -119,8 +104,8 @@ int main(int argc, char** argv)
         }
         need_to_write_wav = true;
     }));
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
         return;
     }));

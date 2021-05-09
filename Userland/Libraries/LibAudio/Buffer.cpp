@@ -1,33 +1,40 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Atomic.h>
+#include <AK/Debug.h>
+#include <AK/String.h>
 #include <LibAudio/Buffer.h>
 
 namespace Audio {
+
+u16 pcm_bits_per_sample(PcmSampleFormat format)
+{
+    switch (format) {
+    case Uint8:
+        return 8;
+    case Int16:
+        return 16;
+    case Int24:
+        return 24;
+    case Float32:
+        return 32;
+    case Float64:
+        return 64;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+String sample_format_name(PcmSampleFormat format)
+{
+    bool is_float = format == Float32 || format == Float64;
+    return String::formatted("PCM {}bit {}", pcm_bits_per_sample(format), is_float ? "Float" : "LE");
+}
 
 i32 Buffer::allocate_id()
 {
@@ -74,6 +81,20 @@ static void read_samples_from_stream(InputMemoryStream& stream, SampleReader rea
     }
 }
 
+static double read_float_sample_64(InputMemoryStream& stream)
+{
+    LittleEndian<double> sample;
+    stream >> sample;
+    return double(sample);
+}
+
+static double read_float_sample_32(InputMemoryStream& stream)
+{
+    LittleEndian<float> sample;
+    stream >> sample;
+    return double(sample);
+}
+
 static double read_norm_sample_24(InputMemoryStream& stream)
 {
     u8 byte = 0;
@@ -105,26 +126,32 @@ static double read_norm_sample_8(InputMemoryStream& stream)
     return double(sample) / NumericLimits<u8>::max();
 }
 
-RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, int bits_per_sample)
+RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format)
 {
     InputMemoryStream stream { data };
-    return from_pcm_stream(stream, resampler, num_channels, bits_per_sample, data.size() / (bits_per_sample / 8));
+    return from_pcm_stream(stream, resampler, num_channels, sample_format, data.size() / (pcm_bits_per_sample(sample_format) / 8));
 }
 
-RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, int bits_per_sample, int num_samples)
+RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples)
 {
     Vector<Frame> fdata;
     fdata.ensure_capacity(num_samples);
 
-    switch (bits_per_sample) {
-    case 8:
+    switch (sample_format) {
+    case PcmSampleFormat::Uint8:
         read_samples_from_stream(stream, read_norm_sample_8, fdata, resampler, num_channels);
         break;
-    case 16:
+    case PcmSampleFormat::Int16:
         read_samples_from_stream(stream, read_norm_sample_16, fdata, resampler, num_channels);
         break;
-    case 24:
+    case PcmSampleFormat::Int24:
         read_samples_from_stream(stream, read_norm_sample_24, fdata, resampler, num_channels);
+        break;
+    case PcmSampleFormat::Float32:
+        read_samples_from_stream(stream, read_float_sample_32, fdata, resampler, num_channels);
+        break;
+    case PcmSampleFormat::Float64:
+        read_samples_from_stream(stream, read_float_sample_64, fdata, resampler, num_channels);
         break;
     default:
         VERIFY_NOT_REACHED();

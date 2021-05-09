@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Badge.h>
@@ -34,13 +14,13 @@ namespace GUI {
 void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 {
     Vector<ModelIndex> to_remove;
-    for (auto& index : m_indexes) {
+    for (auto& index : m_indices) {
         if (filter(index))
             to_remove.append(index);
     }
     if (!to_remove.is_empty()) {
         for (auto& index : to_remove)
-            m_indexes.remove(index);
+            m_indices.remove(index);
         notify_selection_changed();
     }
 }
@@ -48,19 +28,19 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 void ModelSelection::set(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.size() == 1 && m_indexes.contains(index))
+    if (m_indices.size() == 1 && m_indices.contains(index))
         return;
-    m_indexes.clear();
-    m_indexes.set(index);
+    m_indices.clear();
+    m_indices.set(index);
     notify_selection_changed();
 }
 
 void ModelSelection::add(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.contains(index))
+    if (m_indices.contains(index))
         return;
-    m_indexes.set(index);
+    m_indices.set(index);
     notify_selection_changed();
 }
 
@@ -79,28 +59,28 @@ void ModelSelection::add_all(const Vector<ModelIndex>& indices)
 void ModelSelection::toggle(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indexes.contains(index))
-        m_indexes.remove(index);
+    if (m_indices.contains(index))
+        m_indices.remove(index);
     else
-        m_indexes.set(index);
+        m_indices.set(index);
     notify_selection_changed();
 }
 
 bool ModelSelection::remove(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (!m_indexes.contains(index))
+    if (!m_indices.contains(index))
         return false;
-    m_indexes.remove(index);
+    m_indices.remove(index);
     notify_selection_changed();
     return true;
 }
 
 void ModelSelection::clear()
 {
-    if (m_indexes.is_empty())
+    if (m_indices.is_empty())
         return;
-    m_indexes.clear();
+    m_indices.clear();
     notify_selection_changed();
 }
 

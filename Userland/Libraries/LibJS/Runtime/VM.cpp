@@ -1,34 +1,13 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
-#include <AK/TemporaryChange.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -38,13 +17,14 @@
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Symbol.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
 NonnullRefPtr<VM> VM::create()
 {
-    return adopt(*new VM);
+    return adopt_ref(*new VM);
 }
 
 VM::VM()
@@ -193,6 +173,8 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 
         for (auto* scope = current_scope(); scope; scope = scope->parent()) {
             auto possible_match = scope->get_from_scope(name);
+            if (exception())
+                return {};
             if (possible_match.has_value())
                 return possible_match.value().value;
         }
@@ -292,39 +274,14 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
 void VM::throw_exception(Exception& exception)
 {
-    if (should_log_exceptions()) {
-        auto value = exception.value();
-        if (value.is_object()) {
-            auto& object = value.as_object();
-            auto name = object.get_without_side_effects(names.name).value_or(js_undefined());
-            auto message = object.get_without_side_effects(names.message).value_or(js_undefined());
-            if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
-                // The result is not going to be useful, let's just print the value. This affects DOMExceptions, for example.
-                dbgln("Throwing JavaScript exception: {}", value);
-            } else {
-                dbgln("Throwing JavaScript exception: [{}] {}", name, message);
-            }
-        } else {
-            dbgln("Throwing JavaScript exception: {}", value);
-        }
-
-        for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i) {
-            const auto& source_range = m_call_stack[i]->current_node->source_range();
-            auto function_name = m_call_stack[i]->function_name;
-            if (function_name.is_empty())
-                function_name = "<anonymous>";
-            dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
-        }
-    }
-
     set_exception(exception);
     unwind(ScopeType::Try);
 }
 
-String VM::join_arguments() const
+String VM::join_arguments(size_t start_index) const
 {
     StringBuilder joined_arguments;
-    for (size_t i = 0; i < argument_count(); ++i) {
+    for (size_t i = start_index; i < argument_count(); ++i) {
         joined_arguments.append(argument(i).to_string_without_side_effects().characters());
         if (i != argument_count() - 1)
             joined_arguments.append(' ');
@@ -396,7 +353,7 @@ void VM::run_queued_promise_jobs()
     dbgln_if(PROMISE_DEBUG, "Running queued promise jobs");
     // Temporarily get rid of the exception, if any - job functions must be called
     // either way, and that can't happen if we already have an exception stored.
-    TemporaryChange change(m_exception, static_cast<Exception*>(nullptr));
+    TemporaryClearException clear_exception(*this);
     while (!m_promise_jobs.is_empty()) {
         auto* job = m_promise_jobs.take_first();
         dbgln_if(PROMISE_DEBUG, "Calling promise job function @ {}", job);

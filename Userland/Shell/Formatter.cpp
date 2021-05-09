@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Formatter.h"
 #include "AST.h"
 #include "Parser.h"
+#include <AK/Hex.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/TemporaryChange.h>
 
@@ -56,12 +37,14 @@ String Formatter::format()
 
     node->visit(*this);
 
-    auto string = m_builder.string_view();
+    VERIFY(m_builders.size() == 1);
+
+    auto string = current_builder().string_view();
 
     if (!string.ends_with(" "))
-        m_builder.append(m_trivia);
+        current_builder().append(m_trivia);
 
-    return m_builder.to_string();
+    return current_builder().to_string();
 }
 
 void Formatter::with_added_indent(int indent, Function<void()> callback)
@@ -81,6 +64,13 @@ void Formatter::in_new_block(Function<void()> callback)
 
     insert_separator();
     current_builder().append('}');
+}
+
+String Formatter::in_new_builder(Function<void()> callback, StringBuilder new_builder)
+{
+    m_builders.append(move(new_builder));
+    callback();
+    return m_builders.take_last().to_string();
 }
 
 void Formatter::test_and_update_output_cursor(const AST::Node* node)
@@ -116,9 +106,17 @@ void Formatter::will_visit(const AST::Node* node)
     }
 }
 
-void Formatter::insert_separator()
+void Formatter::insert_separator(bool escaped)
 {
+    if (escaped)
+        current_builder().append('\\');
     current_builder().append('\n');
+    if (!escaped && !m_heredocs_to_append_after_sequence.is_empty()) {
+        for (auto& entry : m_heredocs_to_append_after_sequence) {
+            current_builder().append(entry);
+        }
+        m_heredocs_to_append_after_sequence.clear();
+    }
     insert_indent();
 }
 
@@ -147,8 +145,8 @@ void Formatter::visit(const AST::And* node)
     with_added_indent(should_indent ? 1 : 0, [&] {
         node->left()->visit(*this);
 
-        current_builder().append(" \\");
-        insert_separator();
+        current_builder().append(' ');
+        insert_separator(true);
         current_builder().append("&& ");
 
         node->right()->visit(*this);
@@ -244,7 +242,7 @@ void Formatter::visit(const AST::CloseFdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf("%d>&-", node->fd());
+    current_builder().appendff("{}>&-", node->fd());
     visited(node);
 }
 
@@ -289,14 +287,17 @@ void Formatter::visit(const AST::DoubleQuotedString* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    current_builder().append("\"");
+    auto not_in_heredoc = m_parent_node->kind() != AST::Node::Kind::Heredoc;
+    if (not_in_heredoc)
+        current_builder().append("\"");
 
     TemporaryChange quotes { m_options.in_double_quotes, true };
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     NodeVisitor::visit(node);
 
-    current_builder().append("\"");
+    if (not_in_heredoc)
+        current_builder().append("\"");
     visited(node);
 }
 
@@ -306,7 +307,7 @@ void Formatter::visit(const AST::Fd2FdRedirection* node)
     test_and_update_output_cursor(node);
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
-    current_builder().appendf("%d>&%d", node->source_fd(), node->dest_fd());
+    current_builder().appendff("{}>&{}", node->source_fd(), node->dest_fd());
     if (m_hit_node == node)
         ++m_output_cursor;
     visited(node);
@@ -372,6 +373,39 @@ void Formatter::visit(const AST::Glob* node)
     will_visit(node);
     test_and_update_output_cursor(node);
     current_builder().append(node->text());
+    visited(node);
+}
+
+void Formatter::visit(const AST::Heredoc* node)
+{
+    will_visit(node);
+    test_and_update_output_cursor(node);
+
+    current_builder().append("<<");
+    if (node->deindent())
+        current_builder().append('~');
+    else
+        current_builder().append('-');
+
+    if (node->allow_interpolation())
+        current_builder().appendff("{}", node->end());
+    else
+        current_builder().appendff("'{}'", node->end());
+
+    auto content = in_new_builder([&] {
+        if (!node->contents())
+            return;
+
+        TemporaryChange<const AST::Node*> parent { m_parent_node, node };
+        TemporaryChange heredoc { m_options.in_heredoc, true };
+
+        auto& contents = *node->contents();
+        contents.visit(*this);
+        current_builder().appendff("\n{}\n", node->end());
+    });
+
+    m_heredocs_to_append_after_sequence.append(move(content));
+
     visited(node);
 }
 
@@ -587,8 +621,8 @@ void Formatter::visit(const AST::Or* node)
     with_added_indent(should_indent ? 1 : 0, [&] {
         node->left()->visit(*this);
 
-        current_builder().append(" \\");
-        insert_separator();
+        current_builder().append(" ");
+        insert_separator(true);
         current_builder().append("|| ");
 
         node->right()->visit(*this);
@@ -604,10 +638,10 @@ void Formatter::visit(const AST::Pipe* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     node->left()->visit(*this);
-    current_builder().append(" \\");
+    current_builder().append(" ");
 
     with_added_indent(should_indent ? 1 : 0, [&] {
-        insert_separator();
+        insert_separator(true);
         current_builder().append("| ");
 
         node->right()->visit(*this);
@@ -639,7 +673,7 @@ void Formatter::visit(const AST::ReadRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 0)
-        current_builder().appendf(" %d<", node->fd());
+        current_builder().appendff(" {}<", node->fd());
     else
         current_builder().append(" <");
     NodeVisitor::visit(node);
@@ -653,7 +687,7 @@ void Formatter::visit(const AST::ReadWriteRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 0)
-        current_builder().appendf(" %d<>", node->fd());
+        current_builder().appendff(" {}<>", node->fd());
     else
         current_builder().append(" <>");
     NodeVisitor::visit(node);
@@ -740,10 +774,10 @@ void Formatter::visit(const AST::StringLiteral* node)
 {
     will_visit(node);
     test_and_update_output_cursor(node);
-    if (!m_options.in_double_quotes)
+    if (!m_options.in_double_quotes && !m_options.in_heredoc)
         current_builder().append("'");
 
-    if (m_options.in_double_quotes) {
+    if (m_options.in_double_quotes && !m_options.in_heredoc) {
         for (auto ch : node->text()) {
             switch (ch) {
             case '"':
@@ -781,7 +815,7 @@ void Formatter::visit(const AST::StringLiteral* node)
         current_builder().append(node->text());
     }
 
-    if (!m_options.in_double_quotes)
+    if (!m_options.in_double_quotes && !m_options.in_heredoc)
         current_builder().append("'");
     visited(node);
 }
@@ -844,7 +878,7 @@ void Formatter::visit(const AST::WriteAppendRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 1)
-        current_builder().appendf(" %d>>", node->fd());
+        current_builder().appendff(" {}>>", node->fd());
     else
         current_builder().append(" >>");
     NodeVisitor::visit(node);
@@ -858,7 +892,7 @@ void Formatter::visit(const AST::WriteRedirection* node)
     TemporaryChange<const AST::Node*> parent { m_parent_node, node };
 
     if (node->fd() != 1)
-        current_builder().appendf(" %d>", node->fd());
+        current_builder().appendff(" {}>", node->fd());
     else
         current_builder().append(" >");
     NodeVisitor::visit(node);

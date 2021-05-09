@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibGfx/Painter.h>
@@ -92,20 +72,20 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
     if (gfx_line_style != Gfx::Painter::LineStyle::Solid) {
         switch (edge) {
         case BorderEdge::Top:
-            p1.move_by(int_width / 2, int_width / 2);
-            p2.move_by(-int_width / 2, int_width / 2);
+            p1.translate_by(int_width / 2, int_width / 2);
+            p2.translate_by(-int_width / 2, int_width / 2);
             break;
         case BorderEdge::Right:
-            p1.move_by(-int_width / 2, int_width / 2);
-            p2.move_by(-int_width / 2, -int_width / 2);
+            p1.translate_by(-int_width / 2, int_width / 2);
+            p2.translate_by(-int_width / 2, -int_width / 2);
             break;
         case BorderEdge::Bottom:
-            p1.move_by(int_width / 2, -int_width / 2);
-            p2.move_by(-int_width / 2, -int_width / 2);
+            p1.translate_by(int_width / 2, -int_width / 2);
+            p2.translate_by(-int_width / 2, -int_width / 2);
             break;
         case BorderEdge::Left:
-            p1.move_by(int_width / 2, int_width / 2);
-            p2.move_by(int_width / 2, -int_width / 2);
+            p1.translate_by(int_width / 2, int_width / 2);
+            p2.translate_by(int_width / 2, -int_width / 2);
             break;
         }
         context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, int_width, gfx_line_style);
@@ -125,8 +105,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         p2_step = style.border_right().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
-            p1.move_by(p1_step, 1);
-            p2.move_by(-p2_step, 1);
+            p1.translate_by(p1_step, 1);
+            p2.translate_by(-p2_step, 1);
         }
         break;
     case BorderEdge::Right:
@@ -134,8 +114,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         p2_step = style.border_bottom().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
-            p1.move_by(-1, p1_step);
-            p2.move_by(-1, -p2_step);
+            p1.translate_by(-1, p1_step);
+            p2.translate_by(-1, -p2_step);
         }
         break;
     case BorderEdge::Bottom:
@@ -143,8 +123,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         p2_step = style.border_right().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
-            p1.move_by(p1_step, -1);
-            p2.move_by(-p2_step, -1);
+            p1.translate_by(p1_step, -1);
+            p2.translate_by(-p2_step, -1);
         }
         break;
     case BorderEdge::Left:
@@ -152,8 +132,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         p2_step = style.border_bottom().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
-            p1.move_by(1, p1_step);
-            p2.move_by(1, -p2_step);
+            p1.translate_by(1, p1_step);
+            p2.translate_by(1, -p2_step);
         }
         break;
     }

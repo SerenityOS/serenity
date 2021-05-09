@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Format.h>
 #include <LibGfx/Orientation.h>
+#include <LibGfx/Point.h>
 #include <LibIPC/Forward.h>
 
 namespace Gfx {
@@ -35,7 +16,7 @@ namespace Gfx {
 template<typename T>
 class Size {
 public:
-    Size() { }
+    Size() = default;
 
     Size(T w, T h)
         : m_width(w)
@@ -57,16 +38,54 @@ public:
     {
     }
 
-    bool is_null() const { return !m_width && !m_height; }
-    bool is_empty() const { return m_width <= 0 || m_height <= 0; }
+    [[nodiscard]] ALWAYS_INLINE T width() const { return m_width; }
+    [[nodiscard]] ALWAYS_INLINE T height() const { return m_height; }
+    [[nodiscard]] ALWAYS_INLINE T area() const { return width() * height(); }
 
-    T width() const { return m_width; }
-    T height() const { return m_height; }
+    ALWAYS_INLINE void set_width(T w) { m_width = w; }
+    ALWAYS_INLINE void set_height(T h) { m_height = h; }
 
-    T area() const { return width() * height(); }
+    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return !m_width && !m_height; }
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_width <= 0 || m_height <= 0; }
 
-    void set_width(T w) { m_width = w; }
-    void set_height(T h) { m_height = h; }
+    void scale_by(T dx, T dy)
+    {
+        m_width *= dx;
+        m_height *= dy;
+    }
+
+    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
+
+    ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
+    ALWAYS_INLINE void scale_by(const Point<T>& s) { scale_by(s.x(), s.y()); }
+
+    Size scaled_by(T dx, T dy) const
+    {
+        Size<T> size = *this;
+        size.scale_by(dx, dy);
+        return size;
+    }
+
+    Size scaled_by(T dboth) const
+    {
+        Size<T> size = *this;
+        size.scale_by(dboth);
+        return size;
+    }
+
+    Size scaled_by(const Point<T>& s) const
+    {
+        Size<T> size = *this;
+        size.scale_by(s);
+        return size;
+    }
+
+    Size transformed_by(const AffineTransform& transform) const
+    {
+        Size<T> size = *this;
+        size.transform_by(transform);
+        return size;
+    }
 
     template<typename U>
     bool contains(const Size<U>& other) const
@@ -138,7 +157,7 @@ public:
     }
 
     template<typename U>
-    Size<U> to_type() const
+    ALWAYS_INLINE Size<U> to_type() const
     {
         return Size<U>(*this);
     }

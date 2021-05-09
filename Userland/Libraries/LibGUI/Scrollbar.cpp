@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibCore/Timer.h>
@@ -130,23 +110,6 @@ Gfx::IntRect Scrollbar::increment_button_rect() const
         return { width() - button_width(), 0, button_width(), button_height() };
 }
 
-Gfx::IntRect Scrollbar::decrement_gutter_rect() const
-{
-    if (orientation() == Orientation::Vertical)
-        return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
-    else
-        return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
-}
-
-Gfx::IntRect Scrollbar::increment_gutter_rect() const
-{
-    auto scrubber_rect = this->scrubber_rect();
-    if (orientation() == Orientation::Vertical)
-        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1 };
-    else
-        return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
-}
-
 int Scrollbar::scrubbable_range_in_pixels() const
 {
     if (orientation() == Orientation::Vertical)
@@ -187,7 +150,7 @@ Gfx::IntRect Scrollbar::scrubber_rect() const
     if (value() == min())
         x_or_y = button_size();
     else if (value() == max())
-        x_or_y = (length(orientation()) - button_size() - visible_scrubber_size()) + 1;
+        x_or_y = length(orientation()) - button_size() - visible_scrubber_size();
     else {
         float range_size = max() - min();
         float available = scrubbable_range_in_pixels();
@@ -221,14 +184,14 @@ void Scrollbar::paint_event(PaintEvent& event)
     if (length(orientation()) > default_button_size()) {
         auto decrement_location = decrement_button_rect().location().translated(3, 3);
         if (decrement_pressed)
-            decrement_location.move_by(1, 1);
+            decrement_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
             painter.draw_bitmap(decrement_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, palette().threed_highlight());
         painter.draw_bitmap(decrement_location, orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());
 
         auto increment_location = increment_button_rect().location().translated(3, 3);
         if (increment_pressed)
-            increment_location.move_by(1, 1);
+            increment_location.translate_by(1, 1);
         if (!has_scrubber() || !is_enabled())
             painter.draw_bitmap(increment_location.translated(1, 1), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, palette().threed_highlight());
         painter.draw_bitmap(increment_location, orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, (has_scrubber() && is_enabled()) ? palette().button_text() : palette().threed_shadow1());

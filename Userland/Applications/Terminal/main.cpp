@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/URL.h>
@@ -54,6 +34,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <pty.h>
 #include <pwd.h>
 #include <serenity.h>
 #include <signal.h>
@@ -99,84 +80,27 @@ static void utmp_update(const char* tty, pid_t pid, bool create)
     }
 }
 
-static pid_t run_command(int ptm_fd, String command)
+static void run_command(String command)
 {
-    pid_t pid = fork();
-    if (pid < 0) {
-        perror("fork");
-        dbgln("run_command: could not fork to run '{}'", command);
-        return pid;
+    String shell = "/bin/Shell";
+    auto* pw = getpwuid(getuid());
+    if (pw && pw->pw_shell) {
+        shell = pw->pw_shell;
     }
+    endpwent();
 
-    if (pid == 0) {
-        const char* tty_name = ptsname(ptm_fd);
-        if (!tty_name) {
-            perror("ptsname");
-            exit(1);
-        }
-        close(ptm_fd);
-        int pts_fd = open(tty_name, O_RDWR);
-        if (pts_fd < 0) {
-            perror("open");
-            exit(1);
-        }
-
-        if (setsid() < 0) {
-            perror("setsid");
-        }
-
-        close(0);
-        close(1);
-        close(2);
-
-        int rc = dup2(pts_fd, 0);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = dup2(pts_fd, 1);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = dup2(pts_fd, 2);
-        if (rc < 0) {
-            perror("dup2");
-            exit(1);
-        }
-        rc = close(pts_fd);
-        if (rc < 0) {
-            perror("close");
-            exit(1);
-        }
-        rc = ioctl(0, TIOCSCTTY);
-        if (rc < 0) {
-            perror("ioctl(TIOCSCTTY)");
-            exit(1);
-        }
-
-        String shell = "/bin/Shell";
-        auto* pw = getpwuid(getuid());
-        if (pw && pw->pw_shell) {
-            shell = pw->pw_shell;
-        }
-        endpwent();
-
-        const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
-        if (!command.is_empty()) {
-            args[1] = "-c";
-            args[2] = command.characters();
-        }
-        const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
-        rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
-        if (rc < 0) {
-            perror("execve");
-            exit(1);
-        }
-        VERIFY_NOT_REACHED();
+    const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
+    if (!command.is_empty()) {
+        args[1] = "-c";
+        args[2] = command.characters();
     }
-
-    return pid;
+    const char* envs[] = { "TERM=xterm", "PAGER=more", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
+    int rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
+    if (rc < 0) {
+        perror("execve");
+        exit(1);
+    }
+    VERIFY_NOT_REACHED();
 }
 
 static RefPtr<GUI::Window> create_settings_window(VT::TerminalWidget& terminal)
@@ -334,29 +258,23 @@ int main(int argc, char** argv)
 
     args_parser.parse(argc, argv);
 
-    int ptm_fd = posix_openpt(O_RDWR | O_CLOEXEC);
-    if (ptm_fd < 0) {
-        perror("posix_openpt");
-        return 1;
-    }
-    if (grantpt(ptm_fd) < 0) {
-        perror("grantpt");
-        return 1;
-    }
-    if (unlockpt(ptm_fd) < 0) {
-        perror("unlockpt");
-        return 1;
-    }
-
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Terminal");
-    Core::File::ensure_parent_directories(config->file_name());
+    Core::File::ensure_parent_directories(config->filename());
 
-    pid_t shell_pid = 0;
-
-    if (command_to_execute)
-        shell_pid = run_command(ptm_fd, command_to_execute);
-    else
-        shell_pid = run_command(ptm_fd, config->read_entry("Startup", "Command", ""));
+    int ptm_fd;
+    pid_t shell_pid = forkpty(&ptm_fd, nullptr, nullptr, nullptr);
+    if (shell_pid < 0) {
+        perror("forkpty");
+        return 1;
+    }
+    if (shell_pid == 0) {
+        close(ptm_fd);
+        if (command_to_execute)
+            run_command(command_to_execute);
+        else
+            run_command(config->read_entry("Startup", "Command", ""));
+        VERIFY_NOT_REACHED();
+    }
 
     auto* pts_name = ptsname(ptm_fd);
     utmp_update(pts_name, shell_pid, true);
@@ -401,7 +319,7 @@ int main(int argc, char** argv)
     auto new_scrollback_size = config->read_num_entry("Terminal", "MaxHistorySize", terminal.max_history_size());
     terminal.set_max_history_size(new_scrollback_size);
 
-    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/gear.png"),
+    auto open_settings_action = GUI::Action::create("&Settings", Gfx::Bitmap::load_from_file("/res/icons/16x16/settings.png"),
         [&](const GUI::Action&) {
             if (!settings_window)
                 settings_window = create_settings_window(terminal);
@@ -428,8 +346,8 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("&File");
-    app_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::Action::create("Open New &Terminal", { Mod_Ctrl | Mod_Shift, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         pid_t child;
         const char* argv[] = { "Terminal", nullptr };
         if ((errno = posix_spawn(&child, "/bin/Terminal", nullptr, nullptr, const_cast<char**>(argv), environ))) {
@@ -440,9 +358,9 @@ int main(int argc, char** argv)
         }
     }));
 
-    app_menu.add_action(open_settings_action);
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    file_menu.add_action(open_settings_action);
+    file_menu.add_separator();
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
     }));
@@ -505,7 +423,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil(config->file_name().characters(), "rwc") < 0) {
+    if (unveil(config->filename().characters(), "rwc") < 0) {
         perror("unveil");
         return 1;
     }

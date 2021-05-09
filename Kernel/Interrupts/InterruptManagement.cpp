@@ -1,30 +1,9 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/StringView.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/CPU.h>
@@ -36,7 +15,6 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 
 #define PCAT_COMPAT_FLAG 0x1
@@ -145,7 +123,7 @@ UNMAP_AFTER_INIT void InterruptManagement::switch_to_pic_mode()
     dmesgln("Interrupts: Switch to Legacy PIC mode");
     InterruptDisabler disabler;
     m_smp_enabled = false;
-    m_interrupt_controllers[0] = adopt(*new PIC());
+    m_interrupt_controllers[0] = adopt_ref(*new PIC());
     SpuriousInterruptHandler::initialize(7);
     SpuriousInterruptHandler::initialize(15);
     for (auto& irq_controller : m_interrupt_controllers) {
@@ -203,7 +181,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
 
     int irq_controller_count = 0;
     if (madt->flags & PCAT_COMPAT_FLAG) {
-        m_interrupt_controllers[0] = adopt(*new PIC());
+        m_interrupt_controllers[0] = adopt_ref(*new PIC());
         irq_controller_count++;
     }
     size_t entry_index = 0;
@@ -215,7 +193,7 @@ UNMAP_AFTER_INIT void InterruptManagement::locate_apic_data()
             auto* ioapic_entry = (const ACPI::Structures::MADTEntries::IOAPIC*)madt_entry;
             dbgln("IOAPIC found @ MADT entry {}, MMIO Registers @ {}", entry_index, PhysicalAddress(ioapic_entry->ioapic_address));
             m_interrupt_controllers.resize(1 + irq_controller_count);
-            m_interrupt_controllers[irq_controller_count] = adopt(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
+            m_interrupt_controllers[irq_controller_count] = adopt_ref(*new IOAPIC(PhysicalAddress(ioapic_entry->ioapic_address), ioapic_entry->gsi_base));
             irq_controller_count++;
         }
         if (madt_entry->type == (u8)ACPI::Structures::MADTEntryType::InterruptSourceOverride) {

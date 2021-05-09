@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -43,40 +23,9 @@
 #include <LibGfx/Palette.h>
 #include <unistd.h>
 
-REGISTER_WIDGET(GUI, Widget)
+REGISTER_CORE_OBJECT(GUI, Widget)
 
 namespace GUI {
-
-static HashMap<String, WidgetClassRegistration*>& widget_classes()
-{
-    static HashMap<String, WidgetClassRegistration*>* map;
-    if (!map)
-        map = new HashMap<String, WidgetClassRegistration*>;
-    return *map;
-}
-
-WidgetClassRegistration::WidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<Widget>()> factory)
-    : m_class_name(class_name)
-    , m_factory(move(factory))
-{
-    widget_classes().set(class_name, this);
-}
-
-WidgetClassRegistration::~WidgetClassRegistration()
-{
-}
-
-void WidgetClassRegistration::for_each(Function<void(const WidgetClassRegistration&)> callback)
-{
-    for (auto& it : widget_classes()) {
-        callback(*it.value);
-    }
-}
-
-const WidgetClassRegistration* WidgetClassRegistration::find(const String& class_name)
-{
-    return widget_classes().get(class_name).value_or(nullptr);
-}
 
 Widget::Widget()
     : Core::Object(nullptr)
@@ -503,8 +452,9 @@ void Widget::mousemove_event(MouseEvent&)
 {
 }
 
-void Widget::mousewheel_event(MouseEvent&)
+void Widget::mousewheel_event(MouseEvent& event)
 {
+    event.ignore();
 }
 
 void Widget::context_menu_event(ContextMenuEvent&)
@@ -595,7 +545,7 @@ Gfx::IntRect Widget::window_relative_rect() const
 {
     auto rect = relative_rect();
     for (auto* parent = parent_widget(); parent; parent = parent->parent_widget()) {
-        rect.move_by(parent->relative_position());
+        rect.translate_by(parent->relative_position());
     }
     return rect;
 }
@@ -977,7 +927,7 @@ void Widget::set_content_margins(const Margins& margins)
 Gfx::IntRect Widget::content_rect() const
 {
     auto rect = relative_rect();
-    rect.move_by(m_content_margins.left(), m_content_margins.top());
+    rect.translate_by(m_content_margins.left(), m_content_margins.top());
     rect.set_width(rect.width() - (m_content_margins.left() + m_content_margins.right()));
     rect.set_height(rect.height() - (m_content_margins.top() + m_content_margins.bottom()));
     return rect;
@@ -1015,13 +965,13 @@ void Widget::set_override_cursor(Gfx::StandardCursor cursor)
 
 bool Widget::load_from_gml(const StringView& gml_string)
 {
-    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Widget> {
+    return load_from_gml(gml_string, [](const String& class_name) -> RefPtr<Core::Object> {
         dbgln("Class '{}' not registered", class_name);
         return nullptr;
     });
 }
 
-bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Widget> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
     auto value = parse_gml(gml_string);
     if (!value.is_object())
@@ -1029,7 +979,7 @@ bool Widget::load_from_gml(const StringView& gml_string, RefPtr<Widget> (*unregi
     return load_from_json(value.as_object(), unregistered_child_handler);
 }
 
-bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistered_child_handler)(const String&))
+bool Widget::load_from_json(const JsonObject& json, RefPtr<Core::Object> (*unregistered_child_handler)(const String&))
 {
     json.for_each_member([&](auto& key, auto& value) {
         set_property(key, value);
@@ -1074,16 +1024,16 @@ bool Widget::load_from_json(const JsonObject& json, RefPtr<Widget> (*unregistere
                 return false;
             }
 
-            RefPtr<Widget> child_widget;
-            if (auto* registration = WidgetClassRegistration::find(class_name.as_string())) {
-                child_widget = registration->construct();
+            RefPtr<Core::Object> child;
+            if (auto* registration = Core::ObjectClassRegistration::find(class_name.as_string())) {
+                child = registration->construct();
             } else {
-                child_widget = unregistered_child_handler(class_name.as_string());
-                if (!child_widget)
-                    return false;
+                child = unregistered_child_handler(class_name.as_string());
             }
-            add_child(*child_widget);
-            child_widget->load_from_json(child_json, unregistered_child_handler);
+            if (!child)
+                return false;
+            add_child(*child);
+            child->load_from_json(child_json, unregistered_child_handler);
         }
     }
 

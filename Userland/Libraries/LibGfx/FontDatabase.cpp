@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/NonnullRefPtrVector.h>
@@ -31,7 +11,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Typeface.h>
 #include <LibTTF/Font.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 namespace Gfx {
@@ -93,22 +72,21 @@ struct FontDatabase::Private {
 FontDatabase::FontDatabase()
     : m_private(make<Private>())
 {
-    Core::DirIterator di("/res/fonts", Core::DirIterator::SkipDots);
-    if (di.has_error()) {
-        fprintf(stderr, "DirIterator: %s\n", di.error_string());
+    Core::DirIterator dir_iterator("/res/fonts", Core::DirIterator::SkipDots);
+    if (dir_iterator.has_error()) {
+        warnln("DirIterator: {}", dir_iterator.error_string());
         exit(1);
     }
-    while (di.has_next()) {
-        String name = di.next_path();
+    while (dir_iterator.has_next()) {
+        auto path = dir_iterator.next_full_path();
 
-        auto path = String::format("/res/fonts/%s", name.characters());
-        if (name.ends_with(".font")) {
+        if (path.ends_with(".font"sv)) {
             if (auto font = Gfx::BitmapFont::load_from_file(path)) {
                 m_private->full_name_to_font_map.set(font->qualified_name(), font);
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
                 typeface->add_bitmap_font(font);
             }
-        } else if (name.ends_with(".ttf")) {
+        } else if (path.ends_with(".ttf"sv)) {
             // FIXME: What about .otf and .woff
             if (auto font = TTF::Font::load_from_file(path)) {
                 auto typeface = get_or_create_typeface(font->family(), font->variant());
@@ -180,7 +158,7 @@ RefPtr<Typeface> FontDatabase::get_or_create_typeface(const String& family, cons
         if (typeface->family() == family && typeface->variant() == variant)
             return typeface;
     }
-    auto typeface = adopt(*new Typeface(family, variant));
+    auto typeface = adopt_ref(*new Typeface(family, variant));
     m_private->typefaces.append(typeface);
     return typeface;
 }

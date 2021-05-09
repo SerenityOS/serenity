@@ -32,9 +32,9 @@ include the following characters:
 
 A single `unveil()` call may specify multiple permission characters at once.
 Subsequent `unveil()` calls may take away permissions from the ones allowed
-earlier for the same file. Note that unveilng a path with any set of
+earlier for the same file. Note that unveiling a path with any set of
 permissions does not turn off the regular permission checks: access to a file
-which the process has unvelied for itself, but has otherwise no appropriate
+which the process has unveiled for itself, but has otherwise no appropriate
 permissions for, will still be rejected. Unveiling a directory allows the
 process to access any files inside the directory.
 
@@ -58,7 +58,7 @@ the error.
 * `EFAULT`: `path` and/or `permissions` are not null and not in readable
   memory.
 * `EPERM`: The veil is locked, or an attempt to add more permissions for an
-  already unvelied path was rejected.
+  already unveiled path was rejected.
 * `EINVAL`: `path` is not an absolute path, or `permissions` are malformed.
 
 All of the usual path resolution errors may also occur.
@@ -74,7 +74,7 @@ The `unveil()` system call was first introduced by OpenBSD.
 unveil("/res", "r");
 
 // Allow the process to read, write, and create the config file:
-unveil("/etc/WindowServer/WindowServer.ini", "rwc");
+unveil("/etc/WindowServer.ini", "rwc");
 
 // Allow the process to execute Calendar:
 unveil("/bin/Calendar", "x");
@@ -90,3 +90,4 @@ unveil(nullptr, nullptr);
 
 * [`pledge`(2)](pledge.md)
 * [`chroot`(2)](chroot.md)
+* [`Mitigations`(7)](../man7/Mitigations.md)

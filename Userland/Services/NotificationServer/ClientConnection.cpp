@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClientConnection.h"
@@ -48,50 +28,47 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-OwnPtr<Messages::NotificationServer::GreetResponse> ClientConnection::handle(const Messages::NotificationServer::Greet&)
+void ClientConnection::greet()
 {
-    return make<Messages::NotificationServer::GreetResponse>();
 }
 
-OwnPtr<Messages::NotificationServer::ShowNotificationResponse> ClientConnection::handle(const Messages::NotificationServer::ShowNotification& message)
+void ClientConnection::show_notification(String const& text, String const& title, Gfx::ShareableBitmap const& icon)
 {
-    auto window = NotificationWindow::construct(client_id(), message.text(), message.title(), message.icon());
+    auto window = NotificationWindow::construct(client_id(), text, title, icon);
     window->show();
-    return make<Messages::NotificationServer::ShowNotificationResponse>();
 }
 
-OwnPtr<Messages::NotificationServer::CloseNotificationResponse> ClientConnection::handle([[maybe_unused]] const Messages::NotificationServer::CloseNotification& message)
+void ClientConnection::close_notification()
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
     if (window) {
         window->close();
     }
-    return make<Messages::NotificationServer::CloseNotificationResponse>();
 }
 
-OwnPtr<Messages::NotificationServer::UpdateNotificationIconResponse> ClientConnection::handle(const Messages::NotificationServer::UpdateNotificationIcon& message)
+Messages::NotificationServer::UpdateNotificationIconResponse ClientConnection::update_notification_icon(Gfx::ShareableBitmap const& icon)
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
     if (window) {
-        window->set_image(message.icon());
+        window->set_image(icon);
     }
-    return make<Messages::NotificationServer::UpdateNotificationIconResponse>(window);
+    return !!window;
 }
 
-OwnPtr<Messages::NotificationServer::UpdateNotificationTextResponse> ClientConnection::handle(const Messages::NotificationServer::UpdateNotificationText& message)
+Messages::NotificationServer::UpdateNotificationTextResponse ClientConnection::update_notification_text(String const& text, String const& title)
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
     if (window) {
-        window->set_text(message.text());
-        window->set_title(message.title());
+        window->set_text(text);
+        window->set_title(title);
     }
-    return make<Messages::NotificationServer::UpdateNotificationTextResponse>(window);
+    return !!window;
 }
 
-OwnPtr<Messages::NotificationServer::IsShowingResponse> ClientConnection::handle(const Messages::NotificationServer::IsShowing&)
+Messages::NotificationServer::IsShowingResponse ClientConnection::is_showing()
 {
     auto window = NotificationWindow::get_window_by_id(client_id());
-    return make<Messages::NotificationServer::IsShowingResponse>(window);
+    return !!window;
 }
 
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Arch/x86/CPU.h>
@@ -60,7 +40,7 @@ extern "C" u8* safe_atomic_compare_exchange_relaxed_faulted;
 namespace Kernel {
 
 CODE_SECTION(".text.safemem")
-bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
+NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
@@ -106,7 +86,7 @@ bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem")
-ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
+NEVER_INLINE ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 {
     ssize_t count = 0;
     fault_at = nullptr;
@@ -135,7 +115,7 @@ ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem")
-bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
+NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 {
     fault_at = nullptr;
     size_t dest = (size_t)dest_ptr;
@@ -183,7 +163,7 @@ bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 {
     u32 result;
     bool error;
@@ -201,7 +181,7 @@ Optional<u32> safe_atomic_fetch_add_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
 {
     u32 result;
     bool error;
@@ -219,7 +199,7 @@ Optional<u32> safe_atomic_exchange_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
+NEVER_INLINE Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
 {
     u32 result;
     bool error;
@@ -237,7 +217,7 @@ Optional<u32> safe_atomic_load_relaxed(volatile u32* var)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
+NEVER_INLINE bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
 {
     bool error;
     asm volatile(
@@ -252,7 +232,7 @@ bool safe_atomic_store_relaxed(volatile u32* var, u32 val)
 }
 
 CODE_SECTION(".text.safemem.atomic")
-Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
+NEVER_INLINE Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* var, u32& expected, u32 val)
 {
     // NOTE: accessing expected is NOT protected as it should always point
     // to a valid location in kernel memory!

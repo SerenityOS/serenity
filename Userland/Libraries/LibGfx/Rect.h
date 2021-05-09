@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/Format.h>
+#include <LibGfx/AffineTransform.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Point.h>
 #include <LibGfx/Size.h>
@@ -44,7 +25,7 @@ T abst(T value)
 template<typename T>
 class Rect {
 public:
-    Rect() { }
+    Rect() = default;
 
     Rect(T x, T y, T width, T height)
         : m_location(x, y)
@@ -79,37 +60,47 @@ public:
     {
     }
 
-    bool is_null() const
-    {
-        return width() == 0 && height() == 0;
-    }
+    [[nodiscard]] ALWAYS_INLINE T x() const { return location().x(); }
+    [[nodiscard]] ALWAYS_INLINE T y() const { return location().y(); }
+    [[nodiscard]] ALWAYS_INLINE T width() const { return m_size.width(); }
+    [[nodiscard]] ALWAYS_INLINE T height() const { return m_size.height(); }
 
-    bool is_empty() const
-    {
-        return width() <= 0 || height() <= 0;
-    }
+    ALWAYS_INLINE void set_x(T x) { m_location.set_x(x); }
+    ALWAYS_INLINE void set_y(T y) { m_location.set_y(y); }
+    ALWAYS_INLINE void set_width(T width) { m_size.set_width(width); }
+    ALWAYS_INLINE void set_height(T height) { m_size.set_height(height); }
 
-    void move_by(T dx, T dy)
-    {
-        m_location.move_by(dx, dy);
-    }
+    [[nodiscard]] ALWAYS_INLINE const Point<T>& location() const { return m_location; }
+    [[nodiscard]] ALWAYS_INLINE const Size<T>& size() const { return m_size; }
 
-    void move_by(const Point<T>& delta)
+    [[nodiscard]] ALWAYS_INLINE bool is_null() const { return width() == 0 && height() == 0; }
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
+
+    ALWAYS_INLINE void translate_by(T dx, T dy) { m_location.translate_by(dx, dy); }
+    ALWAYS_INLINE void translate_by(T dboth) { m_location.translate_by(dboth); }
+    ALWAYS_INLINE void translate_by(const Point<T>& delta) { m_location.translate_by(delta); }
+
+    ALWAYS_INLINE void scale_by(T dx, T dy)
     {
-        m_location.move_by(delta);
+        m_location.scale_by(dx, dy);
+        m_size.scale_by(dx, dy);
     }
+    ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
+    ALWAYS_INLINE void scale_by(const Point<T>& delta) { scale_by(delta.x(), delta.y()); }
+
+    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
 
     Point<T> center() const
     {
         return { x() + width() / 2, y() + height() / 2 };
     }
 
-    void set_location(const Point<T>& location)
+    ALWAYS_INLINE void set_location(const Point<T>& location)
     {
         m_location = location;
     }
 
-    void set_size(const Size<T>& size)
+    ALWAYS_INLINE void set_size(const Size<T>& size)
     {
         m_size = size;
     }
@@ -154,6 +145,41 @@ public:
         set_height(height() - size.height());
     }
 
+    Rect<T> translated(T dx, T dy) const
+    {
+        Rect<T> rect = *this;
+        rect.translate_by(dx, dy);
+        return rect;
+    }
+
+    Rect<T> translated(const Point<T>& delta) const
+    {
+        Rect<T> rect = *this;
+        rect.translate_by(delta);
+        return rect;
+    }
+
+    Rect<T> scaled(T sx, T sy) const
+    {
+        Rect<T> rect = *this;
+        rect.scale_by(sx, sy);
+        return rect;
+    }
+
+    Rect<T> scaled(const Point<T>& s) const
+    {
+        Rect<T> rect = *this;
+        rect.scale_by(s);
+        return rect;
+    }
+
+    Rect<T> transformed(const AffineTransform& transform) const
+    {
+        Rect<T> rect = *this;
+        rect.transform_by(transform);
+        return rect;
+    }
+
     Rect<T> shrunken(T w, T h) const
     {
         Rect<T> rect = *this;
@@ -179,20 +205,6 @@ public:
     {
         Rect<T> rect = *this;
         rect.inflate(size);
-        return rect;
-    }
-
-    Rect<T> translated(T dx, T dy) const
-    {
-        Rect<T> rect = *this;
-        rect.move_by(dx, dy);
-        return rect;
-    }
-
-    Rect<T> translated(const Point<T>& delta) const
-    {
-        Rect<T> rect = *this;
-        rect.move_by(delta);
         return rect;
     }
 
@@ -255,7 +267,7 @@ public:
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
-    bool contains(const Point<T>& point) const
+    ALWAYS_INLINE bool contains(const Point<T>& point) const
     {
         return contains(point.x(), point.y());
     }
@@ -280,15 +292,15 @@ public:
         return have_any;
     }
 
-    int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
-    void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
-    int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
-    void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
+    ALWAYS_INLINE int primary_offset_for_orientation(Orientation orientation) const { return m_location.primary_offset_for_orientation(orientation); }
+    ALWAYS_INLINE void set_primary_offset_for_orientation(Orientation orientation, int value) { m_location.set_primary_offset_for_orientation(orientation, value); }
+    ALWAYS_INLINE int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
+    ALWAYS_INLINE void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
 
-    int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
-    int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
-    void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
-    void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
+    ALWAYS_INLINE int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
+    ALWAYS_INLINE int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
+    ALWAYS_INLINE void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
+    ALWAYS_INLINE void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
 
     T first_edge_for_orientation(Orientation orientation) const
     {
@@ -304,27 +316,27 @@ public:
         return right();
     }
 
-    T left() const { return x(); }
-    T right() const { return x() + width() - 1; }
-    T top() const { return y(); }
-    T bottom() const { return y() + height() - 1; }
+    [[nodiscard]] ALWAYS_INLINE T left() const { return x(); }
+    [[nodiscard]] ALWAYS_INLINE T right() const { return x() + width() - 1; }
+    [[nodiscard]] ALWAYS_INLINE T top() const { return y(); }
+    [[nodiscard]] ALWAYS_INLINE T bottom() const { return y() + height() - 1; }
 
-    void set_left(T left)
+    ALWAYS_INLINE void set_left(T left)
     {
         set_x(left);
     }
 
-    void set_top(T top)
+    ALWAYS_INLINE void set_top(T top)
     {
         set_y(top);
     }
 
-    void set_right(T right)
+    ALWAYS_INLINE void set_right(T right)
     {
         set_width(right - x() + 1);
     }
 
-    void set_bottom(T bottom)
+    ALWAYS_INLINE void set_bottom(T bottom)
     {
         set_height(bottom - y() + 1);
     }
@@ -332,13 +344,13 @@ public:
     void set_right_without_resize(T new_right)
     {
         int delta = new_right - right();
-        move_by(delta, 0);
+        translate_by(delta, 0);
     }
 
     void set_bottom_without_resize(T new_bottom)
     {
         int delta = new_bottom - bottom();
-        move_by(0, delta);
+        translate_by(0, delta);
     }
 
     bool intersects_vertically(const Rect<T>& other) const
@@ -385,19 +397,6 @@ public:
         return IterationDecision::Continue;
     }
 
-    T x() const { return location().x(); }
-    T y() const { return location().y(); }
-    T width() const { return m_size.width(); }
-    T height() const { return m_size.height(); }
-
-    void set_x(T x) { m_location.set_x(x); }
-    void set_y(T y) { m_location.set_y(y); }
-    void set_width(T width) { m_size.set_width(width); }
-    void set_height(T height) { m_size.set_height(height); }
-
-    const Point<T>& location() const { return m_location; }
-    const Size<T>& size() const { return m_size; }
-
     Vector<Rect<T>, 4> shatter(const Rect<T>& hammer) const;
 
     template<class U>
@@ -435,7 +434,7 @@ public:
         return r;
     }
 
-    Rect<T> intersected(const Rect<T>& other) const
+    ALWAYS_INLINE Rect<T> intersected(const Rect<T>& other) const
     {
         return intersection(*this, other);
     }
@@ -466,7 +465,7 @@ public:
     }
 
     template<typename U>
-    Rect<U> to() const
+    ALWAYS_INLINE Rect<U> to_type() const
     {
         return Rect<U>(*this);
     }

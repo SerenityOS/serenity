@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "SoftMMU.h"
@@ -183,6 +163,42 @@ ValueWithShadow<u64> SoftMMU::read64(X86::LogicalAddress address)
     return region->read64(address.offset() - region->base());
 }
 
+ValueWithShadow<u128> SoftMMU::read128(X86::LogicalAddress address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        reportln("SoftMMU::read128: No region for @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read128: Non-readable region @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    return region->read128(address.offset() - region->base());
+}
+
+ValueWithShadow<u256> SoftMMU::read256(X86::LogicalAddress address)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        reportln("SoftMMU::read256: No region for @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_readable()) {
+        reportln("SoftMMU::read256: Non-readable region @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    return region->read256(address.offset() - region->base());
+}
+
 void SoftMMU::write8(X86::LogicalAddress address, ValueWithShadow<u8> value)
 {
     auto* region = find_region(address);
@@ -252,6 +268,42 @@ void SoftMMU::write64(X86::LogicalAddress address, ValueWithShadow<u64> value)
     }
 
     region->write64(address.offset() - region->base(), value);
+}
+
+void SoftMMU::write128(X86::LogicalAddress address, ValueWithShadow<u128> value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        reportln("SoftMMU::write128: No region for @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write128: Non-writable region @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    region->write128(address.offset() - region->base(), value);
+}
+
+void SoftMMU::write256(X86::LogicalAddress address, ValueWithShadow<u256> value)
+{
+    auto* region = find_region(address);
+    if (!region) {
+        reportln("SoftMMU::write256: No region for @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    if (!region->is_writable()) {
+        reportln("SoftMMU::write256: Non-writable region @ {:p}", address.offset());
+        m_emulator.dump_backtrace();
+        TODO();
+    }
+
+    region->write256(address.offset() - region->base(), value);
 }
 
 void SoftMMU::copy_to_vm(FlatPtr destination, const void* source, size_t size)

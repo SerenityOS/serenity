@@ -1,10 +1,10 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=emu2
-version=ff276eb0a755a3e784f73da00b5db6c1b25c1f83
-files="https://github.com/dmsc/emu2/archive/${version}.zip emu2-${version}.zip 2640a713d6c7ed98d020e0b7dccbc404"
-auth_type=md5
+version="2021.01"
+files="https://github.com/dmsc/emu2/archive/refs/tags/v${version}.tar.gz emu2-${version}.tar.gz 32ea656ad9b034d2c91a20f1a9ac1779cb6905a019c5bdeda9338cfd673bbd72"
+auth_type=sha256
 
 build() {
-    export CC="${SERENITY_ROOT}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc"
-    run make DESTDIR="${SERENITY_BUILD_DIR}/Root" CC="${CC}" $installopts
+    export CC="${SERENITY_SOURCE_DIR}/Toolchain/Local/${SERENITY_ARCH}/bin/${SERENITY_ARCH}-pc-serenity-gcc"
+    run make DESTDIR="${SERENITY_INSTALL_ROOT}" CC="${CC}" $installopts
 }

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -57,19 +37,36 @@ public:
     u32 alt_shortcut_character() const { return m_alt_shortcut_character; }
 
     bool is_empty() const { return m_items.is_empty(); }
-    int item_count() const { return m_items.size(); }
-    const MenuItem& item(int index) const { return m_items.at(index); }
-    MenuItem& item(int index) { return m_items.at(index); }
+    size_t item_count() const { return m_items.size(); }
+    const MenuItem& item(size_t index) const { return m_items.at(index); }
+    MenuItem& item(size_t index) { return m_items.at(index); }
+
+    MenuItem* item_by_identifier(unsigned identifier)
+    {
+        MenuItem* found_item = nullptr;
+        for_each_item([&](auto& item) {
+            if (item.identifier() == identifier) {
+                found_item = &item;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        return found_item;
+    }
 
     void add_item(NonnullOwnPtr<MenuItem>);
 
-    String name() const { return m_name; }
+    String const& name() const { return m_name; }
 
     template<typename Callback>
-    void for_each_item(Callback callback) const
+    IterationDecision for_each_item(Callback callback)
     {
-        for (auto& item : m_items)
-            callback(item);
+        for (auto& item : m_items) {
+            IterationDecision decision = callback(item);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
     }
 
     Gfx::IntRect rect_in_window_menubar() const { return m_rect_in_window_menubar; }
@@ -80,18 +77,18 @@ public:
 
     Window* window_menu_of() { return m_window_menu_of; }
     void set_window_menu_of(Window& window) { m_window_menu_of = window; }
-    bool is_window_menu_open() { return m_is_window_menu_open; }
+    bool is_window_menu_open() const { return m_is_window_menu_open; }
     void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 
     bool activate_default();
 
     int content_width() const;
 
-    int item_height() const { return 22; }
-    int frame_thickness() const { return 2; }
-    int horizontal_padding() const { return left_padding() + right_padding(); }
-    int left_padding() const { return 14; }
-    int right_padding() const { return 14; }
+    static constexpr int item_height() { return 22; }
+    static constexpr int frame_thickness() { return 2; }
+    static constexpr int horizontal_padding() { return left_padding() + right_padding(); }
+    static constexpr int left_padding() { return 14; }
+    static constexpr int right_padding() { return 14; }
 
     void draw();
     const Gfx::Font& font() const;
@@ -130,10 +127,10 @@ private:
     virtual void event(Core::Event&) override;
 
     void handle_mouse_move_event(const MouseEvent&);
-    int visible_item_count() const;
+    size_t visible_item_count() const;
 
     int item_index_at(const Gfx::IntPoint&);
-    int padding_between_text_and_shortcut() const { return 50; }
+    static constexpr int padding_between_text_and_shortcut() { return 50; }
     void did_activate(MenuItem&, bool leave_menu_open);
     void update_for_new_hovered_item(bool make_input = false);
 
@@ -157,7 +154,7 @@ private:
     int m_scroll_offset { 0 };
     int m_max_scroll_offset { 0 };
 
-    HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indexes;
+    HashMap<u32, Vector<size_t>> m_alt_shortcut_character_to_item_indices;
 };
 
 u32 find_ampersand_shortcut_character(const StringView&);

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/DOMImplementation.h>
@@ -39,14 +19,46 @@ DOMImplementation::DOMImplementation(Document& document)
 {
 }
 
-const NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& title) const
+// https://dom.spec.whatwg.org/#dom-domimplementation-createdocument
+NonnullRefPtr<Document> DOMImplementation::create_document(const String& namespace_, const String& qualified_name) const
 {
+    // FIXME: This should specifically be an XML document.
+    auto xml_document = Document::create();
+
+    xml_document->set_ready_for_post_load_tasks(true);
+
+    RefPtr<Element> element;
+
+    if (!qualified_name.is_empty())
+        element = xml_document->create_element_ns(namespace_, qualified_name /* FIXME: and an empty dictionary */);
+
+    // FIXME: If doctype is non-null, append doctype to document.
+
+    if (element)
+        xml_document->append_child(element.release_nonnull());
+
+    xml_document->set_origin(m_document.origin());
+
+    if (namespace_ == Namespace::HTML)
+        m_document.set_content_type("application/xhtml+xml");
+    else if (namespace_ == Namespace::SVG)
+        m_document.set_content_type("image/svg+xml");
+    else
+        m_document.set_content_type("application/xml");
+
+    return xml_document;
+}
+
+// https://dom.spec.whatwg.org/#dom-domimplementation-createhtmldocument
+NonnullRefPtr<Document> DOMImplementation::create_html_document(const String& title) const
+{
+    // FIXME: This should specifically be a HTML document.
     auto html_document = Document::create();
 
     html_document->set_content_type("text/html");
     html_document->set_ready_for_post_load_tasks(true);
 
-    auto doctype = adopt(*new DocumentType(html_document));
+    auto doctype = adopt_ref(*new DocumentType(html_document));
     doctype->set_name("html");
     html_document->append_child(doctype);
 
@@ -60,7 +72,7 @@ const NonnullRefPtr<Document> DOMImplementation::create_html_document(const Stri
         auto title_element = create_element(html_document, HTML::TagNames::title, Namespace::HTML);
         head_element->append_child(title_element);
 
-        auto text_node = adopt(*new Text(html_document, title));
+        auto text_node = adopt_ref(*new Text(html_document, title));
         title_element->append_child(text_node);
     }
 
@@ -70,6 +82,17 @@ const NonnullRefPtr<Document> DOMImplementation::create_html_document(const Stri
     html_document->set_origin(m_document.origin());
 
     return html_document;
+}
+
+// https://dom.spec.whatwg.org/#dom-domimplementation-createdocumenttype
+NonnullRefPtr<DocumentType> DOMImplementation::create_document_type(const String& qualified_name, const String& public_id, const String& system_id) const
+{
+    // FIXME: Validate qualified_name.
+    auto document_type = DocumentType::create(m_document);
+    document_type->set_name(qualified_name);
+    document_type->set_public_id(public_id);
+    document_type->set_system_id(system_id);
+    return document_type;
 }
 
 }

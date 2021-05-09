@@ -1,28 +1,9 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, William McPherson <willmcpherson2@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2021, kleines Filmröllchen <malu.bertsch@gmail.com>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RollWidget.h"
@@ -88,6 +69,62 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
     int horizontal_notes_to_paint = horizontal_paint_area / m_note_width;
 
     GUI::Painter painter(*this);
+
+    // Draw the background, if necessary.
+    if (viewport_changed() || paint_area != m_background->height()) {
+        m_background = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(m_roll_width, paint_area));
+        Gfx::Painter background_painter(*m_background);
+
+        background_painter.translate(frame_thickness(), frame_thickness());
+        background_painter.translate(-horizontal_note_offset_remainder, -note_offset_remainder);
+
+        for (int y = 0; y < notes_to_paint; ++y) {
+            int y_pos = y * note_height;
+
+            for (int x = 0; x < horizontal_notes_to_paint; ++x) {
+                // This is needed to avoid rounding errors. You can't just use
+                // m_note_width as the width.
+                int x_pos = x * m_note_width;
+                int next_x_pos = (x + 1) * m_note_width;
+                int distance_to_next_x = next_x_pos - x_pos;
+                Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
+
+                if (key_pattern[key_pattern_index] == Black)
+                    background_painter.fill_rect(rect, Color::LightGray);
+                else
+                    background_painter.fill_rect(rect, Color::White);
+
+                background_painter.draw_line(rect.top_right(), rect.bottom_right(), Color::Black);
+                background_painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::Black);
+            }
+
+            if (--key_pattern_index == -1)
+                key_pattern_index = notes_per_octave - 1;
+        }
+
+        background_painter.translate(-x_offset, -y_offset);
+        background_painter.translate(horizontal_note_offset_remainder, note_offset_remainder);
+
+        for (int note = note_count - (note_offset + notes_to_paint); note <= (note_count - 1) - note_offset; ++note) {
+            int y = ((note_count - 1) - note) * note_height;
+
+            Gfx::IntRect note_name_rect(3, y, 1, note_height);
+            const char* note_name = note_names[note % notes_per_octave];
+
+            background_painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
+            note_name_rect.translate_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
+            if (note % notes_per_octave == 0)
+                background_painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
+        }
+
+        m_prev_zoom_level = m_zoom_level;
+        m_prev_scroll_x = horizontal_scrollbar().value();
+        m_prev_scroll_y = vertical_scrollbar().value();
+    }
+
+    painter.blit(Gfx::IntPoint(0, 0), *m_background, m_background->rect());
+
+    // Draw the notes, mouse interaction, and time position.
     painter.translate(frame_thickness(), frame_thickness());
     painter.add_clip_rect(event.rect());
     painter.translate(-horizontal_note_offset_remainder, -note_offset_remainder);
@@ -104,20 +141,9 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             int distance_to_next_x = next_x_pos - x_pos;
             Gfx::IntRect rect(x_pos, y_pos, distance_to_next_x, note_height);
 
-            if (key_pattern[key_pattern_index] == Black)
-                painter.fill_rect(rect, Color::LightGray);
-            else
-                painter.fill_rect(rect, Color::White);
-
             if (keys_widget() && keys_widget()->note_is_set(note))
                 painter.fill_rect(rect, note_pressed_color.with_alpha(128));
-
-            painter.draw_line(rect.top_right(), rect.bottom_right(), Color::Black);
-            painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::Black);
         }
-
-        if (--key_pattern_index == -1)
-            key_pattern_index = notes_per_octave - 1;
     }
 
     painter.translate(-x_offset, -y_offset);
@@ -139,13 +165,6 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
             painter.fill_rect(rect, note_pressed_color);
             painter.draw_rect(rect, Color::Black);
         }
-        Gfx::IntRect note_name_rect(3, y, 1, note_height);
-        const char* note_name = note_names[note % notes_per_octave];
-
-        painter.draw_text(note_name_rect, note_name, Gfx::TextAlignment::CenterLeft);
-        note_name_rect.move_by(Gfx::FontDatabase::default_font().width(note_name) + 2, 0);
-        if (note % notes_per_octave == 0)
-            painter.draw_text(note_name_rect, String::formatted("{}", note / notes_per_octave + 1), Gfx::TextAlignment::CenterLeft);
     }
 
     int x = m_roll_width * (static_cast<double>(m_track_manager.time()) / roll_length);
@@ -153,6 +172,15 @@ void RollWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_line({ x, 0 }, { x, roll_height }, Gfx::Color::Black);
 
     GUI::Frame::paint_event(event);
+}
+
+bool RollWidget::viewport_changed() const
+{
+    // height is complicated to check, will be done in paint_event
+    return m_background.is_null()
+        || m_roll_width != m_background->width()
+        || m_prev_scroll_x != horizontal_scrollbar().value() || m_prev_scroll_y != vertical_scrollbar().value()
+        || m_prev_zoom_level != m_zoom_level;
 }
 
 void RollWidget::mousedown_event(GUI::MouseEvent& event)
@@ -220,7 +248,7 @@ void RollWidget::mousewheel_event(GUI::MouseEvent& event)
     }
 
     if (!(event.modifiers() & KeyModifier::Mod_Ctrl)) {
-        GUI::ScrollableWidget::mousewheel_event(event);
+        GUI::AbstractScrollableWidget::mousewheel_event(event);
         return;
     }
 

@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include "NodeVisitor.h"
 #include <AK/Forward.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
@@ -38,7 +19,7 @@ namespace Shell {
 class Formatter final : public AST::NodeVisitor {
 public:
     Formatter(const StringView& source, ssize_t cursor = -1)
-        : m_builder(round_up_to_power_of_two(source.length(), 16))
+        : m_builders({ StringBuilder { round_up_to_power_of_two(source.length(), 16) } })
         , m_source(source)
         , m_cursor(cursor)
     {
@@ -50,7 +31,8 @@ public:
     }
 
     explicit Formatter(const AST::Node& node)
-        : m_cursor(-1)
+        : m_builders({ StringBuilder {} })
+        , m_cursor(-1)
         , m_root_node(node)
     {
     }
@@ -77,6 +59,7 @@ private:
     virtual void visit(const AST::FunctionDeclaration*) override;
     virtual void visit(const AST::ForLoop*) override;
     virtual void visit(const AST::Glob*) override;
+    virtual void visit(const AST::Heredoc*) override;
     virtual void visit(const AST::HistoryEvent*) override;
     virtual void visit(const AST::Execute*) override;
     virtual void visit(const AST::IfCond*) override;
@@ -105,24 +88,26 @@ private:
     void test_and_update_output_cursor(const AST::Node*);
     void visited(const AST::Node*);
     void will_visit(const AST::Node*);
-    void insert_separator();
+    void insert_separator(bool escaped = false);
     void insert_indent();
 
     ALWAYS_INLINE void with_added_indent(int indent, Function<void()>);
     ALWAYS_INLINE void in_new_block(Function<void()>);
+    ALWAYS_INLINE String in_new_builder(Function<void()>, StringBuilder new_builder = StringBuilder {});
 
-    StringBuilder& current_builder() { return m_builder; }
+    StringBuilder& current_builder() { return m_builders.last(); }
 
     struct Options {
         size_t max_line_length_hint { 80 };
         bool explicit_parentheses { false };
         bool explicit_braces { false };
         bool in_double_quotes { false };
+        bool in_heredoc { false };
     } m_options;
 
     size_t m_current_indent { 0 };
 
-    StringBuilder m_builder;
+    Vector<StringBuilder> m_builders;
 
     StringView m_source;
     size_t m_output_cursor { 0 };
@@ -134,6 +119,7 @@ private:
     const AST::Node* m_last_visited_node { nullptr };
 
     StringView m_trivia;
+    Vector<String> m_heredocs_to_append_after_sequence;
 };
 
 }

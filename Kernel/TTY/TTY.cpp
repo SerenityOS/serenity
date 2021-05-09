@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ScopeGuard.h>
@@ -88,8 +68,14 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
         });
     } else {
         nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
-            for (size_t i = 0; i < data_size; i++)
-                data[i] = m_input_buffer.dequeue();
+            for (size_t i = 0; i < data_size; i++) {
+                auto ch = m_input_buffer.dequeue();
+                if (ch == '\r' && m_termios.c_iflag & ICRNL)
+                    ch = '\n';
+                else if (ch == '\n' && m_termios.c_iflag & INLCR)
+                    ch = '\r';
+                data[i] = ch;
+            }
             return (ssize_t)data_size;
         });
     }
@@ -107,8 +93,23 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
         return EINTR;
     }
 
-    on_tty_write(buffer, size);
-    return size;
+    const size_t num_chars = 256;
+    ssize_t nread = buffer.read_buffered<num_chars>((size_t)size, [&](const u8* data, size_t buffer_bytes) {
+        u8 modified_data[num_chars * 2];
+        size_t extra_chars = 0;
+        for (size_t i = 0; i < buffer_bytes; ++i) {
+            auto ch = data[i];
+            if (ch == '\n' && (m_termios.c_oflag & (OPOST | ONLCR))) {
+                modified_data[i + extra_chars] = '\r';
+                extra_chars++;
+            }
+            modified_data[i + extra_chars] = ch;
+        }
+        on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), buffer_bytes + extra_chars);
+        return (ssize_t)buffer_bytes;
+    });
+
+    return nread;
 }
 
 bool TTY::can_read(const FileDescription&, size_t) const
@@ -304,7 +305,7 @@ void TTY::set_termios(const termios& t)
 {
     m_termios = t;
 
-    dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}",
+    dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
         tty_name(),
         should_echo_input(),
         should_generate_signals(),
@@ -315,7 +316,9 @@ void TTY::set_termios(const termios& t)
         ((m_termios.c_iflag & ISTRIP) != 0),
         ((m_termios.c_iflag & ICRNL) != 0),
         ((m_termios.c_iflag & INLCR) != 0),
-        ((m_termios.c_iflag & IGNCR) != 0));
+        ((m_termios.c_iflag & IGNCR) != 0),
+        ((m_termios.c_oflag & OPOST) != 0),
+        ((m_termios.c_oflag & ONLCR) != 0));
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)

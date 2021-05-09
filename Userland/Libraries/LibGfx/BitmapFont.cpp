@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "BitmapFont.h"
@@ -63,11 +43,8 @@ NonnullRefPtr<Font> BitmapFont::clone() const
     auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * m_glyph_count));
     memcpy(new_rows, m_rows, bytes_per_glyph * m_glyph_count);
     auto* new_widths = static_cast<u8*>(malloc(m_glyph_count));
-    if (m_glyph_widths)
-        memcpy(new_widths, m_glyph_widths, m_glyph_count);
-    else
-        memset(new_widths, m_glyph_width, m_glyph_count);
-    return adopt(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight, true));
+    memcpy(new_widths, m_glyph_widths, m_glyph_count);
+    return adopt_ref(*new BitmapFont(m_name, m_family, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing, m_type, m_baseline, m_mean_line, m_presentation_size, m_weight, true));
 }
 
 NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bool fixed, FontTypes type)
@@ -77,8 +54,8 @@ NonnullRefPtr<BitmapFont> BitmapFont::create(u8 glyph_height, u8 glyph_width, bo
     auto* new_rows = static_cast<unsigned*>(malloc(bytes_per_glyph * count));
     memset(new_rows, 0, bytes_per_glyph * count);
     auto* new_widths = static_cast<u8*>(malloc(count));
-    memset(new_widths, glyph_width, count);
-    return adopt(*new BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400, true));
+    memset(new_widths, 0, count);
+    return adopt_ref(*new BitmapFont("Untitled", "Untitled", new_rows, new_widths, fixed, glyph_width, glyph_height, 1, type, 0, 0, 0, 400, true));
 }
 
 BitmapFont::BitmapFont(String name, String family, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing, FontTypes type, u8 baseline, u8 mean_line, u8 presentation_size, u16 weight, bool owns_arrays)
@@ -99,6 +76,9 @@ BitmapFont::BitmapFont(String name, String family, unsigned* rows, u8* widths, b
     , m_fixed_width(is_fixed_width)
     , m_owns_arrays(owns_arrays)
 {
+    VERIFY(m_rows);
+    VERIFY(m_glyph_widths);
+
     update_x_height();
 
     m_glyph_count = glyph_count_by_type(m_type);
@@ -111,7 +91,7 @@ BitmapFont::BitmapFont(String name, String family, unsigned* rows, u8* widths, b
             maximum = max(maximum, m_glyph_widths[i]);
         }
         m_min_glyph_width = minimum;
-        m_max_glyph_width = maximum;
+        m_max_glyph_width = max(maximum, m_glyph_width);
     }
 }
 
@@ -147,6 +127,8 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
         type = FontTypes::LatinExtendedA;
     else if (header.type == 2)
         type = FontTypes::Cyrillic;
+    else if (header.type == 3)
+        type = FontTypes::Hebrew;
     else
         VERIFY_NOT_REACHED();
 
@@ -154,10 +136,8 @@ RefPtr<BitmapFont> BitmapFont::load_from_memory(const u8* data)
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
 
     auto* rows = const_cast<unsigned*>((const unsigned*)(data + sizeof(FontFileHeader)));
-    u8* widths = nullptr;
-    if (header.is_variable_width)
-        widths = (u8*)(rows) + count * bytes_per_glyph;
-    return adopt(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line, header.presentation_size, header.weight));
+    u8* widths = (u8*)(rows) + count * bytes_per_glyph;
+    return adopt_ref(*new BitmapFont(String(header.name), String(header.family), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing, type, header.baseline, header.mean_line, header.presentation_size, header.weight));
 }
 
 size_t BitmapFont::glyph_count_by_type(FontTypes type)
@@ -170,6 +150,9 @@ size_t BitmapFont::glyph_count_by_type(FontTypes type)
 
     if (type == FontTypes::Cyrillic)
         return 1280;
+
+    if (type == FontTypes::Hebrew)
+        return 1536;
 
     dbgln("Unknown font type: {}", (int)type);
     VERIFY_NOT_REACHED();
@@ -185,6 +168,9 @@ String BitmapFont::type_name_by_type(FontTypes type)
 
     if (type == FontTypes::Cyrillic)
         return "Cyrillic";
+
+    if (type == FontTypes::Hebrew)
+        return "Hebrew";
 
     dbgln("Unknown font type: {}", (int)type);
     VERIFY_NOT_REACHED();
@@ -255,8 +241,12 @@ Glyph BitmapFont::glyph(u32 code_point) const
 
 int BitmapFont::glyph_or_emoji_width(u32 code_point) const
 {
-    if (code_point < m_glyph_count)
-        return glyph_width(code_point);
+    if (code_point < m_glyph_count) {
+        if (m_glyph_widths[code_point] > 0)
+            return glyph_width(code_point);
+        else
+            return glyph_width('?');
+    }
 
     if (m_fixed_width)
         return m_glyph_width;

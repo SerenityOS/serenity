@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -58,7 +38,7 @@ public:
 
     virtual void handshake() override
     {
-        send_sync<Messages::LanguageServer::Greet>(m_project_path);
+        greet(m_project_path);
     }
 
     WeakPtr<LanguageClient> language_client() { return m_current_language_client; }
@@ -67,9 +47,9 @@ public:
     virtual void die() override;
 
 protected:
-    virtual void handle(const Messages::LanguageClient::AutoCompleteSuggestions&) override;
-    virtual void handle(const Messages::LanguageClient::DeclarationLocation&) override;
-    virtual void handle(const Messages::LanguageClient::DeclarationsInDocument&) override;
+    virtual void auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const&) override;
+    virtual void declaration_location(GUI::AutocompleteProvider::ProjectLocation const&) override;
+    virtual void declarations_in_document(String const&, Vector<GUI::AutocompleteProvider::Declaration> const&) override;
     void set_wrapper(ServerConnectionWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;

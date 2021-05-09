@@ -150,21 +150,6 @@ index 554ceb0b..67464ef2 100644
  #include <netinet/ip.h>
  #include <netinet/tcp.h>
  #include <arpa/inet.h>
-diff --git a/monitor.c b/monitor.c
-index b6e855d5..bde8f383 100644
---- a/monitor.c
-+++ b/monitor.c
-@@ -1752,8 +1752,10 @@ monitor_openfds(struct monitor *mon, int do_logfds)
- 	int on = 1;
- #endif
- 
-+#ifndef __serenity__
- 	if (socketpair(AF_UNIX, SOCK_STREAM, 0, pair) == -1)
- 		fatal("%s: socketpair: %s", __func__, strerror(errno));
-+#endif
- #ifdef SO_ZEROIZE
- 	if (setsockopt(pair[0], SOL_SOCKET, SO_ZEROIZE, &on, sizeof(on)) == -1)
- 		error("setsockopt SO_ZEROIZE(0): %.100s", strerror(errno));
 diff --git a/openbsd-compat/bsd-misc.c b/openbsd-compat/bsd-misc.c
 index 059b6d3b..2a248c81 100644
 --- a/openbsd-compat/bsd-misc.c
@@ -588,27 +573,6 @@ index af08be41..9e748a23 100644
  	r = check_host_key(host, hostaddr, options.port, host_key, RDRW,
  	    options.user_hostfiles, options.num_user_hostfiles,
  	    options.system_hostfiles, options.num_system_hostfiles);
-diff --git a/sshd.c b/sshd.c
-index 6f8f11a3..1ecf3e32 100644
---- a/sshd.c
-+++ b/sshd.c
-@@ -1231,6 +1231,8 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
- 				continue;
- 			}
- 
-+// FIXME: socketpair is seemingly required for SSHD to work, but doesn't current exist.
-+#ifndef __serenity__
- 			if (rexec_flag && socketpair(AF_UNIX,
- 			    SOCK_STREAM, 0, config_s) == -1) {
- 				error("reexec socketpair: %s",
-@@ -1240,6 +1242,7 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
- 				close(startup_p[1]);
- 				continue;
- 			}
-+#endif
- 
- 			for (j = 0; j < options.max_startups; j++)
- 				if (startup_pipes[j] == -1) {
 diff --git a/sshkey.c b/sshkey.c
 index 1571e3d9..2b5c611c 100644
 --- a/sshkey.c

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -47,35 +27,35 @@ public:
     static WindowServerConnection& the();
 
 private:
-    virtual void handle(const Messages::WindowClient::Paint&) override;
-    virtual void handle(const Messages::WindowClient::MouseMove&) override;
-    virtual void handle(const Messages::WindowClient::MouseDown&) override;
-    virtual void handle(const Messages::WindowClient::MouseDoubleClick&) override;
-    virtual void handle(const Messages::WindowClient::MouseUp&) override;
-    virtual void handle(const Messages::WindowClient::MouseWheel&) override;
-    virtual void handle(const Messages::WindowClient::WindowEntered&) override;
-    virtual void handle(const Messages::WindowClient::WindowLeft&) override;
-    virtual void handle(const Messages::WindowClient::KeyDown&) override;
-    virtual void handle(const Messages::WindowClient::KeyUp&) override;
-    virtual void handle(const Messages::WindowClient::WindowActivated&) override;
-    virtual void handle(const Messages::WindowClient::WindowDeactivated&) override;
-    virtual void handle(const Messages::WindowClient::WindowInputEntered&) override;
-    virtual void handle(const Messages::WindowClient::WindowInputLeft&) override;
-    virtual void handle(const Messages::WindowClient::WindowCloseRequest&) override;
-    virtual void handle(const Messages::WindowClient::WindowResized&) override;
-    virtual void handle(const Messages::WindowClient::MenuItemActivated&) override;
-    virtual void handle(const Messages::WindowClient::MenuItemEntered&) override;
-    virtual void handle(const Messages::WindowClient::MenuItemLeft&) override;
-    virtual void handle(const Messages::WindowClient::MenuVisibilityDidChange&) override;
-    virtual void handle(const Messages::WindowClient::ScreenRectChanged&) override;
-    virtual void handle(const Messages::WindowClient::AsyncSetWallpaperFinished&) override;
-    virtual void handle(const Messages::WindowClient::DragDropped&) override;
-    virtual void handle(const Messages::WindowClient::DragAccepted&) override;
-    virtual void handle(const Messages::WindowClient::DragCancelled&) override;
-    virtual void handle(const Messages::WindowClient::UpdateSystemTheme&) override;
-    virtual void handle(const Messages::WindowClient::WindowStateChanged&) override;
-    virtual void handle(const Messages::WindowClient::DisplayLinkNotification&) override;
-    virtual void handle(const Messages::WindowClient::Ping&) override;
+    virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;
+    virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, bool, Vector<String> const&) override;
+    virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
+    virtual void mouse_double_click(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
+    virtual void mouse_up(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
+    virtual void mouse_wheel(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
+    virtual void window_entered(i32) override;
+    virtual void window_left(i32) override;
+    virtual void key_down(i32, u32, u32, u32, u32) override;
+    virtual void key_up(i32, u32, u32, u32, u32) override;
+    virtual void window_activated(i32) override;
+    virtual void window_deactivated(i32) override;
+    virtual void window_input_entered(i32) override;
+    virtual void window_input_left(i32) override;
+    virtual void window_close_request(i32) override;
+    virtual void window_resized(i32, Gfx::IntRect const&) override;
+    virtual void menu_item_activated(i32, u32) override;
+    virtual void menu_item_entered(i32, u32) override;
+    virtual void menu_item_left(i32, u32) override;
+    virtual void menu_visibility_did_change(i32, bool) override;
+    virtual void screen_rect_changed(Gfx::IntRect const&) override;
+    virtual void set_wallpaper_finished(bool) override;
+    virtual void drag_dropped(i32, Gfx::IntPoint const&, String const&, HashMap<String, ByteBuffer> const&) override;
+    virtual void drag_accepted() override;
+    virtual void drag_cancelled() override;
+    virtual void update_system_theme(Core::AnonymousBuffer const&) override;
+    virtual void window_state_changed(i32, bool, bool) override;
+    virtual void display_link_notification() override;
+    virtual void ping() override;
 
     bool m_display_link_notification_pending { false };
 };

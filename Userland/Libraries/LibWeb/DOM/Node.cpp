@@ -1,28 +1,9 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -252,9 +233,9 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
         document().adopt_node(node_to_insert);
 
         if (!child)
-            TreeNode<Node>::append_child(node);
+            TreeNode<Node>::append_child(node_to_insert);
         else
-            TreeNode<Node>::insert_before(node, child);
+            TreeNode<Node>::insert_before(node_to_insert, child);
 
         // FIXME: If parent is a shadow host and node is a slottable, then assign a slot for node.
         // FIXME: If parent’s root is a shadow root, and parent is a slot whose assigned nodes is the empty list, then run signal a slot change for parent.
@@ -365,6 +346,64 @@ void Node::remove(bool suppress_observers)
     parent->children_changed();
 }
 
+// https://dom.spec.whatwg.org/#concept-node-replace
+ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, NonnullRefPtr<Node> child)
+{
+    // NOTE: This differs slightly from ensure_pre_insertion_validity.
+    if (!is<Document>(this) && !is<DocumentFragment>(this) && !is<Element>(this))
+        return DOM::HierarchyRequestError::create("Can only insert into a document, document fragment or element");
+
+    if (node->is_host_including_inclusive_ancestor_of(*this))
+        return DOM::HierarchyRequestError::create("New node is an ancestor of this node");
+
+    if (child->parent() != this)
+        return DOM::NotFoundError::create("This node is not the parent of the given child");
+
+    // FIXME: All the following "Invalid node type for insertion" messages could be more descriptive.
+
+    if (!is<DocumentFragment>(*node) && !is<DocumentType>(*node) && !is<Element>(*node) && !is<Text>(*node) && !is<Comment>(*node) && !is<ProcessingInstruction>(*node))
+        return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+
+    if ((is<Text>(*node) && is<Document>(this)) || (is<DocumentType>(*node) && !is<Document>(this)))
+        return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+
+    if (is<Document>(this)) {
+        if (is<DocumentFragment>(*node)) {
+            auto node_element_child_count = downcast<DocumentFragment>(*node).child_element_count();
+            if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
+                || (node_element_child_count == 1 && (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */))) {
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+            }
+        } else if (is<Element>(*node)) {
+            if (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */)
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+        } else if (is<DocumentType>(*node)) {
+            if (first_child_of_type<DocumentType>() != node /* FIXME: or an element is preceding child */)
+                return DOM::HierarchyRequestError::create("Invalid node type for insertion");
+        }
+    }
+
+    auto reference_child = child->next_sibling();
+    if (reference_child == node)
+        reference_child = node->next_sibling();
+
+    // FIXME: Let previousSibling be child’s previous sibling. (Currently unused so not included)
+    // FIXME: Let removedNodes be the empty set. (Currently unused so not included)
+
+    if (child->parent()) {
+        // FIXME: Set removedNodes to « child ».
+        child->remove(true);
+    }
+
+    // FIXME: Let nodes be node’s children if node is a DocumentFragment node; otherwise « node ». (Currently unused so not included)
+
+    insert_before(node, reference_child, true);
+
+    // FIXME: Queue a tree mutation record for parent with nodes, removedNodes, previousSibling, and referenceChild.
+
+    return child;
+}
+
 // https://dom.spec.whatwg.org/#concept-node-clone
 NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) const
 {
@@ -374,7 +413,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
     if (is<Element>(this)) {
         auto& element = *downcast<Element>(this);
         auto qualified_name = QualifiedName(element.local_name(), element.prefix(), element.namespace_());
-        auto element_copy = adopt(*new Element(*document, move(qualified_name)));
+        auto element_copy = adopt_ref(*new Element(*document, move(qualified_name)));
         element.for_each_attribute([&](auto& name, auto& value) {
             element_copy->set_attribute(name, value);
         });
@@ -390,22 +429,22 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         copy = move(document_copy);
     } else if (is<DocumentType>(this)) {
         auto document_type = downcast<DocumentType>(this);
-        auto document_type_copy = adopt(*new DocumentType(*document));
+        auto document_type_copy = adopt_ref(*new DocumentType(*document));
         document_type_copy->set_name(document_type->name());
         document_type_copy->set_public_id(document_type->public_id());
         document_type_copy->set_system_id(document_type->system_id());
         copy = move(document_type_copy);
     } else if (is<Text>(this)) {
         auto text = downcast<Text>(this);
-        auto text_copy = adopt(*new Text(*document, text->data()));
+        auto text_copy = adopt_ref(*new Text(*document, text->data()));
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
         auto comment = downcast<Comment>(this);
-        auto comment_copy = adopt(*new Comment(*document, comment->data()));
+        auto comment_copy = adopt_ref(*new Comment(*document, comment->data()));
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
         auto processing_instruction = downcast<ProcessingInstruction>(this);
-        auto processing_instruction_copy = adopt(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
+        auto processing_instruction_copy = adopt_ref(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
         copy = move(processing_instruction_copy);
     } else {
         dbgln("clone_node() not implemented for NodeType {}", (u16)m_type);
@@ -557,6 +596,14 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {
     return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && downcast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*downcast<DocumentFragment>(other.root())->host().ptr()));
+}
+
+// https://dom.spec.whatwg.org/#dom-node-ownerdocument
+RefPtr<Document> Node::owner_document() const
+{
+    if (is_document())
+        return nullptr;
+    return m_document;
 }
 
 }

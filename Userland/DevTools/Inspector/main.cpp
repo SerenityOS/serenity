@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RemoteObject.h"
@@ -33,6 +13,7 @@
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Clipboard.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
@@ -111,6 +92,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (pid == getpid()) {
+        GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
+        return 1;
+    }
+
     auto all_processes = Core::ProcessStatisticsReader::get_all();
     for (auto& it : all_processes.value()) {
         if (it.value.pid != pid)
@@ -129,8 +115,8 @@ int main(int argc, char** argv)
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     auto& help_menu = menubar->add_menu("Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
@@ -157,6 +143,7 @@ int main(int argc, char** argv)
     tree_view.set_fixed_width(286);
 
     auto& properties_tree_view = splitter.add<GUI::TreeView>();
+    properties_tree_view.set_should_fill_selected_rows(true);
     properties_tree_view.set_editable(true);
     properties_tree_view.aid_create_editing_delegate = [](auto&) {
         return make<GUI::StringModelEditingDelegate>();
@@ -166,6 +153,25 @@ int main(int argc, char** argv)
         auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
         properties_tree_view.set_model(remote_object->property_model());
         remote_process.set_inspected_object(remote_object->address);
+    };
+
+    auto properties_tree_view_context_menu = GUI::Menu::construct("Properties Tree View");
+
+    auto copy_bitmap = Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png");
+    auto copy_property_name_action = GUI::Action::create("Copy Property Name", copy_bitmap, [&](auto&) {
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().data().to_string());
+    });
+    auto copy_property_value_action = GUI::Action::create("Copy Property Value", copy_bitmap, [&](auto&) {
+        GUI::Clipboard::the().set_plain_text(properties_tree_view.selection().first().sibling_at_column(1).data().to_string());
+    });
+
+    properties_tree_view_context_menu->add_action(copy_property_name_action);
+    properties_tree_view_context_menu->add_action(copy_property_value_action);
+
+    properties_tree_view.on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
+        if (index.is_valid()) {
+            properties_tree_view_context_menu->popup(event.screen_position());
+        }
     };
 
     window->set_menubar(move(menubar));

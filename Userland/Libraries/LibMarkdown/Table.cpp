@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -42,11 +22,15 @@ String Table::render_for_terminal(size_t view_width) const
         auto string = text.render_for_terminal();
         if (alignment == Alignment::Center) {
             auto padding_length = (width - original_length) / 2;
-            builder.appendf("%*s%s%*s", (int)padding_length, "", string.characters(), (int)padding_length, "");
+            // FIXME: We're using a StringView literal to bypass the compile-time AK::Format checking here, since it can't handle the "}}"
+            builder.appendff("{:{1}}"sv, "", (int)padding_length);
+            builder.append(string);
+            builder.appendff("{:{1}}"sv, "", (int)padding_length);
             if ((width - original_length) % 2)
                 builder.append(' ');
         } else {
-            builder.appendf(alignment == Alignment::Left ? "%-*s" : "%*s", (int)(width + (string.length() - original_length)), string.characters());
+            // FIXME: We're using StringView literals to bypass the compile-time AK::Format checking here, since it can't handle the "}}"
+            builder.appendff(alignment == Alignment::Left ? "{:<{1}}"sv : "{:>{1}}"sv, string, (int)(width + (string.length() - original_length)));
         }
     };
 

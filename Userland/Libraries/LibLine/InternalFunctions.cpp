@@ -1,29 +1,10 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/FileStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
@@ -547,15 +528,15 @@ void Editor::edit_in_external_editor()
             return;
         }
 
+        OutputFileStream stream { fp };
+
         StringBuilder builder;
         builder.append(Utf32View { m_buffer.data(), m_buffer.size() });
-        auto view = builder.string_view();
-        size_t remaining_size = view.length();
-
-        while (remaining_size > 0)
-            remaining_size = fwrite(view.characters_without_null_termination() - remaining_size, sizeof(char), remaining_size, fp);
-
-        fclose(fp);
+        auto bytes = builder.string_view().bytes();
+        while (!bytes.is_empty()) {
+            auto nwritten = stream.write(bytes);
+            bytes = bytes.slice(nwritten);
+        }
     }
 
     ScopeGuard remove_temp_file_guard {

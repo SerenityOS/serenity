@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/QuickSort.h>
@@ -44,7 +24,7 @@ SortingProxyModel::~SortingProxyModel()
 
 void SortingProxyModel::invalidate(unsigned int flags)
 {
-    if (flags == UpdateFlag::DontInvalidateIndexes) {
+    if (flags == UpdateFlag::DontInvalidateIndices) {
         sort(m_last_key_column, m_last_sort_order);
     } else {
         m_mappings.clear();
@@ -221,20 +201,20 @@ void SortingProxyModel::sort_mapping(Mapping& mapping, int column, SortOrder sor
 
         // Update the view's selection.
         view.selection().change_from_model({}, [&](ModelSelection& selection) {
-            Vector<ModelIndex> selected_indexes_in_source;
-            Vector<ModelIndex> stale_indexes_in_selection;
+            Vector<ModelIndex> selected_indices_in_source;
+            Vector<ModelIndex> stale_indices_in_selection;
             selection.for_each_index([&](const ModelIndex& index) {
                 if (index.parent() == mapping.source_parent) {
-                    stale_indexes_in_selection.append(index);
-                    selected_indexes_in_source.append(source().index(old_source_rows[index.row()], index.column(), mapping.source_parent));
+                    stale_indices_in_selection.append(index);
+                    selected_indices_in_source.append(source().index(old_source_rows[index.row()], index.column(), mapping.source_parent));
                 }
             });
 
-            for (auto& index : stale_indexes_in_selection) {
+            for (auto& index : stale_indices_in_selection) {
                 selection.remove(index);
             }
 
-            for (auto& index : selected_indexes_in_source) {
+            for (auto& index : selected_indices_in_source) {
                 for (size_t i = 0; i < mapping.source_rows.size(); ++i) {
                     if (mapping.source_rows[i] == index.row()) {
                         auto new_source_index = this->index(i, index.column(), mapping.source_parent);
@@ -257,7 +237,7 @@ void SortingProxyModel::sort(int column, SortOrder sort_order)
     m_last_key_column = column;
     m_last_sort_order = sort_order;
 
-    did_update(UpdateFlag::DontInvalidateIndexes);
+    did_update(UpdateFlag::DontInvalidateIndices);
 }
 
 SortingProxyModel::InternalMapIterator SortingProxyModel::build_mapping(const ModelIndex& source_parent)
@@ -307,10 +287,10 @@ bool SortingProxyModel::is_searchable() const
 
 Vector<ModelIndex, 1> SortingProxyModel::matches(const StringView& searching, unsigned flags, const ModelIndex& proxy_index)
 {
-    auto found_indexes = source().matches(searching, flags, map_to_source(proxy_index));
-    for (size_t i = 0; i < found_indexes.size(); i++)
-        found_indexes[i] = map_to_proxy(found_indexes[i]);
-    return found_indexes;
+    auto found_indices = source().matches(searching, flags, map_to_source(proxy_index));
+    for (size_t i = 0; i < found_indices.size(); i++)
+        found_indices[i] = map_to_proxy(found_indices[i]);
+    return found_indices;
 }
 
 }

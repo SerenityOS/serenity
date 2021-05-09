@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Menu.h"
@@ -153,7 +133,7 @@ Window& Menu::ensure_menu_window()
         else if (item.type() == MenuItem::Separator)
             height = 8;
         item.set_rect({ next_item_location, { width - frame_thickness() * 2, height } });
-        next_item_location.move_by(0, height);
+        next_item_location.translate_by(0, height);
     }
 
     int window_height_available = Screen::the().height() - frame_thickness() * 2;
@@ -173,7 +153,7 @@ Window& Menu::ensure_menu_window()
     return *m_menu_window;
 }
 
-int Menu::visible_item_count() const
+size_t Menu::visible_item_count() const
 {
     if (!is_scrollable())
         return m_items.size();
@@ -256,7 +236,7 @@ void Menu::draw()
                     painter.blit_filtered(icon_rect.location().translated(1, 1), *item.icon(), item.icon()->rect(), [&shadow_color](auto) {
                         return shadow_color;
                     });
-                    icon_rect.move_by(-1, -1);
+                    icon_rect.translate_by(-1, -1);
                 }
                 if (item.is_enabled())
                     painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
@@ -390,15 +370,26 @@ void Menu::event(Core::Event& event)
         VERIFY(menu_window());
         VERIFY(menu_window()->is_visible());
 
-        // Default to the first enabled, non-separator item on key press if one has not been selected yet
         if (!hovered_item()) {
-            int counter = 0;
-            for (const auto& item : m_items) {
-                if (item.type() != MenuItem::Separator && item.is_enabled()) {
-                    set_hovered_index(counter, key == Key_Right);
-                    break;
+            if (key == Key_Up) {
+                // Default to the last enabled, non-separator item on key press if one has not been selected yet
+                for (auto i = static_cast<int>(m_items.size()) - 1; i >= 0; i--) {
+                    auto& item = m_items.at(i);
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(i, key == Key_Right);
+                        break;
+                    }
                 }
-                counter++;
+            } else {
+                // Default to the first enabled, non-separator item on key press if one has not been selected yet
+                int counter = 0;
+                for (const auto& item : m_items) {
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(counter, key == Key_Right);
+                        break;
+                    }
+                    counter++;
+                }
             }
             return;
         }
@@ -450,7 +441,7 @@ void Menu::event(Core::Event& event)
             VERIFY(new_index >= 0);
             VERIFY(new_index <= static_cast<int>(m_items.size()) - 1);
 
-            if (is_scrollable() && new_index >= (m_scroll_offset + visible_item_count()))
+            if (is_scrollable() && new_index >= (m_scroll_offset + static_cast<int>(visible_item_count())))
                 ++m_scroll_offset;
 
             set_hovered_index(new_index);
@@ -527,7 +518,7 @@ void Menu::did_activate(MenuItem& item, bool leave_menu_open)
         MenuManager::the().close_everyone();
 
     if (m_client)
-        m_client->post_message(Messages::WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
+        m_client->async_menu_item_activated(m_menu_id, item.identifier());
 }
 
 bool Menu::activate_default()
@@ -599,7 +590,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     }
     if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -window.height());
+        adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());
     }
@@ -632,21 +623,21 @@ void Menu::set_visible(bool visible)
         return;
     menu_window()->set_visible(visible);
     if (m_client)
-        m_client->post_message(Messages::WindowClient::MenuVisibilityDidChange(m_menu_id, visible));
+        m_client->async_menu_visibility_did_change(m_menu_id, visible);
 }
 
 void Menu::add_item(NonnullOwnPtr<MenuItem> item)
 {
     if (auto alt_shortcut = find_ampersand_shortcut_character(item->text())) {
-        m_alt_shortcut_character_to_item_indexes.ensure(tolower(alt_shortcut)).append(m_items.size());
+        m_alt_shortcut_character_to_item_indices.ensure(tolower(alt_shortcut)).append(m_items.size());
     }
     m_items.append(move(item));
 }
 
 const Vector<size_t>* Menu::items_with_alt_shortcut(u32 alt_shortcut) const
 {
-    auto it = m_alt_shortcut_character_to_item_indexes.find(tolower(alt_shortcut));
-    if (it == m_alt_shortcut_character_to_item_indexes.end())
+    auto it = m_alt_shortcut_character_to_item_indices.find(tolower(alt_shortcut));
+    if (it == m_alt_shortcut_character_to_item_indices.end())
         return nullptr;
     return &it->value;
 }
@@ -657,13 +648,13 @@ void Menu::set_hovered_index(int index, bool make_input)
         return;
     if (auto* old_hovered_item = hovered_item()) {
         if (client())
-            client()->post_message(Messages::WindowClient::MenuItemLeft(m_menu_id, old_hovered_item->identifier()));
+            client()->async_menu_item_left(m_menu_id, old_hovered_item->identifier());
     }
     m_hovered_item_index = index;
     update_for_new_hovered_item(make_input);
     if (auto* new_hovered_item = hovered_item()) {
         if (client())
-            client()->post_message(Messages::WindowClient::MenuItemEntered(m_menu_id, new_hovered_item->identifier()));
+            client()->async_menu_item_entered(m_menu_id, new_hovered_item->identifier());
     }
 }
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DebugInfo.h"
@@ -62,15 +42,11 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             return;
 
         if (child.get_attribute(Dwarf::Attribute::Inline).has_value()) {
-#if SPAM_DEBUG
-            dbgln("DWARF inlined functions are not supported");
-#endif
+            dbgln_if(SPAM_DEBUG, "DWARF inlined functions are not supported");
             return;
         }
         if (child.get_attribute(Dwarf::Attribute::Ranges).has_value()) {
-#if SPAM_DEBUG
-            dbgln("DWARF ranges are not supported");
-#endif
+            dbgln_if(SPAM_DEBUG, "DWARF ranges are not supported");
             return;
         }
         auto name = child.get_attribute(Dwarf::Attribute::Name);
@@ -81,9 +57,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
             scope.name = name.value().data.as_string;
 
         if (!child.get_attribute(Dwarf::Attribute::LowPc).has_value()) {
-#if SPAM_DEBUG
-            dbgln("DWARF: Couldn't find attribute LowPc for scope");
-#endif
+            dbgln_if(SPAM_DEBUG, "DWARF: Couldn't find attribute LowPc for scope");
             return;
         }
         scope.address_low = child.get_attribute(Dwarf::Attribute::LowPc).value().data.as_u32;
@@ -112,7 +86,7 @@ void DebugInfo::prepare_lines()
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {
-        Dwarf::LineProgram program(stream);
+        Dwarf::LineProgram program(m_dwarf_info, stream);
         all_lines.append(program.lines());
     }
 
@@ -156,12 +130,12 @@ Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source
 {
     String file_path = file;
     if (!file_path.starts_with("/"))
-        file_path = String::format("/%s", file_path.characters());
+        file_path = String::formatted("/{}", file_path);
 
     constexpr char SERENITY_LIBS_PREFIX[] = "/usr/src/serenity";
     if (file.starts_with(SERENITY_LIBS_PREFIX)) {
         file_path = file.substring(sizeof(SERENITY_LIBS_PREFIX), file.length() - sizeof(SERENITY_LIBS_PREFIX));
-        file_path = String::format("../%s", file_path.characters());
+        file_path = String::formatted("../{}", file_path);
     }
 
     Optional<SourcePositionAndAddress> result;
@@ -207,7 +181,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
     if (!type_die_offset.has_value())
         return {};
 
-    VERIFY(type_die_offset.value().type == Dwarf::DIE::AttributeValue::Type::DieReference);
+    VERIFY(type_die_offset.value().type == Dwarf::AttributeValue::Type::DieReference);
 
     auto type_die = variable_die.get_die_at_offset(type_die_offset.value().data.as_u32);
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
@@ -232,11 +206,11 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
         return;
 
     switch (location_info.value().type) {
-    case Dwarf::DIE::AttributeValue::Type::UnsignedNumber:
+    case Dwarf::AttributeValue::Type::UnsignedNumber:
         variable_info.location_type = DebugInfo::VariableInfo::LocationType::Address;
         variable_info.location_data.address = location_info.value().data.as_u32;
         break;
-    case Dwarf::DIE::AttributeValue::Type::DwarfExpression: {
+    case Dwarf::AttributeValue::Type::DwarfExpression: {
         auto expression_bytes = ReadonlyBytes { location_info.value().data.as_raw_bytes.bytes, location_info.value().data.as_raw_bytes.length };
         auto value = Dwarf::Expression::evaluate(expression_bytes, regs);
 
@@ -273,13 +247,13 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
         auto constant = variable_die.get_attribute(Dwarf::Attribute::ConstValue);
         VERIFY(constant.has_value());
         switch (constant.value().type) {
-        case Dwarf::DIE::AttributeValue::Type::UnsignedNumber:
+        case Dwarf::AttributeValue::Type::UnsignedNumber:
             variable_info->constant_data.as_u32 = constant.value().data.as_u32;
             break;
-        case Dwarf::DIE::AttributeValue::Type::SignedNumber:
+        case Dwarf::AttributeValue::Type::SignedNumber:
             variable_info->constant_data.as_i32 = constant.value().data.as_i32;
             break;
-        case Dwarf::DIE::AttributeValue::Type::String:
+        case Dwarf::AttributeValue::Type::String:
             variable_info->constant_data.as_string = constant.value().data.as_string;
             break;
         default:

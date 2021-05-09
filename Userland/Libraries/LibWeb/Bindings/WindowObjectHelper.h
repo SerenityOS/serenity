@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -34,6 +14,8 @@
 #include <LibWeb/Bindings/CanvasRenderingContext2DPrototype.h>
 #include <LibWeb/Bindings/CharacterDataConstructor.h>
 #include <LibWeb/Bindings/CharacterDataPrototype.h>
+#include <LibWeb/Bindings/CloseEventConstructor.h>
+#include <LibWeb/Bindings/CloseEventPrototype.h>
 #include <LibWeb/Bindings/CommentConstructor.h>
 #include <LibWeb/Bindings/CommentPrototype.h>
 #include <LibWeb/Bindings/DOMExceptionConstructor.h>
@@ -197,6 +179,8 @@
 #include <LibWeb/Bindings/ImageConstructor.h>
 #include <LibWeb/Bindings/ImageDataConstructor.h>
 #include <LibWeb/Bindings/ImageDataPrototype.h>
+#include <LibWeb/Bindings/MessageEventConstructor.h>
+#include <LibWeb/Bindings/MessageEventPrototype.h>
 #include <LibWeb/Bindings/MouseEventConstructor.h>
 #include <LibWeb/Bindings/MouseEventPrototype.h>
 #include <LibWeb/Bindings/NodeConstructor.h>
@@ -233,6 +217,8 @@
 #include <LibWeb/Bindings/TextPrototype.h>
 #include <LibWeb/Bindings/UIEventConstructor.h>
 #include <LibWeb/Bindings/UIEventPrototype.h>
+#include <LibWeb/Bindings/WebSocketConstructor.h>
+#include <LibWeb/Bindings/WebSocketPrototype.h>
 #include <LibWeb/Bindings/XMLHttpRequestConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetConstructor.h>
 #include <LibWeb/Bindings/XMLHttpRequestEventTargetPrototype.h>
@@ -253,6 +239,7 @@
     auto& vm = this->vm();                                 \
     ADD_WINDOW_OBJECT_INTERFACE(CanvasRenderingContext2D)  \
     ADD_WINDOW_OBJECT_INTERFACE(CharacterData)             \
+    ADD_WINDOW_OBJECT_INTERFACE(CloseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Comment)                   \
     ADD_WINDOW_OBJECT_INTERFACE(CSSStyleSheet)             \
     ADD_WINDOW_OBJECT_INTERFACE(DocumentFragment)          \
@@ -335,6 +322,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(HTMLUnknownElement)        \
     ADD_WINDOW_OBJECT_INTERFACE(HTMLVideoElement)          \
     ADD_WINDOW_OBJECT_INTERFACE(ImageData)                 \
+    ADD_WINDOW_OBJECT_INTERFACE(MessageEvent)              \
     ADD_WINDOW_OBJECT_INTERFACE(MouseEvent)                \
     ADD_WINDOW_OBJECT_INTERFACE(Node)                      \
     ADD_WINDOW_OBJECT_INTERFACE(Performance)               \
@@ -353,6 +341,7 @@
     ADD_WINDOW_OBJECT_INTERFACE(SVGSVGElement)             \
     ADD_WINDOW_OBJECT_INTERFACE(Text)                      \
     ADD_WINDOW_OBJECT_INTERFACE(UIEvent)                   \
+    ADD_WINDOW_OBJECT_INTERFACE(WebSocket)                 \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequest)            \
     ADD_WINDOW_OBJECT_INTERFACE(XMLHttpRequestEventTarget) \
     ADD_WINDOW_OBJECT_CONSTRUCTOR_AND_PROTOTYPE(Image, ImageConstructor, HTMLImageElementPrototype)

@@ -1,33 +1,14 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DNSPacket.h"
 #include "DNSName.h"
 #include "DNSPacketHeader.h"
+#include <AK/Debug.h>
 #include <AK/IPv4Address.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
@@ -124,13 +105,11 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
     }
 
     auto& header = *(const DNSPacketHeader*)(raw_data);
-#ifdef LOOKUPSERVER_DEBUG
-    dbgln("Got packet (ID: {})", header.id());
-    dbgln("  Question count: {}", header.question_count());
-    dbgln("    Answer count: {}", header.answer_count());
-    dbgln(" Authority count: {}", header.authority_count());
-    dbgln("Additional count: {}", header.additional_count());
-#endif
+    dbgln_if(LOOKUPSERVER_DEBUG, "Got packet (ID: {})", header.id());
+    dbgln_if(LOOKUPSERVER_DEBUG, "  Question count: {}", header.question_count());
+    dbgln_if(LOOKUPSERVER_DEBUG, "    Answer count: {}", header.answer_count());
+    dbgln_if(LOOKUPSERVER_DEBUG, " Authority count: {}", header.authority_count());
+    dbgln_if(LOOKUPSERVER_DEBUG, "Additional count: {}", header.additional_count());
 
     DNSPacket packet;
     packet.m_id = header.id();
@@ -152,10 +131,8 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
         auto& record_and_class = *(const RawDNSAnswerQuestion*)&raw_data[offset];
         packet.m_questions.empend(name, record_and_class.record_type, record_and_class.class_code);
         offset += 4;
-#ifdef LOOKUPSERVER_DEBUG
         auto& question = packet.m_questions.last();
-        dbgln("Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
-#endif
+        dbgln_if(LOOKUPSERVER_DEBUG, "Question #{}: name=_{}_, type={}, class={}", i, question.name(), question.record_type(), question.class_code());
     }
 
     for (u16 i = 0; i < header.answer_count(); ++i) {
@@ -176,9 +153,7 @@ Optional<DNSPacket> DNSPacket::from_raw_packet(const u8* raw_data, size_t raw_si
             // FIXME: Parse some other record types perhaps?
             dbgln("data=(unimplemented record type {})", record.type());
         }
-#ifdef LOOKUPSERVER_DEBUG
-        dbgln("Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
-#endif
+        dbgln_if(LOOKUPSERVER_DEBUG, "Answer   #{}: name=_{}_, type={}, ttl={}, length={}, data=_{}_", i, name, record.type(), record.ttl(), record.data_length(), data);
         packet.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
         offset += record.data_length();
     }

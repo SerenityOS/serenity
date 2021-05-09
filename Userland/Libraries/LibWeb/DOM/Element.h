@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -49,7 +29,9 @@ public:
     Element(Document&, QualifiedName);
     virtual ~Element() override;
 
-    virtual FlyString node_name() const final { return m_qualified_name.local_name(); }
+    const String& qualified_name() const { return m_qualified_name.as_string(); }
+    String html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
     const FlyString& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
@@ -102,8 +84,8 @@ public:
     bool is_focused() const;
     virtual bool is_focusable() const { return false; }
 
-    NonnullRefPtrVector<Element> get_elements_by_tag_name(const FlyString&) const;
-    NonnullRefPtrVector<Element> get_elements_by_class_name(const FlyString&) const;
+    NonnullRefPtr<HTMLCollection> get_elements_by_tag_name(FlyString const&);
+    NonnullRefPtr<HTMLCollection> get_elements_by_class_name(FlyString const&);
 
     ShadowRoot* shadow_root() { return m_shadow_root; }
     const ShadowRoot* shadow_root() const { return m_shadow_root; }
@@ -116,7 +98,10 @@ private:
     Attribute* find_attribute(const FlyString& name);
     const Attribute* find_attribute(const FlyString& name) const;
 
+    void make_html_uppercased_qualified_name();
+
     QualifiedName m_qualified_name;
+    String m_html_uppercased_qualified_name;
     Vector<Attribute> m_attributes;
 
     RefPtr<CSS::CSSStyleDeclaration> m_inline_style;

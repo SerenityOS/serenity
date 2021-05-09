@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <Kernel/Process.h>
@@ -93,6 +73,31 @@ KResultOr<int> Process::sys$setgid(gid_t new_gid)
     return 0;
 }
 
+KResultOr<int> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
+{
+    REQUIRE_PROMISE(id);
+
+    if (new_ruid == (uid_t)-1)
+        new_ruid = uid();
+    if (new_euid == (uid_t)-1)
+        new_euid = euid();
+
+    auto ok = [this](uid_t id) { return id == uid() || id == euid() || id == suid(); };
+    if (!ok(new_ruid) || !ok(new_euid))
+        return EPERM;
+
+    if (new_ruid < (uid_t)-1 || new_euid < (uid_t)-1)
+        return EINVAL;
+
+    if (euid() != new_euid)
+        set_dumpable(false);
+
+    ProtectedDataMutationScope scope { *this };
+    m_uid = new_ruid;
+    m_euid = new_euid;
+    return 0;
+}
+
 KResultOr<int> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
 {
     REQUIRE_PROMISE(id);
@@ -158,7 +163,8 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
     }
 
     Vector<gid_t> new_extra_gids;
-    new_extra_gids.resize(count);
+    if (!new_extra_gids.try_resize(count))
+        return ENOMEM;
     if (!copy_n_from_user(new_extra_gids.data(), user_gids, count))
         return EFAULT;
 
@@ -169,7 +175,8 @@ KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> use
     }
 
     ProtectedDataMutationScope scope { *this };
-    m_extra_gids.resize(unique_extra_gids.size());
+    if (!m_extra_gids.try_resize(unique_extra_gids.size()))
+        return ENOMEM;
     size_t i = 0;
     for (auto& extra_gid : unique_extra_gids) {
         if (extra_gid == gid())

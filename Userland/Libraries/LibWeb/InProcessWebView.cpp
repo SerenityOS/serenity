@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/URL.h>
@@ -245,7 +225,7 @@ void InProcessWebView::layout_and_sync_size()
 
 void InProcessWebView::resize_event(GUI::ResizeEvent& event)
 {
-    GUI::ScrollableWidget::resize_event(event);
+    GUI::AbstractScrollableWidget::resize_event(event);
     layout_and_sync_size();
 }
 
@@ -274,25 +254,25 @@ void InProcessWebView::paint_event(GUI::PaintEvent& event)
 void InProcessWebView::mousemove_event(GUI::MouseEvent& event)
 {
     page().handle_mousemove(to_content_position(event.position()), event.buttons(), event.modifiers());
-    GUI::ScrollableWidget::mousemove_event(event);
+    GUI::AbstractScrollableWidget::mousemove_event(event);
 }
 
 void InProcessWebView::mousedown_event(GUI::MouseEvent& event)
 {
     page().handle_mousedown(to_content_position(event.position()), event.button(), event.modifiers());
-    GUI::ScrollableWidget::mousedown_event(event);
+    GUI::AbstractScrollableWidget::mousedown_event(event);
 }
 
 void InProcessWebView::mouseup_event(GUI::MouseEvent& event)
 {
     page().handle_mouseup(to_content_position(event.position()), event.button(), event.modifiers());
-    GUI::ScrollableWidget::mouseup_event(event);
+    GUI::AbstractScrollableWidget::mouseup_event(event);
 }
 
 void InProcessWebView::mousewheel_event(GUI::MouseEvent& event)
 {
     page().handle_mousewheel(to_content_position(event.position()), event.button(), event.modifiers(), event.wheel_delta());
-    GUI::ScrollableWidget::mousewheel_event(event);
+    GUI::AbstractScrollableWidget::mousewheel_event(event);
 }
 
 void InProcessWebView::keydown_event(GUI::KeyEvent& event)
@@ -327,7 +307,7 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
             break;
         default:
             if (!page_accepted_event) {
-                ScrollableWidget::keydown_event(event);
+                AbstractScrollableWidget::keydown_event(event);
                 return;
             }
             break;
@@ -411,7 +391,7 @@ void InProcessWebView::drop_event(GUI::DropEvent& event)
             return;
         }
     }
-    ScrollableWidget::drop_event(event);
+    AbstractScrollableWidget::drop_event(event);
 }
 
 void InProcessWebView::page_did_request_alert(const String& message)

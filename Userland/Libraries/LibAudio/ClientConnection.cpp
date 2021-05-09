@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibAudio/Buffer.h>
@@ -36,14 +16,14 @@ ClientConnection::ClientConnection()
 
 void ClientConnection::handshake()
 {
-    send_sync<Messages::AudioServer::Greet>();
+    greet();
 }
 
 void ClientConnection::enqueue(const Buffer& buffer)
 {
     for (;;) {
-        auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-        if (response->success())
+        auto success = enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
+        if (success)
             break;
         sleep(1);
     }
@@ -51,71 +31,25 @@ void ClientConnection::enqueue(const Buffer& buffer)
 
 bool ClientConnection::try_enqueue(const Buffer& buffer)
 {
-    auto response = send_sync<Messages::AudioServer::EnqueueBuffer>(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
-    return response->success();
+    return enqueue_buffer(buffer.anonymous_buffer(), buffer.id(), buffer.sample_count());
 }
 
-bool ClientConnection::get_muted()
-{
-    return send_sync<Messages::AudioServer::GetMuted>()->muted();
-}
-
-void ClientConnection::set_muted(bool muted)
-{
-    send_sync<Messages::AudioServer::SetMuted>(muted);
-}
-
-int ClientConnection::get_main_mix_volume()
-{
-    return send_sync<Messages::AudioServer::GetMainMixVolume>()->volume();
-}
-
-void ClientConnection::set_main_mix_volume(int volume)
-{
-    send_sync<Messages::AudioServer::SetMainMixVolume>(volume);
-}
-
-int ClientConnection::get_remaining_samples()
-{
-    return send_sync<Messages::AudioServer::GetRemainingSamples>()->remaining_samples();
-}
-
-int ClientConnection::get_played_samples()
-{
-    return send_sync<Messages::AudioServer::GetPlayedSamples>()->played_samples();
-}
-
-void ClientConnection::set_paused(bool paused)
-{
-    send_sync<Messages::AudioServer::SetPaused>(paused);
-}
-
-void ClientConnection::clear_buffer(bool paused)
-{
-    send_sync<Messages::AudioServer::ClearBuffer>(paused);
-}
-
-int ClientConnection::get_playing_buffer()
-{
-    return send_sync<Messages::AudioServer::GetPlayingBuffer>()->buffer_id();
-}
-
-void ClientConnection::handle(const Messages::AudioClient::FinishedPlayingBuffer& message)
+void ClientConnection::finished_playing_buffer(i32 buffer_id)
 {
     if (on_finish_playing_buffer)
-        on_finish_playing_buffer(message.buffer_id());
+        on_finish_playing_buffer(buffer_id);
 }
 
-void ClientConnection::handle(const Messages::AudioClient::MutedStateChanged& message)
+void ClientConnection::muted_state_changed(bool muted)
 {
     if (on_muted_state_change)
-        on_muted_state_change(message.muted());
+        on_muted_state_change(muted);
 }
 
-void ClientConnection::handle(const Messages::AudioClient::MainMixVolumeChanged& message)
+void ClientConnection::main_mix_volume_changed(i32 volume)
 {
     if (on_main_mix_volume_change)
-        on_main_mix_volume_change(message.volume());
+        on_main_mix_volume_change(volume);
 }
 
 }

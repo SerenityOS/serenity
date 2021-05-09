@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * 2018-2021, the SerenityOS developers
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Editor.h"
 #include "Debugger/Debugger.h"
+#include "Debugger/EvaluateExpressionDialog.h"
 #include "EditorWrapper.h"
 #include "HackStudio.h"
 #include "Language.h"
@@ -36,6 +17,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibCpp/SyntaxHighlighter.h>
+#include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/GMLSyntaxHighlighter.h>
 #include <LibGUI/INISyntaxHighlighter.h>
@@ -62,6 +44,28 @@ Editor::Editor()
     m_documentation_tooltip_window->set_rect(0, 0, 500, 400);
     m_documentation_tooltip_window->set_window_type(GUI::WindowType::Tooltip);
     m_documentation_page_view = m_documentation_tooltip_window->set_main_widget<Web::OutOfProcessWebView>();
+    m_evaluate_expression_action = GUI::Action::create("Evaluate expression", { Mod_Ctrl, Key_E }, [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program is not running", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto dialog = EvaluateExpressionDialog::construct(window());
+        dialog->exec();
+    });
+    m_move_execution_to_line_action = GUI::Action::create("Set execution point to line", [this](auto&) {
+        if (!execution_position().has_value()) {
+            GUI::MessageBox::show(window(), "Program must be paused", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        auto success = Debugger::the().set_execution_position(currently_open_file(), cursor().line());
+        if (success) {
+            set_execution_position(cursor().line());
+        } else {
+            GUI::MessageBox::show(window(), "Failed to set execution position", "Error", GUI::MessageBox::Type::Error);
+        }
+    });
+    add_custom_context_menu_action(*m_evaluate_expression_action);
+    add_custom_context_menu_action(*m_move_execution_to_line_action);
 }
 
 Editor::~Editor()
@@ -142,7 +146,7 @@ static HashMap<String, String>& man_paths()
         // FIXME: This should also search man3, possibly other places..
         Core::DirIterator it("/usr/share/man/man2", Core::DirIterator::Flags::SkipDots);
         while (it.has_next()) {
-            auto path = String::formatted("/usr/share/man/man2/{}", it.next_path());
+            auto path = it.next_full_path();
             auto title = LexicalPath(path).title();
             paths.set(title, path);
         }
@@ -484,13 +488,13 @@ void Editor::LanguageServerAidedAutocompleteProvider::provide_completions(Functi
         data.value().position.column());
 }
 
-void Editor::on_edit_action(const GUI::Command& command)
+void Editor::will_execute(GUI::TextDocumentUndoCommand const& command)
 {
     if (!m_language_client)
         return;
 
-    if (command.is_insert_text()) {
-        const GUI::InsertTextCommand& insert_command = static_cast<const GUI::InsertTextCommand&>(command);
+    if (is<GUI::InsertTextCommand>(command)) {
+        auto const& insert_command = static_cast<GUI::InsertTextCommand const&>(command);
         m_language_client->insert_text(
             code_document().file_path(),
             insert_command.text(),
@@ -499,8 +503,8 @@ void Editor::on_edit_action(const GUI::Command& command)
         return;
     }
 
-    if (command.is_remove_text()) {
-        const GUI::RemoveTextCommand& remove_command = static_cast<const GUI::RemoveTextCommand&>(command);
+    if (is<GUI::RemoveTextCommand>(command)) {
+        auto const& remove_command = static_cast<GUI::RemoveTextCommand const&>(command);
         m_language_client->remove_text(
             code_document().file_path(),
             remove_command.range().start().line(),

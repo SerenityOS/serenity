@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020-2021, Linus Groh <mail@linusgroh.de>
- * All rights reserved.
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -39,6 +19,7 @@
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
+#include <LibJS/Runtime/TemporaryClearException.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
@@ -164,12 +145,20 @@ bool Object::prevent_extensions()
 bool Object::set_integrity_level(IntegrityLevel level)
 {
     // FIXME: This feels clunky and should get nicer abstractions.
-    auto update_property = [this](auto& key, auto attributes) {
-        auto property_name = PropertyName::from_value(global_object(), key);
-        auto metadata = shape().lookup(property_name.to_string_or_symbol());
-        VERIFY(metadata.has_value());
-        auto value = get_direct(metadata->offset);
-        define_property(property_name, value, metadata->attributes.bits() & attributes);
+    auto update_property = [this](auto& property_name, auto new_attributes) {
+        if (property_name.is_number()) {
+            auto value_and_attributes = m_indexed_properties.get(nullptr, property_name.as_number(), false).value();
+            auto value = value_and_attributes.value;
+            auto attributes = value_and_attributes.attributes.bits() & new_attributes;
+            m_indexed_properties.put(nullptr, property_name.as_number(), value, attributes, false);
+        } else {
+            auto metadata = shape().lookup(property_name.to_string_or_symbol()).value();
+            auto attributes = metadata.attributes.bits() & new_attributes;
+            if (m_shape->is_unique())
+                m_shape->reconfigure_property_in_unique_shape(property_name.to_string_or_symbol(), attributes);
+            else
+                set_shape(*m_shape->create_configure_transition(property_name.to_string_or_symbol(), attributes));
+        }
     };
 
     auto& vm = this->vm();
@@ -184,7 +173,13 @@ bool Object::set_integrity_level(IntegrityLevel level)
     switch (level) {
     case IntegrityLevel::Sealed:
         for (auto& key : keys) {
-            update_property(key, ~Attribute::Configurable);
+            auto property_name = PropertyName::from_value(global_object(), key);
+            if (property_name.is_string()) {
+                i32 property_index = property_name.as_string().to_int().value_or(-1);
+                if (property_index >= 0)
+                    property_name = property_index;
+            }
+            update_property(property_name, ~Attribute::Configurable);
             if (vm.exception())
                 return {};
         }
@@ -192,12 +187,17 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Frozen:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
+            if (property_name.is_string()) {
+                i32 property_index = property_name.as_string().to_int().value_or(-1);
+                if (property_index >= 0)
+                    property_name = property_index;
+            }
             auto property_descriptor = get_own_property_descriptor(property_name);
             VERIFY(property_descriptor.has_value());
             u8 attributes = property_descriptor->is_accessor_descriptor()
                 ? ~Attribute::Configurable
                 : ~Attribute::Configurable & ~Attribute::Writable;
-            update_property(key, attributes);
+            update_property(property_name, attributes);
             if (vm.exception())
                 return {};
         }
@@ -368,8 +368,12 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
             return {};
         value = existing_value.value().value;
         attributes = existing_value.value().attributes;
-        attributes = default_attributes;
     } else {
+        if (property_name.is_string()) {
+            i32 property_index = property_name.as_string().to_int().value_or(-1);
+            if (property_index >= 0)
+                return get_own_property_descriptor(property_index);
+        }
         auto metadata = shape().lookup(property_name.to_string_or_symbol());
         if (!metadata.has_value())
             return {};
@@ -490,9 +494,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
             return false;
         }
 
-#if OBJECT_DEBUG
-        dbgln("Defining new property {} with accessor descriptor {{ attributes={}, getter={}, setter={} }}", property_name.to_display_string(), attributes, getter, setter);
-#endif
+        dbgln_if(OBJECT_DEBUG, "Defining new property {} with accessor descriptor {{ attributes={}, getter={}, setter={} }}", property_name.to_display_string(), attributes, getter, setter);
 
         return define_property(property_name, Accessor::create(vm, getter_function, setter_function), attributes, throw_exceptions);
     }
@@ -510,9 +512,7 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
     if (vm.exception())
         return {};
 
-#if OBJECT_DEBUG
-    dbgln("Defining new property {} with data descriptor {{ attributes={}, value={} }}", property_name.to_display_string(), attributes, value);
-#endif
+    dbgln_if(OBJECT_DEBUG, "Defining new property {} with data descriptor {{ attributes={}, value={} }}", property_name.to_display_string(), attributes, value);
 
     return define_property(property_name, value, attributes, throw_exceptions);
 }
@@ -590,9 +590,7 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
     bool new_property = !metadata.has_value();
 
     if (!is_extensible() && new_property) {
-#if OBJECT_DEBUG
-        dbgln("Disallow define_property of non-extensible object");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow define_property of non-extensible object");
         if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string());
         return false;
@@ -619,9 +617,7 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
     }
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
-#if OBJECT_DEBUG
-        dbgln("Disallow reconfig of non-configurable property");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
         if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
         return false;
@@ -635,16 +631,12 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
         }
         metadata = shape().lookup(property_name);
 
-#if OBJECT_DEBUG
-        dbgln("Reconfigured property {}, new shape says offset is {} and my storage capacity is {}", property_name.to_display_string(), metadata.value().offset, m_storage.size());
-#endif
+        dbgln_if(OBJECT_DEBUG, "Reconfigured property {}, new shape says offset is {} and my storage capacity is {}", property_name.to_display_string(), metadata.value().offset, m_storage.size());
     }
 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
-#if OBJECT_DEBUG
-        dbgln("Disallow write to non-writable property");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
         return false;
     }
 
@@ -667,9 +659,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     auto new_property = !existing_property.has_value();
 
     if (!is_extensible() && new_property) {
-#if OBJECT_DEBUG
-        dbgln("Disallow define_property of non-extensible object");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow define_property of non-extensible object");
         if (throw_exceptions && vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
         return false;
@@ -686,9 +676,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
 
     if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
-#if OBJECT_DEBUG
-        dbgln("Disallow reconfig of non-configurable property");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
         if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
         return false;
@@ -696,9 +684,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
 
     auto value_here = new_property ? Value() : existing_property.value().value;
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
-#if OBJECT_DEBUG
-        dbgln("Disallow write to non-writable property");
-#endif
+        dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
         return false;
     }
 
@@ -804,6 +790,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
 
 Value Object::get_without_side_effects(const PropertyName& property_name) const
 {
+    TemporaryClearException clear_exception(vm());
     return get(property_name, {}, true);
 }
 

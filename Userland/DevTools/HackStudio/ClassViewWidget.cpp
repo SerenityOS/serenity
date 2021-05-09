@@ -1,33 +1,16 @@
 /*
  * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "ClassViewWidget.h"
 #include "HackStudio.h"
 #include "ProjectDeclarations.h"
+#include <AK/BinarySearch.h>
+#include <AK/StdLibExtras.h>
 #include <LibGUI/BoxLayout.h>
+#include <string.h>
 
 namespace HackStudio {
 
@@ -50,7 +33,7 @@ ClassViewWidget::ClassViewWidget()
 
 RefPtr<ClassViewModel> ClassViewModel::create()
 {
-    return adopt(*new ClassViewModel());
+    return adopt_ref(*new ClassViewModel());
 }
 
 int ClassViewModel::row_count(const GUI::ModelIndex& index) const
@@ -127,6 +110,22 @@ ClassViewModel::ClassViewModel()
     });
 }
 
+static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& children, NonnullOwnPtr<ClassViewNode>&& node_ptr, ClassViewNode* parent, const GUI::AutocompleteProvider::Declaration* declaration)
+{
+    node_ptr->parent = parent;
+    node_ptr->declaration = declaration;
+
+    size_t inserted_index = 0;
+    ClassViewNode& node = *node_ptr;
+    children.insert_before_matching(
+        move(node_ptr), [&node](auto& other_node) {
+            return strncmp(node.name.characters_without_null_termination(), other_node->name.characters_without_null_termination(), min(node.name.length(), other_node->name.length())) < 0;
+        },
+        0, &inserted_index);
+
+    return children.at(inserted_index);
+}
+
 void ClassViewModel::add_declaration(const GUI::AutocompleteProvider::Declaration& decl)
 {
     ClassViewNode* parent = nullptr;
@@ -160,9 +159,7 @@ void ClassViewModel::add_declaration(const GUI::AutocompleteProvider::Declaratio
                 continue;
             }
 
-            parent->children.append(make<ClassViewNode>(scope));
-            parent->children.last().parent = parent;
-            parent = &parent->children.last();
+            parent = &add_child_node(parent->children, make<ClassViewNode>(scope), parent, nullptr);
         }
     }
 
@@ -184,9 +181,7 @@ void ClassViewModel::add_declaration(const GUI::AutocompleteProvider::Declaratio
         }
     }
     if (!already_exists) {
-        children_of_parent->append(make<ClassViewNode>(decl.name));
-        children_of_parent->last().declaration = &decl;
-        children_of_parent->last().parent = parent;
+        add_child_node(*children_of_parent, make<ClassViewNode>(decl.name), parent, &decl);
     }
 }
 

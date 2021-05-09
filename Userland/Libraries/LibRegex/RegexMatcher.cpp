@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Emanuel Sprung <emanuel.sprung@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "RegexMatcher.h"
@@ -64,12 +44,12 @@ template<class Parser>
 String Regex<Parser>::error_string(Optional<String> message) const
 {
     StringBuilder eb;
-    eb.appendf("Error during parsing of regular expression:\n");
-    eb.appendf("    %s\n    ", pattern_value.characters());
+    eb.append("Error during parsing of regular expression:\n");
+    eb.appendff("    {}\n    ", pattern_value);
     for (size_t i = 0; i < parser_result.error_token.position(); ++i)
-        eb.append(" ");
+        eb.append(' ');
 
-    eb.appendf("^---- %s", message.value_or(get_error_string(parser_result.error)).characters());
+    eb.appendff("^---- {}", message.value_or(get_error_string(parser_result.error)));
     return eb.build();
 }
 
@@ -102,9 +82,21 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
     input.regex_options = m_regex_options | regex_options.value_or({}).value();
     input.start_offset = m_pattern.start_offset;
     output.operations = 0;
+    size_t lines_to_skip = 0;
 
-    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
-        VERIFY(views.size() == 1);
+    if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful)) {
+        if (views.size() > 1 && input.start_offset > views.first().length()) {
+            dbgln_if(REGEX_DEBUG, "Started with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+            for (auto& view : views) {
+                if (input.start_offset < view.length() + 1)
+                    break;
+                ++lines_to_skip;
+                input.start_offset -= view.length() + 1;
+                input.global_offset += view.length() + 1;
+            }
+            dbgln_if(REGEX_DEBUG, "Ended with start={}, goff={}, skip={}", input.start_offset, input.global_offset, lines_to_skip);
+        }
+    }
 
     if (c_match_preallocation_count) {
         output.matches.ensure_capacity(c_match_preallocation_count);
@@ -147,12 +139,18 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
         continue_search = false;
 
     for (auto& view : views) {
+        if (lines_to_skip != 0) {
+            ++input.line;
+            --lines_to_skip;
+            continue;
+        }
         input.view = view;
         dbgln_if(REGEX_DEBUG, "[match] Starting match with view ({}): _{}_", view.length(), view);
 
         auto view_length = view.length();
         size_t view_index = m_pattern.start_offset;
         state.string_position = view_index;
+        bool succeeded = false;
 
         if (view_index == view_length && m_pattern.parser_result.match_length_minimum == 0) {
             // Run the code until it tries to consume something.
@@ -202,6 +200,7 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                 return { false, 0, {}, {}, {}, output.operations };
 
             if (success.value()) {
+                succeeded = true;
 
                 if (input.regex_options.has_flag_set(AllFlags::MatchNotEndOfLine) && state.string_position == input.view.length()) {
                     if (!continue_search)
@@ -214,10 +213,8 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
                     continue;
                 }
 
-                if constexpr (REGEX_DEBUG) {
-                    dbgln("state.string_position={}, view_index={}", state.string_position, view_index);
-                    dbgln("[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
-                }
+                dbgln_if(REGEX_DEBUG, "state.string_position={}, view_index={}", state.string_position, view_index);
+                dbgln_if(REGEX_DEBUG, "[match] Found a match (length={}): '{}'", state.string_position - view_index, input.view.substring_view(view_index, state.string_position - view_index));
 
                 ++match_count;
 
@@ -249,6 +246,9 @@ RegexResult Matcher<Parser>::match(const Vector<RegexStringView> views, Optional
 
         if (input.regex_options.has_flag_set(AllFlags::Internal_Stateful))
             m_pattern.start_offset = state.string_position;
+
+        if (succeeded && !continue_search)
+            break;
     }
 
     MatchOutput output_copy;

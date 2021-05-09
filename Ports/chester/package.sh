@@ -4,14 +4,14 @@ useconfigure=true
 version=git
 depends="SDL2"
 workdir=chester-public
-configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMake/CMakeToolchain.txt"
-files="https://github.com/veikkos/chester/archive/public.tar.gz chester.tar.gz f09d797209e7bfd9b1460d2540525186"
-auth_type=md5
+configopts="-DCMAKE_TOOLCHAIN_FILE=${SERENITY_SOURCE_DIR}/Toolchain/CMake/CMakeToolchain.txt"
+files="https://github.com/veikkos/chester/archive/public.tar.gz chester.tar.gz b3ea7ad40608e1050fa434258f5c69b93e7bad10523c4c4a86fe08d1442a907b"
+auth_type=sha256
 
 configure() {
     run cmake $configopts
 }
 
 install() {
-    run cp bin/chester "${SERENITY_BUILD_DIR}/Root/bin"
+    run cp bin/chester "${SERENITY_INSTALL_ROOT}/bin"
 }

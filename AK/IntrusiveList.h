@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -33,15 +13,32 @@
 
 namespace AK {
 
+namespace Detail {
 template<typename T, typename Container = RawPtr<T>>
 class IntrusiveListNode;
 
 template<typename T, typename Container>
+struct SubstituteIntrusiveListNodeContainerType {
+    using Type = Container;
+};
+
+template<typename T>
+struct SubstituteIntrusiveListNodeContainerType<T, NonnullRefPtr<T>> {
+    using Type = RefPtr<T>;
+};
+}
+
+template<typename T, typename Container = RawPtr<T>>
+using IntrusiveListNode = Detail::IntrusiveListNode<T, typename Detail::SubstituteIntrusiveListNodeContainerType<T, Container>::Type>;
+
+template<typename T, typename Container>
 class IntrusiveListStorage {
 private:
-    friend class IntrusiveListNode<T, Container>;
+    friend class Detail::IntrusiveListNode<T, Container>;
+
     template<class T_, typename Container_, IntrusiveListNode<T_, Container_> T_::*member>
     friend class IntrusiveList;
+
     IntrusiveListNode<T, Container>* m_first { nullptr };
     IntrusiveListNode<T, Container>* m_last { nullptr };
 };
@@ -132,6 +129,8 @@ template<typename Contained>
 struct SelfReferenceIfNeeded<Contained, true> {
 };
 
+namespace Detail {
+
 template<typename T, typename Container>
 class IntrusiveListNode {
 public:
@@ -141,14 +140,21 @@ public:
 
     static constexpr bool IsRaw = IsPointer<Container>;
 
+    // Note: For some reason, clang does not consider `member` as declared here, and as declared above (`IntrusiveListNode<T, Container> T::*`)
+    //       to be of equal types. so for now, just make the members public on clang.
+#ifndef __clang__
 private:
     template<class T_, typename Container_, IntrusiveListNode<T_, Container_> T_::*member>
-    friend class IntrusiveList;
+    friend class ::AK::IntrusiveList;
+#endif
+
     IntrusiveListStorage<T, Container>* m_storage = nullptr;
     IntrusiveListNode<T, Container>* m_next = nullptr;
     IntrusiveListNode<T, Container>* m_prev = nullptr;
     SelfReferenceIfNeeded<Container, IsRaw> m_self;
 };
+
+}
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline typename IntrusiveList<T, Container, member>::Iterator& IntrusiveList<T, Container, member>::Iterator::erase()
@@ -246,7 +252,7 @@ inline Container IntrusiveList<T, Container, member>::first() const
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline Container IntrusiveList<T, Container, member>::take_first()
 {
-    if (auto* ptr = first()) {
+    if (Container ptr = first()) {
         remove(*ptr);
         return ptr;
     }
@@ -256,7 +262,7 @@ inline Container IntrusiveList<T, Container, member>::take_first()
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline Container IntrusiveList<T, Container, member>::take_last()
 {
-    if (auto* ptr = last()) {
+    if (Container ptr = last()) {
         remove(*ptr);
         return ptr;
     }
@@ -309,6 +315,8 @@ inline T* IntrusiveList<T, Container, member>::node_to_value(IntrusiveListNode<T
     return bit_cast<T*>(bit_cast<unsigned char*>(&node) - bit_cast<unsigned char*>(member));
 }
 
+namespace Detail {
+
 template<typename T, typename Container>
 inline IntrusiveListNode<T, Container>::~IntrusiveListNode()
 {
@@ -341,12 +349,11 @@ inline bool IntrusiveListNode<T, Container>::is_in_list() const
     return m_storage != nullptr;
 }
 
-// Specialise IntrusiveList(Node) for NonnullRefPtr
+}
+
+// Specialise IntrusiveList for NonnullRefPtr
 // By default, intrusive lists cannot contain null entries anyway, so switch to RefPtr
 // and just make the user-facing functions deref the pointers.
-template<typename T>
-struct IntrusiveListNode<T, NonnullRefPtr<T>> : public IntrusiveListNode<T, RefPtr<T>> {
-};
 
 template<class T, IntrusiveListNode<T, NonnullRefPtr<T>> T::*member>
 class IntrusiveList<T, NonnullRefPtr<T>, member> : public IntrusiveList<T, RefPtr<T>, member> {

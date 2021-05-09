@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
@@ -54,8 +34,6 @@ constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default 
 
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
-
-extern void (*__libc_pthread_key_destroy_for_current_thread)();
 
 extern "C" {
 
@@ -143,6 +121,16 @@ void pthread_exit(void* value_ptr)
     exit_thread(value_ptr);
 }
 
+void pthread_cleanup_push([[maybe_unused]] void (*routine)(void*), [[maybe_unused]] void* arg)
+{
+    TODO();
+}
+
+void pthread_cleanup_pop([[maybe_unused]] int execute)
+{
+    TODO();
+}
+
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
     int rc = syscall(SC_join_thread, thread, exit_value_ptr);
@@ -179,18 +167,7 @@ int pthread_mutex_lock(pthread_mutex_t* mutex)
 
 int pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
-    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
-    u32 expected = false;
-    if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-        if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
-            mutex->level++;
-            return 0;
-        }
-        return EBUSY;
-    }
-    mutex->owner = pthread_self();
-    mutex->level = 0;
-    return 0;
+    return __pthread_mutex_trylock(mutex);
 }
 
 int pthread_mutex_unlock(pthread_mutex_t* mutex)
@@ -216,6 +193,12 @@ int pthread_mutexattr_settype(pthread_mutexattr_t* attr, int type)
     if (type != PTHREAD_MUTEX_NORMAL && type != PTHREAD_MUTEX_RECURSIVE)
         return EINVAL;
     attr->type = type;
+    return 0;
+}
+
+int pthread_mutexattr_gettype(pthread_mutexattr_t* attr, int* type)
+{
+    *type = attr->type;
     return 0;
 }
 
@@ -428,6 +411,16 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
+int pthread_attr_getscope([[maybe_unused]] const pthread_attr_t* attributes, [[maybe_unused]] int* contention_scope)
+{
+    return 0;
+}
+
+int pthread_attr_setscope([[maybe_unused]] pthread_attr_t* attributes, [[maybe_unused]] int contention_scope)
+{
+    return 0;
+}
+
 int pthread_getschedparam([[maybe_unused]] pthread_t thread, [[maybe_unused]] int* policy, [[maybe_unused]] struct sched_param* param)
 {
     return 0;
@@ -455,7 +448,7 @@ static int futex_wait(uint32_t& futex_addr, uint32_t value, const struct timespe
 {
     int saved_errno = errno;
     // NOTE: FUTEX_WAIT takes a relative timeout, so use FUTEX_WAIT_BITSET instead!
-    int rc = futex(&futex_addr, FUTEX_WAIT_BITSET, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
+    int rc = futex(&futex_addr, FUTEX_WAIT_BITSET | FUTEX_CLOCK_REALTIME, value, abstime, nullptr, FUTEX_BITSET_MATCH_ANY);
     if (rc < 0 && errno == EAGAIN) {
         // If we didn't wait, that's not an error
         errno = saved_errno;
@@ -521,99 +514,31 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     return 0;
 }
 
-static constexpr int max_keys = PTHREAD_KEYS_MAX;
-
-typedef void (*KeyDestructor)(void*);
-
-struct KeyTable {
-    KeyDestructor destructors[max_keys] { nullptr };
-    int next { 0 };
-    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-};
-
-struct SpecificTable {
-    void* values[max_keys] { nullptr };
-};
-
-static KeyTable s_keys;
-
-__thread SpecificTable t_specifics;
+// libgcc expects this function to exist in libpthread, even
+// if it is not implemented.
+int pthread_cancel(pthread_t)
+{
+    TODO();
+}
 
 int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
 {
-    int ret = 0;
-    pthread_mutex_lock(&s_keys.mutex);
-    if (s_keys.next >= max_keys) {
-        ret = EAGAIN;
-    } else {
-        *key = s_keys.next++;
-        s_keys.destructors[*key] = destructor;
-        ret = 0;
-    }
-    pthread_mutex_unlock(&s_keys.mutex);
-    return ret;
+    return __pthread_key_create(key, destructor);
 }
 
 int pthread_key_delete(pthread_key_t key)
 {
-    if (key < 0 || key >= max_keys)
-        return EINVAL;
-    pthread_mutex_lock(&s_keys.mutex);
-    s_keys.destructors[key] = nullptr;
-    pthread_mutex_unlock(&s_keys.mutex);
-    return 0;
+    return __pthread_key_delete(key);
 }
 
 void* pthread_getspecific(pthread_key_t key)
 {
-    if (key < 0)
-        return nullptr;
-    if (key >= max_keys)
-        return nullptr;
-    return t_specifics.values[key];
+    return __pthread_getspecific(key);
 }
 
 int pthread_setspecific(pthread_key_t key, const void* value)
 {
-    if (key < 0)
-        return EINVAL;
-    if (key >= max_keys)
-        return EINVAL;
-
-    t_specifics.values[key] = const_cast<void*>(value);
-    return 0;
-}
-
-[[gnu::constructor]] static void set_libc_key_destructor()
-{
-    __libc_pthread_key_destroy_for_current_thread = __pthread_key_destroy_for_current_thread;
-}
-
-void __pthread_key_destroy_for_current_thread()
-{
-    // This function will either be called during exit_thread, for a pthread, or
-    // during global program shutdown for the main thread.
-
-    pthread_mutex_lock(&s_keys.mutex);
-    size_t num_used_keys = s_keys.next;
-
-    // Dr. POSIX accounts for weird key destructors setting their own key again.
-    // Or even, setting other unrelated keys? Odd, but whatever the Doc says goes.
-
-    for (size_t destruct_iteration = 0; destruct_iteration < PTHREAD_DESTRUCTOR_ITERATIONS; ++destruct_iteration) {
-        bool any_nonnull_destructors = false;
-        for (size_t key_index = 0; key_index < num_used_keys; ++key_index) {
-            void* value = exchange(t_specifics.values[key_index], nullptr);
-
-            if (value && s_keys.destructors[key_index]) {
-                any_nonnull_destructors = true;
-                (*s_keys.destructors[key_index])(value);
-            }
-        }
-        if (!any_nonnull_destructors)
-            break;
-    }
-    pthread_mutex_unlock(&s_keys.mutex);
+    return __pthread_setspecific(key, value);
 }
 
 int pthread_setname_np(pthread_t thread, const char* name)
@@ -638,6 +563,64 @@ int pthread_setcancelstate([[maybe_unused]] int state, [[maybe_unused]] int* old
 int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldtype)
 {
     TODO();
+}
+
+constexpr static pid_t spinlock_unlock_sentinel = 0;
+int pthread_spin_destroy(pthread_spinlock_t* lock)
+{
+    auto current = AK::atomic_load(&lock->m_lock);
+
+    if (current != spinlock_unlock_sentinel)
+        return EBUSY;
+
+    return 0;
+}
+
+int pthread_spin_init(pthread_spinlock_t* lock, [[maybe_unused]] int shared)
+{
+    lock->m_lock = spinlock_unlock_sentinel;
+    return 0;
+}
+
+int pthread_spin_lock(pthread_spinlock_t* lock)
+{
+    const auto desired = gettid();
+    while (true) {
+        auto current = AK::atomic_load(&lock->m_lock);
+
+        if (current == desired)
+            return EDEADLK;
+
+        if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire))
+            break;
+    }
+
+    return 0;
+}
+
+int pthread_spin_trylock(pthread_spinlock_t* lock)
+{
+    // We expect the current value to be unlocked, as the specification
+    // states that trylock should lock ony if it is not held by ANY thread.
+    auto current = spinlock_unlock_sentinel;
+    auto desired = gettid();
+
+    if (AK::atomic_compare_exchange_strong(&lock->m_lock, current, desired, AK::MemoryOrder::memory_order_acquire)) {
+        return 0;
+    } else {
+        return EBUSY;
+    }
+}
+
+int pthread_spin_unlock(pthread_spinlock_t* lock)
+{
+    auto current = AK::atomic_load(&lock->m_lock);
+
+    if (gettid() != current)
+        return EPERM;
+
+    AK::atomic_store(&lock->m_lock, spinlock_unlock_sentinel);
+    return 0;
 }
 
 int pthread_equal(pthread_t t1, pthread_t t2)

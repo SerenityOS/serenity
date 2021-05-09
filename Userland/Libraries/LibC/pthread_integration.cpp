@@ -1,36 +1,14 @@
 /*
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Atomic.h>
 #include <AK/NeverDestroyed.h>
-#include <AK/Types.h>
 #include <AK/Vector.h>
 #include <bits/pthread_integration.h>
 #include <sched.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 namespace {
@@ -110,9 +88,10 @@ int __pthread_self()
     return gettid();
 }
 
-int __pthread_mutex_lock(void* mutexp)
+int pthread_self() __attribute__((weak, alias("__pthread_self")));
+
+int __pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
     auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
     pthread_t this_thread = __pthread_self();
     for (;;) {
@@ -131,9 +110,10 @@ int __pthread_mutex_lock(void* mutexp)
     }
 }
 
-int __pthread_mutex_unlock(void* mutexp)
+int pthread_mutex_lock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_lock")));
+
+int __pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
     if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
         mutex->level--;
         return 0;
@@ -143,14 +123,34 @@ int __pthread_mutex_unlock(void* mutexp)
     return 0;
 }
 
-int __pthread_mutex_init(void* mutexp, const void* attrp)
+int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread_mutex_unlock")));
+
+int __pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
-    auto* mutex = reinterpret_cast<pthread_mutex_t*>(mutexp);
-    auto* attributes = reinterpret_cast<const pthread_mutexattr_t*>(attrp);
+    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
+    u32 expected = false;
+    if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
+            mutex->level++;
+            return 0;
+        }
+        return EBUSY;
+    }
+    mutex->owner = pthread_self();
+    mutex->level = 0;
+    return 0;
+}
+
+int pthread_mutex_trylock(pthread_mutex_t* mutex) __attribute__((weak, alias("__pthread_mutex_trylock")));
+
+int __pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
+{
     mutex->lock = 0;
     mutex->owner = 0;
     mutex->level = 0;
     mutex->type = attributes ? attributes->type : __PTHREAD_MUTEX_NORMAL;
     return 0;
 }
+
+int pthread_mutex_init(pthread_mutex_t*, const pthread_mutexattr_t*) __attribute__((weak, alias("__pthread_mutex_init")));
 }

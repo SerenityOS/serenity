@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/OwnPtr.h>
@@ -36,7 +16,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEController> IDEController::initialize(PCI::Address address, bool force_pio)
 {
-    return adopt(*new IDEController(address, force_pio));
+    return adopt_ref(*new IDEController(address, force_pio));
 }
 
 bool IDEController::reset()
@@ -73,6 +53,8 @@ UNMAP_AFTER_INIT IDEController::IDEController(PCI::Address address, bool force_p
     : StorageController()
     , PCI::DeviceController(address)
 {
+    PCI::enable_io_space(address);
+    PCI::enable_memory_space(address);
     initialize(force_pio);
 }
 
@@ -155,7 +137,7 @@ UNMAP_AFTER_INIT void IDEController::initialize(bool force_pio)
         if (force_pio)
             m_channels.append(IDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));
         else
-            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_control_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
+            m_channels.append(BMIDEChannel::create(*this, irq_line, { primary_base_io, primary_control_io, bus_master_base }, IDEChannel::ChannelType::Primary));
     } else {
         if (force_pio)
             m_channels.append(IDEChannel::create(*this, { primary_base_io, primary_control_io }, IDEChannel::ChannelType::Primary));

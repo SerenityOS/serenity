@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -65,25 +45,26 @@ struct TypeErasedParameter {
         Custom
     };
 
-    static Type get_type_from_size(size_t size, bool is_unsigned)
+    template<size_t size, bool is_unsigned>
+    static consteval Type get_type_from_size()
     {
-        if (is_unsigned) {
-            if (size == 1)
+        if constexpr (is_unsigned) {
+            if constexpr (size == 1)
                 return Type::UInt8;
-            if (size == 2)
+            if constexpr (size == 2)
                 return Type::UInt16;
-            if (size == 4)
+            if constexpr (size == 4)
                 return Type::UInt32;
-            if (size == 8)
+            if constexpr (size == 8)
                 return Type::UInt64;
         } else {
-            if (size == 1)
+            if constexpr (size == 1)
                 return Type::Int8;
-            if (size == 2)
+            if constexpr (size == 2)
                 return Type::Int16;
-            if (size == 4)
+            if constexpr (size == 4)
                 return Type::Int32;
-            if (size == 8)
+            if constexpr (size == 8)
                 return Type::Int64;
         }
 
@@ -91,15 +72,41 @@ struct TypeErasedParameter {
     }
 
     template<typename T>
-    static Type get_type()
+    static consteval Type get_type()
     {
         if constexpr (IsIntegral<T>)
-            return get_type_from_size(sizeof(T), IsUnsigned<T>);
+            return get_type_from_size<sizeof(T), IsUnsigned<T>>();
         else
             return Type::Custom;
     }
 
-    size_t to_size() const;
+    constexpr size_t to_size() const
+    {
+        i64 svalue;
+
+        if (type == TypeErasedParameter::Type::UInt8)
+            svalue = *static_cast<const u8*>(value);
+        else if (type == TypeErasedParameter::Type::UInt16)
+            svalue = *static_cast<const u16*>(value);
+        else if (type == TypeErasedParameter::Type::UInt32)
+            svalue = *static_cast<const u32*>(value);
+        else if (type == TypeErasedParameter::Type::UInt64)
+            svalue = *static_cast<const u64*>(value);
+        else if (type == TypeErasedParameter::Type::Int8)
+            svalue = *static_cast<const i8*>(value);
+        else if (type == TypeErasedParameter::Type::Int16)
+            svalue = *static_cast<const i16*>(value);
+        else if (type == TypeErasedParameter::Type::Int32)
+            svalue = *static_cast<const i32*>(value);
+        else if (type == TypeErasedParameter::Type::Int64)
+            svalue = *static_cast<const i64*>(value);
+        else
+            VERIFY_NOT_REACHED();
+
+        VERIFY(svalue >= 0);
+
+        return static_cast<size_t>(svalue);
+    }
 
     // FIXME: Getters and setters.
 

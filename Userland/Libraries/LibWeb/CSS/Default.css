@@ -199,6 +199,29 @@ ol {
     padding-left: 20px;
 }
 
+ul {
+    list-style-type: disc;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+/* FIXME: Implement these using :is() :^) */
+/* :is(ul, ol) ul */
+ul ul,
+ol ul {
+    list-style-type: circle;
+}
+
+/* :is(ul, ol) :is(ul, ol) ul */
+ul ul ul,
+ol ul ul,
+ul ol ul,
+ol ol ul {
+    list-style-type: square;
+}
+
 /* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
 input[type=text] {
     border: 1px solid black;

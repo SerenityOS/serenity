@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
@@ -41,17 +21,14 @@ namespace Kernel {
 #define PATA_PRIMARY_IRQ 14
 #define PATA_SECONDARY_IRQ 15
 
-#define PCI_Mass_Storage_Class 0x1
-#define PCI_IDE_Controller_Subclass 0x1
-
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt(*new IDEChannel(controller, io_group, type));
+    return adopt_ref(*new IDEChannel(controller, io_group, type));
 }
 
 UNMAP_AFTER_INIT NonnullRefPtr<IDEChannel> IDEChannel::create(const IDEController& controller, u8 irq, IOAddressGroup io_group, ChannelType type)
 {
-    return adopt(*new IDEChannel(controller, irq, io_group, type));
+    return adopt_ref(*new IDEChannel(controller, irq, io_group, type));
 }
 
 RefPtr<StorageDevice> IDEChannel::master_device() const
@@ -74,6 +51,25 @@ UNMAP_AFTER_INIT void IDEChannel::initialize()
     else
         dbgln_if(PATA_DEBUG, "IDEChannel: {} bus master base disabled", channel_type_string());
     m_parent_controller->enable_pin_based_interrupts();
+
+    // reset the channel
+    u8 device_control = m_io_group.control_base().in<u8>();
+    // Wait 30 milliseconds
+    IO::delay(30000);
+    m_io_group.control_base().out<u8>(device_control | (1 << 2));
+    // Wait 30 milliseconds
+    IO::delay(30000);
+    m_io_group.control_base().out<u8>(device_control);
+    // Wait up to 30 seconds before failing
+    if (!wait_until_not_busy(false, 30000)) {
+        dbgln("IDEChannel: reset failed, busy flag on master stuck");
+        return;
+    }
+    // Wait up to 30 seconds before failing
+    if (!wait_until_not_busy(true, 30000)) {
+        dbgln("IDEChannel: reset failed, busy flag on slave stuck");
+        return;
+    }
 
     detect_disks();
 
@@ -110,7 +106,7 @@ UNMAP_AFTER_INIT IDEChannel::~IDEChannel()
 
 void IDEChannel::start_request(AsyncBlockDeviceRequest& request, bool is_slave, u16 capabilities)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     VERIFY(m_current_request.is_null());
 
     dbgln_if(PATA_DEBUG, "IDEChannel::start_request");
@@ -137,7 +133,7 @@ void IDEChannel::complete_current_request(AsyncDeviceRequest::RequestResult resu
     // before Processor::deferred_call_queue returns!
     g_io_work->queue([this, result]() {
         dbgln_if(PATA_DEBUG, "IDEChannel::complete_current_request result: {}", (int)result);
-        LOCKER(m_lock);
+        Locker locker(m_lock);
         VERIFY(m_current_request);
         auto current_request = m_current_request;
         m_current_request.clear();
@@ -225,7 +221,7 @@ void IDEChannel::handle_irq(const RegisterState&)
     // This is important so that we can safely access the buffers, which could
     // trigger page faults
     g_io_work->queue([this]() {
-        LOCKER(m_lock);
+        Locker locker(m_lock);
         ScopedSpinLock lock(m_request_lock);
         if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
             dbgln_if(PATA_DEBUG, "IDEChannel: Read block {}/{}", m_current_request_block_index, m_current_request->block_count());
@@ -263,10 +259,27 @@ static void io_delay()
         IO::in8(0x3f6);
 }
 
-void IDEChannel::wait_until_not_busy()
+bool IDEChannel::wait_until_not_busy(bool slave, size_t milliseconds_timeout)
 {
-    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY)
-        ;
+    IO::delay(20);
+    m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (slave << 4)); // First, we need to select the drive itself
+    IO::delay(20);
+    size_t time_elapsed = 0;
+    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
+        IO::delay(1000);
+        time_elapsed++;
+    }
+    return time_elapsed != milliseconds_timeout;
+}
+
+bool IDEChannel::wait_until_not_busy(size_t milliseconds_timeout)
+{
+    size_t time_elapsed = 0;
+    while (m_io_group.control_base().in<u8>() & ATA_SR_BSY && time_elapsed <= milliseconds_timeout) {
+        IO::delay(1000);
+        time_elapsed++;
+    }
+    return time_elapsed != milliseconds_timeout;
 }
 
 String IDEChannel::channel_type_string() const
@@ -289,8 +302,15 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
         // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
+        IO::delay(20);
         m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xA0 | (i << 4)); // First, we need to select the drive itself
         IO::delay(20);
+
+        auto status = m_io_group.control_base().in<u8>();
+        if (status == 0x0) {
+            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string().to_lowercase(), channel_string(i));
+            continue;
+        }
 
         m_io_group.io_base().offset(ATA_REG_SECCOUNT0).out<u8>(0);
         m_io_group.io_base().offset(ATA_REG_LBA0).out<u8>(0);
@@ -298,19 +318,21 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
         m_io_group.io_base().offset(ATA_REG_LBA2).out<u8>(0);
         m_io_group.io_base().offset(ATA_REG_COMMAND).out<u8>(ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
 
-        // Wait for the BSY flag to be reset
-        while (m_io_group.control_base().in<u8>() & ATA_SR_BSY)
-            ;
-
-        if (m_io_group.control_base().in<u8>() == 0x00) {
-            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected!", channel_type_string().to_lowercase(), channel_string(i));
+        // Wait 10 second for the BSY flag to clear
+        if (!wait_until_not_busy(2000)) {
+            dbgln_if(PATA_DEBUG, "IDEChannel: No {} {} disk detected, BSY flag was not reset!", channel_type_string().to_lowercase(), channel_string(i));
             continue;
         }
 
         bool check_for_atapi = false;
+        bool device_presence = true;
         PATADiskDevice::InterfaceType interface_type = PATADiskDevice::InterfaceType::ATA;
 
+        size_t milliseconds_elapsed = 0;
         for (;;) {
+            // Wait about 10 seconds
+            if (milliseconds_elapsed > 2000)
+                break;
             u8 status = m_io_group.control_base().in<u8>();
             if (status & ATA_SR_ERR) {
                 dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device is not ATA. Will check for ATAPI.", channel_type_string(), channel_string(i));
@@ -323,6 +345,22 @@ UNMAP_AFTER_INIT void IDEChannel::detect_disks()
                 interface_type = PATADiskDevice::InterfaceType::ATA;
                 break;
             }
+
+            if (status == 0 || status == 0xFF) {
+                dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device presence - none.", channel_type_string(), channel_string(i));
+                device_presence = false;
+                break;
+            }
+
+            IO::delay(1000);
+            milliseconds_elapsed++;
+        }
+        if (!device_presence) {
+            continue;
+        }
+        if (milliseconds_elapsed > 10000) {
+            dbgln_if(PATA_DEBUG, "IDEChannel: {} {} device state unknown. Timeout exceeded.", channel_type_string(), channel_string(i));
+            continue;
         }
 
         if (check_for_atapi) {
@@ -393,7 +431,8 @@ void IDEChannel::ata_access(Direction direction, bool slave_request, u64 lba, u8
         head = (lba & 0xF000000) >> 24;
     }
 
-    wait_until_not_busy();
+    // Wait 1 second
+    wait_until_not_busy(1000);
 
     // We need to select the drive and then we wait 20 microseconds... and it doesn't hurt anything so let's just do it.
     m_io_group.io_base().offset(ATA_REG_HDDEVSEL).out<u8>(0xE0 | (static_cast<u8>(slave_request) << 4) | head);

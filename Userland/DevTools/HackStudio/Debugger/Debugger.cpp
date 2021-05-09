@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Debugger.h"
@@ -97,6 +77,21 @@ void Debugger::on_breakpoint_change(const String& file, size_t line, BreakpointC
     }
 }
 
+bool Debugger::set_execution_position(const String& file, size_t line)
+{
+    auto position = create_source_position(file, line);
+    auto session = Debugger::the().session();
+    if (!session)
+        return false;
+    auto address = session->get_address_from_source_position(position.file_path, position.line_number);
+    if (!address.has_value())
+        return false;
+    auto registers = session->get_registers();
+    registers.eip = address.value().address;
+    session->set_registers(registers);
+    return true;
+}
+
 Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& file, size_t line)
 {
     if (file.starts_with("/"))
@@ -104,10 +99,15 @@ Debug::DebugInfo::SourcePosition Debugger::create_source_position(const String& 
     return { LexicalPath::canonicalized_path(String::formatted("{}/{}", m_source_root, file)), line + 1 };
 }
 
-int Debugger::start_static()
+intptr_t Debugger::start_static()
 {
     Debugger::the().start();
     return 0;
+}
+
+void Debugger::stop()
+{
+    set_requested_debugger_action(DebuggerAction::Exit);
 }
 
 void Debugger::start()
@@ -190,11 +190,9 @@ int Debugger::debugger_loop()
             do_step_over(regs);
             return Debug::DebugSession::DebugDecision::Continue;
         case DebuggerAction::Exit:
-            // NOTE: Is detaching from the debuggee the best thing to do here?
-            // We could display a dialog in the UI, remind the user that there is
-            // a live debugged process, and ask whether they want to terminate/detach.
             dbgln("Debugger exiting");
-            return Debug::DebugSession::DebugDecision::Detach;
+            m_on_exit_callback();
+            return Debug::DebugSession::DebugDecision::Kill;
         }
         VERIFY_NOT_REACHED();
     });

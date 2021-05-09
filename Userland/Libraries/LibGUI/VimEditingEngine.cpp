@@ -1,34 +1,739 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
+#include <AK/String.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/VimEditingEngine.h>
+#include <string.h>
 
 namespace GUI {
+
+void VimCursor::move()
+{
+    if (m_forwards)
+        move_forwards();
+    else
+        move_backwards();
+}
+
+void VimCursor::move_reverse()
+{
+    if (m_forwards)
+        move_backwards();
+    else
+        move_forwards();
+}
+
+u32 VimCursor::peek()
+{
+    TextPosition saved_position = m_position;
+
+    move();
+    u32 peeked = current_char();
+
+    m_position = saved_position;
+    return peeked;
+}
+
+u32 VimCursor::peek_reverse()
+{
+    TextPosition saved_position = m_position;
+
+    move_reverse();
+    u32 peeked = current_char();
+
+    m_position = saved_position;
+    return peeked;
+}
+
+TextDocumentLine& VimCursor::current_line()
+{
+    return m_editor.line(m_position.line());
+}
+
+u32 VimCursor::current_char()
+{
+    if (on_empty_line()) {
+        // Fails all of isspace, ispunct, isalnum so should be good.
+        return 0;
+    } else {
+        return current_line().view().code_points()[m_position.column()];
+    }
+}
+
+bool VimCursor::on_empty_line()
+{
+    return current_line().length() == 0;
+}
+
+bool VimCursor::will_cross_line_boundary()
+{
+    if (on_empty_line())
+        return true;
+    else if (m_forwards && m_position.column() == current_line().length() - 1)
+        return true;
+    else if (!m_forwards && m_position.column() == 0)
+        return true;
+    else
+        return false;
+}
+
+void VimCursor::move_forwards()
+{
+    if (on_empty_line() || m_position.column() == current_line().length() - 1) {
+        if (m_position.line() == m_editor.line_count() - 1) {
+            // We have reached the end of the document, so any other
+            // forward movements are no-ops.
+            m_hit_edge = true;
+        } else {
+            m_position.set_column(0);
+            m_position.set_line(m_position.line() + 1);
+            m_crossed_line_boundary = true;
+        }
+    } else {
+        m_position.set_column(m_position.column() + 1);
+        m_crossed_line_boundary = false;
+    }
+}
+
+void VimCursor::move_backwards()
+{
+    if (m_position.column() == 0) {
+        if (m_position.line() == 0) {
+            // We have reached the start of the document, so any other
+            // backward movements are no-ops.
+            m_hit_edge = true;
+        } else {
+            m_position.set_line(m_position.line() - 1);
+            if (!on_empty_line())
+                m_position.set_column(current_line().length() - 1);
+            else
+                m_position.set_column(0);
+            m_crossed_line_boundary = true;
+        }
+    } else {
+        m_position.set_column(m_position.column() - 1);
+        m_crossed_line_boundary = false;
+    }
+}
+
+void VimMotion::add_key_code(KeyCode key, [[maybe_unused]] bool ctrl, bool shift, [[maybe_unused]] bool alt)
+{
+    if (is_complete())
+        return;
+
+    if (m_find_mode != FindMode::None) {
+        // We need to consume the next character because we are going to find
+        // until that character.
+
+        // HACK: there is no good way to obtain whether a character is alphanumeric
+        // from the keycode itself.
+        char const* keycode_str = key_code_to_string(key);
+
+        if (strlen(keycode_str) == 1 && (isalpha(keycode_str[0]) || isspace(keycode_str[0]))) {
+            m_next_character = tolower(keycode_str[0]);
+            m_unit = Unit::Find;
+        } else {
+            m_unit = Unit::Unknown;
+        }
+
+        m_is_complete = true;
+        m_should_consume_next_character = false;
+        return;
+    }
+
+    bool should_use_guirky = m_guirky_mode;
+
+    switch (key) {
+#define DIGIT(n)                        \
+    case KeyCode::Key_##n:              \
+        m_amount = (m_amount * 10) + n; \
+        break
+
+        // Digits add digits to the amount.
+        DIGIT(1);
+        DIGIT(2);
+        DIGIT(3);
+        DIGIT(4);
+        DIGIT(5);
+        DIGIT(6);
+        DIGIT(7);
+        DIGIT(8);
+        DIGIT(9);
+
+#undef DIGIT
+
+    // Home means to the beginning of the line.
+    case KeyCode::Key_Home:
+        m_unit = Unit::Character;
+        m_amount = START_OF_LINE;
+        m_is_complete = true;
+        break;
+
+    // If 0 appears while amount is 0, then it means beginning of line.
+    // Otherwise, it adds 0 to the amount.
+    case KeyCode::Key_0:
+        if (m_amount == 0) {
+            m_unit = Unit::Character;
+            m_amount = START_OF_LINE;
+            m_is_complete = true;
+        } else {
+            m_amount = m_amount * 10;
+        }
+        break;
+
+    // End or $ means end of line.
+    // TODO: d2$ in vim deletes to the end of the line and then the next line.
+    case KeyCode::Key_End:
+    case KeyCode::Key_Dollar:
+        m_unit = Unit::Character;
+        m_amount = END_OF_LINE;
+        m_is_complete = true;
+        break;
+
+    // ^ means the first non-whitespace character for this line.
+    // It deletes backwards if you're in front of it, and forwards if you're behind.
+    case KeyCode::Key_Circumflex:
+        m_unit = Unit::Character;
+        m_amount = START_OF_NON_WHITESPACE;
+        m_is_complete = true;
+        break;
+
+    // j, down or + operates on this line and amount line(s) after.
+    case KeyCode::Key_J:
+    case KeyCode::Key_Down:
+    case KeyCode::Key_Plus:
+        m_unit = Unit::Line;
+
+        if (m_amount == 0)
+            m_amount = 1;
+
+        m_is_complete = true;
+        break;
+
+    // k, up or - operates on this line and amount line(s) before.
+    case KeyCode::Key_K:
+    case KeyCode::Key_Up:
+    case KeyCode::Key_Minus:
+        m_unit = Unit::Line;
+
+        if (m_amount == 0)
+            m_amount = -1;
+        else
+            m_amount = -m_amount;
+
+        m_is_complete = true;
+        break;
+
+    // BS, h or left operates on this character and amount character(s) before.
+    case KeyCode::Key_Backspace:
+    case KeyCode::Key_H:
+    case KeyCode::Key_Left:
+        m_unit = Unit::Character;
+
+        if (m_amount == 0)
+            m_amount = -1;
+        else
+            m_amount = -m_amount;
+
+        m_is_complete = true;
+        break;
+
+    // l or right operates on this character and amount character(s) after.
+    case KeyCode::Key_L:
+    case KeyCode::Key_Right:
+        m_unit = Unit::Character;
+
+        if (m_amount > 0)
+            m_amount--;
+
+        m_is_complete = true;
+        break;
+
+    // w operates on amount word(s) after.
+    // W operates on amount WORD(s) after.
+    case KeyCode::Key_W:
+        if (shift)
+            m_unit = Unit::WORD;
+        else
+            m_unit = Unit::Word;
+
+        if (m_amount == 0)
+            m_amount = 1;
+
+        m_is_complete = true;
+        break;
+
+    // b operates on amount word(s) before.
+    // B operates on amount WORD(s) before.
+    case KeyCode::Key_B:
+        if (shift)
+            m_unit = Unit::WORD;
+        else
+            m_unit = Unit::Word;
+
+        if (m_amount == 0)
+            m_amount = -1;
+        else
+            m_amount = -m_amount;
+
+        m_is_complete = true;
+        break;
+
+    // e operates on amount of word(s) after, till the end of the last word.
+    // E operates on amount of WORD(s) after, till the end of the last WORD.
+    // ge operates on amount of word(s) before, till the end of the last word.
+    // gE operates on amount of WORD(s) before, till the end of the last WORD.
+    case KeyCode::Key_E:
+        if (shift)
+            m_unit = Unit::EndOfWORD;
+        else
+            m_unit = Unit::EndOfWord;
+
+        if (m_guirky_mode) {
+            if (m_amount == 0)
+                m_amount = -1;
+            else
+                m_amount = -m_amount;
+
+            m_guirky_mode = false;
+        } else {
+            if (m_amount == 0)
+                m_amount = 1;
+        }
+
+        m_is_complete = true;
+        break;
+
+    // g enables guirky (g-prefix commands) mode.
+    // gg operates from the start of the document to the cursor.
+    // G operates from the cursor to the end of the document.
+    case KeyCode::Key_G:
+        if (m_guirky_mode) {
+            if (shift) {
+                // gG is not a valid command in vim.
+                m_guirky_mode = false;
+                m_unit = Unit::Unknown;
+                m_is_complete = true;
+            } else {
+                m_guirky_mode = false;
+                m_unit = Unit::Document;
+                m_amount = -1;
+                m_is_complete = true;
+            }
+        } else {
+            if (shift) {
+                m_unit = Unit::Document;
+                m_amount = 1;
+                m_is_complete = true;
+            } else {
+                m_guirky_mode = true;
+            }
+        }
+        break;
+
+    // t operates until the given character.
+    case KeyCode::Key_T:
+        m_find_mode = FindMode::To;
+        m_should_consume_next_character = true;
+
+        if (m_amount == 0)
+            m_amount = 1;
+        break;
+
+    // f operates through the given character.
+    case KeyCode::Key_F:
+        m_find_mode = FindMode::Find;
+        m_should_consume_next_character = true;
+
+        if (m_amount == 0)
+            m_amount = 1;
+        break;
+
+    default:
+        m_unit = Unit::Unknown;
+        m_is_complete = true;
+        break;
+    }
+
+    if (should_use_guirky && m_guirky_mode) {
+        // If we didn't use the g then we cancel the motion.
+        m_guirky_mode = false;
+        m_unit = Unit::Unknown;
+        m_is_complete = true;
+    }
+}
+
+Optional<TextRange> VimMotion::get_range(VimEditingEngine& engine, bool normalize_for_position)
+{
+    if (!is_complete() || is_cancelled())
+        return {};
+
+    TextEditor& editor = engine.editor();
+
+    auto position = editor.cursor();
+    int amount = abs(m_amount);
+    bool forwards = m_amount >= 0;
+    VimCursor cursor { editor, position, forwards };
+
+    m_start_line = m_end_line = position.line();
+    m_start_column = m_end_column = position.column();
+
+    switch (m_unit) {
+    case Unit::Unknown:
+        VERIFY_NOT_REACHED();
+    case Unit::Document: {
+        calculate_document_range(editor);
+        break;
+    }
+    case Unit::Line: {
+        calculate_line_range(editor, normalize_for_position);
+        break;
+    }
+    case Unit::EndOfWord:
+    case Unit::Word:
+    case Unit::EndOfWORD:
+    case Unit::WORD: {
+        calculate_word_range(cursor, amount, normalize_for_position);
+        break;
+    }
+    case Unit::Character: {
+        calculate_character_range(cursor, amount, normalize_for_position);
+        break;
+    }
+    case Unit::Find: {
+        calculate_find_range(cursor, amount);
+        break;
+    }
+    }
+
+    return { TextRange { { m_start_line, m_start_column }, { m_end_line, m_end_column } } };
+}
+
+void VimMotion::calculate_document_range(TextEditor& editor)
+{
+    if (m_amount >= 0) {
+        m_end_line = editor.line_count() - 1;
+        auto& last_line = editor.line(m_end_line);
+        m_end_column = last_line.length();
+    } else {
+        m_start_line = 0;
+        m_start_column = 0;
+    }
+}
+
+void VimMotion::calculate_line_range(TextEditor& editor, bool normalize_for_position)
+{
+    // Use this line +/- m_amount lines.
+    m_start_column = 0;
+    m_end_column = 0;
+
+    if (m_amount >= 0) {
+        m_end_line = min(m_end_line + !normalize_for_position + m_amount, editor.line_count());
+
+        // We can't delete to "last line + 1", so if we're on the last line,
+        // delete until the end.
+        if (m_end_line == editor.line_count()) {
+            m_end_line--;
+            m_end_column = editor.line(m_end_line).length();
+        }
+    } else {
+        // Can't write it as max(start_line + m_amount, 0) because of unsigned
+        // shenanigans.
+        if (m_start_line <= (unsigned)-m_amount)
+            m_start_line = 0;
+        else
+            m_start_line += m_amount;
+
+        if (m_end_line == editor.line_count() - 1)
+            m_end_column = editor.line(m_end_line).length();
+        else
+            m_end_line++;
+    }
+}
+
+void VimMotion::calculate_word_range(VimCursor& cursor, int amount, bool normalize_for_position)
+{
+    enum {
+        Whitespace,
+        Word,
+        Punctuation,
+        Unknown
+    };
+    // Word is defined as a-zA-Z0-9_.
+    auto part_of_word = [](u32 ch) { return ch == '_' || isalnum(ch); };
+    auto part_of_punctuation = [](u32 ch) { return ch != '_' && ispunct(ch); };
+    auto classify = [&](u32 ch) {
+        if (isspace(ch))
+            return Whitespace;
+        else if (part_of_word(ch))
+            return Word;
+        else if (part_of_punctuation(ch))
+            return Punctuation;
+        else
+            return Unknown;
+    };
+
+    // A small explanation for the code below: Because the direction of the
+    // movement for this motion determines what the "start" and "end" of a word
+    // is, the code below treats the motions like so:
+    // - Start of word: w/W/ge/gE
+    // - End of word: e/E/b/B
+
+    while (amount > 0) {
+        if (cursor.hit_edge())
+            break;
+
+        if ((!cursor.forwards() && (m_unit == Unit::Word || m_unit == Unit::WORD))
+            || (cursor.forwards() && (m_unit == Unit::EndOfWord || m_unit == Unit::EndOfWORD))) {
+            // End-of-word motions peek at the "next" character and if its class
+            // is not the same as ours, they move over one character (to end up
+            // at the new character class). This is required because we don't
+            // want to exit the word with end-of-word motions.
+
+            if (m_unit == Unit::Word || m_unit == Unit::EndOfWord) {
+                // Word-style peeking
+                int current_class = classify(cursor.current_char());
+                int peeked_class = classify(cursor.peek());
+                if (current_class != peeked_class) {
+                    cursor.move();
+                }
+            } else {
+                // WORD-style peeking, much simpler
+                if (isspace(cursor.peek())) {
+                    cursor.move();
+                }
+            }
+        } else {
+            // Start-of-word motions want to exit the word no matter which part
+            // of it we're in.
+            if (m_unit == Unit::Word || m_unit == Unit::EndOfWord) {
+                // Word-style consumption
+                if (part_of_word(cursor.current_char())) {
+                    do {
+                        cursor.move();
+                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                            break;
+                    } while (part_of_word(cursor.current_char()));
+                } else if (part_of_punctuation(cursor.current_char())) {
+                    do {
+                        cursor.move();
+                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                            break;
+                    } while (part_of_punctuation(cursor.current_char()));
+                } else if (cursor.on_empty_line()) {
+                    cursor.move();
+                }
+            } else {
+                // WORD-style consumption
+                if (!isspace(cursor.current_char())) {
+                    do {
+                        cursor.move();
+                        if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                            break;
+                    } while (!isspace(cursor.current_char()));
+                } else if (cursor.on_empty_line()) {
+                    cursor.move();
+                }
+            }
+        }
+
+        // Now consume any space if it exists.
+        if (isspace(cursor.current_char())) {
+            do {
+                cursor.move();
+                if (cursor.hit_edge())
+                    break;
+            } while (isspace(cursor.current_char()));
+        }
+
+        if ((!cursor.forwards() && (m_unit == Unit::Word || m_unit == Unit::WORD))
+            || (cursor.forwards() && (m_unit == Unit::EndOfWord || m_unit == Unit::EndOfWORD))) {
+            // End-of-word motions consume until the class doesn't match.
+
+            if (m_unit == Unit::Word || m_unit == Unit::EndOfWord) {
+                // Word-style consumption
+                int current_class = classify(cursor.current_char());
+                while (classify(cursor.current_char()) == current_class) {
+                    cursor.move();
+                    if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                        break;
+                }
+            } else {
+                // WORD-style consumption
+                while (!isspace(cursor.current_char())) {
+                    cursor.move();
+                    if (cursor.hit_edge() || cursor.crossed_line_boundary())
+                        break;
+                }
+            }
+        }
+
+        amount--;
+    }
+
+    // If we need to normalize for position then we do a move_reverse for
+    // end-of-word motions, because vim acts on end-of-word ranges through the
+    // character your cursor is placed on but acts on start-of-words *until* the
+    // character your cursor is placed on.
+    if (normalize_for_position) {
+        if ((!cursor.forwards() && (m_unit == Unit::Word || m_unit == Unit::WORD))
+            || (cursor.forwards() && (m_unit == Unit::EndOfWord || m_unit == Unit::EndOfWORD))) {
+            if (!cursor.hit_edge())
+                cursor.move_reverse();
+        }
+    }
+
+    if (cursor.forwards()) {
+        m_end_line = cursor.current_position().line();
+        m_end_column = cursor.current_position().column() + normalize_for_position;
+    } else {
+        m_start_line = cursor.current_position().line();
+        m_start_column = cursor.current_position().column();
+    }
+}
+
+void VimMotion::calculate_character_range(VimCursor& cursor, int amount, bool normalize_for_position)
+{
+    if (m_amount == START_OF_LINE) {
+        m_start_column = 0;
+    } else if (m_amount == END_OF_LINE) {
+        m_end_column = cursor.current_line().length();
+    } else if (m_amount == START_OF_NON_WHITESPACE) {
+        // Find the first non-whitespace character and set the range from current
+        // position to it.
+        TextPosition cursor_copy = cursor.current_position();
+        cursor.current_position().set_column(0);
+
+        while (isspace(cursor.current_char())) {
+            if (cursor.will_cross_line_boundary())
+                break;
+
+            cursor.move_forwards();
+        }
+
+        if (cursor_copy < cursor.current_position())
+            m_end_column = cursor.current_position().column() + 1;
+        else
+            m_start_column = cursor.current_position().column();
+    } else {
+        while (amount > 0) {
+            if (cursor.hit_edge() || cursor.will_cross_line_boundary())
+                break;
+
+            cursor.move();
+            amount--;
+        }
+
+        if (cursor.forwards()) {
+            m_end_column = cursor.current_position().column() + 1 + normalize_for_position;
+        } else {
+            m_start_column = cursor.current_position().column();
+        }
+    }
+}
+
+void VimMotion::calculate_find_range(VimCursor& cursor, int amount)
+{
+    // Find the searched character (case-insensitive).
+    while (amount > 0) {
+        cursor.move_forwards();
+
+        while ((unsigned)tolower(cursor.current_char()) != m_next_character) {
+            if (cursor.will_cross_line_boundary())
+                break;
+
+            cursor.move_forwards();
+        }
+
+        amount--;
+    }
+
+    // If we didn't find our character before reaching the end of the line, then
+    // we want the range to be invalid so no operation is performed.
+    if ((unsigned)tolower(cursor.current_char()) == m_next_character) {
+        // We found our character.
+        bool in_find_mode = m_find_mode == FindMode::Find;
+        m_end_column = cursor.current_position().column() + in_find_mode;
+    }
+
+    m_find_mode = FindMode::None;
+}
+
+Optional<TextPosition> VimMotion::get_position(VimEditingEngine& engine, bool in_visual_mode)
+{
+    auto range_optional = get_range(engine, true);
+    if (!range_optional.has_value())
+        return {};
+
+    auto range = range_optional.value();
+    if (!range.is_valid())
+        return {};
+
+    TextEditor& editor = engine.editor();
+    auto cursor_position = editor.cursor();
+
+    switch (m_unit) {
+    case Unit::Document: {
+        if (range.start().line() < cursor_position.line()) {
+            cursor_position.set_line(range.start().line());
+        } else {
+            cursor_position.set_line(range.end().line());
+        }
+        cursor_position.set_column(0);
+
+        return { cursor_position };
+    }
+    case Unit::Line: {
+        size_t line_number;
+        // Because we select lines from start to end, we can't use that
+        // to get the new position, so we do some correction here.
+        if (range.start().line() < cursor_position.line() || m_amount < 0) {
+            line_number = range.start().line();
+        } else {
+            line_number = range.end().line();
+        }
+
+        auto& line = editor.line(line_number);
+
+        cursor_position.set_line(line_number);
+        if (line.length() <= cursor_position.column()) {
+            cursor_position.set_column(line.length() - 1);
+        }
+
+        return { cursor_position };
+    }
+    default: {
+        if (range.start() < cursor_position) {
+            return { range.start() };
+        } else {
+            // Ranges are end-exclusive. The normalize_for_position argument we pass
+            // above in get_range normalizes some values which shouldn't be
+            // end-exclusive during normal operations.
+            bool is_at_start = range.end().column() == 0;
+            auto& line = editor.line(range.end().line());
+
+            size_t column = is_at_start ? 0 : range.end().column() - 1;
+            column = min(column, line.length() - (in_visual_mode ? 0 : 1));
+            // Need to not go beyond the last character, as standard in vim.
+
+            return { TextPosition { range.end().line(), column } };
+        }
+    }
+    }
+}
+
+void VimMotion::reset()
+{
+    m_unit = Unit::Unknown;
+    m_amount = 0;
+    m_is_complete = false;
+}
 
 CursorWidth VimEditingEngine::cursor_width() const
 {
@@ -37,9 +742,6 @@ CursorWidth VimEditingEngine::cursor_width() const
 
 bool VimEditingEngine::on_key(const KeyEvent& event)
 {
-    if (EditingEngine::on_key(event))
-        return true;
-
     switch (m_vim_mode) {
     case (VimMode::Insert):
         return on_key_in_insert_mode(event);
@@ -56,7 +758,12 @@ bool VimEditingEngine::on_key(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 {
+    if (EditingEngine::on_key(event))
+        return true;
+
     if (event.key() == KeyCode::Key_Escape || (event.ctrl() && event.key() == KeyCode::Key_LeftBracket) || (event.ctrl() && event.key() == KeyCode::Key_C)) {
+        if (m_editor->cursor().column() > 0)
+            move_one_left();
         switch_to_normal_mode();
         return true;
     }
@@ -65,57 +772,61 @@ bool VimEditingEngine::on_key_in_insert_mode(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 {
-    // FIXME: changing or deleting word methods don't correctly support 1 letter words.
-    // For example, in the line 'return 0;' with the cursor on the '0',
-    // keys 'cw' will move to the delete '0;' rather than just the '0'.
+    // Ignore auxiliary keypress events.
+    if (event.key() == KeyCode::Key_LeftShift
+        || event.key() == KeyCode::Key_RightShift
+        || event.key() == KeyCode::Key_Control
+        || event.key() == KeyCode::Key_Alt) {
+        return false;
+    }
 
-    // FIXME: Changing or deleting the last word on a line will bring the next line
-    // up to the cursor.
     if (m_previous_key == KeyCode::Key_D) {
-        if (event.key() == KeyCode::Key_D) {
+        if (event.key() == KeyCode::Key_D && !m_motion.should_consume_next_character()) {
             yank(Line);
             delete_line();
-        } else if (event.key() == KeyCode::Key_W) {
-            // If the current char is an alnum or punct, delete from said char, to the
-            // beginning of the next word including any whitespace in between the two words.
-            // If the current char is whitespace, delete from the cursor to the beginning of the next world.
-            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
-            TextPosition delete_to;
-            if (isspace(current_char)) {
-                delete_to = find_beginning_of_next_word();
-            } else {
-                delete_to = find_end_of_next_word();
-                delete_to.set_column(delete_to.column() + 1);
+            m_motion.reset();
+            m_previous_key = {};
+        } else {
+            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            if (m_motion.is_complete()) {
+                if (!m_motion.is_cancelled()) {
+                    auto range = m_motion.get_range(*this);
+                    VERIFY(range.has_value());
+
+                    if (range->is_valid()) {
+                        m_editor->delete_text_range(*range);
+                    }
+                }
+
+                m_motion.reset();
+                m_previous_key = {};
             }
-            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
-        } else if (event.key() == KeyCode::Key_B) {
-            // Will delete from the current char to the beginning of the previous word regardless of whitespace.
-            // Does not delete the starting char, see note below.
-            TextPosition delete_to = find_beginning_of_previous_word();
-            // NOTE: Intentionally don't adjust m_editor->cursor() for the wide cursor's column
-            // because in the original vim... they don't.
-            m_editor->delete_text_range(TextRange(delete_to, m_editor->cursor()).normalized());
-        } else if (event.key() == KeyCode::Key_E) {
-            // Delete from the current char to the end of the next word regardless of whitespace.
-            TextPosition delete_to = find_end_of_next_word();
-            delete_to.set_column(delete_to.column() + 1);
-            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
         }
-        m_previous_key = {};
-    } else if (m_previous_key == KeyCode::Key_G) {
-        if (event.key() == KeyCode::Key_G) {
-            move_to_first_line();
-        } else if (event.key() == KeyCode::Key_E) {
-            move_to_end_of_previous_word();
-        }
-        m_previous_key = {};
     } else if (m_previous_key == KeyCode::Key_Y) {
-        if (event.key() == KeyCode::Key_Y) {
+        if (event.key() == KeyCode::Key_Y && !m_motion.should_consume_next_character()) {
             yank(Line);
+            m_motion.reset();
+            m_previous_key = {};
+        } else {
+            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            if (m_motion.is_complete()) {
+                if (!m_motion.is_cancelled()) {
+                    auto range = m_motion.get_range(*this);
+                    VERIFY(range.has_value());
+
+                    if (range->is_valid()) {
+                        m_editor->set_selection(*range);
+                        yank(Selection);
+                        m_editor->clear_selection();
+                    }
+                }
+
+                m_motion.reset();
+                m_previous_key = {};
+            }
         }
-        m_previous_key = {};
     } else if (m_previous_key == KeyCode::Key_C) {
-        if (event.key() == KeyCode::Key_C) {
+        if (event.key() == KeyCode::Key_C && !m_motion.should_consume_next_character()) {
             // Needed because the code to replace the deleted line is called after delete_line() so
             // what was the second last line before the delete, is now the last line.
             bool was_second_last_line = m_editor->cursor().line() == m_editor->line_count() - 2;
@@ -123,63 +834,60 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
             delete_line();
             if (was_second_last_line || (m_editor->cursor().line() != 0 && m_editor->cursor().line() != m_editor->line_count() - 1)) {
                 move_one_up(event);
-                move_to_line_end(event);
+                move_to_line_end();
                 m_editor->add_code_point(0x0A);
             } else if (m_editor->cursor().line() == 0) {
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
             } else if (m_editor->cursor().line() == m_editor->line_count() - 1) {
                 m_editor->add_code_point(0x0A);
             }
             switch_to_insert_mode();
-        } else if (event.key() == KeyCode::Key_W) {
-            // Delete to the end of the next word, if in the middle of a word, this will delete
-            // from the cursor to the said of said word. If the cursor is on whitespace,
-            // any whitespace between the cursor and the beginning of the next word will be deleted.
-            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
-            TextPosition delete_to;
-            if (isspace(current_char)) {
-                delete_to = find_beginning_of_next_word();
-            } else {
-                delete_to = find_end_of_next_word();
-                delete_to.set_column(delete_to.column() + 1);
+        } else {
+            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            if (m_motion.is_complete()) {
+                if (!m_motion.is_cancelled()) {
+                    auto range = m_motion.get_range(*this);
+                    VERIFY(range.has_value());
+
+                    if (range->is_valid()) {
+                        m_editor->set_selection(*range);
+                        yank(Selection);
+                        m_editor->delete_text_range(*range);
+                        switch_to_insert_mode();
+                    }
+                }
+
+                m_motion.reset();
+                m_previous_key = {};
             }
-            m_editor->delete_text_range(TextRange(m_editor->cursor(), delete_to).normalized());
-            switch_to_insert_mode();
-        } else if (event.key() == KeyCode::Key_B) {
-            // Delete to the beginning of the previous word, if in the middle of a word, this will delete
-            // from the cursor to the beginning of said word. If the cursor is on whitespace
-            // it, and the previous word will be deleted.
-            u32 current_char = m_editor->current_line().view().code_points()[m_editor->cursor().column()];
-            TextPosition delete_to = find_beginning_of_previous_word();
-            TextPosition adjusted_cursor = m_editor->cursor();
-            // Adjust cursor for the column the wide cursor is covering
-            if (isalnum(current_char) || ispunct(current_char))
-                adjusted_cursor.set_column(adjusted_cursor.column() + 1);
-            m_editor->delete_text_range(TextRange(delete_to, adjusted_cursor).normalized());
-            switch_to_insert_mode();
-        } else if (event.key() == KeyCode::Key_E) {
-            // Delete to the end of the next word, if in the middle of a word, this will delete
-            // from the cursor to the end of said word. If the cursor is on whitespace
-            // it, and the next word will be deleted.
-            TextPosition delete_to = find_end_of_next_word();
-            TextPosition adjusted_cursor = m_editor->cursor();
-            delete_to.set_column(delete_to.column() + 1);
-            m_editor->delete_text_range(TextRange(adjusted_cursor, delete_to).normalized());
-            switch_to_insert_mode();
         }
-        m_previous_key = {};
     } else {
+        if (m_motion.should_consume_next_character()) {
+            // We must consume the next character.
+            // FIXME: deduplicate with code below.
+            m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+            if (m_motion.is_complete()) {
+                if (!m_motion.is_cancelled()) {
+                    auto maybe_new_position = m_motion.get_position(*this);
+                    if (maybe_new_position.has_value()) {
+                        auto new_position = maybe_new_position.value();
+                        m_editor->set_cursor(new_position);
+                    }
+                }
+
+                m_motion.reset();
+            }
+            return true;
+        }
+
         // Handle first any key codes that are to be applied regardless of modifiers.
         switch (event.key()) {
-        case (KeyCode::Key_Dollar):
-            move_to_line_end(event);
-            break;
         case (KeyCode::Key_Escape):
             if (m_editor->on_escape_pressed)
                 m_editor->on_escape_pressed();
-            break;
+            return true;
         default:
             break;
         }
@@ -188,22 +896,26 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (event.shift() && !event.ctrl() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_A):
-                move_to_line_end(event);
+                move_to_line_end();
                 switch_to_insert_mode();
-                break;
-            case (KeyCode::Key_G):
-                move_to_last_line();
-                break;
+                return true;
             case (KeyCode::Key_I):
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 switch_to_insert_mode();
-                break;
+                return true;
             case (KeyCode::Key_O):
-                move_to_line_beginning(event);
+                move_to_line_beginning();
                 m_editor->add_code_point(0x0A);
                 move_one_up(event);
                 switch_to_insert_mode();
-                break;
+                return true;
+            // FIXME: Integrate these into vim motions too.
+            case (KeyCode::Key_LeftBrace):
+                move_to_previous_empty_lines_block();
+                return true;
+            case (KeyCode::Key_RightBrace):
+                move_to_next_empty_lines_block();
+                return true;
             default:
                 break;
             }
@@ -213,14 +925,14 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_D):
-                move_half_page_down(event);
-                break;
+                move_half_page_down();
+                return true;
             case (KeyCode::Key_R):
                 m_editor->redo();
-                break;
+                return true;
             case (KeyCode::Key_U):
-                move_half_page_up(event);
-                break;
+                move_half_page_up();
+                return true;
             default:
                 break;
             }
@@ -233,74 +945,63 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
         if (!event.ctrl() && !event.shift() && !event.alt()) {
             switch (event.key()) {
             case (KeyCode::Key_A):
-                move_one_right(event);
+                move_one_right();
                 switch_to_insert_mode();
-                break;
-            case (KeyCode::Key_B):
-                move_to_beginning_of_previous_word();
-                break;
+                return true;
             case (KeyCode::Key_C):
                 m_previous_key = event.key();
-                break;
-            case (KeyCode::Key_Backspace):
-            case (KeyCode::Key_H):
-            case (KeyCode::Key_Left):
-                move_one_left(event);
-                break;
+                return true;
             case (KeyCode::Key_D):
                 m_previous_key = event.key();
-                break;
-            case (KeyCode::Key_E):
-                move_to_end_of_next_word();
-                break;
-            case (KeyCode::Key_G):
-                m_previous_key = event.key();
-                break;
-            case (KeyCode::Key_Down):
-            case (KeyCode::Key_J):
-                move_one_down(event);
-                break;
+                return true;
             case (KeyCode::Key_I):
                 switch_to_insert_mode();
-                break;
-            case (KeyCode::Key_K):
-            case (KeyCode::Key_Up):
-                move_one_up(event);
-                break;
-            case (KeyCode::Key_L):
-            case (KeyCode::Key_Right):
-                move_one_right(event);
-                break;
+                return true;
             case (KeyCode::Key_O):
-                move_to_line_end(event);
+                move_to_line_end();
                 m_editor->add_code_point(0x0A);
                 switch_to_insert_mode();
-                break;
+                return true;
             case (KeyCode::Key_U):
                 m_editor->undo();
-                break;
-            case (KeyCode::Key_W):
-                move_to_beginning_of_next_word();
-                break;
+                return true;
             case (KeyCode::Key_X):
                 yank({ m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 } });
                 delete_char();
-                break;
-            case (KeyCode::Key_0):
-                move_to_line_beginning(event);
-                break;
+                return true;
             case (KeyCode::Key_V):
                 switch_to_visual_mode();
-                break;
+                return true;
             case (KeyCode::Key_Y):
                 m_previous_key = event.key();
-                break;
+                return true;
             case (KeyCode::Key_P):
-                put(event);
-                break;
+                put();
+                return true;
+            case (KeyCode::Key_PageUp):
+                move_page_up();
+                return true;
+            case (KeyCode::Key_PageDown):
+                move_page_down();
+                return true;
             default:
                 break;
             }
+        }
+
+        // If nothing else handled the key, we'll be feeding the motion state
+        // machine instead.
+        m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+        if (m_motion.is_complete()) {
+            if (!m_motion.is_cancelled()) {
+                auto maybe_new_position = m_motion.get_position(*this);
+                if (maybe_new_position.has_value()) {
+                    auto new_position = maybe_new_position.value();
+                    m_editor->set_cursor(new_position);
+                }
+            }
+
+            m_motion.reset();
         }
     }
     return true;
@@ -308,139 +1009,124 @@ bool VimEditingEngine::on_key_in_normal_mode(const KeyEvent& event)
 
 bool VimEditingEngine::on_key_in_visual_mode(const KeyEvent& event)
 {
-    if (m_previous_key == KeyCode::Key_G) {
-        if (event.key() == KeyCode::Key_G) {
-            move_to_first_line();
-            update_selection_on_cursor_move();
-        } else if (event.key() == KeyCode::Key_E) {
-            move_to_end_of_previous_word();
-            update_selection_on_cursor_move();
+    // If the motion state machine requires the next character, feed it.
+    if (m_motion.should_consume_next_character()) {
+        m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+        if (m_motion.is_complete()) {
+            if (!m_motion.is_cancelled()) {
+                auto maybe_new_position = m_motion.get_position(*this, true);
+                if (maybe_new_position.has_value()) {
+                    auto new_position = maybe_new_position.value();
+                    m_editor->set_cursor(new_position);
+                    update_selection_on_cursor_move();
+                }
+            }
+
+            m_motion.reset();
         }
-        m_previous_key = {};
-    } else {
-        // Handle first any key codes that are to be applied regardless of modifiers.
+
+        return true;
+    }
+
+    // Handle first any key codes that are to be applied regardless of modifiers.
+    switch (event.key()) {
+    case (KeyCode::Key_Escape):
+        switch_to_normal_mode();
+        if (m_editor->on_escape_pressed)
+            m_editor->on_escape_pressed();
+        return true;
+    default:
+        break;
+    }
+
+    // SHIFT is pressed.
+    if (event.shift() && !event.ctrl() && !event.alt()) {
         switch (event.key()) {
-        case (KeyCode::Key_Dollar):
-            move_to_line_end(event);
-            update_selection_on_cursor_move();
-            break;
-        case (KeyCode::Key_Escape):
-            switch_to_normal_mode();
-            if (m_editor->on_escape_pressed)
-                m_editor->on_escape_pressed();
-            break;
+        case (KeyCode::Key_A):
+            move_to_line_end();
+            switch_to_insert_mode();
+            return true;
+        case (KeyCode::Key_I):
+            move_to_line_beginning();
+            switch_to_insert_mode();
+            return true;
         default:
             break;
         }
+    }
 
-        // SHIFT is pressed.
-        if (event.shift() && !event.ctrl() && !event.alt()) {
-            switch (event.key()) {
-            case (KeyCode::Key_A):
-                move_to_line_end(event);
-                switch_to_insert_mode();
-                break;
-            case (KeyCode::Key_G):
-                move_to_last_line();
-                break;
-            case (KeyCode::Key_I):
-                move_to_line_beginning(event);
-                switch_to_insert_mode();
-                break;
-            default:
-                break;
-            }
-        }
-
-        // CTRL is pressed.
-        if (event.ctrl() && !event.shift() && !event.alt()) {
-            switch (event.key()) {
-            case (KeyCode::Key_D):
-                move_half_page_down(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_U):
-                move_half_page_up(event);
-                update_selection_on_cursor_move();
-                break;
-            default:
-                break;
-            }
-        }
-
-        // No modifier is pressed.
-        if (!event.ctrl() && !event.shift() && !event.alt()) {
-            switch (event.key()) {
-            case (KeyCode::Key_B):
-                move_to_beginning_of_previous_word();
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_Backspace):
-            case (KeyCode::Key_H):
-            case (KeyCode::Key_Left):
-                move_one_left(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_D):
-                yank(Selection);
-                m_editor->do_delete();
-                switch_to_normal_mode();
-                break;
-            case (KeyCode::Key_E):
-                move_to_end_of_next_word();
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_G):
-                m_previous_key = event.key();
-                break;
-            case (KeyCode::Key_Down):
-            case (KeyCode::Key_J):
-                move_one_down(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_K):
-            case (KeyCode::Key_Up):
-                move_one_up(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_L):
-            case (KeyCode::Key_Right):
-                move_one_right(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_U):
-                // FIXME: Set selection to uppercase.
-                break;
-            case (KeyCode::Key_W):
-                move_to_beginning_of_next_word();
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_X):
-                yank(Selection);
-                m_editor->do_delete();
-                switch_to_normal_mode();
-                break;
-            case (KeyCode::Key_0):
-                move_to_line_beginning(event);
-                update_selection_on_cursor_move();
-                break;
-            case (KeyCode::Key_V):
-                switch_to_normal_mode();
-                break;
-            case (KeyCode::Key_C):
-                yank(Selection);
-                m_editor->do_delete();
-                switch_to_insert_mode();
-                break;
-            case (KeyCode::Key_Y):
-                yank(Selection);
-                switch_to_normal_mode();
-                break;
-            default:
-                break;
-            }
+    // CTRL is pressed.
+    if (event.ctrl() && !event.shift() && !event.alt()) {
+        switch (event.key()) {
+        case (KeyCode::Key_D):
+            move_half_page_down();
+            update_selection_on_cursor_move();
+            return true;
+        case (KeyCode::Key_U):
+            move_half_page_up();
+            update_selection_on_cursor_move();
+            return true;
+        default:
+            break;
         }
     }
+
+    // No modifier is pressed.
+    if (!event.ctrl() && !event.shift() && !event.alt()) {
+        switch (event.key()) {
+        case (KeyCode::Key_D):
+            yank(Selection);
+            m_editor->do_delete();
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_U):
+            // FIXME: Set selection to uppercase.
+            return true;
+        case (KeyCode::Key_X):
+            yank(Selection);
+            m_editor->do_delete();
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_V):
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_C):
+            yank(Selection);
+            m_editor->do_delete();
+            switch_to_insert_mode();
+            return true;
+        case (KeyCode::Key_Y):
+            yank(Selection);
+            switch_to_normal_mode();
+            return true;
+        case (KeyCode::Key_PageUp):
+            move_page_up();
+            update_selection_on_cursor_move();
+            return true;
+        case (KeyCode::Key_PageDown):
+            move_page_down();
+            update_selection_on_cursor_move();
+            return true;
+        default:
+            break;
+        }
+    }
+
+    // By default, we feed the motion state machine.
+    m_motion.add_key_code(event.key(), event.ctrl(), event.shift(), event.alt());
+    if (m_motion.is_complete()) {
+        if (!m_motion.is_cancelled()) {
+            auto maybe_new_position = m_motion.get_position(*this, true);
+            if (maybe_new_position.has_value()) {
+                auto new_position = maybe_new_position.value();
+                m_editor->set_cursor(new_position);
+                update_selection_on_cursor_move();
+            }
+        }
+
+        m_motion.reset();
+    }
+
     return true;
 }
 
@@ -450,6 +1136,7 @@ void VimEditingEngine::switch_to_normal_mode()
     m_editor->reset_cursor_blink();
     m_previous_key = {};
     clear_visual_mode_data();
+    m_motion.reset();
 };
 
 void VimEditingEngine::switch_to_insert_mode()
@@ -458,6 +1145,7 @@ void VimEditingEngine::switch_to_insert_mode()
     m_editor->reset_cursor_blink();
     m_previous_key = {};
     clear_visual_mode_data();
+    m_motion.reset();
 };
 
 void VimEditingEngine::switch_to_visual_mode()
@@ -468,6 +1156,7 @@ void VimEditingEngine::switch_to_visual_mode()
     m_selection_start_position = m_editor->cursor();
     m_editor->selection()->set(m_editor->cursor(), { m_editor->cursor().line(), m_editor->cursor().column() + 1 });
     m_editor->did_update_selection();
+    m_motion.reset();
 }
 
 void VimEditingEngine::update_selection_on_cursor_move()
@@ -475,9 +1164,25 @@ void VimEditingEngine::update_selection_on_cursor_move()
     auto cursor = m_editor->cursor();
     auto start = m_selection_start_position < cursor ? m_selection_start_position : cursor;
     auto end = m_selection_start_position < cursor ? cursor : m_selection_start_position;
-    end.set_column(end.column() + 1);
+
+    if (end.column() >= m_editor->current_line().length()) {
+        if (end.line() != m_editor->line_count() - 1)
+            end = { end.line() + 1, 0 };
+    } else {
+        end.set_column(end.column() + 1);
+    }
+
     m_editor->selection()->set(start, end);
     m_editor->did_update_selection();
+}
+
+void VimEditingEngine::clamp_cursor_position()
+{
+    auto cursor = m_editor->cursor();
+    if (cursor.column() >= m_editor->current_line().length()) {
+        cursor.set_column(m_editor->current_line().length() - 1);
+        m_editor->set_cursor(cursor);
+    }
 }
 
 void VimEditingEngine::clear_visual_mode_data()
@@ -485,18 +1190,19 @@ void VimEditingEngine::clear_visual_mode_data()
     if (m_editor->has_selection()) {
         m_editor->selection()->clear();
         m_editor->did_update_selection();
+        clamp_cursor_position();
     }
     m_selection_start_position = {};
 }
 
-void VimEditingEngine::move_half_page_up(const KeyEvent& event)
+void VimEditingEngine::move_half_page_up()
 {
-    move_up(event, 0.5);
+    move_up(0.5);
 };
 
-void VimEditingEngine::move_half_page_down(const KeyEvent& event)
+void VimEditingEngine::move_half_page_down()
 {
-    move_down(event, 0.5);
+    move_down(0.5);
 };
 
 void VimEditingEngine::yank(YankType type)
@@ -521,10 +1227,10 @@ void VimEditingEngine::yank(TextRange range)
     m_yank_buffer = m_editor->document().text_in_range(range);
 }
 
-void VimEditingEngine::put(const GUI::KeyEvent& event)
+void VimEditingEngine::put()
 {
     if (m_yank_type == YankType::Line) {
-        move_to_line_end(event);
+        move_to_line_end();
         StringBuilder sb = StringBuilder(m_yank_buffer.length() + 1);
         sb.append_code_point(0x0A);
         sb.append(m_yank_buffer);
@@ -533,10 +1239,50 @@ void VimEditingEngine::put(const GUI::KeyEvent& event)
     } else {
         // FIXME: If attempting to put on the last column a line,
         // the buffer will bne placed on the next line due to the move_one_left/right behaviour.
-        move_one_right(event);
+        move_one_right();
         m_editor->insert_at_cursor_or_replace_selection(m_yank_buffer);
-        move_one_left(event);
+        move_one_left();
     }
 }
+
+void VimEditingEngine::move_to_previous_empty_lines_block()
+{
+    VERIFY(!m_editor.is_null());
+    size_t line_idx = m_editor->cursor().line();
+    bool skipping_initial_empty_lines = true;
+    while (line_idx > 0) {
+        if (m_editor->document().line(line_idx).is_empty()) {
+            if (!skipping_initial_empty_lines)
+                break;
+        } else {
+            skipping_initial_empty_lines = false;
+        }
+        line_idx--;
+    }
+
+    TextPosition new_cursor = { line_idx, 0 };
+
+    m_editor->set_cursor(new_cursor);
+};
+
+void VimEditingEngine::move_to_next_empty_lines_block()
+{
+    VERIFY(!m_editor.is_null());
+    size_t line_idx = m_editor->cursor().line();
+    bool skipping_initial_empty_lines = true;
+    while (line_idx < m_editor->line_count() - 1) {
+        if (m_editor->document().line(line_idx).is_empty()) {
+            if (!skipping_initial_empty_lines)
+                break;
+        } else {
+            skipping_initial_empty_lines = false;
+        }
+        line_idx++;
+    }
+
+    TextPosition new_cursor = { line_idx, 0 };
+
+    m_editor->set_cursor(new_cursor);
+};
 
 }

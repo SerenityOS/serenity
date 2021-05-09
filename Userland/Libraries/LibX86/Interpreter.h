@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -416,9 +396,27 @@ public:
     virtual void OUT_imm8_AL(const Instruction&) = 0;
     virtual void OUT_imm8_AX(const Instruction&) = 0;
     virtual void OUT_imm8_EAX(const Instruction&) = 0;
+    virtual void PACKSSDW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PACKSSWB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PACKUSWB_mm1_mm2m64(const Instruction&) = 0;
     virtual void PADDB_mm1_mm2m64(const Instruction&) = 0;
     virtual void PADDW_mm1_mm2m64(const Instruction&) = 0;
     virtual void PADDD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PADDSB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PADDSW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PADDUSB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PADDUSW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PAND_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PANDN_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPEQB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPEQW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPEQD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPGTB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPGTW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PCMPGTD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PMADDWD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PMULHW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PMULLW_mm1_mm2m64(const Instruction&) = 0;
     virtual void POPA(const Instruction&) = 0;
     virtual void POPAD(const Instruction&) = 0;
     virtual void POPF(const Instruction&) = 0;
@@ -432,6 +430,36 @@ public:
     virtual void POP_SS(const Instruction&) = 0;
     virtual void POP_reg16(const Instruction&) = 0;
     virtual void POP_reg32(const Instruction&) = 0;
+    virtual void POR_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSLLW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSLLW_mm1_imm8(const Instruction&) = 0;
+    virtual void PSLLD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSLLD_mm1_imm8(const Instruction&) = 0;
+    virtual void PSLLQ_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSLLQ_mm1_imm8(const Instruction&) = 0;
+    virtual void PSRAW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSRAW_mm1_imm8(const Instruction&) = 0;
+    virtual void PSRAD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSRAD_mm1_imm8(const Instruction&) = 0;
+    virtual void PSRLW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSRLW_mm1_imm8(const Instruction&) = 0;
+    virtual void PSRLD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSRLD_mm1_imm8(const Instruction&) = 0;
+    virtual void PSRLQ_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSRLQ_mm1_imm8(const Instruction&) = 0;
+    virtual void PSUBB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBSB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBSW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBUSB_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PSUBUSW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PUNPCKHBW_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PUNPCKHWD_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PUNPCKHDQ_mm1_mm2m64(const Instruction&) = 0;
+    virtual void PUNPCKLBW_mm1_mm2m32(const Instruction&) = 0;
+    virtual void PUNPCKLWD_mm1_mm2m32(const Instruction&) = 0;
+    virtual void PUNPCKLDQ_mm1_mm2m32(const Instruction&) = 0;
     virtual void PUSHA(const Instruction&) = 0;
     virtual void PUSHAD(const Instruction&) = 0;
     virtual void PUSHF(const Instruction&) = 0;
@@ -450,6 +478,7 @@ public:
     virtual void PUSH_imm8(const Instruction&) = 0;
     virtual void PUSH_reg16(const Instruction&) = 0;
     virtual void PUSH_reg32(const Instruction&) = 0;
+    virtual void PXOR_mm1_mm2m64(const Instruction&) = 0;
     virtual void RCL_RM16_1(const Instruction&) = 0;
     virtual void RCL_RM16_CL(const Instruction&) = 0;
     virtual void RCL_RM16_imm8(const Instruction&) = 0;

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/StringBuilder.h>
@@ -92,6 +72,12 @@ String guess_mime_type_based_on_filename(const StringView& path)
         return "text/markdown";
     if (path.ends_with(".html", CaseSensitivity::CaseInsensitive) || path.ends_with(".htm", CaseSensitivity::CaseInsensitive))
         return "text/html";
+    if (path.ends_with(".js", CaseSensitivity::CaseInsensitive))
+        return "application/javascript";
+    if (path.ends_with(".json", CaseSensitivity::CaseInsensitive))
+        return "application/json";
+    if (path.ends_with(".md", CaseSensitivity::CaseInsensitive))
+        return "text/markdown";
     if (path.ends_with("/", CaseSensitivity::CaseInsensitive))
         return "text/html";
     if (path.ends_with(".csv", CaseSensitivity::CaseInsensitive))
@@ -99,4 +85,37 @@ String guess_mime_type_based_on_filename(const StringView& path)
     return "text/plain";
 }
 
+#define ENUMERATE_HEADER_CONTENTS                                                                                                 \
+    __ENUMERATE_MIME_TYPE_HEADER(bmp, "image/bmp", 2, 'B', 'M')                                                                   \
+    __ENUMERATE_MIME_TYPE_HEADER(bzip2, "application/x-bzip2", 3, 'B', 'Z', 'h')                                                  \
+    __ENUMERATE_MIME_TYPE_HEADER(elf, "extra/elf", 4, 0x7F, 'E', 'L', 'F')                                                        \
+    __ENUMERATE_MIME_TYPE_HEADER(gif_87, "image/gif", 6, 'G', 'I', 'F', '8', '7', 'a')                                            \
+    __ENUMERATE_MIME_TYPE_HEADER(gif_89, "image/gif", 6, 'G', 'I', 'F', '8', '9', 'a')                                            \
+    __ENUMERATE_MIME_TYPE_HEADER(gzip, "extra/gzip", 2, 0x1F, 0x8B)                                                               \
+    __ENUMERATE_MIME_TYPE_HEADER(jpeg, "image/jpeg", 4, 0xFF, 0xD8, 0xFF, 0xDB)                                                   \
+    __ENUMERATE_MIME_TYPE_HEADER(jpeg_huh, "image/jpeg", 4, 0xFF, 0xD8, 0xFF, 0xEE)                                               \
+    __ENUMERATE_MIME_TYPE_HEADER(jpeg_jfif, "image/jpeg", 12, 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0x00, 0x01) \
+    __ENUMERATE_MIME_TYPE_HEADER(pbm, "image/x-portable-bitmap", 3, 0x50, 0x31, 0x0A)                                             \
+    __ENUMERATE_MIME_TYPE_HEADER(pgm, "image/x-portable-graymap", 3, 0x50, 0x32, 0x0A)                                            \
+    __ENUMERATE_MIME_TYPE_HEADER(png, "image/png", 8, 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A)                                \
+    __ENUMERATE_MIME_TYPE_HEADER(ppm, "image/x-portable-pixmap", 3, 0x50, 0x33, 0x0A)                                             \
+    __ENUMERATE_MIME_TYPE_HEADER(shell, "text/x-shellscript", 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')              \
+    __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff", 4, 'I', 'I', '*', 0x00)                                                      \
+    __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 4, 'M', 'M', 0x00, '*')
+
+#define __ENUMERATE_MIME_TYPE_HEADER(var_name, mime_type, pattern_size, ...) \
+    static const u8 var_name##_arr[pattern_size] = { __VA_ARGS__ };          \
+    static constexpr ReadonlyBytes var_name = ReadonlyBytes { var_name##_arr, pattern_size };
+ENUMERATE_HEADER_CONTENTS
+#undef __ENUMERATE_MIME_TYPE_HEADER
+
+Optional<String> guess_mime_type_based_on_sniffed_bytes(const ReadonlyBytes& bytes)
+{
+#define __ENUMERATE_MIME_TYPE_HEADER(var_name, mime_type, pattern_size, ...) \
+    if (bytes.starts_with(var_name))                                         \
+        return mime_type;
+    ENUMERATE_HEADER_CONTENTS;
+#undef __ENUMERATE_MIME_TYPE_HEADER
+    return {};
+}
 }

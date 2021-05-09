@@ -8,8 +8,8 @@ interface Element : Node {
     boolean hasAttribute(DOMString qualifiedName);
     boolean hasAttributes();
 
-    ArrayFromVector getElementsByTagName(DOMString tagName);
-    ArrayFromVector getElementsByClassName(DOMString className);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByClassName(DOMString className);
 
     [LegacyNullToEmptyString] attribute DOMString innerHTML;
     [Reflect] attribute DOMString id;

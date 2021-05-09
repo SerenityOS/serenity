@@ -1,5 +1,7 @@
 interface HTMLInputElement : HTMLElement {
 
+    readonly attribute HTMLFormElement? form;
+
     [Reflect] attribute DOMString accept;
     [Reflect] attribute DOMString alt;
     [Reflect] attribute DOMString max;
@@ -8,6 +10,7 @@ interface HTMLInputElement : HTMLElement {
     [Reflect] attribute DOMString placeholder;
     [Reflect] attribute DOMString src;
     [Reflect] attribute DOMString step;
+    [Reflect] attribute DOMString name;
     [Reflect=dirname] attribute DOMString dirName;
     [Reflect=value] attribute DOMString defaultValue;
 

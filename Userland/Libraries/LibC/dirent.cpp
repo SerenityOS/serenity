@@ -1,31 +1,13 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Assertions.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
+#include <AK/Vector.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -55,13 +37,21 @@ int closedir(DIR* dirp)
 {
     if (!dirp || dirp->fd == -1)
         return -EBADF;
-    if (dirp->buffer)
-        free(dirp->buffer);
+    free(dirp->buffer);
     int rc = close(dirp->fd);
     if (rc == 0)
         dirp->fd = -1;
     free(dirp);
     return rc;
+}
+
+void rewinddir(DIR* dirp)
+{
+    free(dirp->buffer);
+    dirp->buffer = nullptr;
+    dirp->buffer_size = 0;
+    dirp->nextptr = nullptr;
+    lseek(dirp->fd, 0, SEEK_SET);
 }
 
 struct [[gnu::packed]] sys_dirent {
@@ -80,10 +70,14 @@ static void create_struct_dirent(sys_dirent* sys_ent, struct dirent* str_ent)
     str_ent->d_ino = sys_ent->ino;
     str_ent->d_type = sys_ent->file_type;
     str_ent->d_off = 0;
-    str_ent->d_reclen = sys_ent->total_size();
-    for (size_t i = 0; i < sys_ent->namelen; ++i)
-        str_ent->d_name[i] = sys_ent->name[i];
-    // FIXME: I think this null termination behavior is not supposed to be here.
+    str_ent->d_reclen = sizeof(struct dirent);
+
+    VERIFY(sizeof(str_ent->d_name) > sys_ent->namelen);
+
+    // Note: We can't use any normal string function as sys_ent->name is
+    // not null terminated. All string copy functions will attempt to read
+    // the non-existent null terminator past the end of the source string.
+    memcpy(str_ent->d_name, sys_ent->name, sys_ent->namelen);
     str_ent->d_name[sys_ent->namelen] = '\0';
 }
 
@@ -196,5 +190,65 @@ int dirfd(DIR* dirp)
 {
     VERIFY(dirp);
     return dirp->fd;
+}
+
+int scandir(const char* dir_name,
+    struct dirent*** namelist,
+    int (*select)(const struct dirent*),
+    int (*compare)(const struct dirent**, const struct dirent**))
+{
+    auto dir = opendir(dir_name);
+    if (dir == nullptr)
+        return -1;
+    ScopeGuard guard = [&] {
+        closedir(dir);
+    };
+
+    Vector<struct dirent*> tmp_names;
+    ScopeGuard names_guard = [&] {
+        tmp_names.remove_all_matching([&](auto& entry) {
+            free(entry);
+            return true;
+        });
+    };
+
+    while (true) {
+        errno = 0;
+        auto entry = readdir(dir);
+        if (!entry)
+            break;
+
+        // Omit entries the caller chooses to ignore.
+        if (select && !select(entry))
+            continue;
+
+        auto entry_copy = (struct dirent*)malloc(entry->d_reclen);
+        if (!entry_copy)
+            break;
+        memcpy(entry_copy, entry, entry->d_reclen);
+        tmp_names.append(entry_copy);
+    }
+
+    // Propagate any errors encountered while accumulating back to the user.
+    if (errno) {
+        return -1;
+    }
+
+    // Sort the entries if the user provided a comparator.
+    if (compare) {
+        qsort(tmp_names.data(), tmp_names.size(), sizeof(struct dirent*), (int (*)(const void*, const void*))compare);
+    }
+
+    const int size = tmp_names.size();
+    auto names = (struct dirent**)malloc(size * sizeof(struct dirent*));
+    for (auto i = 0; i < size; i++) {
+        names[i] = tmp_names[i];
+    }
+
+    // Disable the scope guard which free's names on error.
+    tmp_names.clear();
+
+    *namelist = names;
+    return size;
 }
 }

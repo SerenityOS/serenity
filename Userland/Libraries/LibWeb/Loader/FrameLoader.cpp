@@ -1,31 +1,12 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
+#include <AK/SourceGenerator.h>
 #include <LibGemini/Document.h>
 #include <LibGfx/ImageDecoder.h>
 #include <LibMarkdown/Document.h>
@@ -101,7 +82,7 @@ static bool build_image_document(DOM::Document& document, const ByteBuffer& data
     head_element->append_child(title_element);
 
     auto basename = LexicalPath(document.url().path()).basename();
-    auto title_text = adopt(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
+    auto title_text = adopt_ref(*new DOM::Text(document, String::formatted("{} [{}x{}]", basename, bitmap->width(), bitmap->height())));
     title_element->append_child(title_text);
 
     auto body_element = document.create_element("body");
@@ -120,10 +101,8 @@ static bool build_gemini_document(DOM::Document& document, const ByteBuffer& dat
     auto gemini_document = Gemini::Document::parse(gemini_data, document.url());
     String html_data = gemini_document->render_to_html();
 
-#if GEMINI_DEBUG
-    dbgln("Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
-    dbgln("Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
-#endif
+    dbgln_if(GEMINI_DEBUG, "Gemini data:\n\"\"\"{}\"\"\"", gemini_data);
+    dbgln_if(GEMINI_DEBUG, "Converted to HTML:\n\"\"\"{}\"\"\"", html_data);
 
     HTML::HTMLDocumentParser parser(document, html_data, "utf-8");
     parser.run(document.url());
@@ -154,6 +133,11 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 {
     if (!request.is_valid()) {
         load_error_page(request.url(), "Invalid request");
+        return false;
+    }
+
+    if (!m_frame.is_frame_nesting_allowed(request.url())) {
+        dbgln("No further recursion is allowed for the frame, abort load!");
         return false;
     }
 
@@ -226,13 +210,12 @@ void FrameLoader::load_error_page(const URL& failed_url, const String& error)
         error_page_url,
         [this, failed_url, error](auto data, auto&, auto) {
             VERIFY(!data.is_null());
-#pragma GCC diagnostic ignored "-Wformat-nonliteral"
-            auto html = String::format(
-                String::copy(data).characters(),
-                escape_html_entities(failed_url.to_string()).characters(),
-                escape_html_entities(error).characters());
-#pragma GCC diagnostic pop
-            auto document = HTML::parse_html_document(html, failed_url, "utf-8");
+            StringBuilder builder;
+            SourceGenerator generator { builder };
+            generator.set("failed_url", escape_html_entities(failed_url.to_string()));
+            generator.set("error", escape_html_entities(error));
+            generator.append(data);
+            auto document = HTML::parse_html_document(generator.as_string_view(), failed_url, "utf-8");
             VERIFY(document);
             frame().set_document(document);
         },
@@ -258,7 +241,7 @@ void FrameLoader::resource_did_load()
         return;
     }
 
-    dbgln("I believe this content has MIME type '{}', , encoding '{}'", resource()->mime_type(), resource()->encoding());
+    dbgln("I believe this content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding());
 
     auto document = DOM::Document::create();
     document->set_url(url);

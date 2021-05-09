@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Format.h>
@@ -30,6 +10,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
+#include <LibC/bits/pthread_integration.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -49,6 +30,7 @@ public:
         : m_fd(fd)
         , m_mode(mode)
     {
+        __pthread_mutex_init(&m_mutex, nullptr);
     }
     ~FILE();
 
@@ -130,12 +112,18 @@ private:
     // Flush *some* data from the buffer.
     bool write_from_buffer();
 
+    void lock();
+    void unlock();
+
     int m_fd { -1 };
     int m_mode { 0 };
     int m_error { 0 };
     bool m_eof { false };
     pid_t m_popen_child { -1 };
     Buffer m_buffer;
+    __pthread_mutex_t m_mutex;
+
+    friend class ScopedFileLock;
 };
 
 FILE::~FILE()
@@ -572,6 +560,33 @@ bool FILE::Buffer::enqueue_front(u8 byte)
     return true;
 }
 
+void FILE::lock()
+{
+    __pthread_mutex_lock(&m_mutex);
+}
+
+void FILE::unlock()
+{
+    __pthread_mutex_unlock(&m_mutex);
+}
+
+class ScopedFileLock {
+public:
+    ScopedFileLock(FILE* file)
+        : m_file(file)
+    {
+        m_file->lock();
+    }
+
+    ~ScopedFileLock()
+    {
+        m_file->unlock();
+    }
+
+private:
+    FILE* m_file;
+};
+
 extern "C" {
 
 static u8 default_streams[3][sizeof(FILE)];
@@ -591,6 +606,7 @@ void __stdio_init()
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     if (mode != _IONBF && mode != _IOLBF && mode != _IOFBF) {
         errno = EINVAL;
         return -1;
@@ -612,12 +628,14 @@ void setlinebuf(FILE* stream)
 int fileno(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->fileno();
 }
 
 int feof(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->eof();
 }
 
@@ -627,12 +645,14 @@ int fflush(FILE* stream)
         dbgln("FIXME: fflush(nullptr) should flush all open streams");
         return 0;
     }
+    ScopedFileLock lock(stream);
     return stream->flush() ? 0 : EOF;
 }
 
 char* fgets(char* buffer, int size, FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     bool ok = stream->gets(reinterpret_cast<u8*>(buffer), size);
     return ok ? buffer : nullptr;
 }
@@ -647,6 +667,16 @@ int fgetc(FILE* stream)
     return EOF;
 }
 
+int fgetc_unlocked(FILE* stream)
+{
+    VERIFY(stream);
+    char ch;
+    size_t nread = fread_unlocked(&ch, sizeof(char), 1, stream);
+    if (nread == 1)
+        return ch;
+    return EOF;
+}
+
 int getc(FILE* stream)
 {
     return fgetc(stream);
@@ -654,7 +684,7 @@ int getc(FILE* stream)
 
 int getc_unlocked(FILE* stream)
 {
-    return fgetc(stream);
+    return fgetc_unlocked(stream);
 }
 
 int getchar()
@@ -716,6 +746,7 @@ ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 int ungetc(int c, FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     bool ok = stream->ungetc(c);
     return ok ? c : EOF;
 }
@@ -724,6 +755,7 @@ int fputc(int ch, FILE* stream)
 {
     VERIFY(stream);
     u8 byte = ch;
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(&byte, 1);
     if (nwritten == 0)
         return EOF;
@@ -745,6 +777,7 @@ int fputs(const char* s, FILE* stream)
 {
     VERIFY(stream);
     size_t len = strlen(s);
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(s), len);
     if (nwritten < len)
         return EOF;
@@ -762,22 +795,33 @@ int puts(const char* s)
 void clearerr(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     stream->clear_err();
 }
 
 int ferror(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->error();
 }
 
-size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+size_t fread_unlocked(void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
     size_t nread = stream->read(reinterpret_cast<u8*>(ptr), size * nmemb);
+    if (!nread)
+        return 0;
     return nread / size;
+}
+
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
+{
+    VERIFY(stream);
+    ScopedFileLock lock(stream);
+    return fread_unlocked(ptr, size, nmemb, stream);
 }
 
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
@@ -785,31 +829,38 @@ size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
     VERIFY(stream);
     VERIFY(!Checked<size_t>::multiplication_would_overflow(size, nmemb));
 
+    ScopedFileLock lock(stream);
     size_t nwritten = stream->write(reinterpret_cast<const u8*>(ptr), size * nmemb);
+    if (!nwritten)
+        return 0;
     return nwritten / size;
 }
 
 int fseek(FILE* stream, long offset, int whence)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->seek(offset, whence);
 }
 
 int fseeko(FILE* stream, off_t offset, int whence)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->seek(offset, whence);
 }
 
 long ftell(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->tell();
 }
 
 off_t ftello(FILE* stream)
 {
     VERIFY(stream);
+    ScopedFileLock lock(stream);
     return stream->tell();
 }
 
@@ -818,6 +869,7 @@ int fgetpos(FILE* stream, fpos_t* pos)
     VERIFY(stream);
     VERIFY(pos);
 
+    ScopedFileLock lock(stream);
     off_t val = stream->tell();
     if (val == -1L)
         return 1;
@@ -831,14 +883,14 @@ int fsetpos(FILE* stream, const fpos_t* pos)
     VERIFY(stream);
     VERIFY(pos);
 
+    ScopedFileLock lock(stream);
     return stream->seek(*pos, SEEK_SET);
 }
 
 void rewind(FILE* stream)
 {
-    VERIFY(stream);
-    int rc = stream->seek(0, SEEK_SET);
-    VERIFY(rc == 0);
+    fseek(stream, 0, SEEK_SET);
+    clearerr(stream);
 }
 
 ALWAYS_INLINE void stdout_putch(char*&, char ch)
@@ -1046,7 +1098,12 @@ static inline bool is_default_stream(FILE* stream)
 int fclose(FILE* stream)
 {
     VERIFY(stream);
-    bool ok = stream->close();
+    bool ok;
+
+    {
+        ScopedFileLock lock(stream);
+        ok = stream->close();
+    }
     ScopedValueRollback errno_restorer(errno);
 
     stream->~FILE();
@@ -1198,6 +1255,11 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     if (!fgets(buffer, sizeof(buffer) - 1, stream))
         return -1;
     return vsscanf(buffer, fmt, ap);
+}
+
+int vscanf(const char* fmt, va_list ap)
+{
+    return vfscanf(stdin, fmt, ap);
 }
 
 void flockfile([[maybe_unused]] FILE* filehandle)

@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2021, the SerenityOS developers
- * All rights reserved.
+ * Copyright (c) 2021, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "NewFontDialog.h"
@@ -43,6 +23,9 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 
+static constexpr int s_max_width = 32;
+static constexpr int s_max_height = 36;
+
 namespace GUI {
 
 class GlyphPreviewWidget final : public Frame {
@@ -53,10 +36,13 @@ public:
         m_width = width;
         m_height = height;
         m_glyph_width = width;
-        if (m_width > 25 || m_height > 20)
-            set_scale(6);
-        if (m_width <= 25 && m_height <= 20)
-            set_scale(10);
+        for (int i = 10; i > 0; i--) {
+            if ((frame_thickness() * 2 + (m_width * i) - 1) <= 250
+                && (frame_thickness() * 2 + (m_height * i) - 1) <= 205) {
+                set_scale(i);
+                break;
+            }
+        }
         set_fixed_width(frame_thickness() * 2 + (m_width * m_scale) - 1);
         set_fixed_height(frame_thickness() * 2 + (m_height * m_scale) - 1);
     }
@@ -134,7 +120,7 @@ private:
     int m_glyph_width { 20 };
     int m_mean_line { 2 };
     int m_baseline { 16 };
-    u8 m_bits[34][34] {};
+    u8 m_bits[s_max_width][s_max_height] {};
 };
 
 }
@@ -196,8 +182,12 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     m_glyph_height_spinbox->set_value(20);
     m_glyph_width_spinbox->set_value(20);
-    m_mean_line_spinbox->set_value(3);
+    m_glyph_height_spinbox->set_max(s_max_height);
+    m_glyph_width_spinbox->set_max(s_max_width);
+    m_mean_line_spinbox->set_value(2);
     m_baseline_spinbox->set_value(16);
+    m_mean_line_spinbox->set_max(max(m_glyph_height_spinbox->value() - 2, 0));
+    m_baseline_spinbox->set_max(max(m_glyph_height_spinbox->value() - 2, 0));
     m_spacing_spinbox->set_value(1);
     m_fixed_width_checkbox->set_checked(false);
 
@@ -213,6 +203,8 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
     };
     m_glyph_height_spinbox->on_change = [&](int value) {
         preview_editor.set_preview_size(m_glyph_width_spinbox->value(), value);
+        m_mean_line_spinbox->set_max(max(value - 2, 0));
+        m_baseline_spinbox->set_max(max(value - 2, 0));
         deferred_invoke([&] {
             m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
         });

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "PreviewWidget.h"
@@ -130,8 +110,8 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
     auto paint_window = [&](auto& title, const Gfx::IntRect& rect, auto state, const Gfx::Bitmap& icon) {
         int window_button_width = m_preview_palette.window_title_button_width();
         int window_button_height = m_preview_palette.window_title_button_height();
-        auto title_bar_text_rect = Gfx::WindowTheme::current().title_bar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
-        int pos = title_bar_text_rect.right() + 1;
+        auto titlebar_text_rect = Gfx::WindowTheme::current().titlebar_text_rect(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette);
+        int pos = titlebar_text_rect.right() + 1;
 
         Vector<Button> buttons;
         buttons.append(Button { {}, m_close_bitmap });
@@ -141,14 +121,14 @@ void PreviewWidget::paint_event(GUI::PaintEvent& event)
         for (auto& button : buttons) {
             pos -= window_button_width;
             Gfx::IntRect rect { pos, 0, window_button_width, window_button_height };
-            rect.center_vertically_within(title_bar_text_rect);
+            rect.center_vertically_within(titlebar_text_rect);
             button.rect = rect;
         }
 
         auto frame_rect = Gfx::WindowTheme::current().frame_rect_for_window(Gfx::WindowTheme::WindowType::Normal, rect, m_preview_palette, 0);
         Gfx::PainterStateSaver saver(painter);
         painter.translate(frame_rect.location());
-        Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, buttons.last().rect, 0);
+        Gfx::WindowTheme::current().paint_normal_frame(painter, state, rect, title, icon, m_preview_palette, buttons.last().rect, 0, false);
 
         for (auto& button : buttons) {
             Gfx::StylePainter::paint_button(painter, button.rect, m_preview_palette, Gfx::ButtonStyle::Normal, false);

@@ -1,32 +1,13 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/LEB128.h>
 #include <AK/MemMem.h>
 #include <AK/Stream.h>
 #include <AK/Vector.h>
@@ -93,58 +74,9 @@ public:
         return m_bytes[m_offset];
     }
 
-    bool read_LEB128_unsigned(size_t& result)
-    {
-        const auto backup = m_offset;
+    bool read_LEB128_unsigned(size_t& result) { return LEB128::read_unsigned(*this, result); }
 
-        result = 0;
-        size_t num_bytes = 0;
-        while (true) {
-            if (eof()) {
-                m_offset = backup;
-                set_recoverable_error();
-                return false;
-            }
-
-            const u8 byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            if (!(byte & (1 << 7)))
-                break;
-            ++num_bytes;
-        }
-
-        return true;
-    }
-
-    bool read_LEB128_signed(ssize_t& result)
-    {
-        const auto backup = m_offset;
-
-        result = 0;
-        size_t num_bytes = 0;
-        u8 byte = 0;
-
-        do {
-            if (eof()) {
-                m_offset = backup;
-                set_recoverable_error();
-                return false;
-            }
-
-            byte = m_bytes[m_offset];
-            result = (result) | (static_cast<size_t>(byte & ~(1 << 7)) << (num_bytes * 7));
-            ++m_offset;
-            ++num_bytes;
-        } while (byte & (1 << 7));
-
-        if (num_bytes * 7 < sizeof(size_t) * 4 && (byte & 0x40)) {
-            // sign extend
-            result |= ((size_t)(-1) << (num_bytes * 7));
-        }
-
-        return true;
-    }
+    bool read_LEB128_signed(ssize_t& result) { return LEB128::read_signed(*this, result); }
 
     ReadonlyBytes bytes() const { return m_bytes; }
     size_t offset() const { return m_offset; }

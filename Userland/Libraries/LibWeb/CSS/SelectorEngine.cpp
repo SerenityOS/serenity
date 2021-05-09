@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/CSS/SelectorEngine.h>
@@ -102,6 +82,53 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
                 return false;
         }
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
+        const auto step_size = component.nth_child_pattern.step_size;
+        const auto offset = component.nth_child_pattern.offset;
+        if (step_size == 0 && offset == 0)
+            return false; // "If both a and b are equal to zero, the pseudo-class represents no element in the document tree."
+
+        const auto* parent = element.parent_element();
+        if (!parent)
+            return false;
+
+        int index = 1;
+        for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
+            ++index;
+        }
+
+        if (step_size < 0) {
+            // When "step_size" is negative, selector represents first "offset" elements in document tree.
+            if (offset <= 0 || index > offset)
+                return false;
+            else
+                break;
+        } else if (step_size == 1) {
+            // When "step_size == 1", selector represents last "offset" elements in document tree.
+            if (offset < 0 || index < offset)
+                return false;
+            else
+                break;
+        }
+
+        // Like "a % b", but handles negative integers correctly.
+        const auto canonical_modulo = [](int a, int b) -> int {
+            int c = a % b;
+            if ((c < 0 && b > 0) || (c > 0 && b < 0)) {
+                c += b;
+            }
+            return c;
+        };
+
+        if (step_size == 0) {
+            // Avoid divide by zero.
+            if (index != offset) {
+                return false;
+            }
+        } else if (canonical_modulo(index - offset, step_size) != 0) {
+            return false;
+        }
+        break;
     }
 
     switch (component.attribute_match_type) {
@@ -171,6 +198,8 @@ static bool matches(const CSS::Selector& selector, int component_list_index, con
                 return true;
         }
         return false;
+    case CSS::Selector::ComplexSelector::Relation::Column:
+        TODO();
     }
     VERIFY_NOT_REACHED();
 }

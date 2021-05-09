@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Editor.h"
@@ -576,6 +556,20 @@ void Editor::interrupted()
     });
 }
 
+void Editor::resized()
+{
+    m_was_resized = true;
+    m_previous_num_columns = m_num_columns;
+    get_terminal_size();
+
+    reposition_cursor(true);
+    m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
+    reposition_cursor();
+
+    if (m_is_searching)
+        m_search_editor->resized();
+}
+
 void Editor::really_quit_event_loop()
 {
     m_finish = false;
@@ -586,7 +580,9 @@ void Editor::really_quit_event_loop()
     m_buffer.clear();
     m_chars_touched_in_the_middle = buffer().size();
     m_is_editing = false;
-    restore();
+
+    if (m_initialized)
+        restore();
 
     m_returned_line = string;
 
@@ -1092,7 +1088,6 @@ void Editor::cleanup_suggestions()
 
 bool Editor::search(const StringView& phrase, bool allow_empty, bool from_beginning)
 {
-
     int last_matching_offset = -1;
     bool found = false;
 
@@ -1451,9 +1446,9 @@ String Style::Background::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[48;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[48;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 40);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 40);
     }
 }
 
@@ -1463,9 +1458,9 @@ String Style::Foreground::to_vt_escape() const
         return "";
 
     if (m_is_rgb) {
-        return String::format("\033[38;2;%d;%d;%dm", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
+        return String::formatted("\e[38;2;{};{};{}m", m_rgb_color[0], m_rgb_color[1], m_rgb_color[2]);
     } else {
-        return String::format("\033[%dm", (u8)m_xterm_color + 30);
+        return String::formatted("\e[{}m", (u8)m_xterm_color + 30);
     }
 }
 
@@ -1474,7 +1469,7 @@ String Style::Hyperlink::to_vt_escape(bool starting) const
     if (is_empty())
         return "";
 
-    return String::format("\033]8;;%s\033\\", starting ? m_link.characters() : "");
+    return String::formatted("\e]8;;{}\e\\", starting ? m_link : String::empty());
 }
 
 void Style::unify_with(const Style& other, bool prefer_other)
@@ -1511,7 +1506,7 @@ String Style::to_string() const
         if (m_foreground.m_is_rgb) {
             builder.join(", ", m_foreground.m_rgb_color);
         } else {
-            builder.appendf("(XtermColor) %d", (int)m_foreground.m_xterm_color);
+            builder.appendff("(XtermColor) {}", (int)m_foreground.m_xterm_color);
         }
         builder.append("), ");
     }
@@ -1521,7 +1516,7 @@ String Style::to_string() const
         if (m_background.m_is_rgb) {
             builder.join(' ', m_background.m_rgb_color);
         } else {
-            builder.appendf("(XtermColor) %d", (int)m_background.m_xterm_color);
+            builder.appendff("(XtermColor) {}", (int)m_background.m_xterm_color);
         }
         builder.append("), ");
     }
@@ -1536,7 +1531,7 @@ String Style::to_string() const
         builder.append("Italic, ");
 
     if (!m_hyperlink.is_empty())
-        builder.appendf("Hyperlink(\"%s\"), ", m_hyperlink.m_link.characters());
+        builder.appendff("Hyperlink(\"{}\"), ", m_hyperlink.m_link);
 
     builder.append("}");
 

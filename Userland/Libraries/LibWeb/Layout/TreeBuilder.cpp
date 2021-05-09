@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <LibWeb/DOM/Document.h>
@@ -80,7 +60,7 @@ static Layout::Node& insertion_parent_for_block_node(Layout::Node& layout_parent
         layout_parent.remove_child(*child);
         children.append(child.release_nonnull());
     }
-    layout_parent.append_child(adopt(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
+    layout_parent.append_child(adopt_ref(*new BlockBox(layout_node.document(), nullptr, layout_parent.computed_values().clone_inherited_values())));
     layout_parent.set_children_are_inline(false);
     for (auto& child : children) {
         layout_parent.last_child()->append_child(child);
@@ -210,7 +190,10 @@ static bool is_table_track(CSS::Display display)
 
 static bool is_table_track_group(CSS::Display display)
 {
-    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableColumnGroup;
+    // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
+    // table-header-groups and table-footer-groups.
+    return display == CSS::Display::TableRowGroup || display == CSS::Display::TableHeaderGroup || display == CSS::Display::TableFooterGroup
+        || display == CSS::Display::TableColumnGroup;
 }
 
 static bool is_not_proper_table_child(const Node& node)
@@ -264,7 +247,7 @@ static void wrap_in_anonymous(NonnullRefPtrVector<Node>& sequence, Node* nearest
     auto& parent = *sequence.first().parent();
     auto computed_values = parent.computed_values().clone_inherited_values();
     static_cast<CSS::MutableComputedValues&>(computed_values).set_display(WrapperBoxType::static_display());
-    auto wrapper = adopt(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
+    auto wrapper = adopt_ref(*new WrapperBoxType(parent.document(), nullptr, move(computed_values)));
     for (auto& child : sequence) {
         parent.remove_child(child);
         wrapper->append_child(child);
@@ -286,6 +269,18 @@ void TreeBuilder::generate_missing_child_wrappers(NodeWithStyle& root)
 
     // An anonymous table-row box must be generated around each sequence of consecutive children of a table-row-group box which are not table-row boxes.
     for_each_in_tree_with_display<CSS::Display::TableRowGroup>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+    // Unless explicitly mentioned otherwise, mentions of table-row-groups in this spec also encompass the specialized
+    // table-header-groups and table-footer-groups.
+    for_each_in_tree_with_display<CSS::Display::TableHeaderGroup>(root, [&](auto& parent) {
+        for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
+            wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
+        });
+    });
+    for_each_in_tree_with_display<CSS::Display::TableFooterGroup>(root, [&](auto& parent) {
         for_each_sequence_of_consecutive_children_matching(parent, is_not_table_row, [&](auto& sequence, auto nearest_sibling) {
             wrap_in_anonymous<TableRowBox>(sequence, nearest_sibling);
         });

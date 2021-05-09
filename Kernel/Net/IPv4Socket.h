@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -74,6 +54,8 @@ public:
     u16 peer_port() const { return m_peer_port; }
     void set_peer_port(u16 port) { m_peer_port = port; }
 
+    const Vector<IPv4Address>& multicast_memberships() const { return m_multicast_memberships; }
+
     IPv4SocketTuple tuple() const { return IPv4SocketTuple(m_local_address, m_local_port, m_peer_address, m_peer_port); }
 
     String absolute_path(const FileDescription& description) const override;
@@ -90,14 +72,14 @@ protected:
     IPv4Socket(int type, int protocol);
     virtual const char* class_name() const override { return "IPv4Socket"; }
 
-    int allocate_local_port_if_needed();
+    KResultOr<u16> allocate_local_port_if_needed();
 
     virtual KResult protocol_bind() { return KSuccess; }
     virtual KResult protocol_listen() { return KSuccess; }
-    virtual KResultOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return -ENOTIMPL; }
-    virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return -ENOTIMPL; }
+    virtual KResultOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return ENOTIMPL; }
+    virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
-    virtual int protocol_allocate_local_port() { return 0; }
+    virtual KResultOr<u16> protocol_allocate_local_port() { return ENOPROTOOPT; }
     virtual bool protocol_is_disconnected() const { return false; }
 
     virtual void shut_down_for_reading() override;
@@ -115,6 +97,9 @@ private:
 
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
+
+    Vector<IPv4Address> m_multicast_memberships;
+    bool m_multicast_loop { true };
 
     struct ReceivedPacket {
         IPv4Address peer_address;

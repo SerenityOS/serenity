@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,6 +12,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/SourceLocation.h>
 #include <AK/String.h>
 #include <AK/Time.h>
 #include <AK/Vector.h>
@@ -578,7 +559,6 @@ public:
         const BlockFlags m_flags;
         BlockFlags& m_unblocked_flags;
         bool m_did_unblock { false };
-        bool m_should_block { true };
     };
 
     class AcceptBlocker final : public FileDescriptionBlocker {
@@ -762,6 +742,9 @@ public:
 
     RegisterState& get_register_dump_from_stack();
     const RegisterState& get_register_dump_from_stack() const { return const_cast<Thread*>(this)->get_register_dump_from_stack(); }
+
+    DebugRegisterState& debug_register_state() { return m_debug_register_state; }
+    const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
 
     TSS& tss() { return m_tss; }
     const TSS& tss() const { return m_tss; }
@@ -969,6 +952,9 @@ public:
     u32 signal_mask() const;
     void clear_signals();
 
+    KResultOr<u32> peek_debug_register(u32 register_index);
+    KResult poke_debug_register(u32 register_index, u32 data);
+
     void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
 
     DispatchSignalResult dispatch_one_pending_signal();
@@ -1080,7 +1066,7 @@ public:
     RecursiveSpinLock& get_lock() const { return m_lock; }
 
 #if LOCK_DEBUG
-    void holding_lock(Lock& lock, int refs_delta, const char* file = nullptr, int line = 0)
+    void holding_lock(Lock& lock, int refs_delta, const SourceLocation& location)
     {
         VERIFY(refs_delta != 0);
         m_holding_locks.fetch_add(refs_delta, AK::MemoryOrder::memory_order_relaxed);
@@ -1096,7 +1082,7 @@ public:
                 }
             }
             if (!have_existing)
-                m_holding_locks_list.append({ &lock, file ? file : "unknown", line, 1 });
+                m_holding_locks_list.append({ &lock, location, 1 });
         } else {
             VERIFY(refs_delta < 0);
             bool found = false;
@@ -1125,6 +1111,8 @@ public:
         return m_handling_page_fault;
     }
     void set_handling_page_fault(bool b) { m_handling_page_fault = b; }
+    void set_idle_thread() { m_is_idle_thread = true; }
+    bool is_idle_thread() const { return m_is_idle_thread; }
 
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
@@ -1200,6 +1188,7 @@ private:
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
     TSS m_tss {};
+    DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };
     IntrusiveListNode<Thread> m_ready_queue_node;
@@ -1221,8 +1210,7 @@ private:
 #if LOCK_DEBUG
     struct HoldingLockInfo {
         Lock* lock;
-        const char* file;
-        int line;
+        SourceLocation source_location;
         unsigned count;
     };
     Atomic<u32> m_holding_locks { 0 };
@@ -1261,6 +1249,7 @@ private:
     bool m_should_die { false };
     bool m_initialized { false };
     bool m_in_block { false };
+    bool m_is_idle_thread { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
 
     void yield_without_holding_big_lock();

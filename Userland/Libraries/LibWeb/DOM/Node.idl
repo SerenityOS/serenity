@@ -13,10 +13,12 @@ interface Node : EventTarget {
     readonly attribute Node? parentNode;
     readonly attribute Element? parentElement;
     readonly attribute boolean isConnected;
+    readonly attribute Document? ownerDocument;
     attribute DOMString textContent;
 
     Node appendChild(Node node);
     [ImplementedAs=pre_insert] Node insertBefore(Node node, Node? child);
+    Node replaceChild(Node node, Node child);
     [ImplementedAs=pre_remove] Node removeChild(Node child);
     [ImplementedAs=clone_node_binding] Node cloneNode(optional boolean deep = false);
 

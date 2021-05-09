@@ -1,27 +1,8 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
- * All rights reserved.
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "History.h"
@@ -39,6 +20,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
@@ -274,10 +256,8 @@ int main(int argc, char* argv[])
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
-    app_menu.add_separator();
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
@@ -285,6 +265,9 @@ int main(int argc, char* argv[])
     go_menu.add_action(*go_back_action);
     go_menu.add_action(*go_forward_action);
     go_menu.add_action(*go_home_action);
+
+    auto& help_menu = menubar->add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("Help", app_icon, window));
 
     window->set_menubar(move(menubar));
 
@@ -305,6 +288,21 @@ int main(int argc, char* argv[])
     } else {
         go_home_action->activate();
     }
+
+    auto& statusbar = widget.add<GUI::Statusbar>();
+    app->on_action_enter = [&statusbar](GUI::Action const& action) {
+        statusbar.set_override_text(action.status_tip());
+    };
+    app->on_action_leave = [&statusbar](GUI::Action const&) {
+        statusbar.set_override_text({});
+    };
+
+    page_view.on_link_hover = [&](URL const& url) {
+        if (url.is_valid())
+            statusbar.set_text(url.to_string());
+        else
+            statusbar.set_text({});
+    };
 
     window->set_focused_widget(&left_tab_bar);
     window->show();

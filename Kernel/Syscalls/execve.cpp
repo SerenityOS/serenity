@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/LexicalPath.h>
@@ -31,7 +11,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/PerformanceEventBuffer.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -116,13 +96,15 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     Vector<FlatPtr> argv_entries;
     for (auto& argument : arguments) {
         push_string_on_new_stack(argument);
-        argv_entries.append(new_esp);
+        if (!argv_entries.try_append(new_esp))
+            return ENOMEM;
     }
 
     Vector<FlatPtr> env_entries;
     for (auto& variable : environment) {
         push_string_on_new_stack(variable);
-        env_entries.append(new_esp);
+        if (!env_entries.try_append(new_esp))
+            return ENOMEM;
     }
 
     for (auto& value : auxiliary_values) {
@@ -149,11 +131,17 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
 
     // NOTE: The stack needs to be 16-byte aligned.
     new_esp -= new_esp % 16;
+    // GCC assumes that the return address has been pushed to the stack when it enters the function,
+    // so we need to reserve an extra pointer's worth of bytes below this to make GCC's stack alignment
+    // calculations work
+    new_esp -= sizeof(void*);
 
     push_on_new_stack((FlatPtr)envp);
     push_on_new_stack((FlatPtr)argv);
     push_on_new_stack((FlatPtr)argv_entries.size());
     push_on_new_stack(0);
+
+    VERIFY((new_esp + sizeof(void*)) % 16 == 0);
 
     return new_esp;
 }
@@ -648,9 +636,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
 
-    // Throw away any recorded performance events in this process.
-    if (m_perf_event_buffer)
-        m_perf_event_buffer->clear();
+    PerformanceManager::add_process_exec_event(*this);
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
@@ -737,7 +723,6 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
 
 KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& main_program_header, int nread, size_t file_size)
 {
-
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
     if (!ELF::validate_program_headers(main_program_header, file_size, (const u8*)&main_program_header, nread, &interpreter_path)) {
@@ -933,14 +918,16 @@ KResultOr<int> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> u
         if (size.has_overflow())
             return false;
         Vector<Syscall::StringArgument, 32> strings;
-        strings.resize(list.length);
+        if (!strings.try_resize(list.length))
+            return false;
         if (!copy_from_user(strings.data(), list.strings, list.length * sizeof(*list.strings)))
             return false;
         for (size_t i = 0; i < list.length; ++i) {
             auto string = copy_string_from_user(strings[i]);
             if (string.is_null())
                 return false;
-            output.append(move(string));
+            if (!output.try_append(move(string)))
+                return false;
         }
         return true;
     };

@@ -1,34 +1,15 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2019-2020, Shannon Booth <shannon.ml.booth@gmail.com>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Function.h>
 #include <AK/String.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
+#include <LibTest/CrashTest.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -36,72 +17,9 @@
 #include <syscall.h>
 #include <unistd.h>
 
+using Test::Crash;
+
 #pragma GCC optimize("O0")
-
-class Crash {
-public:
-    enum class RunType {
-        UsingChildProcess,
-        UsingCurrentProcess,
-    };
-
-    enum class Failure {
-        DidNotCrash,
-        UnexpectedError,
-    };
-
-    Crash(String test_type, Function<Crash::Failure()> crash_function)
-        : m_type(test_type)
-        , m_crash_function(move(crash_function))
-    {
-    }
-
-    void run(RunType run_type)
-    {
-        printf("\x1B[33mTesting\x1B[0m: \"%s\"\n", m_type.characters());
-
-        auto run_crash_and_print_if_error = [this]() {
-            auto failure = m_crash_function();
-
-            // If we got here something went wrong
-            printf("\x1B[31mFAIL\x1B[0m: ");
-            switch (failure) {
-            case Failure::DidNotCrash:
-                printf("Did not crash!\n");
-                break;
-            case Failure::UnexpectedError:
-                printf("Unexpected error!\n");
-                break;
-            default:
-                VERIFY_NOT_REACHED();
-            }
-        };
-
-        if (run_type == RunType::UsingCurrentProcess) {
-            run_crash_and_print_if_error();
-        } else {
-
-            // Run the test in a child process so that we do not crash the crash program :^)
-            pid_t pid = fork();
-            if (pid < 0) {
-                perror("fork");
-                VERIFY_NOT_REACHED();
-            } else if (pid == 0) {
-                run_crash_and_print_if_error();
-                exit(0);
-            }
-
-            int status;
-            waitpid(pid, &status, 0);
-            if (WIFSIGNALED(status))
-                printf("\x1B[32mPASS\x1B[0m: Terminated with signal %d\n", WTERMSIG(status));
-        }
-    }
-
-private:
-    String m_type;
-    Function<Crash::Failure()> m_crash_function;
-};
 
 int main(int argc, char** argv)
 {
@@ -196,7 +114,10 @@ int main(int argc, char** argv)
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             [[maybe_unused]] volatile auto x = uninitialized_memory[0][0];
+#pragma GCC diagnostic pop
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -219,7 +140,10 @@ int main(int argc, char** argv)
             if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
             uninitialized_memory[4][0] = 1;
+#pragma GCC diagnostic pop
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -281,8 +205,14 @@ int main(int argc, char** argv)
                 return Crash::Failure::UnexpectedError;
 
             u8* bad_esp = bad_stack + 2048;
+#ifndef __LP64__
             asm volatile("mov %%eax, %%esp" ::"a"(bad_esp));
             asm volatile("pushl $0");
+#else
+            asm volatile("movq %%rax, %%rsp" ::"a"(bad_esp));
+            asm volatile("pushq $0");
+#endif
+
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

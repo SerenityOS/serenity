@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "GlyphMapWidget.h"
@@ -59,7 +39,7 @@ void GlyphMapWidget::resize_event(GUI::ResizeEvent& event)
     int content_height = rows() * (font().glyph_height() + m_vertical_spacing) + frame_thickness();
     set_content_size({ content_width, content_height });
 
-    ScrollableWidget::resize_event(event);
+    AbstractScrollableWidget::resize_event(event);
 }
 
 void GlyphMapWidget::set_selected_glyph(int glyph)
@@ -90,6 +70,14 @@ void GlyphMapWidget::update_glyph(int glyph)
     update(get_outer_rect(glyph));
 }
 
+void GlyphMapWidget::reprobe_font()
+{
+    VERIFY(m_font);
+    m_glyph_count = m_font->glyph_count();
+    m_selected_glyph = 0;
+    update();
+}
+
 void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
@@ -99,7 +87,7 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     painter.set_font(font());
-    painter.fill_rect(widget_inner_rect(), palette().base());
+    painter.fill_rect(widget_inner_rect(), palette().inactive_window_title());
 
     for (int glyph = 0; glyph < m_glyph_count; ++glyph) {
         Gfx::IntRect outer_rect = get_outer_rect(glyph);
@@ -110,8 +98,10 @@ void GlyphMapWidget::paint_event(GUI::PaintEvent& event)
             font().glyph_height());
         if (glyph == m_selected_glyph) {
             painter.fill_rect(outer_rect, is_focused() ? palette().selection() : palette().inactive_selection());
-            painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
-        } else {
+            if (m_font->contains_glyph(glyph))
+                painter.draw_glyph(inner_rect.location(), glyph, is_focused() ? palette().selection_text() : palette().inactive_selection_text());
+        } else if (m_font->contains_glyph(glyph)) {
+            painter.fill_rect(outer_rect, palette().base());
             painter.draw_glyph(inner_rect.location(), glyph, palette().base_text());
         }
     }

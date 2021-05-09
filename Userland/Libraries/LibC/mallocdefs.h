@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -34,8 +14,18 @@
 #define MALLOC_SCRUB_BYTE 0xdc
 #define FREE_SCRUB_BYTE 0xed
 
-static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 500, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
+static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
 static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
+
+consteval bool check_size_classes_alignment()
+{
+    for (size_t i = 0; i < num_size_classes; i++) {
+        if ((size_classes[i] % 8) != 0)
+            return false;
+    }
+    return true;
+}
+static_assert(check_size_classes_alignment());
 
 struct CommonHeader {
     size_t m_magic;
@@ -67,18 +57,11 @@ struct ChunkedBlock
         m_magic = MAGIC_PAGE_HEADER;
         m_size = bytes_per_chunk;
         m_free_chunks = chunk_capacity();
-        m_freelist = (FreelistEntry*)chunk(0);
-        for (size_t i = 0; i < chunk_capacity(); ++i) {
-            auto* entry = (FreelistEntry*)chunk(i);
-            if (i != chunk_capacity() - 1)
-                entry->next = (FreelistEntry*)chunk(i + 1);
-            else
-                entry->next = nullptr;
-        }
     }
 
     ChunkedBlock* m_prev { nullptr };
     ChunkedBlock* m_next { nullptr };
+    size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     size_t m_free_chunks { 0 };
     [[gnu::aligned(8)]] unsigned char m_slot[0];

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DownloadWidget.h"
@@ -38,7 +18,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
-#include <LibProtocol/Client.h>
+#include <LibProtocol/RequestClient.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <math.h>
 
@@ -56,7 +36,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     }
 
     m_elapsed_timer.start();
-    m_download = Web::ResourceLoader::the().protocol_client().start_download("GET", url.to_string());
+    m_download = Web::ResourceLoader::the().protocol_client().start_request("GET", url.to_string());
     VERIFY(m_download);
     m_download->on_progress = [this](Optional<u32> total_size, u32 downloaded_size) {
         did_progress(total_size.value(), downloaded_size);

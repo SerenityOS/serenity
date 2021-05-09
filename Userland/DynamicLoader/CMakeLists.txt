@@ -1,6 +1,5 @@
 set(LOADER_SOURCES
     main.cpp
-    math.cpp
     misc.cpp
 )
 
@@ -19,16 +18,17 @@ endif()
 
 file(GLOB LIBSYSTEM_SOURCES "../Libraries/LibSystem/*.cpp")
 
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".+crt0.cpp")
-list(FILTER LIBC_SOURCES1 EXCLUDE REGEX ".+crt0.+.cpp")
+add_definitions(-D_DYNAMIC_LOADER)
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
+# FIXME: Remove -fbuilding-libgcc after the next toolchain update
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fbuilding-libgcc -fno-rtti -nostdlib -pie -fpic -DNO_TLS")
 
 set_source_files_properties (../Libraries/LibC/ssp.cpp PROPERTIES COMPILE_FLAGS
     "-fno-stack-protector")
 
 add_executable(Loader.so ${SOURCES})
+target_link_libraries(Loader.so gcc)
 target_link_options(Loader.so PRIVATE LINKER:--no-dynamic-linker)
 install(TARGETS Loader.so RUNTIME DESTINATION usr/lib/)

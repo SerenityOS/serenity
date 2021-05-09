@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -253,10 +233,17 @@ ALWAYS_INLINE int print_octal_number(PutChFunc putch, char*& bufptr, u32 number,
 }
 
 template<typename PutChFunc>
-ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot)
+ALWAYS_INLINE int print_string(PutChFunc putch, char*& bufptr, const char* str, size_t len, bool left_pad, size_t field_width, bool dot, size_t fraction_length, bool has_fraction)
 {
+    if (has_fraction)
+        len = min(len, fraction_length);
+
     if (!dot && (!field_width || field_width < len))
         field_width = len;
+
+    if (has_fraction && !field_width)
+        field_width = len;
+
     size_t pad_amount = field_width > len ? field_width - len : 0;
 
     if (!left_pad) {
@@ -312,7 +299,7 @@ struct PrintfImpl {
         const char* sp = NextArgument<const char*>()(ap);
         if (!sp)
             sp = "(null)";
-        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot);
+        return print_string(m_putch, m_bufptr, sp, strlen(sp), state.left_pad, state.field_width, state.dot, state.fraction_length, state.has_fraction_length);
     }
     ALWAYS_INLINE int format_d(const ModifierState& state, ArgumentListRefT ap) const
     {
@@ -387,7 +374,7 @@ struct PrintfImpl {
     ALWAYS_INLINE int format_c(const ModifierState& state, ArgumentListRefT ap) const
     {
         char c = NextArgument<int>()(ap);
-        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot);
+        return print_string(m_putch, m_bufptr, &c, 1, state.left_pad, state.field_width, state.dot, state.fraction_length, state.has_fraction_length);
     }
     ALWAYS_INLINE int format_unrecognized(char format_op, const char* fmt, const ModifierState&, ArgumentListRefT) const
     {
@@ -442,7 +429,7 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 if (*(p + 1))
                     goto one_more;
             }
-            if (!state.zero_pad && !state.field_width && *p == '0') {
+            if (!state.zero_pad && !state.field_width && !state.has_fraction_length && *p == '0') {
                 state.zero_pad = true;
                 if (*(p + 1))
                     goto one_more;

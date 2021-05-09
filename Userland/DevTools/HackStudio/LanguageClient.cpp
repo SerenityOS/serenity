@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "LanguageClient.h"
@@ -34,22 +14,22 @@
 
 namespace HackStudio {
 
-void ServerConnection::handle(const Messages::LanguageClient::AutoCompleteSuggestions& message)
+void ServerConnection::auto_complete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
         return;
     }
-    m_current_language_client->provide_autocomplete_suggestions(message.suggestions());
+    m_current_language_client->provide_autocomplete_suggestions(suggestions);
 }
 
-void ServerConnection::handle(const Messages::LanguageClient::DeclarationLocation& message)
+void ServerConnection::declaration_location(const GUI::AutocompleteProvider::ProjectLocation& location)
 {
     if (!m_current_language_client) {
         dbgln("Language Server connection has no attached language client");
         return;
     }
-    m_current_language_client->declaration_found(message.location().file, message.location().line, message.location().column);
+    m_current_language_client->declaration_found(location.file, location.line, location.column);
 }
 
 void ServerConnection::die()
@@ -63,14 +43,14 @@ void LanguageClient::open_file(const String& path, int fd)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileOpened(path, fd));
+    m_connection_wrapper.connection()->async_file_opened(path, fd);
 }
 
 void LanguageClient::set_file_content(const String& path, const String& content)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::SetFileContent(path, content));
+    m_connection_wrapper.connection()->async_set_file_content(path, content);
 }
 
 void LanguageClient::insert_text(const String& path, const String& text, size_t line, size_t column)
@@ -78,14 +58,14 @@ void LanguageClient::insert_text(const String& path, const String& text, size_t 
     if (!m_connection_wrapper.connection())
         return;
     //    set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileEditInsertText(path, text, line, column));
+    m_connection_wrapper.connection()->async_file_edit_insert_text(path, text, line, column);
 }
 
 void LanguageClient::remove_text(const String& path, size_t from_line, size_t from_column, size_t to_line, size_t to_column)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FileEditRemoveText(path, from_line, from_column, to_line, to_column));
+    m_connection_wrapper.connection()->async_file_edit_remove_text(path, from_line, from_column, to_line, to_column);
 }
 
 void LanguageClient::request_autocomplete(const String& path, size_t cursor_line, size_t cursor_column)
@@ -93,7 +73,7 @@ void LanguageClient::request_autocomplete(const String& path, size_t cursor_line
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::AutoCompleteSuggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column }));
+    m_connection_wrapper.connection()->async_auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation { path, cursor_line, cursor_column });
 }
 
 void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::AutocompleteProvider::Entry>& suggestions) const
@@ -108,7 +88,7 @@ void LanguageClient::set_autocomplete_mode(const String& mode)
 {
     if (!m_connection_wrapper.connection())
         return;
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::SetAutoCompleteMode(mode));
+    m_connection_wrapper.connection()->async_set_auto_complete_mode(mode);
 }
 
 void LanguageClient::set_active_client()
@@ -120,9 +100,9 @@ void LanguageClient::set_active_client()
 
 HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstances::s_instance_for_language;
 
-void ServerConnection::handle(const Messages::LanguageClient::DeclarationsInDocument& message)
+void ServerConnection::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
 {
-    ProjectDeclarations::the().set_declared_symbols(message.filename(), message.declarations());
+    ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
 void LanguageClient::search_declaration(const String& path, size_t line, size_t column)
@@ -130,7 +110,7 @@ void LanguageClient::search_declaration(const String& path, size_t line, size_t 
     if (!m_connection_wrapper.connection())
         return;
     set_active_client();
-    m_connection_wrapper.connection()->post_message(Messages::LanguageServer::FindDeclaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column }));
+    m_connection_wrapper.connection()->async_find_declaration(GUI::AutocompleteProvider::ProjectLocation { path, line, column });
 }
 
 void LanguageClient::declaration_found(const String& file, size_t line, size_t column) const
@@ -241,7 +221,7 @@ void ServerConnectionWrapper::try_respawn_connection()
     project().for_each_text_file([this](const ProjectFile& file) {
         if (file.code_document().language() != m_language)
             return;
-        m_connection->post_message(Messages::LanguageServer::SetFileContent(file.code_document().file_path(), file.document().text()));
+        m_connection->async_set_file_content(file.code_document().file_path(), file.document().text());
     });
 }
 

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2020, the SerenityOS developers.
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Random.h>
@@ -29,6 +9,7 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
+#include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
@@ -147,7 +128,7 @@ static int run(Function<void(const char*, size_t)> fn)
         }
     } else {
         if (filename == nullptr) {
-            puts("must specify a file name");
+            puts("must specify a filename");
             return 1;
         }
         if (!Core::File::exists(filename)) {
@@ -431,11 +412,16 @@ auto main(int argc, char** argv) -> int
             return 1;
         }
         auto config = Core::ConfigFile::open(ca_certs_file);
+        auto now = Core::DateTime::now();
+        auto last_year = Core::DateTime::create(now.year() - 1);
+        auto next_year = Core::DateTime::create(now.year() + 1);
         for (auto& entity : config->groups()) {
             Certificate cert;
-            cert.subject = entity;
-            cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-            cert.country = config->read_entry(entity, "country");
+            cert.subject.subject = entity;
+            cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+            cert.subject.country = config->read_entry(entity, "country");
+            cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+            cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
             s_root_ca_certificates.append(move(cert));
         }
         if (run_tests)
@@ -474,11 +460,16 @@ auto main(int argc, char** argv) -> int
                 return 1;
             }
             auto config = Core::ConfigFile::open(ca_certs_file);
+            auto now = Core::DateTime::now();
+            auto last_year = Core::DateTime::create(now.year() - 1);
+            auto next_year = Core::DateTime::create(now.year() + 1);
             for (auto& entity : config->groups()) {
                 Certificate cert;
-                cert.subject = entity;
-                cert.issuer_subject = config->read_entry(entity, "issuer_subject", entity);
-                cert.country = config->read_entry(entity, "country");
+                cert.subject.subject = entity;
+                cert.issuer.subject = config->read_entry(entity, "issuer_subject", entity);
+                cert.subject.country = config->read_entry(entity, "country");
+                cert.not_before = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_before", "")).value_or(last_year);
+                cert.not_after = Crypto::ASN1::parse_generalized_time(config->read_entry(entity, "not_after", "")).value_or(next_year);
                 s_root_ca_certificates.append(move(cert));
             }
             tls_tests();

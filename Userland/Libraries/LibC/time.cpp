@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/String.h>
@@ -82,6 +62,12 @@ int utimes(const char* pathname, const struct timeval times[2])
 char* ctime(const time_t* t)
 {
     return asctime(localtime(t));
+}
+
+char* ctime_r(const time_t* t, char* buf)
+{
+    struct tm tm_buf;
+    return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
 static const int __seconds_per_day = 60 * 60 * 24;
@@ -180,7 +166,18 @@ struct tm* gmtime_r(const time_t* t, struct tm* tm)
 char* asctime(const struct tm* tm)
 {
     static char buffer[69];
-    strftime(buffer, sizeof buffer, "%a %b %e %T %Y", tm);
+    return asctime_r(tm, buffer);
+}
+
+char* asctime_r(const struct tm* tm, char* buffer)
+{
+    // Spec states buffer must be at least 26 bytes.
+    constexpr size_t assumed_len = 26;
+    size_t filled_size = strftime(buffer, assumed_len, "%a %b %e %T %Y\n", tm);
+
+    // Verify that the buffer was large enough.
+    VERIFY(filled_size != 0);
+
     return buffer;
 }
 
@@ -226,34 +223,34 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.append(mon_long_names[tm->tm_mon]);
                 break;
             case 'C':
-                builder.appendf("%02d", (tm->tm_year + 1900) / 100);
+                builder.appendff("{:02}", (tm->tm_year + 1900) / 100);
                 break;
             case 'd':
-                builder.appendf("%02d", tm->tm_mday);
+                builder.appendff("{:02}", tm->tm_mday);
                 break;
             case 'D':
-                builder.appendf("%02d/%02d/%02d", tm->tm_mon + 1, tm->tm_mday, (tm->tm_year + 1900) % 100);
+                builder.appendff("{:02}/{:02}/{:02}", tm->tm_mon + 1, tm->tm_mday, (tm->tm_year + 1900) % 100);
                 break;
             case 'e':
-                builder.appendf("%2d", tm->tm_mday);
+                builder.appendff("{:2}", tm->tm_mday);
                 break;
             case 'h':
                 builder.append(mon_short_names[tm->tm_mon]);
                 break;
             case 'H':
-                builder.appendf("%02d", tm->tm_hour);
+                builder.appendff("{:02}", tm->tm_hour);
                 break;
             case 'I':
-                builder.appendf("%02d", tm->tm_hour % 12);
+                builder.appendff("{:02}", tm->tm_hour % 12);
                 break;
             case 'j':
-                builder.appendf("%03d", tm->tm_yday + 1);
+                builder.appendff("{:03}", tm->tm_yday + 1);
                 break;
             case 'm':
-                builder.appendf("%02d", tm->tm_mon + 1);
+                builder.appendff("{:02}", tm->tm_mon + 1);
                 break;
             case 'M':
-                builder.appendf("%02d", tm->tm_min);
+                builder.appendff("{:02}", tm->tm_min);
                 break;
             case 'n':
                 builder.append('\n');
@@ -262,27 +259,27 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                 builder.append(tm->tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'r':
-                builder.appendf("%02d:%02d:%02d %s", tm->tm_hour % 12, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
+                builder.appendff("{:02}:{:02}:{:02} {}", tm->tm_hour % 12, tm->tm_min, tm->tm_sec, tm->tm_hour < 12 ? "a.m." : "p.m.");
                 break;
             case 'R':
-                builder.appendf("%02d:%02d", tm->tm_hour, tm->tm_min);
+                builder.appendff("{:02}:{:02}", tm->tm_hour, tm->tm_min);
                 break;
             case 'S':
-                builder.appendf("%02d", tm->tm_sec);
+                builder.appendff("{:02}", tm->tm_sec);
                 break;
             case 't':
                 builder.append('\t');
                 break;
             case 'T':
-                builder.appendf("%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
+                builder.appendff("{:02}:{:02}:{:02}", tm->tm_hour, tm->tm_min, tm->tm_sec);
                 break;
             case 'u':
-                builder.appendf("%d", tm->tm_wday ? tm->tm_wday : 7);
+                builder.appendff("{}", tm->tm_wday ? tm->tm_wday : 7);
                 break;
             case 'U': {
                 const int wday_of_year_beginning = (tm->tm_wday + 6 * tm->tm_yday) % 7;
                 const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'V': {
@@ -299,23 +296,23 @@ size_t strftime(char* destination, size_t max_size, const char* format, const st
                             --week_number;
                     }
                 }
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'w':
-                builder.appendf("%d", tm->tm_wday);
+                builder.appendff("{}", tm->tm_wday);
                 break;
             case 'W': {
                 const int wday_of_year_beginning = (tm->tm_wday + 6 + 6 * tm->tm_yday) % 7;
                 const int week_number = (tm->tm_yday + wday_of_year_beginning) / 7;
-                builder.appendf("%02d", week_number);
+                builder.appendff("{:02}", week_number);
                 break;
             }
             case 'y':
-                builder.appendf("%02d", (tm->tm_year + 1900) % 100);
+                builder.appendff("{:02}", (tm->tm_year + 1900) % 100);
                 break;
             case 'Y':
-                builder.appendf("%d", tm->tm_year + 1900);
+                builder.appendff("{}", tm->tm_year + 1900);
                 break;
             case '%':
                 builder.append('%');

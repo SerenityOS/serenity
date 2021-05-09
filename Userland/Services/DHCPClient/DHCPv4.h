@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -173,12 +153,12 @@ struct ParsedDHCPv4Options {
     {
         StringBuilder builder;
         builder.append("DHCP Options (");
-        builder.appendf("%zu", options.size());
+        builder.appendff("{}", options.size());
         builder.append(" entries)\n");
         for (auto& opt : options) {
-            builder.appendf("\toption %d (%d bytes):", (u8)opt.key, (u8)opt.value.length);
+            builder.appendff("\toption {} ({} bytes):", (u8)opt.key, (u8)opt.value.length);
             for (auto i = 0; i < opt.value.length; ++i)
-                builder.appendf(" %u ", ((const u8*)opt.value.value)[i]);
+                builder.appendff(" {} ", ((const u8*)opt.value.value)[i]);
             builder.append('\n');
         }
         return builder.build();

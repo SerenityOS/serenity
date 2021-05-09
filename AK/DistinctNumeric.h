@@ -1,28 +1,8 @@
 /*
  * Copyright (c) 2020, Ben Wiederhake <BenWiederhake.GitHub@gmx.de>
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -72,48 +52,48 @@ class DistinctNumeric {
     using Self = DistinctNumeric<T, X, Incr, Cmp, Bool, Flags, Shift, Arith>;
 
 public:
-    DistinctNumeric()
+    constexpr DistinctNumeric()
     {
     }
 
-    DistinctNumeric(T value)
+    constexpr DistinctNumeric(T value)
         : m_value { value }
     {
     }
 
-    const T& value() const { return m_value; }
+    constexpr const T& value() const { return m_value; }
 
     // Always implemented: identity.
-    bool operator==(const Self& other) const
+    constexpr bool operator==(const Self& other) const
     {
         return this->m_value == other.m_value;
     }
-    bool operator!=(const Self& other) const
+    constexpr bool operator!=(const Self& other) const
     {
         return this->m_value != other.m_value;
     }
 
     // Only implemented when `Incr` is true:
-    Self& operator++()
+    constexpr Self& operator++()
     {
         static_assert(Incr, "'++a' is only available for DistinctNumeric types with 'Incr'.");
         this->m_value += 1;
         return *this;
     }
-    Self operator++(int)
+    constexpr Self operator++(int)
     {
         static_assert(Incr, "'a++' is only available for DistinctNumeric types with 'Incr'.");
         Self ret = this->m_value;
         this->m_value += 1;
         return ret;
     }
-    Self& operator--()
+    constexpr Self& operator--()
     {
         static_assert(Incr, "'--a' is only available for DistinctNumeric types with 'Incr'.");
         this->m_value -= 1;
         return *this;
     }
-    Self operator--(int)
+    constexpr Self operator--(int)
     {
         static_assert(Incr, "'a--' is only available for DistinctNumeric types with 'Incr'.");
         Self ret = this->m_value;
@@ -122,22 +102,22 @@ public:
     }
 
     // Only implemented when `Cmp` is true:
-    bool operator>(const Self& other) const
+    constexpr bool operator>(const Self& other) const
     {
         static_assert(Cmp, "'a>b' is only available for DistinctNumeric types with 'Cmp'.");
         return this->m_value > other.m_value;
     }
-    bool operator<(const Self& other) const
+    constexpr bool operator<(const Self& other) const
     {
         static_assert(Cmp, "'a<b' is only available for DistinctNumeric types with 'Cmp'.");
         return this->m_value < other.m_value;
     }
-    bool operator>=(const Self& other) const
+    constexpr bool operator>=(const Self& other) const
     {
         static_assert(Cmp, "'a>=b' is only available for DistinctNumeric types with 'Cmp'.");
         return this->m_value >= other.m_value;
     }
-    bool operator<=(const Self& other) const
+    constexpr bool operator<=(const Self& other) const
     {
         static_assert(Cmp, "'a<=b' is only available for DistinctNumeric types with 'Cmp'.");
         return this->m_value <= other.m_value;
@@ -145,7 +125,7 @@ public:
     // 'operator<=>' cannot be implemented. See class comment.
 
     // Only implemented when `bool` is true:
-    bool operator!() const
+    constexpr bool operator!() const
     {
         static_assert(Bool, "'!a' is only available for DistinctNumeric types with 'Bool'.");
         return !this->m_value;
@@ -156,39 +136,39 @@ public:
     // `operator bool() const` would defy the entire point of this class.
 
     // Only implemented when `Flags` is true:
-    Self operator~() const
+    constexpr Self operator~() const
     {
         static_assert(Flags, "'~a' is only available for DistinctNumeric types with 'Flags'.");
         return ~this->m_value;
     }
-    Self operator&(const Self& other) const
+    constexpr Self operator&(const Self& other) const
     {
         static_assert(Flags, "'a&b' is only available for DistinctNumeric types with 'Flags'.");
         return this->m_value & other.m_value;
     }
-    Self operator|(const Self& other) const
+    constexpr Self operator|(const Self& other) const
     {
         static_assert(Flags, "'a|b' is only available for DistinctNumeric types with 'Flags'.");
         return this->m_value | other.m_value;
     }
-    Self operator^(const Self& other) const
+    constexpr Self operator^(const Self& other) const
     {
         static_assert(Flags, "'a^b' is only available for DistinctNumeric types with 'Flags'.");
         return this->m_value ^ other.m_value;
     }
-    Self& operator&=(const Self& other)
+    constexpr Self& operator&=(const Self& other)
     {
         static_assert(Flags, "'a&=b' is only available for DistinctNumeric types with 'Flags'.");
         this->m_value &= other.m_value;
         return *this;
     }
-    Self& operator|=(const Self& other)
+    constexpr Self& operator|=(const Self& other)
     {
         static_assert(Flags, "'a|=b' is only available for DistinctNumeric types with 'Flags'.");
         this->m_value |= other.m_value;
         return *this;
     }
-    Self& operator^=(const Self& other)
+    constexpr Self& operator^=(const Self& other)
     {
         static_assert(Flags, "'a^=b' is only available for DistinctNumeric types with 'Flags'.");
         this->m_value ^= other.m_value;
@@ -197,23 +177,23 @@ public:
 
     // Only implemented when `Shift` is true:
     // TODO: Should this take `int` instead?
-    Self operator<<(const Self& other) const
+    constexpr Self operator<<(const Self& other) const
     {
         static_assert(Shift, "'a<<b' is only available for DistinctNumeric types with 'Shift'.");
         return this->m_value << other.m_value;
     }
-    Self operator>>(const Self& other) const
+    constexpr Self operator>>(const Self& other) const
     {
         static_assert(Shift, "'a>>b' is only available for DistinctNumeric types with 'Shift'.");
         return this->m_value >> other.m_value;
     }
-    Self& operator<<=(const Self& other)
+    constexpr Self& operator<<=(const Self& other)
     {
         static_assert(Shift, "'a<<=b' is only available for DistinctNumeric types with 'Shift'.");
         this->m_value <<= other.m_value;
         return *this;
     }
-    Self& operator>>=(const Self& other)
+    constexpr Self& operator>>=(const Self& other)
     {
         static_assert(Shift, "'a>>=b' is only available for DistinctNumeric types with 'Shift'.");
         this->m_value >>= other.m_value;
@@ -221,66 +201,66 @@ public:
     }
 
     // Only implemented when `Arith` is true:
-    Self operator+(const Self& other) const
+    constexpr Self operator+(const Self& other) const
     {
         static_assert(Arith, "'a+b' is only available for DistinctNumeric types with 'Arith'.");
         return this->m_value + other.m_value;
     }
-    Self operator-(const Self& other) const
+    constexpr Self operator-(const Self& other) const
     {
         static_assert(Arith, "'a-b' is only available for DistinctNumeric types with 'Arith'.");
         return this->m_value - other.m_value;
     }
-    Self operator+() const
+    constexpr Self operator+() const
     {
         static_assert(Arith, "'+a' is only available for DistinctNumeric types with 'Arith'.");
         return +this->m_value;
     }
-    Self operator-() const
+    constexpr Self operator-() const
     {
         static_assert(Arith, "'-a' is only available for DistinctNumeric types with 'Arith'.");
         return -this->m_value;
     }
-    Self operator*(const Self& other) const
+    constexpr Self operator*(const Self& other) const
     {
         static_assert(Arith, "'a*b' is only available for DistinctNumeric types with 'Arith'.");
         return this->m_value * other.m_value;
     }
-    Self operator/(const Self& other) const
+    constexpr Self operator/(const Self& other) const
     {
         static_assert(Arith, "'a/b' is only available for DistinctNumeric types with 'Arith'.");
         return this->m_value / other.m_value;
     }
-    Self operator%(const Self& other) const
+    constexpr Self operator%(const Self& other) const
     {
         static_assert(Arith, "'a%b' is only available for DistinctNumeric types with 'Arith'.");
         return this->m_value % other.m_value;
     }
-    Self& operator+=(const Self& other)
+    constexpr Self& operator+=(const Self& other)
     {
         static_assert(Arith, "'a+=b' is only available for DistinctNumeric types with 'Arith'.");
         this->m_value += other.m_value;
         return *this;
     }
-    Self& operator-=(const Self& other)
+    constexpr Self& operator-=(const Self& other)
     {
         static_assert(Arith, "'a+=b' is only available for DistinctNumeric types with 'Arith'.");
         this->m_value += other.m_value;
         return *this;
     }
-    Self& operator*=(const Self& other)
+    constexpr Self& operator*=(const Self& other)
     {
         static_assert(Arith, "'a*=b' is only available for DistinctNumeric types with 'Arith'.");
         this->m_value *= other.m_value;
         return *this;
     }
-    Self& operator/=(const Self& other)
+    constexpr Self& operator/=(const Self& other)
     {
         static_assert(Arith, "'a/=b' is only available for DistinctNumeric types with 'Arith'.");
         this->m_value /= other.m_value;
         return *this;
     }
-    Self& operator%=(const Self& other)
+    constexpr Self& operator%=(const Self& other)
     {
         static_assert(Arith, "'a%=b' is only available for DistinctNumeric types with 'Arith'.");
         this->m_value %= other.m_value;

@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2021, Liav A. <liavalb@hotmail.co.il>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Atomic.h>
@@ -38,7 +18,7 @@ namespace Kernel {
 
 NonnullRefPtr<AHCIPort::ScatterList> AHCIPort::ScatterList::create(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
 {
-    return adopt(*new ScatterList(request, allocated_pages, device_block_size));
+    return adopt_ref(*new ScatterList(request, allocated_pages, device_block_size));
 }
 
 AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefPtrVector<PhysicalPage> allocated_pages, size_t device_block_size)
@@ -49,7 +29,7 @@ AHCIPort::ScatterList::ScatterList(AsyncBlockDeviceRequest& request, NonnullRefP
 
 NonnullRefPtr<AHCIPort> AHCIPort::create(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
 {
-    return adopt(*new AHCIPort(handler, registers, port_index));
+    return adopt_ref(*new AHCIPort(handler, registers, port_index));
 }
 
 AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters& registers, u32 port_index)
@@ -125,7 +105,7 @@ void AHCIPort::handle_interrupt()
         } else {
             g_io_work->queue([this]() {
                 dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request handled", representative_port_index());
-                LOCKER(m_lock);
+                Locker locker(m_lock);
                 VERIFY(m_current_request);
                 VERIFY(m_current_scatter_list);
                 if (m_current_request->request_type() == AsyncBlockDeviceRequest::Read) {
@@ -153,7 +133,7 @@ bool AHCIPort::is_interrupts_enabled() const
 
 void AHCIPort::recover_from_fatal_error()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     dmesgln("{}: AHCI Port {} fatal error, shutting down!", m_parent_handler->hba_controller()->pci_address(), representative_port_index());
     dmesgln("{}: AHCI Port {} fatal error, SError {}", m_parent_handler->hba_controller()->pci_address(), representative_port_index(), (u32)m_port_registers.serr);
@@ -237,7 +217,7 @@ void AHCIPort::eject()
 
 bool AHCIPort::reset()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Resetting", representative_port_index());
@@ -262,7 +242,7 @@ bool AHCIPort::reset()
 
 bool AHCIPort::initialize_without_reset()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     dmesgln("AHCI Port {}: {}", representative_port_index(), try_disambiguate_sata_status());
     return initialize(lock);
@@ -474,7 +454,7 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
 
 void AHCIPort::start_request(AsyncBlockDeviceRequest& request)
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Request start", representative_port_index());
     VERIFY(!m_current_request);
     VERIFY(!m_current_scatter_list);
@@ -677,7 +657,7 @@ bool AHCIPort::identify_device(ScopedSpinLock<SpinLock<u8>>& main_lock)
 
 bool AHCIPort::shutdown()
 {
-    LOCKER(m_lock);
+    Locker locker(m_lock);
     ScopedSpinLock lock(m_hard_lock);
     rebase();
     set_interface_state(AHCI::DeviceDetectionInitialization::DisableInterface);

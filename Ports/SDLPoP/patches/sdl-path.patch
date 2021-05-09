@@ -1,0 +1,16 @@
+diff -Naur SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68/src/CMakeLists.txt SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68.serenity/src/CMakeLists.txt
+--- SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68/src/CMakeLists.txt	2021-04-19 15:57:54.748801218 +0200
++++ SDLPoP-86988c668eeaa10f218e1d4938fc5b4e42314d68.serenity/src/CMakeLists.txt	2021-04-19 15:59:47.581060085 +0200
+@@ -14,10 +14,10 @@
+ 
+ # On macOS, if you used Homebrew to install SDL2, the location may be something like this:
+ 
+-#set(SDL2 "/usr/local/Cellar/sdl2/2.0.5")
++set(SDL2 "/usr/local")
+ 
+ if (NOT(WIN32) AND (DEFINED SDL2))
+-    include_directories(${SDL2}/include)
++    include_directories(${SDL2}/include/SDL2)
+     link_directories(${SDL2}/lib)
+ endif()
+ 

@@ -1,4 +1,5 @@
-#!/bin/env bash
+#!/usr/bin/env bash
+
 set -e
 
 ARG0=$0
@@ -38,6 +39,7 @@ Usage: $NAME COMMAND [TARGET] [ARGS...]
                     Resolves the ADDRESS in BINARY_FILE to a file:line. It will
                     attempt to find the BINARY_FILE in the appropriate build directory
     rebuild-toolchain: Deletes and re-builds the TARGET's toolchain
+    rebuild-world:     Deletes and re-builds the toolchain and build environment for TARGET.
 
   Examples:
     $NAME run i686 smp=on
@@ -104,14 +106,14 @@ create_build_dir() {
 cmd_with_target() {
     is_valid_target || ( >&2 echo "Unknown target: $TARGET"; usage )
 
-    if [ ! -d "$SERENITY_ROOT" ]; then
-        SERENITY_ROOT="$(get_top_dir)"
-        export SERENITY_ROOT
+    if [ ! -d "$SERENITY_SOURCE_DIR" ]; then
+        SERENITY_SOURCE_DIR="$(get_top_dir)"
+        export SERENITY_SOURCE_DIR
     fi
-    BUILD_DIR="$SERENITY_ROOT/Build/$TARGET"
+    BUILD_DIR="$SERENITY_SOURCE_DIR/Build/$TARGET"
     if [ "$TARGET" != "lagom" ]; then
         export SERENITY_ARCH="$TARGET"
-        TOOLCHAIN_DIR="$SERENITY_ROOT/Toolchain/Build/$TARGET"
+        TOOLCHAIN_DIR="$SERENITY_SOURCE_DIR/Toolchain/Build/$TARGET"
     fi
 }
 
@@ -138,7 +140,7 @@ delete_target() {
 }
 
 build_toolchain() {
-    ( cd "$SERENITY_ROOT/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
+    ( cd "$SERENITY_SOURCE_DIR/Toolchain" && ARCH="$TARGET" ./BuildIt.sh )
 }
 
 ensure_toolchain() {
@@ -199,7 +201,8 @@ run_gdb() {
         if [ -n "$KERNEL_CMD_LINE" ]; then
             export SERENITY_KERNEL_CMDLINE="$KERNEL_CMD_LINE"
         fi
-        gdb "$BUILD_DIR/Kernel/Kernel" -ex 'target remote :1234' "${GDB_ARGS[@]}" -ex cont
+        sleep 1
+        "$(get_top_dir)/Meta/debug-kernel.sh" "${GDB_ARGS[@]}" -ex cont
     fi
 }
 
@@ -306,6 +309,14 @@ elif [ "$CMD" = "rebuild-toolchain" ]; then
     lagom_unsupported "The lagom target uses the host toolchain"
     delete_toolchain
     ensure_toolchain
+elif [ "$CMD" = "rebuild-world" ]; then
+    cmd_with_target
+    lagom_unsupported "The lagom target uses the host toolchain"
+    delete_toolchain
+    delete_target
+    ensure_toolchain
+    ensure_target
+    build_target
 elif [ "$CMD" = "__tmux_cmd" ]; then
     trap kill_tmux_session EXIT
     cmd_with_target

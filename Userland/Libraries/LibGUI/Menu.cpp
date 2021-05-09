@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Debug.h>
@@ -92,38 +72,36 @@ void Menu::realize_if_needed(const RefPtr<Action>& default_action)
 void Menu::popup(const Gfx::IntPoint& screen_position, const RefPtr<Action>& default_action)
 {
     realize_if_needed(default_action);
-    WindowServerConnection::the().post_message(Messages::WindowServer::PopupMenu(m_menu_id, screen_position));
+    WindowServerConnection::the().async_popup_menu(m_menu_id, screen_position);
 }
 
 void Menu::dismiss()
 {
     if (m_menu_id == -1)
         return;
-    WindowServerConnection::the().post_message(Messages::WindowServer::DismissMenu(m_menu_id));
+    WindowServerConnection::the().async_dismiss_menu(m_menu_id);
 }
 
 int Menu::realize_menu(RefPtr<Action> default_action)
 {
     unrealize_menu();
-    m_menu_id = WindowServerConnection::the().send_sync<Messages::WindowServer::CreateMenu>(m_name)->menu_id();
+    m_menu_id = WindowServerConnection::the().create_menu(m_name);
 
-#if MENU_DEBUG
-    dbgln("GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
-#endif
+    dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
     for (size_t i = 0; i < m_items.size(); ++i) {
         auto& item = m_items[i];
         item.set_menu_id({}, m_menu_id);
         item.set_identifier({}, i);
         if (item.type() == MenuItem::Type::Separator) {
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuSeparator>(m_menu_id);
+            WindowServerConnection::the().async_add_menu_separator(m_menu_id);
             continue;
         }
         if (item.type() == MenuItem::Type::Submenu) {
             auto& submenu = *item.submenu();
             submenu.realize_if_needed(default_action);
             auto icon = submenu.icon() ? submenu.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon, false);
+            WindowServerConnection::the().async_add_menu_item(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, false, "", icon, false);
             continue;
         }
         if (item.type() == MenuItem::Type::Action) {
@@ -132,7 +110,7 @@ int Menu::realize_menu(RefPtr<Action> default_action)
             bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
             bool is_default = (default_action.ptr() == &action);
             auto icon = action.icon() ? action.icon()->to_shareable_bitmap() : Gfx::ShareableBitmap();
-            WindowServerConnection::the().send_sync<Messages::WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
+            WindowServerConnection::the().async_add_menu_item(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, is_default, shortcut_text, icon, exclusive);
         }
     }
     all_menus().set(m_menu_id, this);
@@ -145,7 +123,7 @@ void Menu::unrealize_menu()
     if (m_menu_id == -1)
         return;
     all_menus().remove(m_menu_id);
-    WindowServerConnection::the().send_sync<Messages::WindowServer::DestroyMenu>(m_menu_id);
+    WindowServerConnection::the().destroy_menu(m_menu_id);
     m_menu_id = -1;
 }
 

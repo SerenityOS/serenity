@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -45,19 +25,37 @@ __BEGIN_DECLS
 #define HUGE_VALF __builtin_huge_valf()
 #define HUGE_VAL __builtin_huge_val()
 #define HUGE_VALL __builtin_huge_vall()
-#define INFINITY __builtin_huge_val()
+#define INFINITY __builtin_huge_valf()
 #define NAN __builtin_nan("")
 #define MAXFLOAT FLT_MAX
-#define M_E 2.718281828459045
-#define M_PI 3.141592653589793
-#define M_PI_2 1.570796326794896
-#define M_TAU 6.283185307179586
-#define M_DEG2RAD 0.017453292519943
-#define M_RAD2DEG 57.29577951308232
-#define M_LN2 0.69314718055995
-#define M_LN10 2.30258509299405
-#define M_SQRT2 1.4142135623730951
-#define M_SQRT1_2 0.7071067811865475
+
+#define M_E 2.7182818284590452354
+#define M_LOG2E 1.4426950408889634074
+#define M_LOG10E 0.43429448190325182765
+#define M_LN2 0.69314718055994530942
+#define M_LN10 2.30258509299404568402
+#define M_PI 3.14159265358979323846
+#define M_PI_2 1.57079632679489661923
+#define M_PI_4 0.78539816339744830962
+#define M_1_PI 0.31830988618379067154
+#define M_2_PI 0.63661977236758134308
+#define M_2_SQRTPI 1.12837916709551257390
+#define M_SQRT2 1.41421356237309504880
+#define M_SQRT1_2 0.70710678118654752440
+
+#define M_Ef32 2.7182818284590452354f
+#define M_LOG2Ef32 1.4426950408889634074f
+#define M_LOG10Ef32 0.43429448190325182765f
+#define M_LN2f32 0.69314718055994530942f
+#define M_LN10f32 2.30258509299404568402f
+#define M_PIf32 3.14159265358979323846f
+#define M_PI_2f32 1.57079632679489661923f
+#define M_PI_4f32 0.78539816339744830962f
+#define M_1_PIf32 0.31830988618379067154f
+#define M_2_PIf32 0.63661977236758134308f
+#define M_2_SQRTPIf32 1.12837916709551257390f
+#define M_SQRT2f32 1.41421356237309504880f
+#define M_SQRT1_2f32 0.70710678118654752440f
 
 #define FP_NAN 0
 #define FP_INFINITE 1
@@ -76,7 +74,7 @@ __BEGIN_DECLS
 #define isless(x, y) __builtin_isless((x), (y))
 #define islessequal(x, y) __builtin_islessequal((x), (y))
 #define islessgreater(x, y) __builtin_islessgreater((x), (y))
-#define isunordered(x, y) __builtin_isunoredered((x), (y))
+#define isunordered(x, y) __builtin_isunordered((x), (y))
 
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
@@ -238,6 +236,11 @@ long lroundl(long double) NOEXCEPT;
 long long llroundf(float) NOEXCEPT;
 long long llround(double) NOEXCEPT;
 long long llroundd(long double) NOEXCEPT;
+long long llroundl(long double x) NOEXCEPT;
+double nearbyint(double x) NOEXCEPT;
+float nearbyintf(float x) NOEXCEPT;
+long double nearbyintl(long double x) NOEXCEPT;
+
 float rintf(float) NOEXCEPT;
 double rint(double) NOEXCEPT;
 long double rintl(long double) NOEXCEPT;
@@ -263,6 +266,7 @@ double scalbn(double, int) NOEXCEPT;
 long double scalbnl(long double, int) NOEXCEPT;
 float scalbnlf(float, long) NOEXCEPT;
 double scalbln(double, long) NOEXCEPT;
+float scalblnf(float, long) NOEXCEPT;
 long double scalblnl(long double, long) NOEXCEPT;
 int ilogbl(long double) NOEXCEPT;
 int ilogb(double) NOEXCEPT;
@@ -279,5 +283,20 @@ long double nexttowardl(long double, long double) NOEXCEPT;
 float copysignf(float x, float y) NOEXCEPT;
 double copysign(double x, double y) NOEXCEPT;
 long double copysignl(long double x, long double y) NOEXCEPT;
+
+/* positive difference */
+double fdim(double x, double y) NOEXCEPT;
+float fdimf(float x, float y) NOEXCEPT;
+long double fdiml(long double x, long double y) NOEXCEPT;
+
+/* floating-point multiply and add */
+double fma(double x, double y, double z) NOEXCEPT;
+float fmaf(float x, float y, float z) NOEXCEPT;
+long double fmal(long double x, long double y, long double z) NOEXCEPT;
+
+/* remainder and part of quotient */
+double remquo(double x, double y, int* quo) NOEXCEPT;
+float remquof(float x, float y, int* quo) NOEXCEPT;
+long double remquol(long double x, long double y, int* quo) NOEXCEPT;
 
 __END_DECLS

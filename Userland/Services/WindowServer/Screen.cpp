@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Screen.h"
@@ -75,7 +55,7 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
     int new_physical_width = width * new_scale_factor;
     int new_physical_height = height * new_scale_factor;
     if (physical_width() == new_physical_width && physical_height() == new_physical_height) {
-        assert(scale_factor() != new_scale_factor);
+        VERIFY(scale_factor() != new_scale_factor);
         on_change_resolution(m_pitch, physical_width(), physical_height(), new_scale_factor);
         return true;
     }
@@ -143,15 +123,11 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
 {
     auto prev_location = m_physical_cursor_location / m_scale_factor;
     if (packet.is_relative) {
-        m_physical_cursor_location.move_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
-#if WSSCREEN_DEBUG
-        dbgln("Screen: New Relative mouse point @ {}", m_physical_cursor_location);
-#endif
+        m_physical_cursor_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
+        dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_physical_cursor_location);
     } else {
         m_physical_cursor_location = { packet.x * physical_width() / 0xffff, packet.y * physical_height() / 0xffff };
-#if WSSCREEN_DEBUG
-        dbgln("Screen: New Absolute mouse point @ {}", m_physical_cursor_location);
-#endif
+        dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_physical_cursor_location);
     }
 
     m_physical_cursor_location.constrain(physical_rect());

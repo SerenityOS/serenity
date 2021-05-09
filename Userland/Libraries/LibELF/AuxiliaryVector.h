@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, The SerenityOS developers.
- * All rights reserved.
+ * Copyright (c) 2020, the SerenityOS developers.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -62,7 +42,7 @@ typedef struct
 #define AT_BASE_PLATFORM 24 /* a_ptr points to a string identifying base platform name, which might be different from platform (e.g x86_64 when in i386 compat)  */
 #define AT_RANDOM 25        /* a_ptr points to 16 securely generated random bytes */
 #define AT_HWCAP2 26        /* a_val holds extended hw feature mask. Currently 0 */
-#define AT_EXECFN 31        /* a_ptr points to file name of executed program */
+#define AT_EXECFN 31        /* a_ptr points to filename of executed program */
 #define AT_EXE_BASE 32      /* a_ptr holds base address where main program was loaded into memory */
 #define AT_EXE_SIZE 33      /* a_val holds the size of the main program in memory */
 

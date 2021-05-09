@@ -1,27 +1,7 @@
 /*
- * Copyright (c) 2020, Ali Mohammad Pur <ali.mpfard@gmail.com>
- * All rights reserved.
+ * Copyright (c) 2020, Ali Mohammad Pur <mpfard@serenityos.org>
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -64,8 +44,42 @@ public:
         ValueType value;
     };
 
+    Optional<DecodeError> drop()
+    {
+        if (m_stack.is_empty())
+            return DecodeError::NoInput;
+
+        if (eof())
+            return DecodeError::EndOfStream;
+
+        auto previous_position = m_stack;
+
+        auto tag_or_error = peek();
+        if (tag_or_error.is_error()) {
+            m_stack = move(previous_position);
+            return tag_or_error.error();
+        }
+
+        auto length_or_error = read_length();
+        if (length_or_error.is_error()) {
+            m_stack = move(previous_position);
+            return length_or_error.error();
+        }
+
+        auto length = length_or_error.value();
+
+        auto bytes_result = read_bytes(length);
+        if (bytes_result.is_error()) {
+            m_stack = move(previous_position);
+            return bytes_result.error();
+        }
+
+        m_current_tag.clear();
+        return {};
+    }
+
     template<typename ValueType>
-    Result<ValueType, DecodeError> read()
+    Result<ValueType, DecodeError> read(Optional<Class> class_override = {}, Optional<Kind> kind_override = {})
     {
         if (m_stack.is_empty())
             return DecodeError::NoInput;
@@ -90,7 +104,7 @@ public:
         auto tag = tag_or_error.value();
         auto length = length_or_error.value();
 
-        auto value_or_error = read_value<ValueType>(tag.class_, tag.kind, length);
+        auto value_or_error = read_value<ValueType>(class_override.value_or(tag.class_), kind_override.value_or(tag.kind), length);
         if (value_or_error.is_error()) {
             m_stack = move(previous_position);
             return value_or_error.error();
@@ -120,9 +134,13 @@ private:
         if (value_or_error.is_error())
             return value_or_error.error();
 
-        auto&& value = value_or_error.value();
-        if constexpr (requires { ValueType { value }; })
-            return ValueType { value };
+        if constexpr (IsSame<ValueType, bool> && !IsSame<DecodedType, bool>) {
+            return DecodeError::NonConformingType;
+        } else {
+            auto&& value = value_or_error.value();
+            if constexpr (requires { ValueType { value }; })
+                return ValueType { value };
+        }
 
         return DecodeError::NonConformingType;
     }
@@ -181,6 +199,8 @@ private:
     Vector<ReadonlyBytes> m_stack;
     Optional<Tag> m_current_tag;
 };
+
+void pretty_print(Decoder&, OutputStream&, int indent = 0);
 
 }
 

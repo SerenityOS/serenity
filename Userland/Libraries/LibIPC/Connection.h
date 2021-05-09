@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
@@ -32,9 +12,9 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
-#include <LibCore/SyscallUtils.h>
 #include <LibCore/Timer.h>
 #include <LibIPC/Message.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,8 +28,10 @@ namespace IPC {
 template<typename LocalEndpoint, typename PeerEndpoint>
 class Connection : public Core::Object {
 public:
-    Connection(LocalEndpoint& local_endpoint, NonnullRefPtr<Core::LocalSocket> socket)
-        : m_local_endpoint(local_endpoint)
+    using LocalStub = typename LocalEndpoint::Stub;
+
+    Connection(LocalStub& local_stub, NonnullRefPtr<Core::LocalSocket> socket)
+        : m_local_stub(local_stub)
         , m_socket(move(socket))
         , m_notifier(Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read, this))
     {
@@ -69,19 +51,24 @@ public:
 
     void post_message(const Message& message)
     {
+        post_message(message.encode());
+    }
+
+    // FIXME: unnecessary copy
+    void post_message(MessageBuffer buffer)
+    {
         // NOTE: If this connection is being shut down, but has not yet been destroyed,
         //       the socket will be closed. Don't try to send more messages.
         if (!m_socket->is_open())
             return;
 
-        auto buffer = message.encode();
         // Prepend the message size.
         uint32_t message_size = buffer.data.size();
         buffer.data.prepend(reinterpret_cast<const u8*>(&message_size), sizeof(message_size));
 
 #ifdef __serenity__
-        for (int fd : buffer.fds) {
-            auto rc = sendfd(m_socket->fd(), fd);
+        for (auto& fd : buffer.fds) {
+            auto rc = sendfd(m_socket->fd(), fd->value());
             if (rc < 0) {
                 perror("sendfd");
                 shutdown();
@@ -118,12 +105,12 @@ public:
     }
 
     template<typename RequestType, typename... Args>
-    OwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
+    NonnullOwnPtr<typename RequestType::ResponseType> send_sync(Args&&... args)
     {
         post_message(RequestType(forward<Args>(args)...));
         auto response = wait_for_specific_endpoint_message<typename RequestType::ResponseType, PeerEndpoint>();
         VERIFY(response);
-        return response;
+        return response.release_nonnull();
     }
 
     template<typename RequestType, typename... Args>
@@ -167,12 +154,19 @@ protected:
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_socket->fd(), &rfds);
-            int rc = Core::safe_syscall(select, m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr);
-            if (rc < 0) {
-                perror("select");
+            for (;;) {
+                if (auto rc = select(m_socket->fd() + 1, &rfds, nullptr, nullptr, nullptr); rc < 0) {
+                    if (errno == EINTR)
+                        continue;
+                    perror("wait_for_specific_endpoint_message: select");
+                    VERIFY_NOT_REACHED();
+                } else {
+                    VERIFY(rc > 0);
+                    VERIFY(FD_ISSET(m_socket->fd(), &rfds));
+                    break;
+                }
             }
-            VERIFY(rc > 0);
-            VERIFY(FD_ISSET(m_socket->fd(), &rfds));
+
             if (!drain_messages_from_peer())
                 break;
         }
@@ -256,13 +250,13 @@ protected:
         auto messages = move(m_unprocessed_messages);
         for (auto& message : messages) {
             if (message.endpoint_magic() == LocalEndpoint::static_magic())
-                if (auto response = m_local_endpoint.handle(message))
+                if (auto response = m_local_stub.handle(message))
                     post_message(*response);
         }
     }
 
 protected:
-    LocalEndpoint& m_local_endpoint;
+    LocalStub& m_local_stub;
     NonnullRefPtr<Core::LocalSocket> m_socket;
     RefPtr<Core::Timer> m_responsiveness_timer;
 

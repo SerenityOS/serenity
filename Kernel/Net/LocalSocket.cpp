@@ -1,27 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/Singleton.h>
@@ -46,20 +26,45 @@ Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
 
 void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 {
-    LOCKER(all_sockets().lock(), Lock::Mode::Shared);
+    Locker locker(all_sockets().lock(), Lock::Mode::Shared);
     for (auto& socket : all_sockets().resource())
         callback(socket);
 }
 
 KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 {
-    return adopt(*new LocalSocket(type));
+    return adopt_ref(*new LocalSocket(type));
+}
+
+KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
+{
+    auto socket = adopt_ref(*new LocalSocket(type));
+
+    auto description1_result = FileDescription::create(*socket);
+    if (description1_result.is_error())
+        return description1_result.error();
+
+    socket->m_address.sun_family = AF_LOCAL;
+    memcpy(socket->m_address.sun_path, "[socketpair]", 13);
+
+    auto& process = *Process::current();
+    socket->m_acceptor = { process.pid().value(), process.uid(), process.gid() };
+
+    socket->set_connected(true);
+    socket->set_connect_side_role(Role::Connected);
+    socket->m_role = Role::Accepted;
+
+    auto description2_result = FileDescription::create(*socket);
+    if (description2_result.is_error())
+        return description2_result.error();
+
+    return SocketPair { description1_result.release_value(), description2_result.release_value() };
 }
 
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
-    LOCKER(all_sockets().lock());
+    Locker locker(all_sockets().lock());
     all_sockets().resource().append(this);
 
     auto current_process = Process::current();
@@ -79,7 +84,7 @@ LocalSocket::LocalSocket(int type)
 
 LocalSocket::~LocalSocket()
 {
-    LOCKER(all_sockets().lock());
+    Locker locker(all_sockets().lock());
     all_sockets().resource().remove(this);
 }
 
@@ -202,7 +207,7 @@ KResult LocalSocket::connect(FileDescription& description, Userspace<const socka
 
 KResult LocalSocket::listen(size_t backlog)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     if (type() != SOCK_STREAM)
         return EOPNOTSUPP;
     set_backlog(backlog);
@@ -453,7 +458,7 @@ NonnullRefPtrVector<FileDescription>& LocalSocket::sendfd_queue_for(const FileDe
 
 KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescription& passing_description)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return EINVAL;
@@ -461,13 +466,14 @@ KResult LocalSocket::sendfd(const FileDescription& socket_description, FileDescr
     // FIXME: Figure out how we should limit this properly.
     if (queue.size() > 128)
         return EBUSY;
-    queue.append(move(passing_description));
+    if (!queue.try_append(move(passing_description)))
+        return ENOMEM;
     return KSuccess;
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> LocalSocket::recvfd(const FileDescription& socket_description)
 {
-    LOCKER(lock());
+    Locker locker(lock());
     auto role = this->role(socket_description);
     if (role != Role::Connected && role != Role::Accepted)
         return EINVAL;
