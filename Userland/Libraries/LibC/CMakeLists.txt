@@ -18,6 +18,7 @@ set(LIBC_SOURCES
     malloc.cpp
     mman.cpp
     mntent.cpp
+    net.cpp
     netdb.cpp
     poll.cpp
     pthread_forward.cpp

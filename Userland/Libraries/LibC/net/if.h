@@ -46,4 +46,7 @@ struct ifreq {
 #define ifr_hwaddr ifr_ifru.ifru_hwaddr       // MAC address
 };
 
+unsigned int if_nametoindex(const char* ifname);
+char* if_indextoname(unsigned int ifindex, char* ifname);
+
 __END_DECLS
