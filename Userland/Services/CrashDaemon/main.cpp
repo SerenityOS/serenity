@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCompress/Gzip.h>
 #include <LibCore/File.h>
 #include <LibCore/FileWatcher.h>
@@ -99,13 +100,19 @@ int main()
         return 1;
     }
 
-    Core::BlockingFileWatcher watcher { "/tmp/coredump" };
+    Core::BlockingFileWatcher watcher;
+    auto watch_result = watcher.add_watch("/tmp/coredump", Core::FileWatcherEvent::Type::ChildCreated);
+    if (watch_result.is_error()) {
+        warnln("Failed to watch the coredump directory: {}", watch_result.error());
+        VERIFY_NOT_REACHED();
+    }
+
     while (true) {
         auto event = watcher.wait_for_event();
         VERIFY(event.has_value());
-        if (event.value().type != Core::FileWatcherEvent::Type::ChildAdded)
+        if (event.value().type != Core::FileWatcherEvent::Type::ChildCreated)
             continue;
-        auto coredump_path = event.value().child_path;
+        auto& coredump_path = event.value().event_path;
         if (coredump_path.ends_with(".gz"))
             continue; // stops compress_coredump from accidentally triggering us
         dbgln("New coredump file: {}", coredump_path);

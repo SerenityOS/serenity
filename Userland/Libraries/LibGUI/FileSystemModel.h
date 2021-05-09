@@ -87,8 +87,6 @@ public:
 
         bool m_selected { false };
 
-        RefPtr<Core::FileWatcher> m_file_watcher;
-
         int m_error { 0 };
         bool m_parent_of_root { false };
 
@@ -148,6 +146,8 @@ private:
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
 
+    Node const* node_for_path(String const&) const;
+
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
 
@@ -162,6 +162,8 @@ private:
     unsigned m_thumbnail_progress_total { 0 };
 
     bool m_should_show_dotfiles { false };
+
+    RefPtr<Core::FileWatcher> m_file_watcher;
 };
 
 }

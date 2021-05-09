@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -125,21 +126,18 @@ void FileSystemModel::Node::traverse_if_needed()
     children.append(move(directory_children));
     children.append(move(file_children));
 
-    if (!m_file_watcher) {
+    if (!m_model.m_file_watcher->is_watching(full_path)) {
+        // We are not already watching this file, watch it
+        auto result = m_model.m_file_watcher->add_watch(full_path,
+            Core::FileWatcherEvent::Type::MetadataModified
+                | Core::FileWatcherEvent::Type::ChildCreated
+                | Core::FileWatcherEvent::Type::ChildDeleted
+                | Core::FileWatcherEvent::Type::Deleted);
 
-        // We are not already watching this file, create a new watcher
-        auto watcher_or_error = Core::FileWatcher::watch(full_path);
-
-        // Note : the watcher may not be created (e.g. we do not have access rights.) This is expected, just don't watch if that's the case.
-        if (!watcher_or_error.is_error()) {
-            m_file_watcher = watcher_or_error.release_value();
-            m_file_watcher->on_change = [this](auto) {
-                has_traversed = false;
-                mode = 0;
-                children.clear();
-                reify_if_needed();
-                m_model.did_update();
-            };
+        if (result.is_error()) {
+            dbgln("Couldn't watch '{}': {}", full_path, result.error());
+        } else if (result.value() == false) {
+            dbgln("Couldn't watch '{}', probably already watching", full_path);
         }
     }
 }
@@ -181,10 +179,29 @@ String FileSystemModel::Node::full_path() const
 
 ModelIndex FileSystemModel::index(String path, int column) const
 {
-    LexicalPath lexical_path(move(path));
+    Node const* node = node_for_path(move(path));
+    if (node != nullptr) {
+        return node->index(column);
+    }
+
+    return {};
+}
+
+FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) const
+{
+    LexicalPath lexical_path;
+    if (path == m_root_path) {
+        lexical_path = LexicalPath { "/" };
+    } else if (!m_root_path.is_empty() && path.starts_with(m_root_path)) {
+        lexical_path = LexicalPath { LexicalPath::relative_path(path, m_root_path) };
+    } else {
+        lexical_path = LexicalPath { move(path) };
+    }
+
     const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
     if (lexical_path.string() == "/")
-        return node->index(column);
+        return node;
+
     for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
         auto& part = lexical_path.parts()[i];
         bool found = false;
@@ -194,14 +211,14 @@ ModelIndex FileSystemModel::index(String path, int column) const
                 node = &child;
                 found = true;
                 if (i == lexical_path.parts().size() - 1)
-                    return child.index(column);
+                    return node;
                 break;
             }
         }
         if (!found)
-            return {};
+            return nullptr;
     }
-    return {};
+    return nullptr;
 }
 
 String FileSystemModel::full_path(const ModelIndex& index) const
@@ -224,6 +241,31 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
     while (auto* group = getgrent())
         m_group_names.set(group->gr_gid, group->gr_name);
     endgrent();
+
+    auto result = Core::FileWatcher::create();
+    if (result.is_error()) {
+        dbgln("{}", result.error());
+        VERIFY_NOT_REACHED();
+    }
+
+    m_file_watcher = result.release_value();
+    m_file_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+        Node const* maybe_node = node_for_path(event.event_path);
+        if (maybe_node == nullptr) {
+            dbgln("Received event at \"{}\" but we don't have that node", event.event_path);
+            return;
+        }
+        auto& node = *const_cast<Node*>(maybe_node);
+
+        dbgln("Event at \"{}\" on Node {}: {}", node.full_path(), &node, event);
+
+        // FIXME: Your time is coming, un-granular updates.
+        node.has_traversed = false;
+        node.mode = 0;
+        node.children.clear();
+        node.reify_if_needed();
+        did_update();
+    };
 
     update();
 }

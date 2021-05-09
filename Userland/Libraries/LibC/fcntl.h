@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -42,7 +43,9 @@ int open(const char* path, int options, ...);
 int openat(int dirfd, const char* path, int options, ...);
 
 int fcntl(int fd, int cmd, ...);
-int watch_file(const char* path, size_t path_length);
+int create_inode_watcher(unsigned flags);
+int inode_watcher_add_watch(int fd, const char* path, size_t path_length, unsigned event_mask);
+int inode_watcher_remove_watch(int fd, int wd);
 
 #define F_RDLCK 0
 #define F_WRLCK 1
