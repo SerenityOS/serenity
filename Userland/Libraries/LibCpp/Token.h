@@ -84,6 +84,7 @@ struct Position {
     size_t column { 0 };
 
     bool operator<(const Position&) const;
+    bool operator<=(const Position&) const;
     bool operator>(const Position&) const;
     bool operator==(const Position&) const;
 };
