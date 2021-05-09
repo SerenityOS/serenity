@@ -1,4 +1,5 @@
 set(SOURCES
+    CatDog.cpp
     main.cpp
 )
 
