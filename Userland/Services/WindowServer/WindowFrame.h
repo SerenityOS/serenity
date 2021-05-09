@@ -94,7 +94,7 @@ private:
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
-    String compute_title_text() const;
+    String computed_title() const;
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;

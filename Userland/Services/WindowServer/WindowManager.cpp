@@ -299,7 +299,7 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress());
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)

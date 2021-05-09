@@ -1002,4 +1002,13 @@ void Window::set_modified(bool modified)
     frame().invalidate_titlebar();
 }
 
+String Window::computed_title() const
+{
+    String title = m_title;
+    title.replace("[*]", is_modified() ? " (*)" : "");
+    if (client() && client()->is_unresponsive())
+        return String::formatted("{} (Not responding)", title);
+    return title;
+}
+
 }

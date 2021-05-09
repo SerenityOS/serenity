@@ -270,18 +270,11 @@ void WindowFrame::paint_notification_frame(Gfx::Painter& painter)
     Gfx::WindowTheme::current().paint_notification_frame(painter, m_window.rect(), palette, m_buttons.last().relative_rect());
 }
 
-String WindowFrame::compute_title_text() const
-{
-    if (m_window.client() && m_window.client()->is_unresponsive())
-        return String::formatted("{} (Not responding)", m_window.title());
-    return m_window.title();
-}
-
 void WindowFrame::paint_tool_window_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_tool_window_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), palette, leftmost_button_rect);
+    Gfx::WindowTheme::current().paint_tool_window_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), palette, leftmost_button_rect);
 }
 
 void WindowFrame::paint_menubar(Gfx::Painter& painter)
@@ -316,7 +309,7 @@ void WindowFrame::paint_normal_frame(Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     auto leftmost_button_rect = m_buttons.is_empty() ? Gfx::IntRect() : m_buttons.last().relative_rect();
-    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), compute_title_text(), m_window.icon(), palette, leftmost_button_rect, menu_row_count(), m_window.is_modified());
+    Gfx::WindowTheme::current().paint_normal_frame(painter, window_state_for_theme(), m_window.rect(), m_window.computed_title(), m_window.icon(), palette, leftmost_button_rect, menu_row_count(), m_window.is_modified());
 
     if (m_window.menubar() && m_window.should_show_menubar())
         paint_menubar(painter);

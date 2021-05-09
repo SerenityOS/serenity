@@ -185,7 +185,7 @@ void WindowSwitcher::draw()
         Gfx::IntRect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
         painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
-        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
+        painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.computed_title(), WindowManager::the().window_title_font(), Gfx::TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), Gfx::TextAlignment::CenterRight, rect_text_color);
     }
 }
@@ -207,7 +207,7 @@ void WindowSwitcher::refresh()
             if (window.is_frameless())
                 return IterationDecision::Continue;
             ++window_count;
-            longest_title_width = max(longest_title_width, wm.font().width(window.title()));
+            longest_title_width = max(longest_title_width, wm.font().width(window.computed_title()));
             if (selected_window == &window)
                 m_selected_index = m_windows.size();
             m_windows.append(window);
