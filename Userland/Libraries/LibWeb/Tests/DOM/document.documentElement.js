@@ -5,7 +5,7 @@ afterInitialPageLoad(() => {
         expect(document.documentElement).not.toBeNull();
         // FIXME: Add this in once HTMLHtmlElement's constructor is implemented.
         //expect(document.documentElement).toBeInstanceOf(HTMLHtmlElement);
-        expect(document.documentElement.nodeName).toBe("html");
+        expect(document.documentElement.nodeName).toBe("HTML");
     });
 
     // FIXME: Add this in once removeChild is implemented.
