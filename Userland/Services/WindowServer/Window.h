@@ -125,6 +125,8 @@ public:
     String title() const { return m_title; }
     void set_title(const String&);
 
+    String computed_title() const;
+
     float opacity() const { return m_opacity; }
     void set_opacity(float);
 
