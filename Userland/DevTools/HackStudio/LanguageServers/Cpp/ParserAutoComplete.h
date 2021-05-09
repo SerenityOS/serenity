@@ -72,15 +72,21 @@ private:
     bool is_property(const ASTNode&) const;
     bool is_empty_property(const DocumentData&, const ASTNode&, const Position& autocomplete_position) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
-    NonnullRefPtrVector<Declaration> get_available_declarations(const DocumentData&, const ASTNode&) const;
+
+    enum class RecurseIntoScopes {
+        No,
+        Yes
+    };
+    NonnullRefPtrVector<Declaration> get_available_declarations(const DocumentData&, const ASTNode&, RecurseIntoScopes) const;
 
     struct PropertyInfo {
         StringView name;
         RefPtr<Type> type;
     };
     Vector<PropertyInfo> properties_of_type(const DocumentData& document, const String& type) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations_including_headers(const DocumentData& document) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations(const ASTNode& node) const;
+    NonnullRefPtrVector<Declaration> get_global_declarations_including_headers(const DocumentData&, RecurseIntoScopes) const;
+    NonnullRefPtrVector<Declaration> get_global_declarations(const DocumentData&, RecurseIntoScopes) const;
+    NonnullRefPtrVector<Declaration> get_declarations_recursive(const ASTNode&) const;
 
     const DocumentData* get_document_data(const String& file) const;
     const DocumentData* get_or_create_document_data(const String& file);
