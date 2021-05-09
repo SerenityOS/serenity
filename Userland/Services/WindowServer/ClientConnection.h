@@ -9,10 +9,12 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/Optional.h>
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/Rect.h>
 #include <LibIPC/ClientConnection.h>
 #include <WindowServer/Event.h>
 #include <WindowServer/Menu.h>
@@ -144,7 +146,7 @@ private:
     virtual Messages::WindowServer::GetMouseAccelerationResponse get_mouse_acceleration() override;
     virtual void set_scroll_step_size(u32) override;
     virtual Messages::WindowServer::GetScrollStepSizeResponse get_scroll_step_size() override;
-    virtual Messages::WindowServer::GetScreenBitmapResponse get_screen_bitmap() override;
+    virtual Messages::WindowServer::GetScreenBitmapResponse get_screen_bitmap(Optional<Gfx::IntRect> const&) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_window_modified(i32, bool) override;

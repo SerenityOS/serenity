@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
     sleep(delay);
-    auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap();
+    auto shared_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap({});
 
     auto* bitmap = shared_bitmap.bitmap();
     if (!bitmap) {

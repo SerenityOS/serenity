@@ -863,8 +863,12 @@ void ClientConnection::did_become_responsive()
     set_unresponsive(false);
 }
 
-Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap()
+Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap(Optional<Gfx::IntRect> const& rect)
 {
+    if (rect.has_value()) {
+        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}).cropped(rect.value());
+        return bitmap->to_shareable_bitmap();
+    }
     auto& bitmap = Compositor::the().front_bitmap_for_screenshot({});
     return bitmap.to_shareable_bitmap();
 }

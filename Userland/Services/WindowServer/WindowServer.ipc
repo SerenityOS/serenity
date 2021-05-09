@@ -120,7 +120,7 @@ endpoint WindowServer
     set_scroll_step_size(u32 step_size) => ()
     get_scroll_step_size() => (u32 step_size)
 
-    get_screen_bitmap() => (Gfx::ShareableBitmap bitmap)
+    get_screen_bitmap(Optional<Gfx::IntRect> rect) => (Gfx::ShareableBitmap bitmap)
 
     pong() =|
 
