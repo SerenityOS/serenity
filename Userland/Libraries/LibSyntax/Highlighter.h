@@ -21,6 +21,7 @@ enum class Language {
     INI,
     GML,
     Shell,
+    SQL,
 };
 
 struct TextStyle {
