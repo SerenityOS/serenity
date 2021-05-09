@@ -113,7 +113,7 @@ static bool read_magic_number(TContext& context, Streamer& streamer)
 }
 
 template<typename TContext>
-static bool read_white_space(TContext& context, Streamer& streamer)
+static bool read_whitespace(TContext& context, Streamer& streamer)
 {
     bool exist = false;
     u8 byte {};
@@ -213,13 +213,13 @@ static bool decode(TContext& context)
     if (!read_magic_number(context, streamer))
         return false;
 
-    if (!read_white_space(context, streamer))
+    if (!read_whitespace(context, streamer))
         return false;
 
     if (!read_width(context, streamer))
         return false;
 
-    if (!read_white_space(context, streamer))
+    if (!read_whitespace(context, streamer))
         return false;
 
     if (!read_height(context, streamer))
@@ -230,14 +230,14 @@ static bool decode(TContext& context)
         return false;
     }
 
-    if (!read_white_space(context, streamer))
+    if (!read_whitespace(context, streamer))
         return false;
 
     if constexpr (requires { context.max_val; }) {
         if (!read_max_val(context, streamer))
             return false;
 
-        if (!read_white_space(context, streamer))
+        if (!read_whitespace(context, streamer))
             return false;
     }
 
