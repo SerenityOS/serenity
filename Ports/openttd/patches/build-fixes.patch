@@ -10,18 +10,6 @@ diff -Naur openttd-1.11.0/cmake/CompileFlags.cmake openttd-1.11.0.serenity/cmake
          # rdynamic is used to get useful stack traces from crash reports.
          set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -rdynamic")
      endif()
-diff -Naur openttd-1.11.0/src/network/core/address.cpp openttd-1.11.0.serenity/src/network/core/address.cpp
---- openttd-1.11.0/src/network/core/address.cpp	2021-04-01 14:33:44.000000000 +0200
-+++ openttd-1.11.0.serenity/src/network/core/address.cpp	2021-04-19 19:30:33.457232215 +0200
-@@ -372,7 +372,7 @@
- 		DEBUG(net, 3, "[%s] could not set reusable %s sockets for port %s: %s", type, family, address, strerror(errno));
- 	}
- 
--#ifndef __OS2__
-+#if !defined(__OS2__) && !defined(__serenity__)
- 	if (runp->ai_family == AF_INET6 &&
- 			setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&on, sizeof(on)) == -1) {
- 		DEBUG(net, 3, "[%s] could not disable IPv4 over IPv6 on port %s: %s", type, address, strerror(errno));
 diff -Naur openttd-1.11.0/src/network/core/host.cpp openttd-1.11.0.serenity/src/network/core/host.cpp
 --- openttd-1.11.0/src/network/core/host.cpp	2021-04-01 14:33:44.000000000 +0200
 +++ openttd-1.11.0.serenity/src/network/core/host.cpp	2021-04-19 19:30:33.457232215 +0200
