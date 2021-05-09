@@ -110,3 +110,10 @@ TEST_CASE(moved_from_state)
     auto same_contents = __builtin_memcmp(&bunch_of_values, &optionally_a_bunch_of_values.get<Vector<i32>>(), sizeof(bunch_of_values)) == 0;
     EXPECT(same_contents);
 }
+
+TEST_CASE(duplicated_types)
+{
+    Variant<int, int, int, int> its_just_an_int { 42 };
+    EXPECT(its_just_an_int.has<int>());
+    EXPECT_EQ(its_just_an_int.get<int>(), 42);
+}

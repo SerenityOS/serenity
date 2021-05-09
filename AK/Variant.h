@@ -138,6 +138,62 @@ private:
     }
 };
 
+// Type list deduplication
+// Since this is a big template mess, each template is commented with how and why it works.
+struct ParameterPackTag {
+};
+
+// Pack<Ts...> is just a way to pass around the type parameter pack Ts
+template<typename... Ts>
+struct ParameterPack : ParameterPackTag {
+};
+
+// Blank<T> is a unique replacement for T, if T is a duplicate type.
+template<typename T>
+struct Blank {
+};
+
+template<typename A, typename P>
+inline constexpr bool IsTypeInPack = false;
+
+// IsTypeInPack<T, Pack<Ts...>> will just return whether 'T' exists in 'Ts'.
+template<typename T, typename... Ts>
+inline constexpr bool IsTypeInPack<T, ParameterPack<Ts...>> = (IsSame<T, Ts> || ...);
+
+// Replaces T with Blank<T> if it exists in Qs.
+template<typename T, typename... Qs>
+using BlankIfDuplicate = Conditional<(IsTypeInPack<T, Qs> || ...), Blank<T>, T>;
+
+template<unsigned I, typename...>
+struct InheritFromUniqueEntries;
+
+// InheritFromUniqueEntries will inherit from both Qs and Ts, but only scan entries going *forwards*
+// that is to say, if it's scanning from index I in Qs, it won't scan for duplicates for entries before I
+// as that has already been checked before.
+// This makes sure that the search is linear in time (like the 'merge' step of merge sort).
+template<unsigned I, typename... Ts, unsigned... Js, typename... Qs>
+struct InheritFromUniqueEntries<I, ParameterPack<Ts...>, IndexSequence<Js...>, Qs...>
+    : public BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>... {
+
+    using BlankIfDuplicate<Ts, Conditional<Js <= I, ParameterPack<>, Qs>...>::BlankIfDuplicate...;
+};
+
+template<typename...>
+struct InheritFromPacks;
+
+// InheritFromPacks will attempt to 'merge' the pack 'Ps' with *itself*, but skip the duplicate entries
+// (via InheritFromUniqueEntries).
+template<unsigned... Is, typename... Ps>
+struct InheritFromPacks<IndexSequence<Is...>, Ps...>
+    : public InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>... {
+
+    using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::InheritFromUniqueEntries...;
+};
+
+// Just a nice wrapper around InheritFromPacks, which will wrap any parameter packs in ParameterPack (unless it alread is one).
+template<typename... Ps>
+using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps)>, Conditional<IsBaseOf<ParameterPackTag, Ps>, Ps, ParameterPack<Ps>>...>;
+
 }
 
 namespace AK {
@@ -147,7 +203,7 @@ struct Empty {
 
 template<typename... Ts>
 struct Variant
-    : public Detail::VariantConstructors<Ts, Variant<Ts...>>... {
+    : public Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...> {
 private:
     using IndexType = Conditional<sizeof...(Ts) < 255, u8, size_t>; // Note: size+1 reserved for internal value checks
     static constexpr IndexType invalid_index = sizeof...(Ts);
@@ -171,7 +227,7 @@ public:
     //       and if a variant with a nontrivial move ctor is moved from, it may or may not be valid
     //       but it will still contain the "moved-from" state of the object it previously contained.
     Variant(Variant&& old)
-        : Detail::VariantConstructors<Ts, Variant<Ts...>>()...
+        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_index(old.m_index)
     {
         Helper::move_(old.m_index, old.m_data, m_data);
@@ -196,7 +252,7 @@ public:
         return *this;
     }
 
-    using Detail::VariantConstructors<Ts, Variant<Ts...>>::VariantConstructors...;
+    using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
     template<typename T>
     void set(T&& t) requires(index_of<T>() != invalid_index)
