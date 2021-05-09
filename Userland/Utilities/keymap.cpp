@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <LibCore/ConfigFile.h>
 #include <LibKeyboard/CharacterMap.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,13 +13,18 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio setkeymap getkeymap rpath", nullptr) < 0) {
+    if (pledge("stdio setkeymap getkeymap rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     if (unveil("/res/keymaps", "r") < 0) {
         perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/Keyboard.ini", "rwc") < 0) {
+        perror("unveil /etc/Keyboard.ini");
         return 1;
     }
 
@@ -60,7 +66,12 @@ int main(int argc, char** argv)
     int rc = character_map.value().set_system_map();
     if (rc != 0) {
         perror("setkeymap");
+        return rc;
     }
+
+    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
+    mapper_config->write_entry("Mapping", "Keymap", path);
+    mapper_config->sync();
 
     return rc;
 }
