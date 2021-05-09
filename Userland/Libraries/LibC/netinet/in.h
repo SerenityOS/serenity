@@ -25,6 +25,12 @@ in_addr_t inet_addr(const char*);
 #define IP_MULTICAST_LOOP 3
 #define IP_ADD_MEMBERSHIP 4
 #define IP_DROP_MEMBERSHIP 5
+#define IP_MULTICAST_IF 6
+#define IP_MULTICAST_TTL 7
+
+/* Make sure these don't overlap with any other IPv4 and IPv6 options */
+#define MCAST_JOIN_SOURCE_GROUP 100
+#define MCAST_LEAVE_SOURCE_GROUP 101
 
 #define IPPORT_RESERVED 1024
 #define IPPORT_USERRESERVED 5000
@@ -47,9 +53,38 @@ struct ip_mreq {
     struct in_addr imr_interface;
 };
 
+struct group_source_req {
+    uint32_t gsr_interface;
+    struct sockaddr_storage gsr_group;
+    struct sockaddr_storage gsr_source;
+};
+
+struct ip_mreq_source {
+    struct in_addr imr_multiaddr;
+    struct in_addr imr_sourceaddr;
+    struct in_addr imr_interface;
+};
+
+#define IPV6_UNICAST_HOPS 1
+#define IPV6_MULTICAST_HOPS 2
+#define IPV6_MULTICAST_LOOP 3
+#define IPV6_MULTICAST_IF 4
+#define IPV6_ADD_MEMBERSHIP 5
+#define IPV6_DROP_MEMBERSHIP 6
+#define IP_ADD_SOURCE_MEMBERSHIP 7
+#define IP_DROP_SOURCE_MEMBERSHIP 8
+#define IPV6_V6ONLY 9
+
 struct in6_addr {
     uint8_t s6_addr[16];
 };
+
+#define IN6ADDR_ANY_INIT                               \
+    {                                                  \
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 \
+    }
+
+extern struct in6_addr in6addr_any;
 
 struct sockaddr_in6 {
     sa_family_t sin6_family;   // AF_INET6.
@@ -57,6 +92,11 @@ struct sockaddr_in6 {
     uint32_t sin6_flowinfo;    // IPv6 traffic class and flow information.
     struct in6_addr sin6_addr; // IPv6 address.
     uint32_t sin6_scope_id;    // Set of interfaces for a scop
+};
+
+struct ipv6_mreq {
+    struct in6_addr ipv6mr_multiaddr;
+    uint32_t ipv6mr_interface;
 };
 
 __END_DECLS
