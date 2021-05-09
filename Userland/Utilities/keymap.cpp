@@ -23,8 +23,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/etc/SystemServer.ini", "rwc") < 0) {
-        perror("unveil /etc/SystemServer.ini");
+    if (unveil("/etc/Keyboard.ini", "rwc") < 0) {
+        perror("unveil /etc/Keyboard.ini");
         return 1;
     }
 
@@ -69,8 +69,8 @@ int main(int argc, char** argv)
         return rc;
     }
 
-    auto mapper_config(Core::ConfigFile::open("/etc/SystemServer.ini"));
-    mapper_config->write_entry("KeyboardMapper", "Arguments", path);
+    auto mapper_config(Core::ConfigFile::open("/etc/Keyboard.ini"));
+    mapper_config->write_entry("Mapping", "Keymap", path);
     mapper_config->sync();
 
     return rc;
