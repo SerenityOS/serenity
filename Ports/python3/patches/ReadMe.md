@@ -8,10 +8,6 @@ Ensures `HAVE_SIGSET_T` is defined, as we *do* have `sigset_t` but it's not dete
 
 Enforce UTF-8 as encoding by defining `_Py_FORCE_UTF8_LOCALE`.
 
-## `disable-setrlimit.patch`
-
-Disables check for `RLIMIT_CORE` and subsequent `setrlimit()` call. Would be enabled otherwise as we *do* have `<sys/resource.h>` and therefore `HAVE_SYS_RESOURCE_H`.
-
 ## `fix-autoconf.patch`
 
 As usual, make the `configure` script recognize Serenity. Also set `MACHDEP` (which is used for `sys.platform`) to a version-less `serenityos`, even when not cross-compiling.
