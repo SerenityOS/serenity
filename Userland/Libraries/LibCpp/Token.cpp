@@ -20,5 +20,8 @@ bool Position::operator==(const Position& other) const
 {
     return line == other.line && column == other.column;
 }
-
+bool Position::operator<=(const Position& other) const
+{
+    return !(*this > other);
+}
 }
