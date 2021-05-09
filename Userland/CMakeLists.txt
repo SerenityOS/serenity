@@ -1,4 +1,4 @@
-add_compile_options(-O2)
+add_compile_options(-O2 -mmmx)
 
 add_subdirectory(Applications)
 add_subdirectory(Demos)
