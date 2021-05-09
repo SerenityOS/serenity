@@ -742,6 +742,36 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         m_rasterizer.set_options(rasterizer_options);
 }
 
+void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
+{
+    if (n < 0) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    m_name_allocator.allocate(n, textures);
+}
+
+void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
+{
+    if (n < 0) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    m_name_allocator.free(n, textures);
+}
+
 void SoftwareGLContext::gl_front_face(GLenum face)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_front_face, face);
