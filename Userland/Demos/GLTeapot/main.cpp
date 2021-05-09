@@ -43,6 +43,15 @@ private:
         glLoadIdentity();
         glFrustum(-0.5, 0.5, -0.5, 0.5, 1, 1500);
 
+        m_init_list = glGenLists(1);
+        glNewList(m_init_list, GL_COMPILE);
+        {
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClearDepth(1.0);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
+        glEndList();
+
         // Load the teapot
         auto mesh_loader = adopt_own(*new WavefrontOBJLoader());
         m_teapot = mesh_loader->load("/res/gl/teapot.obj");
@@ -57,6 +66,7 @@ private:
     RefPtr<Mesh> m_teapot;
     RefPtr<Gfx::Bitmap> m_bitmap;
     OwnPtr<GL::GLContext> m_context;
+    GLuint m_init_list { 0 };
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -69,13 +79,9 @@ void GLContextWidget::paint_event(GUI::PaintEvent& event)
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
     static float angle = 0.0f;
+    glCallList(m_init_list);
 
     angle -= 0.01f;
-
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClearDepth(1.0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     auto matrix = FloatMatrix4x4::translate(FloatVector3(0, 0, -8.5))
         * FloatMatrix4x4::rotate(FloatVector3(1, 0, 0), angle)
         * FloatMatrix4x4::rotate(FloatVector3(0, 1, 0), 0.0f)
