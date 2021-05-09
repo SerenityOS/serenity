@@ -61,6 +61,10 @@ extern "C" {
 #define GL_CW 0x0900
 #define GL_CCW 0x0901
 
+// Listing enums
+#define GL_COMPILE 0x1300
+#define GL_COMPILE_AND_EXECUTE 0x1301
+
 //
 // OpenGL typedefs
 //
@@ -115,6 +119,11 @@ GLAPI void glEnable(GLenum cap);
 GLAPI void glDisable(GLenum cap);
 GLAPI void glCullFace(GLenum mode);
 GLAPI void glFrontFace(GLenum mode);
+GLuint glGenLists(GLsizei range);
+void glCallList(GLuint list);
+void glDeleteLists(GLuint list, GLsizei range);
+void glEndList(void);
+void glNewList(GLuint list, GLenum mode);
 
 #ifdef __cplusplus
 }
