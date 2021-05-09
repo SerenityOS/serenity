@@ -117,6 +117,7 @@ public:
     RefPtr<Gfx::Bitmap> flipped(Gfx::Orientation) const;
     RefPtr<Gfx::Bitmap> scaled(int sx, int sy) const;
     RefPtr<Gfx::Bitmap> scaled(float sx, float sy) const;
+    RefPtr<Gfx::Bitmap> cropped(Gfx::IntRect) const;
     RefPtr<Bitmap> to_bitmap_backed_by_anon_fd() const;
     ByteBuffer serialize_to_byte_buffer() const;
 

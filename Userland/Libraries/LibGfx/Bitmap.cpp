@@ -498,6 +498,26 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     return new_bitmap;
 }
 
+RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
+{
+    auto new_bitmap = Gfx::Bitmap::create(format(), { crop.width(), crop.height() }, 1);
+    if (!new_bitmap)
+        return nullptr;
+
+    for (int y = 0; y < crop.height(); ++y) {
+        for (int x = 0; x < crop.width(); ++x) {
+            int global_x = x + crop.left();
+            int global_y = y + crop.top();
+            if (global_x >= physical_width() || global_y >= physical_height() || global_x < 0 || global_y < 0) {
+                new_bitmap->set_pixel(x, y, Gfx::Color::Black);
+            } else {
+                new_bitmap->set_pixel(x, y, get_pixel(global_x, global_y));
+            }
+        }
+    }
+    return new_bitmap;
+}
+
 #ifdef __serenity__
 RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
 {
