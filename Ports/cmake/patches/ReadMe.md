@@ -161,26 +161,6 @@ We don't have `SO_LINGER` or its associated struct. This patch removes them.
 - [X] Resolves issue(s) with our side of things
 - [X] Hack
 
-## `0020-libuv-ipv6.patch`
-
-cmlibuv assumes the platform has definitions for (and supports) IPv6; this patch removes IPv6-specific things from libuv.
-
-### Status
-- [X] Local?
-- [ ] Should be merged to upstream?
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
-## `0021-libcurl-no-ipv6.patch`
-
-libcurl has a IPV6 switch, but uses `AF_INET6` unconditionally in one place. this patch disables IPV6 and makes that one use conditional.
-
-### Status
-- [X] Local? Partially.
-- [X] Should be merged to upstream? Partially.
-- [X] Resolves issue(s) with our side of things
-- [ ] Hack
-
 ## `0022-remove-mutex.patch` and `0024-shared-mutex.patch`
 
 We don't have mutexes, and out libstdc++ does not define `std::mutex`.
