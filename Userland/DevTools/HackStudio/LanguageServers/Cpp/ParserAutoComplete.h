@@ -76,8 +76,9 @@ private:
         RefPtr<Type> type;
     };
     Vector<PropertyInfo> properties_of_type(const DocumentData& document, const String& type) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations_including_headers(const DocumentData& document) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations(const ASTNode& node) const;
+    NonnullRefPtrVector<Declaration> get_global_declarations_including_headers(const DocumentData&) const;
+    NonnullRefPtrVector<Declaration> get_global_declarations(const DocumentData&) const;
+    NonnullRefPtrVector<Declaration> get_declarations_recursive(const ASTNode&) const;
 
     const DocumentData* get_document_data(const String& file) const;
     const DocumentData* get_or_create_document_data(const String& file);
