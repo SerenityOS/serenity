@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,6 +24,7 @@
 #include "TerminalWrapper.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/API/InodeWatcherEvent.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
@@ -131,6 +132,24 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     initialize_debugger();
 
     create_toolbar(toolbar_container);
+
+    auto maybe_watcher = Core::FileWatcher::create();
+    if (maybe_watcher.is_error()) {
+        warnln("Couldn't create a file watcher, deleted files won't be noticed! Error: {}", maybe_watcher.error());
+    } else {
+        m_file_watcher = maybe_watcher.release_value();
+        m_file_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
+            if (event.type != Core::FileWatcherEvent::Type::Deleted)
+                return;
+
+            if (event.event_path.starts_with(project().root_path())) {
+                String relative_path = LexicalPath::relative_path(event.event_path, project().root_path());
+                handle_external_file_deletion(relative_path);
+            } else {
+                handle_external_file_deletion(event.event_path);
+            }
+        };
+    }
 }
 
 void HackStudioWidget::update_actions()
@@ -224,18 +243,12 @@ bool HackStudioWidget::open_file(const String& full_filename)
         new_project_file = m_project->get_file(filename);
         m_open_files.set(filename, *new_project_file);
         m_open_files_vector.append(filename);
-        auto watcher_or_error = Core::FileWatcher::watch(filename);
-        if (!watcher_or_error.is_error()) {
-            auto& watcher = watcher_or_error.value();
-            watcher->on_change = [this, filename]() {
-                struct stat st;
-                if (lstat(filename.characters(), &st) < 0) {
-                    if (errno == ENOENT) {
-                        handle_external_file_deletion(filename);
-                    }
-                }
-            };
-            m_file_watchers.set(filename, watcher_or_error.release_value());
+
+        if (!m_file_watcher.is_null()) {
+            auto watch_result = m_file_watcher->add_watch(filename, Core::FileWatcherEvent::Type::Deleted);
+            if (watch_result.is_error()) {
+                warnln("Couldn't watch '{}'", filename);
+            }
         }
 
         m_open_files_view->model()->update();
@@ -1030,7 +1043,6 @@ void HackStudioWidget::handle_external_file_deletion(const String& filepath)
         }
     }
 
-    m_file_watchers.remove(filepath);
     m_open_files_view->model()->update();
 }
 

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,9 +23,22 @@ int fcntl(int fd, int cmd, ...)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int watch_file(const char* path, size_t path_length)
+int create_inode_watcher(unsigned flags)
 {
-    int rc = syscall(SC_watch_file, path, path_length);
+    int rc = syscall(SC_create_inode_watcher, flags);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int inode_watcher_add_watch(int fd, const char* path, size_t path_length, unsigned event_mask)
+{
+    Syscall::SC_inode_watcher_add_watch_params params { fd, { path, path_length }, event_mask };
+    int rc = syscall(SC_inode_watcher_add_watch, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int inode_watcher_remove_watch(int fd, int wd)
+{
+    int rc = syscall(SC_inode_watcher_remove_watch, fd, wd);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

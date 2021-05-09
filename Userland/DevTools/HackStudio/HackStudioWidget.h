@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -122,7 +122,7 @@ private:
     RefPtr<EditorWrapper> m_current_editor_wrapper;
 
     HashMap<String, NonnullRefPtr<ProjectFile>> m_open_files;
-    HashMap<String, NonnullRefPtr<Core::FileWatcher>> m_file_watchers;
+    RefPtr<Core::FileWatcher> m_file_watcher;
     Vector<String> m_open_files_vector; // NOTE: This contains the keys from m_open_files and m_file_watchers
 
     OwnPtr<Project> m_project;

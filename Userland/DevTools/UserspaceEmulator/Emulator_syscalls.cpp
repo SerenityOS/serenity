@@ -222,8 +222,12 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$set_thread_name(arg1, arg2, arg3);
     case SC_setsid:
         return virt$setsid();
-    case SC_watch_file:
-        return virt$watch_file(arg1, arg2);
+    case SC_create_inode_watcher:
+        return virt$create_inode_watcher(arg1);
+    case SC_inode_watcher_add_watch:
+        return virt$inode_watcher_add_watch(arg1);
+    case SC_inode_watcher_remove_watch:
+        return virt$inode_watcher_remove_watch(arg1, arg2);
     case SC_clock_nanosleep:
         return virt$clock_nanosleep(arg1);
     case SC_readlink:
@@ -1386,10 +1390,21 @@ pid_t Emulator::virt$setsid()
     return syscall(SC_setsid);
 }
 
-int Emulator::virt$watch_file(FlatPtr user_path_addr, size_t path_length)
+int Emulator::virt$create_inode_watcher(unsigned flags)
 {
-    auto user_path = mmu().copy_buffer_from_vm(user_path_addr, path_length);
-    return syscall(SC_watch_file, user_path.data(), user_path.size());
+    return syscall(SC_create_inode_watcher, flags);
+}
+
+int Emulator::virt$inode_watcher_add_watch(FlatPtr params_addr)
+{
+    Syscall::SC_inode_watcher_add_watch_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    return syscall(SC_inode_watcher_add_watch, &params);
+}
+
+int Emulator::virt$inode_watcher_remove_watch(int fd, int wd)
+{
+    return syscall(SC_inode_watcher_add_watch, fd, wd);
 }
 
 int Emulator::virt$clock_nanosleep(FlatPtr params_addr)
