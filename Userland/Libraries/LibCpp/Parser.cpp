@@ -899,7 +899,7 @@ Optional<size_t> Parser::index_of_node_at(Position pos) const
         if (node.start() > pos || node.end() < pos)
             continue;
 
-        if (!match_node_index.has_value() || (node_span(node) < node_span(m_state.nodes[match_node_index.value()])))
+        if (!match_node_index.has_value() || (node_span(node) <= node_span(m_state.nodes[match_node_index.value()])))
             match_node_index = node_index;
     }
     return match_node_index;
