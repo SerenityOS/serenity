@@ -42,10 +42,10 @@ public:
     void set_default(bool);
 
     String text() const { return m_text; }
-    void set_text(const String& text) { m_text = text; }
+    void set_text(String text) { m_text = move(text); }
 
     String shortcut_text() const { return m_shortcut_text; }
-    void set_shortcut_text(const String& text) { m_shortcut_text = text; }
+    void set_shortcut_text(String text) { m_shortcut_text = move(text); }
 
     void set_rect(const Gfx::IntRect& rect) { m_rect = rect; }
     Gfx::IntRect rect() const;

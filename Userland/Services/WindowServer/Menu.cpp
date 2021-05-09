@@ -153,7 +153,7 @@ Window& Menu::ensure_menu_window()
     return *m_menu_window;
 }
 
-int Menu::visible_item_count() const
+size_t Menu::visible_item_count() const
 {
     if (!is_scrollable())
         return m_items.size();
@@ -441,7 +441,7 @@ void Menu::event(Core::Event& event)
             VERIFY(new_index >= 0);
             VERIFY(new_index <= static_cast<int>(m_items.size()) - 1);
 
-            if (is_scrollable() && new_index >= (m_scroll_offset + visible_item_count()))
+            if (is_scrollable() && new_index >= (m_scroll_offset + static_cast<int>(visible_item_count())))
                 ++m_scroll_offset;
 
             set_hovered_index(new_index);
