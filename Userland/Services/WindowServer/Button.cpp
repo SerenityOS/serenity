@@ -56,7 +56,7 @@ void Button::on_mouse_event(const MouseEvent& event)
         break;
     }
 
-    if (!interesting_button)
+    if (event.type() != Event::Type::MouseMove && !interesting_button)
         return;
 
     auto& wm = WindowManager::the();
