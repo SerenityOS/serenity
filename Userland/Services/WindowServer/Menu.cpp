@@ -590,7 +590,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     }
     if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -window.height());
+        adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());
     }
