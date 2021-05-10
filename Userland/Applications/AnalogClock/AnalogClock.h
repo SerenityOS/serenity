@@ -13,6 +13,10 @@ class AnalogClock : public GUI::Widget {
     C_OBJECT(AnalogClock)
 public:
     ~AnalogClock() override = default;
+    void set_show_window_frame(bool);
+    bool show_window_frame() const { return m_show_window_frame; }
+
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
 private:
     AnalogClock()
@@ -32,7 +36,10 @@ private:
     double m_hand_tail_length { 22 };
     double m_hand_wing_span { 5 };
 
+    bool m_show_window_frame { true };
+
 protected:
+    void context_menu_event(GUI::ContextMenuEvent& event) override;
     void paint_event(GUI::PaintEvent&) override;
     void draw_face(GUI::Painter&);
     void draw_mirrored_graduations(GUI::Painter&, Gfx::IntRect&, int x, int y, int rect_center_offset);
