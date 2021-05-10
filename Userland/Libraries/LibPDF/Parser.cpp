@@ -617,12 +617,35 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     m_reader.move_by(6);
     consume_eol();
 
-    auto length_value = dict->map().get("Length");
-    VERIFY(length_value.has_value());
-    auto length = length_value.value();
-    VERIFY(length.is_int());
+    ReadonlyBytes bytes;
 
-    auto bytes = m_reader.bytes().slice(m_reader.offset(), length.as_int());
+    auto maybe_length = dict->get("Length");
+    if (maybe_length.has_value()) {
+        // The PDF writer has kindly provided us with the direct length of the stream
+        m_reader.save();
+        auto length = m_document->resolve_to<int>(maybe_length.value());
+        m_reader.load();
+        bytes = m_reader.bytes().slice(m_reader.offset(), length);
+        m_reader.move_by(length);
+        consume_whitespace();
+    } else {
+        // We have to look for the endstream keyword
+        auto stream_start = m_reader.offset();
+
+        while (true) {
+            m_reader.move_until([&] { return matches_eol(); });
+            auto potential_stream_end = m_reader.offset();
+            consume_eol();
+            if (!m_reader.matches("endstream"))
+                continue;
+
+            bytes = m_reader.bytes().slice(stream_start, potential_stream_end - stream_start);
+            break;
+        }
+    }
+
+    m_reader.move_by(9);
+    consume_whitespace();
 
     return make_object<StreamObject>(dict, bytes);
 }
