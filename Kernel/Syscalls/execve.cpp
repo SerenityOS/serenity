@@ -187,18 +187,18 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     return range;
 };
 
-static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription& interpreter_description)
+static KResultOr<FlatPtr> get_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription* interpreter_description)
 {
-    constexpr FlatPtr interpreter_load_range_start = 0x08000000;
-    constexpr FlatPtr interpreter_load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
-    constexpr FlatPtr minimum_interpreter_load_offset_randomization_size = 10 * MiB;
+    constexpr FlatPtr load_range_start = 0x08000000;
+    constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
+    constexpr FlatPtr minimum_load_offset_randomization_size = 10 * MiB;
 
     auto random_load_offset_in_range([](auto start, auto size) {
         return page_round_down(start + get_good_random<FlatPtr>() % size);
     });
 
     if (main_program_header.e_type == ET_DYN) {
-        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
+        return random_load_offset_in_range(load_range_start, load_range_size);
     }
 
     if (main_program_header.e_type != ET_EXEC)
@@ -210,29 +210,33 @@ static KResultOr<FlatPtr> get_interpreter_load_offset(const Elf32_Ehdr& main_pro
 
     auto main_program_load_range = main_program_load_range_result.value();
 
-    auto interpreter_load_range_result = get_required_load_range(interpreter_description);
-    if (interpreter_load_range_result.is_error())
-        return interpreter_load_range_result.error();
-
-    auto interpreter_size_in_memory = interpreter_load_range_result.value().end - interpreter_load_range_result.value().start;
-    auto interpreter_load_range_end = interpreter_load_range_start + interpreter_load_range_size - interpreter_size_in_memory;
-
-    // No intersection
-    if (main_program_load_range.end < interpreter_load_range_start || main_program_load_range.start > interpreter_load_range_end)
-        return random_load_offset_in_range(interpreter_load_range_start, interpreter_load_range_size);
-
-    RequiredLoadRange first_available_part = { interpreter_load_range_start, main_program_load_range.start };
-    RequiredLoadRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
-
     RequiredLoadRange selected_range {};
-    // Select larger part
-    if (first_available_part.end - first_available_part.start > second_available_part.end - second_available_part.start)
-        selected_range = first_available_part;
-    else
-        selected_range = second_available_part;
 
-    // If main program is too big and leaves us without enough space for adequate loader randmoization
-    if (selected_range.end - selected_range.start < minimum_interpreter_load_offset_randomization_size)
+    if (interpreter_description) {
+        auto interpreter_load_range_result = get_required_load_range(*interpreter_description);
+        if (interpreter_load_range_result.is_error())
+            return interpreter_load_range_result.error();
+
+        auto interpreter_size_in_memory = interpreter_load_range_result.value().end - interpreter_load_range_result.value().start;
+        auto interpreter_load_range_end = load_range_start + load_range_size - interpreter_size_in_memory;
+
+        // No intersection
+        if (main_program_load_range.end < load_range_start || main_program_load_range.start > interpreter_load_range_end)
+            return random_load_offset_in_range(load_range_start, load_range_size);
+
+        RequiredLoadRange first_available_part = { load_range_start, main_program_load_range.start };
+        RequiredLoadRange second_available_part = { main_program_load_range.end, interpreter_load_range_end };
+
+        // Select larger part
+        if (first_available_part.end - first_available_part.start > second_available_part.end - second_available_part.start)
+            selected_range = first_available_part;
+        else
+            selected_range = second_available_part;
+    } else
+        selected_range = main_program_load_range;
+
+    // If main program is too big and leaves us without enough space for adequate loader randomization
+    if (selected_range.end - selected_range.start < minimum_load_offset_randomization_size)
         return E2BIG;
 
     return random_load_offset_in_range(selected_range.start, selected_range.end - selected_range.start);
@@ -437,8 +441,13 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         MemoryManager::enter_process_paging_scope(*this);
     });
 
+    auto load_offset = get_load_offset(main_program_header, main_program_description, interpreter_description);
+    if (load_offset.is_error()) {
+        return load_offset.error();
+    }
+
     if (interpreter_description.is_null()) {
-        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, FlatPtr { 0 }, ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
+        auto result = load_elf_object(new_space.release_nonnull(), main_program_description, load_offset.value(), ShouldAllocateTls::Yes, ShouldAllowSyscalls::No);
         if (result.is_error())
             return result.error();
 
@@ -449,12 +458,7 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
         return result;
     }
 
-    auto interpreter_load_offset = get_interpreter_load_offset(main_program_header, main_program_description, *interpreter_description);
-    if (interpreter_load_offset.is_error()) {
-        return interpreter_load_offset.error();
-    }
-
-    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, interpreter_load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
+    auto interpreter_load_result = load_elf_object(new_space.release_nonnull(), *interpreter_description, load_offset.value(), ShouldAllocateTls::No, ShouldAllowSyscalls::Yes);
 
     if (interpreter_load_result.is_error())
         return interpreter_load_result.error();
