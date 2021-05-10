@@ -849,10 +849,19 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
 {
     m_project_tab = parent.add<GUI::TabWidget>();
     m_project_tab->set_tab_position(GUI::TabWidget::TabPosition::Bottom);
-    m_project_tree_view = m_project_tab->add_tab<GUI::TreeView>("Files");
+
+    auto& tree_view_container = m_project_tab->add_tab<GUI::Widget>("Files");
+    tree_view_container.set_layout<GUI::VerticalBoxLayout>();
+    tree_view_container.layout()->set_margins({ 2, 2, 2, 2 });
+
+    m_project_tree_view = tree_view_container.add<GUI::TreeView>();
     configure_project_tree_view();
 
-    m_class_view = m_project_tab->add_tab<ClassViewWidget>("ClassView");
+    auto& class_view_container = m_project_tab->add_tab<GUI::Widget>("Classes");
+    class_view_container.set_layout<GUI::VerticalBoxLayout>();
+    class_view_container.layout()->set_margins({ 2, 2, 2, 2 });
+
+    m_class_view = class_view_container.add<ClassViewWidget>();
 
     ProjectDeclarations::the().on_update = [this]() {
         m_class_view->refresh();
