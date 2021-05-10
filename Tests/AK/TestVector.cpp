@@ -399,3 +399,43 @@ TEST_CASE(should_find_index)
     EXPECT_EQ(4u, v.find_first_index(0).value());
     EXPECT(!v.find_first_index(42).has_value());
 }
+
+TEST_CASE(should_contain_start)
+{
+    // Tests whether value is found if at the start of the range.
+    Vector<int> v { 1, 2, 3, 4, 5 };
+
+    EXPECT(v.contains_in_range(1, 0, 4));
+}
+
+TEST_CASE(should_contain_end)
+{
+    // Tests whether value is found if at the end of the range.
+    Vector<int> v { 1, 2, 3, 4, 5 };
+
+    EXPECT(v.contains_in_range(5, 0, 4));
+}
+
+TEST_CASE(should_contain_range)
+{
+    // Tests whether value is found within a range.
+    Vector<int> v { 1, 2, 3, 4, 5 };
+
+    EXPECT(v.contains_in_range(3, 0, 4));
+}
+
+TEST_CASE(should_not_contain_not_present)
+{
+    // Tests whether a value that is not present is not found, as expected.
+    Vector<int> v { 1, 2, 3, 4, 5 };
+
+    EXPECT(!v.contains_in_range(6, 0, 4));
+}
+
+TEST_CASE(should_not_contain_present_not_in_range)
+{
+    // Tests whether a value that is present, but not in range, is not found.
+    Vector<int> v { 1, 2, 3, 4, 5 };
+
+    EXPECT(!v.contains_in_range(2, 2, 4));
+}
