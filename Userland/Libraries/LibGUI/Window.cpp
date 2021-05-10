@@ -896,6 +896,9 @@ void Window::set_frameless(bool frameless)
     if (!is_visible())
         return;
     WindowServerConnection::the().set_frameless(m_window_id, frameless);
+
+    if (!frameless)
+        apply_icon();
 }
 
 bool Window::is_maximized() const
