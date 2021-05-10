@@ -15,15 +15,15 @@ class Timer final : public Object {
     C_OBJECT(Timer);
 
 public:
-    static NonnullRefPtr<Timer> create_repeating(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    static NonnullRefPtr<Timer> create_repeating(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
     {
-        auto timer = adopt_ref(*new Timer(interval, move(timeout_handler), parent));
+        auto timer = adopt_ref(*new Timer(interval_ms, move(timeout_handler), parent));
         timer->stop();
         return timer;
     }
-    static NonnullRefPtr<Timer> create_single_shot(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr)
+    static NonnullRefPtr<Timer> create_single_shot(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr)
     {
-        auto timer = adopt_ref(*new Timer(interval, move(timeout_handler), parent));
+        auto timer = adopt_ref(*new Timer(interval_ms, move(timeout_handler), parent));
         timer->set_single_shot(true);
         timer->stop();
         return timer;
@@ -32,18 +32,18 @@ public:
     virtual ~Timer() override;
 
     void start();
-    void start(int interval);
+    void start(int interval_ms);
     void restart();
-    void restart(int interval);
+    void restart(int interval_ms);
     void stop();
 
     bool is_active() const { return m_active; }
-    int interval() const { return m_interval; }
-    void set_interval(int interval)
+    int interval() const { return m_interval_ms; }
+    void set_interval(int interval_ms)
     {
-        if (m_interval == interval)
+        if (m_interval_ms == interval_ms)
             return;
-        m_interval = interval;
+        m_interval_ms = interval_ms;
         m_interval_dirty = true;
     }
 
@@ -54,14 +54,14 @@ public:
 
 private:
     explicit Timer(Object* parent = nullptr);
-    Timer(int interval, Function<void()>&& timeout_handler, Object* parent = nullptr);
+    Timer(int interval_ms, Function<void()>&& timeout_handler, Object* parent = nullptr);
 
     virtual void timer_event(TimerEvent&) override;
 
     bool m_active { false };
     bool m_single_shot { false };
     bool m_interval_dirty { false };
-    int m_interval { 0 };
+    int m_interval_ms { 0 };
 };
 
 }
