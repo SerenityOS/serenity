@@ -63,6 +63,8 @@ Page Document::get_page(u32 index)
     auto raw_page_object = resolve_to<DictObject>(get_or_load_value(page_object_index));
 
     auto resources = raw_page_object->get_dict(this, "Resources");
+    auto contents = raw_page_object->get_object(this, "Contents");
+
     auto media_box_array = raw_page_object->get_array(this, "MediaBox");
     auto media_box = Rectangle {
         media_box_array->at(0).to_float(),
@@ -70,9 +72,23 @@ Page Document::get_page(u32 index)
         media_box_array->at(2).to_float(),
         media_box_array->at(3).to_float(),
     };
-    auto contents = raw_page_object->get_object(this, "Contents");
 
-    Page page { resources, media_box, contents };
+    auto crop_box = media_box;
+    if (raw_page_object->contains("CropBox")) {
+        auto crop_box_array = raw_page_object->get_array(this, "CropBox");
+        crop_box = Rectangle {
+            crop_box_array->at(0).to_float(),
+            crop_box_array->at(1).to_float(),
+            crop_box_array->at(2).to_float(),
+            crop_box_array->at(3).to_float(),
+        };
+    }
+
+    float user_unit = 1.0f;
+    if (raw_page_object->contains("UserUnit"))
+        user_unit = raw_page_object->get_value("UserUnit").to_float();
+
+    Page page { move(resources), move(contents), media_box, crop_box, user_unit };
     m_pages.set(index, page);
     return page;
 }
