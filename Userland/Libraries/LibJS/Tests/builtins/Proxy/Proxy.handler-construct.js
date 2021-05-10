@@ -27,11 +27,13 @@ describe("[[Construct]] trap normal behavior", () => {
 
         let p;
         const handler = {
-            construct(target, arguments, newTarget) {
+            construct(target, arguments_, newTarget) {
                 expect(target).toBe(f);
                 expect(newTarget).toBe(p);
-                if (arguments[1]) return Reflect.construct(target, [arguments[0] * 2], newTarget);
-                return Reflect.construct(target, arguments, newTarget);
+                if (arguments_[1]) {
+                    return Reflect.construct(target, [arguments_[0] * 2], newTarget);
+                }
+                return Reflect.construct(target, arguments_, newTarget);
             },
         };
         p = new Proxy(f, handler);
@@ -48,11 +50,13 @@ describe("[[Construct]] trap normal behavior", () => {
         let p;
         function theNewTarget() {}
         const handler = {
-            construct(target, arguments, newTarget) {
+            construct(target, arguments_, newTarget) {
                 expect(target).toBe(f);
                 expect(newTarget).toBe(theNewTarget);
-                if (arguments[1]) return Reflect.construct(target, [arguments[0] * 2], newTarget);
-                return Reflect.construct(target, arguments, newTarget);
+                if (arguments_[1]) {
+                    return Reflect.construct(target, [arguments_[0] * 2], newTarget);
+                }
+                return Reflect.construct(target, arguments_, newTarget);
             },
         };
         p = new Proxy(f, handler);
