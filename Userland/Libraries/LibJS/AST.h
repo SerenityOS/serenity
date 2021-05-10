@@ -658,21 +658,21 @@ public:
 
 class RegExpLiteral final : public Literal {
 public:
-    explicit RegExpLiteral(SourceRange source_range, String content, String flags)
+    explicit RegExpLiteral(SourceRange source_range, String pattern, String flags)
         : Literal(move(source_range))
-        , m_content(content)
-        , m_flags(flags)
+        , m_pattern(move(pattern))
+        , m_flags(move(flags))
     {
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
-    const String& content() const { return m_content; }
+    const String& pattern() const { return m_pattern; }
     const String& flags() const { return m_flags; }
 
 private:
-    String m_content;
+    String m_pattern;
     String m_flags;
 };
 

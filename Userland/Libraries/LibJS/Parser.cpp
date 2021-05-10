@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Stephan Unverwerth <s.unverwerth@gmx.de>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -683,9 +683,11 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
 {
     auto rule_start = push_start();
-    auto content = consume().value();
+    auto pattern = consume().value();
+    // Remove leading and trailing slash.
+    pattern = pattern.substring_view(1, pattern.length() - 2);
     auto flags = match(TokenType::RegexFlags) ? consume().value() : "";
-    return create_ast_node<RegExpLiteral>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, content.substring_view(1, content.length() - 2), flags);
+    return create_ast_node<RegExpLiteral>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, pattern, flags);
 }
 
 NonnullRefPtr<Expression> Parser::parse_unary_prefixed_expression()
