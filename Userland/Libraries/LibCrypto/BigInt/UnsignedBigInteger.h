@@ -75,24 +75,12 @@ public:
 
     void set_bit_inplace(size_t bit_index);
 
-    static void add_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
-    static void subtract_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
-    static void bitwise_or_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
-    static void bitwise_and_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
-    static void bitwise_xor_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& output);
-    static void bitwise_not_without_allocation(const UnsignedBigInteger& left, UnsignedBigInteger& output);
-    static void shift_left_without_allocation(const UnsignedBigInteger& number, size_t bits_to_shift_by, UnsignedBigInteger& temp_result, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
-    static void multiply_without_allocation(const UnsignedBigInteger& left, const UnsignedBigInteger& right, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_plus, UnsignedBigInteger& output);
-    static void divide_without_allocation(const UnsignedBigInteger& numerator, const UnsignedBigInteger& denominator, UnsignedBigInteger& temp_shift_result, UnsignedBigInteger& temp_shift_plus, UnsignedBigInteger& temp_shift, UnsignedBigInteger& temp_minus, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
-    static void divide_u16_without_allocation(const UnsignedBigInteger& numerator, u32 denominator, UnsignedBigInteger& quotient, UnsignedBigInteger& remainder);
-
     bool operator==(const UnsignedBigInteger& other) const;
     bool operator!=(const UnsignedBigInteger& other) const;
     bool operator<(const UnsignedBigInteger& other) const;
 
 private:
-    ALWAYS_INLINE static void shift_left_by_n_words(const UnsignedBigInteger& number, size_t number_of_words, UnsignedBigInteger& output);
-    ALWAYS_INLINE static u32 shift_left_get_one_word(const UnsignedBigInteger& number, size_t num_bits, size_t result_word_index);
+    friend class UnsignedBigIntegerAlgorithms;
 
     static constexpr size_t BITS_IN_WORD = 32;
     // Little endian
