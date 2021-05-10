@@ -53,7 +53,7 @@ private:
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {
-        LOCKER(all_actions().lock());
+        Locker locker(all_actions().lock());
 
         all_actions().resource().enqueue([this] {
             m_result = m_action();

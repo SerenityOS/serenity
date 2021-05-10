@@ -17,7 +17,7 @@ static intptr_t background_thread_func()
     while (true) {
         Function<void()> work_item;
         {
-            LOCKER(s_all_actions->lock());
+            LibThread::Locker locker(s_all_actions->lock());
 
             if (!s_all_actions->resource().is_empty())
                 work_item = s_all_actions->resource().dequeue();
