@@ -19,6 +19,8 @@ class Parser {
 public:
     Parser(Badge<Document>, const ReadonlyBytes&);
 
+    void set_document(RefPtr<Document> document) { m_document = document; }
+
     bool perform_validation();
 
     struct XRefTableAndTrailer {
@@ -74,6 +76,7 @@ private:
     void consume(char);
 
     Reader m_reader;
+    RefPtr<Document> m_document;
 };
 
 }
