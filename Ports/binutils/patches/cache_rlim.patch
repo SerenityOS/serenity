@@ -1,0 +1,12 @@
+diff -Naur binutils-2.36.1/bfd/cache.c cache.c
+--- binutils-2.36.1/bfd/cache.c	2021-01-09 16:32:33.000000000 +0545
++++ cache.c	2021-05-10 14:40:01.400184859 +0545
+@@ -96,7 +96,7 @@
+       struct rlimit rlim;
+ 
+       if (getrlimit (RLIMIT_NOFILE, &rlim) == 0
+-	  && rlim.rlim_cur != (rlim_t) RLIM_INFINITY)
++	  && rlim.rlim_cur != getrlimit(RLIM_INFINITY, &rlim))
+ 	max = rlim.rlim_cur / 8;
+       else
+ #endif
