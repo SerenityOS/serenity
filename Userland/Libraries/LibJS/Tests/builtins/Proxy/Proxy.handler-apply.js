@@ -11,11 +11,13 @@ describe("[[Call]] trap normal behavior", () => {
     test("correct arguments supplied to trap", () => {
         const f = (a, b) => a + b;
         const handler = {
-            apply(target, this_, arguments) {
+            apply(target, this_, arguments_) {
                 expect(target).toBe(f);
                 expect(this_).toBe(handler);
-                if (arguments[2]) return arguments[0] * arguments[1];
-                return f(...arguments);
+                if (arguments_[2]) {
+                    return arguments_[0] * arguments_[1];
+                }
+                return f(...arguments_);
             },
         };
         p = new Proxy(f, handler);
