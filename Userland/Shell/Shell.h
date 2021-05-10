@@ -156,7 +156,13 @@ public:
     static String escape_token_for_single_quotes(const String& token);
     static String escape_token(const String& token);
     static String unescape_token(const String& token);
-    static bool is_special(char c);
+    enum class SpecialCharacterEscapeMode {
+        Untouched,
+        Escaped,
+        QuotedAsEscape,
+        QuotedAsHex,
+    };
+    static SpecialCharacterEscapeMode special_character_escape_mode(u32 c);
 
     static bool is_glob(const StringView&);
     static Vector<StringView> split_path(const StringView&);
@@ -352,17 +358,37 @@ inline size_t find_offset_into_node(const String& unescaped_text, size_t escaped
 {
     size_t unescaped_offset = 0;
     size_t offset = 0;
-    for (auto& c : unescaped_text) {
-        if (offset == escaped_offset)
-            return unescaped_offset;
+    auto do_find_offset = [&](auto& unescaped_text) {
+        for (auto c : unescaped_text) {
+            if (offset == escaped_offset)
+                return unescaped_offset;
 
-        if (Shell::is_special(c))
+            switch (Shell::special_character_escape_mode(c)) {
+            case Shell::SpecialCharacterEscapeMode::Untouched:
+                break;
+            case Shell::SpecialCharacterEscapeMode::Escaped:
+                ++offset; // X -> \X
+                break;
+            case Shell::SpecialCharacterEscapeMode::QuotedAsEscape:
+                offset += 3; // X -> "\Y"
+                break;
+            case Shell::SpecialCharacterEscapeMode::QuotedAsHex:
+                if (c > NumericLimits<u8>::max())
+                    offset += 11; // X -> "\uhhhhhhhh"
+                else
+                    offset += 5; // X -> "\xhh"
+                break;
+            }
             ++offset;
-        ++offset;
-        ++unescaped_offset;
-    }
+            ++unescaped_offset;
+        }
+        return unescaped_offset;
+    };
 
-    return unescaped_offset;
+    Utf8View view { unescaped_text };
+    if (view.validate())
+        return do_find_offset(view);
+    return do_find_offset(unescaped_text);
 }
 
 }

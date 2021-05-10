@@ -1,4 +1,6 @@
 set(SOURCES
+    CatDog.cpp
+    SpeechBubble.cpp
     main.cpp
 )
 

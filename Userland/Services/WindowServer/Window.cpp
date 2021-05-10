@@ -245,20 +245,18 @@ void Window::handle_mouse_event(const MouseEvent& event)
     }
 }
 
-void Window::update_menu_item_text(PopupMenuItem item)
+void Window::update_window_menu_items()
 {
-    if (m_window_menu) {
-        m_window_menu->item((int)item).set_text(item == PopupMenuItem::Minimize ? (m_minimized ? "Unminimize" : "Minimize") : (m_maximized ? "Restore" : "Maximize"));
-        m_window_menu->redraw();
-    }
-}
+    if (!m_window_menu)
+        return;
 
-void Window::update_menu_item_enabled(PopupMenuItem item)
-{
-    if (m_window_menu) {
-        m_window_menu->item((int)item).set_enabled(item == PopupMenuItem::Minimize ? m_minimizable : m_resizable);
-        m_window_menu->redraw();
-    }
+    m_window_menu_minimize_item->set_text(m_minimized ? "&Unminimize" : "Mi&nimize");
+    m_window_menu_minimize_item->set_enabled(m_minimizable);
+
+    m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
+    m_window_menu_maximize_item->set_enabled(m_resizable);
+
+    m_window_menu_move_item->set_enabled(!m_minimized && !m_maximized && !m_fullscreen);
 }
 
 void Window::set_minimized(bool minimized)
@@ -268,7 +266,7 @@ void Window::set_minimized(bool minimized)
     if (minimized && !m_minimizable)
         return;
     m_minimized = minimized;
-    update_menu_item_text(PopupMenuItem::Minimize);
+    update_window_menu_items();
     Compositor::the().invalidate_occlusions();
     Compositor::the().invalidate_screen(frame().render_rect());
     if (!blocking_modal_window())
@@ -283,7 +281,7 @@ void Window::set_minimizable(bool minimizable)
     if (m_minimizable == minimizable)
         return;
     m_minimizable = minimizable;
-    update_menu_item_enabled(PopupMenuItem::Minimize);
+    update_window_menu_items();
     // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
@@ -353,7 +351,7 @@ void Window::set_maximized(bool maximized, Optional<Gfx::IntPoint> fixed_point)
         return;
     m_tiled = WindowTileType::None;
     m_maximized = maximized;
-    update_menu_item_text(PopupMenuItem::Maximize);
+    update_window_menu_items();
     if (maximized) {
         m_unmaximized_rect = m_rect;
         set_rect(WindowManager::the().maximized_window_rect(*this));
@@ -390,7 +388,7 @@ void Window::set_resizable(bool resizable)
     if (m_resizable == resizable)
         return;
     m_resizable = resizable;
-    update_menu_item_enabled(PopupMenuItem::Maximize);
+    update_window_menu_items();
     // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
@@ -454,6 +452,11 @@ void Window::event(Core::Event& event)
 
 void Window::handle_keydown_event(const KeyEvent& event)
 {
+    if (event.modifiers() == Mod_Alt && event.key() == Key_Space && type() == WindowType::Normal && !is_frameless()) {
+        auto position = frame().titlebar_rect().bottom_left().translated(frame().rect().location());
+        popup_window_menu(position, WindowMenuDefaultAction::Close);
+        return;
+    }
     if (event.modifiers() == Mod_Alt && event.code_point() && menubar()) {
         Menu* menu_to_open = nullptr;
         menubar()->for_each_menu([&](Menu& menu) {
@@ -630,13 +633,17 @@ void Window::ensure_window_menu()
         m_window_menu = Menu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->set_window_menu_of(*this);
 
-        auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, m_minimized ? "&Unminimize" : "Mi&nimize");
+        auto minimize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MinimizeOrUnminimize, "");
         m_window_menu_minimize_item = minimize_item.ptr();
         m_window_menu->add_item(move(minimize_item));
 
-        auto maximize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MaximizeOrRestore, m_maximized ? "&Restore" : "Ma&ximize");
+        auto maximize_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::MaximizeOrRestore, "");
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
+
+        auto move_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Move, "&Move");
+        m_window_menu_move_item = move_item.ptr();
+        m_window_menu->add_item(move(move_item));
 
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
@@ -645,18 +652,19 @@ void Window::ensure_window_menu()
         menubar_visibility_item->set_checkable(true);
         m_window_menu->add_item(move(menubar_visibility_item));
 
+        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+
         auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
         m_window_menu_close_item->set_default(true);
         m_window_menu->add_item(move(close_item));
 
-        m_window_menu->item((int)PopupMenuItem::Minimize).set_enabled(m_minimizable);
-        m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
-
         m_window_menu->on_item_activation = [&](auto& item) {
             handle_window_menu_action(static_cast<WindowMenuAction>(item.identifier()));
         };
+
+        update_window_menu_items();
     }
 }
 
@@ -671,6 +679,9 @@ void Window::handle_window_menu_action(WindowMenuAction action)
     case WindowMenuAction::MaximizeOrRestore:
         WindowManager::the().maximize_windows(*this, !m_maximized);
         WindowManager::the().move_to_front_and_make_active(*this);
+        break;
+    case WindowMenuAction::Move:
+        WindowManager::the().start_window_move(*this, Screen::the().cursor_location());
         break;
     case WindowMenuAction::Close:
         request_close();
@@ -764,12 +775,12 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
     case WindowTileType::Top:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width() - frame_width,
+            Screen::the().width(),
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::Bottom:
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width() - frame_width,
+            Screen::the().width(),
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::TopLeft:
         return Gfx::IntRect(0,
@@ -785,12 +796,12 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
             Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2);
+            (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::BottomRight:
         return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
             Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2);
+            (max_height - titlebar_height) / 2 - frame_width);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -997,8 +1008,18 @@ void Window::set_modified(bool modified)
         return;
 
     m_modified = modified;
+    WindowManager::the().notify_modified_changed(*this);
     frame().set_button_icons();
     frame().invalidate_titlebar();
+}
+
+String Window::computed_title() const
+{
+    String title = m_title;
+    title.replace("[*]", is_modified() ? " (*)" : "");
+    if (client() && client()->is_unresponsive())
+        return String::formatted("{} (Not responding)", title);
+    return title;
 }
 
 }

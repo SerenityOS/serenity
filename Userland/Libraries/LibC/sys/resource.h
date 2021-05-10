@@ -46,9 +46,11 @@ int getrusage(int who, struct rusage* usage);
 
 #define RLIM_INFINITY SIZE_MAX
 
+typedef size_t rlim_t;
+
 struct rlimit {
-    size_t rlim_cur;
-    size_t rlim_max;
+    rlim_t rlim_cur;
+    rlim_t rlim_max;
 };
 
 int getrlimit(int, struct rlimit*);

@@ -1,4 +1,5 @@
 add_subdirectory(About)
+add_subdirectory(AnalogClock)
 add_subdirectory(Browser)
 add_subdirectory(Calculator)
 add_subdirectory(Calendar)

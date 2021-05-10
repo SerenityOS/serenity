@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Mathieu Gaillard <gaillard.mathieu.39@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +18,7 @@ struct Vertex {
 
 // A triangle defines a single "face" of a mesh
 struct Triangle {
-    Vertex a;
-    Vertex b;
-    Vertex c;
+    GLuint a;
+    GLuint b;
+    GLuint c;
 };

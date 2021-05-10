@@ -153,7 +153,7 @@ Window& Menu::ensure_menu_window()
     return *m_menu_window;
 }
 
-int Menu::visible_item_count() const
+size_t Menu::visible_item_count() const
 {
     if (!is_scrollable())
         return m_items.size();
@@ -370,15 +370,26 @@ void Menu::event(Core::Event& event)
         VERIFY(menu_window());
         VERIFY(menu_window()->is_visible());
 
-        // Default to the first enabled, non-separator item on key press if one has not been selected yet
         if (!hovered_item()) {
-            int counter = 0;
-            for (const auto& item : m_items) {
-                if (item.type() != MenuItem::Separator && item.is_enabled()) {
-                    set_hovered_index(counter, key == Key_Right);
-                    break;
+            if (key == Key_Up) {
+                // Default to the last enabled, non-separator item on key press if one has not been selected yet
+                for (auto i = static_cast<int>(m_items.size()) - 1; i >= 0; i--) {
+                    auto& item = m_items.at(i);
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(i, key == Key_Right);
+                        break;
+                    }
                 }
-                counter++;
+            } else {
+                // Default to the first enabled, non-separator item on key press if one has not been selected yet
+                int counter = 0;
+                for (const auto& item : m_items) {
+                    if (item.type() != MenuItem::Separator && item.is_enabled()) {
+                        set_hovered_index(counter, key == Key_Right);
+                        break;
+                    }
+                    counter++;
+                }
             }
             return;
         }
@@ -430,7 +441,7 @@ void Menu::event(Core::Event& event)
             VERIFY(new_index >= 0);
             VERIFY(new_index <= static_cast<int>(m_items.size()) - 1);
 
-            if (is_scrollable() && new_index >= (m_scroll_offset + visible_item_count()))
+            if (is_scrollable() && new_index >= (m_scroll_offset + static_cast<int>(visible_item_count())))
                 ++m_scroll_offset;
 
             set_hovered_index(new_index);
@@ -579,7 +590,7 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     }
     if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -window.height());
+        adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());
     }

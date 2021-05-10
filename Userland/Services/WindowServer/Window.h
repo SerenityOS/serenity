@@ -46,16 +46,12 @@ enum class WindowTileType {
     BottomRight
 };
 
-enum class PopupMenuItem {
-    Minimize = 0,
-    Maximize,
-};
-
 enum class WindowMenuAction {
     MinimizeOrUnminimize = 0,
     MaximizeOrRestore,
     ToggleMenubarVisibility,
     Close,
+    Move,
 };
 
 enum class WindowMenuDefaultAction {
@@ -129,6 +125,8 @@ public:
 
     String title() const { return m_title; }
     void set_title(const String&);
+
+    String computed_title() const;
 
     float opacity() const { return m_opacity; }
     void set_opacity(float);
@@ -327,11 +325,10 @@ private:
     virtual void event(Core::Event&) override;
     void handle_mouse_event(const MouseEvent&);
     void handle_keydown_event(const KeyEvent&);
-    void update_menu_item_text(PopupMenuItem item);
-    void update_menu_item_enabled(PopupMenuItem item);
     void add_child_window(Window&);
     void add_accessory_window(Window&);
     void ensure_window_menu();
+    void update_window_menu_items();
     void modal_unparented();
 
     ClientConnection* m_client { nullptr };
@@ -396,6 +393,7 @@ private:
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
+    MenuItem* m_window_menu_move_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     int m_minimize_animation_step { -1 };

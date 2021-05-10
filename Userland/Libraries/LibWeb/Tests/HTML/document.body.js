@@ -5,7 +5,7 @@ afterInitialPageLoad(() => {
         expect(document.body).not.toBeNull();
         // FIXME: Add this in once HTMLBodyElement's constructor is implemented.
         //expect(document.body).toBeInstanceOf(HTMLBodyElement);
-        expect(document.body.nodeName).toBe("body");
+        expect(document.body.nodeName).toBe("BODY");
     });
 
     // FIXME: Add this in once set_body is fully implemented.
@@ -20,7 +20,7 @@ afterInitialPageLoad(() => {
         document.body = newBody;
 
         expect(document.body).not.toBeNull();
-        expect(document.body.nodeName).toBe("body");
+        expect(document.body.nodeName).toBe("BODY");
 
         // FIXME: Add this in once HTMLBodyElement's constructor is implemented.
         //expect(document.body).toBeInstanceOf(HTMLBodyElement);
@@ -34,7 +34,7 @@ afterInitialPageLoad(() => {
         document.body = newFrameSet;
 
         expect(document.body).not.toBeNull();
-        expect(document.body.nodeName).toBe("frameset");
+        expect(document.body.nodeName).toBe("FRAMESET");
 
         // FIXME: Add this in once HTMLFrameSetElement's constructor is implemented.
         //expect(document.body).toBeInstanceOf(HTMLFrameSetElement);

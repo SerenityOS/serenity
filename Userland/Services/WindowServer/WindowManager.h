@@ -78,6 +78,7 @@ public:
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
+    void notify_modified_changed(Window&);
 
     Gfx::IntRect maximized_window_rect(const Window&) const;
 
@@ -161,6 +162,8 @@ public:
 
     void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
     void start_window_resize(Window&, const MouseEvent&);
+    void start_window_move(Window&, const MouseEvent&);
+    void start_window_move(Window&, const Gfx::IntPoint&);
 
     const Window* active_fullscreen_window() const
     {
@@ -236,7 +239,7 @@ private:
     bool process_ongoing_window_resize(const MouseEvent&, Window*& hovered_window);
     bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
     bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
-    void start_window_move(Window&, const MouseEvent&);
+
     template<typename Callback>
     IterationDecision for_each_visible_window_of_type_from_back_to_front(WindowType, Callback, bool ignore_highlight = false);
     template<typename Callback>

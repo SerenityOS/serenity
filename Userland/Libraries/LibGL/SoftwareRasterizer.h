@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include "DepthBuffer.h"
 #include "GLStruct.h"
+#include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Vector4.h>
 
@@ -14,6 +16,7 @@ namespace GL {
 
 struct RasterizerOptions {
     bool shade_smooth { false };
+    bool enable_depth_test { false };
 };
 
 class SoftwareRasterizer final {
@@ -31,6 +34,7 @@ public:
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
+    OwnPtr<DepthBuffer> m_depth_buffer;
     RasterizerOptions m_options;
 };
 

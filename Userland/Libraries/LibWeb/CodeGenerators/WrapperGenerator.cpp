@@ -658,6 +658,12 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     if (vm.exception())
         @return_statement@
 )~~~");
+    } else if (parameter.type.name == "long") {
+        scoped_generator.append(R"~~~(
+    auto @cpp_name@ = @js_name@@js_suffix@.to_i32(global_object);
+    if (vm.exception())
+        @return_statement@
+)~~~");
     } else if (parameter.type.name == "EventHandler") {
         // x.onfoo = function() { ... }
         scoped_generator.append(R"~~~(
@@ -866,6 +872,8 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/HTMLFormElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/TextWrapper.h>
@@ -1211,6 +1219,8 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibWeb/Bindings/HTMLFormElementWrapper.h>
 #include <LibWeb/Bindings/HTMLHeadElementWrapper.h>
 #include <LibWeb/Bindings/HTMLImageElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableCaptionElementWrapper.h>
+#include <LibWeb/Bindings/HTMLTableSectionElementWrapper.h>
 #include <LibWeb/Bindings/ImageDataWrapper.h>
 #include <LibWeb/Bindings/NodeWrapperFactory.h>
 #include <LibWeb/Bindings/PerformanceTimingWrapper.h>

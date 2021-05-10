@@ -5,7 +5,7 @@ afterInitialPageLoad(() => {
         expect(document.head).not.toBeNull();
         // FIXME: Add this in once HTMLHeadElement's constructor is implemented.
         //expect(document.head).toBeInstanceOf(HTMLHeadElement);
-        expect(document.head.nodeName).toBe("head");
+        expect(document.head.nodeName).toBe("HEAD");
     });
 
     // FIXME: Add this in once removeChild is implemented.

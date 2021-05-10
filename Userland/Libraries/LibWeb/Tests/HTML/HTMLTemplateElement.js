@@ -14,7 +14,7 @@ afterInitialPageLoad(() => {
         expect(template.content.nodeName).toBe("#document-fragment");
 
         const templateDiv = template.content.getElementById("templatediv");
-        expect(templateDiv.nodeName).toBe("div");
+        expect(templateDiv.nodeName).toBe("DIV");
         expect(templateDiv.textContent).toBe("Hello template!");
     });
 

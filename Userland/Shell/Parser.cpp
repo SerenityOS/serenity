@@ -1315,6 +1315,18 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
                 builder.append(to_byte(first_nibble, second_nibble));
                 break;
             }
+            case 'u': {
+                if (m_input.length() <= m_offset + 8)
+                    break;
+                size_t counter = 8;
+                auto chars = consume_while([&](auto) { return counter-- > 0; });
+                if (auto number = AK::StringUtils::convert_to_uint_from_hex(chars); number.has_value())
+                    builder.append(Utf32View { &number.value(), 1 });
+                else
+                    builder.append(chars);
+
+                break;
+            }
             case 'a':
                 builder.append('\a');
                 break;
@@ -1332,6 +1344,9 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
                 break;
             case 'n':
                 builder.append('\n');
+                break;
+            case 't':
+                builder.append('\t');
                 break;
             }
             continue;

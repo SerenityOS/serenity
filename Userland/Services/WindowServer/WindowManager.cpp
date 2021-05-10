@@ -299,7 +299,7 @@ void WindowManager::tell_wm_about_window(WMClientConnection& conn, Window& windo
     if (window.is_internal())
         return;
     auto* parent = window.parent_window();
-    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.title(), window.rect(), window.progress());
+    conn.async_window_state_changed(conn.window_id(), window.client_id(), window.window_id(), parent ? parent->client_id() : -1, parent ? parent->window_id() : -1, window.is_active(), window.is_minimized(), window.is_modal_dont_unparent(), window.is_frameless(), (i32)window.type(), window.computed_title(), window.rect(), window.progress());
 }
 
 void WindowManager::tell_wm_about_window_rect(WMClientConnection& conn, Window& window)
@@ -373,6 +373,14 @@ void WindowManager::tell_wms_super_key_pressed()
 static bool window_type_has_title(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::ToolWindow;
+}
+
+void WindowManager::notify_modified_changed(Window& window)
+{
+    if (m_switcher.is_visible())
+        m_switcher.refresh();
+
+    tell_wms_window_state_changed(window);
 }
 
 void WindowManager::notify_title_changed(Window& window)
@@ -469,7 +477,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     return new_window_picked;
 }
 
-void WindowManager::start_window_move(Window& window, const MouseEvent& event)
+void WindowManager::start_window_move(Window& window, const Gfx::IntPoint& origin)
 {
     MenuManager::the().close_everyone();
 
@@ -478,9 +486,14 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     move_to_front_and_make_active(window);
     m_move_window = window;
     m_move_window->set_default_positioned(false);
-    m_move_origin = event.position();
+    m_move_origin = origin;
     m_move_window_origin = window.position();
     window.invalidate(true, true);
+}
+
+void WindowManager::start_window_move(Window& window, const MouseEvent& event)
+{
+    start_window_move(window, event.position());
 }
 
 void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
@@ -1492,7 +1505,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
         return IterationDecision::Break;
     });
 
-    constexpr int tasteful_space_above_maximized_window = 2;
+    constexpr int tasteful_space_above_maximized_window = 1;
     rect.set_y(rect.y() + tasteful_space_above_maximized_window);
     rect.set_height(rect.height() - tasteful_space_above_maximized_window);
 

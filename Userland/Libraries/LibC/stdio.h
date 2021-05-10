@@ -89,6 +89,7 @@ void perror(const char*);
 int scanf(const char* fmt, ...) __attribute__((format(scanf, 1, 2)));
 int sscanf(const char* str, const char* fmt, ...) __attribute__((format(scanf, 2, 3)));
 int fscanf(FILE*, const char* fmt, ...) __attribute__((format(scanf, 2, 3)));
+int vscanf(const char*, va_list) __attribute__((format(scanf, 1, 0)));
 int vfscanf(FILE*, const char*, va_list) __attribute__((format(scanf, 2, 0)));
 int vsscanf(const char*, const char*, va_list) __attribute__((format(scanf, 2, 0)));
 int setvbuf(FILE*, char* buf, int mode, size_t);

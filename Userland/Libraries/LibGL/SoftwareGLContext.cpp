@@ -55,12 +55,18 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
         return;
     }
 
-    if (mask & GL_COLOR_BUFFER_BIT) {
-        m_rasterizer.clear_color(m_clear_color);
-        m_error = GL_NO_ERROR;
-    } else {
+    if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)) {
         m_error = GL_INVALID_ENUM;
+        return;
     }
+
+    if (mask & GL_COLOR_BUFFER_BIT)
+        m_rasterizer.clear_color(m_clear_color);
+
+    if (mask & GL_DEPTH_BUFFER_BIT)
+        m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
+
+    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -71,6 +77,17 @@ void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf bl
     }
 
     m_clear_color = { red, green, blue, alpha };
+    m_error = GL_NO_ERROR;
+}
+
+void SoftwareGLContext::gl_clear_depth(GLdouble depth)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    m_clear_depth = depth;
     m_error = GL_NO_ERROR;
 }
 
@@ -601,14 +618,25 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         return;
     }
 
+    auto rasterizer_options = m_rasterizer.options();
+    bool update_rasterizer_options = false;
+
     switch (capability) {
     case GL_CULL_FACE:
         m_cull_faces = true;
+        break;
+    case GL_DEPTH_TEST:
+        m_depth_test_enabled = true;
+        rasterizer_options.enable_depth_test = true;
+        update_rasterizer_options = true;
         break;
     default:
         m_error = GL_INVALID_ENUM;
         break;
     }
+
+    if (update_rasterizer_options)
+        m_rasterizer.set_options(rasterizer_options);
 }
 
 void SoftwareGLContext::gl_disable(GLenum capability)
@@ -618,14 +646,25 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         return;
     }
 
+    auto rasterizer_options = m_rasterizer.options();
+    bool update_rasterizer_options = false;
+
     switch (capability) {
     case GL_CULL_FACE:
         m_cull_faces = false;
+        break;
+    case GL_DEPTH_TEST:
+        m_depth_test_enabled = false;
+        rasterizer_options.enable_depth_test = false;
+        update_rasterizer_options = true;
         break;
     default:
         m_error = GL_INVALID_ENUM;
         break;
     }
+
+    if (update_rasterizer_options)
+        m_rasterizer.set_options(rasterizer_options);
 }
 
 void SoftwareGLContext::gl_front_face(GLenum face)

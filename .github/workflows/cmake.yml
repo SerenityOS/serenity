@@ -45,7 +45,7 @@ jobs:
       run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
     - name: Install JS dependencies
-      run: sudo npm install -g prettier
+      run: sudo npm install -g prettier@2.2.1
     - name: Install Python dependencies
       # The setup-python action set default python to python3.x. Note that we are not using system python here.
       run: |

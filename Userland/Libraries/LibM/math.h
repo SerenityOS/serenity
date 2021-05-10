@@ -74,7 +74,7 @@ __BEGIN_DECLS
 #define isless(x, y) __builtin_isless((x), (y))
 #define islessequal(x, y) __builtin_islessequal((x), (y))
 #define islessgreater(x, y) __builtin_islessgreater((x), (y))
-#define isunordered(x, y) __builtin_isunoredered((x), (y))
+#define isunordered(x, y) __builtin_isunordered((x), (y))
 
 #define DOUBLE_MAX ((double)0b0111111111101111111111111111111111111111111111111111111111111111)
 #define DOUBLE_MIN ((double)0b0000000000010000000000000000000000000000000000000000000000000000)
@@ -236,6 +236,11 @@ long lroundl(long double) NOEXCEPT;
 long long llroundf(float) NOEXCEPT;
 long long llround(double) NOEXCEPT;
 long long llroundd(long double) NOEXCEPT;
+long long llroundl(long double x) NOEXCEPT;
+double nearbyint(double x) NOEXCEPT;
+float nearbyintf(float x) NOEXCEPT;
+long double nearbyintl(long double x) NOEXCEPT;
+
 float rintf(float) NOEXCEPT;
 double rint(double) NOEXCEPT;
 long double rintl(long double) NOEXCEPT;
@@ -261,6 +266,7 @@ double scalbn(double, int) NOEXCEPT;
 long double scalbnl(long double, int) NOEXCEPT;
 float scalbnlf(float, long) NOEXCEPT;
 double scalbln(double, long) NOEXCEPT;
+float scalblnf(float, long) NOEXCEPT;
 long double scalblnl(long double, long) NOEXCEPT;
 int ilogbl(long double) NOEXCEPT;
 int ilogb(double) NOEXCEPT;
@@ -277,5 +283,20 @@ long double nexttowardl(long double, long double) NOEXCEPT;
 float copysignf(float x, float y) NOEXCEPT;
 double copysign(double x, double y) NOEXCEPT;
 long double copysignl(long double x, long double y) NOEXCEPT;
+
+/* positive difference */
+double fdim(double x, double y) NOEXCEPT;
+float fdimf(float x, float y) NOEXCEPT;
+long double fdiml(long double x, long double y) NOEXCEPT;
+
+/* floating-point multiply and add */
+double fma(double x, double y, double z) NOEXCEPT;
+float fmaf(float x, float y, float z) NOEXCEPT;
+long double fmal(long double x, long double y, long double z) NOEXCEPT;
+
+/* remainder and part of quotient */
+double remquo(double x, double y, int* quo) NOEXCEPT;
+float remquof(float x, float y, int* quo) NOEXCEPT;
+long double remquol(long double x, long double y, int* quo) NOEXCEPT;
 
 __END_DECLS
