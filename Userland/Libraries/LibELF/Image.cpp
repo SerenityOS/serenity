@@ -141,13 +141,15 @@ bool Image::parse()
     if (m_size < sizeof(Elf32_Ehdr) || !validate_elf_header(header(), m_size, m_verbose_logging)) {
         if (m_verbose_logging)
             dbgln("ELF::Image::parse(): ELF Header not valid");
-        return m_valid = false;
+        m_valid = false;
+        return false;
     }
 
     if (!validate_program_headers(header(), m_size, m_buffer, m_size, nullptr, m_verbose_logging)) {
         if (m_verbose_logging)
             dbgln("ELF::Image::parse(): ELF Program Headers not valid");
-        return m_valid = false;
+        m_valid = false;
+        return false;
     }
 
     m_valid = true;
@@ -156,8 +158,10 @@ bool Image::parse()
     for (unsigned i = 0; i < section_count(); ++i) {
         auto& sh = section_header(i);
         if (sh.sh_type == SHT_SYMTAB) {
-            if (m_symbol_table_section_index && m_symbol_table_section_index != i)
-                return m_valid = false;
+            if (m_symbol_table_section_index && m_symbol_table_section_index != i) {
+                m_valid = false;
+                return false;
+            }
             m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
