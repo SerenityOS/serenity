@@ -1345,6 +1345,9 @@ RefPtr<AST::Node> Parser::parse_doublequoted_string_inner()
             case 'n':
                 builder.append('\n');
                 break;
+            case 't':
+                builder.append('\t');
+                break;
             }
             continue;
         }
