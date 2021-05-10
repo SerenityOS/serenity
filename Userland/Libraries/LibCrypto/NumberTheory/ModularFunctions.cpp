@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 
 namespace Crypto {
@@ -15,7 +16,6 @@ UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBi
     if (b == 1)
         return { 1 };
 
-    UnsignedBigInteger one { 1 };
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
@@ -23,78 +23,14 @@ UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBi
     UnsignedBigInteger temp_plus;
     UnsignedBigInteger temp_minus;
     UnsignedBigInteger temp_quotient;
-    UnsignedBigInteger temp_remainder;
-    UnsignedBigInteger d;
+    UnsignedBigInteger temp_d;
+    UnsignedBigInteger temp_u;
+    UnsignedBigInteger temp_v;
+    UnsignedBigInteger temp_x;
+    UnsignedBigInteger result;
 
-    auto a = a_;
-    auto u = a;
-    if (a.words()[0] % 2 == 0) {
-        // u += b
-        UnsignedBigInteger::add_without_allocation(u, b, temp_plus);
-        u.set_to(temp_plus);
-    }
-
-    auto v = b;
-    UnsignedBigInteger x { 0 };
-
-    // d = b - 1
-    UnsignedBigInteger::subtract_without_allocation(b, one, d);
-
-    while (!(v == 1)) {
-        while (v < u) {
-            // u -= v
-            UnsignedBigInteger::subtract_without_allocation(u, v, temp_minus);
-            u.set_to(temp_minus);
-
-            // d += x
-            UnsignedBigInteger::add_without_allocation(d, x, temp_plus);
-            d.set_to(temp_plus);
-
-            while (u.words()[0] % 2 == 0) {
-                if (d.words()[0] % 2 == 1) {
-                    // d += b
-                    UnsignedBigInteger::add_without_allocation(d, b, temp_plus);
-                    d.set_to(temp_plus);
-                }
-
-                // u /= 2
-                UnsignedBigInteger::divide_u16_without_allocation(u, 2, temp_quotient, temp_remainder);
-                u.set_to(temp_quotient);
-
-                // d /= 2
-                UnsignedBigInteger::divide_u16_without_allocation(d, 2, temp_quotient, temp_remainder);
-                d.set_to(temp_quotient);
-            }
-        }
-
-        // v -= u
-        UnsignedBigInteger::subtract_without_allocation(v, u, temp_minus);
-        v.set_to(temp_minus);
-
-        // x += d
-        UnsignedBigInteger::add_without_allocation(x, d, temp_plus);
-        x.set_to(temp_plus);
-
-        while (v.words()[0] % 2 == 0) {
-            if (x.words()[0] % 2 == 1) {
-                // x += b
-                UnsignedBigInteger::add_without_allocation(x, b, temp_plus);
-                x.set_to(temp_plus);
-            }
-
-            // v /= 2
-            UnsignedBigInteger::divide_u16_without_allocation(v, 2, temp_quotient, temp_remainder);
-            v.set_to(temp_quotient);
-
-            // x /= 2
-            UnsignedBigInteger::divide_u16_without_allocation(x, 2, temp_quotient, temp_remainder);
-            x.set_to(temp_quotient);
-        }
-    }
-
-    // x % b
-    UnsignedBigInteger::divide_without_allocation(x, b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-    return temp_remainder;
+    UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(a_, b, temp_1, temp_2, temp_3, temp_4, temp_plus, temp_minus, temp_quotient, temp_d, temp_u, temp_v, temp_x, result);
+    return result;
 }
 
 UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigInteger& e, const UnsignedBigInteger& m)
@@ -104,8 +40,8 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
 
     UnsignedBigInteger ep { e };
     UnsignedBigInteger base { b };
-    UnsignedBigInteger exp { 1 };
 
+    UnsignedBigInteger result;
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
@@ -114,72 +50,15 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_remainder;
 
-    while (!(ep < 1)) {
-        if (ep.words()[0] % 2 == 1) {
-            // exp = (exp * base) % m;
-            UnsignedBigInteger::multiply_without_allocation(exp, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
-            UnsignedBigInteger::divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-            exp.set_to(temp_remainder);
-        }
+    UnsignedBigIntegerAlgorithms::destructive_modular_power_without_allocation(ep, base, m, temp_1, temp_2, temp_3, temp_4, temp_multiply, temp_quotient, temp_remainder, result);
 
-        // ep = ep / 2;
-        UnsignedBigInteger::divide_u16_without_allocation(ep, 2, temp_quotient, temp_remainder);
-        ep.set_to(temp_quotient);
-
-        // base = (base * base) % m;
-        UnsignedBigInteger::multiply_without_allocation(base, base, temp_1, temp_2, temp_3, temp_4, temp_multiply);
-        UnsignedBigInteger::divide_without_allocation(temp_multiply, m, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-        base.set_to(temp_remainder);
-
-        // Note that not clamping here would cause future calculations (multiply, specifically) to allocate even more unused space
-        // which would then persist through the temp bigints, and significantly slow down later loops.
-        // To avoid that, we can clamp to a specific max size, or just clamp to the min needed amount of space.
-        ep.clamp_to_trimmed_length();
-        exp.clamp_to_trimmed_length();
-        base.clamp_to_trimmed_length();
-    }
-    return exp;
-}
-
-static void GCD_without_allocation(
-    const UnsignedBigInteger& a,
-    const UnsignedBigInteger& b,
-    UnsignedBigInteger& temp_a,
-    UnsignedBigInteger& temp_b,
-    UnsignedBigInteger& temp_1,
-    UnsignedBigInteger& temp_2,
-    UnsignedBigInteger& temp_3,
-    UnsignedBigInteger& temp_4,
-    UnsignedBigInteger& temp_quotient,
-    UnsignedBigInteger& temp_remainder,
-    UnsignedBigInteger& output)
-{
-    temp_a.set_to(a);
-    temp_b.set_to(b);
-    for (;;) {
-        if (temp_a == 0) {
-            output.set_to(temp_b);
-            return;
-        }
-
-        // temp_b %= temp_a
-        UnsignedBigInteger::divide_without_allocation(temp_b, temp_a, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-        temp_b.set_to(temp_remainder);
-        if (temp_b == 0) {
-            output.set_to(temp_a);
-            return;
-        }
-
-        // temp_a %= temp_b
-        UnsignedBigInteger::divide_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-        temp_a.set_to(temp_remainder);
-    }
+    return result;
 }
 
 UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 {
-    UnsignedBigInteger temp_a;
-    UnsignedBigInteger temp_b;
+    UnsignedBigInteger temp_a { a };
+    UnsignedBigInteger temp_b { b };
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
@@ -188,15 +67,15 @@ UnsignedBigInteger GCD(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     UnsignedBigInteger temp_remainder;
     UnsignedBigInteger output;
 
-    GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, output);
+    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, output);
 
     return output;
 }
 
 UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 {
-    UnsignedBigInteger temp_a;
-    UnsignedBigInteger temp_b;
+    UnsignedBigInteger temp_a { a };
+    UnsignedBigInteger temp_b { b };
     UnsignedBigInteger temp_1;
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
@@ -206,15 +85,15 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
     UnsignedBigInteger gcd_output;
     UnsignedBigInteger output { 0 };
 
-    GCD_without_allocation(a, b, temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
+    UnsignedBigIntegerAlgorithms::destructive_GCD_without_allocation(temp_a, temp_b, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder, gcd_output);
     if (gcd_output == 0) {
         dbgln_if(NT_DEBUG, "GCD is zero");
         return output;
     }
 
     // output = (a / gcd_output) * b
-    UnsignedBigInteger::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-    UnsignedBigInteger::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
+    UnsignedBigIntegerAlgorithms::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
+    UnsignedBigIntegerAlgorithms::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
 
     dbgln_if(NT_DEBUG, "quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
 
