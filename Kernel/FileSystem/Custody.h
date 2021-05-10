@@ -11,6 +11,7 @@
 #include <AK/String.h>
 #include <Kernel/Forward.h>
 #include <Kernel/Heap/SlabAllocator.h>
+#include <Kernel/KResult.h>
 
 namespace Kernel {
 
@@ -19,9 +20,13 @@ namespace Kernel {
 class Custody : public RefCounted<Custody> {
     MAKE_SLAB_ALLOCATED(Custody)
 public:
-    static NonnullRefPtr<Custody> create(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
+    static KResultOr<NonnullRefPtr<Custody>> create(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
     {
-        return adopt_ref(*new Custody(parent, name, inode, mount_flags));
+        auto custody = new Custody(parent, name, inode, mount_flags);
+        if (!custody)
+            return ENOMEM;
+
+        return adopt_ref(*custody);
     }
 
     ~Custody();

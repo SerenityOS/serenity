@@ -25,7 +25,12 @@ KResultOr<int> Process::sys$chroot(Userspace<const char*> user_path, size_t path
     auto directory = directory_or_error.value();
     m_root_directory_relative_to_global_root = directory;
     int chroot_mount_flags = mount_flags == -1 ? directory->mount_flags() : mount_flags;
-    set_root_directory(Custody::create(nullptr, "", directory->inode(), chroot_mount_flags));
+
+    auto custody = Custody::create(nullptr, "", directory->inode(), chroot_mount_flags);
+    if (custody.is_error())
+        return custody.error();
+
+    set_root_directory(custody.release_value());
     return 0;
 }
 
