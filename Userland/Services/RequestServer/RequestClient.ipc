@@ -5,5 +5,5 @@ endpoint RequestClient
     headers_became_available(i32 request_id, IPC::Dictionary response_headers, Optional<u32> status_code) =|
 
     // Certificate requests
-    certificate_requested(i32 request_id) => ()
+    certificate_requested(i32 request_id) =|
 }
