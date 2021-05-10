@@ -3,6 +3,13 @@ set(SOURCES
     ASN1/DER.cpp
     ASN1/PEM.cpp
     Authentication/GHash.cpp
+    BigInt/Algorithms/BitwiseOperations.cpp
+    BigInt/Algorithms/Division.cpp
+    BigInt/Algorithms/GCD.cpp
+    BigInt/Algorithms/ModularInverse.cpp
+    BigInt/Algorithms/ModularPower.cpp
+    BigInt/Algorithms/Multiplication.cpp
+    BigInt/Algorithms/SimpleOperations.cpp
     BigInt/SignedBigInteger.cpp
     BigInt/UnsignedBigInteger.cpp
     Checksum/Adler32.cpp
