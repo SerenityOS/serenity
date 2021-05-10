@@ -1142,9 +1142,9 @@ String Shell::escape_token_for_double_quotes(const String& token)
     return builder.build();
 }
 
-bool Shell::is_special(char c)
+Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_point)
 {
-    switch (c) {
+    switch (code_point) {
     case '\'':
     case '"':
     case '$':
@@ -1156,25 +1156,72 @@ bool Shell::is_special(char c)
     case '{':
     case '}':
     case '&':
+    case ';':
     case '\\':
     case ' ':
-        return true;
+        return SpecialCharacterEscapeMode::Escaped;
+    case '\n':
+    case '\t':
+    case '\r':
+        return SpecialCharacterEscapeMode::QuotedAsEscape;
     default:
-        return false;
+        // FIXME: Should instead use unicode's "graphic" property (categories L, M, N, P, S, Zs)
+        if (code_point < NumericLimits<i32>::max()) {
+            if (isascii(static_cast<i32>(code_point)))
+                return isprint(static_cast<i32>(code_point)) ? SpecialCharacterEscapeMode::Untouched : SpecialCharacterEscapeMode::QuotedAsHex;
+        }
+        return SpecialCharacterEscapeMode::Untouched;
     }
 }
 
 String Shell::escape_token(const String& token)
 {
-    StringBuilder builder;
+    auto do_escape = [](auto& token) {
+        StringBuilder builder;
+        for (auto c : token) {
+            static_assert(sizeof(c) == sizeof(u32) || sizeof(c) == sizeof(u8));
+            switch (special_character_escape_mode(c)) {
+            case SpecialCharacterEscapeMode::Untouched:
+                if constexpr (sizeof(c) == sizeof(u8))
+                    builder.append(c);
+                else
+                    builder.append(Utf32View { &c, 1 });
+                break;
+            case SpecialCharacterEscapeMode::Escaped:
+                builder.append('\\');
+                builder.append(c);
+                break;
+            case SpecialCharacterEscapeMode::QuotedAsEscape:
+                switch (c) {
+                case '\n':
+                    builder.append(R"("\n")");
+                    break;
+                case '\t':
+                    builder.append(R"("\t")");
+                    break;
+                case '\r':
+                    builder.append(R"("\r")");
+                    break;
+                default:
+                    VERIFY_NOT_REACHED();
+                }
+                break;
+            case SpecialCharacterEscapeMode::QuotedAsHex:
+                if (c <= NumericLimits<u8>::max())
+                    builder.appendff(R"("\x{:0>2x}")", static_cast<u8>(c));
+                else
+                    builder.appendff(R"("\u{:0>8x}")", static_cast<u32>(c));
+                break;
+            }
+        }
 
-    for (auto c : token) {
-        if (is_special(c))
-            builder.append('\\');
-        builder.append(c);
-    }
+        return builder.build();
+    };
 
-    return builder.build();
+    Utf8View view { token };
+    if (view.validate())
+        return do_escape(view);
+    return do_escape(token);
 }
 
 String Shell::unescape_token(const String& token)
@@ -2057,5 +2104,4 @@ SavedFileDescriptors::~SavedFileDescriptors()
         }
     }
 }
-
 }
