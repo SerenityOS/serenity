@@ -37,7 +37,7 @@ void Menubar::unrealize_menubar()
 {
     if (m_menubar_id == -1)
         return;
-    WindowServerConnection::the().destroy_menubar(m_menubar_id);
+    WindowServerConnection::the().async_destroy_menubar(m_menubar_id);
     m_menubar_id = -1;
 }
 

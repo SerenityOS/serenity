@@ -123,7 +123,7 @@ void Menu::unrealize_menu()
     if (m_menu_id == -1)
         return;
     all_menus().remove(m_menu_id);
-    WindowServerConnection::the().destroy_menu(m_menu_id);
+    WindowServerConnection::the().async_destroy_menu(m_menu_id);
     m_menu_id = -1;
 }
 
