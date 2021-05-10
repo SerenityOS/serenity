@@ -7,6 +7,6 @@ auth_type=sha256
 
 install() {
     run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
-    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.so -Wl,-soname,libintl.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.a -Wl,--no-whole-archive -liconv
+    ${CC} -shared -pthread -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.so -Wl,-soname,libintl.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.a -Wl,--no-whole-archive -liconv
     rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libintl.la
 }
