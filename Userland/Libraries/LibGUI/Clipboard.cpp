@@ -78,6 +78,11 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<S
     connection().async_set_clipboard_data(move(buffer), type, metadata);
 }
 
+void Clipboard::clear()
+{
+    connection().async_set_clipboard_data({}, {}, {});
+}
+
 void ClipboardServerConnection::clipboard_data_changed(String const& mime_type)
 {
     auto& clipboard = Clipboard::the();
