@@ -153,11 +153,10 @@ void HackStudioWidget::update_actions()
 void HackStudioWidget::on_action_tab_change()
 {
     update_actions();
-    auto active_widget = m_action_tab_widget->active_widget();
-    if (!active_widget)
-        return;
-    if (StringView { "GitWidget" } == active_widget->class_name())
-        reinterpret_cast<GitWidget*>(active_widget)->refresh();
+    if (auto* active_widget = m_action_tab_widget->active_widget()) {
+        if (is<GitWidget>(*active_widget))
+            static_cast<GitWidget&>(*active_widget).refresh();
+    }
 }
 
 void HackStudioWidget::open_project(const String& root_path)
