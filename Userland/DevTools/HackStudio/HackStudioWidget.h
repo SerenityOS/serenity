@@ -13,7 +13,6 @@
 #include "Debugger/DisassemblyWidget.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
-#include "FormEditorWidget.h"
 #include "Git/DiffViewer.h"
 #include "Git/GitWidget.h"
 #include "Locator.h"
@@ -102,7 +101,6 @@ private:
     void handle_external_file_deletion(const String& filepath);
 
     void create_open_files_view(GUI::Widget& parent);
-    void create_form_editor(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
     void create_app_menubar(GUI::Menubar&);
@@ -135,7 +133,6 @@ private:
     RefPtr<GUI::StackWidget> m_right_hand_stack;
     RefPtr<GUI::Splitter> m_editors_splitter;
     RefPtr<GUI::Widget> m_form_inner_container;
-    RefPtr<FormEditorWidget> m_form_editor_widget;
     RefPtr<GUI::TreeView> m_form_widget_tree_view;
     RefPtr<DiffViewer> m_diff_viewer;
     RefPtr<GitWidget> m_git_widget;
