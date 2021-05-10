@@ -28,7 +28,7 @@ Kernel: Enable x86 SMEP (Supervisor Mode Execution Protection)
 ### SMAP (Supervisor Mode Access Prevention)
 
 [Supervisor Mode Access Prevention](https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention)
-compliments SMEP by also guarding read/write access to
+complements SMEP by also guarding read/write access to
 userspace memory while executing in kernel mode.
 
 It was enabled in the following [commit](https://github.com/SerenityOS/serenity/commit/9eef39d68a99c5e29099ae4eb4a56934b35eecde):
