@@ -117,7 +117,7 @@ HexEditorWidget::~HexEditorWidget()
 
 void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
 {
-    auto& file_menu = menubar.add_menu("File");
+    auto& file_menu = menubar.add_menu("&File");
     file_menu.add_action(*m_new_action);
     file_menu.add_action(*m_open_action);
     file_menu.add_action(*m_save_action);
@@ -129,25 +129,25 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    m_goto_decimal_offset_action = GUI::Action::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_decimal_offset_action = GUI::Action::create("Go to Offset (&Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Enter Decimal offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter decimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = value.to_int();
             if (new_offset.has_value())
                 m_editor->set_position(new_offset.value());
         }
     });
 
-    m_goto_hex_offset_action = GUI::Action::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_hex_offset_action = GUI::Action::create("Go to Offset (&Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
-        if (GUI::InputBox::show(window(), value, "Enter Hex offset:", "Go To") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (GUI::InputBox::show(window(), value, "Enter hexadecimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = strtol(value.characters(), nullptr, 16);
             m_editor->set_position(new_offset);
         }
     });
 
-    auto& edit_menu = menubar.add_menu("Edit");
-    edit_menu.add_action(GUI::Action::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
+    auto& edit_menu = menubar.add_menu("&Edit");
+    edit_menu.add_action(GUI::Action::create("&Fill Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
@@ -158,17 +158,17 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     edit_menu.add_action(*m_goto_decimal_offset_action);
     edit_menu.add_action(*m_goto_hex_offset_action);
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Copy Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
     }));
-    edit_menu.add_action(GUI::Action::create("Copy Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy &Text", { Mod_Ctrl | Mod_Shift, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GUI::Action&) {
         m_editor->copy_selected_text_to_clipboard();
     }));
-    edit_menu.add_action(GUI::Action::create("Copy As C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Copy as &C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer.isolated_copy();
         if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
 
@@ -188,7 +188,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         }
     }));
 
-    edit_menu.add_action(GUI::Action::create("Find next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty() || m_search_buffer.is_null()) {
             GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
             return;
@@ -203,9 +203,9 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         m_last_found_index = result;
     }));
 
-    auto& view_menu = menubar.add_menu("View");
+    auto& view_menu = menubar.add_menu("&View");
     m_bytes_per_row_actions.set_exclusive(true);
-    auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per row");
+    auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per &Row");
     for (int i = 8; i <= 32; i += 8) {
         auto action = GUI::Action::create_checkable(String::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
@@ -217,7 +217,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
             action->set_checked(true);
     }
 
-    auto& help_menu = menubar.add_menu("Help");
+    auto& help_menu = menubar.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Hex Editor", GUI::Icon::default_icon("app-hex-editor"), window()));
 }
 
