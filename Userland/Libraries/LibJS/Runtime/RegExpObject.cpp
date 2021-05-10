@@ -13,9 +13,8 @@
 
 namespace JS {
 
-static Flags options_from(const String& flags, VM& vm, GlobalObject& global_object)
+static Flags options_from(const String& flags)
 {
-    bool g = false, i = false, m = false, s = false, u = false, y = false;
     Flags options {
         // JS regexps are all 'global' by default as per our definition, but the "global" flag enables "stateful".
         // FIXME: Enable 'BrowserExtended' only if in a browser context.
@@ -26,44 +25,26 @@ static Flags options_from(const String& flags, VM& vm, GlobalObject& global_obje
     for (auto ch : flags) {
         switch (ch) {
         case 'g':
-            if (g)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            g = true;
             options.effective_flags |= regex::ECMAScriptFlags::Global;
             options.declared_flags |= regex::ECMAScriptFlags::Global;
             break;
         case 'i':
-            if (i)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            i = true;
             options.effective_flags |= regex::ECMAScriptFlags::Insensitive;
             options.declared_flags |= regex::ECMAScriptFlags::Insensitive;
             break;
         case 'm':
-            if (m)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            m = true;
             options.effective_flags |= regex::ECMAScriptFlags::Multiline;
             options.declared_flags |= regex::ECMAScriptFlags::Multiline;
             break;
         case 's':
-            if (s)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            s = true;
             options.effective_flags |= regex::ECMAScriptFlags::SingleLine;
             options.declared_flags |= regex::ECMAScriptFlags::SingleLine;
             break;
         case 'u':
-            if (u)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            u = true;
             options.effective_flags |= regex::ECMAScriptFlags::Unicode;
             options.declared_flags |= regex::ECMAScriptFlags::Unicode;
             break;
         case 'y':
-            if (y)
-                vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectRepeatedFlag, ch);
-            y = true;
             // Now for the more interesting flag, 'sticky' actually unsets 'global', part of which is the default.
             options.effective_flags.reset_flag(regex::ECMAScriptFlags::Global);
             // "What's the difference between sticky and global, then", that's simple.
@@ -74,8 +55,8 @@ static Flags options_from(const String& flags, VM& vm, GlobalObject& global_obje
             options.declared_flags |= regex::ECMAScriptFlags::Sticky;
             break;
         default:
-            vm.throw_exception<SyntaxError>(global_object, ErrorType::RegExpObjectBadFlag, ch);
-            return options;
+            // RegExp flags must be validated by the parser.
+            VERIFY_NOT_REACHED();
         }
     }
 
@@ -91,7 +72,7 @@ RegExpObject::RegExpObject(String pattern, String flags, Object& prototype)
     : Object(prototype)
     , m_pattern(pattern)
     , m_flags(flags)
-    , m_active_flags(options_from(m_flags, this->vm(), this->global_object()))
+    , m_active_flags(options_from(m_flags))
     , m_regex(pattern, m_active_flags.effective_flags)
 {
     if (m_regex.parser_result.error != regex::Error::NoError) {
@@ -167,11 +148,7 @@ RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value fl
         if (f.is_null())
             return nullptr;
     }
-    // FIXME: This is awkward: the RegExpObject C++ constructor may throw a VM exception.
-    auto* obj = RegExpObject::create(global_object, move(p), move(f));
-    if (global_object.vm().exception())
-        return nullptr;
-    return obj;
+    return RegExpObject::create(global_object, move(p), move(f));
 }
 
 }
