@@ -12,6 +12,8 @@ namespace PDF {
 Document::Document(const ReadonlyBytes& bytes)
     : m_parser(Parser({}, bytes))
 {
+    m_parser.set_document(this);
+
     VERIFY(m_parser.perform_validation());
     auto [xref_table, trailer] = m_parser.parse_last_xref_table_and_trailer();
 
