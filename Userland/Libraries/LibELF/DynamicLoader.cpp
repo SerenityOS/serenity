@@ -54,7 +54,10 @@ Result<NonnullRefPtr<DynamicLoader>, DlErrorMessage> DynamicLoader::try_create(i
         return DlErrorMessage { "DynamicLoader::try_create mmap" };
     }
 
-    return adopt_ref(*new DynamicLoader(fd, move(filename), data, size));
+    auto loader = adopt_ref(*new DynamicLoader(fd, move(filename), data, size));
+    if (!loader->is_valid())
+        return DlErrorMessage { "ELF image validation failed" };
+    return loader;
 }
 
 DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
@@ -64,8 +67,9 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
     , m_file_data(data)
     , m_elf_image((u8*)m_file_data, m_file_size)
 {
-    m_tls_size_of_current_object = calculate_tls_size();
     m_valid = validate();
+    if (m_valid)
+        m_tls_size_of_current_object = calculate_tls_size();
 }
 
 DynamicLoader::~DynamicLoader()
