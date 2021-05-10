@@ -75,7 +75,7 @@ void Clipboard::set_data(ReadonlyBytes data, const String& type, const HashMap<S
     if (!data.is_empty())
         memcpy(buffer.data<void>(), data.data(), data.size());
 
-    connection().set_clipboard_data(move(buffer), type, metadata);
+    connection().async_set_clipboard_data(move(buffer), type, metadata);
 }
 
 void ClipboardServerConnection::clipboard_data_changed(String const& mime_type)
