@@ -267,7 +267,7 @@ dquoted_string_inner :: '\' . dquoted_string_inner?       {concat}
                       | . dquoted_string_inner?
                       | '\' 'x' xdigit*2 dquoted_string_inner?
                       | '\' 'u' xdigit*8 dquoted_string_inner?
-                      | '\' [abefrn] dquoted_string_inner?
+                      | '\' [abefrnt] dquoted_string_inner?
 
 variable :: variable_ref slice?
 
