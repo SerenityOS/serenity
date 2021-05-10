@@ -109,7 +109,7 @@ void Window::move_to_front()
     if (!is_visible())
         return;
 
-    WindowServerConnection::the().move_window_to_front(m_window_id);
+    WindowServerConnection::the().async_move_window_to_front(m_window_id);
 }
 
 void Window::show()
