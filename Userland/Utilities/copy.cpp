@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2019-2021, Sergey Bugaev <bugaevc@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,23 +16,29 @@
 struct Options {
     String data;
     StringView type;
+    bool clear;
 };
 
 static Options parse_options(int argc, char* argv[])
 {
     const char* type = "text/plain";
     Vector<const char*> text;
+    bool clear = false;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Copy text from stdin or the command-line to the clipboard.");
     args_parser.add_option(type, "Pick a type", "type", 't', "type");
+    args_parser.add_option(clear, "Instead of copying, clear the clipboard", "clear", 'c');
     args_parser.add_positional_argument(text, "Text to copy", "text", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     Options options;
     options.type = type;
+    options.clear = clear;
 
-    if (text.is_empty()) {
+    if (clear) {
+        // We're not copying anything.
+    } else if (text.is_empty()) {
         // Copy our stdin.
         auto c_stdin = Core::File::construct();
         bool success = c_stdin->open(
@@ -60,7 +66,10 @@ int main(int argc, char* argv[])
     Options options = parse_options(argc, argv);
 
     auto& clipboard = GUI::Clipboard::the();
-    clipboard.set_data(options.data.bytes(), options.type);
+    if (options.clear)
+        clipboard.clear();
+    else
+        clipboard.set_data(options.data.bytes(), options.type);
 
     return 0;
 }
