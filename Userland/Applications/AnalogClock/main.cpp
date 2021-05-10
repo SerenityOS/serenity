@@ -13,14 +13,9 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept rpath unix cpath wpath fattr", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept rpath cpath wpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
