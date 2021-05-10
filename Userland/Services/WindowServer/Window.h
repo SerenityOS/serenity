@@ -51,6 +51,7 @@ enum class WindowMenuAction {
     MaximizeOrRestore,
     ToggleMenubarVisibility,
     Close,
+    Move,
 };
 
 enum class WindowMenuDefaultAction {
@@ -392,6 +393,7 @@ private:
     RefPtr<Menu> m_window_menu;
     MenuItem* m_window_menu_minimize_item { nullptr };
     MenuItem* m_window_menu_maximize_item { nullptr };
+    MenuItem* m_window_menu_move_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
     int m_minimize_animation_step { -1 };

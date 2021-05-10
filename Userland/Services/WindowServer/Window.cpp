@@ -255,6 +255,8 @@ void Window::update_window_menu_items()
 
     m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);
+
+    m_window_menu_move_item->set_enabled(!m_minimized && !m_maximized && !m_fullscreen);
 }
 
 void Window::set_minimized(bool minimized)
@@ -639,6 +641,10 @@ void Window::ensure_window_menu()
         m_window_menu_maximize_item = maximize_item.ptr();
         m_window_menu->add_item(move(maximize_item));
 
+        auto move_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Move, "&Move");
+        m_window_menu_move_item = move_item.ptr();
+        m_window_menu->add_item(move(move_item));
+
         m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
 
         auto menubar_visibility_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::ToggleMenubarVisibility, "Menu &Bar");
@@ -673,6 +679,9 @@ void Window::handle_window_menu_action(WindowMenuAction action)
     case WindowMenuAction::MaximizeOrRestore:
         WindowManager::the().maximize_windows(*this, !m_maximized);
         WindowManager::the().move_to_front_and_make_active(*this);
+        break;
+    case WindowMenuAction::Move:
+        WindowManager::the().start_window_move(*this, Screen::the().cursor_location());
         break;
     case WindowMenuAction::Close:
         request_close();

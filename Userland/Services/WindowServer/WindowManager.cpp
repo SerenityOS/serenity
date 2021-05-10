@@ -477,7 +477,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     return new_window_picked;
 }
 
-void WindowManager::start_window_move(Window& window, const MouseEvent& event)
+void WindowManager::start_window_move(Window& window, const Gfx::IntPoint& origin)
 {
     MenuManager::the().close_everyone();
 
@@ -486,9 +486,14 @@ void WindowManager::start_window_move(Window& window, const MouseEvent& event)
     move_to_front_and_make_active(window);
     m_move_window = window;
     m_move_window->set_default_positioned(false);
-    m_move_origin = event.position();
+    m_move_origin = origin;
     m_move_window_origin = window.position();
     window.invalidate(true, true);
+}
+
+void WindowManager::start_window_move(Window& window, const MouseEvent& event)
+{
+    start_window_move(window, event.position());
 }
 
 void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
