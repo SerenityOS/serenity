@@ -1,0 +1,63 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gunnar Beutner <gunnar@beutner.name>
+Date: Sun, 23 Oct 2022 12:05:20 +0200
+Subject: [PATCH] Fix building Boost.System
+
+---
+ boost/system/detail/config.hpp              | 2 +-
+ boost/system/detail/error_category_impl.hpp | 6 ++++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/boost/system/detail/config.hpp b/boost/system/detail/config.hpp
+index ad958bcabe2fa05c5242ff11dfcc07004885d86a..26e0a4cae88cb0f80c0532308b92446a04ddf243 100644
+--- a/boost/system/detail/config.hpp
++++ b/boost/system/detail/config.hpp
+@@ -13,7 +13,7 @@
+ 
+ // BOOST_SYSTEM_HAS_SYSTEM_ERROR
+ 
+-#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR) && !defined(BOOST_NO_CXX11_HDR_ATOMIC) && !defined(BOOST_NO_CXX11_HDR_MUTEX)
++#if !defined(BOOST_NO_CXX11_HDR_SYSTEM_ERROR) && !defined(BOOST_NO_CXX11_HDR_ATOMIC)
+ # define BOOST_SYSTEM_HAS_SYSTEM_ERROR
+ #endif
+ 
+diff --git a/boost/system/detail/error_category_impl.hpp b/boost/system/detail/error_category_impl.hpp
+index 982c667b3f0b8960aa6e3ecaf1dc15eb01e06436..0335f3504c77b5ea27f8df0d3ba7011389d13e33 100644
+--- a/boost/system/detail/error_category_impl.hpp
++++ b/boost/system/detail/error_category_impl.hpp
+@@ -98,7 +98,9 @@ inline char const * error_category::message( int ev, char * buffer, std::size_t
+ #if defined(BOOST_SYSTEM_HAS_SYSTEM_ERROR)
+ 
+ #include <boost/system/detail/std_category_impl.hpp>
++#ifndef BOOST_NO_CXX11_HDR_MUTEX
+ #include <mutex>
++#endif
+ #include <new>
+ 
+ namespace boost
+@@ -106,6 +108,7 @@ namespace boost
+ namespace system
+ {
+ 
++#ifndef BOOST_NO_CXX11_HDR_MUTEX
+ namespace detail
+ {
+ 
+@@ -117,6 +120,7 @@ template<class = void> struct stdcat_mx_holder
+ template<class T> std::mutex stdcat_mx_holder<T>::mx_;
+ 
+ } // namespace detail
++#endif
+ 
+ inline void error_category::init_stdcat() const
+ {
+@@ -130,7 +134,9 @@ inline void error_category::init_stdcat() const
+ 
+ #endif
+ 
++#ifndef BOOST_NO_CXX11_HDR_MUTEX
+     std::lock_guard<std::mutex> lk( boost::system::detail::stdcat_mx_holder<>::mx_ );
++#endif
+ 
+     if( sc_init_.load( std::memory_order_acquire ) == 0 )
+     {
