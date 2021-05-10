@@ -22,6 +22,7 @@ public:
     ByteBuffer data() const { return data_and_type().data; }
     String mime_type() const { return data_and_type().mime_type; }
     void set_data(ReadonlyBytes, const String& mime_type = "text/plain", const HashMap<String, String>& metadata = {});
+    void clear();
 
     void set_plain_text(const String& text)
     {
