@@ -70,8 +70,6 @@ inline void Lock::unlock()
         --m_level;
 }
 
-#    define LOCKER(lock) LibThread::Locker locker(lock)
-
 template<typename T>
 class Lockable {
 public:
@@ -92,7 +90,7 @@ public:
 
     T lock_and_copy()
     {
-        LOCKER(m_lock);
+        Locker locker(m_lock);
         return m_resource;
     }
 
@@ -113,8 +111,12 @@ public:
     ~Lock() { }
 };
 
-}
+class Locker {
+public:
+    explicit Locker(Lock&) { }
+    ~Locker() { }
+};
 
-#    define LOCKER(x)
+}
 
 #endif
