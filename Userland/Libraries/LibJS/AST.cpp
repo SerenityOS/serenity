@@ -1791,13 +1791,13 @@ Value NullLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 void RegExpLiteral::dump(int indent) const
 {
     print_indent(indent);
-    outln("{} (/{}/{})", class_name(), content(), flags());
+    outln("{} (/{}/{})", class_name(), pattern(), flags());
 }
 
 Value RegExpLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return RegExpObject::create(global_object, content(), flags());
+    return RegExpObject::create(global_object, pattern(), flags());
 }
 
 void ArrayExpression::dump(int indent) const
