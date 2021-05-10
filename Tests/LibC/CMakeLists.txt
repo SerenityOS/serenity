@@ -5,6 +5,7 @@ set(TEST_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCMkTemp.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCExec.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCDirEnt.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TestLibCInodeWatcher.cpp
 )
 
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
