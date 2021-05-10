@@ -646,6 +646,8 @@ void Window::ensure_window_menu()
         menubar_visibility_item->set_checkable(true);
         m_window_menu->add_item(move(menubar_visibility_item));
 
+        m_window_menu->add_item(make<MenuItem>(*m_window_menu, MenuItem::Type::Separator));
+
         auto close_item = make<MenuItem>(*m_window_menu, (unsigned)WindowMenuAction::Close, "&Close");
         m_window_menu_close_item = close_item.ptr();
         m_window_menu_close_item->set_icon(&close_icon());
