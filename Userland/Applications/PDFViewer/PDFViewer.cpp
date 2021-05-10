@@ -14,27 +14,33 @@ PDFViewer::PDFViewer()
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_scrollbars_enabled(true);
-}
 
-PDFViewer::~PDFViewer()
-{
+    start_timer(30'000);
 }
 
 void PDFViewer::set_document(RefPtr<PDF::Document> document)
 {
     m_document = document;
     m_current_page_index = document->get_first_page_index();
+    m_zoom_level = initial_zoom_level;
+    m_rendered_page_list.clear();
+
+    m_rendered_page_list.ensure_capacity(document->get_page_count());
+    for (u32 i = 0; i < document->get_page_count(); i++)
+        m_rendered_page_list.unchecked_append(HashMap<u32, RefPtr<Gfx::Bitmap>>());
+
     update();
 }
 
 RefPtr<Gfx::Bitmap> PDFViewer::get_rendered_page(u32 index)
 {
-    auto existing_rendered_page = m_rendered_pages.get(index);
+    auto& rendered_page_map = m_rendered_page_list[index];
+    auto existing_rendered_page = rendered_page_map.get(m_zoom_level);
     if (existing_rendered_page.has_value())
         return existing_rendered_page.value();
 
     auto rendered_page = render_page(m_document->get_page(index));
-    m_rendered_pages.set(index, rendered_page);
+    rendered_page_map.set(m_zoom_level, rendered_page);
     return rendered_page;
 }
 
@@ -50,39 +56,85 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
     if (!m_document)
         return;
 
+    auto page = get_rendered_page(m_current_page_index);
+    set_content_size(page->size());
+
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    auto page = get_rendered_page(m_current_page_index);
+    int x = max(0, (width() - page->width()) / 2);
+    int y = max(0, (height() - page->height()) / 2);
 
-    auto total_width = width() - frame_thickness() * 2;
-    auto total_height = height() - frame_thickness() * 2;
-    auto bitmap_width = page->width();
-    auto bitmap_height = page->height();
-
-    Gfx::IntPoint p { (total_width - bitmap_width) / 2, (total_height - bitmap_height) / 2 };
-
-    painter.blit(p, *page, page->rect());
+    painter.blit({ x, y }, *page, page->rect());
 }
 
 void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
 {
-    if (event.wheel_delta() > 0) {
-        if (m_current_page_index < m_document->get_page_count() - 1)
-            m_current_page_index++;
-    } else if (m_current_page_index > 0) {
-        m_current_page_index--;
+    bool scrolled_down = event.wheel_delta() > 0;
+
+    if (event.ctrl()) {
+        if (scrolled_down) {
+            zoom_out();
+        } else {
+            zoom_in();
+        }
+    } else {
+        auto& scrollbar = event.shift() ? horizontal_scrollbar() : vertical_scrollbar();
+
+        if (scrolled_down) {
+            if (scrollbar.value() == scrollbar.max()) {
+                if (m_current_page_index < m_document->get_page_count() - 1) {
+                    m_current_page_index++;
+                    scrollbar.set_value(0);
+                }
+            } else {
+                scrollbar.set_value(scrollbar.value() + 20);
+            }
+        } else {
+            if (scrollbar.value() == 0) {
+                if (m_current_page_index > 0) {
+                    m_current_page_index--;
+                    scrollbar.set_value(scrollbar.max());
+                }
+            } else {
+                scrollbar.set_value(scrollbar.value() - 20);
+            }
+        }
     }
+
     update();
+}
+
+void PDFViewer::timer_event(Core::TimerEvent&)
+{
+    // Clear the bitmap vector of all pages except the current page
+    for (size_t i = 0; i < m_rendered_page_list.size(); i++) {
+        if (i != m_current_page_index)
+            m_rendered_page_list[i].clear();
+    }
+}
+
+void PDFViewer::zoom_in()
+{
+    if (m_zoom_level < number_of_zoom_levels - 1)
+        m_zoom_level++;
+}
+
+void PDFViewer::zoom_out()
+{
+    if (m_zoom_level > 0)
+        m_zoom_level--;
 }
 
 RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 {
+    auto zoom_scale_factor = static_cast<float>(zoom_levels[m_zoom_level]) / 100.0f;
+
     float page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
     float page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
     float page_scale_factor = page_height / page_width;
 
-    float width = 300.0f;
+    float width = 300.0f * zoom_scale_factor;
     float height = width * page_scale_factor;
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
 
