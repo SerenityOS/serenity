@@ -31,18 +31,23 @@ class WebAssemblyModule final : public JS::Object {
     JS_OBJECT(WebAssemblyModule, JS::Object);
 
 public:
-    // FIXME: This should only contain an instantiated module, not the entire abstract machine!
     explicit WebAssemblyModule(JS::Object& prototype)
         : JS::Object(prototype)
     {
     }
 
+    static Wasm::AbstractMachine& machine() { return m_machine; }
+    Wasm::Module& module() { return *m_module; }
+    Wasm::ModuleInstance& module_instance() { return *m_module_instance; }
+
     static WebAssemblyModule* create(JS::GlobalObject& global_object, Wasm::Module module)
     {
         auto instance = global_object.heap().allocate<WebAssemblyModule>(global_object, *global_object.object_prototype());
         instance->m_module = move(module);
-        if (auto result = instance->m_machine.instantiate(*instance->m_module, {}); result.is_error())
+        if (auto result = machine().instantiate(*instance->m_module, {}); result.is_error())
             global_object.vm().throw_exception<JS::TypeError>(global_object, result.release_error().error);
+        else
+            instance->m_module_instance = result.release_value();
         return instance;
     }
     void initialize(JS::GlobalObject&) override;
@@ -53,9 +58,12 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_export);
     JS_DECLARE_NATIVE_FUNCTION(wasm_invoke);
 
-    Wasm::AbstractMachine m_machine;
+    static Wasm::AbstractMachine m_machine;
     Optional<Wasm::Module> m_module;
+    Optional<Wasm::ModuleInstance> m_module_instance;
 };
+
+Wasm::AbstractMachine WebAssemblyModule::m_machine;
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
@@ -123,7 +131,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
         return {};
     }
     auto instance = static_cast<WebAssemblyModule*>(object);
-    for (auto& entry : instance->m_machine.module_instance().exports()) {
+    for (auto& entry : instance->module_instance().exports()) {
         if (entry.name() == name) {
             auto& value = entry.value();
             if (auto ptr = value.get_pointer<Wasm::FunctionAddress>())
@@ -151,7 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     }
     auto instance = static_cast<WebAssemblyModule*>(object);
     Wasm::FunctionAddress function_address { address };
-    auto function_instance = instance->m_machine.store().get(function_address);
+    auto function_instance = WebAssemblyModule::machine().store().get(function_address);
     if (!function_instance) {
         vm.throw_exception<JS::TypeError>(global_object, "Invalid function address");
         return {};
@@ -194,7 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         }
     }
 
-    auto result = instance->m_machine.invoke(function_address, arguments);
+    auto result = WebAssemblyModule::machine().invoke(function_address, arguments);
     if (result.is_trap()) {
         vm.throw_exception<JS::TypeError>(global_object, "Execution trapped");
         return {};

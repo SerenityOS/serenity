@@ -15,7 +15,6 @@ namespace Wasm {
 struct InstantiationError {
     String error { "Unknown error" };
 };
-using InstantiationResult = Result<void, InstantiationError>;
 
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, FunctionAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, ExternAddress);
@@ -419,6 +418,8 @@ private:
     Vector<EntryType> m_data;
 };
 
+using InstantiationResult = AK::Result<ModuleInstance, InstantiationError>;
+
 class AbstractMachine {
 public:
     explicit AbstractMachine() = default;
@@ -427,14 +428,11 @@ public:
     InstantiationResult instantiate(const Module&, Vector<ExternValue>);
     Result invoke(FunctionAddress, Vector<Value>);
 
-    auto& module_instance() const { return m_module_instance; }
-    auto& module_instance() { return m_module_instance; }
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
 
 private:
-    InstantiationResult allocate_all(const Module&, Vector<ExternValue>&, Vector<Value>& global_values);
-    ModuleInstance m_module_instance;
+    Optional<InstantiationError> allocate_all(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
     Store m_store;
 };
 
