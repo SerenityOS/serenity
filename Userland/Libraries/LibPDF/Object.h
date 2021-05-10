@@ -29,9 +29,6 @@ public:
     ENUMERATE_OBJECT_TYPES(DEFINE_ID)
 #undef DEFINE_ID
 
-    template<typename T>
-    NonnullRefPtr<T> resolved_to(Document*) const;
-
     virtual const char* type_name() const = 0;
     virtual String to_string(int indent) const = 0;
 
