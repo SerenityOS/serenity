@@ -6,7 +6,6 @@ compile_gml(Dialogs/NewProjectDialog.gml Dialogs/NewProjectDialogGML.h new_proje
 set(SOURCES
     CodeDocument.cpp
     ClassViewWidget.cpp
-    CursorTool.cpp
     Debugger/BacktraceModel.cpp
     Debugger/DebugInfoWidget.cpp
     Debugger/Debugger.cpp
@@ -23,8 +22,6 @@ set(SOURCES
     Editor.cpp
     EditorWrapper.cpp
     FindInFilesWidget.cpp
-    FormEditorWidget.cpp
-    FormWidget.cpp
     Git/DiffViewer.cpp
     Git/GitFilesModel.cpp
     Git/GitFilesView.cpp
@@ -39,8 +36,6 @@ set(SOURCES
     ProjectFile.cpp
     ProjectTemplate.cpp
     TerminalWrapper.cpp
-    WidgetTool.cpp
-    WidgetTreeModel.cpp
     main.cpp
 )
 
