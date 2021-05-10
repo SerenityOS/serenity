@@ -110,7 +110,7 @@ void AnalogClock::draw_seconds_hand(GUI::Painter& painter, double angle)
 void AnalogClock::paint_event(GUI::PaintEvent& event)
 {
     GUI::Painter painter(*this);
-    painter.clear_rect(event.rect(), palette().window());
+    painter.clear_rect(event.rect(), m_show_window_frame ? palette().window() : Gfx::Color::Transparent);
 
     draw_face(painter);
 
@@ -131,4 +131,21 @@ void AnalogClock::paint_event(GUI::PaintEvent& event)
 void AnalogClock::update_title_date()
 {
     window()->set_title(Core::DateTime::now().to_string("Clock %d-%m-%Y"));
+}
+
+void AnalogClock::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
+
+void AnalogClock::set_show_window_frame(bool show)
+{
+    if (show == m_show_window_frame)
+        return;
+    m_show_window_frame = show;
+    auto& w = *window();
+    w.set_frameless(!m_show_window_frame);
+    w.set_has_alpha_channel(!m_show_window_frame);
+    w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
 }
