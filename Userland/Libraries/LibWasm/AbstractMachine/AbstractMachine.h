@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
+#include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
 #include <AK/Result.h>
 #include <LibWasm/Types.h>
@@ -14,6 +16,13 @@ namespace Wasm {
 
 struct InstantiationError {
     String error { "Unknown error" };
+};
+struct LinkError {
+    enum OtherErrors {
+        InvalidImportedModule,
+    };
+    Vector<String> missing_imports;
+    Vector<OtherErrors> other_errors;
 };
 
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, FunctionAddress);
@@ -436,4 +445,42 @@ private:
     Store m_store;
 };
 
+class Linker {
+public:
+    struct Name {
+        String module;
+        String name;
+        ImportSection::Import::ImportDesc type;
+    };
+
+    explicit Linker(const Module& module)
+        : m_module(module)
+    {
+    }
+
+    // Link a module, the import 'module name' is ignored with this.
+    void link(const ModuleInstance&);
+
+    // Link a bunch of qualified values, also matches 'module name'.
+    void link(const HashMap<Name, ExternValue>&);
+
+    AK::Result<Vector<ExternValue>, LinkError> finish();
+
+private:
+    void populate();
+
+    const Module& m_module;
+    HashMap<Name, ExternValue> m_resolved_imports;
+    HashTable<Name> m_unresolved_imports;
+    Vector<Name> m_ordered_imports;
+    Optional<LinkError> m_error;
+};
+
 }
+
+template<>
+struct AK::Traits<Wasm::Linker::Name> : public AK::GenericTraits<Wasm::Linker::Name> {
+    static constexpr bool is_trivial() { return false; }
+    static unsigned hash(const Wasm::Linker::Name& entry) { return pair_int_hash(entry.module.hash(), entry.name.hash()); }
+    static bool equals(const Wasm::Linker::Name& a, const Wasm::Linker::Name& b) { return a.name == b.name && a.module == b.module; }
+};
