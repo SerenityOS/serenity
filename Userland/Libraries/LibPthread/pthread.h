@@ -97,6 +97,9 @@ int pthread_cond_timedwait(pthread_cond_t*, pthread_mutex_t*, const struct times
 #define PTHREAD_CANCEL_ENABLE 1
 #define PTHREAD_CANCEL_DISABLE 2
 
+#define PTHREAD_CANCEL_DEFERRED 1
+#define PTHREAD_CANCEL_ASYNCHRONOUS 2
+
 int pthread_cancel(pthread_t);
 int pthread_setcancelstate(int state, int* oldstate);
 int pthread_setcanceltype(int type, int* oldtype);
