@@ -19,7 +19,18 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
+Vector<Command> Parser::parse_graphics_commands(const ReadonlyBytes& bytes)
+{
+    Parser parser(bytes);
+    return parser.parse_graphics_commands();
+}
+
 Parser::Parser(Badge<Document>, const ReadonlyBytes& bytes)
+    : m_reader(bytes)
+{
+}
+
+Parser::Parser(const ReadonlyBytes& bytes)
     : m_reader(bytes)
 {
 }
@@ -648,6 +659,41 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     consume_whitespace();
 
     return make_object<StreamObject>(dict, bytes);
+}
+
+Vector<Command> Parser::parse_graphics_commands()
+{
+    Vector<Command> commands;
+    Vector<Value> command_args;
+
+    constexpr static auto is_command_char = [](char ch) {
+        return isalpha(ch) || ch == '*' || ch == '\'';
+    };
+
+    while (!m_reader.done()) {
+        auto ch = m_reader.peek();
+        if (is_command_char(ch)) {
+            auto command_start = m_reader.offset();
+            while (is_command_char(ch)) {
+                consume();
+                if (m_reader.done())
+                    break;
+                ch = m_reader.peek();
+            }
+
+            auto command_string = StringView(m_reader.bytes().slice(command_start, m_reader.offset() - command_start));
+            auto command_type = Command::command_type_from_symbol(command_string);
+            commands.append(Command(command_type, move(command_args)));
+            command_args = Vector<Value>();
+            consume_whitespace();
+
+            continue;
+        }
+
+        command_args.append(parse_value());
+    }
+
+    return commands;
 }
 
 bool Parser::matches_eol() const
