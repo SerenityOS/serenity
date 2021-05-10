@@ -65,7 +65,21 @@ public:
     // Like resolve, but unwraps the Value into the given type. Accepts
     // any object type, and the three primitive Value types.
     template<IsValueType T>
-    UnwrappedValueType<T> resolve_to(const Value& value);
+    UnwrappedValueType<T> resolve_to(const Value& value)
+    {
+        auto resolved = resolve(value);
+
+        if constexpr (IsSame<T, bool>)
+            return resolved.as_bool();
+        if constexpr (IsSame<T, int>)
+            return resolved.as_int();
+        if constexpr (IsSame<T, float>)
+            return resolved.as_float();
+        if constexpr (IsObject<T>)
+            return object_cast<T>(resolved.as_object());
+
+        VERIFY_NOT_REACHED();
+    }
 
 private:
     // FIXME: Currently, to improve performance, we don't load any pages at Document

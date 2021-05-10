@@ -115,23 +115,6 @@ Value Document::resolve(const Value& value)
     return obj;
 }
 
-template<IsValueType T>
-UnwrappedValueType<T> Document::resolve_to(const Value& value)
-{
-    auto resolved = resolve(value);
-
-    if constexpr (IsSame<T, bool>)
-        return resolved.as_bool();
-    if constexpr (IsSame<T, int>)
-        return resolved.as_int();
-    if constexpr (IsSame<T, float>)
-        return resolved.as_float();
-    if constexpr (IsObject<T>)
-        return object_cast<T>(resolved.as_object());
-
-    VERIFY_NOT_REACHED();
-}
-
 void Document::build_page_tree()
 {
     auto page_tree = m_catalog->get_dict(this, "Pages");
