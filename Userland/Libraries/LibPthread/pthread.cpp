@@ -555,14 +555,24 @@ int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
     __RETURN_PTHREAD_ERROR(rc);
 }
 
-int pthread_setcancelstate([[maybe_unused]] int state, [[maybe_unused]] int* oldstate)
+int pthread_setcancelstate(int state, int* oldstate)
 {
-    TODO();
+    if (oldstate)
+        *oldstate = PTHREAD_CANCEL_DISABLE;
+    dbgln("FIXME: Implement pthread_setcancelstate({}, ...)", state);
+    if (state != PTHREAD_CANCEL_DISABLE)
+        return EINVAL;
+    return 0;
 }
 
-int pthread_setcanceltype([[maybe_unused]] int type, [[maybe_unused]] int* oldtype)
+int pthread_setcanceltype(int type, int* oldtype)
 {
-    TODO();
+    if (oldtype)
+        *oldtype = PTHREAD_CANCEL_DEFERRED;
+    dbgln("FIXME: Implement pthread_setcanceltype({}, ...)", type);
+    if (type != PTHREAD_CANCEL_DEFERRED)
+        return EINVAL;
+    return 0;
 }
 
 constexpr static pid_t spinlock_unlock_sentinel = 0;
