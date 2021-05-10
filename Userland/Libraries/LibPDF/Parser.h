@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/NonnullRefPtrVector.h>
+#include <LibPDF/Command.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Reader.h>
 #include <LibPDF/XRefTable.h>
@@ -17,6 +18,8 @@ class Document;
 
 class Parser {
 public:
+    static Vector<Command> parse_graphics_commands(const ReadonlyBytes&);
+
     Parser(Badge<Document>, const ReadonlyBytes&);
 
     void set_document(RefPtr<Document> document) { m_document = document; }
@@ -34,6 +37,8 @@ public:
     RefPtr<DictObject> conditionally_parse_page_tree_node_at_offset(size_t offset);
 
 private:
+    explicit Parser(const ReadonlyBytes&);
+
     bool parse_header();
     XRefTable parse_xref_table();
     NonnullRefPtr<DictObject> parse_file_trailer();
@@ -63,6 +68,8 @@ private:
     NonnullRefPtr<ArrayObject> parse_array();
     NonnullRefPtr<DictObject> parse_dict();
     NonnullRefPtr<StreamObject> parse_stream(NonnullRefPtr<DictObject> dict);
+
+    Vector<Command> parse_graphics_commands();
 
     bool matches_eol() const;
     bool matches_whitespace() const;
