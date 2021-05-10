@@ -283,4 +283,86 @@ Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)
     return Configuration { m_store }.call(address, move(arguments));
 }
 
+void Linker::link(const ModuleInstance& instance)
+{
+    populate();
+    if (m_unresolved_imports.is_empty())
+        return;
+
+    HashTable<Name> resolved_imports;
+    for (auto& import_ : m_unresolved_imports) {
+        auto it = instance.exports().find_if([&](auto& export_) { return export_.name() == import_.name; });
+        if (!it.is_end()) {
+            resolved_imports.set(import_);
+            m_resolved_imports.set(import_, it->value());
+        }
+    }
+
+    for (auto& entry : resolved_imports)
+        m_unresolved_imports.remove(entry);
+}
+
+void Linker::link(const HashMap<Linker::Name, ExternValue>& exports)
+{
+    populate();
+    if (m_unresolved_imports.is_empty())
+        return;
+
+    HashTable<Name> resolved_imports;
+    for (auto& import_ : m_unresolved_imports) {
+        auto export_ = exports.get(import_);
+        if (export_.has_value()) {
+            resolved_imports.set(import_);
+            m_resolved_imports.set(import_, export_.value());
+        }
+    }
+
+    for (auto& entry : resolved_imports)
+        m_unresolved_imports.remove(entry);
+}
+
+AK::Result<Vector<ExternValue>, LinkError> Linker::finish()
+{
+    populate();
+    if (!m_unresolved_imports.is_empty()) {
+        if (!m_error.has_value())
+            m_error = LinkError {};
+        for (auto& entry : m_unresolved_imports)
+            m_error->missing_imports.append(entry.name);
+        return *m_error;
+    }
+
+    if (m_error.has_value())
+        return *m_error;
+
+    // Result must be in the same order as the module imports
+    Vector<ExternValue> exports;
+    exports.ensure_capacity(m_ordered_imports.size());
+    for (auto& import_ : m_ordered_imports)
+        exports.unchecked_append(*m_resolved_imports.get(import_));
+    return exports;
+}
+
+void Linker::populate()
+{
+    if (!m_ordered_imports.is_empty())
+        return;
+
+    // There better be at most one import section!
+    bool already_seen_an_import_section = false;
+    m_module.for_each_section_of_type<ImportSection>([&](const ImportSection& section) {
+        if (already_seen_an_import_section) {
+            if (!m_error.has_value())
+                m_error = LinkError {};
+            m_error->other_errors.append(LinkError::InvalidImportedModule);
+            return;
+        }
+        already_seen_an_import_section = true;
+        for (auto& import_ : section.imports()) {
+            m_ordered_imports.append({ import_.module(), import_.name(), import_.description() });
+            m_unresolved_imports.set(m_ordered_imports.last());
+        }
+    });
+}
+
 }
