@@ -49,10 +49,10 @@ test("flag and options", () => {
     expect(re.unicode).toBe(false);
 
     expect(() => {
-        /foo/gg;
+        Function("/foo/gg");
     }).toThrowWithMessage(SyntaxError, "Repeated RegExp flag 'g'");
 
     expect(() => {
-        /foo/x;
+        Function("/foo/x");
     }).toThrowWithMessage(SyntaxError, "Invalid RegExp flag 'x'");
 });

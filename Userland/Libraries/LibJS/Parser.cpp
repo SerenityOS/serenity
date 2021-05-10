@@ -6,6 +6,7 @@
  */
 
 #include "Parser.h"
+#include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
@@ -686,7 +687,20 @@ NonnullRefPtr<RegExpLiteral> Parser::parse_regexp_literal()
     auto pattern = consume().value();
     // Remove leading and trailing slash.
     pattern = pattern.substring_view(1, pattern.length() - 2);
-    auto flags = match(TokenType::RegexFlags) ? consume().value() : "";
+    auto flags = String::empty();
+    if (match(TokenType::RegexFlags)) {
+        auto flags_start = position();
+        flags = consume().value();
+        HashTable<char> seen_flags;
+        for (size_t i = 0; i < flags.length(); ++i) {
+            auto flag = flags.substring_view(i, 1);
+            if (!flag.is_one_of("g", "i", "m", "s", "u", "y"))
+                syntax_error(String::formatted("Invalid RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });
+            if (seen_flags.contains(*flag.characters_without_null_termination()))
+                syntax_error(String::formatted("Repeated RegExp flag '{}'", flag), Position { flags_start.line, flags_start.column + i });
+            seen_flags.set(*flag.characters_without_null_termination());
+        }
+    }
     return create_ast_node<RegExpLiteral>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, pattern, flags);
 }
 
