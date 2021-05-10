@@ -90,8 +90,8 @@ endpoint WindowServer
 
     set_wallpaper(String path) =|
 
-    set_background_color(String background_color)  => ()
-    set_wallpaper_mode(String mode)  => ()
+    set_background_color(String background_color) =|
+    set_wallpaper_mode(String mode) =|
 
     set_resolution(Gfx::IntSize resolution, int scale_factor) => (bool success, Gfx::IntSize resolution, int scale_factor)
     set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap icon) =|
