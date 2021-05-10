@@ -106,6 +106,24 @@ Then use this script: `nix-shell myshell.nix`.
 
 Once you're in nix-shell, you should be able to follow the build directions.
 
+#### Alpine Linux
+
+First, make sure you have enabled the `community` repository in `/etc/apk/repositories` and run `apk update`. It has been tested on `edge`, YMMV on `stable`.
+
+```console
+# the basics, if you have not already done so
+apk add bash curl git util-linux sudo
+
+# rough equivalent of build-essential
+apk add build-base
+
+# qemu
+apk add qemu qemu-system-i386 qemu-img qemu-ui-gtk
+
+# build tools (samurai is a drop-in replacement for ninja)
+apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev
+```
+
 ### macOS prerequisites
 
 Make sure you have all the dependencies installed:
