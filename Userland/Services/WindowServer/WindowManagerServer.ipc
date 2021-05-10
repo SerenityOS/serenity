@@ -1,12 +1,12 @@
 endpoint WindowManagerServer
 {
-    set_event_mask(u32 event_mask) => ()
-    set_manager_window(i32 window_id) => ()
+    set_event_mask(u32 event_mask) =|
+    set_manager_window(i32 window_id) =|
 
     set_active_window(i32 client_id, i32 window_id) =|
     set_window_minimized(i32 client_id, i32 window_id, bool minimized) =|
     start_window_resize(i32 client_id, i32 window_id) =|
     popup_window_menu(i32 client_id, i32 window_id, Gfx::IntPoint screen_position) =|
     set_window_taskbar_rect(i32 client_id, i32 window_id, Gfx::IntRect rect) =|
-    set_applet_area_position(Gfx::IntPoint position) => ()
+    set_applet_area_position(Gfx::IntPoint position) =|
 }
