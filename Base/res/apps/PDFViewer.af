@@ -1,0 +1,4 @@
+[App]
+Name=PDFViewer
+Executable=/bin/PDFViewer
+Category=Graphics
