@@ -6,7 +6,7 @@ diff -Naur binutils-2.36.1/bfd/cache.c cache.c
  
        if (getrlimit (RLIMIT_NOFILE, &rlim) == 0
 -	  && rlim.rlim_cur != (rlim_t) RLIM_INFINITY)
-+	  && rlim.rlim_cur != getrlimit(RLIM_INFINITY, &rlim))
++	  && rlim.rlim_cur != RLIM_INFINITY)
  	max = rlim.rlim_cur / 8;
        else
  #endif
