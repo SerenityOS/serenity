@@ -85,17 +85,17 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GUI::Action::create("Join channel", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
+    m_join_action = GUI::Action::create("&Join Channel...", { Mod_Ctrl, Key_J }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(this, value, "Enter channel name:", "Join channel") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter channel name:", "Join Channel") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_join_action(value);
     });
 
-    m_list_channels_action = GUI::Action::create("List channels", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-list.png"), [&](auto&) {
+    m_list_channels_action = GUI::Action::create("&List Channels", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-list.png"), [&](auto&) {
         m_client->handle_list_channels_action();
     });
 
-    m_part_action = GUI::Action::create("Part from channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
+    m_part_action = GUI::Action::create("&Part from Channel", { Mod_Ctrl, Key_P }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
@@ -103,49 +103,49 @@ void IRCAppWindow::setup_actions()
         m_client->handle_part_action(window->channel().name());
     });
 
-    m_whois_action = GUI::Action::create("Whois user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
+    m_whois_action = GUI::Action::create("&Whois User...", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nickname:", "IRC WHOIS lookup") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Whois User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_whois_action(value);
     });
 
-    m_open_query_action = GUI::Action::create("Open query", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
+    m_open_query_action = GUI::Action::create("Open &Query...", { Mod_Ctrl, Key_O }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nickname:", "Open IRC query with...") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Open Query") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_open_query_action(value);
     });
 
-    m_close_query_action = GUI::Action::create("Close query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
+    m_close_query_action = GUI::Action::create("&Close Query", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
         outln("FIXME: Implement close-query action");
     });
 
-    m_change_nick_action = GUI::Action::create("Change nickname", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
+    m_change_nick_action = GUI::Action::create("Change &Nickname...", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nickname:", "Change nickname") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nickname:", "Change Nickname") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_nick_action(value);
     });
 
-    m_change_topic_action = GUI::Action::create("Change topic", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-topic.png"), [this](auto&) {
+    m_change_topic_action = GUI::Action::create("Change &Topic...", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-topic.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter topic:", "Change topic") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter topic:", "Change Topic") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_change_topic_action(window->channel().name(), value);
     });
 
-    m_invite_user_action = GUI::Action::create("Invite user", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-invite.png"), [this](auto&) {
+    m_invite_user_action = GUI::Action::create("&Invite User...", Gfx::Bitmap::load_from_file("/res/icons/16x16/irc-invite.png"), [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "Invite user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Invite User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_invite_user_action(window->channel().name(), value);
     });
 
-    m_banlist_action = GUI::Action::create("Ban list", [this](auto&) {
+    m_banlist_action = GUI::Action::create("&Ban List", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
@@ -153,17 +153,17 @@ void IRCAppWindow::setup_actions()
         m_client->handle_banlist_action(window->channel().name());
     });
 
-    m_voice_user_action = GUI::Action::create("Voice user", [this](auto&) {
+    m_voice_user_action = GUI::Action::create("&Voice User...", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "Voice user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Voice User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_voice_user_action(window->channel().name(), value);
     });
 
-    m_devoice_user_action = GUI::Action::create("DeVoice user", [this](auto&) {
+    m_devoice_user_action = GUI::Action::create("DeVoice User...", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
@@ -173,33 +173,33 @@ void IRCAppWindow::setup_actions()
             m_client->handle_devoice_user_action(window->channel().name(), value);
     });
 
-    m_hop_user_action = GUI::Action::create("Hop user", [this](auto&) {
+    m_hop_user_action = GUI::Action::create("Hop User", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "Hop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Hop User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_hop_user_action(window->channel().name(), value);
     });
 
-    m_dehop_user_action = GUI::Action::create("DeHop user", [this](auto&) {
+    m_dehop_user_action = GUI::Action::create("DeHop User", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "DeHop user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeHop User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_dehop_user_action(window->channel().name(), value);
     });
 
-    m_op_user_action = GUI::Action::create("Op user", [this](auto&) {
+    m_op_user_action = GUI::Action::create("&Op User", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "Op user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "Op User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_op_user_action(window->channel().name(), value);
     });
 
@@ -209,24 +209,24 @@ void IRCAppWindow::setup_actions()
             return;
         }
         String value;
-        if (GUI::InputBox::show(this, value, "Enter nick:", "DeOp user") == GUI::InputBox::ExecOK && !value.is_empty())
+        if (GUI::InputBox::show(this, value, "Enter nick:", "DeOp User") == GUI::InputBox::ExecOK && !value.is_empty())
             m_client->handle_deop_user_action(window->channel().name(), value);
     });
 
-    m_kick_user_action = GUI::Action::create("Kick user", [this](auto&) {
+    m_kick_user_action = GUI::Action::create("&Kick User", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
         }
         String nick_value;
-        if (GUI::InputBox::show(this, nick_value, "Enter nick:", "Kick user") != GUI::InputBox::ExecOK || nick_value.is_empty())
+        if (GUI::InputBox::show(this, nick_value, "Enter nick:", "Kick User") != GUI::InputBox::ExecOK || nick_value.is_empty())
             return;
         String reason_value;
         if (GUI::InputBox::show(this, reason_value, "Enter reason:", "Reason") == GUI::InputBox::ExecOK)
             m_client->handle_kick_user_action(window->channel().name(), nick_value, reason_value.characters());
     });
 
-    m_cycle_channel_action = GUI::Action::create("Cycle channel", [this](auto&) {
+    m_cycle_channel_action = GUI::Action::create("Cycle Channel", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
@@ -238,11 +238,9 @@ void IRCAppWindow::setup_actions()
 void IRCAppWindow::setup_menus()
 {
     auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
-        dbgln("Terminal: Quit menu activated!");
         GUI::Application::the()->quit();
-        return;
     }));
 
     auto& server_menu = menubar->add_menu("Server");
@@ -255,12 +253,12 @@ void IRCAppWindow::setup_menus()
     server_menu.add_action(*m_open_query_action);
     server_menu.add_action(*m_close_query_action);
 
-    auto& channel_menu = menubar->add_menu("Channel");
+    auto& channel_menu = menubar->add_menu("&Channel");
     channel_menu.add_action(*m_change_topic_action);
     channel_menu.add_action(*m_invite_user_action);
     channel_menu.add_action(*m_banlist_action);
 
-    auto& channel_control_menu = channel_menu.add_submenu("Control");
+    auto& channel_control_menu = channel_menu.add_submenu("Con&trol");
     channel_control_menu.add_action(*m_voice_user_action);
     channel_control_menu.add_action(*m_devoice_user_action);
     channel_control_menu.add_action(*m_hop_user_action);
@@ -274,7 +272,7 @@ void IRCAppWindow::setup_menus()
     channel_menu.add_action(*m_cycle_channel_action);
     channel_menu.add_action(*m_part_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("IRC Client", GUI::Icon::default_icon("app-irc-client"), this));
 
     set_menubar(move(menubar));
