@@ -9,6 +9,8 @@
 #include <LibGUI/Painter.h>
 #include <LibPDF/Renderer.h>
 
+static constexpr int PAGE_PADDING = 25;
+
 PDFViewer::PDFViewer()
 {
     set_should_hide_unnecessary_scrollbars(true);
@@ -130,12 +132,12 @@ RefPtr<Gfx::Bitmap> PDFViewer::render_page(const PDF::Page& page)
 {
     auto zoom_scale_factor = static_cast<float>(zoom_levels[m_zoom_level]) / 100.0f;
 
-    float page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
-    float page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
-    float page_scale_factor = page_height / page_width;
+    auto page_width = page.media_box.upper_right_x - page.media_box.lower_left_x;
+    auto page_height = page.media_box.upper_right_y - page.media_box.lower_left_y;
+    auto page_scale_factor = page_height / page_width;
 
-    float width = 300.0f * zoom_scale_factor;
-    float height = width * page_scale_factor;
+    auto height = static_cast<float>(this->height() - 2 * frame_thickness() - PAGE_PADDING * 2) * zoom_scale_factor;
+    auto width = height / page_scale_factor;
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
 
     PDF::Renderer::render(*m_document, page, bitmap);
