@@ -130,6 +130,12 @@ bool VFS::mount_root(FS& file_system)
     dmesgln("VFS: mounted root from {} ({})", file_system.class_name(), static_cast<FileBackedFS&>(file_system).file_description().absolute_path());
 
     m_mounts.append(move(mount));
+
+    auto root_custody = Custody::create(nullptr, "", *m_root_inode, root_mount_flags);
+    if (root_custody.is_error())
+        return false;
+    m_root_custody = root_custody.release_value();
+
     return true;
 }
 
@@ -381,7 +387,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
         return inode_or_error.error();
 
     auto new_custody = Custody::create(&parent_custody, p.basename(), inode_or_error.value(), parent_custody.mount_flags());
-    auto description = FileDescription::create(*new_custody);
+    if (new_custody.is_error())
+        return new_custody.error();
+    auto description = FileDescription::create(*new_custody.release_value());
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);
@@ -820,8 +828,6 @@ void VFS::sync()
 
 Custody& VFS::root_custody()
 {
-    if (!m_root_custody)
-        m_root_custody = Custody::create(nullptr, "", *m_root_inode, root_mount_flags);
     return *m_root_custody;
 }
 
@@ -986,7 +992,11 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
             mount_flags_for_child = mount->flags();
         }
 
-        custody = Custody::create(&parent, part, *child_inode, mount_flags_for_child);
+        auto new_custody = Custody::create(&parent, part, *child_inode, mount_flags_for_child);
+        if (new_custody.is_error())
+            return new_custody.error();
+
+        custody = new_custody.release_value();
 
         if (child_inode->metadata().is_symlink()) {
             if (!have_more_parts) {
