@@ -148,7 +148,7 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
         // these pages to the overall page tree
 
         for (auto& value : *kids_array) {
-            auto reference = resolve_to<IndirectValueRef>(value);
+            auto reference = object_cast<IndirectValueRef>(value.as_object());
             auto byte_offset = m_xref_table.byte_offset_for_object(reference->index());
             auto maybe_page_tree_node = m_parser.conditionally_parse_page_tree_node_at_offset(byte_offset);
             if (maybe_page_tree_node) {
@@ -163,7 +163,7 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
 
     // We know all of the kids are leaf nodes
     for (auto& value : *kids_array) {
-        auto reference = resolve_to<IndirectValueRef>(value);
+        auto reference = object_cast<IndirectValueRef>(value.as_object());
         m_page_object_indices.append(reference->index());
     }
 }
