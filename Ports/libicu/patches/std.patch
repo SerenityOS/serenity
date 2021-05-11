@@ -1,0 +1,48 @@
+diff -Naur source/i18n/decimfmt.cpp source.serenity/i18n/decimfmt.cpp
+--- source/i18n/decimfmt.cpp	2021-05-11 18:48:28.172956656 +0200
++++ source.serenity/i18n/decimfmt.cpp	2021-05-11 18:47:42.222070235 +0200
+@@ -9,7 +9,7 @@
+ // Helpful in toString methods and elsewhere.
+ #define UNISTR_FROM_STRING_EXPLICIT
+ 
+-#include <cmath>
++#include <math.h>
+ #include <cstdlib>
+ #include <stdlib.h>
+ #include "unicode/errorcode.h"
+diff -Naur source/i18n/number_decimalquantity.cpp source.serenity/i18n/number_decimalquantity.cpp
+--- source/i18n/number_decimalquantity.cpp	2021-05-11 18:48:28.172956656 +0200
++++ source.serenity/i18n/number_decimalquantity.cpp	2021-05-11 18:48:02.715798916 +0200
+@@ -6,7 +6,7 @@
+ #if !UCONFIG_NO_FORMATTING
+ 
+ #include <cstdlib>
+-#include <cmath>
++#include <math.h>
+ #include <limits>
+ #include <stdlib.h>
+ 
+diff -Naur source/i18n/number_utils.cpp source.serenity/i18n/number_utils.cpp
+--- source/i18n/number_utils.cpp	2021-05-11 18:48:28.172956656 +0200
++++ source.serenity/i18n/number_utils.cpp	2021-05-11 18:47:22.298352531 +0200
+@@ -10,7 +10,7 @@
+ #define UNISTR_FROM_STRING_EXPLICIT
+ 
+ #include <stdlib.h>
+-#include <cmath>
++#include <math.h>
+ #include "number_decnum.h"
+ #include "number_types.h"
+ #include "number_utils.h"
+diff -Naur source/i18n/reldatefmt.cpp source.serenity/i18n/reldatefmt.cpp
+--- source/i18n/reldatefmt.cpp	2021-05-11 18:48:28.172956656 +0200
++++ source.serenity/i18n/reldatefmt.cpp	2021-05-11 18:46:45.380973593 +0200
+@@ -14,7 +14,7 @@
+ 
+ #if !UCONFIG_NO_FORMATTING && !UCONFIG_NO_BREAK_ITERATION
+ 
+-#include <cmath>
++#include <math.h>
+ #include <functional>
+ #include "unicode/dtfmtsym.h"
+ #include "unicode/ucasemap.h"
