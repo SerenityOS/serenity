@@ -46,7 +46,6 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
     window->set_title("Magnifier");
     window->resize(window_dimensions, window_dimensions);
-    window->set_resizable(false);
     window->set_minimizable(false);
     window->set_icon(app_icon.bitmap_for_size(16));
     auto& magnifier = window->set_main_widget<MagnifierWidget>();
@@ -80,10 +79,12 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
-    window->set_menubar(move(menubar));
 
+    window->set_menubar(move(menubar));
     window->show();
+
     magnifier.track_cursor_globally();
     magnifier.start_timer(16);
+
     return app->exec();
 }
