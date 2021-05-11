@@ -2084,7 +2084,7 @@ void Shell::timer_event(Core::TimerEvent& event)
     if (!m_history_autosave_time.has_value())
         return;
 
-    if (m_editor)
+    if (m_editor && m_editor->is_history_dirty())
         m_editor->save_history(get_history_path());
 }
 

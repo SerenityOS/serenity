@@ -142,6 +142,7 @@ public:
     bool load_history(const String& path);
     bool save_history(const String& path);
     const auto& history() const { return m_history; }
+    bool is_history_dirty() const { return m_history_dirty; }
 
     void register_key_input_callback(const KeyBinding&);
     void register_key_input_callback(Vector<Key> keys, Function<bool(Editor&)> callback) { m_callback_machine.register_key_input_callback(move(keys), move(callback)); }
@@ -442,6 +443,7 @@ private:
     Vector<HistoryEntry> m_history;
     size_t m_history_cursor { 0 };
     size_t m_history_capacity { 1024 };
+    bool m_history_dirty { false };
 
     enum class InputState {
         Free,
