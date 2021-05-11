@@ -56,7 +56,7 @@ public:
     bool can_read() const;
     bool can_write() const;
 
-    ssize_t get_dir_entries(UserOrKernelBuffer& buffer, ssize_t);
+    KResultOr<ssize_t> get_dir_entries(UserOrKernelBuffer& buffer, ssize_t);
 
     KResultOr<NonnullOwnPtr<KBuffer>> read_entire_file();
 
