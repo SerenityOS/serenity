@@ -196,8 +196,26 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     if (~pixel_mask[y] & (1 << x))
                         continue;
 
+                    // Perspective correct barycentric coordinates
                     auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                    *pixel = to_rgba32(pixel_shader(barycentric, triangle));
+                    float interpolated_reciprocal_w = interpolate(triangle.vertices[0].w, triangle.vertices[1].w, triangle.vertices[2].w, barycentric);
+                    float interpolated_w = 1 / interpolated_reciprocal_w;
+                    barycentric = barycentric * FloatVector3(triangle.vertices[0].w, triangle.vertices[1].w, triangle.vertices[2].w) * interpolated_w;
+
+                    // FIXME: make this more generic. We want to interpolate more than just color and uv
+                    auto rgba = interpolate(
+                        FloatVector4(triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a),
+                        FloatVector4(triangle.vertices[1].r, triangle.vertices[1].g, triangle.vertices[1].b, triangle.vertices[1].a),
+                        FloatVector4(triangle.vertices[2].r, triangle.vertices[2].g, triangle.vertices[2].b, triangle.vertices[2].a),
+                        barycentric);
+
+                    auto uv = interpolate(
+                        FloatVector2(triangle.vertices[0].u, triangle.vertices[0].v),
+                        FloatVector2(triangle.vertices[1].u, triangle.vertices[1].v),
+                        FloatVector2(triangle.vertices[2].u, triangle.vertices[2].v),
+                        barycentric);
+
+                    *pixel = to_rgba32(pixel_shader(uv, rgba));
                 }
             }
         }
@@ -219,19 +237,9 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
 {
-    if (m_options.shade_smooth) {
-        rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector3& v, const GLTriangle& t) -> FloatVector4 {
-            const float r = t.vertices[0].r * v.x() + t.vertices[1].r * v.y() + t.vertices[2].r * v.z();
-            const float g = t.vertices[0].g * v.x() + t.vertices[1].g * v.y() + t.vertices[2].g * v.z();
-            const float b = t.vertices[0].b * v.x() + t.vertices[1].b * v.y() + t.vertices[2].b * v.z();
-            const float a = t.vertices[0].a * v.x() + t.vertices[1].a * v.y() + t.vertices[2].a * v.z();
-            return { r, g, b, a };
-        });
-    } else {
-        rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector3&, const GLTriangle& t) -> FloatVector4 {
-            return { t.vertices[0].r, t.vertices[0].g, t.vertices[0].b, t.vertices[0].a };
-        });
-    }
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector2&, const FloatVector4& color) -> FloatVector4 {
+        return color;
+    });
 }
 
 void SoftwareRasterizer::resize(const Gfx::IntSize& min_size)
