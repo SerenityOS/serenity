@@ -131,3 +131,24 @@ test("super constructor call from child class with argument", () => {
     expect(p.x).toBe(3);
     expect(c.x).toBe(10);
 });
+
+test("issue #7045, super constructor call from child class in catch {}", () => {
+    class Parent {
+        constructor(x) {
+            this.x = x;
+        }
+    }
+
+    class Child extends Parent {
+        constructor() {
+            try {
+                throw new Error("Error in Child constructor");
+            } catch (e) {
+                super(e.message);
+            }
+        }
+    }
+
+    const c = new Child();
+    expect(c.x).toBe("Error in Child constructor");
+});
