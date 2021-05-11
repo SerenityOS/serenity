@@ -426,6 +426,10 @@ long double powl(long double x, long double y) NOEXCEPT
             result = 1.0l / result;
         return result;
     }
+    if (x < 0) {
+        return 1.l / exp2l(y * log2l(-x));
+    }
+
     return exp2l(y * log2l(x));
 }
 
