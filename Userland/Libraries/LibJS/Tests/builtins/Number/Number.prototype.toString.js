@@ -13,6 +13,9 @@ describe("correct behavior", () => {
             [12, "12"],
             [93465, "93465"],
             [358000, "358000"],
+            // Numbers above 2 ** 31 - 1 (Issue #3931)
+            [2147483648, "2147483648"], // 2 ** 31
+            [4294967295, "4294967295"], // 2 ** 32 - 1
         ].forEach(testCase => {
             expect(testCase[0].toString()).toBe(testCase[1]);
         });
