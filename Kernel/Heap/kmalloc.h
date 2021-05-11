@@ -40,6 +40,13 @@ extern bool g_dump_kmalloc_stacks;
 inline void* operator new(size_t, void* p) { return p; }
 inline void* operator new[](size_t, void* p) { return p; }
 
+[[nodiscard]] void* operator new(size_t size) noexcept;
+void operator delete(void* ptr) noexcept;
+void operator delete(void* ptr, size_t) noexcept;
+[[nodiscard]] void* operator new[](size_t size) noexcept;
+void operator delete[](void* ptrs) noexcept;
+void operator delete[](void* ptr, size_t) noexcept;
+
 [[gnu::malloc, gnu::returns_nonnull, gnu::alloc_size(1)]] void* kmalloc(size_t);
 
 template<size_t ALIGNMENT>
