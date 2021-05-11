@@ -110,7 +110,7 @@ private:
 
     SinglyLinkedListWithCount<ReceivedPacket> m_receive_queue;
 
-    DoubleBuffer m_receive_buffer;
+    DoubleBuffer m_receive_buffer { 256 * KiB };
 
     u16 m_local_port { 0 };
     u16 m_peer_port { 0 };
