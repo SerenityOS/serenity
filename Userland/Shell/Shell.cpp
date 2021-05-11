@@ -1676,8 +1676,10 @@ bool Shell::read_single_line()
 
     run_command(line);
 
-    if (!has_history_event(line))
+    if (!has_history_event(line)) {
         m_editor->add_to_history(line);
+        m_history_dirty = true;
+    }
 
     return true;
 }
@@ -2084,8 +2086,10 @@ void Shell::timer_event(Core::TimerEvent& event)
     if (!m_history_autosave_time.has_value())
         return;
 
-    if (m_editor)
+    if (m_editor && m_history_dirty) {
         m_editor->save_history(get_history_path());
+        m_history_dirty = false;
+    }
 }
 
 void FileDescriptionCollector::collect()

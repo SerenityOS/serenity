@@ -351,6 +351,7 @@ private:
     mutable bool m_last_continuation_state { false }; // false == not needed.
 
     Optional<size_t> m_history_autosave_time;
+    bool m_history_dirty { false };
 };
 
 [[maybe_unused]] static constexpr bool is_word_character(char c)
