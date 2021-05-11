@@ -276,6 +276,8 @@ private:
     Shell();
     virtual ~Shell() override;
 
+    void timer_event(Core::TimerEvent&) override;
+
     // FIXME: Port to Core::Property
     void save_to(JsonObject&);
     void bring_cursor_to_beginning_of_a_line() const;
@@ -347,6 +349,8 @@ private:
     bool m_default_constructed { false };
 
     mutable bool m_last_continuation_state { false }; // false == not needed.
+
+    Optional<size_t> m_history_autosave_time;
 };
 
 [[maybe_unused]] static constexpr bool is_word_character(char c)
