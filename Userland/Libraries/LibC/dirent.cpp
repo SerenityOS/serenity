@@ -98,15 +98,30 @@ static int allocate_dirp_buffer(DIR* dirp)
     }
     size_t size_to_allocate = max(st.st_size, static_cast<off_t>(4096));
     dirp->buffer = (char*)malloc(size_to_allocate);
-    ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
-    if (nread < 0) {
-        // uh-oh, the syscall returned an error
-        free(dirp->buffer);
-        dirp->buffer = nullptr;
-        return -nread;
+    if (!dirp->buffer)
+        return ENOMEM;
+    for (;;) {
+        ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
+        if (nread < 0) {
+            if (nread == -EINVAL) {
+                size_to_allocate *= 2;
+                char* new_buffer = (char*)realloc(dirp->buffer, size_to_allocate);
+                if (new_buffer) {
+                    dirp->buffer = new_buffer;
+                    continue;
+                } else {
+                    nread = -ENOMEM;
+                }
+            }
+            // uh-oh, the syscall returned an error
+            free(dirp->buffer);
+            dirp->buffer = nullptr;
+            return -nread;
+        }
+        dirp->buffer_size = nread;
+        dirp->nextptr = dirp->buffer;
+        break;
     }
-    dirp->buffer_size = nread;
-    dirp->nextptr = dirp->buffer;
     return 0;
 }
 
