@@ -220,7 +220,14 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (result.is_object())
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
-        auto* super_constructor = interpreter.current_environment()->current_function()->prototype();
+        // FIXME: This is merely a band-aid to make super() inside catch {} work (which constructs
+        //        a new LexicalEnvironment without current function). Implement GetSuperConstructor()
+        //        and subsequently GetThisEnvironment() instead.
+        auto* function_environment = interpreter.current_environment();
+        if (!function_environment->current_function())
+            function_environment = static_cast<LexicalEnvironment*>(function_environment->parent());
+
+        auto* super_constructor = function_environment->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
@@ -230,7 +237,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (vm.exception())
             return {};
 
-        interpreter.current_environment()->bind_this_value(global_object, result);
+        function_environment->bind_this_value(global_object, result);
     } else {
         result = vm.call(function, this_value, move(arguments));
     }
