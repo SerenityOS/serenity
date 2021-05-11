@@ -955,10 +955,10 @@ class Module {
 public:
     class Function {
     public:
-        explicit Function(TypeIndex type, Vector<ValueType> local_types, const Expression& body)
+        explicit Function(TypeIndex type, Vector<ValueType> local_types, Expression body)
             : m_type(type)
             , m_local_types(move(local_types))
-            , m_body(body)
+            , m_body(move(body))
         {
         }
 
@@ -969,7 +969,7 @@ public:
     private:
         TypeIndex m_type;
         Vector<ValueType> m_local_types;
-        const Expression& m_body;
+        Expression m_body;
     };
 
     using AnySection = Variant<

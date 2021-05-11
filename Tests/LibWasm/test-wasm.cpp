@@ -60,7 +60,7 @@ private:
 
     static Wasm::AbstractMachine m_machine;
     Optional<Wasm::Module> m_module;
-    Optional<Wasm::ModuleInstance> m_module_instance;
+    OwnPtr<Wasm::ModuleInstance> m_module_instance;
 };
 
 Wasm::AbstractMachine WebAssemblyModule::m_machine;
@@ -149,15 +149,6 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     auto address = static_cast<unsigned long>(vm.argument(0).to_double(global_object));
     if (vm.exception())
         return {};
-    auto this_value = vm.this_value(global_object);
-    auto object = this_value.to_object(global_object);
-    if (vm.exception())
-        return {};
-    if (!object || !is<WebAssemblyModule>(object)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Not a WebAssemblyModule");
-        return {};
-    }
-    auto instance = static_cast<WebAssemblyModule*>(object);
     Wasm::FunctionAddress function_address { address };
     auto function_instance = WebAssemblyModule::machine().store().get(function_address);
     if (!function_instance) {
