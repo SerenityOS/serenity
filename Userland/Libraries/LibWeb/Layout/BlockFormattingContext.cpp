@@ -495,27 +495,21 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     }
 
-    if (child_box.computed_values().clear() == CSS::Clear::Left || child_box.computed_values().clear() == CSS::Clear::Both) {
-        if (!m_left_floating_boxes.is_empty()) {
+    auto clear_floating_boxes = [&](auto& floating_boxes) {
+        if (!floating_boxes.is_empty()) {
             float clearance_y = 0;
-            for (auto* floating_box : m_left_floating_boxes) {
-                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box().bottom);
+            for (auto* floating_box : floating_boxes) {
+                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->border_box_height());
             }
             y = max(y, clearance_y);
-            m_left_floating_boxes.clear();
+            floating_boxes.clear();
         }
-    }
+    };
 
-    if (child_box.computed_values().clear() == CSS::Clear::Right || child_box.computed_values().clear() == CSS::Clear::Both) {
-        if (!m_right_floating_boxes.is_empty()) {
-            float clearance_y = 0;
-            for (auto* floating_box : m_right_floating_boxes) {
-                clearance_y = max(clearance_y, floating_box->effective_offset().y() + floating_box->box_model().margin_box().bottom);
-            }
-            y = max(y, clearance_y);
-            m_right_floating_boxes.clear();
-        }
-    }
+    if (computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both)
+        clear_floating_boxes(m_left_floating_boxes);
+    if (computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both)
+        clear_floating_boxes(m_right_floating_boxes);
 
     child_box.set_offset(x, y);
 }
