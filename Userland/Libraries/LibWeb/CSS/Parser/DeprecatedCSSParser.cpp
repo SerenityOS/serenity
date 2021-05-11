@@ -566,6 +566,9 @@ public:
             } else if (pseudo_name.starts_with("nth-child", CaseSensitivity::CaseInsensitive)) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::NthChild;
                 simple_selector.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(capture_selector_args(pseudo_name));
+            } else if (pseudo_name.starts_with("nth-last-child", CaseSensitivity::CaseInsensitive)) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::NthLastChild;
+                simple_selector.nth_child_pattern = CSS::Selector::SimpleSelector::NthChildPattern::parse(capture_selector_args(pseudo_name));
             } else if (pseudo_name.equals_ignoring_case("before")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("after")) {

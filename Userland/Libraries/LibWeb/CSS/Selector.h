@@ -37,6 +37,7 @@ public:
             FirstOfType,
             LastOfType,
             NthChild,
+            NthLastChild,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
@@ -69,7 +70,7 @@ public:
         };
 
         // FIXME: We don't need this field on every single SimpleSelector, but it's also annoying to malloc it somewhere.
-        // Only used when "pseudo_class" == PseudoClass::NthChild.
+        // Only used when "pseudo_class" is "NthChild" or "NthLastChild".
         NthChildPattern nth_child_pattern;
     };
 

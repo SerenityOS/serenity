@@ -83,6 +83,7 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
         }
         break;
     case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
+    case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
         const auto step_size = component.nth_child_pattern.step_size;
         const auto offset = component.nth_child_pattern.offset;
         if (step_size == 0 && offset == 0)
@@ -93,8 +94,12 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
             return false;
 
         int index = 1;
-        for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling()) {
-            ++index;
+        if (component.pseudo_class == CSS::Selector::SimpleSelector::PseudoClass::NthChild) {
+            for (auto* child = parent->first_child_of_type<DOM::Element>(); child && child != &element; child = child->next_element_sibling())
+                ++index;
+        } else {
+            for (auto* child = parent->last_child_of_type<DOM::Element>(); child && child != &element; child = child->previous_element_sibling())
+                ++index;
         }
 
         if (step_size < 0) {

@@ -354,6 +354,9 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
                 pseudo_class_description = "NthChild";
                 break;
+            case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
+                pseudo_class_description = "NthLastChild";
+                break;
             case CSS::Selector::SimpleSelector::PseudoClass::Focus:
                 pseudo_class_description = "Focus";
                 break;
