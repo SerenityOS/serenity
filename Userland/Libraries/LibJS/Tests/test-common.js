@@ -298,8 +298,18 @@ class ExpectationError extends Error {
                     this.target();
                     this.__expect(false);
                 } catch (e) {
-                    this.__expect(e instanceof class_);
-                    this.__expect(e.message.includes(message));
+                    this.__expect(
+                        e instanceof class_,
+                        () =>
+                            `Expected error to be instance of ${class_.name}, got ${String(e.name)}`
+                    );
+                    this.__expect(
+                        e.message.includes(message),
+                        () =>
+                            `Expected error message to include _${String(message)}_, got _${String(
+                                e.message
+                            )}_`
+                    );
                 }
             });
         }
