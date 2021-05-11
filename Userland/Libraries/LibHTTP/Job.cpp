@@ -7,6 +7,7 @@
 #include <AK/Debug.h>
 #include <LibCompress/Gzip.h>
 #include <LibCompress/Zlib.h>
+#include <LibCore/Event.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpResponse.h>
 #include <LibHTTP/Job.h>
@@ -352,6 +353,14 @@ void Job::on_socket_connected()
     });
 }
 
+void Job::timer_event(Core::TimerEvent& event)
+{
+    event.accept();
+    finish_up();
+    if (m_buffered_size == 0)
+        stop_timer();
+}
+
 void Job::finish_up()
 {
     m_state = State::Finished;
@@ -382,9 +391,9 @@ void Job::finish_up()
         // before we can actually call `did_finish`. in a normal flow, this should
         // never be hit since the client is reading as we are writing, unless there
         // are too many concurrent downloads going on.
-        deferred_invoke([this](auto&) {
-            finish_up();
-        });
+        dbgln_if(JOB_DEBUG, "Flush finished with {} bytes remaining, will try again later", m_buffered_size);
+        if (!has_timer())
+            start_timer(50);
         return;
     }
 
