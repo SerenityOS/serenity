@@ -49,7 +49,7 @@ public:
 };
 
 Decoder* decoder_for(const String& encoding);
-String get_standardized_encoding(const String& encoding);
+Optional<String> get_standardized_encoding(const String& encoding);
 bool is_standardized_encoding(const String& encoding);
 
 }
