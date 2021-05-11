@@ -369,7 +369,7 @@ KResultOr<size_t> IPv4Socket::recvfrom(FileDescription& description, UserOrKerne
     return nreceived;
 }
 
-bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet, const Time& packet_timestamp)
+bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ReadonlyBytes packet, const Time& packet_timestamp)
 {
     Locker locker(lock());
 
@@ -398,7 +398,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
             dbgln("IPv4Socket({}): did_receive refusing packet since queue is full.", this);
             return false;
         }
-        m_receive_queue.append({ source_address, source_port, packet_timestamp, move(packet) });
+        m_receive_queue.append({ source_address, source_port, packet_timestamp, KBuffer::copy(packet.data(), packet.size()) });
         set_can_read(true);
     }
     m_bytes_received += packet_size;

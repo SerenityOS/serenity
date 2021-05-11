@@ -221,7 +221,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
             }
         }
         for (auto& socket : icmp_sockets)
-            socket.did_receive(ipv4_packet.source(), 0, KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+            socket.did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
     }
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
@@ -276,7 +276,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
     auto& destination = ipv4_packet.destination();
 
     if (destination == IPv4Address(255, 255, 255, 255) || NetworkAdapter::from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
-        socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+        socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 }
 
 void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
@@ -533,7 +533,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
         if (tcp_packet.has_fin()) {
             if (payload_size != 0)
-                socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp);
+                socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
@@ -548,7 +548,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
 
         if (payload_size) {
-            if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()), packet_timestamp))
+            if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp))
                 unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
         }
     }
