@@ -85,7 +85,8 @@ GlobalInstance* Store::get(GlobalAddress address)
 
 InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<ExternValue> externs)
 {
-    ModuleInstance main_module_instance;
+    auto main_module_instance_pointer = make<ModuleInstance>();
+    auto& main_module_instance = *main_module_instance_pointer;
     Optional<InstantiationResult> instantiation_result;
 
     module.for_each_section_of_type<TypeSection>([&](const TypeSection& section) {
@@ -181,7 +182,10 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         invoke(functions[index.value()], {});
     });
 
-    return instantiation_result.value_or(move(main_module_instance));
+    if (instantiation_result.has_value())
+        return instantiation_result.release_value();
+
+    return InstantiationResult { move(main_module_instance_pointer) };
 }
 
 Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
