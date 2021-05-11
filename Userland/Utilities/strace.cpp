@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     Vector<const char*> child_argv;
 
     const char* output_filename = nullptr;
-    auto trace_file = Core::File::standard_output();
+    auto trace_file = Core::File::standard_error();
 
     Core::ArgsParser parser;
     parser.set_general_help(
