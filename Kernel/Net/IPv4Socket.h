@@ -43,7 +43,7 @@ public:
 
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
 
-    bool did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&, const Time&);
+    bool did_receive(const IPv4Address& peer_address, u16 peer_port, ReadonlyBytes, const Time&);
 
     const IPv4Address& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }
