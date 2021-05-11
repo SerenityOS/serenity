@@ -27,25 +27,34 @@ namespace Kernel {
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custody)
 {
-    auto description = adopt_ref(*new FileDescription(InodeFile::create(custody.inode())));
+    auto inode_file = InodeFile::create(custody.inode());
+    if (inode_file.is_error())
+        return inode_file.error();
+
+    auto description = adopt_ref_if_nonnull(new FileDescription(*inode_file.release_value()));
+    if (!description)
+        return ENOMEM;
+
     description->m_custody = custody;
     auto result = description->attach();
     if (result.is_error()) {
         dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for custody: {}", result);
         return result;
     }
-    return description;
+    return description.release_nonnull();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
 {
-    auto description = adopt_ref(*new FileDescription(file));
+    auto description = adopt_ref_if_nonnull(new FileDescription(file));
+    if (!description)
+        return ENOMEM;
     auto result = description->attach();
     if (result.is_error()) {
         dbgln_if(FILEDESCRIPTION_DEBUG, "Failed to create file description for file: {}", result);
         return result;
     }
-    return description;
+    return description.release_nonnull();
 }
 
 FileDescription::FileDescription(File& file)
