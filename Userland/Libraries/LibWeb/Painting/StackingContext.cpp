@@ -85,6 +85,7 @@ void StackingContext::paint(PaintContext& context)
     // Draw the non-positioned floats (step 5)
     paint_descendants(context, m_box, StackingContextPaintPhase::Floats);
     // Draw inline content, replaced content, etc. (steps 6, 7)
+    m_box.paint(context, PaintPhase::Foreground);
     paint_descendants(context, m_box, StackingContextPaintPhase::Foreground);
     // Draw other positioned descendants (steps 8, 9)
     for (auto* child : m_children) {
