@@ -120,6 +120,14 @@ void StringBuilder::append(const Utf32View& utf32_view)
     }
 }
 
+void StringBuilder::append_as_lowercase(char ch)
+{
+    if (ch >= 'A' && ch <= 'Z')
+        append(ch + 0x20);
+    else
+        append(ch);
+}
+
 void StringBuilder::append_escaped_for_json(const StringView& string)
 {
     for (auto ch : string) {
