@@ -219,7 +219,7 @@ public:
     auto& code() const { return m_code; }
 
 private:
-    const FunctionType& m_type;
+    FunctionType m_type;
     const ModuleInstance& m_module;
     const Module::Function& m_code;
 };
@@ -237,7 +237,7 @@ public:
 
 private:
     FlatPtr m_ptr { 0 };
-    const FunctionType& m_type;
+    FunctionType m_type;
 };
 
 using FunctionInstance = Variant<WasmFunction, HostFunction>;
@@ -418,7 +418,7 @@ private:
     Vector<EntryType> m_data;
 };
 
-using InstantiationResult = AK::Result<ModuleInstance, InstantiationError>;
+using InstantiationResult = AK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
 
 class AbstractMachine {
 public:
