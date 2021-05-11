@@ -214,6 +214,7 @@ void Editor::add_to_history(const String& line)
     struct timeval tv;
     gettimeofday(&tv, nullptr);
     m_history.append({ line, tv.tv_sec });
+    m_history_dirty = true;
 }
 
 bool Editor::load_history(const String& path)
@@ -301,6 +302,7 @@ bool Editor::save_history(const String& path)
     for (const auto& entry : final_history)
         file->write(String::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
 
+    m_history_dirty = false;
     return true;
 }
 
