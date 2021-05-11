@@ -191,7 +191,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t size)
+ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, ssize_t size)
 {
     Locker locker(m_lock, Lock::Mode::Shared);
     if (!is_directory())
@@ -204,29 +204,57 @@ ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& buffer, ssize_t siz
     if (size < 0)
         return -EINVAL;
 
-    size_t size_to_allocate = max(static_cast<size_t>(PAGE_SIZE), static_cast<size_t>(metadata.size));
-
-    auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
+    size_t remaining = size;
+    ssize_t error = 0;
+    u8 stack_buffer[PAGE_SIZE];
+    Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
     OutputMemoryStream stream { temp_buffer };
 
-    KResult result = VFS::the().traverse_directory_inode(*m_inode, [&stream, this](auto& entry) {
+    auto flush_stream_to_output_buffer = [&error, &stream, &remaining, &output_buffer]() -> bool {
+        if (error != 0)
+            return false;
+        if (stream.size() == 0)
+            return true;
+        if (remaining < stream.size()) {
+            error = -EINVAL;
+            return false;
+        } else if (!output_buffer.write(stream.bytes())) {
+            error = -EFAULT;
+            return false;
+        }
+        output_buffer = output_buffer.offset(stream.size());
+        remaining -= stream.size();
+        stream.reset();
+        return true;
+    };
+
+    KResult result = VFS::the().traverse_directory_inode(*m_inode, [&flush_stream_to_output_buffer, &error, &remaining, &output_buffer, &stream, this](auto& entry) {
+        size_t serialized_size = sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * entry.name.length();
+        if (serialized_size > stream.remaining()) {
+            if (!flush_stream_to_output_buffer()) {
+                return false;
+            }
+        }
         stream << (u32)entry.inode.index().value();
         stream << m_inode->fs().internal_file_type_to_directory_entry_type(entry);
         stream << (u32)entry.name.length();
         stream << entry.name.bytes();
         return true;
     });
+    flush_stream_to_output_buffer();
 
-    if (result.is_error())
+    if (result.is_error()) {
+        // We should only return -EFAULT when the userspace buffer is too small,
+        // so that userspace can reliably use it as a signal to increase its
+        // buffer size.
+        VERIFY(result != -EFAULT);
         return result;
+    }
 
-    if (stream.handle_recoverable_error())
-        return -EINVAL;
-
-    if (!buffer.write(stream.bytes()))
-        return -EFAULT;
-
-    return stream.size();
+    if (error) {
+        return error;
+    }
+    return size - remaining;
 }
 
 bool FileDescription::is_device() const
