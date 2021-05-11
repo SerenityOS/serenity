@@ -163,7 +163,7 @@ typedef unsigned int GLuint;
 typedef int GLfixed;
 typedef long long GLint64;
 typedef unsigned long long GLuint64;
-typedef unsigned long GLsizei;
+typedef int GLsizei;
 typedef void GLvoid;
 typedef float GLfloat;
 typedef float GLclampf;
