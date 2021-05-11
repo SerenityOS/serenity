@@ -531,6 +531,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             return;
         }
 
+        if (tcp_packet.sequence_number() != socket->ack_number()) {
+            dbgln_if(TCP_DEBUG, "Discarding out of order packet: seq {} vs. ack {}", tcp_packet.sequence_number(), socket->ack_number());
+            return;
+        }
+
         if (tcp_packet.has_fin()) {
             if (payload_size != 0)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
@@ -542,14 +547,13 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             return;
         }
 
-        socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-
-        dbgln_if(TCP_DEBUG, "Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
-            tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
-
         if (payload_size) {
-            if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp))
+            if (socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp)) {
+                socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+                dbgln_if(TCP_DEBUG, "Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
+                    tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
                 unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            }
         }
     }
 }
