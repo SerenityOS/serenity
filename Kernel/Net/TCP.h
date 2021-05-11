@@ -21,6 +21,23 @@ struct TCPFlags {
     };
 };
 
+class [[gnu::packed]] TCPOptionMSS {
+public:
+    TCPOptionMSS(u16 value)
+        : m_value(value)
+    {
+    }
+
+    u16 value() const { return m_value; }
+
+private:
+    u8 m_option_kind { 0x02 };
+    u8 m_option_length { sizeof(TCPOptionMSS) };
+    NetworkOrdered<u16> m_value;
+};
+
+static_assert(sizeof(TCPOptionMSS) == 4);
+
 class [[gnu::packed]] TCPPacket {
 public:
     TCPPacket() = default;

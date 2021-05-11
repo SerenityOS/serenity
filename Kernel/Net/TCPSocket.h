@@ -129,7 +129,7 @@ public:
     u32 bytes_out() const { return m_bytes_out; }
 
     KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
-    void send_outgoing_packets();
+    void send_outgoing_packets(RoutingDecision&);
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
