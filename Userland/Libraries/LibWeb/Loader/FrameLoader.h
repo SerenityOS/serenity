@@ -12,6 +12,8 @@
 
 namespace Web {
 
+constexpr size_t maximum_redirects_allowed = 20;
+
 class FrameLoader final
     : public ResourceClient {
 public:
@@ -41,6 +43,7 @@ private:
     bool parse_document(DOM::Document&, const ByteBuffer& data);
 
     Frame& m_frame;
+    size_t m_redirects_count { 0 };
 };
 
 }
