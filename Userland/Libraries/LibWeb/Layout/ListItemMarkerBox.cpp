@@ -11,9 +11,6 @@
 
 namespace Web::Layout {
 
-constexpr auto lower_alpha = "abcdefghijklmnopqrstuvwxyz";
-constexpr auto upper_alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType style_type, size_t index)
     : Box(document, nullptr, CSS::StyleProperties::create())
     , m_list_style_type(style_type)
