@@ -91,7 +91,7 @@ int main(int argc, char* argv[])
         };
         if (print) {
             // Now, let's dump the functions!
-            for (auto& address : module_instance.functions()) {
+            for (auto& address : module_instance->functions()) {
                 print_func(address);
             }
         }
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
         if (!exported_function_to_execute.is_empty()) {
             Optional<Wasm::FunctionAddress> run_address;
             Vector<Wasm::Value> values;
-            for (auto& entry : module_instance.exports()) {
+            for (auto& entry : module_instance->exports()) {
                 if (entry.name() == exported_function_to_execute) {
                     if (auto addr = entry.value().get_pointer<Wasm::FunctionAddress>())
                         run_address = *addr;
