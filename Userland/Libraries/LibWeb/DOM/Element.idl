@@ -1,5 +1,7 @@
 interface Element : Node {
     readonly attribute DOMString? namespaceURI;
+    readonly attribute DOMString? prefix;
+    readonly attribute DOMString localName;
     readonly attribute DOMString tagName;
 
     DOMString? getAttribute(DOMString qualifiedName);
