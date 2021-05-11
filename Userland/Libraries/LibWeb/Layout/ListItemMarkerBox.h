@@ -21,6 +21,8 @@ public:
 private:
     CSS::ListStyleType m_list_style_type { CSS::ListStyleType::None };
     size_t m_index;
+
+    String m_text {};
 };
 
 }
