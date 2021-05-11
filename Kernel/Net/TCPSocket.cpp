@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
@@ -168,7 +169,10 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 
 KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
-    const size_t buffer_size = sizeof(TCPPacket) + payload_size;
+    const bool has_mss_option = flags == TCPFlags::SYN;
+    const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
+    const size_t header_size = sizeof(TCPPacket) + options_size;
+    const size_t buffer_size = header_size + payload_size;
     auto buffer = ByteBuffer::create_zeroed(buffer_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.data());
     VERIFY(local_port());
@@ -176,7 +180,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     tcp_packet.set_destination_port(peer_port());
     tcp_packet.set_window_size(NumericLimits<u16>::max());
     tcp_packet.set_sequence_number(m_sequence_number);
-    tcp_packet.set_data_offset(sizeof(TCPPacket) / sizeof(u32));
+    tcp_packet.set_data_offset(header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
 
     if (flags & TCPFlags::ACK)
@@ -191,18 +195,25 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         m_sequence_number += payload_size;
     }
 
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    if (routing_decision.is_zero())
+        return EHOSTUNREACH;
+
+    if (has_mss_option) {
+        u16 mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
+        TCPOptionMSS mss_option { mss };
+        VERIFY(buffer.size() >= sizeof(TCPPacket) + sizeof(mss_option));
+        memcpy(buffer.data() + sizeof(TCPPacket), &mss_option, sizeof(mss_option));
+    }
+
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
     if (tcp_packet.has_syn() || payload_size > 0) {
         Locker locker(m_not_acked_lock);
         m_not_acked.append({ m_sequence_number, move(buffer) });
-        send_outgoing_packets();
+        send_outgoing_packets(routing_decision);
         return KSuccess;
     }
-
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    if (routing_decision.is_zero())
-        return EHOSTUNREACH;
 
     auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
     auto result = routing_decision.adapter->send_ipv4(
@@ -216,12 +227,8 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     return KSuccess;
 }
 
-void TCPSocket::send_outgoing_packets()
+void TCPSocket::send_outgoing_packets(RoutingDecision& routing_decision)
 {
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    if (routing_decision.is_zero())
-        return;
-
     auto now = kgettimeofday();
 
     Locker locker(m_not_acked_lock, Lock::Mode::Shared);
@@ -311,7 +318,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
         NetworkOrdered<u16> payload_size;
     };
 
-    PseudoHeader pseudo_header { source, destination, 0, (u8)IPv4Protocol::TCP, sizeof(TCPPacket) + payload_size };
+    PseudoHeader pseudo_header { source, destination, 0, (u8)IPv4Protocol::TCP, packet.header_size() + payload_size };
 
     u32 checksum = 0;
     auto* w = (const NetworkOrdered<u16>*)&pseudo_header;
@@ -321,12 +328,12 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     w = (const NetworkOrdered<u16>*)&packet;
-    for (size_t i = 0; i < sizeof(packet) / sizeof(u16); ++i) {
+    for (size_t i = 0; i < packet.header_size() / sizeof(u16); ++i) {
         checksum += w[i];
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    VERIFY(packet.data_offset() * 4 == sizeof(TCPPacket));
+    VERIFY(packet.data_offset() * 4 == packet.header_size());
     w = (const NetworkOrdered<u16>*)packet.payload();
     for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
         checksum += w[i];
