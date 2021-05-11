@@ -264,14 +264,34 @@ void* krealloc(void* ptr, size_t new_size)
     return g_kmalloc_global->m_heap.reallocate(ptr, new_size);
 }
 
-void* operator new(size_t size)
+void* operator new(size_t size) noexcept
 {
     return kmalloc(size);
 }
 
-void* operator new[](size_t size)
+void* operator new[](size_t size) noexcept
 {
     return kmalloc(size);
+}
+
+void operator delete(void* ptr) noexcept
+{
+    return kfree(ptr);
+}
+
+void operator delete(void* ptr, size_t) noexcept
+{
+    return kfree(ptr);
+}
+
+void operator delete[](void* ptr) noexcept
+{
+    return kfree(ptr);
+}
+
+void operator delete[](void* ptr, size_t) noexcept
+{
+    return kfree(ptr);
 }
 
 void get_kmalloc_stats(kmalloc_stats& stats)
