@@ -216,7 +216,7 @@ public:
     friend struct Variant;
 
     Variant(const Variant& old)
-        : Detail::VariantConstructors<Ts, Variant<Ts...>>()...
+        : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_index(old.m_index)
     {
         Helper::copy_(old.m_index, old.m_data, m_data);
