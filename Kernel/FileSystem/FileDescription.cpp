@@ -200,21 +200,21 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, ssize_t size)
+KResultOr<ssize_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, ssize_t size)
 {
     Locker locker(m_lock, Lock::Mode::Shared);
     if (!is_directory())
-        return -ENOTDIR;
+        return ENOTDIR;
 
     auto metadata = this->metadata();
     if (!metadata.is_valid())
-        return -EIO;
+        return EIO;
 
     if (size < 0)
-        return -EINVAL;
+        return EINVAL;
 
     size_t remaining = size;
-    ssize_t error = 0;
+    KResult error = KSuccess;
     u8 stack_buffer[PAGE_SIZE];
     Bytes temp_buffer(stack_buffer, sizeof(stack_buffer));
     OutputMemoryStream stream { temp_buffer };
@@ -225,10 +225,10 @@ ssize_t FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, ssiz
         if (stream.size() == 0)
             return true;
         if (remaining < stream.size()) {
-            error = -EINVAL;
+            error = EINVAL;
             return false;
         } else if (!output_buffer.write(stream.bytes())) {
-            error = -EFAULT;
+            error = EFAULT;
             return false;
         }
         output_buffer = output_buffer.offset(stream.size());
