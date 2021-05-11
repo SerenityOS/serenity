@@ -129,6 +129,7 @@ public:
 
     size_t size() const { return m_offset; }
     size_t remaining() const { return m_bytes.size() - m_offset; }
+    void reset() { m_offset = 0; }
 
 private:
     size_t m_offset { 0 };
