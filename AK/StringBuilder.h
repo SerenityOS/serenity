@@ -28,6 +28,7 @@ public:
     void append(const char*, size_t);
     void appendvf(const char*, va_list);
 
+    void append_as_lowercase(char);
     void append_escaped_for_json(const StringView&);
 
     template<typename... Parameters>
