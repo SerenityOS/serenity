@@ -14,9 +14,12 @@ class Inode;
 
 class InodeFile final : public File {
 public:
-    static NonnullRefPtr<InodeFile> create(NonnullRefPtr<Inode>&& inode)
+    static KResultOr<NonnullRefPtr<InodeFile>> create(NonnullRefPtr<Inode>&& inode)
     {
-        return adopt_ref(*new InodeFile(move(inode)));
+        auto file = adopt_ref_if_nonnull(new InodeFile(move(inode)));
+        if (!file)
+            return ENOMEM;
+        return file.release_nonnull();
     }
 
     virtual ~InodeFile() override;
