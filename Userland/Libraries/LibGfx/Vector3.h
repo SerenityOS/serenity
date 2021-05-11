@@ -54,6 +54,16 @@ public:
         return Vector3(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z);
     }
 
+    constexpr Vector3 operator*(const Vector3& other) const
+    {
+        return Vector3(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z);
+    }
+
+    constexpr Vector3 operator/(const Vector3& other) const
+    {
+        return Vector3(m_x / other.m_x, m_y / other.m_y, m_z / other.m_z);
+    }
+
     constexpr Vector3 operator*(T f) const
     {
         return Vector3(m_x * f, m_y * f, m_z * f);

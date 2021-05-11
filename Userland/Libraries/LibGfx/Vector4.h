@@ -59,6 +59,16 @@ public:
         return Vector4(m_x - other.m_x, m_y - other.m_y, m_z - other.m_z, m_w - other.m_w);
     }
 
+    constexpr Vector4 operator*(const Vector4& other) const
+    {
+        return Vector4(m_x * other.m_x, m_y * other.m_y, m_z * other.m_z, m_w * other.m_w);
+    }
+
+    constexpr Vector4 operator/(const Vector4& other) const
+    {
+        return Vector4(m_x / other.m_x, m_y / other.m_y, m_z / other.m_z, m_w / other.m_w);
+    }
+
     constexpr Vector4 operator*(T f) const
     {
         return Vector4(m_x * f, m_y * f, m_z * f, m_w * f);
