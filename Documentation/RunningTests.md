@@ -1,7 +1,7 @@
 ## Running SerenityOS Tests
 
 There are two classes of tests built during a Serenity build: host tests and target tests. Host tests run on the build
-machine, and use [Lagom](../Meta/Lagom/README.md) to build Serenity userspace libraries for the host platform. Target
+machine, and use [Lagom](../Meta/Lagom/ReadMe.md) to build Serenity userspace libraries for the host platform. Target
 tests run on the Serenity machine, either emulated or bare metal.
 
 ### Running Host Tests
