@@ -238,6 +238,7 @@ void SoftwareGLContext::gl_end()
                 vec.set_x(vec.x() / vec.w());
                 vec.set_y(vec.y() / vec.w());
                 vec.set_z(vec.z() / vec.w());
+                vec.set_w(1 / vec.w());
             }
 
             vertex.x = vec.x();
