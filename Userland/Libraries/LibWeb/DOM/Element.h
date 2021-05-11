@@ -30,12 +30,12 @@ public:
     virtual ~Element() override;
 
     const String& qualified_name() const { return m_qualified_name.as_string(); }
-    String html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
+    const String& html_uppercased_qualified_name() const { return m_html_uppercased_qualified_name; }
     virtual FlyString node_name() const final { return html_uppercased_qualified_name(); }
     const FlyString& local_name() const { return m_qualified_name.local_name(); }
 
     // NOTE: This is for the JS bindings
-    const FlyString& tag_name() const { return local_name(); }
+    const String& tag_name() const { return html_uppercased_qualified_name(); }
 
     const FlyString& prefix() const { return m_qualified_name.prefix(); }
     const FlyString& namespace_() const { return m_qualified_name.namespace_(); }
