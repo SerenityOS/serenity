@@ -80,7 +80,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (negative)
         number *= -1;
 
-    int int_part = floor(number);
+    u32 int_part = floor(number);
     double decimal_part = number - int_part;
 
     Vector<char> backwards_characters;
@@ -107,11 +107,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (decimal_part != 0.0) {
         characters.append('.');
 
-        int precision = max_precision_for_radix[radix];
+        u8 precision = max_precision_for_radix[radix];
 
-        for (int i = 0; i < precision; ++i) {
+        for (u8 i = 0; i < precision; ++i) {
             decimal_part *= radix;
-            int integral = floor(decimal_part);
+            u32 integral = floor(decimal_part);
             characters.append(digits[integral]);
             decimal_part -= integral;
         }
