@@ -94,6 +94,9 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
     const int by1 = min(render_target.height(), max(max(v0.y(), v1.y()), v2.y()) + RASTERIZER_BLOCK_SIZE - 1) / RASTERIZER_BLOCK_SIZE;
     // clang-format on
 
+    static_assert(RASTERIZER_BLOCK_SIZE < sizeof(int) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
+    int pixel_mask[RASTERIZER_BLOCK_SIZE];
+
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by++) {
         for (int bx = bx0; bx < bx1; bx++) {
@@ -126,52 +129,75 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
             int x0 = bx * RASTERIZER_BLOCK_SIZE;
             int y0 = by * RASTERIZER_BLOCK_SIZE;
-            int x1 = x0 + RASTERIZER_BLOCK_SIZE;
-            int y1 = y0 + RASTERIZER_BLOCK_SIZE;
 
+            // Generate the coverage mask
             if (test_point(b0) && test_point(b1) && test_point(b2) && test_point(b3)) {
-                // The block is fully contained within the triangle
-                // Fill the block without further coverage tests
-                auto coords = b0;
-                for (int y = y0; y < y1; y++, coords += step_y) {
-                    auto* pixel = &render_target.scanline(y)[x0];
-                    auto* depth = &depth_buffer.scanline(y)[x0];
-                    for (int x = x0; x < x1; x++, coords += dbdx, pixel++, depth++) {
-                        auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        if (options.enable_depth_test) {
-                            float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, barycentric);
-                            if (z < *depth) {
-                                *pixel = to_rgba32(pixel_shader(barycentric, triangle));
-                                *depth = z;
-                            }
-                        } else {
-                            *pixel = to_rgba32(pixel_shader(barycentric, triangle));
-                        }
-                    }
+                // The block is fully contained within the triangle. Fill the mask with all 1s
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    pixel_mask[y] = -1;
                 }
             } else {
-                // The block overlaps at least one triangle edge
-                // We need to test coverage of every pixel within the block
+                // The block overlaps at least one triangle edge.
+                // We need to test coverage of every pixel within the block.
                 auto coords = b0;
-                for (int y = y0; y < y1; y++, coords += step_y) {
-                    auto* pixel = &render_target.scanline(y)[x0];
-                    auto* depth = &depth_buffer.scanline(y)[x0];
-                    for (int x = x0; x < x1; x++, coords += dbdx, pixel++, depth++) {
-                        
-                        if (!test_point(coords))
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
+                    pixel_mask[y] = 0;
+
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx) {
+                        if (test_point(coords))
+                            pixel_mask[y] |= 1 << x;
+                    }
+                }
+            }
+
+            // AND the depth mask onto the coverage mask
+            if (options.enable_depth_test) {
+                int z_pass_count = 0;
+                auto coords = b0;
+
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
+                    if (pixel_mask[y] == 0) {
+                        coords += dbdx * RASTERIZER_BLOCK_SIZE;
+                        continue;
+                    }
+
+                    auto* depth = &depth_buffer.scanline(y0 + y)[x0];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, depth++) {
+                        if (~pixel_mask[y] & (1 << x))
                             continue;
 
                         auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
-                        if (options.enable_depth_test) {
-                            float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, barycentric);
-                            if (z < *depth) {
-                                *pixel = to_rgba32(pixel_shader(barycentric, triangle));
-                                *depth = z;
-                            }
-                        } else {
-                            *pixel = to_rgba32(pixel_shader(barycentric, triangle));
+                        float z = interpolate(triangle.vertices[0].z, triangle.vertices[1].z, triangle.vertices[2].z, barycentric);
+                        if (z >= *depth) {
+                            pixel_mask[y] ^= 1 << x;
+                            continue;
                         }
+
+                        *depth = z;
+                        z_pass_count++;
                     }
+                }
+
+                // Nice, no pixels passed the depth test -> block rejected by early z
+                if (z_pass_count == 0)
+                    continue;
+            }
+
+            // Draw the pixels according to the previously generated mask
+            auto coords = b0;
+            for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++, coords += step_y) {
+                if (pixel_mask[y] == 0) {
+                    coords += dbdx * RASTERIZER_BLOCK_SIZE;
+                    continue;
+                }
+
+                auto* pixel = &render_target.scanline(y0 + y)[x0];
+                for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, pixel++) {
+                    if (~pixel_mask[y] & (1 << x))
+                        continue;
+
+                    auto barycentric = FloatVector3(coords.x(), coords.y(), coords.z()) * one_over_area;
+                    *pixel = to_rgba32(pixel_shader(barycentric, triangle));
                 }
             }
         }
