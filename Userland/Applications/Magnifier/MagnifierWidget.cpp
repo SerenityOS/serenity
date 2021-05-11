@@ -8,8 +8,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/AffineTransform.h>
-#include <math.h>
+#include <LibGfx/Rect.h>
 
 MagnifierWidget::MagnifierWidget()
 {
@@ -46,12 +45,9 @@ void MagnifierWidget::paint_event(GUI::PaintEvent&)
 {
     GUI::Painter painter(*this);
 
-    int grab_frame_size = 200;
-
-    grab_frame_size /= m_scale_factor;
-
-    // Paint our screenshot
-    Gfx::Rect region { m_mouse_position.x() - (grab_frame_size / 2), m_mouse_position.y() - (grab_frame_size / 2), grab_frame_size, grab_frame_size };
+    // Grab and paint our screenshot.
+    Gfx::IntSize region_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
+    Gfx::Rect region { m_mouse_position.x() - (region_size.width() / 2), m_mouse_position.y() - (region_size.height() / 2), region_size.width(), region_size.height() };
     auto map = GUI::WindowServerConnection::the().get_screen_bitmap(region);
     painter.draw_scaled_bitmap(rect(), *map.bitmap(), map.bitmap()->rect());
 }
