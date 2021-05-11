@@ -1844,6 +1844,8 @@ Shell::Shell(Line::Editor& editor, bool attempt_interactive)
 
         return EDITOR_INTERNAL_FUNCTION(finish)(editor);
     });
+
+    start_timer(3000);
 }
 
 Shell::~Shell()
@@ -2054,6 +2056,36 @@ Optional<int> Shell::resolve_job_spec(const String& str)
     }
 
     return {};
+}
+
+void Shell::timer_event(Core::TimerEvent& event)
+{
+    event.accept();
+
+    if (m_is_subshell)
+        return;
+
+    StringView option = getenv("HISTORY_AUTOSAVE_TIME_MS");
+
+    auto time = option.to_uint();
+    if (!time.has_value() || time.value() == 0) {
+        m_history_autosave_time.clear();
+        stop_timer();
+        start_timer(3000);
+        return;
+    }
+
+    if (m_history_autosave_time != time) {
+        m_history_autosave_time = time.value();
+        stop_timer();
+        start_timer(m_history_autosave_time.value());
+    }
+
+    if (!m_history_autosave_time.has_value())
+        return;
+
+    if (m_editor)
+        m_editor->save_history(get_history_path());
 }
 
 void FileDescriptionCollector::collect()

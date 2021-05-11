@@ -33,6 +33,13 @@ Note: This variable is respected by every program using `Line::Editor`, e.g. [`j
 The value of this variable is used as the Shell's history file path, both for reading history at startup and writing history on exit.
 Its default value is `~/.history`.
 
+`HISTORY_AUTOSAVE_TIME_MS` (environment)
+
+Setting this variable to a value `t` other than zero (0) will make the shell save the history to the history file every `t` milliseconds.
+If `t` is not a non-negative integer, zero will be assumed.
+Note that multiple shell instances will not interfere with each other if they are to save to the same history file, instead, the entries will all be merged together chronologically.
+The default value for this option is set in `/etc/shellrc`.
+
 ## Visual
 
 1. Prompting
