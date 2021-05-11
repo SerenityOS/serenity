@@ -104,7 +104,9 @@ HTMLDocumentParser::HTMLDocumentParser(DOM::Document& document, const StringView
     , m_document(document)
 {
     m_document->set_should_invalidate_styles_on_attribute_changes(false);
-    m_document->set_encoding(TextCodec::get_standardized_encoding(encoding));
+    auto standardized_encoding = TextCodec::get_standardized_encoding(encoding);
+    VERIFY(standardized_encoding.has_value());
+    m_document->set_encoding(standardized_encoding.value());
 }
 
 HTMLDocumentParser::~HTMLDocumentParser()
