@@ -89,6 +89,7 @@ int main(int argc, char** argv)
     update();
 
     Vector<Game> undo_stack;
+    Vector<Game> redo_stack;
 
     auto change_settings = [&] {
         auto size_dialog = GameSizeDialog::construct(window);
@@ -116,6 +117,7 @@ int main(int argc, char** argv)
     auto start_a_new_game = [&] {
         // Do not leak game states between games.
         undo_stack.clear();
+        redo_stack.clear();
 
         game = Game(board_size, target_tile);
 
@@ -169,7 +171,15 @@ int main(int argc, char** argv)
     game_menu.add_action(GUI::CommonActions::make_undo_action([&](auto&) {
         if (undo_stack.is_empty())
             return;
+        redo_stack.append(game);
         game = undo_stack.take_last();
+        update();
+    }));
+    game_menu.add_action(GUI::CommonActions::make_redo_action([&](auto&) {
+        if (redo_stack.is_empty())
+            return;
+        undo_stack.append(game);
+        game = redo_stack.take_last();
         update();
     }));
 
