@@ -43,7 +43,7 @@ DownloadWidget::DownloadWidget(const URL& url)
     };
 
     {
-        auto file_or_error = Core::File::open(m_destination_path, Core::IODevice::WriteOnly);
+        auto file_or_error = Core::File::open(m_destination_path, Core::OpenMode::WriteOnly);
         if (file_or_error.is_error()) {
             GUI::MessageBox::show(window(), String::formatted("Cannot open {} for writing", m_destination_path), "Download failed", GUI::MessageBox::Type::Error);
             window()->close();

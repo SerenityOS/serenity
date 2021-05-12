@@ -867,7 +867,7 @@ TLSv12::TLSv12(Core::Object* parent, Options options)
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(IODevice::ReadWrite);
+        set_mode(Core::OpenMode::ReadWrite);
         set_error(0);
     }
 }

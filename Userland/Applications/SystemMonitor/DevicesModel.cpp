@@ -122,7 +122,7 @@ GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 void DevicesModel::update()
 {
     auto proc_devices = Core::File::construct("/proc/devices");
-    if (!proc_devices->open(Core::IODevice::OpenMode::ReadOnly))
+    if (!proc_devices->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_devices->read_all());

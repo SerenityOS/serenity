@@ -394,7 +394,7 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "IDL file", "idl-file");
     args_parser.parse(argc, argv);
 
-    auto file_or_error = Core::File::open(path, Core::IODevice::ReadOnly);
+    auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         fprintf(stderr, "Cannot open %s\n", path);
         return 1;

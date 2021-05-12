@@ -46,7 +46,7 @@ static bool compress_coredump(const String& coredump_path)
         return false;
     }
     auto output_path = String::formatted("{}.gz", coredump_path);
-    auto output_file_or_error = Core::File::open(output_path, Core::File::WriteOnly);
+    auto output_file_or_error = Core::File::open(output_path, Core::OpenMode::WriteOnly);
     if (output_file_or_error.is_error()) {
         dbgln("Could not open '{}' for writing: {}", output_path, output_file_or_error.error());
         return false;

@@ -41,7 +41,7 @@ static void initialize_if_needed()
 void CommonLocationsProvider::load_from_json(const String& json_path)
 {
     auto file = Core::File::construct(json_path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Unable to open {}", file->filename());
         return;
     }

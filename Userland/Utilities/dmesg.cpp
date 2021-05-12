@@ -26,7 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     unveil(nullptr, nullptr);
 
     auto f = Core::File::construct("/proc/dmesg");
-    if (!f->open(Core::IODevice::ReadOnly)) {
+    if (!f->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "open: failed to open /proc/dmesg: %s\n", f->error_string());
         return 1;
     }

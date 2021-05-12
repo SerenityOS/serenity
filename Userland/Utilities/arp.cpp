@@ -13,7 +13,7 @@
 int main()
 {
     auto file = Core::File::construct("/proc/net/arp");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", file->error_string());
         return 1;
     }

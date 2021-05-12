@@ -48,10 +48,10 @@ int main(int argc, char* argv[])
     auto file = Core::File::construct();
     bool success;
     if (filename == nullptr) {
-        success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
+        success = file->open(STDIN_FILENO, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
     } else {
         file->set_filename(filename);
-        success = file->open(Core::IODevice::OpenMode::ReadOnly);
+        success = file->open(Core::OpenMode::ReadOnly);
     }
     if (!success) {
         fprintf(stderr, "Error: %s\n", file->error_string());

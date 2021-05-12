@@ -115,7 +115,7 @@ int main(int argc, char** argv)
         editor.set_cursor(4, 28); // after "...widgets!"
     } else {
         auto file = Core::File::construct(path);
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return 1;
         }
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
             return;
 
         auto file = Core::File::construct(open_path.value());
-        if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
+        if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return;
         }

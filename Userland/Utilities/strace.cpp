@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     if (output_filename != nullptr) {
-        auto open_result = Core::File::open(output_filename, Core::IODevice::OpenMode::WriteOnly);
+        auto open_result = Core::File::open(output_filename, Core::OpenMode::WriteOnly);
         if (open_result.is_error()) {
             outln(stderr, "Failed to open output file: {}", open_result.error());
             return 1;

@@ -71,7 +71,7 @@ static void run_file_operation([[maybe_unused]] FileOperation operation, const S
     file_operation_windows.set(window);
 
     auto pipe_input_file = Core::File::construct();
-    pipe_input_file->open(pipe_fds[0], Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
+    pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
 
     window->set_title("Copying Files...");
     window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);

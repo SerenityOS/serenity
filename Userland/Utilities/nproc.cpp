@@ -18,7 +18,7 @@ int main()
     }
 
     auto file = Core::File::construct("/proc/cpuinfo");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         perror("Core::File::open()");
         return 1;
     }

@@ -77,7 +77,7 @@ TEST_CASE(should_iterate_rows)
 
 BENCHMARK_CASE(fairly_big_data)
 {
-    auto file_or_error = Core::File::open(__FILE__ ".data", Core::IODevice::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(__FILE__ ".data", Core::OpenMode::ReadOnly);
     EXPECT_EQ_FORCE(file_or_error.is_error(), false);
 
     auto data = file_or_error.value()->read_all();

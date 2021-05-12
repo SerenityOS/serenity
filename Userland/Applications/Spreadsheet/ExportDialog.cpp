@@ -198,7 +198,7 @@ void CSVExportDialogPage::update_preview()
 
     auto file_or_error = Core::File::open(
         m_temp_output_file_path,
-        Core::IODevice::ReadOnly);
+        Core::OpenMode::ReadOnly);
     if (file_or_error.is_error())
         goto fail;
 

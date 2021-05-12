@@ -77,7 +77,7 @@ static inline size_t bytes_to_kb(size_t bytes)
 void MemoryStatsWidget::refresh()
 {
     auto proc_memstat = Core::File::construct("/proc/memstat");
-    if (!proc_memstat->open(Core::IODevice::OpenMode::ReadOnly))
+    if (!proc_memstat->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 
     auto file_contents = proc_memstat->read_all();

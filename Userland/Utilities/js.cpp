@@ -587,7 +587,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     for (auto& file : vm.call_frame().arguments) {
         String filename = file.as_string().string();
         auto js_file = Core::File::construct(filename);
-        if (!js_file->open(Core::IODevice::ReadOnly)) {
+        if (!js_file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", filename, js_file->error_string());
             continue;
         }
@@ -969,7 +969,7 @@ int main(int argc, char** argv)
         });
 
         auto file = Core::File::construct(script_path);
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", script_path, file->error_string());
             return 1;
         }

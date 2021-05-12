@@ -141,7 +141,7 @@ int main(int argc, char** argv)
 
     auto fn = parse_target_name(type);
 
-    auto file = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+    auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file.is_error()) {
         warnln("Cannot read from file: {}", file.error());
         exit(1);

@@ -10,7 +10,7 @@
 int main(int, char**)
 {
     auto file = Core::File::construct("/home/anon/Source/little/other.h");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         perror("open");
         exit(1);
     }
