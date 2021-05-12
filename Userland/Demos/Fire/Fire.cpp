@@ -220,8 +220,8 @@ int main(int argc, char** argv)
     window->resize(640, 400);
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     window->set_menubar(move(menubar));
 
     auto& fire = window->set_main_widget<Fire>();

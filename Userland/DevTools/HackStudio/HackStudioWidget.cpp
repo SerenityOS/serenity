@@ -868,7 +868,7 @@ void HackStudioWidget::create_project_tab(GUI::Widget& parent)
     };
 }
 
-void HackStudioWidget::create_app_menubar(GUI::Menubar& menubar)
+void HackStudioWidget::create_file_menubar(GUI::Menubar& menubar)
 {
     auto& file_menu = menubar.add_menu("&File");
     file_menu.add_action(*m_new_project_action);
@@ -998,7 +998,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_set_autocomplete_mode_action
 
 void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
 {
-    create_app_menubar(menubar);
+    create_file_menubar(menubar);
     create_project_menubar(menubar);
     create_edit_menubar(menubar);
     create_build_menubar(menubar);
