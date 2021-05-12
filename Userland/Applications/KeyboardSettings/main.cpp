@@ -168,10 +168,10 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& file_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
     file_menu.add_action(quit_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Settings", app_icon, window));
 
     window->set_menubar(move(menubar));

@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
         GUI::Application::the()->quit();
     }));
 
-    auto& go_menu = menubar->add_menu("Go");
+    auto& go_menu = menubar->add_menu("&Go");
     go_menu.add_action(*go_back_action);
     go_menu.add_action(*go_forward_action);
     go_menu.add_action(*go_home_action);
