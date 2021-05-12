@@ -203,7 +203,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::shift_left_without_allocation(
     }
 }
 
-ALWAYS_INLINE void UnsignedBigIntegerAlgorithms::shift_left_by_n_words(
+void UnsignedBigIntegerAlgorithms::shift_left_by_n_words(
     UnsignedBigInteger const& number,
     size_t number_of_words,
     UnsignedBigInteger& output)
@@ -214,6 +214,17 @@ ALWAYS_INLINE void UnsignedBigIntegerAlgorithms::shift_left_by_n_words(
 
     __builtin_memset(output.m_words.data(), 0, number_of_words * sizeof(unsigned));
     __builtin_memcpy(&output.m_words.data()[number_of_words], number.m_words.data(), number.m_words.size() * sizeof(unsigned));
+}
+
+void UnsignedBigIntegerAlgorithms::shift_right_by_n_words(
+    UnsignedBigInteger const& number,
+    size_t number_of_words,
+    UnsignedBigInteger& output)
+{
+    // shifting right by N words means just not copying the first words
+    output.set_to_0();
+    output.m_words.resize_and_keep_capacity(number.length() - number_of_words);
+    __builtin_memcpy(output.m_words.data(), &number.m_words.data()[number_of_words], (number.m_words.size() - number_of_words) * sizeof(unsigned));
 }
 
 /**
