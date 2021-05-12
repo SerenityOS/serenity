@@ -16,6 +16,11 @@ class Splitter : public Widget {
 public:
     virtual ~Splitter() override;
 
+    int first_resizee_minimum_size() { return m_first_resizee_minimum_size; }
+    void set_first_resizee_minimum_size(int minimum_size) { m_first_resizee_minimum_size = minimum_size; }
+    int second_resizee_minimum_size() { return m_second_resizee_minimum_size; }
+    void set_second_resizee_minimum_size(int minimum_size) { m_second_resizee_minimum_size = minimum_size; }
+
 protected:
     explicit Splitter(Gfx::Orientation);
 
@@ -41,6 +46,8 @@ private:
     WeakPtr<Widget> m_second_resizee;
     Gfx::IntSize m_first_resizee_start_size;
     Gfx::IntSize m_second_resizee_start_size;
+    int m_first_resizee_minimum_size { 0 };
+    int m_second_resizee_minimum_size { 0 };
     Gfx::IntRect m_grabbable_rect;
 };
 
