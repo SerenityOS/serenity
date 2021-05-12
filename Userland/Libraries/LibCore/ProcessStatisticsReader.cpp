@@ -20,7 +20,7 @@ HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
 {
     if (proc_all_file) {
-        if (!proc_all_file->seek(0, Core::File::SeekMode::SetPosition)) {
+        if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
             fprintf(stderr, "ProcessStatisticsReader: Failed to refresh /proc/all: %s\n", proc_all_file->error_string());
             return {};
         }

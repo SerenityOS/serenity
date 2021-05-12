@@ -63,7 +63,7 @@ public:
         return true;
     }
 
-    bool discard_or_error(size_t count) override { return m_file->seek(count, IODevice::SeekMode::FromCurrentPosition); }
+    bool discard_or_error(size_t count) override { return m_file->seek(count, SeekMode::FromCurrentPosition); }
 
     bool unreliable_eof() const override { return m_file->eof(); }
 

@@ -47,7 +47,7 @@ static off_t find_seek_pos(Core::File& file, int wanted_lines)
     // Rather than reading the whole file, start at the end and work backwards,
     // stopping when we've found the number of lines we want.
     off_t pos = 0;
-    if (!file.seek(0, Core::IODevice::SeekMode::FromEndPosition, &pos)) {
+    if (!file.seek(0, Core::SeekMode::FromEndPosition, &pos)) {
         fprintf(stderr, "Failed to find end of file: %s\n", file.error_string());
         return 1;
     }

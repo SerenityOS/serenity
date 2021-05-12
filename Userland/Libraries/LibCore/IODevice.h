@@ -44,6 +44,12 @@ enum class OpenMode : unsigned {
     MustBeNew = 16,
 };
 
+enum class SeekMode {
+    SetPosition,
+    FromCurrentPosition,
+    FromEndPosition,
+};
+
 AK_ENUM_BITWISE_OPERATORS(OpenMode)
 
 class IODevice : public Object {
@@ -75,12 +81,6 @@ public:
     bool can_read_line() const;
 
     bool can_read() const;
-
-    enum class SeekMode {
-        SetPosition,
-        FromCurrentPosition,
-        FromEndPosition,
-    };
 
     bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
