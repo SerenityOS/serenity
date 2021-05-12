@@ -16,13 +16,14 @@ class HPETComparator final : public HardwareTimer<IRQHandler> {
     friend class HPET;
 
 public:
-    static NonnullRefPtr<HPETComparator> create(u8 number, u8 irq, bool periodic_capable);
+    static NonnullRefPtr<HPETComparator> create(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable);
 
     virtual HardwareTimerType timer_type() const override { return HardwareTimerType::HighPrecisionEventTimer; }
     virtual const char* model() const override { return "HPET"; }
 
     u8 comparator_number() const { return m_comparator_number; }
     bool is_enabled() const { return m_enabled; }
+    bool is_64bit_capable() const { return m_is_64bit_capable; }
 
     virtual size_t ticks_per_second() const override;
 
@@ -43,10 +44,11 @@ public:
 private:
     void set_new_countdown();
     virtual void handle_irq(const RegisterState&) override;
-    HPETComparator(u8 number, u8 irq, bool periodic_capable);
+    HPETComparator(u8 number, u8 irq, bool periodic_capable, bool is_64bit_capable);
     bool m_periodic : 1;
     bool m_periodic_capable : 1;
     bool m_enabled : 1;
+    bool m_is_64bit_capable : 1;
     u8 m_comparator_number { 0 };
 };
 }
