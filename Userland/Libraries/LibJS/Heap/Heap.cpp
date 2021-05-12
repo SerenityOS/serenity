@@ -30,7 +30,7 @@ Heap::Heap(VM& vm)
     m_allocators.append(make<Allocator>(256));
     m_allocators.append(make<Allocator>(512));
     m_allocators.append(make<Allocator>(1024));
-    m_allocators.append(make<Allocator>(3172));
+    m_allocators.append(make<Allocator>(3072));
 }
 
 Heap::~Heap()
