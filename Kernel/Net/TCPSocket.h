@@ -128,6 +128,11 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
+    // FIXME: Make this configurable?
+    static constexpr u32 maximum_duplicate_acks = 5;
+    void set_duplicate_acks(u32 acks) { m_duplicate_acks = acks; }
+    u32 duplicate_acks() const { return m_duplicate_acks; }
+
     KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
     void send_outgoing_packets(RoutingDecision&);
     void receive_tcp_packet(const TCPPacket&, u16 size);
@@ -187,6 +192,8 @@ private:
 
     Lock m_not_acked_lock { "TCPSocket unacked packets" };
     SinglyLinkedList<OutgoingPacket> m_not_acked;
+
+    u32 m_duplicate_acks { 0 };
 };
 
 }
