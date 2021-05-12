@@ -40,6 +40,11 @@
 #endif
 #define FLATTEN [[gnu::flatten]]
 
+#ifdef NO_SANITIZE_ADDRESS
+#    undef NO_SANITIZE_ADDRESS
+#endif
+#define NO_SANITIZE_ADDRESS [[gnu::no_sanitize_address]]
+
 #ifndef __serenity__
 #    include <unistd.h>
 #    define PAGE_SIZE sysconf(_SC_PAGESIZE)
