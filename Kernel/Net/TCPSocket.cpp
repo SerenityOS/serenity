@@ -167,6 +167,13 @@ KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_
     return data_length;
 }
 
+KResult TCPSocket::send_ack(bool allow_duplicate)
+{
+    if (!allow_duplicate && m_last_ack_number_sent == m_ack_number)
+        return KSuccess;
+    return send_tcp_packet(TCPFlags::ACK);
+}
+
 KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
     const bool has_mss_option = flags == TCPFlags::SYN;
@@ -183,8 +190,11 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     tcp_packet.set_data_offset(header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
 
-    if (flags & TCPFlags::ACK)
+    if (flags & TCPFlags::ACK) {
+        m_last_ack_number_sent = m_ack_number;
+        m_last_ack_sent_time = kgettimeofday();
         tcp_packet.set_ack_number(m_ack_number);
+    }
 
     if (payload && !payload->read(tcp_packet.payload(), payload_size))
         return EFAULT;
@@ -306,6 +316,22 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
 
     m_packets_in++;
     m_bytes_in += packet.header_size() + size;
+}
+
+bool TCPSocket::should_delay_next_ack() const
+{
+    // FIXME: We don't know the MSS here so make a reasonable guess.
+    const size_t mss = 1500;
+
+    // RFC 1122 says we should send an ACK for every two full-sized segments.
+    if (m_ack_number >= m_last_ack_number_sent + 2 * mss)
+        return false;
+
+    // RFC 1122 says we should not delay ACKs for more than 500 milliseconds.
+    if (kgettimeofday() >= m_last_ack_sent_time + Time::from_milliseconds(500))
+        return false;
+
+    return true;
 }
 
 NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
