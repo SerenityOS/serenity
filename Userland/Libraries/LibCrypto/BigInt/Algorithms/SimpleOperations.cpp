@@ -20,36 +20,51 @@ void UnsignedBigIntegerAlgorithms::add_without_allocation(
     const UnsignedBigInteger* const longer = (left.length() > right.length()) ? &left : &right;
     const UnsignedBigInteger* const shorter = (longer == &right) ? &left : &right;
 
-    u8 carry = 0;
+    output.set_to(*longer);
+    add_into_accumulator_without_allocation(output, *shorter);
+}
 
-    output.set_to_0();
-    output.m_words.resize_and_keep_capacity(longer->length());
+/**
+ * Complexity: O(N) where N is the number of words in the larger number
+ */
+void UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(UnsignedBigInteger& accumulator, UnsignedBigInteger const& value)
+{
+    auto value_length = value.trimmed_length();
 
-    for (size_t i = 0; i < shorter->length(); ++i) {
-        u32 word_addition_result = shorter->m_words[i] + longer->m_words[i];
-        u8 carry_out = 0;
-        // if there was a carry, the result will be smaller than any of the operands
-        if (word_addition_result + carry < shorter->m_words[i]) {
-            carry_out = 1;
+    // If needed, resize the accumulator so it can fit the value.
+    accumulator.resize_with_leading_zeros(value_length);
+    auto final_length = accumulator.length();
+
+    // Add the words of the value into the accumulator, rippling any carry as we go
+    UnsignedBigInteger::Word last_carry_for_word = 0;
+    for (size_t i = 0; i < value_length; ++i) {
+        UnsignedBigInteger::Word current_carry_for_word = 0;
+        if (Checked<UnsignedBigInteger::Word>::addition_would_overflow(value.m_words[i], accumulator.m_words[i])) {
+            current_carry_for_word = 1;
         }
-        if (carry) {
-            word_addition_result++;
+        UnsignedBigInteger::Word word_addition_result = value.m_words[i] + accumulator.m_words[i];
+        if (Checked<UnsignedBigInteger::Word>::addition_would_overflow(word_addition_result, last_carry_for_word)) {
+            current_carry_for_word = 1;
         }
-        carry = carry_out;
-        output.m_words[i] = word_addition_result;
+        word_addition_result += last_carry_for_word;
+        last_carry_for_word = current_carry_for_word;
+        accumulator.m_words[i] = word_addition_result;
     }
 
-    for (size_t i = shorter->length(); i < longer->length(); ++i) {
-        u32 word_addition_result = longer->m_words[i] + carry;
-
-        carry = 0;
-        if (word_addition_result < longer->m_words[i]) {
-            carry = 1;
+    // Ripple the carry over the remaining words in the accumulator until either there is no carry left or we run out of words
+    while (last_carry_for_word && final_length > value_length) {
+        UnsignedBigInteger::Word current_carry_for_word = 0;
+        if (Checked<UnsignedBigInteger::Word>::addition_would_overflow(accumulator.m_words[value_length], last_carry_for_word)) {
+            current_carry_for_word = 1;
         }
-        output.m_words[i] = word_addition_result;
+        accumulator.m_words[value_length] += last_carry_for_word;
+        last_carry_for_word = current_carry_for_word;
+        value_length++;
     }
-    if (carry) {
-        output.m_words.append(carry);
+
+    if (last_carry_for_word) {
+        // Note : The accumulator couldn't add the carry directly, so we reached its end
+        accumulator.m_words.append(last_carry_for_word);
     }
 }
 

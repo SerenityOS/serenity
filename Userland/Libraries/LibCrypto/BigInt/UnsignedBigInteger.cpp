@@ -144,6 +144,15 @@ void UnsignedBigInteger::clamp_to_trimmed_length()
         m_words.resize(length);
 }
 
+void UnsignedBigInteger::resize_with_leading_zeros(size_t new_length)
+{
+    size_t old_length = length();
+    if (old_length < new_length) {
+        m_words.resize_and_keep_capacity(new_length);
+        __builtin_memset(&m_words.data()[old_length], 0, (new_length - old_length) * sizeof(u32));
+    }
+}
+
 FLATTEN UnsignedBigInteger UnsignedBigInteger::plus(const UnsignedBigInteger& other) const
 {
     UnsignedBigInteger result;
@@ -215,9 +224,8 @@ FLATTEN UnsignedBigInteger UnsignedBigInteger::multiplied_by(const UnsignedBigIn
     UnsignedBigInteger temp_shift_result;
     UnsignedBigInteger temp_shift_plus;
     UnsignedBigInteger temp_shift;
-    UnsignedBigInteger temp_plus;
 
-    UnsignedBigIntegerAlgorithms::multiply_without_allocation(*this, other, temp_shift_result, temp_shift_plus, temp_shift, temp_plus, result);
+    UnsignedBigIntegerAlgorithms::multiply_without_allocation(*this, other, temp_shift_result, temp_shift_plus, temp_shift, result);
 
     return result;
 }

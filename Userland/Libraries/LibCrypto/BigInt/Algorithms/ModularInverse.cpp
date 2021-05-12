@@ -16,7 +16,6 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
     UnsignedBigInteger& temp_2,
     UnsignedBigInteger& temp_3,
     UnsignedBigInteger& temp_4,
-    UnsignedBigInteger& temp_plus,
     UnsignedBigInteger& temp_minus,
     UnsignedBigInteger& temp_quotient,
     UnsignedBigInteger& temp_d,
@@ -30,8 +29,7 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
     temp_u.set_to(a);
     if (a.words()[0] % 2 == 0) {
         // u += b
-        add_without_allocation(temp_u, b, temp_plus);
-        temp_u.set_to(temp_plus);
+        add_into_accumulator_without_allocation(temp_u, b);
     }
 
     temp_v.set_to(b);
@@ -47,14 +45,12 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
             temp_u.set_to(temp_minus);
 
             // d += x
-            add_without_allocation(temp_d, temp_x, temp_plus);
-            temp_d.set_to(temp_plus);
+            add_into_accumulator_without_allocation(temp_d, temp_x);
 
             while (temp_u.words()[0] % 2 == 0) {
                 if (temp_d.words()[0] % 2 == 1) {
                     // d += b
-                    add_without_allocation(temp_d, b, temp_plus);
-                    temp_d.set_to(temp_plus);
+                    add_into_accumulator_without_allocation(temp_d, b);
                 }
 
                 // u /= 2
@@ -72,14 +68,12 @@ void UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(
         temp_v.set_to(temp_minus);
 
         // x += d
-        add_without_allocation(temp_x, temp_d, temp_plus);
-        temp_x.set_to(temp_plus);
+        add_into_accumulator_without_allocation(temp_x, temp_d);
 
         while (temp_v.words()[0] % 2 == 0) {
             if (temp_x.words()[0] % 2 == 1) {
                 // x += b
-                add_without_allocation(temp_x, b, temp_plus);
-                temp_x.set_to(temp_plus);
+                add_into_accumulator_without_allocation(temp_x, b);
             }
 
             // v /= 2

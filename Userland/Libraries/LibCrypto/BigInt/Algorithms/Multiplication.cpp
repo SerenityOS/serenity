@@ -23,7 +23,6 @@ FLATTEN void UnsignedBigIntegerAlgorithms::multiply_without_allocation(
     UnsignedBigInteger& temp_shift_result,
     UnsignedBigInteger& temp_shift_plus,
     UnsignedBigInteger& temp_shift,
-    UnsignedBigInteger& temp_plus,
     UnsignedBigInteger& output)
 {
     output.set_to_0();
@@ -39,8 +38,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::multiply_without_allocation(
 
             // output += (right << shift_amount);
             shift_left_without_allocation(right, shift_amount, temp_shift_result, temp_shift_plus, temp_shift);
-            add_without_allocation(output, temp_shift, temp_plus);
-            output.set_to(temp_plus);
+            add_into_accumulator_without_allocation(output, temp_shift);
         }
     }
 }

@@ -199,8 +199,7 @@ FLATTEN void UnsignedBigIntegerAlgorithms::shift_left_without_allocation(
         temp_plus.set_to_0();
         temp_plus.m_words.append(carry_word);
         shift_left_by_n_words(temp_plus, temp_result.length(), temp_result);
-        add_without_allocation(output, temp_result, temp_plus);
-        output.set_to(temp_plus);
+        add_into_accumulator_without_allocation(output, temp_result);
     }
 }
 

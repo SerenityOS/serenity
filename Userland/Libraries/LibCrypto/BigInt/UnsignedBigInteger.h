@@ -65,6 +65,7 @@ public:
     size_t trimmed_length() const;
 
     void clamp_to_trimmed_length();
+    void resize_with_leading_zeros(size_t num_words);
 
     UnsignedBigInteger plus(const UnsignedBigInteger& other) const;
     UnsignedBigInteger minus(const UnsignedBigInteger& other) const;
