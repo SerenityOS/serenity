@@ -28,8 +28,11 @@ static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size, const Tim
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Time& packet_timestamp);
 static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
+static void send_delayed_tcp_ack(RefPtr<TCPSocket> socket);
+static void flush_delayed_tcp_acks(bool all);
 
 static Thread* network_task = nullptr;
+static HashTable<RefPtr<TCPSocket>>* delayed_ack_sockets;
 
 [[noreturn]] static void NetworkTask_main(void*);
 
@@ -47,6 +50,8 @@ bool NetworkTask::is_current()
 
 void NetworkTask_main(void*)
 {
+    delayed_ack_sockets = new HashTable<RefPtr<TCPSocket>>;
+
     WaitQueue packet_wait_queue;
     int pending_packets = 0;
     NetworkAdapter::for_each([&](auto& adapter) {
@@ -86,9 +91,13 @@ void NetworkTask_main(void*)
     for (;;) {
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
         if (!packet_size) {
+            // We might sleep for a while so we must flush all delayed TCP ACKs
+            // including those which haven't expired yet.
+            flush_delayed_tcp_acks(true);
             packet_wait_queue.wait_forever("NetworkTask");
             continue;
         }
+        flush_delayed_tcp_acks(false);
         if (packet_size < sizeof(EthernetFrameHeader)) {
             dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
             continue;
@@ -279,6 +288,38 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 }
 
+void send_delayed_tcp_ack(RefPtr<TCPSocket> socket)
+{
+    VERIFY(socket->lock().is_locked());
+    if (!socket->should_delay_next_ack()) {
+        [[maybe_unused]] auto result = socket->send_ack();
+        return;
+    }
+
+    delayed_ack_sockets->set(move(socket));
+}
+
+void flush_delayed_tcp_acks(bool all)
+{
+    Vector<RefPtr<TCPSocket>, 32> remaining_sockets;
+    for (auto& socket : *delayed_ack_sockets) {
+        Locker locker(socket->lock());
+        if (!all && socket->should_delay_next_ack()) {
+            remaining_sockets.append(socket);
+            continue;
+        }
+        [[maybe_unused]] auto result = socket->send_ack();
+    }
+
+    if (remaining_sockets.size() != delayed_ack_sockets->size()) {
+        delayed_ack_sockets->clear();
+        if (remaining_sockets.size() > 0)
+            dbgln("flush_delayed_tcp_acks: {} sockets remaining", remaining_sockets.size());
+        for (auto&& socket : remaining_sockets)
+            delayed_ack_sockets->set(move(socket));
+    }
+}
+
 void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 {
     if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
@@ -393,26 +434,26 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::SynReceived);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
             return;
         case TCPFlags::ACK | TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::FINDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::RSTDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
@@ -536,7 +577,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             if (socket->duplicate_acks() < TCPSocket::maximum_duplicate_acks) {
                 dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
                 socket->set_duplicate_acks(socket->duplicate_acks() + 1);
-                unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+                [[maybe_unused]] auto result = socket->send_ack(true);
             }
             return;
         }
@@ -548,7 +589,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
                 socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+            send_delayed_tcp_ack(socket);
             socket->set_state(TCPSocket::State::CloseWait);
             socket->set_connected(false);
             return;
@@ -559,7 +600,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
                 socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
                 dbgln_if(TCP_DEBUG, "Got packet with ack_no={}, seq_no={}, payload_size={}, acking it with new ack_no={}, seq_no={}",
                     tcp_packet.ack_number(), tcp_packet.sequence_number(), payload_size, socket->ack_number(), socket->sequence_number());
-                unused_rc = socket->send_tcp_packet(TCPFlags::ACK);
+                send_delayed_tcp_ack(socket);
             }
         }
     }
