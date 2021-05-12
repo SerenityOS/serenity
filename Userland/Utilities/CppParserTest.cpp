@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     if (!path)
         path = "Source/little/main.cpp";
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         perror("open");
         exit(1);
     }

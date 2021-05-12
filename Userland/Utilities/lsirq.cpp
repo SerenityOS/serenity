@@ -26,7 +26,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     unveil(nullptr, nullptr);
 
     auto proc_interrupts = Core::File::construct("/proc/interrupts");
-    if (!proc_interrupts->open(Core::IODevice::ReadOnly)) {
+    if (!proc_interrupts->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", proc_interrupts->error_string());
         return 1;
     }

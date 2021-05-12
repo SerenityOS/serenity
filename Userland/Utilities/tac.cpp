@@ -38,7 +38,7 @@ int main(int argc, char** argv)
             if (path == "-") {
                 file = Core::File::standard_input();
             } else {
-                auto file_or_error = Core::File::open(path, Core::File::ReadOnly);
+                auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
                 if (file_or_error.is_error()) {
                     warnln("Failed to open {}: {}", path, strerror(errno));
                     continue;

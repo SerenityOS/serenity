@@ -57,7 +57,7 @@ void ConfigFile::reparse()
     m_groups.clear();
 
     auto file = File::construct(m_filename);
-    if (!file->open(IODevice::OpenMode::ReadOnly))
+    if (!file->open(OpenMode::ReadOnly))
         return;
 
     HashMap<String, String>* current_group = nullptr;

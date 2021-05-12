@@ -133,7 +133,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
     if (url.protocol() == "file") {
         auto f = Core::File::construct();
         f->set_filename(url.path());
-        if (!f->open(Core::IODevice::OpenMode::ReadOnly)) {
+        if (!f->open(Core::OpenMode::ReadOnly)) {
             dbgln("ResourceLoader::load: Error: {}", f->error_string());
             if (error_callback)
                 error_callback(f->error_string(), {});

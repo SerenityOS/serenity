@@ -207,13 +207,13 @@ GlyphHorizontalMetrics Hmtx::get_glyph_horizontal_metrics(u32 glyph_id) const
 
 RefPtr<Font> Font::load_from_file(String path, unsigned index)
 {
-    auto file_or_error = Core::File::open(move(path), Core::IODevice::ReadOnly);
+    auto file_or_error = Core::File::open(move(path), Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         dbgln("Could not open file: {}", file_or_error.error());
         return nullptr;
     }
     auto file = file_or_error.value();
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Could not open file");
         return nullptr;
     }

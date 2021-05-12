@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-keyboard-settings");
 
     auto proc_keymap = Core::File::construct("/proc/keymap");
-    if (!proc_keymap->open(Core::IODevice::OpenMode::ReadOnly))
+    if (!proc_keymap->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
 
     auto json = JsonValue::from_string(proc_keymap->read_all());
