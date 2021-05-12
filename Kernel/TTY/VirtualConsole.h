@@ -35,7 +35,7 @@ private:
 
     // ^TTY
     virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
-    virtual String tty_name() const override { return m_tty_name; }
+    virtual String const& tty_name() const override { return m_tty_name; }
     virtual void echo(u8) override;
 
     // ^TerminalClient
