@@ -147,6 +147,7 @@ set(SOURCES
     HTML/ImageData.cpp
     HTML/Parser/Entities.cpp
     HTML/Parser/HTMLDocumentParser.cpp
+    HTML/Parser/HTMLEncodingDetection.cpp
     HTML/Parser/HTMLToken.cpp
     HTML/Parser/HTMLTokenizer.cpp
     HTML/Parser/ListOfActiveFormattingElements.cpp
