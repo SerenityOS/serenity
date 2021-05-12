@@ -141,6 +141,8 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
         return { adapter, mac };
     };
 
+    if (target[0] == 0 && target[1] == 0 && target[2] == 0 && target[3] == 0)
+        return if_matches(LoopbackAdapter::the(), LoopbackAdapter::the().mac_address());
     if (target[0] == 127)
         return if_matches(LoopbackAdapter::the(), LoopbackAdapter::the().mac_address());
 

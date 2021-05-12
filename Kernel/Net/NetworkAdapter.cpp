@@ -40,6 +40,8 @@ RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& addr
         if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
             return adapter;
     }
+    if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0)
+        return LoopbackAdapter::the();
     if (address[0] == 127)
         return LoopbackAdapter::the();
     return nullptr;
