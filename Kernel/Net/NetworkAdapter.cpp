@@ -83,11 +83,11 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_raw({ (const u8*)eth, size_in_bytes });
 }
 
-KResult NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4(const IPv4Address& source_ipv4, const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
     if (ipv4_packet_size > mtu())
-        return send_ipv4_fragmented(destination_mac, destination_ipv4, protocol, payload, payload_size, ttl);
+        return send_ipv4_fragmented(source_ipv4, destination_mac, destination_ipv4, protocol, payload, payload_size, ttl);
 
     size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
     auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
@@ -98,7 +98,7 @@ KResult NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4A
     auto& ipv4 = *(IPv4Packet*)eth.payload();
     ipv4.set_version(4);
     ipv4.set_internet_header_length(5);
-    ipv4.set_source(ipv4_address());
+    ipv4.set_source(source_ipv4);
     ipv4.set_destination(destination_ipv4);
     ipv4.set_protocol((u8)protocol);
     ipv4.set_length(sizeof(IPv4Packet) + payload_size);
@@ -114,7 +114,7 @@ KResult NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4A
     return KSuccess;
 }
 
-KResult NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
+KResult NetworkAdapter::send_ipv4_fragmented(const IPv4Address& source_ipv4, const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl)
 {
     // packets must be split on the 64-bit boundary
     auto packet_boundary_size = (mtu() - sizeof(IPv4Packet) - sizeof(EthernetFrameHeader)) & 0xfffffff8;
@@ -136,7 +136,7 @@ KResult NetworkAdapter::send_ipv4_fragmented(const MACAddress& destination_mac, 
         auto& ipv4 = *(IPv4Packet*)eth.payload();
         ipv4.set_version(4);
         ipv4.set_internet_header_length(5);
-        ipv4.set_source(ipv4_address());
+        ipv4.set_source(source_ipv4);
         ipv4.set_destination(destination_ipv4);
         ipv4.set_protocol((u8)protocol);
         ipv4.set_length(sizeof(IPv4Packet) + packet_payload_size);

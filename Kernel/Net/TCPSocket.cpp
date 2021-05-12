@@ -227,7 +227,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 
     auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
     auto result = routing_decision.adapter->send_ipv4(
-        routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
+        local_address(), routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
         packet_buffer, buffer_size, ttl());
     if (result.is_error())
         return result;
@@ -265,8 +265,8 @@ void TCPSocket::send_outgoing_packets(RoutingDecision& routing_decision)
 
         auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
         int err = routing_decision.adapter->send_ipv4(
-            routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-            packet_buffer, packet.buffer.size(), ttl());
+            local_address(), routing_decision.next_hop, peer_address(),
+            IPv4Protocol::TCP, packet_buffer, packet.buffer.size(), ttl());
         if (err < 0) {
             auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
             dmesgln("Error ({}) sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",

@@ -206,7 +206,8 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     dbgln_if(IPV4_SOCKET_DEBUG, "sendto: destination={}:{}", m_peer_address, m_peer_port);
 
     if (type() == SOCK_RAW) {
-        auto result = routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), data, data_length, m_ttl);
+        auto result = routing_decision.adapter->send_ipv4(local_address(), routing_decision.next_hop,
+            m_peer_address, (IPv4Protocol)protocol(), data, data_length, m_ttl);
         if (result.is_error())
             return result;
         return data_length;

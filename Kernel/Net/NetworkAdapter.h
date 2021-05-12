@@ -45,8 +45,8 @@ public:
     void set_ipv4_gateway(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
-    KResult send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
-    KResult send_ipv4_fragmented(const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
+    KResult send_ipv4(const IPv4Address& source_ipv4, const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
+    KResult send_ipv4_fragmented(const IPv4Address& source_ipv4, const MACAddress&, const IPv4Address&, IPv4Protocol, const UserOrKernelBuffer& payload, size_t payload_size, u8 ttl);
 
     size_t dequeue_packet(u8* buffer, size_t buffer_size, Time& packet_timestamp);
 
