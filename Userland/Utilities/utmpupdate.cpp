@@ -92,7 +92,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (!file.write(json.to_string())) {
+    if (auto string = json.to_string(); !file.write(string.bytes())) {
         dbgln("Write failed");
         return 1;
     }

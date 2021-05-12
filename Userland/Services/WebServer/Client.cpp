@@ -125,7 +125,7 @@ void Client::send_response(InputStream& response, const HTTP::HttpRequest& reque
     builder.append("\r\n");
     builder.append("\r\n");
 
-    m_socket->write(builder.to_string());
+    m_socket->write(builder.string_view().bytes());
     log_response(200, request);
 
     char buffer[PAGE_SIZE];
@@ -147,7 +147,7 @@ void Client::send_redirect(StringView redirect_path, const HTTP::HttpRequest& re
     builder.append("\r\n");
     builder.append("\r\n");
 
-    m_socket->write(builder.to_string());
+    m_socket->write(builder.string_view().bytes());
 
     log_response(301, request);
 }
@@ -249,7 +249,7 @@ void Client::send_error_response(unsigned code, const StringView& message, const
     builder.appendff("{} ", code);
     builder.append(message);
     builder.append("</h1></body></html>");
-    m_socket->write(builder.to_string());
+    m_socket->write(builder.string_view().bytes());
 
     log_response(code, request);
 }

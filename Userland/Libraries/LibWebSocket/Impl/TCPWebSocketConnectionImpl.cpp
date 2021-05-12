@@ -24,9 +24,9 @@ void TCPWebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     VERIFY(on_connected);
     VERIFY(on_connection_error);
     VERIFY(on_ready_to_read);
-    m_socket = Core::TCPSocket::construct(this);
+    m_socket = Core::BufferedTCPSocket::construct(this);
 
-    m_notifier = Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read);
+    m_notifier = m_socket->make_notifier(Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
         on_ready_to_read();
     };

@@ -452,8 +452,8 @@ URL URL::create_with_data(const StringView& mime_type, const StringView& payload
     URL url;
     url.set_protocol("data");
     url.m_valid = true;
-    url.m_data_payload = payload;
-    url.m_data_mime_type = mime_type;
+    url.m_data_payload = payload.to_string();
+    url.m_data_mime_type = mime_type.to_string();
     url.m_data_payload_is_base64 = is_base64;
 
     return url;

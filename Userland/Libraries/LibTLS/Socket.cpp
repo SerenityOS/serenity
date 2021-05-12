@@ -23,13 +23,13 @@ Optional<ByteBuffer> TLSv12::read()
     return {};
 }
 
-ByteBuffer TLSv12::read(size_t max_size)
+size_t TLSv12::read(Bytes bytes)
 {
     if (m_context.application_buffer.size()) {
-        auto length = min(m_context.application_buffer.size(), max_size);
-        auto buf = m_context.application_buffer.slice(0, length);
+        auto length = min(m_context.application_buffer.size(), bytes.size());
+        memcpy(bytes.data(), m_context.application_buffer.data(), length);
         m_context.application_buffer = m_context.application_buffer.slice(length, m_context.application_buffer.size() - length);
-        return buf;
+        return length;
     }
     return {};
 }
@@ -54,11 +54,11 @@ String TLSv12::read_line(size_t max_size)
     return String::copy(buffer, Chomp);
 }
 
-bool TLSv12::write(ReadonlyBytes buffer)
+size_t TLSv12::write(ReadonlyBytes buffer)
 {
     if (m_context.connection_status != ConnectionStatus::Established) {
         dbgln_if(TLS_DEBUG, "write request while not connected");
-        return false;
+        return 0;
     }
 
     PacketBuilder builder { MessageType::ApplicationData, m_context.options.version, buffer.size() };
@@ -68,7 +68,7 @@ bool TLSv12::write(ReadonlyBytes buffer)
     update_packet(packet);
     write_packet(packet);
 
-    return true;
+    return buffer.size();
 }
 
 bool TLSv12::connect(const String& hostname, int port)
@@ -157,8 +157,9 @@ void TLSv12::read_from_socket()
     if (!check_connection_state(true))
         return;
 
-    consume(Core::Socket::read(4096));
-
+    char buf[4096];
+    auto nread = Core::Socket::read({ buf, 4096 });
+    consume({ buf, nread });
     // If anything new shows up, tell the client about the event.
     notify_client_for_app_data();
 }
@@ -182,10 +183,14 @@ void TLSv12::write_into_socket()
 
 bool TLSv12::check_connection_state(bool read)
 {
-    if (!Core::Socket::is_open() || !Core::Socket::is_connected() || Core::Socket::eof()) {
+    if (!Core::Socket::is_open() || !Core::Socket::is_connected()) {
         // an abrupt closure (the server is a jerk)
         dbgln_if(TLS_DEBUG, "Socket not open, assuming abrupt closure");
         m_context.connection_finished = true;
+    } else if (Core::Socket::eof()) {
+        // Treat this as connection finished only if there's nothing to send (i.e. the server is waiting for us to say something)
+        if (m_context.tls_buffer.is_empty())
+            m_context.connection_finished = true;
     }
     if (m_context.critical_error) {
         dbgln_if(TLS_DEBUG, "CRITICAL ERROR {} :(", m_context.critical_error);
@@ -209,6 +214,7 @@ bool TLSv12::check_connection_state(bool read)
         }
         if (!m_context.application_buffer.size()) {
             m_context.connection_status = ConnectionStatus::Disconnected;
+            Core::Socket::close();
             return false;
         }
     }
@@ -228,10 +234,12 @@ bool TLSv12::flush()
         dbgln("SENDING...");
         print_buffer(out_buffer, out_buffer_length);
     }
-    if (Core::Socket::write(&out_buffer[out_buffer_index], out_buffer_length)) {
+    auto bytes_written = Core::Socket::write({ &out_buffer[out_buffer_index], out_buffer_length });
+    if (bytes_written == out_buffer_length) {
         write_buffer().clear();
         return true;
     }
+    write_buffer() = write_buffer().slice(bytes_written, write_buffer().size() - bytes_written);
     if (m_context.send_retries++ == 10) {
         // drop the records, we can't send
         dbgln_if(TLS_DEBUG, "Dropping {} bytes worth of TLS records as max retries has been reached", write_buffer().size());

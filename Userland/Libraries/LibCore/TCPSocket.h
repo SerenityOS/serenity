@@ -11,14 +11,16 @@
 
 namespace Core {
 
-class TCPSocket final : public Socket {
+class TCPSocket : public Socket {
     C_OBJECT(TCPSocket)
 public:
     virtual ~TCPSocket() override;
 
-private:
+protected:
     TCPSocket(int fd, Object* parent = nullptr);
     explicit TCPSocket(Object* parent = nullptr);
 };
+
+using BufferedTCPSocket = BufferingIODevice<TCPSocket>;
 
 }

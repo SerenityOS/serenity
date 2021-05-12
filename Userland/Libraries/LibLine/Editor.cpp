@@ -299,8 +299,10 @@ bool Editor::save_history(const String& path)
         return false;
     auto file = file_or_error.release_value();
     final_history.take_first();
-    for (const auto& entry : final_history)
-        file->write(String::formatted("{}::{}\n\n", entry.timestamp, entry.entry));
+    for (const auto& entry : final_history) {
+        auto line = String::formatted("{}::{}\n\n", entry.timestamp, entry.entry);
+        file->write(line.bytes());
+    }
 
     m_history_dirty = false;
     return true;

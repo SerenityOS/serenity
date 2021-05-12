@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <LibCore/BufferingIODevice.h>
 #include <LibCore/NetworkJob.h>
 #include <LibCore/TCPSocket.h>
 #include <LibHTTP/HttpRequest.h>
@@ -43,7 +44,7 @@ protected:
     virtual bool is_established() const override { return true; }
 
 private:
-    RefPtr<Core::Socket> m_socket;
+    RefPtr<Core::BufferedTCPSocket> m_socket;
 };
 
 }

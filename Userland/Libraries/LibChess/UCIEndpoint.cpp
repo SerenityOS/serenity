@@ -13,10 +13,11 @@
 
 namespace Chess::UCI {
 
-Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out)
+Endpoint::Endpoint(NonnullRefPtr<Core::File> in, NonnullRefPtr<Core::IODevice> out)
     : m_in(in)
     , m_out(out)
-    , m_in_notifier(Core::Notifier::construct(in->fd(), Core::Notifier::Read))
+    , m_in_notifier(in->make_notifier(Core::Notifier::Read))
+
 {
     set_in_notifier();
 }
@@ -24,7 +25,8 @@ Endpoint::Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevic
 void Endpoint::send_command(const Command& command)
 {
     dbgln_if(UCI_DEBUG, "{} Sent UCI Command: {}", class_name(), String(command.to_string().characters(), Chomp));
-    m_out->write(command.to_string());
+    auto command_string = command.to_string();
+    m_out->write(command_string.bytes());
 }
 
 void Endpoint::event(Core::Event& event)
@@ -61,7 +63,7 @@ void Endpoint::event(Core::Event& event)
 
 void Endpoint::set_in_notifier()
 {
-    m_in_notifier = Core::Notifier::construct(m_in->fd(), Core::Notifier::Read);
+    m_in_notifier = m_in->make_notifier(Core::Notifier::Read);
     m_in_notifier->on_ready_to_read = [this] {
         while (m_in->can_read_line())
             Core::EventLoop::current().post_event(*this, read_command());

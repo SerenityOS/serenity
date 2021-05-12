@@ -9,12 +9,13 @@
 #include <AK/OSError.h>
 #include <AK/Result.h>
 #include <AK/String.h>
-#include <LibCore/IODevice.h>
+#include <LibCore/BufferingIODevice.h>
+#include <LibCore/FileLikeIODevice.h>
 #include <sys/stat.h>
 
 namespace Core {
 
-class File final : public IODevice {
+class File final : public BufferingIODevice<FileLikeIODevice> {
     C_OBJECT(File)
 public:
     virtual ~File() override;
@@ -82,6 +83,7 @@ public:
 private:
     File(Object* parent = nullptr)
         : IODevice(parent)
+        , BufferingIODevice<FileLikeIODevice>(parent)
     {
     }
     explicit File(String filename, Object* parent = nullptr);

@@ -9,10 +9,10 @@ set(SOURCES
     ElapsedTimer.cpp
     Event.cpp
     EventLoop.cpp
+    FileLikeIODevice.cpp
     FileWatcher.cpp
     File.cpp
     GetPassword.cpp
-    IODevice.cpp
     LocalServer.cpp
     LocalSocket.cpp
     MimeData.cpp

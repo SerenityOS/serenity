@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     }
 
     auto& file = *file_or_error.value();
-    if (!file.write(encoded_bitmap.data(), encoded_bitmap.size())) {
+    if (!file.write(encoded_bitmap)) {
         warnln("Failed to write PNG");
         return 1;
     }

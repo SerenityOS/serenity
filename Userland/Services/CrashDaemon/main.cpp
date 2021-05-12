@@ -52,7 +52,7 @@ static bool compress_coredump(const String& coredump_path)
         return false;
     }
     auto output_file = output_file_or_error.value();
-    if (!output_file->write(compressed_coredump.value().data(), compressed_coredump.value().size())) {
+    if (!output_file->write(compressed_coredump.value().bytes())) {
         dbgln("Could not write compressed coredump '{}'", output_path);
         return false;
     }

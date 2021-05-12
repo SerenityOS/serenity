@@ -280,7 +280,7 @@ Result<void, String> ExportDialog::make_and_run_for(StringView mime, Core::File&
             array.append(sheet.to_json());
 
         auto file_content = array.to_string();
-        bool result = file.write(file_content);
+        bool result = file.write(file_content.bytes());
         if (!result) {
             int error_number = errno;
             StringBuilder sb;

@@ -83,8 +83,8 @@ void RemoteProcess::send_request(const JsonObject& request)
 {
     auto serialized = request.to_string();
     i32 length = serialized.length();
-    m_socket->write((const u8*)&length, sizeof(length));
-    m_socket->write(serialized);
+    m_socket->write({ (const u8*)&length, sizeof(length) });
+    m_socket->write(serialized.bytes());
 }
 
 void RemoteProcess::set_inspected_object(FlatPtr address)
@@ -131,7 +131,7 @@ void RemoteProcess::update()
         }
 
         u32 length;
-        int nread = m_socket->read((u8*)&length, sizeof(length));
+        int nread = m_socket->read({ (u8*)&length, sizeof(length) });
         if (nread != sizeof(length)) {
             dbgln("Disconnected from PID {}", m_pid);
             m_socket->close();

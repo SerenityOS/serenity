@@ -575,7 +575,7 @@ void Editor::edit_in_external_editor()
 
         auto file = file_or_error.release_value();
         auto contents = file->read_all();
-        StringView data { contents };
+        StringView data { contents.data(), contents.size() };
         while (data.ends_with('\n'))
             data = data.substring_view(0, data.length() - 1);
 

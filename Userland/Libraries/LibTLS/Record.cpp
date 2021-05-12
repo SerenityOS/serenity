@@ -409,6 +409,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
             if (code == (u8)AlertDescription::CloseNotify) {
                 res += 2;
                 alert(AlertLevel::Critical, AlertDescription::CloseNotify);
+                dbgln("Got a close notify, gonna disconnect now...");
                 m_context.connection_finished = true;
                 if (!m_context.cipher_spec_set) {
                     // AWS CloudFront hits this.

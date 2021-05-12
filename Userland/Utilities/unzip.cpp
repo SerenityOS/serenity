@@ -34,7 +34,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member)
     // TODO: verify CRC32s match!
     switch (zip_member.compression_method) {
     case Archive::ZipCompressionMethod::Store: {
-        if (!new_file->write(zip_member.compressed_data.data(), zip_member.compressed_data.size())) {
+        if (!new_file->write(zip_member.compressed_data)) {
             warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
             return false;
         }
@@ -50,7 +50,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member)
             warnln("Failed decompressing file {}", zip_member.name);
             return false;
         }
-        if (!new_file->write(decompressed_data.value().data(), decompressed_data.value().size())) {
+        if (!new_file->write(decompressed_data.value())) {
             warnln("Can't write file contents in {}: {}", zip_member.name, new_file->error_string());
             return false;
         }

@@ -15,7 +15,10 @@
 namespace Core {
 
 UDPSocket::UDPSocket(Object* parent)
-    : Socket(Socket::Type::UDP, parent)
+    : IODevice(parent)
+    , SocketLikeIODevice(parent)
+    , FileLikeIODevice(parent)
+    , Socket(parent)
 {
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_INET, SOCK_DGRAM | SOCK_NONBLOCK, 0);

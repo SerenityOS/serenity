@@ -48,7 +48,7 @@ static void write_var(const String& name, const String& value)
         fprintf(stderr, "open: %s\n", f->error_string());
         exit(1);
     }
-    f->write(value);
+    f->write(value.bytes());
     if (f->error() < 0) {
         fprintf(stderr, "write: %s\n", f->error_string());
         exit(1);

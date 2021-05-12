@@ -189,7 +189,7 @@ private:
     String m_hostname;
     int m_port { 6667 };
 
-    RefPtr<Core::TCPSocket> m_socket;
+    RefPtr<Core::BufferedTCPSocket> m_socket;
 
     String m_nickname;
     RefPtr<Core::Notifier> m_notifier;

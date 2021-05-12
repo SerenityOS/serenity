@@ -349,9 +349,9 @@ public:
     }
 
     Optional<ByteBuffer> read();
-    ByteBuffer read(size_t max_size);
+    size_t read(Bytes) override;
 
-    bool write(ReadonlyBytes);
+    size_t write(ReadonlyBytes) override;
     void alert(AlertLevel, AlertDescription);
 
     bool can_read_line() const { return m_context.application_buffer.size() && memchr(m_context.application_buffer.data(), '\n', m_context.application_buffer.size()); }

@@ -39,8 +39,8 @@ public:
     virtual void discard_connection() override;
 
 private:
-    RefPtr<Core::Notifier> m_notifier;
-    RefPtr<Core::TCPSocket> m_socket;
+    RefPtr<Core::AbstractNotifier> m_notifier;
+    RefPtr<Core::BufferedTCPSocket> m_socket;
 };
 
 }

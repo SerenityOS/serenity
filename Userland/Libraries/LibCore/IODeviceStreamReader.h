@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/StdLibExtras.h>
-#include <LibCore/IODevice.h>
+#include <LibCore/FileLikeIODevice.h>
 
 namespace Core {
 
@@ -26,7 +26,7 @@ public:
     template<typename T>
     IODeviceStreamReader& operator>>(T& value)
     {
-        int nread = m_device.read((u8*)&value, sizeof(T));
+        int nread = m_device.read({ (u8*)&value, sizeof(T) });
         VERIFY(nread == sizeof(T));
         if (nread != sizeof(T))
             m_had_failure = true;

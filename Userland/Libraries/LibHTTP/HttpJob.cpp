@@ -15,7 +15,7 @@ namespace HTTP {
 void HttpJob::start()
 {
     VERIFY(!m_socket);
-    m_socket = Core::TCPSocket::construct(this);
+    m_socket = Core::BufferedTCPSocket::construct(this);
     m_socket->on_connected = [this] {
         dbgln_if(CHTTPJOB_DEBUG, "HttpJob: on_connected callback");
         on_socket_connected();
@@ -61,7 +61,9 @@ String HttpJob::read_line(size_t size)
 
 ByteBuffer HttpJob::receive(size_t size)
 {
-    return m_socket->receive(size);
+    auto buffer = ByteBuffer::create_uninitialized(size);
+    auto received_size = m_socket->receive(buffer.bytes());
+    return buffer.slice(0, received_size);
 }
 
 bool HttpJob::can_read() const

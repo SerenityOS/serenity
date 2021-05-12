@@ -106,7 +106,9 @@ String HttpsJob::read_line(size_t size)
 
 ByteBuffer HttpsJob::receive(size_t size)
 {
-    return m_socket->read(size);
+    auto buffer = ByteBuffer::create_uninitialized(size);
+    buffer.trim(m_socket->read(buffer.bytes()));
+    return buffer;
 }
 
 bool HttpsJob::can_read() const

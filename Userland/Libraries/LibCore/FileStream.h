@@ -120,12 +120,12 @@ public:
 
     size_t write(ReadonlyBytes bytes) override
     {
-        if (!m_file->write(bytes.data(), bytes.size())) {
+        auto size = m_file->write(bytes);
+        if (size == 0) {
             set_fatal_error();
             return 0;
         }
-
-        return bytes.size();
+        return size;
     }
 
     bool write_or_error(ReadonlyBytes bytes) override

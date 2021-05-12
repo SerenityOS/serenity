@@ -106,7 +106,9 @@ String GeminiJob::read_line(size_t size)
 
 ByteBuffer GeminiJob::receive(size_t size)
 {
-    return m_socket->read(size);
+    auto buffer = ByteBuffer::create_uninitialized(size);
+    buffer.trim(m_socket->read(buffer.bytes()));
+    return buffer;
 }
 
 bool GeminiJob::can_read() const

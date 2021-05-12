@@ -851,7 +851,10 @@ Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringV
 }
 
 TLSv12::TLSv12(Core::Object* parent, Options options)
-    : Core::Socket(Core::Socket::Type::TCP, parent)
+    : Core::IODevice(parent)
+    , Core::SocketLikeIODevice(parent)
+    , Core::FileLikeIODevice(parent)
+    , Core::Socket(parent)
 {
     m_context.options = move(options);
     m_context.is_server = false;

@@ -191,6 +191,8 @@ void RunWindow::save_history()
 
     auto file = file_or_error.release_value();
     // Write the first 25 items of history
-    for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++)
-        file->write(String::formatted("{}\n", m_path_history[i]));
+    for (int i = 0; i < min(static_cast<int>(m_path_history.size()), 25); i++) {
+        auto line = String::formatted("{}\n", m_path_history[i]);
+        file->write(line.bytes());
+    }
 }

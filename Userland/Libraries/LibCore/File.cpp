@@ -36,6 +36,7 @@ Result<NonnullRefPtr<File>, String> File::open(String filename, OpenMode mode, m
 
 File::File(String filename, Object* parent)
     : IODevice(parent)
+    , BufferingIODevice<FileLikeIODevice>(parent)
     , m_filename(move(filename))
 {
 }

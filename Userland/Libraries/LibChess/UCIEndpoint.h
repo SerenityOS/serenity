@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibChess/UCICommand.h>
+#include <LibCore/File.h>
 #include <LibCore/IODevice.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
@@ -19,7 +20,7 @@ public:
     virtual ~Endpoint() override { }
 
     Endpoint() { }
-    Endpoint(NonnullRefPtr<Core::IODevice> in, NonnullRefPtr<Core::IODevice> out);
+    Endpoint(NonnullRefPtr<Core::File> in, NonnullRefPtr<Core::IODevice> out);
 
     virtual void handle_uci() { }
     virtual void handle_debug(const DebugCommand&) { }
@@ -38,23 +39,23 @@ public:
 
     virtual void event(Core::Event&);
 
-    Core::IODevice& in() { return *m_in; }
-    Core::IODevice& out() { return *m_out; }
+    auto& in() { return *m_in; }
+    auto& out() { return *m_out; }
 
-    void set_in(RefPtr<Core::IODevice> in)
+    void set_in(RefPtr<Core::File> in)
     {
-        m_in = in;
+        m_in = move(in);
         set_in_notifier();
     }
-    void set_out(RefPtr<Core::IODevice> out) { m_out = out; }
+    void set_out(RefPtr<Core::IODevice> out) { m_out = move(out); }
 
 private:
     void set_in_notifier();
     NonnullOwnPtr<Command> read_command();
 
-    RefPtr<Core::IODevice> m_in;
+    RefPtr<Core::File> m_in;
     RefPtr<Core::IODevice> m_out;
-    RefPtr<Core::Notifier> m_in_notifier;
+    RefPtr<Core::AbstractNotifier> m_in_notifier;
 };
 
 }

@@ -37,7 +37,8 @@ bool JsonArrayModel::store()
         return false;
     }
 
-    file->write(m_array.to_string());
+    auto string = m_array.to_string();
+    file->write(string.bytes());
     file->close();
     return true;
 }

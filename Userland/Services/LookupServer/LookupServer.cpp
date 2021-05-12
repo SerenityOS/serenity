@@ -222,7 +222,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
         return {};
 
     u8 response_buffer[4096];
-    int nrecv = udp_socket->read(response_buffer, sizeof(response_buffer));
+    int nrecv = udp_socket->read({ response_buffer, sizeof(response_buffer) });
     if (nrecv == 0)
         return {};
 

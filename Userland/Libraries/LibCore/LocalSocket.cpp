@@ -19,7 +19,10 @@
 namespace Core {
 
 LocalSocket::LocalSocket(int fd, Object* parent)
-    : Socket(Socket::Type::Local, parent)
+    : IODevice(parent)
+    , SocketLikeIODevice(parent)
+    , FileLikeIODevice(parent)
+    , Socket(parent)
 {
     // NOTE: This constructor is used by LocalServer::accept(), so the socket is already connected.
     m_connected = true;
@@ -29,7 +32,10 @@ LocalSocket::LocalSocket(int fd, Object* parent)
 }
 
 LocalSocket::LocalSocket(Object* parent)
-    : Socket(Socket::Type::Local, parent)
+    : IODevice(parent)
+    , SocketLikeIODevice(parent)
+    , FileLikeIODevice(parent)
+    , Socket(parent)
 {
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);

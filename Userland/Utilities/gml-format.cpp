@@ -36,7 +36,7 @@ bool format_file(const StringView& path, bool inplace)
             warnln("Could not truncate {}: {}", path, file->error_string());
             return false;
         }
-        if (!file->write(formatted_gml)) {
+        if (!file->write(formatted_gml.bytes())) {
             warnln("Could not write to {}: {}", path, file->error_string());
             return false;
         }

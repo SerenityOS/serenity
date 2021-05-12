@@ -119,7 +119,7 @@ void Client::send_data(StringView data)
     }
 
     if (fast) {
-        m_socket->write(data);
+        m_socket->write(data.bytes());
         return;
     }
 
@@ -140,7 +140,7 @@ void Client::send_data(StringView data)
         }
     }
 
-    m_socket->write(builder.to_string());
+    m_socket->write(builder.string_view().bytes());
 }
 
 void Client::send_command(Command command)
@@ -157,7 +157,7 @@ void Client::send_commands(Vector<Command> commands)
         stream << (u8)IAC << command.command << command.subcommand;
 
     VERIFY(stream.is_end());
-    m_socket->write(buffer.data(), buffer.size());
+    m_socket->write(buffer);
 }
 
 void Client::quit()

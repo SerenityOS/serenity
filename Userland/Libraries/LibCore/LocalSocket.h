@@ -19,10 +19,10 @@ public:
 
 private:
     explicit LocalSocket(Object* parent = nullptr);
-    LocalSocket(int fd, Object* parent = nullptr);
+    explicit LocalSocket(int fd, Object* parent = nullptr);
 
     // FIXME: better place to put this so both LocalSocket and LocalServer can
-    // enjoy it?
+    //        enjoy it?
     friend class LocalServer;
 
     static void parse_sockets_from_system_server();

@@ -15,7 +15,10 @@
 namespace Core {
 
 TCPSocket::TCPSocket(int fd, Object* parent)
-    : Socket(Socket::Type::TCP, parent)
+    : IODevice(parent)
+    , SocketLikeIODevice(parent)
+    , FileLikeIODevice(parent)
+    , Socket(parent)
 {
     // NOTE: This constructor is used by TCPServer::accept(), so the socket is already connected.
     m_connected = true;
@@ -25,7 +28,10 @@ TCPSocket::TCPSocket(int fd, Object* parent)
 }
 
 TCPSocket::TCPSocket(Object* parent)
-    : Socket(Socket::Type::TCP, parent)
+    : IODevice(parent)
+    , SocketLikeIODevice(parent)
+    , FileLikeIODevice(parent)
+    , Socket(parent)
 {
 #ifdef SOCK_NONBLOCK
     int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);

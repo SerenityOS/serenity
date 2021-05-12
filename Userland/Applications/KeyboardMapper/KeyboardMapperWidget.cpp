@@ -201,7 +201,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& filename)
         return;
     }
 
-    bool result = file->write(file_content);
+    bool result = file->write(file_content.bytes());
     if (!result) {
         int error_number = errno;
         StringBuilder sb;

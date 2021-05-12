@@ -50,7 +50,7 @@ IRCClient::IRCClient(String server, int port)
     , m_config(Core::ConfigFile::get_for_app("IRCClient"))
 {
     struct passwd* user_pw = getpwuid(getuid());
-    m_socket = Core::TCPSocket::construct(this);
+    m_socket = Core::BufferedTCPSocket::construct(this);
     m_nickname = m_config->read_entry("User", "Nickname", String::formatted("{}_seren1ty", user_pw->pw_name));
 
     if (server.is_empty()) {

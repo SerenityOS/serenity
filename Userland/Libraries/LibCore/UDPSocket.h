@@ -19,4 +19,6 @@ private:
     explicit UDPSocket(Object* parent = nullptr);
 };
 
+using BufferedUDPSocket = BufferingIODevice<UDPSocket>;
+
 }

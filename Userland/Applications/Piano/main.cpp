@@ -64,7 +64,7 @@ int main(int argc, char** argv)
         Array<Sample, sample_count> buffer;
         while (!Core::EventLoop::current().was_exit_requested()) {
             track_manager.fill_buffer(buffer);
-            audio->write(reinterpret_cast<u8*>(buffer.data()), buffer_size);
+            audio->write({ reinterpret_cast<u8*>(buffer.data()), buffer_size });
             Core::EventLoop::wake();
 
             if (need_to_write_wav) {

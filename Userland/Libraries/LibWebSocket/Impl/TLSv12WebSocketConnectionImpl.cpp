@@ -26,7 +26,7 @@ void TLSv12WebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     VERIFY(on_ready_to_read);
     m_socket = TLS::TLSv12::construct(this);
 
-    m_notifier = Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read);
+    m_notifier = m_socket->make_notifier(Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
         on_ready_to_read();
     };
@@ -74,7 +74,9 @@ bool TLSv12WebSocketConnectionImpl::can_read()
 
 ByteBuffer TLSv12WebSocketConnectionImpl::read(int max_size)
 {
-    return m_socket->read(max_size);
+    auto buffer = ByteBuffer::create_uninitialized(max_size);
+    buffer.trim(m_socket->read(buffer.bytes()));
+    return buffer;
 }
 
 bool TLSv12WebSocketConnectionImpl::eof()

@@ -132,7 +132,7 @@ public:
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
             u32 length;
-            int nread = m_socket->read((u8*)&length, sizeof(length));
+            int nread = m_socket->read({ (u8*)&length, sizeof(length) });
             if (nread == 0) {
                 dbgln_if(EVENTLOOP_DEBUG, "RPC client disconnected");
                 shutdown();
@@ -164,8 +164,8 @@ public:
     {
         auto serialized = response.to_string();
         u32 length = serialized.length();
-        m_socket->write((const u8*)&length, sizeof(length));
-        m_socket->write(serialized);
+        m_socket->write({ (const u8*)&length, sizeof(length) });
+        m_socket->write(serialized.bytes());
     }
 
     void handle_request(const JsonObject& request)
