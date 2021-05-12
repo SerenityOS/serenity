@@ -236,6 +236,7 @@ set(KERNEL_SOURCES
     VM/Range.cpp
     VM/RangeAllocator.cpp
     VM/Region.cpp
+    VM/RingBuffer.cpp
     VM/ScatterGatherList.cpp
     VM/SharedInodeVMObject.cpp
     VM/Space.cpp
