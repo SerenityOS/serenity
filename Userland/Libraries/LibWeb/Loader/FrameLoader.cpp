@@ -113,7 +113,7 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        HTML::HTMLDocumentParser parser(document, data, document.encoding());
+        HTML::HTMLDocumentParser parser(document, data, document.encoding_or_default());
         parser.run(document.url());
         return true;
     }
@@ -251,12 +251,12 @@ void FrameLoader::resource_did_load()
     if (resource()->has_encoding()) {
         dbgln("This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
     } else {
-        dbgln("This content has MIME type '{}', encoding unknown (defaulting to 'utf-8')", resource()->mime_type());
+        dbgln("This content has MIME type '{}', encoding unknown", resource()->mime_type());
     }
 
     auto document = DOM::Document::create();
     document->set_url(url);
-    document->set_encoding(resource()->encoding().value_or("utf-8"));
+    document->set_encoding(resource()->encoding());
     document->set_content_type(resource()->mime_type());
 
     frame().set_document(document);
