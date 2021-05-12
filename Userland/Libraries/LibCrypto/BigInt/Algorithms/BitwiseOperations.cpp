@@ -220,7 +220,7 @@ ALWAYS_INLINE void UnsignedBigIntegerAlgorithms::shift_left_by_n_words(
 /**
  * Returns the word at a requested index in the result of a shift operation
  */
-ALWAYS_INLINE u32 UnsignedBigIntegerAlgorithms::shift_left_get_one_word(
+ALWAYS_INLINE UnsignedBigInteger::Word UnsignedBigIntegerAlgorithms::shift_left_get_one_word(
     UnsignedBigInteger const& number,
     size_t num_bits,
     size_t result_word_index)
