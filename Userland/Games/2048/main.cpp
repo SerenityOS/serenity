@@ -182,13 +182,11 @@ int main(int argc, char** argv)
         game = redo_stack.take_last();
         update();
     }));
-
     game_menu.add_separator();
-
     game_menu.add_action(GUI::Action::create("&Settings...", [&](auto&) {
         change_settings();
     }));
-
+    game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
