@@ -116,4 +116,15 @@ String LexicalPath::relative_path(String absolute_path, const String& prefix)
     return absolute_path.substring(prefix_length);
 }
 
+void LexicalPath::append(String const& component)
+{
+    StringBuilder builder;
+    builder.append(m_string);
+    builder.append('/');
+    builder.append(component);
+
+    m_string = builder.to_string();
+    canonicalize();
+}
+
 }

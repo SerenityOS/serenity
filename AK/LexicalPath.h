@@ -29,8 +29,20 @@ public:
 
     bool has_extension(const StringView&) const;
 
+    void append(String const& component);
+
     static String canonicalized_path(String);
     static String relative_path(String absolute_path, String const& prefix);
+
+    template<typename... S>
+    static LexicalPath join(String const& first, S&&... rest)
+    {
+        StringBuilder builder;
+        builder.append(first);
+        ((builder.append('/'), builder.append(forward<S>(rest))), ...);
+
+        return LexicalPath { builder.to_string() };
+    }
 
 private:
     void canonicalize();
