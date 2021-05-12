@@ -9,8 +9,8 @@
 namespace Kernel {
 namespace PCI {
 
-Device::Device(Address address)
-    : IRQHandler(get_interrupt_line(address))
+Device::Device(Address address, bool setup_irq)
+    : IRQHandler(get_interrupt_line(address), setup_irq)
     , m_pci_address(address)
 {
     // FIXME: Register PCI device somewhere...

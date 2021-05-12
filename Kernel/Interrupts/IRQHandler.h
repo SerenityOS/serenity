@@ -37,7 +37,7 @@ public:
 
 protected:
     void change_irq_number(u8 irq);
-    explicit IRQHandler(u8 irq);
+    explicit IRQHandler(u8 irq, bool setup_irq = true);
 
 private:
     bool m_shared_with_others { false };

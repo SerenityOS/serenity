@@ -11,11 +11,12 @@
 
 namespace Kernel {
 
-IRQHandler::IRQHandler(u8 irq)
+IRQHandler::IRQHandler(u8 irq, bool setup_irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
 {
-    disable_irq();
+    if (setup_irq)
+        disable_irq();
 }
 
 IRQHandler::~IRQHandler()
