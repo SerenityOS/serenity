@@ -113,6 +113,9 @@ void WindowServerConnection::window_left(i32 window_id)
 
 static Action* action_for_key_event(Window& window, KeyEvent const& event)
 {
+    if (event.key() == KeyCode::Key_Invalid)
+        return nullptr;
+
     dbgln_if(KEYBOARD_SHORTCUTS_DEBUG, "Looking up action for {}", event.to_string());
 
     for (auto* widget = window.focused_widget(); widget; widget = widget->parent_widget()) {
