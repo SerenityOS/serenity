@@ -153,9 +153,15 @@ int main(int argc, char** argv)
     auto default_favicon = Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png");
     VERIFY(default_favicon);
 
+    auto set_window_title_for_tab = [&window](auto& tab) {
+        auto& title = tab.title();
+        auto url = tab.url();
+        window->set_title(String::formatted("{} - Browser", title.is_empty() ? url.to_string() : title));
+    };
+
     tab_widget.on_change = [&](auto& active_widget) {
         auto& tab = static_cast<Browser::Tab&>(active_widget);
-        window->set_title(String::formatted("{} - Browser", tab.title()));
+        set_window_title_for_tab(tab);
         tab.did_become_active();
     };
 
@@ -182,7 +188,7 @@ int main(int argc, char** argv)
         new_tab.on_title_change = [&](auto title) {
             tab_widget.set_tab_title(new_tab, title);
             if (tab_widget.active_widget() == &new_tab)
-                window->set_title(String::formatted("{} - Browser", title));
+                set_window_title_for_tab(new_tab);
         };
 
         new_tab.on_favicon_change = [&](auto& bitmap) {
