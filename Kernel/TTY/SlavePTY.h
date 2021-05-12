@@ -26,7 +26,7 @@ public:
 
 private:
     // ^TTY
-    virtual String tty_name() const override;
+    virtual String const& tty_name() const override;
     virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
     virtual void echo(u8) override;
 
