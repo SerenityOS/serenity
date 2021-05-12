@@ -20,7 +20,6 @@ UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBi
     UnsignedBigInteger temp_2;
     UnsignedBigInteger temp_3;
     UnsignedBigInteger temp_4;
-    UnsignedBigInteger temp_plus;
     UnsignedBigInteger temp_minus;
     UnsignedBigInteger temp_quotient;
     UnsignedBigInteger temp_d;
@@ -29,7 +28,7 @@ UnsignedBigInteger ModularInverse(const UnsignedBigInteger& a_, const UnsignedBi
     UnsignedBigInteger temp_x;
     UnsignedBigInteger result;
 
-    UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(a_, b, temp_1, temp_2, temp_3, temp_4, temp_plus, temp_minus, temp_quotient, temp_d, temp_u, temp_v, temp_x, result);
+    UnsignedBigIntegerAlgorithms::modular_inverse_without_allocation(a_, b, temp_1, temp_2, temp_3, temp_4, temp_minus, temp_quotient, temp_d, temp_u, temp_v, temp_x, result);
     return result;
 }
 
@@ -93,7 +92,7 @@ UnsignedBigInteger LCM(const UnsignedBigInteger& a, const UnsignedBigInteger& b)
 
     // output = (a / gcd_output) * b
     UnsignedBigIntegerAlgorithms::divide_without_allocation(a, gcd_output, temp_1, temp_2, temp_3, temp_4, temp_quotient, temp_remainder);
-    UnsignedBigIntegerAlgorithms::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, temp_4, output);
+    UnsignedBigIntegerAlgorithms::multiply_without_allocation(temp_quotient, b, temp_1, temp_2, temp_3, output);
 
     dbgln_if(NT_DEBUG, "quot: {} rem: {} out: {}", temp_quotient, temp_remainder, output);
 
