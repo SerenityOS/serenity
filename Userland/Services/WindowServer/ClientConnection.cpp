@@ -839,7 +839,7 @@ void ClientConnection::set_unresponsive(bool unresponsive)
     m_unresponsive = unresponsive;
     for (auto& it : m_windows) {
         auto& window = *it.value;
-        window.invalidate();
+        window.invalidate(true, true);
         if (unresponsive) {
             window.set_cursor_override(WindowManager::the().wait_cursor());
         } else {
