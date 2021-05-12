@@ -79,9 +79,9 @@ public:
         s_the = this;
     }
 
-    virtual ~TestRunner() = default;
+    virtual ~TestRunner() { s_the = nullptr; };
 
-    void run();
+    Test::Counts run();
 
     const Test::Counts& counts() const { return m_counts; }
 
@@ -197,7 +197,7 @@ Vector<String> TestRunner::get_test_paths() const
     return paths;
 }
 
-void TestRunner::run()
+Test::Counts TestRunner::run()
 {
     size_t progress_counter = 0;
     auto test_paths = get_test_paths();
@@ -212,6 +212,8 @@ void TestRunner::run()
         warn("\033]9;-1;\033\\");
 
     print_test_results();
+
+    return m_counts;
 }
 
 static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
@@ -739,12 +741,13 @@ int main(int argc, char** argv)
 
     vm = JS::VM::create();
 
+    Test::Counts result_counts;
     if (test262_parser_tests)
-        Test262ParserTestRunner(test_root, print_times, print_progress).run();
+        result_counts = Test262ParserTestRunner(test_root, print_times, print_progress).run();
     else
-        TestRunner(test_root, print_times, print_progress).run();
+        result_counts = TestRunner(test_root, print_times, print_progress).run();
 
     vm = nullptr;
 
-    return TestRunner::the()->counts().tests_failed > 0 ? 1 : 0;
+    return result_counts.tests_failed > 0 ? 1 : 0;
 }
