@@ -103,7 +103,7 @@ private:
     void create_open_files_view(GUI::Widget& parent);
     void create_toolbar(GUI::Widget& parent);
     void create_action_tab(GUI::Widget& parent);
-    void create_app_menubar(GUI::Menubar&);
+    void create_file_menubar(GUI::Menubar&);
     void create_project_menubar(GUI::Menubar&);
     void create_edit_menubar(GUI::Menubar&);
     void create_build_menubar(GUI::Menubar&);
