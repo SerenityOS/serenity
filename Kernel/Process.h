@@ -251,7 +251,9 @@ public:
     KResultOr<int> sys$beep();
     KResultOr<int> sys$get_process_name(Userspace<char*> buffer, size_t buffer_size);
     KResultOr<int> sys$set_process_name(Userspace<const char*> user_name, size_t user_name_length);
-    KResultOr<int> sys$watch_file(Userspace<const char*> path, size_t path_length);
+    KResultOr<int> sys$create_inode_watcher(u32 flags);
+    KResultOr<int> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
+    KResultOr<int> sys$inode_watcher_remove_watch(int fd, int wd);
     KResultOr<int> sys$dbgputch(u8);
     KResultOr<int> sys$dbgputstr(Userspace<const u8*>, int length);
     KResultOr<int> sys$dump_backtrace();

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -1033,6 +1034,8 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
         nwritten += num_bytes_to_copy;
     }
 
+    did_modify_contents();
+
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes(): After write, i_size={}, i_blocks={} ({} blocks in list)", identifier(), size(), m_raw_inode.i_blocks, m_block_list.size());
     return nwritten;
 }
@@ -1208,7 +1211,7 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
         return result;
 
     m_lookup_cache.set(name, child.index());
-    did_add_child(child.identifier());
+    did_add_child(child.identifier(), name);
     return KSuccess;
 }
 
@@ -1245,7 +1248,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     if (result.is_error())
         return result;
 
-    did_remove_child(child_id);
+    did_remove_child(child_id, name);
     return KSuccess;
 }
 
@@ -1674,10 +1677,15 @@ KResult Ext2FSInode::decrement_link_count()
     if (fs().is_readonly())
         return EROFS;
     VERIFY(m_raw_inode.i_links_count);
+
     --m_raw_inode.i_links_count;
+    set_metadata_dirty(true);
+    if (m_raw_inode.i_links_count == 0)
+        did_delete_self();
+
     if (ref_count() == 1 && m_raw_inode.i_links_count == 0)
         fs().uncache_inode(index());
-    set_metadata_dirty(true);
+
     return KSuccess;
 }
 
