@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     auto& file_menu = menubar->add_menu("&File");
 
-    auto& playlist_menu = menubar->add_menu("Playlist");
+    auto& playlist_menu = menubar->add_menu("Play&list");
 
     String path = argv[1];
     // start in advanced view by default
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         app->quit();
     }));
 
-    auto& playback_menu = menubar->add_menu("Playback");
+    auto& playback_menu = menubar->add_menu("&Playback");
 
     auto loop = GUI::Action::create_checkable("Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
         player->set_looping_file(action.is_checked());
@@ -109,7 +109,7 @@ int main(int argc, char** argv)
 
     playback_menu.add_action(move(loop));
 
-    auto& visualization_menu = menubar->add_menu("Visualization");
+    auto& visualization_menu = menubar->add_menu("&Visualization");
     Vector<NonnullRefPtr<GUI::Action>> visualization_checkmarks;
     GUI::Action* checked_vis = nullptr;
     auto uncheck_all_but = [&](GUI::Action& one) {for (auto& a : visualization_checkmarks) if (a != &one) a->set_checked(false); };
@@ -154,7 +154,7 @@ int main(int argc, char** argv)
     visualization_menu.add_action(none);
     visualization_checkmarks.append(none);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Sound Player", app_icon, window));
 
     window->set_menubar(move(menubar));

@@ -125,21 +125,21 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& difficulty_menu = menubar->add_menu("Difficulty");
-    difficulty_menu.add_action(GUI::Action::create("Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
+    auto& difficulty_menu = menubar->add_menu("&Difficulty");
+    difficulty_menu.add_action(GUI::Action::create("&Beginner", { Mod_Ctrl, Key_B }, [&](auto&) {
         field.set_field_size(9, 9, 10);
     }));
-    difficulty_menu.add_action(GUI::Action::create("Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
+    difficulty_menu.add_action(GUI::Action::create("&Intermediate", { Mod_Ctrl, Key_I }, [&](auto&) {
         field.set_field_size(16, 16, 40);
     }));
-    difficulty_menu.add_action(GUI::Action::create("Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
+    difficulty_menu.add_action(GUI::Action::create("&Expert", { Mod_Ctrl, Key_E }, [&](auto&) {
         field.set_field_size(16, 30, 99);
     }));
-    difficulty_menu.add_action(GUI::Action::create("Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
+    difficulty_menu.add_action(GUI::Action::create("&Madwoman", { Mod_Ctrl, Key_M }, [&](auto&) {
         field.set_field_size(32, 60, 350);
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Minesweeper", app_icon, window));
 
     window->set_menubar(move(menubar));

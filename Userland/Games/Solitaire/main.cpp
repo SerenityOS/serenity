@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Solitaire", app_icon, window));
 
     window->set_resizable(false);

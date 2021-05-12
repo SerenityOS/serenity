@@ -93,7 +93,7 @@ int main(int argc, char** argv)
     file_menu.add_separator();
     file_menu.add_action(quit_action);
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Keyboard Mapper", app_icon, window));
 
     window->set_menubar(move(menubar));
