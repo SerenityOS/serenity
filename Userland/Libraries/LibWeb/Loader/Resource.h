@@ -52,7 +52,8 @@ public:
     void register_client(Badge<ResourceClient>, ResourceClient&);
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 
-    const String& encoding() const { return m_encoding; }
+    bool has_encoding() const { return m_encoding.has_value(); }
+    const Optional<String>& encoding() const { return m_encoding; }
     const String& mime_type() const { return m_mime_type; }
 
     void for_each_client(Function<void(ResourceClient&)>);
@@ -70,7 +71,8 @@ private:
     bool m_loaded { false };
     bool m_failed { false };
     String m_error;
-    String m_encoding;
+    Optional<String> m_encoding;
+
     String m_mime_type;
     HashMap<String, String, CaseInsensitiveStringTraits> m_response_headers;
     Optional<u32> m_status_code;

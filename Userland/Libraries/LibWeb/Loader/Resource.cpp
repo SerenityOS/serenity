@@ -85,14 +85,12 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
     }
 
+    m_encoding = {};
     if (content_type.has_value()) {
         auto encoding = encoding_from_content_type(content_type.value());
         if (encoding.has_value()) {
             dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
             m_encoding = encoding.value();
-        } else {
-            // FIXME: This doesn't seem nice.
-            m_encoding = "utf-8";
         }
     }
 

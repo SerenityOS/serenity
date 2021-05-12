@@ -248,11 +248,15 @@ void FrameLoader::resource_did_load()
     }
     m_redirects_count = 0;
 
-    dbgln("I believe this content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding());
+    if (resource()->has_encoding()) {
+        dbgln("This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
+    } else {
+        dbgln("This content has MIME type '{}', encoding unknown (defaulting to 'utf-8')", resource()->mime_type());
+    }
 
     auto document = DOM::Document::create();
     document->set_url(url);
-    document->set_encoding(resource()->encoding());
+    document->set_encoding(resource()->encoding().value_or("utf-8"));
     document->set_content_type(resource()->mime_type());
 
     frame().set_document(document);
