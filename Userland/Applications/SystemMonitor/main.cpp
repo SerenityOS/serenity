@@ -418,7 +418,7 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
 {
     auto window = GUI::Window::construct();
     window->resize(480, 360);
-    window->set_title(String::formatted("PID {} - SystemMonitor", pid));
+    window->set_title(String::formatted("PID {} - System Monitor", pid));
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
