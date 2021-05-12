@@ -144,7 +144,7 @@ private:
     {
         if (m_proc_mem) {
             // Seeking to the beginning causes a data refresh!
-            if (!m_proc_mem->seek(0, Core::File::SeekMode::SetPosition))
+            if (!m_proc_mem->seek(0, Core::SeekMode::SetPosition))
                 return false;
         } else {
             auto proc_memstat = Core::File::construct("/proc/memstat");
