@@ -31,7 +31,7 @@ SlavePTY::~SlavePTY()
     DevPtsFS::unregister_slave_pty(*this);
 }
 
-String SlavePTY::tty_name() const
+String const& SlavePTY::tty_name() const
 {
     return m_tty_name;
 }
