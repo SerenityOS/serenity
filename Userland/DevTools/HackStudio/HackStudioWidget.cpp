@@ -968,7 +968,7 @@ void HackStudioWidget::create_view_menubar(GUI::Menubar& menubar)
 
 void HackStudioWidget::create_help_menubar(GUI::Menubar& menubar)
 {
-    auto& help_menu = menubar.add_menu("Help");
+    auto& help_menu = menubar.add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Hack Studio", GUI::Icon::default_icon("app-hack-studio"), window()));
 }
 

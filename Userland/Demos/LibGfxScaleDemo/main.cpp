@@ -127,7 +127,7 @@ int main(int argc, char** argv)
     window->resize(WIDTH * 2, HEIGHT * 3);
 
     auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("File");
+    auto& file_menu = menubar->add_menu("&File");
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     window->set_menubar(move(menubar));
 

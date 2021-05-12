@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
         return GUI::Window::CloseRequestDecision::StayOpen;
     };
 
-    auto& edit_menu = menubar->add_menu("Edit");
+    auto& edit_menu = menubar->add_menu("&Edit");
 
     auto clipboard_action = [&](bool is_cut) {
         /// text/x-spreadsheet-data:
@@ -233,7 +233,7 @@ int main(int argc, char* argv[])
     },
         window));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
 
     help_menu.add_action(GUI::Action::create(
         "Functions Help", [&](auto&) {

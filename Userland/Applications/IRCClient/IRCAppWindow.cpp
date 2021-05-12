@@ -243,7 +243,7 @@ void IRCAppWindow::setup_menus()
         GUI::Application::the()->quit();
     }));
 
-    auto& server_menu = menubar->add_menu("Server");
+    auto& server_menu = menubar->add_menu("&Server");
     server_menu.add_action(*m_change_nick_action);
     server_menu.add_separator();
     server_menu.add_action(*m_join_action);

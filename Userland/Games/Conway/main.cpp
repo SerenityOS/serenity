@@ -51,9 +51,9 @@ int main(int argc, char** argv)
 
     auto menubar = GUI::Menubar::construct();
 
-    auto& game_menu = menubar->add_menu("Game");
+    auto& game_menu = menubar->add_menu("&Game");
 
-    game_menu.add_action(GUI::Action::create("Reset", { Mod_None, Key_F2 }, [&](auto&) {
+    game_menu.add_action(GUI::Action::create("&Reset", { Mod_None, Key_F2 }, [&](auto&) {
         game.reset();
     }));
     game_menu.add_separator();
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Conway", app_icon, window));
 
     window->set_menubar(move(menubar));

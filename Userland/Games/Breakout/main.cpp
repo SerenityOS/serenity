@@ -60,7 +60,7 @@ int main(int argc, char** argv)
         GUI::Application::the()->quit();
     }));
 
-    auto& help_menu = menubar->add_menu("Help");
+    auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Breakout", app_icon, window));
 
     window->set_menubar(move(menubar));
