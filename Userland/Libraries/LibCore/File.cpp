@@ -63,7 +63,7 @@ bool File::open_impl(OpenMode mode, mode_t permissions)
 {
     VERIFY(!m_filename.is_null());
     int flags = 0;
-    if (has_flag(mode, OpenMode::ReadWrite)) {
+    if (has_flag(mode, OpenMode::ReadOnly) && has_flag(mode, OpenMode::WriteOnly)) {
         flags |= O_RDWR | O_CREAT;
     } else if (has_flag(mode, OpenMode::ReadOnly)) {
         flags |= O_RDONLY;
