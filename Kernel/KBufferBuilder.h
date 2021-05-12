@@ -33,7 +33,9 @@ public:
     {
         // FIXME: This is really not the way to go about it, but vformat expects a
         //        StringBuilder. Why does this class exist anyways?
-        append(String::formatted(fmtstr.view(), parameters...));
+        StringBuilder builder;
+        vformat(builder, fmtstr.view(), AK::VariadicFormatParams { parameters... });
+        append_bytes(builder.string_view().bytes());
     }
 
     bool flush();
