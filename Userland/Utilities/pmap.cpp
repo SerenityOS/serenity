@@ -36,7 +36,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     auto file = Core::File::construct(String::formatted("/proc/{}/vm", pid));
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", file->error_string());
         return 1;
     }

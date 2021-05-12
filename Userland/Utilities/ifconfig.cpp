@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     if (!value_ipv4 && !value_adapter && !value_gateway && !value_mask) {
 
         auto file = Core::File::construct("/proc/net/adapters");
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             fprintf(stderr, "Error: %s\n", file->error_string());
             return 1;
         }

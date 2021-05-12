@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
     for (auto path : paths) {
         auto file = Core::File::construct(path);
-        if (!file->open(Core::File::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             perror(path);
             all_ok = false;
             continue;

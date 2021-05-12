@@ -26,7 +26,7 @@ Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_a
         }
     } else {
         proc_all_file = Core::File::construct("/proc/all");
-        if (!proc_all_file->open(Core::IODevice::ReadOnly)) {
+        if (!proc_all_file->open(Core::OpenMode::ReadOnly)) {
             fprintf(stderr, "ProcessStatisticsReader: Failed to open /proc/all: %s\n", proc_all_file->error_string());
             return {};
         }

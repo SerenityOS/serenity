@@ -242,7 +242,7 @@ void HexEditorWidget::update_title()
 void HexEditorWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return;
     }

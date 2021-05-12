@@ -392,7 +392,7 @@ Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::ins
 void DebugSession::update_loaded_libs()
 {
     auto file = Core::File::construct(String::formatted("/proc/{}/vm", m_debuggee_pid));
-    bool rc = file->open(Core::IODevice::ReadOnly);
+    bool rc = file->open(Core::OpenMode::ReadOnly);
     VERIFY(rc);
 
     auto file_contents = file->read_all();

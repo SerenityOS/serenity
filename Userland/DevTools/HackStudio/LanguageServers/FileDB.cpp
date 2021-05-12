@@ -73,7 +73,7 @@ String FileDB::to_absolute_path(const String& filename) const
 
 RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(const String& filename) const
 {
-    auto file = Core::File::open(to_absolute_path(filename), Core::IODevice::ReadOnly);
+    auto file = Core::File::open(to_absolute_path(filename), Core::OpenMode::ReadOnly);
     if (file.is_error()) {
         dbgln("failed to create document for {} from filesystem", filename);
         return nullptr;
@@ -84,7 +84,7 @@ RefPtr<GUI::TextDocument> FileDB::create_from_filesystem(const String& filename)
 RefPtr<GUI::TextDocument> FileDB::create_from_fd(int fd) const
 {
     auto file = Core::File::construct();
-    if (!file->open(fd, Core::IODevice::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
+    if (!file->open(fd, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes)) {
         errno = file->error();
         perror("open");
         dbgln("Failed to open project file");

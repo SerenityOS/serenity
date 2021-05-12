@@ -103,7 +103,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     }
 
     auto file = Core::File::construct(real_path);
-    if (!file->open(Core::File::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         send_error_response(404, "Not found!", request);
         return;
     }

@@ -86,7 +86,7 @@ WelcomeWidget::~WelcomeWidget()
 void WelcomeWidget::open_and_parse_tips_file()
 {
     auto file = Core::File::construct("/home/anon/Documents/tips.txt");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         m_tip_label->set_text("~/Documents/tips.txt has gone missing!");
         return;
     }
@@ -108,7 +108,7 @@ void WelcomeWidget::open_and_parse_tips_file()
 void WelcomeWidget::open_and_parse_readme_file()
 {
     auto file = Core::File::construct("/home/anon/README.md");
-    if (!file->open(Core::IODevice::ReadOnly))
+    if (!file->open(Core::OpenMode::ReadOnly))
         return;
 
     auto document = Markdown::Document::parse(file->read_all());

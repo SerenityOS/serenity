@@ -50,7 +50,7 @@ static void sigchld_handler(int)
 static void parse_boot_mode()
 {
     auto f = Core::File::construct("/proc/cmdline");
-    if (!f->open(Core::IODevice::ReadOnly)) {
+    if (!f->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to read command line: {}", f->error_string());
         return;
     }

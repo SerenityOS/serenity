@@ -631,7 +631,7 @@ void MainWidget::update_title()
 bool MainWidget::open_file(const String& path)
 {
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly) && file->error() != ENOENT) {
+    if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
         GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", path, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
         return false;
     }

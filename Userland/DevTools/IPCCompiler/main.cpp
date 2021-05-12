@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     }
 
     auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         warnln("Error: Cannot open {}: {}", argv[1], file->error_string());
         return 1;
     }

@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     parser.add_positional_argument(filename, "File name to parse", "file");
     parser.parse(argc, argv);
 
-    auto result = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+    auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (result.is_error()) {
         warnln("Failed to open {}: {}", filename, result.error());
         return 1;

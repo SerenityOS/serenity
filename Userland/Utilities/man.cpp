@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     auto file = Core::File::construct();
     file->set_filename(make_path(section));
 
-    if (!file->open(Core::IODevice::OpenMode::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         perror("Failed to open man page file");
         exit(1);
     }

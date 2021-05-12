@@ -24,7 +24,7 @@ static bool unpack_zip_member(Archive::ZipMember zip_member)
         return true;
     }
     auto new_file = Core::File::construct(zip_member.name);
-    if (!new_file->open(Core::IODevice::WriteOnly)) {
+    if (!new_file->open(Core::OpenMode::WriteOnly)) {
         warnln("Can't write file {}: {}", zip_member.name, new_file->error_string());
         return false;
     }

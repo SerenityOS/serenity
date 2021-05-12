@@ -169,7 +169,7 @@ void DHCPv4Client::try_discover_deferred_ifs()
 Result<DHCPv4Client::Interfaces, String> DHCPv4Client::get_discoverable_interfaces()
 {
     auto file = Core::File::construct("/proc/net/adapters");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Error: Failed to open /proc/net/adapters: {}", file->error_string());
         return String { file->error_string() };
     }

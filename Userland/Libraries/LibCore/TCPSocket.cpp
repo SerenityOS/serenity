@@ -20,7 +20,7 @@ TCPSocket::TCPSocket(int fd, Object* parent)
     // NOTE: This constructor is used by TCPServer::accept(), so the socket is already connected.
     m_connected = true;
     set_fd(fd);
-    set_mode(IODevice::ReadWrite);
+    set_mode(OpenMode::ReadWrite);
     set_error(0);
 }
 
@@ -38,7 +38,7 @@ TCPSocket::TCPSocket(Object* parent)
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(IODevice::ReadWrite);
+        set_mode(OpenMode::ReadWrite);
         set_error(0);
     }
 }

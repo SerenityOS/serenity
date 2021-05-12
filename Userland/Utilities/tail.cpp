@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     args_parser.parse(argc, argv);
 
     auto f = Core::File::construct(file);
-    if (!f->open(Core::IODevice::ReadOnly)) {
+    if (!f->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Error opening file %s: %s\n", file, strerror(errno));
         exit(1);
     }

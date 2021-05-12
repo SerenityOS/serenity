@@ -48,7 +48,7 @@ int main(int argc, char** argv)
         auto file = Core::File::standard_input();
 
         if (archive_file) {
-            auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::ReadOnly);
+            auto maybe_file = Core::File::open(archive_file, Core::OpenMode::ReadOnly);
             if (maybe_file.is_error()) {
                 warnln("Core::File::open: {}", maybe_file.error());
                 return 1;
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
         auto file = Core::File::standard_output();
 
         if (archive_file) {
-            auto maybe_file = Core::File::open(archive_file, Core::IODevice::OpenMode::WriteOnly);
+            auto maybe_file = Core::File::open(archive_file, Core::OpenMode::WriteOnly);
             if (maybe_file.is_error()) {
                 warnln("Core::File::open: {}", maybe_file.error());
                 return 1;
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
 
         auto add_file = [&](String path) {
             auto file = Core::File::construct(path);
-            if (!file->open(Core::IODevice::ReadOnly)) {
+            if (!file->open(Core::OpenMode::ReadOnly)) {
                 warnln("Failed to open {}: {}", path, file->error_string());
                 return;
             }

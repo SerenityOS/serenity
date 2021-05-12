@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 
     dbgln("Updating utmp from UID={} GID={} EGID={} PID={}", getuid(), getgid(), getegid(), pid);
 
-    auto file_or_error = Core::File::open("/var/run/utmp", Core::IODevice::ReadWrite);
+    auto file_or_error = Core::File::open("/var/run/utmp", Core::OpenMode::ReadWrite);
     if (file_or_error.is_error()) {
         dbgln("Error: {}", file_or_error.error());
         return 1;

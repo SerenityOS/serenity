@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     bool fail = false;
     for (auto& path : paths) {
         auto file = Core::File::construct((StringView(path) == "-") ? "/dev/stdin" : path);
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("{}: {}: {}", argv[0], path, file->error_string());
             fail = true;
             continue;

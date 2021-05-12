@@ -114,7 +114,7 @@ ssize_t MulticastDNS::emit_packet(const DNSPacket& packet, const sockaddr_in* de
 Vector<IPv4Address> MulticastDNS::local_addresses() const
 {
     auto file = Core::File::construct("/proc/net/adapters");
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Failed to open /proc/net/adapters: {}", file->error_string());
         return {};
     }

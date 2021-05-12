@@ -23,7 +23,7 @@ Mixer::Mixer()
           },
           "AudioServer[mixer]"))
 {
-    if (!m_device->open(Core::IODevice::WriteOnly)) {
+    if (!m_device->open(Core::OpenMode::WriteOnly)) {
         dbgln("Can't open audio device: {}", m_device->error_string());
         return;
     }

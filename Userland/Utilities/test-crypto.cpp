@@ -135,7 +135,7 @@ static int run(Function<void(const char*, size_t)> fn)
             puts("File does not exist");
             return 1;
         }
-        auto file = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+        auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
         if (file.is_error()) {
             printf("That's a weird file man...\n");
             return 1;

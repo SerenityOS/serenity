@@ -63,7 +63,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
     {
 
         auto stack_path = String::formatted("/proc/{}/stacks/{}", pid, tid);
-        auto file_or_error = Core::File::open(stack_path, Core::IODevice::ReadOnly);
+        auto file_or_error = Core::File::open(stack_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", stack_path, file_or_error.error());
             return {};
@@ -83,7 +83,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
 
     {
         auto vm_path = String::formatted("/proc/{}/vm", pid);
-        auto file_or_error = Core::File::open(vm_path, Core::IODevice::ReadOnly);
+        auto file_or_error = Core::File::open(vm_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", vm_path, file_or_error.error());
             return {};

@@ -52,7 +52,7 @@ bool Workbook::set_filename(const String& filename)
 
 Result<bool, String> Workbook::load(const StringView& filename)
 {
-    auto file_or_error = Core::File::open(filename, Core::IODevice::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         StringBuilder sb;
         sb.append("Failed to open ");
@@ -81,7 +81,7 @@ Result<bool, String> Workbook::save(const StringView& filename)
 {
     auto mime = Core::guess_mime_type_based_on_filename(filename);
     auto file = Core::File::construct(filename);
-    file->open(Core::IODevice::WriteOnly);
+    file->open(Core::OpenMode::WriteOnly);
     if (!file->is_open()) {
         StringBuilder sb;
         sb.append("Failed to open ");

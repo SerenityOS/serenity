@@ -45,7 +45,7 @@ int main()
 
     unveil(nullptr, nullptr);
 
-    auto file_or_error = Core::File::open("/var/run/utmp", Core::IODevice::ReadOnly);
+    auto file_or_error = Core::File::open("/var/run/utmp", Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         warnln("Error: {}", file_or_error.error());
         return 1;

@@ -127,12 +127,12 @@ int perform_copy(const String& source, const String& destination)
             continue;
         }
         VERIFY(item.type == WorkItem::Type::CopyFile);
-        auto source_file_or_error = Core::File::open(item.source, Core::File::ReadOnly);
+        auto source_file_or_error = Core::File::open(item.source, Core::OpenMode::ReadOnly);
         if (source_file_or_error.is_error()) {
             report_warning(String::formatted("Failed to open {} for reading: {}", item.source, source_file_or_error.error()));
             return 1;
         }
-        auto destination_file_or_error = Core::File::open(item.destination, (Core::IODevice::OpenMode)(Core::File::WriteOnly | Core::File::Truncate));
+        auto destination_file_or_error = Core::File::open(item.destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
         if (destination_file_or_error.is_error()) {
             report_warning(String::formatted("Failed to open {} for write: {}", item.destination, destination_file_or_error.error()));
             return 1;

@@ -43,7 +43,7 @@ static Options parse_options(int argc, char* argv[])
         auto c_stdin = Core::File::construct();
         bool success = c_stdin->open(
             STDIN_FILENO,
-            Core::IODevice::OpenMode::ReadOnly,
+            Core::OpenMode::ReadOnly,
             Core::File::ShouldCloseFileDescriptor::No);
         VERIFY(success);
         auto buffer = c_stdin->read_all();

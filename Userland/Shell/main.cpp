@@ -105,7 +105,7 @@ int main(int argc, char** argv)
     parser.parse(argc, argv);
 
     if (format) {
-        auto file = Core::File::open(format, Core::IODevice::ReadOnly);
+        auto file = Core::File::open(format, Core::OpenMode::ReadOnly);
         if (file.is_error()) {
             warnln("Error: {}", file.error());
             return 1;

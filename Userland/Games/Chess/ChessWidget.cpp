@@ -483,7 +483,7 @@ String ChessWidget::get_fen() const
 
 bool ChessWidget::import_pgn(const StringView& import_path)
 {
-    auto file_or_error = Core::File::open(import_path, Core::File::OpenMode::ReadOnly);
+    auto file_or_error = Core::File::open(import_path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         warnln("Couldn't open '{}': {}", import_path, file_or_error.error());
         return false;
@@ -588,7 +588,7 @@ bool ChessWidget::import_pgn(const StringView& import_path)
 
 bool ChessWidget::export_pgn(const StringView& export_path) const
 {
-    auto file_or_error = Core::File::open(export_path, Core::File::WriteOnly);
+    auto file_or_error = Core::File::open(export_path, Core::OpenMode::WriteOnly);
     if (file_or_error.is_error()) {
         warnln("Couldn't open '{}': {}", export_path, file_or_error.error());
         return false;

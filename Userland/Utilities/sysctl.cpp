@@ -25,7 +25,7 @@ static String read_var(const String& name)
     builder.append(name);
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
-    if (!f->open(Core::IODevice::ReadOnly)) {
+    if (!f->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "open: %s\n", f->error_string());
         exit(1);
     }
@@ -44,7 +44,7 @@ static void write_var(const String& name, const String& value)
     builder.append(name);
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
-    if (!f->open(Core::IODevice::WriteOnly)) {
+    if (!f->open(Core::OpenMode::WriteOnly)) {
         fprintf(stderr, "open: %s\n", f->error_string());
         exit(1);
     }

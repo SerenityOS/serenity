@@ -54,10 +54,10 @@ int main(int argc, char** argv)
 
     for (auto const& path : paths) {
         if (path == "-") {
-            success = file->open(STDIN_FILENO, Core::IODevice::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
+            success = file->open(STDIN_FILENO, Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::No);
         } else {
             file->set_filename(path);
-            success = file->open(Core::IODevice::OpenMode::ReadOnly);
+            success = file->open(Core::OpenMode::ReadOnly);
         }
         if (!success) {
             warnln("{}: {}: {}", argv[0], path, file->error_string());

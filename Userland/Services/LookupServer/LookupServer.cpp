@@ -79,7 +79,7 @@ void LookupServer::load_etc_hosts()
     };
 
     auto file = Core::File::construct("/etc/hosts");
-    if (!file->open(Core::IODevice::ReadOnly))
+    if (!file->open(Core::OpenMode::ReadOnly))
         return;
     while (!file->eof()) {
         auto line = file->read_line(1024);

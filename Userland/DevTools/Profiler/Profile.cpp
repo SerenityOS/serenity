@@ -192,7 +192,7 @@ void Profile::rebuild_tree()
 Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
 {
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly))
+    if (!file->open(Core::OpenMode::ReadOnly))
         return String::formatted("Unable to open {}, error: {}", path, file->error_string());
 
     auto json = JsonValue::from_string(file->read_all());

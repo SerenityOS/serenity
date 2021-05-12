@@ -13,7 +13,7 @@ namespace GUI {
 void JsonArrayModel::update()
 {
     auto file = Core::File::construct(m_json_path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         dbgln("Unable to open {}", file->filename());
         m_array.clear();
         did_update();
@@ -32,7 +32,7 @@ void JsonArrayModel::update()
 bool JsonArrayModel::store()
 {
     auto file = Core::File::construct(m_json_path);
-    if (!file->open(Core::IODevice::WriteOnly)) {
+    if (!file->open(Core::OpenMode::WriteOnly)) {
         dbgln("Unable to open {}", file->filename());
         return false;
     }

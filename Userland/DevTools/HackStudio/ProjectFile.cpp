@@ -55,7 +55,7 @@ void ProjectFile::create_document_if_needed() const
         return;
 
     m_document = CodeDocument::create(m_name);
-    auto file_or_error = Core::File::open(m_name, Core::File::ReadOnly);
+    auto file_or_error = Core::File::open(m_name, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
         warnln("Couldn't open '{}': {}", m_name, file_or_error.error());
         // This is okay though, we'll just go with an empty document and create the file when saving.

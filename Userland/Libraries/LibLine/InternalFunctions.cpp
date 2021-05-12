@@ -569,7 +569,7 @@ void Editor::edit_in_external_editor()
     }
 
     {
-        auto file_or_error = Core::File::open(file_path, Core::IODevice::OpenMode::ReadOnly);
+        auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error())
             return;
 

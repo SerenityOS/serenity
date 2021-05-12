@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/EnumBits.h>
 #include <AK/Forward.h>
 #include <LibCore/Object.h>
 
@@ -33,24 +34,26 @@ private:
     String m_buffer;
 };
 
+enum class OpenMode : unsigned {
+    NotOpen = 0,
+    ReadOnly = 1,
+    WriteOnly = 2,
+    ReadWrite = 3,
+    Append = 4,
+    Truncate = 8,
+    MustBeNew = 16,
+};
+
+AK_ENUM_BITWISE_OPERATORS(OpenMode)
+
 class IODevice : public Object {
     C_OBJECT_ABSTRACT(IODevice)
 public:
-    enum OpenMode {
-        NotOpen = 0,
-        ReadOnly = 1,
-        WriteOnly = 2,
-        ReadWrite = 3,
-        Append = 4,
-        Truncate = 8,
-        MustBeNew = 16,
-    };
-
     virtual ~IODevice() override;
 
     int fd() const { return m_fd; }
-    unsigned mode() const { return m_mode; }
-    bool is_open() const { return m_mode != NotOpen; }
+    OpenMode mode() const { return m_mode; }
+    bool is_open() const { return m_mode != OpenMode::NotOpen; }
     bool eof() const { return m_eof; }
 
     int error() const { return m_error; }
@@ -81,7 +84,7 @@ public:
 
     bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
-    virtual bool open(IODevice::OpenMode) = 0;
+    virtual bool open(OpenMode) = 0;
     virtual bool close();
 
     LineIterator line_begin() & { return LineIterator(*this); }
@@ -102,7 +105,7 @@ private:
     bool can_read_from_fd() const;
 
     int m_fd { -1 };
-    OpenMode m_mode { NotOpen };
+    OpenMode m_mode { OpenMode::NotOpen };
     mutable int m_error { 0 };
     mutable bool m_eof { false };
     mutable Vector<u8> m_buffered_data;

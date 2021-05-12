@@ -74,7 +74,7 @@ static void fill_mounts(Vector<MountInfo>& output)
 {
     // Output info about currently mounted filesystems.
     auto df = Core::File::construct("/proc/df");
-    if (!df->open(Core::IODevice::ReadOnly)) {
+    if (!df->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
         return;
     }

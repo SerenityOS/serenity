@@ -23,7 +23,7 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& filena
     }
 
     auto file = Core::File::construct(path);
-    file->open(Core::IODevice::ReadOnly);
+    file->open(Core::OpenMode::ReadOnly);
     if (!file->is_open()) {
         dbgln("Failed to open {}: {}", filename, file->error_string());
         return {};

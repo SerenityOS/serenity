@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 
     auto handle_file = [&matches, binary_mode](StringView filename, bool print_filename) -> bool {
         auto file = Core::File::construct(filename);
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             warnln("Failed to open {}: {}", filename, file->error_string());
             return false;
         }

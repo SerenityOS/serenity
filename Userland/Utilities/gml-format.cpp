@@ -18,7 +18,7 @@ bool format_file(const StringView& path, bool inplace)
     if (read_from_stdin) {
         file = Core::File::standard_input();
     } else {
-        auto open_mode = inplace ? Core::File::ReadWrite : Core::File::ReadOnly;
+        auto open_mode = inplace ? Core::OpenMode::ReadWrite : Core::OpenMode::ReadOnly;
         auto file_or_error = Core::File::open(path, open_mode);
         if (file_or_error.is_error()) {
             warnln("Could not open {}: {}", path, file_or_error.error());
