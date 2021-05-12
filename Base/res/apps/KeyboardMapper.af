@@ -1,0 +1,4 @@
+[App]
+Name=Keyboard Mapper
+Executable=/bin/KeyboardMapper
+Category=Development
