@@ -37,6 +37,20 @@ UnsignedBigInteger ModularPower(const UnsignedBigInteger& b, const UnsignedBigIn
     if (m == 1)
         return 0;
 
+    if (m.is_odd()) {
+        UnsignedBigInteger temp_z0 { 0 };
+        UnsignedBigInteger temp_rr { 0 };
+        UnsignedBigInteger temp_one { 0 };
+        UnsignedBigInteger temp_z { 0 };
+        UnsignedBigInteger temp_zz { 0 };
+        UnsignedBigInteger temp_x { 0 };
+        UnsignedBigInteger temp_extra { 0 };
+
+        UnsignedBigInteger result;
+        UnsignedBigIntegerAlgorithms::montgomery_modular_power_with_minimal_allocations(b, e, m, temp_z0, temp_rr, temp_one, temp_z, temp_zz, temp_x, temp_extra, result);
+        return result;
+    }
+
     UnsignedBigInteger ep { e };
     UnsignedBigInteger base { b };
 
