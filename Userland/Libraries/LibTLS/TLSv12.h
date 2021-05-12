@@ -179,6 +179,28 @@ enum ClientVerificationStaus {
     VerificationNeeded,
 };
 
+enum class HashAlgorithm : u8 {
+    None = 0,
+    MD5 = 1,
+    SHA1 = 2,
+    SHA224 = 3,
+    SHA256 = 4,
+    SHA384 = 5,
+    SHA512 = 6,
+};
+
+enum class SignatureAlgorithm : u8 {
+    Anonymous = 0,
+    RSA = 1,
+    DSA = 2,
+    ECDSA = 3,
+};
+
+struct SignatureAndHashAlgorithm {
+    HashAlgorithm hash;
+    SignatureAlgorithm signature;
+};
+
 struct Options {
 #define OPTION_WITH_DEFAULTS(typ, name, ...)                    \
     static typ default_##name() { return typ { __VA_ARGS__ }; } \
@@ -192,6 +214,10 @@ struct Options {
         CipherSuite::RSA_WITH_AES_128_GCM_SHA256)
 
     OPTION_WITH_DEFAULTS(Version, version, Version::V12)
+    OPTION_WITH_DEFAULTS(Vector<SignatureAndHashAlgorithm>, supported_signature_algorithms,
+        { HashAlgorithm::SHA512, SignatureAlgorithm::RSA },
+        { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
+        { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
 
     OPTION_WITH_DEFAULTS(bool, use_sni, true)
     OPTION_WITH_DEFAULTS(bool, use_compression, false)
