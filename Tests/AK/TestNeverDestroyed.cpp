@@ -44,14 +44,20 @@ TEST_CASE(should_construct_by_move)
     EXPECT_EQ(1, n->num_moves);
 }
 
-TEST_CASE(should_not_destroy)
+NO_SANITIZE_ADDRESS static void should_not_destroy()
 {
     Counter* c = nullptr;
     {
         AK::NeverDestroyed<Counter> n {};
+        // note: explicit stack-use-after-scope
         c = &n.get();
     }
     EXPECT_EQ(0, c->num_destroys);
+}
+
+TEST_CASE(should_not_destroy)
+{
+    should_not_destroy();
 }
 
 TEST_CASE(should_provide_dereference_operator)
