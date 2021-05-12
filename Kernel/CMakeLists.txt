@@ -198,7 +198,7 @@ set(KERNEL_SOURCES
     Syscalls/unveil.cpp
     Syscalls/utime.cpp
     Syscalls/waitid.cpp
-    Syscalls/watch_file.cpp
+    Syscalls/inode_watcher.cpp
     Syscalls/write.cpp
     TTY/MasterPTY.cpp
     TTY/PTYMultiplexer.cpp
