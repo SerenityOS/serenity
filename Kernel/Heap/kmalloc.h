@@ -12,11 +12,11 @@
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa
 
-#define MAKE_ALIGNED_ALLOCATED(type, alignment)                                     \
-public:                                                                             \
-    void* operator new(size_t) { return kmalloc_aligned<alignment>(sizeof(type)); } \
-    void operator delete(void* ptr) { kfree_aligned(ptr); }                         \
-                                                                                    \
+#define MAKE_ALIGNED_ALLOCATED(type, alignment)                                                            \
+public:                                                                                                    \
+    [[nodiscard]] void* operator new(size_t) noexcept { return kmalloc_aligned<alignment>(sizeof(type)); } \
+    void operator delete(void* ptr) noexcept { kfree_aligned(ptr); }                                       \
+                                                                                                           \
 private:
 
 void kmalloc_init();
