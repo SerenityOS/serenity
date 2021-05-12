@@ -237,13 +237,15 @@ public:
     const String& content_type() const { return m_content_type; }
     void set_content_type(const String& content_type) { m_content_type = content_type; }
 
-    const String& encoding() const { return m_encoding; }
-    void set_encoding(const String& encoding) { m_encoding = encoding; }
+    bool has_encoding() const { return m_encoding.has_value(); }
+    const Optional<String>& encoding() const { return m_encoding; }
+    String encoding_or_default() const { return m_encoding.value_or("UTF-8"); }
+    void set_encoding(const Optional<String>& encoding) { m_encoding = encoding; }
 
     // NOTE: These are intended for the JS bindings
-    const String& character_set() const { return encoding(); }
-    const String& charset() const { return encoding(); }
-    const String& input_encoding() const { return encoding(); }
+    String character_set() const { return encoding_or_default(); }
+    String charset() const { return encoding_or_default(); }
+    String input_encoding() const { return encoding_or_default(); }
 
     bool ready_for_post_load_tasks() const { return m_ready_for_post_load_tasks; }
     void set_ready_for_post_load_tasks(bool ready) { m_ready_for_post_load_tasks = ready; }
@@ -327,7 +329,7 @@ private:
 
     String m_ready_state { "loading" };
     String m_content_type { "application/xml" };
-    String m_encoding { "UTF-8" };
+    Optional<String> m_encoding;
 
     bool m_ready_for_post_load_tasks { false };
 
