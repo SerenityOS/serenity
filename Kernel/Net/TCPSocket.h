@@ -154,6 +154,7 @@ public:
 
     static Lockable<HashTable<TCPSocket*>>& sockets_for_retransmit();
     void retransmit_packets();
+    void handle_lost_packet();
 
     virtual KResult close() override;
 

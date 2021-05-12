@@ -576,11 +576,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
         if (tcp_packet.sequence_number() != socket->ack_number()) {
             dbgln_if(TCP_DEBUG, "Discarding out of order packet: seq {} vs. ack {}", tcp_packet.sequence_number(), socket->ack_number());
-            if (socket->duplicate_acks() < TCPSocket::maximum_duplicate_acks) {
-                dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
-                socket->set_duplicate_acks(socket->duplicate_acks() + 1);
-                [[maybe_unused]] auto result = socket->send_ack(true);
-            }
+            socket->handle_lost_packet();
             return;
         }
 

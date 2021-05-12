@@ -564,4 +564,13 @@ void TCPSocket::retransmit_packets()
     }
 }
 
+void TCPSocket::handle_lost_packet()
+{
+    if (duplicate_acks() < TCPSocket::maximum_duplicate_acks) {
+        dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
+        set_duplicate_acks(duplicate_acks() + 1);
+        [[maybe_unused]] auto result = send_ack(true);
+    }
+}
+
 }
