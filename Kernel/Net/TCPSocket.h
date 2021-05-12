@@ -211,6 +211,18 @@ private:
     static constexpr u32 maximum_retransmits = 5;
     Time m_last_retransmit_time;
     u32 m_retransmit_attempts { 0 };
+
+    // This lets us change our window size in increments of 2 ** 13, i.e. 8192 bytes.
+    static constexpr u8 window_scale_shift = 13;
+    u16 m_window_size { 8 };
+
+    // FIXME: Make this configurable
+    static constexpr Time window_increase_interval = Time::from_seconds(5);
+    static constexpr u8 window_increase_step = 2;
+    static constexpr Time window_decrease_interval = Time::from_seconds(1);
+    static constexpr u8 window_decrease_step = 1;
+    Time m_last_window_increase;
+    Time m_last_window_decrease;
 };
 
 }

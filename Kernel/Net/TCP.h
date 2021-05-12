@@ -38,6 +38,35 @@ private:
 
 static_assert(sizeof(TCPOptionMSS) == 4);
 
+class [[gnu::packed]] TCPOptionWindowScale {
+public:
+    TCPOptionWindowScale(u16 shift)
+        : m_shift(shift)
+    {
+    }
+
+    u16 shift() const { return m_shift; }
+
+private:
+    u8 m_option_kind { 0x03 };
+    u8 m_option_length { sizeof(TCPOptionWindowScale) };
+    u8 m_shift;
+};
+
+static_assert(sizeof(TCPOptionWindowScale) == 3);
+
+class [[gnu::packed]] TCPOptionEnd {
+public:
+    TCPOptionEnd()
+    {
+    }
+
+private:
+    u8 m_option_kind { 0x00 };
+};
+
+static_assert(sizeof(TCPOptionEnd) == 1);
+
 class [[gnu::packed]] TCPPacket {
 public:
     TCPPacket() = default;

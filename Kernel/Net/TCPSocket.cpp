@@ -183,7 +183,7 @@ KResult TCPSocket::send_ack(bool allow_duplicate)
 KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
     const bool has_options = flags & TCPFlags::SYN;
-    const size_t options_size = has_options ? sizeof(TCPOptionMSS) : 0;
+    const size_t options_size = has_options ? (sizeof(TCPOptionMSS) + sizeof(TCPOptionWindowScale) + sizeof(TCPOptionEnd)) : 0;
     const size_t header_size = sizeof(TCPPacket) + options_size;
     const size_t buffer_size = header_size + payload_size;
     auto buffer = NetworkByteBuffer::create_zeroed(buffer_size);
@@ -191,15 +191,23 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
-    tcp_packet.set_window_size(NumericLimits<u16>::max());
+    tcp_packet.set_window_size(m_window_size);
     tcp_packet.set_sequence_number(m_sequence_number);
     tcp_packet.set_data_offset(header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
 
+    auto now = kgettimeofday();
+
     if (flags & TCPFlags::ACK) {
         m_last_ack_number_sent = m_ack_number;
-        m_last_ack_sent_time = kgettimeofday();
+        m_last_ack_sent_time = now;
         tcp_packet.set_ack_number(m_ack_number);
+    }
+
+    if (m_window_size <= NumericLimits<u16>::max() - window_increase_step
+        && m_last_window_increase < kgettimeofday() - window_increase_interval) {
+        m_window_size += window_increase_step;
+        m_last_window_increase = now;
     }
 
     if (payload && !payload->read(tcp_packet.payload(), payload_size))
@@ -215,12 +223,28 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     if (routing_decision.is_zero())
         return EHOSTUNREACH;
 
+    u8* const after_header = buffer.data() + header_size;
+    u8* next_option = buffer.data() + sizeof(TCPPacket);
+
     if (has_options) {
         u16 mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
         TCPOptionMSS mss_option { mss };
-        VERIFY(buffer.size() >= sizeof(TCPPacket) + sizeof(mss_option));
-        memcpy(buffer.data() + sizeof(TCPPacket), &mss_option, sizeof(mss_option));
+        VERIFY(next_option + sizeof(mss_option) <= after_header);
+        memcpy(next_option, &mss_option, sizeof(mss_option));
+        next_option += sizeof(mss_option);
+
+        TCPOptionWindowScale window_scale_option { window_scale_shift };
+        VERIFY(next_option + sizeof(window_scale_option) <= after_header);
+        memcpy(next_option, &window_scale_option, sizeof(window_scale_option));
+        next_option += sizeof(window_scale_option);
+
+        TCPOptionEnd end_option;
+        VERIFY(next_option + sizeof(end_option) <= after_header);
+        memcpy(next_option, &end_option, sizeof(end_option));
+        next_option += sizeof(end_option);
     }
+
+    VERIFY(next_option == after_header);
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
@@ -570,6 +594,14 @@ void TCPSocket::handle_lost_packet()
         dbgln_if(TCP_DEBUG, "Sending ACK with same ack number to trigger fast retransmission");
         set_duplicate_acks(duplicate_acks() + 1);
         [[maybe_unused]] auto result = send_ack(true);
+    }
+
+    auto now = kgettimeofday();
+
+    if (m_window_size > window_decrease_step && m_last_window_decrease < now - window_decrease_interval) {
+        m_window_size -= window_decrease_step;
+        m_last_window_decrease = now;
+        dbgln_if(TCP_DEBUG, "Decreased window size because we lost a packet");
     }
 }
 
