@@ -277,7 +277,7 @@ void KeyboardMapperWidget::update_window_title()
     sb.append(m_filename);
     if (m_modified)
         sb.append(" (*)");
-    sb.append(" - KeyboardMapper");
+    sb.append(" - Keyboard Mapper");
 
     window()->set_title(sb.to_string());
 }
