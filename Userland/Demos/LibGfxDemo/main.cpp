@@ -206,8 +206,8 @@ int main(int argc, char** argv)
     window->resize(WIDTH, HEIGHT);
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("File");
-    app_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
+    auto& file_menu = menubar->add_menu("File");
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     window->set_menubar(move(menubar));
 
     auto app_icon = GUI::Icon::default_icon("app-libgfx-demo");
