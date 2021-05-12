@@ -188,6 +188,8 @@ KResultOr<ssize_t> TmpFSInode::write_bytes(off_t offset, ssize_t size, const Use
 
     if (!buffer.read(m_content->data() + offset, size)) // TODO: partial reads?
         return EFAULT;
+
+    did_modify_contents();
     return size;
 }
 
@@ -284,7 +286,7 @@ KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
         return ENAMETOOLONG;
 
     m_children.set(name, { name, static_cast<TmpFSInode&>(child) });
-    did_add_child(child.identifier());
+    did_add_child(child.identifier(), name);
     return KSuccess;
 }
 
@@ -300,8 +302,9 @@ KResult TmpFSInode::remove_child(const StringView& name)
     if (it == m_children.end())
         return ENOENT;
     auto child_id = it->value.inode->identifier();
+    it->value.inode->did_delete_self();
     m_children.remove(it);
-    did_remove_child(child_id);
+    did_remove_child(child_id, name);
     return KSuccess;
 }
 
