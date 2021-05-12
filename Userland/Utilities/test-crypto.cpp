@@ -12,6 +12,7 @@
 #include <LibCrypto/ASN1/ASN1.h>
 #include <LibCrypto/Authentication/GHash.h>
 #include <LibCrypto/Authentication/HMAC.h>
+#include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/BigInt/UnsignedBigInteger.h>
 #include <LibCrypto/Checksum/Adler32.h>
@@ -2239,6 +2240,94 @@ static void bigint_addition_edgecases()
         Crypto::UnsignedBigInteger num1({ UINT32_MAX - 3, UINT32_MAX });
         Crypto::UnsignedBigInteger num2({ UINT32_MAX - 2, 0 });
         if (num1.plus(num2).words() == Vector<u32> { 4294967289, 0, 1 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Basic add to accumulator));
+        Crypto::UnsignedBigInteger num1(10);
+        Crypto::UnsignedBigInteger num2(70);
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 80 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to empty accumulator));
+        Crypto::UnsignedBigInteger num1({});
+        Crypto::UnsignedBigInteger num2(10);
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 10 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to smaller accumulator));
+        Crypto::UnsignedBigInteger num1(10);
+        Crypto::UnsignedBigInteger num2({ 10, 10 });
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 20, 10 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to accumulator with carry));
+        Crypto::UnsignedBigInteger num1(UINT32_MAX - 1);
+        Crypto::UnsignedBigInteger num2(2);
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 0, 1 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to accumulator with multiple carries));
+        Crypto::UnsignedBigInteger num1({ UINT32_MAX - 2, UINT32_MAX - 1 });
+        Crypto::UnsignedBigInteger num2({ 5, 1 });
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 2, 0, 1 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to accumulator with multiple carry levels));
+        Crypto::UnsignedBigInteger num1({ UINT32_MAX - 2, UINT32_MAX });
+        Crypto::UnsignedBigInteger num2(5);
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 2, 0, 1 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to accumulator with leading zero));
+        Crypto::UnsignedBigInteger num1(1);
+        Crypto::UnsignedBigInteger num2({ 1, 0 });
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 2 }) {
+            PASS;
+        } else {
+            FAIL(Incorrect Result);
+        }
+    }
+    {
+        I_TEST((BigInteger | Add to accumulator with carry and leading zero));
+        Crypto::UnsignedBigInteger num1({ UINT32_MAX, 0, 0, 0 });
+        Crypto::UnsignedBigInteger num2({ 1, 0 });
+        Crypto::UnsignedBigIntegerAlgorithms::add_into_accumulator_without_allocation(num1, num2);
+        if (num1.words() == Vector<u32> { 0, 1, 0, 0 }) {
             PASS;
         } else {
             FAIL(Incorrect Result);
