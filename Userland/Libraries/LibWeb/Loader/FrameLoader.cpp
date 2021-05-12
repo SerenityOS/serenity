@@ -113,8 +113,8 @@ bool FrameLoader::parse_document(DOM::Document& document, const ByteBuffer& data
 {
     auto& mime_type = document.content_type();
     if (mime_type == "text/html" || mime_type == "image/svg+xml") {
-        HTML::HTMLDocumentParser parser(document, data, document.encoding_or_default());
-        parser.run(document.url());
+        auto parser = HTML::HTMLDocumentParser::create_with_uncertain_encoding(document, data);
+        parser->run(document.url());
         return true;
     }
     if (mime_type.starts_with("image/"))

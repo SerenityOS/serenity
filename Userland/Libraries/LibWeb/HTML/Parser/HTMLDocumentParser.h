@@ -46,6 +46,8 @@ public:
     HTMLDocumentParser(DOM::Document&, const StringView& input, const String& encoding);
     ~HTMLDocumentParser();
 
+    static NonnullOwnPtr<HTMLDocumentParser> create_with_uncertain_encoding(DOM::Document&, const ByteBuffer& input);
+
     void run(const URL&);
 
     DOM::Document& document();
