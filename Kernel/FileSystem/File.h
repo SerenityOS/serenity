@@ -109,6 +109,7 @@ public:
     virtual bool is_block_device() const { return false; }
     virtual bool is_character_device() const { return false; }
     virtual bool is_socket() const { return false; }
+    virtual bool is_inode_watcher() const { return false; }
 
     virtual FileBlockCondition& block_condition() { return m_block_condition; }
 

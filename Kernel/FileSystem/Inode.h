@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -111,8 +112,10 @@ protected:
     void set_metadata_dirty(bool);
     KResult prepare_to_write_data();
 
-    void did_add_child(const InodeIdentifier&);
-    void did_remove_child(const InodeIdentifier&);
+    void did_add_child(InodeIdentifier const& child_id, String const& name);
+    void did_remove_child(InodeIdentifier const& child_id, String const& name);
+    void did_modify_contents();
+    void did_delete_self();
 
     mutable Lock m_lock { "Inode" };
 

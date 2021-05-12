@@ -77,6 +77,10 @@ public:
     const TTY* tty() const;
     TTY* tty();
 
+    bool is_inode_watcher() const;
+    const InodeWatcher* inode_watcher() const;
+    InodeWatcher* inode_watcher();
+
     bool is_master_pty() const;
     const MasterPTY* master_pty() const;
     MasterPTY* master_pty();

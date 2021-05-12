@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,6 +14,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeFile.h>
+#include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/MasterPTY.h>
@@ -265,6 +267,25 @@ TTY* FileDescription::tty()
     if (!is_tty())
         return nullptr;
     return static_cast<TTY*>(m_file.ptr());
+}
+
+bool FileDescription::is_inode_watcher() const
+{
+    return m_file->is_inode_watcher();
+}
+
+const InodeWatcher* FileDescription::inode_watcher() const
+{
+    if (!is_inode_watcher())
+        return nullptr;
+    return static_cast<const InodeWatcher*>(m_file.ptr());
+}
+
+InodeWatcher* FileDescription::inode_watcher()
+{
+    if (!is_inode_watcher())
+        return nullptr;
+    return static_cast<InodeWatcher*>(m_file.ptr());
 }
 
 bool FileDescription::is_master_pty() const
