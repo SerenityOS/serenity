@@ -43,7 +43,7 @@ size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) co
     if (word_count > 0) {
         ssize_t leading_zeros = -1;
         if (remove_leading_zeros) {
-            u32 word = m_words[word_count - 1];
+            UnsignedBigInteger::Word word = m_words[word_count - 1];
             for (size_t i = 0; i < sizeof(u32); i++) {
                 u8 byte = (u8)(word >> ((sizeof(u32) - i - 1) * 8));
                 data[out++] = byte;
@@ -108,7 +108,7 @@ void UnsignedBigInteger::set_to_0()
     m_cached_trimmed_length = {};
 }
 
-void UnsignedBigInteger::set_to(u32 other)
+void UnsignedBigInteger::set_to(UnsignedBigInteger::Word other)
 {
     m_is_invalid = false;
     m_words.resize_and_keep_capacity(1);

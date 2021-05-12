@@ -54,12 +54,12 @@ FLATTEN void UnsignedBigIntegerAlgorithms::divide_without_allocation(
  */
 FLATTEN void UnsignedBigIntegerAlgorithms::divide_u16_without_allocation(
     UnsignedBigInteger const& numerator,
-    u32 denominator,
+    UnsignedBigInteger::Word denominator,
     UnsignedBigInteger& quotient,
     UnsignedBigInteger& remainder)
 {
     VERIFY(denominator < (1 << 16));
-    u32 remainder_word = 0;
+    UnsignedBigInteger::Word remainder_word = 0;
     auto numerator_length = numerator.trimmed_length();
     quotient.set_to_0();
     quotient.m_words.resize(numerator_length);

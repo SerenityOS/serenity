@@ -19,9 +19,12 @@ constexpr size_t STARTING_WORD_SIZE = 512;
 
 class UnsignedBigInteger {
 public:
-    UnsignedBigInteger(u32 x) { m_words.append(x); }
+    using Word = u32;
+    static constexpr size_t BITS_IN_WORD = 32;
 
-    explicit UnsignedBigInteger(Vector<u32, STARTING_WORD_SIZE>&& words)
+    UnsignedBigInteger(Word x) { m_words.append(x); }
+
+    explicit UnsignedBigInteger(Vector<Word, STARTING_WORD_SIZE>&& words)
         : m_words(move(words))
     {
     }
@@ -43,10 +46,10 @@ public:
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;
 
-    const Vector<u32, STARTING_WORD_SIZE>& words() const { return m_words; }
+    const Vector<Word, STARTING_WORD_SIZE>& words() const { return m_words; }
 
     void set_to_0();
-    void set_to(u32 other);
+    void set_to(Word other);
     void set_to(const UnsignedBigInteger& other);
 
     void invalidate()
@@ -81,11 +84,9 @@ public:
 
 private:
     friend class UnsignedBigIntegerAlgorithms;
-
-    static constexpr size_t BITS_IN_WORD = 32;
     // Little endian
-    // m_word[0] + m_word[1] * 256 + m_word[2] * 65536 + ...
-    Vector<u32, STARTING_WORD_SIZE> m_words;
+    // m_word[0] + m_word[1] * Word::MAX + m_word[2] * Word::MAX * Word::MAX + ...
+    Vector<Word, STARTING_WORD_SIZE> m_words;
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };
