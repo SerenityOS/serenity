@@ -64,7 +64,7 @@ static bool parse_name(StringView name, OpenFile& file)
 
 static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
-    auto file = Core::File::open(String::formatted("/proc/{}/fds", pid), Core::IODevice::OpenMode::ReadOnly);
+    auto file = Core::File::open(String::formatted("/proc/{}/fds", pid), Core::OpenMode::ReadOnly);
     if (file.is_error()) {
         printf("lsof: PID %d: %s\n", pid, file.error().characters());
         return Vector<OpenFile>();

@@ -46,7 +46,7 @@ int main(int argc, char** argv)
         return 0;
     }
     auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
         return 1;
     }

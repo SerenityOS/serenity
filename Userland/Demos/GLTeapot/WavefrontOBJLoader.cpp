@@ -11,7 +11,7 @@
 
 RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
 {
-    auto obj_file_or_error = Core::File::open(fname, Core::IODevice::OpenMode::ReadOnly);
+    auto obj_file_or_error = Core::File::open(fname, Core::OpenMode::ReadOnly);
     Vector<Vertex> vertices;
     Vector<Triangle> triangles;
 

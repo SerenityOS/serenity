@@ -189,7 +189,7 @@ void KeyboardMapperWidget::save_to_file(const StringView& filename)
     String file_content = map_json.to_string();
 
     auto file = Core::File::construct(filename);
-    file->open(Core::IODevice::WriteOnly);
+    file->open(Core::OpenMode::WriteOnly);
     if (!file->is_open()) {
         StringBuilder sb;
         sb.append("Failed to open ");

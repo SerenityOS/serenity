@@ -32,12 +32,12 @@ int main(int argc, char** argv)
         auto file = Core::File::construct();
         bool success = file->open(
             STDIN_FILENO,
-            Core::IODevice::OpenMode::ReadOnly,
+            Core::OpenMode::ReadOnly,
             Core::File::ShouldCloseFileDescriptor::Yes);
         VERIFY(success);
         buffer = file->read_all();
     } else {
-        auto result = Core::File::open(filepath, Core::IODevice::OpenMode::ReadOnly);
+        auto result = Core::File::open(filepath, Core::OpenMode::ReadOnly);
         VERIFY(!result.is_error());
         auto file = result.value();
         buffer = file->read_all();

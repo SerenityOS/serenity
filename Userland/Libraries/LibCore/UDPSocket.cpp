@@ -29,7 +29,7 @@ UDPSocket::UDPSocket(Object* parent)
         set_error(errno);
     } else {
         set_fd(fd);
-        set_mode(IODevice::ReadWrite);
+        set_mode(OpenMode::ReadWrite);
         set_error(0);
     }
 }

@@ -149,7 +149,7 @@ void GitWidget::show_diff(const LexicalPath& file_path)
 {
     if (!m_git_repo->is_tracked(file_path)) {
         auto file = Core::File::construct(file_path.string());
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             perror("open");
             VERIFY_NOT_REACHED();
         }

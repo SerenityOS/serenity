@@ -68,7 +68,7 @@ static bool mount_all()
     dbgln("Mounting all filesystems...");
 
     auto fstab = Core::File::construct("/etc/fstab");
-    if (!fstab->open(Core::IODevice::OpenMode::ReadOnly)) {
+    if (!fstab->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Failed to open /etc/fstab: %s\n", fstab->error_string());
         return false;
     }
@@ -118,7 +118,7 @@ static bool print_mounts()
 {
     // Output info about currently mounted filesystems.
     auto df = Core::File::construct("/proc/df");
-    if (!df->open(Core::IODevice::ReadOnly)) {
+    if (!df->open(Core::OpenMode::ReadOnly)) {
         fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
         return false;
     }

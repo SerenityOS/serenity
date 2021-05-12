@@ -340,7 +340,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_new_file_action()
         filepath = String::formatted("{}{}", filepath, filename);
 
         auto file = Core::File::construct(filepath);
-        if (!file->open((Core::IODevice::OpenMode)(Core::IODevice::WriteOnly | Core::IODevice::MustBeNew))) {
+        if (!file->open((Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::MustBeNew))) {
             GUI::MessageBox::show(window(), String::formatted("Failed to create '{}'", filepath), "Error", GUI::MessageBox::Type::Error);
             return;
         }

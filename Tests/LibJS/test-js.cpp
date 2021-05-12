@@ -217,7 +217,7 @@ void TestRunner::run()
 static Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
 {
     auto file = Core::File::construct(file_path);
-    auto result = file->open(Core::IODevice::ReadOnly);
+    auto result = file->open(Core::OpenMode::ReadOnly);
     if (!result) {
         warnln("Failed to open the following file: \"{}\"", file_path);
         cleanup_and_exit();

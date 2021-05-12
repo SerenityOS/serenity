@@ -20,7 +20,7 @@ static constexpr size_t maximum_wav_size = 1 * GiB; // FIXME: is there a more ap
 WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     : m_file(Core::File::construct(path))
 {
-    if (!m_file->open(Core::IODevice::ReadOnly)) {
+    if (!m_file->open(Core::OpenMode::ReadOnly)) {
         m_error_string = String::formatted("Can't open file: {}", m_file->error_string());
         return;
     }

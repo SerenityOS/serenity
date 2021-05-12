@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     if (path == nullptr)
         path = "/dev/stdin";
     auto file = Core::File::construct(path);
-    if (!file->open(Core::IODevice::ReadOnly)) {
+    if (!file->open(Core::OpenMode::ReadOnly)) {
         warnln("Couldn't open {} for reading: {}", path, file->error_string());
         return 1;
     }

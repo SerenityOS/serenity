@@ -108,7 +108,7 @@ private:
         StringBuilder adapter_info;
 
         auto file = Core::File::construct("/proc/net/adapters");
-        if (!file->open(Core::IODevice::ReadOnly)) {
+        if (!file->open(Core::OpenMode::ReadOnly)) {
             fprintf(stderr, "Error: %s\n", file->error_string());
             return adapter_info.to_string();
         }

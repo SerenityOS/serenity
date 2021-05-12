@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     auto audio_thread = LibThread::Thread::construct([&] {
         auto audio = Core::File::construct("/dev/audio");
-        if (!audio->open(Core::IODevice::WriteOnly)) {
+        if (!audio->open(Core::OpenMode::WriteOnly)) {
             dbgln("Can't open audio device: {}", audio->error_string());
             return 1;
         }

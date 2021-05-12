@@ -19,7 +19,7 @@ class File final : public IODevice {
 public:
     virtual ~File() override;
 
-    static Result<NonnullRefPtr<File>, String> open(String filename, IODevice::OpenMode, mode_t = 0644);
+    static Result<NonnullRefPtr<File>, String> open(String filename, OpenMode, mode_t = 0644);
 
     String filename() const { return m_filename; }
     void set_filename(const String filename) { m_filename = move(filename); }
@@ -67,13 +67,13 @@ public:
     };
     static Result<void, RemoveError> remove(const String& path, RecursionMode, bool force);
 
-    virtual bool open(IODevice::OpenMode) override;
+    virtual bool open(OpenMode) override;
 
     enum class ShouldCloseFileDescriptor {
         No = 0,
         Yes
     };
-    bool open(int fd, IODevice::OpenMode, ShouldCloseFileDescriptor);
+    bool open(int fd, OpenMode, ShouldCloseFileDescriptor);
 
     static NonnullRefPtr<File> standard_input();
     static NonnullRefPtr<File> standard_output();
@@ -86,7 +86,7 @@ private:
     }
     explicit File(String filename, Object* parent = nullptr);
 
-    bool open_impl(IODevice::OpenMode, mode_t);
+    bool open_impl(OpenMode, mode_t);
 
     String m_filename;
     ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };

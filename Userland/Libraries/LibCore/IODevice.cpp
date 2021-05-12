@@ -209,7 +209,7 @@ bool IODevice::populate_read_buffer() const
 
 bool IODevice::close()
 {
-    if (fd() < 0 || mode() == NotOpen)
+    if (fd() < 0 || m_mode == OpenMode::NotOpen)
         return false;
     int rc = ::close(fd());
     if (rc < 0) {
@@ -217,7 +217,7 @@ bool IODevice::close()
         return false;
     }
     set_fd(-1);
-    set_mode(IODevice::NotOpen);
+    set_mode(OpenMode::NotOpen);
     return true;
 }
 

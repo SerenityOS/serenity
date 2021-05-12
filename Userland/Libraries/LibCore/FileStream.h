@@ -20,9 +20,9 @@ public:
     {
     }
 
-    static Result<InputFileStream, String> open(StringView filename, IODevice::OpenMode mode = IODevice::OpenMode::ReadOnly, mode_t permissions = 0644)
+    static Result<InputFileStream, String> open(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
     {
-        VERIFY((mode & 0xf) == IODevice::OpenMode::ReadOnly || (mode & 0xf) == IODevice::OpenMode::ReadWrite);
+        VERIFY(has_flag(mode, OpenMode::ReadOnly));
 
         auto file_result = File::open(filename, mode, permissions);
 
@@ -32,9 +32,9 @@ public:
         return InputFileStream { file_result.value() };
     }
 
-    static Result<Buffered<InputFileStream>, String> open_buffered(StringView filename, IODevice::OpenMode mode = IODevice::OpenMode::ReadOnly, mode_t permissions = 0644)
+    static Result<Buffered<InputFileStream>, String> open_buffered(StringView filename, OpenMode mode = OpenMode::ReadOnly, mode_t permissions = 0644)
     {
-        VERIFY((mode & 0xf) == IODevice::OpenMode::ReadOnly || (mode & 0xf) == IODevice::OpenMode::ReadWrite);
+        VERIFY(has_flag(mode, OpenMode::ReadOnly));
 
         auto file_result = File::open(filename, mode, permissions);
 
@@ -84,9 +84,9 @@ public:
     {
     }
 
-    static Result<OutputFileStream, String> open(StringView filename, IODevice::OpenMode mode = IODevice::OpenMode::WriteOnly, mode_t permissions = 0644)
+    static Result<OutputFileStream, String> open(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
     {
-        VERIFY((mode & 0xf) == IODevice::OpenMode::WriteOnly || (mode & 0xf) == IODevice::OpenMode::ReadWrite);
+        VERIFY(has_flag(mode, OpenMode::WriteOnly));
 
         auto file_result = File::open(filename, mode, permissions);
 
@@ -96,9 +96,9 @@ public:
         return OutputFileStream { file_result.value() };
     }
 
-    static Result<Buffered<OutputFileStream>, String> open_buffered(StringView filename, IODevice::OpenMode mode = IODevice::OpenMode::WriteOnly, mode_t permissions = 0644)
+    static Result<Buffered<OutputFileStream>, String> open_buffered(StringView filename, OpenMode mode = OpenMode::WriteOnly, mode_t permissions = 0644)
     {
-        VERIFY((mode & 0xf) == IODevice::OpenMode::WriteOnly || (mode & 0xf) == IODevice::OpenMode::ReadWrite);
+        VERIFY(has_flag(mode, OpenMode::WriteOnly));
 
         auto file_result = File::open(filename, mode, permissions);
 

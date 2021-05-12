@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         files.append(Core::File::standard_input());
     } else {
         for (auto const& path : paths) {
-            auto file_or_error = Core::File::open(path, Core::File::ReadOnly);
+            auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
             if (file_or_error.is_error()) {
                 warnln("Failed to open {}: {}", path, file_or_error.error());
                 continue;
