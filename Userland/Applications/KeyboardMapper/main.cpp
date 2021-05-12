@@ -55,7 +55,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Actions
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
             Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open");
@@ -83,7 +82,6 @@ int main(int argc, char** argv)
             app->quit();
         });
 
-    // Menu
     auto menubar = GUI::Menubar::construct();
 
     auto& file_menu = menubar->add_menu("&File");
