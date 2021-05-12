@@ -21,16 +21,9 @@ namespace Kernel {
 
 static AK::Singleton<Lockable<HashTable<NetworkAdapter*>>> s_table;
 
-static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
+Lockable<HashTable<NetworkAdapter*>>& NetworkAdapter::all_adapters()
 {
     return *s_table;
-}
-
-void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
-{
-    Locker locker(all_adapters().lock());
-    for (auto& it : all_adapters().resource())
-        callback(*it);
 }
 
 RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
