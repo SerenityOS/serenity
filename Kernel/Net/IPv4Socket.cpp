@@ -139,6 +139,8 @@ KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockad
         return EFAULT;
 
     m_peer_address = IPv4Address((const u8*)&safe_address.sin_addr.s_addr);
+    if (m_peer_address == IPv4Address { 0, 0, 0, 0 })
+        m_peer_address = IPv4Address { 127, 0, 0, 1 };
     m_peer_port = ntohs(safe_address.sin_port);
 
     return protocol_connect(description, should_block);
