@@ -58,6 +58,7 @@ public:
         m_cached_trimmed_length = {};
     }
 
+    bool is_odd() const { return m_words.size() && (m_words[0] & 1); }
     bool is_invalid() const { return m_is_invalid; }
 
     size_t length() const { return m_words.size(); }
