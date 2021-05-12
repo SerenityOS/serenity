@@ -18,6 +18,9 @@ namespace GUI {
 Splitter::Splitter(Orientation orientation)
     : m_orientation(orientation)
 {
+    REGISTER_INT_PROPERTY("first_resizee_minimum_size", first_resizee_minimum_size, set_first_resizee_minimum_size);
+    REGISTER_INT_PROPERTY("second_resizee_minimum_size", second_resizee_minimum_size, set_second_resizee_minimum_size);
+
     set_background_role(ColorRole::Button);
     set_layout<BoxLayout>(orientation);
     set_fill_with_background_color(true);
@@ -149,20 +152,19 @@ void Splitter::mousemove_event(MouseEvent& event)
         m_resizing = false;
         return;
     }
-    int minimum_size = 0;
     auto new_first_resizee_size = m_first_resizee_start_size;
     auto new_second_resizee_size = m_second_resizee_start_size;
 
     new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + delta.primary_offset_for_orientation(m_orientation));
     new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - delta.primary_offset_for_orientation(m_orientation));
 
-    if (new_first_resizee_size.primary_size_for_orientation(m_orientation) < minimum_size) {
-        int correction = minimum_size - new_first_resizee_size.primary_size_for_orientation(m_orientation);
+    if (new_first_resizee_size.primary_size_for_orientation(m_orientation) < m_first_resizee_minimum_size) {
+        int correction = m_first_resizee_minimum_size - new_first_resizee_size.primary_size_for_orientation(m_orientation);
         new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + correction);
         new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - correction);
     }
-    if (new_second_resizee_size.primary_size_for_orientation(m_orientation) < minimum_size) {
-        int correction = minimum_size - new_second_resizee_size.primary_size_for_orientation(m_orientation);
+    if (new_second_resizee_size.primary_size_for_orientation(m_orientation) < m_second_resizee_minimum_size) {
+        int correction = m_second_resizee_minimum_size - new_second_resizee_size.primary_size_for_orientation(m_orientation);
         new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) + correction);
         new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) - correction);
     }
