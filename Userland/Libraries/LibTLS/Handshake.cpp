@@ -67,6 +67,9 @@ ByteBuffer TLSv12::build_hello()
     if (!m_context.extensions.SNI.is_null() && m_context.options.use_sni)
         sni_length = m_context.extensions.SNI.length();
 
+    // signature_algorithms: 2b extension ID, 2b extension length, 2b vector length, 2xN signatures and hashes
+    extension_length += 2 + 2 + 2 + 2 * m_context.options.supported_signature_algorithms.size();
+
     if (sni_length)
         extension_length += sni_length + 9;
 
@@ -84,6 +87,18 @@ ByteBuffer TLSv12::build_hello()
         // SNI host length + value
         builder.append((u16)sni_length);
         builder.append((const u8*)m_context.extensions.SNI.characters(), sni_length);
+    }
+
+    // signature_algorithms extension
+    builder.append((u16)HandshakeExtension::SignatureAlgorithms);
+    // Extension length
+    builder.append((u16)(2 + 2 * m_context.options.supported_signature_algorithms.size()));
+    // Vector count
+    builder.append((u16)(m_context.options.supported_signature_algorithms.size() * 2));
+    // Entries
+    for (auto& entry : m_context.options.supported_signature_algorithms) {
+        builder.append((u8)entry.hash);
+        builder.append((u8)entry.signature);
     }
 
     if (alpn_length) {
