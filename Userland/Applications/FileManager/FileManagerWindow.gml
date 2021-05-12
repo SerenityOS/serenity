@@ -39,6 +39,7 @@
 
     @GUI::HorizontalSplitter {
         name: "splitter"
+        first_resizee_minimum_size: 80
 
         @GUI::TreeView {
             name: "tree_view"
