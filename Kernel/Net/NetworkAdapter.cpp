@@ -199,10 +199,8 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     size_t packet_size = packet.size();
     VERIFY(packet_size <= buffer_size);
     memcpy(buffer, packet.data(), packet_size);
-    if (m_unused_packet_buffers_count < 100) {
-        m_unused_packet_buffers.append(packet);
-        ++m_unused_packet_buffers_count;
-    }
+    m_unused_packet_buffers.append(packet);
+    ++m_unused_packet_buffers_count;
     return packet_size;
 }
 
