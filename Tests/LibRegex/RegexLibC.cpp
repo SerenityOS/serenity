@@ -327,6 +327,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
+        regfree(&regex);
 
         // After vertical line
         b.clear();
@@ -335,6 +336,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
+        regfree(&regex);
 
         // After circumflex
         b.clear();
@@ -343,6 +345,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
+        regfree(&regex);
 
         // After dollar
         b.clear();
@@ -351,6 +354,7 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
+        regfree(&regex);
 
         // After left parens
         b.clear();
@@ -360,9 +364,8 @@ TEST_CASE(parser_error_special_characters_used_at_wrong_place)
         pattern = b.build();
         EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), error_code_to_check);
         EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), error_code_to_check);
+        regfree(&regex);
     }
-
-    regfree(&regex);
 }
 
 TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
@@ -376,22 +379,24 @@ TEST_CASE(parser_error_vertical_line_used_at_wrong_place)
     pattern = "|asdf";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EMPTY_EXPR);
     EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EMPTY_EXPR);
+    regfree(&regex);
 
     // Last in ere
     pattern = "asdf|";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EMPTY_EXPR);
     EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EMPTY_EXPR);
+    regfree(&regex);
 
     // After left parens
     pattern = "(|asdf)";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EMPTY_EXPR);
     EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EMPTY_EXPR);
+    regfree(&regex);
 
     // Proceed right parens
     pattern = "(asdf)|";
     EXPECT_EQ(regcomp(&regex, pattern.characters(), REG_EXTENDED), REG_EMPTY_EXPR);
     EXPECT_EQ(regexec(&regex, "test", num_matches, matches, 0), REG_EMPTY_EXPR);
-
     regfree(&regex);
 }
 
@@ -969,6 +974,7 @@ TEST_CASE(simple_bracket_chars)
     EXPECT_EQ(regexec(&regex, "c", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "d", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "e", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
 }
 
 TEST_CASE(simple_bracket_chars_inverse)
@@ -982,6 +988,7 @@ TEST_CASE(simple_bracket_chars_inverse)
     EXPECT_EQ(regexec(&regex, "c", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "d", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "e", 0, NULL, 0), REG_NOERR);
+    regfree(&regex);
 }
 
 TEST_CASE(simple_bracket_chars_range)
@@ -995,6 +1002,7 @@ TEST_CASE(simple_bracket_chars_range)
     EXPECT_EQ(regexec(&regex, "c", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "d", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "e", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
 }
 
 TEST_CASE(simple_bracket_chars_range_inverse)
@@ -1010,6 +1018,7 @@ TEST_CASE(simple_bracket_chars_range_inverse)
     EXPECT_EQ(regexec(&regex, "e", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "k", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "z", 0, NULL, 0), REG_NOMATCH);
+    regfree(&regex);
 }
 
 TEST_CASE(bracket_character_class_uuid)
@@ -1035,6 +1044,7 @@ TEST_CASE(simple_bracket_character_class_inverse)
     EXPECT_EQ(regexec(&regex, "3", 0, NULL, 0), REG_NOMATCH);
     EXPECT_EQ(regexec(&regex, "d", 0, NULL, 0), REG_NOERR);
     EXPECT_EQ(regexec(&regex, "e", 0, NULL, 0), REG_NOERR);
+    regfree(&regex);
 }
 
 TEST_CASE(email_address)
@@ -1115,4 +1125,5 @@ TEST_CASE(simple_notbol_noteol)
     EXPECT_EQ(regexec(&regex2, "hello friends", 0, NULL, REG_NOTEOL), REG_NOMATCH);
 
     regfree(&regex);
+    regfree(&regex2);
 }
