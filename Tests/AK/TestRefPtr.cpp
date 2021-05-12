@@ -129,22 +129,22 @@ TEST_CASE(assign_copy_self)
 
 TEST_CASE(self_observers)
 {
-    RefPtr<SelfAwareObject> object = adopt_ref(*new SelfAwareObject);
-    EXPECT_EQ(object->ref_count(), 1u);
-    EXPECT_EQ(object->m_has_one_ref_left, false);
-    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+    {
+        RefPtr<SelfAwareObject> object = adopt_ref(*new SelfAwareObject);
+        EXPECT_EQ(object->ref_count(), 1u);
+        EXPECT_EQ(object->m_has_one_ref_left, false);
+        EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
 
-    object->ref();
-    EXPECT_EQ(object->ref_count(), 2u);
-    EXPECT_EQ(object->m_has_one_ref_left, false);
-    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+        object->ref();
+        EXPECT_EQ(object->ref_count(), 2u);
+        EXPECT_EQ(object->m_has_one_ref_left, false);
+        EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
 
-    object->unref();
-    EXPECT_EQ(object->ref_count(), 1u);
-    EXPECT_EQ(object->m_has_one_ref_left, true);
-    EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
-
-    object->unref();
+        object->unref();
+        EXPECT_EQ(object->ref_count(), 1u);
+        EXPECT_EQ(object->m_has_one_ref_left, true);
+        EXPECT_EQ(SelfAwareObject::num_destroyed, 0u);
+    }
     EXPECT_EQ(SelfAwareObject::num_destroyed, 1u);
 }
 
