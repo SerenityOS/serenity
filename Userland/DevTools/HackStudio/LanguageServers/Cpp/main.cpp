@@ -5,7 +5,9 @@
  */
 
 #include "ClientConnection.h"
+#include "Tests.h"
 #include <AK/LexicalPath.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
@@ -13,7 +15,24 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-int main(int, char**)
+static int mode_server();
+
+int main(int argc, char** argv)
+{
+    bool tests = false;
+
+    Core::ArgsParser parser;
+    parser.add_option(tests, "Run tests", "tests", 't');
+    parser.parse(argc, argv);
+
+    if (tests) {
+        return run_tests();
+    }
+
+    return mode_server();
+}
+
+int mode_server()
 {
     Core::EventLoop event_loop;
     if (pledge("stdio unix recvfd rpath ", nullptr) < 0) {
