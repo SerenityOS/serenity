@@ -43,10 +43,10 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
-    ssize_t nwritten;
+    KResultOr<size_t> result = 0;
     bool need_evaluate_block_conditions = false;
     if (in_canonical_mode()) {
-        nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+        result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
             size_t i = 0;
             for (; i < data_size; i++) {
                 u8 ch = m_input_buffer.dequeue();
@@ -64,10 +64,10 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
                 }
                 data[i] = ch;
             }
-            return (ssize_t)i;
+            return i;
         });
     } else {
-        nwritten = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+        result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
             for (size_t i = 0; i < data_size; i++) {
                 auto ch = m_input_buffer.dequeue();
                 if (ch == '\r' && m_termios.c_iflag & ICRNL)
@@ -76,14 +76,12 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
                     ch = '\r';
                 data[i] = ch;
             }
-            return (ssize_t)data_size;
+            return data_size;
         });
     }
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
-    if (nwritten > 0 || need_evaluate_block_conditions)
+    if ((!result.is_error() && result.value() > 0) || need_evaluate_block_conditions)
         evaluate_block_conditions();
-    return (size_t)nwritten;
+    return result;
 }
 
 KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
@@ -93,8 +91,8 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
         return EINTR;
     }
 
-    const size_t num_chars = 256;
-    ssize_t nread = buffer.read_buffered<num_chars>((size_t)size, [&](const u8* data, size_t buffer_bytes) {
+    constexpr size_t num_chars = 256;
+    return buffer.read_buffered<num_chars>(size, [&](u8 const* data, size_t buffer_bytes) {
         u8 modified_data[num_chars * 2];
         size_t extra_chars = 0;
         for (size_t i = 0; i < buffer_bytes; ++i) {
@@ -106,10 +104,8 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
             modified_data[i + extra_chars] = ch;
         }
         on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), buffer_bytes + extra_chars);
-        return (ssize_t)buffer_bytes;
+        return buffer_bytes;
     });
-
-    return nread;
 }
 
 bool TTY::can_read(const FileDescription&, size_t) const

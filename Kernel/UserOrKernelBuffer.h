@@ -82,10 +82,10 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] ssize_t write_buffered(size_t offset, size_t len, F f)
+    [[nodiscard]] KResultOr<size_t> write_buffered(size_t offset, size_t len, F f)
     {
         if (!m_buffer)
-            return -EFAULT;
+            return EFAULT;
         if (is_kernel_buffer()) {
             // We're transferring directly to a kernel buffer, bypass
             return f(m_buffer + offset, len);
@@ -102,24 +102,24 @@ public:
                 return copied;
             VERIFY((size_t)copied <= to_copy);
             if (!write(buffer, nwritten, (size_t)copied))
-                return -EFAULT;
+                return EFAULT;
             nwritten += (size_t)copied;
             if ((size_t)copied < to_copy)
                 break;
         }
-        return (ssize_t)nwritten;
+        return nwritten;
     }
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] ssize_t write_buffered(size_t len, F f)
+    [[nodiscard]] KResultOr<size_t> write_buffered(size_t len, F f)
     {
         return write_buffered<BUFFER_BYTES, F>(0, len, f);
     }
 
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] ssize_t read_buffered(size_t offset, size_t len, F f) const
+    [[nodiscard]] KResultOr<size_t> read_buffered(size_t offset, size_t len, F f) const
     {
         if (!m_buffer)
-            return -EFAULT;
+            return EFAULT;
         if (is_kernel_buffer()) {
             // We're transferring directly from a kernel buffer, bypass
             return f(m_buffer + offset, len);
@@ -132,7 +132,7 @@ public:
         while (nread < len) {
             auto to_copy = min(sizeof(buffer), len - nread);
             if (!read(buffer, nread, to_copy))
-                return -EFAULT;
+                return EFAULT;
             ssize_t copied = f(buffer, to_copy);
             if (copied < 0)
                 return copied;
@@ -144,7 +144,7 @@ public:
         return nread;
     }
     template<size_t BUFFER_BYTES, typename F>
-    [[nodiscard]] ssize_t read_buffered(size_t len, F f) const
+    [[nodiscard]] KResultOr<size_t> read_buffered(size_t len, F f) const
     {
         return read_buffered<BUFFER_BYTES, F>(0, len, f);
     }
