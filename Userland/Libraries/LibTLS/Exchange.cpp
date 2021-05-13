@@ -101,28 +101,27 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
     //            document and in TLS documents published prior to this document when
     //            TLS 1.2 is negotiated."
     // Apparently this PRF _always_ uses SHA256
+
+    auto append_label_seed = [&](auto& hmac) {
+        hmac.update(label, label_length);
+        hmac.update(seed);
+        if (seed_b.size() > 0)
+            hmac.update(seed_b);
+    };
+
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret);
+    append_label_seed(hmac);
 
-    auto l_seed_size = label_length + seed.size() + seed_b.size();
-    u8 l_seed[l_seed_size];
-    auto label_seed_buffer = Bytes { l_seed, l_seed_size };
-    label_seed_buffer.overwrite(0, label, label_length);
-    label_seed_buffer.overwrite(label_length, seed.data(), seed.size());
-    if (seed_b.size() > 0)
-        label_seed_buffer.overwrite(label_length + seed.size(), seed_b.data(), seed_b.size());
-
-    auto digest_size = hmac.digest_size();
-
+    constexpr auto digest_size = hmac.digest_size();
     u8 digest[digest_size];
-
     auto digest_0 = Bytes { digest, digest_size };
 
-    digest_0.overwrite(0, hmac.process(label_seed_buffer).immutable_data(), digest_size);
+    digest_0.overwrite(0, hmac.digest().immutable_data(), digest_size);
 
     size_t index = 0;
     while (index < output.size()) {
         hmac.update(digest_0);
-        hmac.update(label_seed_buffer);
+        append_label_seed(hmac);
         auto digest_1 = hmac.digest();
 
         auto copy_size = min(digest_size, output.size() - index);
