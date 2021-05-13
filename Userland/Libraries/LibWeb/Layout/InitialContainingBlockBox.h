@@ -20,8 +20,6 @@ public:
 
     void paint_all_phases(PaintContext&);
 
-    void paint_document_background(PaintContext&);
-
     virtual HitTestResult hit_test(const Gfx::IntPoint&, HitTestType) const override;
 
     const LayoutRange& selection() const { return m_selection; }
