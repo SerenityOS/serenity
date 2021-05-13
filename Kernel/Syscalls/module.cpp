@@ -37,13 +37,17 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
     auto storage = KBuffer::create_with_size(payload.size());
     memcpy(storage.data(), payload.data(), payload.size());
 
-    auto elf_image = make<ELF::Image>(storage.data(), storage.size());
+    auto elf_image = adopt_own_if_nonnull(new ELF::Image(storage.data(), storage.size()));
+    if (!elf_image)
+        return ENOMEM;
     if (!elf_image->parse())
         return ENOEXEC;
 
     HashMap<String, u8*> section_storage_by_name;
 
-    auto module = make<Module>();
+    auto module = adopt_own_if_nonnull(new Module());
+    if (!module)
+        return ENOMEM;
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
