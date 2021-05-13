@@ -16,6 +16,7 @@
 namespace Kernel {
 
 #define OPTIMAL_TICKS_PER_SECOND_RATE 250
+#define OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE 1000
 
 class HardwareTimerBase;
 
@@ -55,6 +56,9 @@ public:
 
     static bool is_hpet_periodic_mode_allowed();
 
+    void enable_profile_timer();
+    void disable_profile_timer();
+
     u64 uptime_ms() const;
     static Time now();
 
@@ -90,6 +94,9 @@ private:
 
     RefPtr<HardwareTimerBase> m_system_timer;
     RefPtr<HardwareTimerBase> m_time_keeper_timer;
+
+    Atomic<u32> m_profile_enable_count { 0 };
+    RefPtr<HardwareTimerBase> m_profile_timer;
 };
 
 }
