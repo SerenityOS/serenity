@@ -255,7 +255,7 @@ public:
     KResultOr<int> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
     KResultOr<int> sys$inode_watcher_remove_watch(int fd, int wd);
     KResultOr<int> sys$dbgputch(u8);
-    KResultOr<int> sys$dbgputstr(Userspace<const u8*>, int length);
+    KResultOr<size_t> sys$dbgputstr(Userspace<const u8*>, int length);
     KResultOr<int> sys$dump_backtrace();
     KResultOr<pid_t> sys$gettid();
     KResultOr<int> sys$donate(pid_t tid);
@@ -372,7 +372,7 @@ public:
     KResultOr<int> sys$halt();
     KResultOr<int> sys$reboot();
     KResultOr<int> sys$realpath(Userspace<const Syscall::SC_realpath_params*>);
-    KResultOr<ssize_t> sys$getrandom(Userspace<void*>, size_t, unsigned int);
+    KResultOr<size_t> sys$getrandom(Userspace<void*>, size_t, unsigned int);
     KResultOr<int> sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*>);
     KResultOr<int> sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
     KResultOr<int> sys$module_load(Userspace<const char*> path, size_t path_length);

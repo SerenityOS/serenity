@@ -903,17 +903,17 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const UserOrKernelBuffer
 
     char value = 0;
     bool did_read = false;
-    ssize_t nread = buffer.read_buffered<1>(1, [&](const u8* data, size_t) {
+    auto result = buffer.read_buffered<1>(1, [&](u8 const* data, size_t) {
         if (did_read)
             return 0;
         value = (char)data[0];
         did_read = true;
         return 1;
     });
-    if (nread < 0)
-        return nread;
-    VERIFY(nread == 0 || (nread == 1 && did_read));
-    if (nread == 0 || !(value == '0' || value == '1'))
+    if (result.is_error())
+        return result.error();
+    VERIFY(result.value() == 0 || (result.value() == 1 && did_read));
+    if (result.value() == 0 || !(value == '0' || value == '1'))
         return (ssize_t)size;
 
     auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);

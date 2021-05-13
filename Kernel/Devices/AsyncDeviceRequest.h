@@ -90,7 +90,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
-    [[nodiscard]] bool write_to_buffer_buffered(UserOrKernelBuffer& buffer, Args... args)
+    [[nodiscard]] KResultOr<size_t> write_to_buffer_buffered(UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.write_buffered<BUFFER_BYTES>(forward<Args>(args)...);
@@ -108,7 +108,7 @@ public:
     }
 
     template<size_t BUFFER_BYTES, typename... Args>
-    [[nodiscard]] bool read_from_buffer_buffered(const UserOrKernelBuffer& buffer, Args... args)
+    [[nodiscard]] KResultOr<size_t> read_from_buffer_buffered(const UserOrKernelBuffer& buffer, Args... args)
     {
         if (in_target_context(buffer))
             return buffer.read_buffered<BUFFER_BYTES>(forward<Args>(args)...);

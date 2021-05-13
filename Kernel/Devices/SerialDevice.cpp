@@ -33,15 +33,11 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (!(get_line_status() & DataReady))
         return 0;
 
-    ssize_t nwritten = buffer.write_buffered<128>(size, [&](u8* data, size_t data_size) {
+    return buffer.write_buffered<128>(size, [&](u8* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
             data[i] = IO::in8(m_base_addr);
-        return (ssize_t)data_size;
+        return data_size;
     });
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
-
-    return size;
 }
 
 bool SerialDevice::can_write(const FileDescription&, size_t) const
@@ -57,14 +53,11 @@ KResultOr<size_t> SerialDevice::write(FileDescription&, u64, const UserOrKernelB
     if (!(get_line_status() & EmptyTransmitterHoldingRegister))
         return 0;
 
-    ssize_t nread = buffer.read_buffered<128>(size, [&](const u8* data, size_t data_size) {
+    return buffer.read_buffered<128>(size, [&](u8 const* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
             IO::out8(m_base_addr, data[i]);
-        return (ssize_t)data_size;
+        return data_size;
     });
-    if (nread < 0)
-        return KResult((ErrnoCode)-nread);
-    return (size_t)nread;
 }
 
 String SerialDevice::device_name() const

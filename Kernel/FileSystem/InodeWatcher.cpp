@@ -48,7 +48,7 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (buffer_size < bytes_to_write)
         return EINVAL;
 
-    ssize_t nwritten = buffer.write_buffered<MAXIMUM_EVENT_SIZE>(bytes_to_write, [&](u8* data, size_t data_bytes) {
+    auto result = buffer.write_buffered<MAXIMUM_EVENT_SIZE>(bytes_to_write, [&](u8* data, size_t data_bytes) {
         size_t offset = 0;
 
         memcpy(data + offset, &event.wd, sizeof(InodeWatcherEvent::watch_descriptor));
@@ -64,12 +64,10 @@ KResultOr<size_t> InodeWatcher::read(FileDescription&, u64, UserOrKernelBuffer& 
             memset(data + offset, 0, sizeof(InodeWatcherEvent::name_length));
         }
 
-        return (ssize_t)data_bytes;
+        return data_bytes;
     });
-    if (nwritten < 0)
-        return KResult((ErrnoCode)-nwritten);
     evaluate_block_conditions();
-    return bytes_to_write;
+    return result;
 }
 
 KResult InodeWatcher::close()
