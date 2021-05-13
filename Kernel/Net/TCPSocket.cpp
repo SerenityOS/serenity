@@ -98,8 +98,11 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     if (sockets_by_tuple().resource().contains(tuple))
         return {};
 
-    auto client = TCPSocket::create(protocol());
+    auto result = TCPSocket::create(protocol());
+    if (result.is_error())
+        return {};
 
+    auto client = result.release_value();
     client->set_setup_state(SetupState::InProgress);
     client->set_local_address(new_local_address);
     client->set_local_port(new_local_port);
@@ -142,9 +145,12 @@ TCPSocket::~TCPSocket()
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
 
-NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
+KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol)
 {
-    return adopt_ref(*new TCPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new TCPSocket(protocol));
+    if (socket)
+        return socket.release_nonnull();
+    return ENOMEM;
 }
 
 KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
