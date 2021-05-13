@@ -182,8 +182,8 @@ KResult TCPSocket::send_ack(bool allow_duplicate)
 
 KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
 {
-    const bool has_mss_option = flags == TCPFlags::SYN;
-    const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
+    const bool has_options = flags & TCPFlags::SYN;
+    const size_t options_size = has_options ? sizeof(TCPOptionMSS) : 0;
     const size_t header_size = sizeof(TCPPacket) + options_size;
     const size_t buffer_size = header_size + payload_size;
     auto buffer = NetworkByteBuffer::create_zeroed(buffer_size);
@@ -215,7 +215,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     if (routing_decision.is_zero())
         return EHOSTUNREACH;
 
-    if (has_mss_option) {
+    if (has_options) {
         u16 mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
         TCPOptionMSS mss_option { mss };
         VERIFY(buffer.size() >= sizeof(TCPPacket) + sizeof(mss_option));
