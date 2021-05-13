@@ -2,8 +2,8 @@ describe("function declarations in if statement clauses", () => {
     test("if clause", () => {
         if (true) function foo() {}
         if (false) function bar() {}
-        expect(typeof globalThis.foo).toBe("function");
-        expect(typeof globalThis.bar).toBe("undefined");
+        expect(typeof foo).toBe("function");
+        expect(typeof bar).toBe("undefined");
     });
 
     test("else clause", () => {
@@ -11,15 +11,15 @@ describe("function declarations in if statement clauses", () => {
         else function foo() {}
         if (true);
         else function bar() {}
-        expect(typeof globalThis.foo).toBe("function");
-        expect(typeof globalThis.bar).toBe("undefined");
+        expect(typeof foo).toBe("function");
+        expect(typeof bar).toBe("undefined");
     });
 
     test("if and else clause", () => {
         if (true) function foo() {}
         else function bar() {}
-        expect(typeof globalThis.foo).toBe("function");
-        expect(typeof globalThis.bar).toBe("undefined");
+        expect(typeof foo).toBe("function");
+        expect(typeof bar).toBe("undefined");
     });
 
     test("syntax error in strict mode", () => {
