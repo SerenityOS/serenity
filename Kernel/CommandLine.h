@@ -72,6 +72,7 @@ public:
     [[nodiscard]] String userspace_init() const;
     [[nodiscard]] Vector<String> userspace_init_args() const;
     [[nodiscard]] String root_device() const;
+    [[nodiscard]] size_t switch_to_tty() const;
 
 private:
     CommandLine(const String&);

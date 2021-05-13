@@ -5,8 +5,10 @@
  */
 
 #include <AK/Singleton.h>
+#include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Panic.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel {
@@ -39,7 +41,11 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
         m_consoles.append(VirtualConsole::create(index));
     }
     // Note: By default the active console is the first one.
-    m_active_console = m_consoles[0];
+    auto tty_number = kernel_command_line().switch_to_tty();
+    if (tty_number > m_consoles.size()) {
+        PANIC("Switch to tty value is invalid: {} ", tty_number);
+    }
+    m_active_console = m_consoles[tty_number];
     ScopedSpinLock lock(m_lock);
     m_active_console->set_active(true);
 }
