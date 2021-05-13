@@ -21,7 +21,12 @@ namespace Core {
 
 class EventLoop {
 public:
-    EventLoop();
+    enum class MakeInspectable {
+        No,
+        Yes,
+    };
+
+    EventLoop(MakeInspectable = MakeInspectable::Yes);
     ~EventLoop();
 
     int exec();
@@ -69,7 +74,6 @@ public:
     static void notify_forked(ForkEvent);
 
 private:
-    bool start_rpc_server();
     void wait_for_event(WaitMode);
     Optional<struct timeval> get_next_timer_expiration();
     static void dispatch_signal(int);

@@ -11,6 +11,7 @@
 
 namespace Inspector {
 
+class InspectorServerClient;
 class RemoteObjectGraphModel;
 class RemoteObject;
 
@@ -19,6 +20,7 @@ public:
     static RemoteProcess& the();
 
     explicit RemoteProcess(pid_t);
+    ~RemoteProcess();
     void update();
 
     pid_t pid() const { return m_pid; }
@@ -42,8 +44,8 @@ private:
     pid_t m_pid { -1 };
     String m_process_name;
     NonnullRefPtr<RemoteObjectGraphModel> m_object_graph_model;
-    RefPtr<Core::LocalSocket> m_socket;
     NonnullOwnPtrVector<RemoteObject> m_roots;
+    RefPtr<InspectorServerClient> m_client;
 };
 
 }

@@ -37,7 +37,9 @@
 
 namespace Core {
 
-class RPCClient;
+class InspectorServerConnection;
+
+[[maybe_unused]] static bool connect_to_inspector_server();
 
 struct EventLoopTimer {
     int timer_id { 0 };
@@ -61,8 +63,7 @@ static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
 int EventLoop::s_wake_pipe_fds[2];
-static RefPtr<LocalServer> s_rpc_server;
-HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
+static RefPtr<InspectorServerConnection> s_inspector_server_connection;
 
 class SignalHandlers : public RefCounted<SignalHandlers> {
     AK_MAKE_NONCOPYABLE(SignalHandlers);
@@ -120,15 +121,14 @@ inline SignalHandlersInfo* signals_info()
 
 pid_t EventLoop::s_pid;
 
-class RPCClient : public Object {
-    C_OBJECT(RPCClient)
+class InspectorServerConnection : public Object {
+    C_OBJECT(InspectorServerConnection)
 public:
-    explicit RPCClient(RefPtr<LocalSocket> socket)
+    explicit InspectorServerConnection(RefPtr<LocalSocket> socket)
         : m_socket(move(socket))
         , m_client_id(s_id_allocator->allocate())
     {
 #ifdef __serenity__
-        s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
             u32 length;
@@ -154,7 +154,7 @@ public:
         warnln("RPC Client constructed outside serenity, this is very likely a bug!");
 #endif
     }
-    virtual ~RPCClient() override
+    virtual ~InspectorServerConnection() override
     {
         if (auto inspected_object = m_inspected_object.strong_ref())
             inspected_object->decrement_inspector_count({});
@@ -244,7 +244,6 @@ public:
 
     void shutdown()
     {
-        s_rpc_clients.remove(m_client_id);
         s_id_allocator->deallocate(m_client_id);
     }
 
@@ -254,7 +253,7 @@ private:
     int m_client_id { -1 };
 };
 
-EventLoop::EventLoop()
+EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
     : m_private(make<Private>())
 {
     if (!s_event_loop_stack) {
@@ -278,9 +277,11 @@ EventLoop::EventLoop()
         s_event_loop_stack->append(this);
 
 #ifdef __serenity__
-        if (!s_rpc_server) {
-            if (!start_rpc_server())
-                dbgln("Core::EventLoop: Failed to start an RPC server");
+        if (make_inspectable == MakeInspectable::Yes) {
+            if (!s_inspector_server_connection) {
+                if (!connect_to_inspector_server())
+                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
+            }
         }
 #endif
     }
@@ -292,15 +293,14 @@ EventLoop::~EventLoop()
 {
 }
 
-bool EventLoop::start_rpc_server()
+bool connect_to_inspector_server()
 {
 #ifdef __serenity__
-    s_rpc_server = LocalServer::construct();
-    s_rpc_server->set_name("Core::EventLoop_RPC_server");
-    s_rpc_server->on_ready_to_accept = [&] {
-        RPCClient::construct(s_rpc_server->accept());
-    };
-    return s_rpc_server->listen(String::formatted("/tmp/rpc/{}", getpid()));
+    auto socket = Core::LocalSocket::construct();
+    if (!socket->connect(SocketAddress::local("/tmp/portal/inspectables")))
+        return false;
+    s_inspector_server_connection = InspectorServerConnection::construct(move(socket));
+    return true;
 #else
     VERIFY_NOT_REACHED();
 #endif
@@ -563,8 +563,7 @@ void EventLoop::notify_forked(ForkEvent event)
         }
         s_pid = 0;
 #ifdef __serenity__
-        s_rpc_server = nullptr;
-        s_rpc_clients.clear();
+        s_inspector_server_connection = nullptr;
 #endif
         return;
     }
