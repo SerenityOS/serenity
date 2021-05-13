@@ -114,6 +114,14 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
         event.data.context_switch.next_pid = arg1;
         event.data.context_switch.next_tid = arg2;
         break;
+    case PERF_EVENT_KMALLOC:
+        event.data.kmalloc.size = arg1;
+        event.data.kmalloc.ptr = arg2;
+        break;
+    case PERF_EVENT_KFREE:
+        event.data.kfree.size = arg1;
+        event.data.kfree.ptr = arg2;
+        break;
     default:
         return EINVAL;
     }
@@ -191,6 +199,16 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             event_object.add("type", "context_switch");
             event_object.add("next_pid", static_cast<u64>(event.data.context_switch.next_pid));
             event_object.add("next_tid", static_cast<u64>(event.data.context_switch.next_tid));
+            break;
+        case PERF_EVENT_KMALLOC:
+            event_object.add("type", "kmalloc");
+            event_object.add("ptr", static_cast<u64>(event.data.kmalloc.ptr));
+            event_object.add("size", static_cast<u64>(event.data.kmalloc.size));
+            break;
+        case PERF_EVENT_KFREE:
+            event_object.add("type", "kfree");
+            event_object.add("ptr", static_cast<u64>(event.data.kfree.ptr));
+            event_object.add("size", static_cast<u64>(event.data.kfree.size));
             break;
         }
         event_object.add("pid", event.pid);

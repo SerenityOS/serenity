@@ -92,6 +92,20 @@ public:
         }
     }
 
+    inline static void add_kmalloc_perf_event(Process& current_process, size_t size, FlatPtr ptr)
+    {
+        if (auto* event_buffer = current_process.current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KMALLOC, size, ptr, nullptr);
+        }
+    }
+
+    inline static void add_kfree_perf_event(Process& current_process, size_t size, FlatPtr ptr)
+    {
+        if (auto* event_buffer = current_process.current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_KFREE, size, ptr, nullptr);
+        }
+    }
+
     inline static void timer_tick(RegisterState const& regs)
     {
         static Time last_wakeup;
