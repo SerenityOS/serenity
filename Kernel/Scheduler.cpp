@@ -10,7 +10,6 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
-#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
@@ -500,8 +499,6 @@ void Scheduler::timer_tick(const RegisterState& regs)
     if (!Processor::is_bootstrap_processor())
         return; // TODO: This prevents scheduling on other CPUs!
 #endif
-
-    PerformanceManager::add_cpu_sample_event(*current_thread, regs);
 
     if (current_thread->tick())
         return;

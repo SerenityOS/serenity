@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/Time/TimeManagement.h>
 
 namespace Kernel {
 
@@ -34,6 +35,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
             PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
         });
+        TimeManagement::the().enable_profile_timer();
         return 0;
     }
 
@@ -48,6 +50,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
     if (!process->create_perf_events_buffer_if_needed())
         return ENOMEM;
     process->set_profiling(true);
+    TimeManagement::the().enable_profile_timer();
     return 0;
 }
 
@@ -60,6 +63,7 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
             return EPERM;
         ScopedCritical critical;
         g_profiling_all_threads = false;
+        TimeManagement::the().disable_profile_timer();
         return 0;
     }
 
@@ -71,6 +75,7 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
         return EPERM;
     if (!process->is_profiling())
         return EINVAL;
+    TimeManagement::the().disable_profile_timer();
     process->set_profiling(false);
     return 0;
 }
