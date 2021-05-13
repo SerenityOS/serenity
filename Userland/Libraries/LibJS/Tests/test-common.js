@@ -296,7 +296,7 @@ class ExpectationError extends Error {
             this.__doMatcher(() => {
                 try {
                     this.target();
-                    this.__expect(false);
+                    this.__expect(false, () => "toThrowWithMessage: target function did not throw");
                 } catch (e) {
                     this.__expect(
                         e instanceof class_,
