@@ -10,6 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
+#include <Kernel/KResult.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {
@@ -17,7 +18,7 @@ namespace Kernel {
 class TCPSocket final : public IPv4Socket {
 public:
     static void for_each(Function<void(const TCPSocket&)>);
-    static NonnullRefPtr<TCPSocket> create(int protocol);
+    static KResultOr<NonnullRefPtr<TCPSocket>> create(int protocol);
     virtual ~TCPSocket() override;
 
     enum class Direction {

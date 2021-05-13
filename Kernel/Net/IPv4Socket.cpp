@@ -36,8 +36,12 @@ Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 
 KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 {
-    if (type == SOCK_STREAM)
-        return TCPSocket::create(protocol);
+    if (type == SOCK_STREAM) {
+        auto tcp_socket = TCPSocket::create(protocol);
+        if (tcp_socket.is_error())
+            return tcp_socket.error();
+        return tcp_socket.release_value();
+    }
     if (type == SOCK_DGRAM)
         return UDPSocket::create(protocol);
     if (type == SOCK_RAW)
