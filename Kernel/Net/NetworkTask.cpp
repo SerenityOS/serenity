@@ -435,12 +435,12 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            send_delayed_tcp_ack(socket);
+            unused_rc = socket->send_ack(true);
             socket->set_state(TCPSocket::State::SynReceived);
             return;
         case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-            send_delayed_tcp_ack(socket);
+            unused_rc = socket->send_ack(true);
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
