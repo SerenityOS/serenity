@@ -109,7 +109,7 @@ function(serenity_app target_name)
         list(APPEND allowed_missing_medium_icons "edit-copy")
 
         if (NOT ${SERENITY_APP_ICON} IN_LIST allowed_missing_medium_icons)
-            message(WARNING "Missing medium app icon: ${medium_icon}")
+            message(FATAL_ERROR "Missing medium app icon: ${medium_icon}")
         endif()
     endif()
 endfunction()
