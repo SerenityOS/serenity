@@ -29,7 +29,7 @@ static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&, const Tim
 static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
 static void send_delayed_tcp_ack(RefPtr<TCPSocket> socket);
-static void flush_delayed_tcp_acks(bool all);
+static void flush_delayed_tcp_acks();
 
 static Thread* network_task = nullptr;
 static HashTable<RefPtr<TCPSocket>>* delayed_ack_sockets;
@@ -89,15 +89,14 @@ void NetworkTask_main(void*)
     Time packet_timestamp;
 
     for (;;) {
+        flush_delayed_tcp_acks();
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
         if (!packet_size) {
-            // We might sleep for a while so we must flush all delayed TCP ACKs
-            // including those which haven't expired yet.
-            flush_delayed_tcp_acks(true);
-            packet_wait_queue.wait_forever("NetworkTask");
+            auto timeout_time = Time::from_milliseconds(500);
+            auto timeout = Thread::BlockTimeout { false, &timeout_time };
+            [[maybe_unused]] auto result = packet_wait_queue.wait_on(timeout, "NetworkTask");
             continue;
         }
-        flush_delayed_tcp_acks(false);
         if (packet_size < sizeof(EthernetFrameHeader)) {
             dbgln("NetworkTask: Packet is too small to be an Ethernet packet! ({})", packet_size);
             continue;
@@ -300,12 +299,12 @@ void send_delayed_tcp_ack(RefPtr<TCPSocket> socket)
     delayed_ack_sockets->set(move(socket));
 }
 
-void flush_delayed_tcp_acks(bool all)
+void flush_delayed_tcp_acks()
 {
     Vector<RefPtr<TCPSocket>, 32> remaining_sockets;
     for (auto& socket : *delayed_ack_sockets) {
         Locker locker(socket->lock());
-        if (!all && socket->should_delay_next_ack()) {
+        if (socket->should_delay_next_ack()) {
             remaining_sockets.append(socket);
             continue;
         }
