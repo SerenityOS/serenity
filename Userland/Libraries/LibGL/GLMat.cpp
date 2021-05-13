@@ -37,11 +37,14 @@ void glPopMatrix()
 
 void glLoadMatrixf(const GLfloat* matrix)
 {
+    // Transpose the matrix here because glLoadMatrix expects elements
+    // in column major order but out Matrix class stores elements in
+    // row major order.
     FloatMatrix4x4 mat(
-        matrix[0], matrix[1], matrix[2], matrix[3],
-        matrix[4], matrix[5], matrix[6], matrix[7],
-        matrix[8], matrix[9], matrix[10], matrix[11],
-        matrix[12], matrix[13], matrix[14], matrix[15]);
+        matrix[0], matrix[4], matrix[8], matrix[12],
+        matrix[1], matrix[5], matrix[9], matrix[13],
+        matrix[2], matrix[6], matrix[10], matrix[14],
+        matrix[3], matrix[7], matrix[11], matrix[15]);
 
     g_gl_context->gl_load_matrix(mat);
 }
