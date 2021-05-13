@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <LibIPC/ClientConnection.h>
-#include <LibWeb/Forward.h>
 #include <SymbolServer/Forward.h>
 #include <SymbolServer/SymbolClientEndpoint.h>
 #include <SymbolServer/SymbolServerEndpoint.h>
