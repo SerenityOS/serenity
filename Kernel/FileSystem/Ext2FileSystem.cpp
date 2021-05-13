@@ -1495,7 +1495,10 @@ KResultOr<Ext2FS::CachedBitmap*> Ext2FS::get_bitmap_block(BlockIndex bitmap_bloc
         dbgln("Ext2FS: Failed to load bitmap block {}", bitmap_block_index);
         return result;
     }
-    if (!m_cached_bitmaps.try_append(make<CachedBitmap>(bitmap_block_index, move(block))))
+    auto new_bitmap = adopt_own_if_nonnull(new CachedBitmap(bitmap_block_index, move(block)));
+    if (!new_bitmap)
+        return ENOMEM;
+    if (!m_cached_bitmaps.try_append(move(new_bitmap)))
         return ENOMEM;
     return m_cached_bitmaps.last();
 }
