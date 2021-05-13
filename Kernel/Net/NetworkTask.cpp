@@ -30,6 +30,7 @@ static void handle_udp(const IPv4Packet&, const Time& packet_timestamp);
 static void handle_tcp(const IPv4Packet&, const Time& packet_timestamp);
 static void send_delayed_tcp_ack(RefPtr<TCPSocket> socket);
 static void flush_delayed_tcp_acks();
+static void retransmit_tcp_packets();
 
 static Thread* network_task = nullptr;
 static HashTable<RefPtr<TCPSocket>>* delayed_ack_sockets;
@@ -90,6 +91,7 @@ void NetworkTask_main(void*)
 
     for (;;) {
         flush_delayed_tcp_acks();
+        retransmit_tcp_packets();
         size_t packet_size = dequeue_packet(buffer, buffer_size, packet_timestamp);
         if (!packet_size) {
             auto timeout_time = Time::from_milliseconds(500);
@@ -603,6 +605,23 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
                 send_delayed_tcp_ack(socket);
             }
         }
+    }
+}
+
+void retransmit_tcp_packets()
+{
+    // We must keep the sockets alive until after we've unlocked the hash table
+    // in case retransmit_packets() realizes that it wants to close the socket.
+    NonnullRefPtrVector<TCPSocket, 16> sockets;
+    {
+        Locker locker(TCPSocket::sockets_for_retransmit().lock(), LockMode::Shared);
+        for (auto& socket : TCPSocket::sockets_for_retransmit().resource())
+            sockets.append(*socket);
+    }
+
+    for (auto& socket : sockets) {
+        Locker socket_locker(socket.lock());
+        socket.retransmit_packets();
     }
 }
 
