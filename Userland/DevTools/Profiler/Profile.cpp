@@ -79,9 +79,9 @@ void Profile::rebuild_tree()
     HashTable<FlatPtr> live_allocations;
 
     for_each_event_in_filter_range([&](auto& event) {
-        if (event.type == "malloc")
+        if (event.type == "malloc"sv)
             live_allocations.set(event.ptr);
-        else if (event.type == "free")
+        else if (event.type == "free"sv)
             live_allocations.remove(event.ptr);
     });
 
@@ -100,17 +100,17 @@ void Profile::rebuild_tree()
             continue;
 
         if (!m_show_scheduler && !event.frames.is_empty()) {
-            auto top_frame = event.frames[event.frames.size() - 1];
-            if (top_frame.symbol == "Kernel::Scheduler::yield()")
+            const auto& top_frame = event.frames[event.frames.size() - 1];
+            if (top_frame.symbol == "Kernel::Scheduler::yield()"sv)
                 continue;
         }
 
         m_filtered_event_indices.append(event_index);
 
-        if (event.type == "malloc" && !live_allocations.contains(event.ptr))
+        if (event.type == "malloc"sv && !live_allocations.contains(event.ptr))
             continue;
 
-        if (event.type == "free")
+        if (event.type == "free"sv)
             continue;
 
         auto for_each_frame = [&]<typename Callback>(Callback callback) {
@@ -233,12 +233,12 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         event.pid = perf_event.get("pid").to_i32();
         event.tid = perf_event.get("tid").to_i32();
 
-        if (event.type == "malloc") {
+        if (event.type == "malloc"sv) {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
-        } else if (event.type == "free") {
+        } else if (event.type == "free"sv) {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
-        } else if (event.type == "mmap") {
+        } else if (event.type == "mmap"sv) {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
             event.name = perf_event.get("name").to_string();
@@ -247,11 +247,11 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             if (it != current_processes.end())
                 it->value->library_metadata.handle_mmap(event.ptr, event.size, event.name);
             continue;
-        } else if (event.type == "munmap") {
+        } else if (event.type == "munmap"sv) {
             event.ptr = perf_event.get("ptr").to_number<FlatPtr>();
             event.size = perf_event.get("size").to_number<size_t>();
             continue;
-        } else if (event.type == "process_create") {
+        } else if (event.type == "process_create"sv) {
             event.parent_pid = perf_event.get("parent_pid").to_number<FlatPtr>();
             event.executable = perf_event.get("executable").to_string();
 
@@ -264,7 +264,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
             continue;
-        } else if (event.type == "process_exec") {
+        } else if (event.type == "process_exec"sv) {
             event.executable = perf_event.get("executable").to_string();
 
             auto old_process = current_processes.get(event.pid).value();
@@ -280,19 +280,19 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
             continue;
-        } else if (event.type == "process_exit") {
+        } else if (event.type == "process_exit"sv) {
             auto old_process = current_processes.get(event.pid).value();
             old_process->end_valid = event.timestamp - 1;
 
             current_processes.remove(event.pid);
             continue;
-        } else if (event.type == "thread_create") {
+        } else if (event.type == "thread_create"sv) {
             event.parent_tid = perf_event.get("parent_tid").to_i32();
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_create(event.tid, event.timestamp);
             continue;
-        } else if (event.type == "thread_exit") {
+        } else if (event.type == "thread_exit"sv) {
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
                 it->value->handle_thread_exit(event.tid, event.timestamp);
@@ -488,7 +488,7 @@ ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, 
     , m_timestamp(timestamp)
 {
     String object;
-    if (object_name.ends_with(": .text")) {
+    if (object_name.ends_with(": .text"sv)) {
         object = object_name.view().substring_view(0, object_name.length() - 7);
     } else {
         object = object_name;
