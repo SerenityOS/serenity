@@ -71,6 +71,12 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
         if (!m_process.valid_at(event.timestamp))
             continue;
 
+        if (!m_profile.show_scheduler() && !event.frames.is_empty()) {
+            auto top_frame = event.frames[event.frames.size() - 1];
+            if (top_frame.symbol == "Kernel::Scheduler::yield()")
+                continue;
+        }
+
         auto& histogram = event.in_kernel ? kernel_histogram : usermode_histogram;
         histogram.insert(clamp_timestamp(event.timestamp), 1);
     }
