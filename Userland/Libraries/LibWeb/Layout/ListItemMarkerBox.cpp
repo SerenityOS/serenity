@@ -30,11 +30,11 @@ ListItemMarkerBox::ListItemMarkerBox(DOM::Document& document, CSS::ListStyleType
         break;
     case CSS::ListStyleType::LowerAlpha:
     case CSS::ListStyleType::LowerLatin:
-        m_text = String::bijective_base_from(m_index).to_lowercase();
+        m_text = String::bijective_base_from(m_index - 1).to_lowercase();
         break;
     case CSS::ListStyleType::UpperAlpha:
     case CSS::ListStyleType::UpperLatin:
-        m_text = String::bijective_base_from(m_index);
+        m_text = String::bijective_base_from(m_index - 1);
         break;
     case CSS::ListStyleType::None:
         break;
