@@ -226,14 +226,14 @@ bool Object::is_visible_for_timer_purposes() const
     return true;
 }
 
-void Object::increment_inspector_count(Badge<RPCClient>)
+void Object::increment_inspector_count(Badge<InspectorServerConnection>)
 {
     ++m_inspector_count;
     if (m_inspector_count == 1)
         did_begin_inspection();
 }
 
-void Object::decrement_inspector_count(Badge<RPCClient>)
+void Object::decrement_inspector_count(Badge<InspectorServerConnection>)
 {
     --m_inspector_count;
     if (!m_inspector_count)
