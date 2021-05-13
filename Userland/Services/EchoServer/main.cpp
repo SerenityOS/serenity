@@ -21,11 +21,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (unveil("/tmp/rpc", "rwc") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;
