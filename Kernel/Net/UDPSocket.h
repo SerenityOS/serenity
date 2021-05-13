@@ -6,13 +6,14 @@
 
 #pragma once
 
+#include <Kernel/KResult.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 namespace Kernel {
 
 class UDPSocket final : public IPv4Socket {
 public:
-    static NonnullRefPtr<UDPSocket> create(int protocol);
+    static KResultOr<NonnullRefPtr<UDPSocket>> create(int protocol);
     virtual ~UDPSocket() override;
 
     static SocketHandle<UDPSocket> from_port(u16);

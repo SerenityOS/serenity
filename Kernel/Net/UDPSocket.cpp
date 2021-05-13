@@ -54,9 +54,12 @@ UDPSocket::~UDPSocket()
     sockets_by_port().resource().remove(local_port());
 }
 
-NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
+KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::create(int protocol)
 {
-    return adopt_ref(*new UDPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new UDPSocket(protocol));
+    if (socket)
+        return socket.release_nonnull();
+    return ENOMEM;
 }
 
 KResultOr<size_t> UDPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, UserOrKernelBuffer& buffer, size_t buffer_size, [[maybe_unused]] int flags)
