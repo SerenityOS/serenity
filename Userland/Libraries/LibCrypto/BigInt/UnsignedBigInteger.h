@@ -15,7 +15,7 @@
 namespace Crypto {
 
 struct UnsignedDivisionResult;
-constexpr size_t STARTING_WORD_SIZE = 512;
+constexpr size_t STARTING_WORD_SIZE = 32;
 
 class UnsignedBigInteger {
 public:
