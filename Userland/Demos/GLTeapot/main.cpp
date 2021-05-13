@@ -87,6 +87,10 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
         * FloatMatrix4x4::rotate(FloatVector3(0, 1, 0), 0.0f)
         * FloatMatrix4x4::rotate(FloatVector3(0, 0, 1), angle);
 
+    // We need to transpose here because OpenGL expects matrices in column major order
+    // but our matrix class stores elements in row major order.
+    matrix = matrix.transpose();
+
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf((float*)matrix.elements());
 
