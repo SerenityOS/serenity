@@ -269,7 +269,7 @@ bool IDEChannel::wait_until_not_busy(bool slave, size_t milliseconds_timeout)
         IO::delay(1000);
         time_elapsed++;
     }
-    return time_elapsed != milliseconds_timeout;
+    return time_elapsed <= milliseconds_timeout;
 }
 
 bool IDEChannel::wait_until_not_busy(size_t milliseconds_timeout)
@@ -279,7 +279,7 @@ bool IDEChannel::wait_until_not_busy(size_t milliseconds_timeout)
         IO::delay(1000);
         time_elapsed++;
     }
-    return time_elapsed != milliseconds_timeout;
+    return time_elapsed <= milliseconds_timeout;
 }
 
 String IDEChannel::channel_type_string() const
