@@ -38,3 +38,7 @@ endif()
 
 serenity_lib(LibCore core)
 target_link_libraries(LibCore ${LIBRARY_LIBC} ${LIBRARY_LIBCRYPT})
+
+if(BUILD_LAGOM)
+    target_link_libraries(LibCore ${LIBRARY_LIBPTHREAD})
+endif()
