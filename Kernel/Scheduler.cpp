@@ -587,7 +587,7 @@ void dump_thread_list()
     Thread::for_each([&](Thread& thread) {
         switch (thread.state()) {
         case Thread::Dying:
-            dbgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
+            dmesgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
                 thread.state_string(),
                 thread,
                 get_cs(thread),
@@ -596,7 +596,7 @@ void dump_thread_list()
                 thread.times_scheduled());
             break;
         default:
-            dbgln("  {:14} Pr:{:2} {:30} @ {:04x}:{:08x} (nsched: {})",
+            dmesgln("  {:14} Pr:{:2} {:30} @ {:04x}:{:08x} (nsched: {})",
                 thread.state_string(),
                 thread.priority(),
                 thread,
