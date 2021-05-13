@@ -142,7 +142,6 @@ public:
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
     static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
-    static RefPtr<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
     static Lockable<HashMap<IPv4SocketTuple, RefPtr<TCPSocket>>>& closing_sockets();
 
