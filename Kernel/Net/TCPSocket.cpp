@@ -132,12 +132,15 @@ void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
 TCPSocket::TCPSocket(int protocol)
     : IPv4Socket(SOCK_STREAM, protocol)
 {
+    m_last_retransmit_time = kgettimeofday();
 }
 
 TCPSocket::~TCPSocket()
 {
     Locker locker(sockets_by_tuple().lock());
     sockets_by_tuple().resource().remove(tuple());
+
+    dequeue_for_retransmit();
 
     dbgln_if(TCP_SOCKET_DEBUG, "~TCPSocket in state {}", to_string(state()));
 }
@@ -221,13 +224,6 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
-    if (tcp_packet.has_syn() || payload_size > 0) {
-        Locker locker(m_not_acked_lock);
-        m_not_acked.append({ m_sequence_number, move(buffer) });
-        send_outgoing_packets(routing_decision);
-        return KSuccess;
-    }
-
     auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
     auto result = routing_decision.adapter->send_ipv4(
         local_address(), routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
@@ -237,19 +233,23 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 
     m_packets_out++;
     m_bytes_out += buffer_size;
+    if (tcp_packet.has_syn() || payload_size > 0) {
+        Locker locker(m_not_acked_lock);
+        m_not_acked.append({ m_sequence_number, move(buffer) });
+        enqueue_for_retransmit();
+    }
+
     return KSuccess;
 }
 
-void TCPSocket::send_outgoing_packets(RoutingDecision& routing_decision)
+void TCPSocket::do_retransmit_packets()
 {
-    auto now = kgettimeofday();
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    if (routing_decision.is_zero())
+        return;
 
     Locker locker(m_not_acked_lock, Lock::Mode::Shared);
     for (auto& packet : m_not_acked) {
-        auto diff = now - packet.tx_time;
-        if (diff <= Time::from_nanoseconds(500'000'000))
-            continue;
-        packet.tx_time = now;
         packet.tx_counter++;
 
         if constexpr (TCP_SOCKET_DEBUG) {
@@ -312,6 +312,11 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             } else {
                 break;
             }
+        }
+
+        if (m_not_acked.is_empty()) {
+            m_retransmit_attempts = 0;
+            dequeue_for_retransmit();
         }
 
         dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: receive_tcp_packet acknowledged {} packets", removed);
@@ -436,7 +441,10 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         VERIFY(setup_state() == SetupState::Completed);
         if (has_error()) { // TODO: check unblock_flags
             m_role = Role::None;
-            return ECONNREFUSED;
+            if (error() == TCPSocket::Error::RetransmitTimeout)
+                return ETIMEDOUT;
+            else
+                return ECONNREFUSED;
         }
         return KSuccess;
     }
@@ -512,6 +520,53 @@ KResult TCPSocket::close()
         closing_sockets().resource().set(tuple(), *this);
     }
     return result;
+}
+
+static AK::Singleton<Lockable<HashTable<TCPSocket*>>> s_sockets_for_retransmit;
+
+Lockable<HashTable<TCPSocket*>>& TCPSocket::sockets_for_retransmit()
+{
+    return *s_sockets_for_retransmit;
+}
+
+void TCPSocket::enqueue_for_retransmit()
+{
+    Locker locker(sockets_for_retransmit().lock());
+    sockets_for_retransmit().resource().set(this);
+}
+
+void TCPSocket::dequeue_for_retransmit()
+{
+    Locker locker(sockets_for_retransmit().lock());
+    sockets_for_retransmit().resource().remove(this);
+}
+
+void TCPSocket::retransmit_packets()
+{
+    auto now = kgettimeofday();
+
+    // RFC6298 says we should have at least one second between retransmits. According to
+    // RFC1122 we must do exponential backoff - even for SYN packets.
+    i64 retransmit_interval = 1;
+    for (decltype(m_retransmit_attempts) i = 0; i < m_retransmit_attempts; i++)
+        retransmit_interval *= 2;
+
+    if (m_last_retransmit_time > now - Time::from_seconds(retransmit_interval))
+        return;
+
+    dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket({}) handling retransmit", this);
+
+    m_last_retransmit_time = now;
+    ++m_retransmit_attempts;
+
+    if (m_retransmit_attempts > maximum_retransmits) {
+        set_state(TCPSocket::State::Closed);
+        set_error(TCPSocket::Error::RetransmitTimeout);
+        set_setup_state(Socket::SetupState::Completed);
+        return;
+    }
+
+    do_retransmit_packets();
 }
 
 }
