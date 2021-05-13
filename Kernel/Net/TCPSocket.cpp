@@ -88,9 +88,11 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
-    Locker locker(sockets_by_tuple().lock());
-    if (sockets_by_tuple().resource().contains(tuple))
-        return {};
+    {
+        Locker locker(sockets_by_tuple().lock(), Lock::Mode::Shared);
+        if (sockets_by_tuple().resource().contains(tuple))
+            return {};
+    }
 
     auto result = TCPSocket::create(protocol());
     if (result.is_error())
@@ -105,10 +107,11 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     client->set_direction(Direction::Incoming);
     client->set_originator(*this);
 
+    Locker locker(sockets_by_tuple().lock());
     m_pending_release_for_accept.set(tuple, client);
     sockets_by_tuple().resource().set(tuple, client);
 
-    return from_tuple(tuple);
+    return client;
 }
 
 void TCPSocket::release_to_originator()
