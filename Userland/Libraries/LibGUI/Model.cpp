@@ -6,6 +6,7 @@
 
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Model.h>
+#include <LibGUI/PersistentModelIndex.h>
 
 namespace GUI {
 
@@ -64,6 +65,25 @@ void Model::register_client(ModelClient& client)
 void Model::unregister_client(ModelClient& client)
 {
     m_clients.remove(&client);
+}
+
+WeakPtr<PersistentHandle> Model::register_persistent_index(Badge<PersistentModelIndex>, const ModelIndex& index)
+{
+    if (!index.is_valid())
+        return {};
+
+    auto it = m_persistent_handles.find(index);
+    // Easy modo: we already have a handle for this model index.
+    if (it != m_persistent_handles.end()) {
+        return it->value->make_weak_ptr();
+    }
+
+    // Hard modo: create a new persistent handle.
+    auto handle = adopt_own(*new PersistentHandle(index));
+    auto weak_handle = handle->make_weak_ptr();
+    m_persistent_handles.set(index, move(handle));
+
+    return weak_handle;
 }
 
 RefPtr<Core::MimeData> Model::mime_data(const ModelSelection& selection) const

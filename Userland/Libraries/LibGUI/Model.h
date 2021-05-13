@@ -8,10 +8,13 @@
 
 #include <AK/Badge.h>
 #include <AK/Function.h>
+#include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <AK/WeakPtr.h>
 #include <LibCore/MimeData.h>
+#include <LibGUI/Forward.h>
 #include <LibGUI/ModelIndex.h>
 #include <LibGUI/ModelRole.h>
 #include <LibGUI/ModelSelection.h>
@@ -83,6 +86,8 @@ public:
 
     void register_client(ModelClient&);
     void unregister_client(ModelClient&);
+
+    WeakPtr<PersistentHandle> register_persistent_index(Badge<PersistentModelIndex>, ModelIndex const&);
 
 protected:
     Model();
