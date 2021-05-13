@@ -147,3 +147,14 @@ TEST_CASE(self_observers)
     object->unref();
     EXPECT_EQ(SelfAwareObject::num_destroyed, 1u);
 }
+
+TEST_CASE(adopt_ref_if_nonnull)
+{
+    RefPtr<SelfAwareObject> object = adopt_ref_if_nonnull(new SelfAwareObject);
+    EXPECT_EQ(object.is_null(), false);
+    EXPECT_EQ(object->ref_count(), 1u);
+
+    SelfAwareObject* null_object = nullptr;
+    RefPtr<SelfAwareObject> failed_allocation = adopt_ref_if_nonnull(null_object);
+    EXPECT_EQ(failed_allocation.is_null(), true);
+}
