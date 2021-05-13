@@ -12,9 +12,12 @@
 
 namespace Kernel {
 
-NonnullRefPtr<InodeWatcher> InodeWatcher::create()
+KResultOr<NonnullRefPtr<InodeWatcher>> InodeWatcher::create()
 {
-    return adopt_ref(*new InodeWatcher);
+    auto watcher = adopt_ref_if_nonnull(new InodeWatcher);
+    if (watcher)
+        return watcher.release_nonnull();
+    return ENOMEM;
 }
 
 InodeWatcher::~InodeWatcher()
@@ -120,7 +123,11 @@ KResultOr<int> InodeWatcher::register_inode(Inode& inode, unsigned event_mask)
             m_wd_counter = 1;
     } while (m_wd_to_watches.find(wd) != m_wd_to_watches.end());
 
-    auto description = WatchDescription::create(wd, inode, event_mask);
+    auto description_or_error = WatchDescription::create(wd, inode, event_mask);
+    if (description_or_error.is_error())
+        return description_or_error.error();
+
+    auto description = description_or_error.release_value();
     m_inode_to_watches.set(inode.identifier(), description.ptr());
     m_wd_to_watches.set(wd, move(description));
 

@@ -21,7 +21,11 @@ KResultOr<int> Process::sys$create_inode_watcher(u32 flags)
     if (fd < 0)
         return fd;
 
-    auto description_or_error = FileDescription::create(*InodeWatcher::create());
+    auto watcher_or_error = InodeWatcher::create();
+    if (watcher_or_error.is_error())
+        return watcher_or_error.error();
+
+    auto description_or_error = FileDescription::create(*watcher_or_error.value());
     if (description_or_error.is_error())
         return description_or_error.error();
 

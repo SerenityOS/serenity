@@ -25,9 +25,12 @@ struct WatchDescription {
     Inode& inode;
     unsigned event_mask;
 
-    static NonnullOwnPtr<WatchDescription> create(int wd, Inode& inode, unsigned event_mask)
+    static KResultOr<NonnullOwnPtr<WatchDescription>> create(int wd, Inode& inode, unsigned event_mask)
     {
-        return adopt_own(*new WatchDescription(wd, inode, event_mask));
+        auto description = adopt_own_if_nonnull(new WatchDescription(wd, inode, event_mask));
+        if (description)
+            return description.release_nonnull();
+        return ENOMEM;
     }
 
 private:
@@ -41,7 +44,7 @@ private:
 
 class InodeWatcher final : public File {
 public:
-    static NonnullRefPtr<InodeWatcher> create();
+    static KResultOr<NonnullRefPtr<InodeWatcher>> create();
     virtual ~InodeWatcher() override;
 
     virtual bool can_read(const FileDescription&, size_t) const override;
