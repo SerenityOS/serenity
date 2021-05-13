@@ -10,6 +10,9 @@
 #include "GLContext.h"
 #include "GLStruct.h"
 #include "SoftwareRasterizer.h"
+#include "Tex/NameAllocator.h"
+#include "Tex/Texture.h"
+#include <AK/HashMap.h>
 #include <AK/RefPtr.h>
 #include <AK/Tuple.h>
 #include <AK/Variant.h>
@@ -63,6 +66,7 @@ public:
     virtual void gl_hint(GLenum target, GLenum mode) override;
     virtual void gl_read_buffer(GLenum mode) override;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
+    virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
 
     virtual void present() override;
 
@@ -126,7 +130,10 @@ private:
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     Clipper m_clipper;
+
+    // Texture objects
     TextureNameAllocator m_name_allocator;
+    HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
 
     SoftwareRasterizer m_rasterizer;
 

@@ -148,6 +148,24 @@ extern "C" {
 #define GL_CONSTANT_ALPHA 0x8003
 #define GL_ONE_MINUS_CONSTANT_ALPHA 0x8004
 
+// Pixel formats
+#define GL_RGB 0x1907
+#define GL_RGBA 0x1908
+#define GL_BGR 0x190B
+#define GL_BGRA 0x190C
+
+// Source pixel data format
+#define GL_UNSIGNED_BYTE 0x1401
+
+// Texture targets
+#define GL_TEXTURE_2D 0x0DE1
+
+// Texture Environment and Parameters
+#define GL_NEAREST 0x2600
+#define GL_LINEAR 0x2601
+#define GL_NEAREST_MIPMAP_LINEAR 0x2602
+#define GL_REPEAT 0x2603
+
 //
 // OpenGL typedefs
 //
@@ -237,6 +255,7 @@ GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 GLAPI void glHint(GLenum target, GLenum mode);
 GLAPI void glReadBuffer(GLenum mode);
 GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
+GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 
 #ifdef __cplusplus
 }
