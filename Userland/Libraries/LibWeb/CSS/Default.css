@@ -236,3 +236,8 @@ option {
 fieldset {
     border: 1px solid #888888;
 }
+
+legend {
+    position: absolute;
+    z-index: -1;
+}
