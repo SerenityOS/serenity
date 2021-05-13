@@ -2118,8 +2118,8 @@ SavedFileDescriptors::SavedFileDescriptors(const NonnullRefPtrVector<AST::Rewiri
             continue;
         }
 
-        auto flags = fcntl(new_fd, F_GETFL);
-        auto rc = fcntl(new_fd, F_SETFL, flags | FD_CLOEXEC);
+        auto flags = fcntl(new_fd, F_GETFD);
+        auto rc = fcntl(new_fd, F_SETFD, flags | FD_CLOEXEC);
         VERIFY(rc == 0);
 
         m_saves.append({ rewiring.new_fd, new_fd });
