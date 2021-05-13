@@ -68,6 +68,7 @@ set(SOURCES
     Notification.cpp
     OpacitySlider.cpp
     Painter.cpp
+    PersistentModelIndex.cpp
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp

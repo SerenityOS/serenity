@@ -49,6 +49,8 @@ class MultiView;
 class OpacitySlider;
 class PaintEvent;
 class Painter;
+class PersistentHandle;
+class PersistentModelIndex;
 class RadioButton;
 class ResizeCorner;
 class ResizeEvent;
