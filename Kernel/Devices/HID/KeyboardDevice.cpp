@@ -298,13 +298,13 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
 
         lock.unlock();
 
-        ssize_t n = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
+        auto result = buffer.write_buffered<sizeof(Event)>(sizeof(Event), [&](u8* data, size_t data_bytes) {
             memcpy(data, &event, sizeof(Event));
-            return (ssize_t)data_bytes;
+            return data_bytes;
         });
-        if (n < 0)
-            return KResult((ErrnoCode)-n);
-        VERIFY((size_t)n == sizeof(Event));
+        if (result.is_error())
+            return result.error();
+        VERIFY(result.value() == sizeof(Event));
         nread += sizeof(Event);
 
         lock.lock();
