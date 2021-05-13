@@ -53,6 +53,7 @@ struct [[gnu::packed]] PerformanceEvent {
     u32 pid { 0 };
     u32 tid { 0 };
     u64 timestamp;
+    u32 lost_samples;
     union {
         MallocPerformanceEvent malloc;
         FreePerformanceEvent free;
@@ -77,7 +78,7 @@ public:
 
     KResult append(int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3, Thread* current_thread = Thread::current());
     KResult append_with_eip_and_ebp(ProcessID pid, ThreadID tid, u32 eip, u32 ebp,
-        int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
+        int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3);
 
     void clear()
     {

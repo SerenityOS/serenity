@@ -166,6 +166,7 @@ public:
         String executable;
         int pid { 0 };
         int tid { 0 };
+        u32 lost_samples { 0 };
         bool in_kernel { false };
         Vector<Frame> frames;
     };

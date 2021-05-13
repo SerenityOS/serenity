@@ -25,7 +25,7 @@ NEVER_INLINE KResult PerformanceEventBuffer::append(int type, FlatPtr arg1, Flat
     FlatPtr ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
-    return append_with_eip_and_ebp(current_thread->pid(), current_thread->tid(), 0, ebp, type, arg1, arg2, arg3);
+    return append_with_eip_and_ebp(current_thread->pid(), current_thread->tid(), 0, ebp, type, 0, arg1, arg2, arg3);
 }
 
 static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(FlatPtr ebp, FlatPtr eip)
@@ -55,13 +55,14 @@ static Vector<FlatPtr, PerformanceEvent::max_stack_frame_count> raw_backtrace(Fl
 }
 
 KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID tid,
-    u32 eip, u32 ebp, int type, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
+    u32 eip, u32 ebp, int type, u32 lost_samples, FlatPtr arg1, FlatPtr arg2, const StringView& arg3)
 {
     if (count() >= capacity())
         return ENOBUFS;
 
     PerformanceEvent event;
     event.type = type;
+    event.lost_samples = lost_samples;
 
     switch (type) {
     case PERF_EVENT_SAMPLE:
@@ -182,6 +183,7 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
         event_object.add("pid", event.pid);
         event_object.add("tid", event.tid);
         event_object.add("timestamp", event.timestamp);
+        event_object.add("lost_samples", i != 0 ? event.lost_samples : 0);
         auto stack_array = event_object.add_array("stack");
         for (size_t j = 0; j < event.stack_size; ++j) {
             stack_array.add(event.stack[j]);
@@ -220,17 +222,17 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
 
     [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0, 0, 0,
         event_type == ProcessEventType::Create ? PERF_EVENT_PROCESS_CREATE : PERF_EVENT_PROCESS_EXEC,
-        process.pid().value(), 0, executable);
+        0, process.pid().value(), 0, executable);
 
     process.for_each_thread([&](auto& thread) {
         [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), thread.tid().value(),
-            0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, nullptr);
+            0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
         return IterationDecision::Continue;
     });
 
     for (auto& region : process.space().regions()) {
         [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), 0,
-            0, 0, PERF_EVENT_MMAP, region->range().base().get(), region->range().size(), region->name());
+            0, 0, PERF_EVENT_MMAP, 0, region->range().base().get(), region->range().size(), region->name());
     }
 }
 
