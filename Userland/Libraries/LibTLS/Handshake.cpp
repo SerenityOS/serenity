@@ -141,7 +141,7 @@ ByteBuffer TLSv12::build_finished()
     PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
 
-    u32 out_size = 12;
+    constexpr u32 out_size = 12;
 
     builder.append_u24(out_size);
 
