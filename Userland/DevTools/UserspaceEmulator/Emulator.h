@@ -17,6 +17,7 @@
 #include <LibDebug/DebugInfo.h>
 #include <LibELF/AuxiliaryVector.h>
 #include <LibELF/Image.h>
+#include <LibLine/Editor.h>
 #include <LibX86/Instruction.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -29,14 +30,15 @@ class Emulator {
 public:
     static Emulator& the();
 
-    Emulator(const String& executable_path, const Vector<String>& arguments, const Vector<String>& environment);
+    Emulator(String const& executable_path, Vector<String> const& arguments, Vector<String> const& environment);
 
     bool load_elf();
     void dump_backtrace();
-    void dump_backtrace(const Vector<FlatPtr>&);
+    void dump_backtrace(Vector<FlatPtr> const&);
     Vector<FlatPtr> raw_backtrace();
 
     int exec();
+    void handle_repl();
     u32 virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3);
 
     SoftMMU& mmu() { return m_mmu; }
@@ -48,7 +50,34 @@ public:
     bool is_in_libsystem() const;
     bool is_in_libc() const;
 
+    void pause()
+    {
+        m_steps_til_pause = 0;
+        m_run_til_return = false;
+    }
+    ALWAYS_INLINE void return_callback(FlatPtr addr)
+    {
+        if (m_run_til_return) [[unlikely]] {
+            if (addr == m_watched_addr)
+                pause();
+        }
+    }
+    ALWAYS_INLINE void call_callback(FlatPtr addr)
+    {
+        if (m_run_til_call) [[unlikely]] {
+            if (addr == m_watched_addr)
+                pause();
+        }
+    }
+
     void did_receive_signal(int signum) { m_pending_signals |= (1 << signum); }
+    void did_receive_sigint(int)
+    {
+        if (m_steps_til_pause == 0)
+            m_shutdown = true;
+        else
+            pause();
+    }
 
     void dump_regions() const;
 
@@ -174,14 +203,23 @@ private:
     int virt$msyscall(FlatPtr);
     int virt$futex(FlatPtr);
 
-    bool find_malloc_symbols(const MmapRegion& libc_text);
+    bool find_malloc_symbols(MmapRegion const& libc_text);
 
     void dispatch_one_pending_signal();
-    const MmapRegion* find_text_region(FlatPtr address);
+    MmapRegion const* find_text_region(FlatPtr address);
+    MmapRegion const* load_library_from_adress(FlatPtr address);
+    String symbol_at(FlatPtr address);
     String create_backtrace_line(FlatPtr address);
+    String create_instruction_line(FlatPtr address, X86::Instruction insn);
 
     bool m_shutdown { false };
     int m_exit_status { 0 };
+
+    i64 m_steps_til_pause { -1 };
+    bool m_run_til_return { false };
+    bool m_run_til_call { false };
+    FlatPtr m_watched_addr { 0 };
+    RefPtr<Line::Editor> m_editor;
 
     FlatPtr m_malloc_symbol_start { 0 };
     FlatPtr m_malloc_symbol_end { 0 };
