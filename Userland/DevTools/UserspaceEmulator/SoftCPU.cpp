@@ -1175,6 +1175,9 @@ void SoftCPU::CALL_RM32(const X86::Instruction& insn)
     auto address = insn.modrm().read32(*this, insn);
     warn_if_uninitialized(address, "call rm32");
     set_eip(address.value());
+    // FIXME: this won't catch at the moment due to us not having a way to set
+    //        the watch point
+    m_emulator.call_callback(address.value());
 }
 
 void SoftCPU::CALL_imm16(const X86::Instruction&) { TODO_INSN(); }
@@ -1185,6 +1188,9 @@ void SoftCPU::CALL_imm32(const X86::Instruction& insn)
 {
     push32(shadow_wrap_as_initialized(eip()));
     set_eip(eip() + (i32)insn.imm32());
+    // FIXME: this won't catch at the moment due to us not having a way to set
+    //        the watch point
+    m_emulator.call_callback(eip() + (i32)insn.imm32());
 }
 
 void SoftCPU::CBW(const X86::Instruction&)
@@ -3128,6 +3134,8 @@ void SoftCPU::RET(const X86::Instruction& insn)
     auto ret_address = pop32();
     warn_if_uninitialized(ret_address, "ret");
     set_eip(ret_address.value());
+
+    m_emulator.return_callback(ret_address.value());
 }
 
 void SoftCPU::RETF(const X86::Instruction&) { TODO_INSN(); }
@@ -3140,6 +3148,8 @@ void SoftCPU::RET_imm16(const X86::Instruction& insn)
     warn_if_uninitialized(ret_address, "ret imm16");
     set_eip(ret_address.value());
     set_esp({ esp().value() + insn.imm16(), esp().shadow() });
+
+    m_emulator.return_callback(ret_address.value());
 }
 
 template<typename T>
