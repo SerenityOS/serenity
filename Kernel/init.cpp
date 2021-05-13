@@ -166,7 +166,6 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     PCI::initialize();
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();
-    ConsoleManagement::the().switch_to(0);
 
     Thread::initialize();
     Process::initialize();

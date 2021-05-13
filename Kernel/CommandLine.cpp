@@ -201,4 +201,13 @@ Vector<String> CommandLine::userspace_init_args() const
     return init_args;
 }
 
+UNMAP_AFTER_INIT size_t CommandLine::switch_to_tty() const
+{
+    const auto default_tty = lookup("switch_to_tty").value_or("1");
+    auto switch_tty_number = default_tty.to_uint();
+    if (switch_tty_number.has_value() && switch_tty_number.value() >= 1) {
+        return switch_tty_number.value() - 1;
+    }
+    PANIC("Invalid default tty value: {}", default_tty);
+}
 }
