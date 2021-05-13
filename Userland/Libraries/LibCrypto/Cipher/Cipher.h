@@ -39,8 +39,6 @@ public:
     {
     }
 
-    static size_t block_size() { VERIFY_NOT_REACHED(); }
-
     virtual ReadonlyBytes bytes() const = 0;
 
     virtual void overwrite(ReadonlyBytes) = 0;
@@ -106,7 +104,7 @@ public:
     virtual const KeyType& key() const = 0;
     virtual KeyType& key() = 0;
 
-    static size_t block_size() { return BlockType::block_size(); }
+    constexpr static size_t block_size() { return BlockType::block_size(); }
 
     PaddingMode padding_mode() const { return m_padding_mode; }
 
