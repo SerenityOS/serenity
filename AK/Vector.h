@@ -619,7 +619,7 @@ public:
             return false;
 
         for (size_t i = size(); i < new_size; ++i)
-            new (slot(i)) T;
+            new (slot(i)) T {};
         m_size = new_size;
         return true;
     }
