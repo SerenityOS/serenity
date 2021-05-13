@@ -1,3 +1,5 @@
+add_compile_options(-Wvla)
+
 set(SOURCES
     ClientHandshake.cpp
     Exchange.cpp
