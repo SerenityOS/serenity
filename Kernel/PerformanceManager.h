@@ -34,7 +34,7 @@ public:
         if (g_profiling_all_threads) {
             VERIFY(g_global_perf_events);
             [[maybe_unused]] auto rc = g_global_perf_events->append_with_eip_and_ebp(
-                process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, nullptr);
+                process.pid(), 0, 0, 0, PERF_EVENT_PROCESS_EXIT, 0, 0, 0, nullptr);
         }
     }
 
@@ -52,7 +52,7 @@ public:
         }
     }
 
-    inline static void add_cpu_sample_event(Thread& current_thread, const RegisterState& regs)
+    inline static void add_cpu_sample_event(Thread& current_thread, const RegisterState& regs, u32 lost_time)
     {
         PerformanceEventBuffer* perf_events = nullptr;
 
@@ -67,7 +67,7 @@ public:
         if (perf_events) {
             [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(
                 current_thread.pid(), current_thread.tid(),
-                regs.eip, regs.ebp, PERF_EVENT_SAMPLE, 0, 0, nullptr);
+                regs.eip, regs.ebp, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
         }
     }
 
@@ -87,13 +87,20 @@ public:
 
     inline static void timer_tick(RegisterState const& regs)
     {
+        static Time last_wakeup;
+        auto now = kgettimeofday();
+        constexpr auto ideal_interval = Time::from_microseconds(1000'000 / OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE);
+        auto expected_wakeup = last_wakeup + ideal_interval;
+        auto delay = (now > expected_wakeup) ? now - expected_wakeup : Time::from_microseconds(0);
+        last_wakeup = now;
         auto current_thread = Thread::current();
         // FIXME: We currently don't collect samples while idle.
         //        That will be an interesting mode to add in the future. :^)
         if (!current_thread || current_thread == Processor::current().idle_thread())
             return;
 
-        PerformanceManager::add_cpu_sample_event(*current_thread, regs);
+        auto lost_samples = delay.to_microseconds() / ideal_interval.to_microseconds();
+        PerformanceManager::add_cpu_sample_event(*current_thread, regs, lost_samples);
     }
 };
 

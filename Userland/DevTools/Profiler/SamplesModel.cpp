@@ -45,6 +45,8 @@ String SamplesModel::column_name(int column) const
         return "TID";
     case Column::ExecutableName:
         return "Executable";
+    case Column::LostSamples:
+        return "Lost Samples";
     case Column::InnermostStackFrame:
         return "Innermost Frame";
     default:
@@ -79,6 +81,10 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
         if (index.column() == Column::Timestamp) {
             return (u32)event.timestamp;
+        }
+
+        if (index.column() == Column::LostSamples) {
+            return event.lost_samples;
         }
 
         if (index.column() == Column::InnermostStackFrame) {

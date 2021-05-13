@@ -78,7 +78,7 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
         }
 
         auto& histogram = event.in_kernel ? kernel_histogram : usermode_histogram;
-        histogram.insert(clamp_timestamp(event.timestamp), 1);
+        histogram.insert(clamp_timestamp(event.timestamp), 1 + event.lost_samples);
     }
 
     decltype(kernel_histogram.at(0)) max_value = 0;
