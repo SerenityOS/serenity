@@ -1,9 +1,11 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
@@ -80,13 +82,17 @@ const GlobalObject& Interpreter::global_object() const
 
 void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type, GlobalObject& global_object)
 {
-    for (auto& declaration : scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_strict_mode());
-        vm().set_variable(declaration.name(), function, global_object);
-    }
+    ScopeGuard guard([&] {
+        for (auto& declaration : scope_node.functions()) {
+            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_strict_mode());
+            vm().set_variable(declaration.name(), function, global_object);
+        }
+    });
 
     if (scope_type == ScopeType::Function) {
         push_scope({ scope_type, scope_node, false });
+        for (auto& declaration : scope_node.functions())
+            current_scope()->put_to_scope(declaration.name(), { js_undefined(), DeclarationKind::Var });
         return;
     }
 
