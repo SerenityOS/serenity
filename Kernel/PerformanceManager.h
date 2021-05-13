@@ -58,11 +58,7 @@ public:
 
         if (g_profiling_all_threads) {
             VERIFY(g_global_perf_events);
-            // FIXME: We currently don't collect samples while idle.
-            //        That will be an interesting mode to add in the future. :^)
-            if (&current_thread != Processor::current().idle_thread()) {
-                perf_events = g_global_perf_events;
-            }
+            perf_events = g_global_perf_events;
         } else if (current_thread.process().is_profiling()) {
             VERIFY(current_thread.process().perf_events());
             perf_events = current_thread.process().perf_events();
@@ -87,6 +83,17 @@ public:
         if (auto* event_buffer = current_process.current_perf_events_buffer()) {
             [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_MUNMAP, region.base().get(), region.size(), nullptr);
         }
+    }
+
+    inline static void timer_tick(RegisterState const& regs)
+    {
+        auto current_thread = Thread::current();
+        // FIXME: We currently don't collect samples while idle.
+        //        That will be an interesting mode to add in the future. :^)
+        if (!current_thread || current_thread == Processor::current().idle_thread())
+            return;
+
+        PerformanceManager::add_cpu_sample_event(*current_thread, regs);
     }
 };
 

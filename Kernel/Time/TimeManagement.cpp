@@ -10,6 +10,7 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Interrupts/APIC.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Time/APICTimer.h>
 #include <Kernel/Time/HPET.h>
@@ -289,6 +290,15 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     // We don't need an interrupt for time keeping purposes because we
     // can query the timer.
     m_time_keeper_timer = m_system_timer;
+
+    if (periodic_timers.size() > 1)
+        m_profile_timer = periodic_timers[1];
+    else
+        m_profile_timer = non_periodic_timers[1];
+
+    m_profile_timer->set_callback(PerformanceManager::timer_tick);
+    m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+
     return true;
 }
 
@@ -377,6 +387,18 @@ void TimeManagement::system_timer_tick(const RegisterState& regs)
         TimerQueue::the().fire();
     }
     Scheduler::timer_tick(regs);
+}
+
+void TimeManagement::enable_profile_timer()
+{
+    if (m_profile_enable_count.fetch_add(1) == 0)
+        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE));
+}
+
+void TimeManagement::disable_profile_timer()
+{
+    if (m_profile_enable_count.fetch_sub(1) == 1)
+        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
 }
 
 }
