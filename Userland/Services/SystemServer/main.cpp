@@ -154,18 +154,6 @@ static void mount_all_filesystems()
     }
 }
 
-static void create_tmp_rpc_directory()
-{
-    dbgln("Creating /tmp/rpc directory");
-    auto old_umask = umask(0);
-    auto rc = mkdir("/tmp/rpc", 01777);
-    if (rc < 0) {
-        perror("mkdir(/tmp/rpc)");
-        VERIFY_NOT_REACHED();
-    }
-    umask(old_umask);
-}
-
 static void create_tmp_coredump_directory()
 {
     dbgln("Creating /tmp/coredump directory");
@@ -189,7 +177,6 @@ int main(int, char**)
     }
 
     mount_all_filesystems();
-    create_tmp_rpc_directory();
     create_tmp_coredump_directory();
     parse_boot_mode();
 
