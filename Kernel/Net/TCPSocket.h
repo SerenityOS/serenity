@@ -176,7 +176,6 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
-    void do_retransmit_packets();
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();
 
