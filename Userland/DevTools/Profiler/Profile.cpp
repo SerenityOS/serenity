@@ -228,6 +228,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
         Event event;
 
         event.timestamp = perf_event.get("timestamp").to_number<u64>();
+        event.lost_samples = perf_event.get("lost_samples").to_number<u32>();
         event.type = perf_event.get("type").to_string();
         event.pid = perf_event.get("pid").to_i32();
         event.tid = perf_event.get("tid").to_i32();
