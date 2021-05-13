@@ -65,9 +65,7 @@ struct Endpoint {
 
 bool is_primitive_type(String const& type)
 {
-    return (type == "u8" || type == "i8" || type == "u16" || type == "i16"
-        || type == "u32" || type == "i32" || type == "bool" || type == "double"
-        || type == "float" || type == "int" || type == "unsigned" || type == "unsigned int");
+    return type.is_one_of("u8", "i8", "u16", "i16", "u32", "i32", "u64", "i64", "bool", "double", "float", "int", "unsigned", "unsigned int");
 }
 
 String message_name(String const& endpoint, String& message, bool is_response)
