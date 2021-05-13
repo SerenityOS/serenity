@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/sys/arch/i386/regs.h>
 
@@ -15,7 +15,7 @@ namespace Kernel {
 
 class ThreadTracer {
 public:
-    static NonnullOwnPtr<ThreadTracer> create(ProcessID tracer) { return make<ThreadTracer>(tracer); }
+    static OwnPtr<ThreadTracer> create(ProcessID tracer) { return adopt_own_if_nonnull(new ThreadTracer(tracer)); }
 
     ProcessID tracer_pid() const { return m_tracer_pid; }
     bool has_pending_signal(u32 signal) const { return m_pending_signals & (1 << (signal - 1)); }

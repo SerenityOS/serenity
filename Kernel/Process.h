@@ -241,7 +241,7 @@ public:
 
     ThreadTracer* tracer() { return m_tracer.ptr(); }
     bool is_traced() const { return !!m_tracer; }
-    void start_tracing_from(ProcessID tracer);
+    KResult start_tracing_from(ProcessID tracer);
     void stop_tracing();
     void tracer_trap(Thread&, const RegisterState&);
 
