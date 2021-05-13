@@ -22,11 +22,11 @@ class Custody : public RefCounted<Custody> {
 public:
     static KResultOr<NonnullRefPtr<Custody>> create(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
     {
-        auto custody = new Custody(parent, name, inode, mount_flags);
+        auto custody = adopt_ref_if_nonnull(new Custody(parent, name, inode, mount_flags));
         if (!custody)
             return ENOMEM;
 
-        return adopt_ref(*custody);
+        return custody.release_nonnull();
     }
 
     ~Custody();
