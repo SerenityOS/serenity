@@ -40,17 +40,12 @@ static void update_path_environment_variable();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd tty accept rpath cpath wpath proc exec unix fattr thread unix ptrace", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd tty rpath cpath wpath proc exec unix thread ptrace", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd tty accept rpath cpath wpath proc exec fattr thread unix ptrace", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     s_window = GUI::Window::construct();
     s_window->resize(840, 600);

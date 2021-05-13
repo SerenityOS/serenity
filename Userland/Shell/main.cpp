@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     });
 
 #ifdef __serenity__
-    if (pledge("stdio rpath wpath cpath proc exec tty accept sigaction unix fattr", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath proc exec tty sigaction unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

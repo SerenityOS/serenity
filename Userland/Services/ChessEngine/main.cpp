@@ -11,7 +11,7 @@
 
 int main()
 {
-    if (pledge("stdio recvfd sendfd accept unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd unix rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

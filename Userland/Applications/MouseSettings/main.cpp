@@ -15,7 +15,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio cpath rpath recvfd sendfd unix fattr", nullptr) < 0) {
+    if (pledge("stdio cpath rpath recvfd sendfd unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

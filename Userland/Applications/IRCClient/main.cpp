@@ -14,7 +14,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio inet unix recvfd sendfd cpath rpath fattr wpath cpath", nullptr) < 0) {
+    if (pledge("stdio inet unix recvfd sendfd cpath rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -25,11 +25,6 @@ int main(int argc, char** argv)
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio inet unix recvfd sendfd rpath wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     if (unveil("/tmp/portal/lookup", "rw") < 0) {
         perror("unveil");

@@ -20,22 +20,16 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept rpath thread unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath thread unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd accept rpath thread unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     auto audio_client = Audio::ClientConnection::construct();
     audio_client->handshake();
 
-    if (pledge("stdio recvfd sendfd accept rpath thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

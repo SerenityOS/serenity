@@ -65,7 +65,7 @@ static bool add_launch_handler_actions_to_menu(RefPtr<GUI::Menu>& menu, const Di
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread recvfd sendfd accept unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd unix cpath rpath wpath fattr proc exec sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -93,7 +93,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread recvfd sendfd accept cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd cpath rpath wpath fattr proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

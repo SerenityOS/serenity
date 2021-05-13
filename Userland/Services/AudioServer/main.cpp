@@ -10,7 +10,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio recvfd thread accept rpath wpath cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd thread accept cpath rpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

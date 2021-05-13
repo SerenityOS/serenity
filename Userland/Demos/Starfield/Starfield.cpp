@@ -129,7 +129,7 @@ void Starfield::draw()
 int main(int argc, char** argv)
 {
 
-    if (pledge("stdio recvfd sendfd rpath wpath cpath accept unix fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -150,6 +150,11 @@ int main(int argc, char** argv)
         refresh_rate = 16;
 
     auto app = GUI::Application::construct(argc, argv);
+
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto app_icon = GUI::Icon::default_icon("app-screensaver");
     auto window = GUI::Window::construct();

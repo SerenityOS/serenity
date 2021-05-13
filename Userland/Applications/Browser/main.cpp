@@ -53,7 +53,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio recvfd sendfd accept unix cpath rpath wpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd unix cpath rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -77,11 +77,6 @@ int main(int argc, char** argv)
     if (!Desktop::Launcher::add_allowed_url(URL::create_with_file_protocol(Core::StandardPaths::downloads_directory()))
         || !Desktop::Launcher::seal_allowlist()) {
         warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
-
-    if (pledge("stdio recvfd sendfd accept unix cpath rpath wpath", nullptr) < 0) {
-        perror("pledge");
         return 1;
     }
 

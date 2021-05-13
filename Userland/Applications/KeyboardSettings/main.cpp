@@ -25,7 +25,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath accept cpath wpath recvfd sendfd unix fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath cpath wpath recvfd sendfd unix proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     // If there is no command line parameter go for GUI.
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio rpath accept recvfd sendfd proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath recvfd sendfd proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -58,14 +58,14 @@ void UnregisteredWidget::paint_event(GUI::PaintEvent& event)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread recvfd sendfd accept cpath rpath wpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd cpath rpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread recvfd sendfd accept rpath cpath wpath unix", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio thread recvfd sendfd accept rpath cpath wpath", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

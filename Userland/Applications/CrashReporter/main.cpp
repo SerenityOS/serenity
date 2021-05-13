@@ -101,7 +101,7 @@ static TitleAndText build_cpu_registers(const ELF::Core::ThreadInfo& thread_info
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept cpath rpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd cpath rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept rpath unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

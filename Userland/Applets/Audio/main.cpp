@@ -195,17 +195,12 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd accept rpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     auto window = GUI::Window::construct();
     window->set_has_alpha_channel(true);
@@ -223,7 +218,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
-    if (pledge("stdio recvfd sendfd accept rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

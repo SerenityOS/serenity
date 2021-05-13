@@ -21,14 +21,14 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(path, "Keyboard character mapping file.", "file", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    if (pledge("stdio getkeymap thread rpath accept cpath wpath recvfd sendfd unix fattr", nullptr) < 0) {
+    if (pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio getkeymap thread rpath accept cpath wpath recvfd sendfd", nullptr) < 0) {
+    if (pledge("stdio getkeymap thread rpath cpath wpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         keyboard_mapper_widget->load_from_system();
     }
 
-    if (pledge("stdio thread rpath accept cpath wpath recvfd sendfd", nullptr) < 0) {
+    if (pledge("stdio thread rpath cpath wpath recvfd sendfd", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
