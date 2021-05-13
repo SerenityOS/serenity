@@ -25,6 +25,7 @@ public:
         ProcessID,
         ThreadID,
         ExecutableName,
+        LostSamples,
         InnermostStackFrame,
         __Count
     };
