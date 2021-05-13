@@ -48,4 +48,13 @@ $ cu -s 57600 -l /dev/ttyUSB0
 
 ## Troubleshooting boot issues without a serial port
 
-If your computer fails to boot and it doesn't have a serial port, you can force Serenity to boot into text mode by editing **Kernel/Arch/i386/Boot/boot.S** and removing **| MULTIBOOT_VIDEO_MODE** from the end of the **multiboot_flags** before building Serenity. This debug source tweak differs from the Serenity text mode GRUB boot option which boots you directly into a text mode shell.
+During the boot process, you should be able to see logging of important messages on the screen, printed solely by the kernel.
+If it happens to you that the system hangs, you should be able to see the last message on the screen. It can be either
+an assertion or kernel panic. Depending on your hardware setup, the framebuffer could be 80x25 VGA text mode, or high resolution
+framebuffer with 8x8 font glyphs.
+
+You can force capable multiboot bootloaders to boot Serenity into high resolution mode by editing **Kernel/Arch/i386/Boot/boot.S** and 
+adding **| MULTIBOOT_VIDEO_MODE** to the end of the **multiboot_flags** before building Serenity.
+
+Setting a boot argument of `boot_mode=no-fbdev` will force the kernel to not initialize any framebuffer devices, hence allowing the system
+to boot into console-only mode as `SystemServer` will detect this condition and will not initialize `WindowServer`.
