@@ -71,6 +71,7 @@ set(SOURCES
     Painter.cpp
     PasswordInputDialog.cpp
     PasswordInputDialogGML.h
+    PersistentModelIndex.cpp
     ProcessChooser.cpp
     Progressbar.cpp
     RadioButton.cpp
