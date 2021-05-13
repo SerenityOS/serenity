@@ -47,10 +47,10 @@ ssize_t DoubleBuffer::write(const UserOrKernelBuffer& data, size_t size)
     Locker locker(m_lock);
     size_t bytes_to_write = min(size, m_space_for_writing);
     u8* write_ptr = m_write_buffer->data + m_write_buffer->size;
-    m_write_buffer->size += bytes_to_write;
-    compute_lockfree_metadata();
     if (!data.read(write_ptr, bytes_to_write))
         return -EFAULT;
+    m_write_buffer->size += bytes_to_write;
+    compute_lockfree_metadata();
     if (m_unblock_callback && !m_empty)
         m_unblock_callback();
     return (ssize_t)bytes_to_write;
