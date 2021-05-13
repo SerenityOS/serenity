@@ -38,7 +38,8 @@ OwnPtr<KBuffer> KBufferBuilder::build()
 {
     if (!flush())
         return {};
-    return make<KBuffer>(move(m_buffer));
+
+    return adopt_own_if_nonnull(new KBuffer(move(m_buffer)));
 }
 
 KBufferBuilder::KBufferBuilder(bool can_expand)
