@@ -248,7 +248,7 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
     const size_t inner_word_index = bit_index % UnsignedBigInteger::BITS_IN_WORD;
 
-    m_words.ensure_capacity(word_index);
+    m_words.ensure_capacity(word_index + 1);
 
     for (size_t i = length(); i <= word_index; ++i) {
         m_words.unchecked_append(0);
