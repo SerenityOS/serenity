@@ -301,14 +301,16 @@ class ExpectationError extends Error {
                     this.__expect(
                         e instanceof class_,
                         () =>
-                            `Expected error to be instance of ${class_.name}, got ${String(e.name)}`
+                            `toThrowWithMessage: expected error to be instance of ${
+                                class_.name
+                            }, got ${String(e.name)}`
                     );
                     this.__expect(
                         e.message.includes(message),
                         () =>
-                            `Expected error message to include _${String(message)}_, got _${String(
-                                e.message
-                            )}_`
+                            `toThrowWithMessage: expected error message to include _${String(
+                                message
+                            )}_, got _${String(e.message)}_`
                     );
                 }
             });
