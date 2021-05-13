@@ -19,7 +19,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath unix proc sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -172,7 +172,7 @@ int main(int argc, char** argv)
 {
     editor = Line::Editor::construct();
 
-    if (pledge("stdio proc ptrace exec rpath tty sigaction cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio proc ptrace exec rpath tty sigaction cpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

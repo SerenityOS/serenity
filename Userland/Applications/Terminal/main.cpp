@@ -229,7 +229,7 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty rpath accept cpath wpath recvfd sendfd proc exec unix fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -246,7 +246,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio tty rpath accept cpath wpath recvfd sendfd proc exec unix", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath recvfd sendfd proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

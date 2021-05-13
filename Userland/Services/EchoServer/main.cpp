@@ -16,7 +16,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio cpath unix fattr inet id accept", nullptr) < 0) {
+    if (pledge("stdio unix inet id accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

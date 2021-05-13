@@ -12,15 +12,11 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio recvfd sendfd accept unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     Core::EventLoop event_loop;
-    if (pledge("stdio recvfd sendfd unix accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");
         return 1;

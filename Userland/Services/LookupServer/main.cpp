@@ -12,7 +12,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
-    if (pledge("stdio accept unix inet cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio accept unix inet rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

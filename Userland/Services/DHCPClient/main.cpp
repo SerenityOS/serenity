@@ -20,7 +20,7 @@
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 {
-    if (pledge("stdio unix inet cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio unix inet cpath rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -43,7 +43,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto ifs = ifs_result.release_value();
     auto client = DHCPv4Client::construct(move(ifs.ready), move(ifs.not_ready));
 
-    if (pledge("stdio inet cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio inet cpath rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
