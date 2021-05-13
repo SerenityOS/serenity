@@ -475,7 +475,16 @@ inline void swap(RefPtr<T, PtrTraitsT>& a, RefPtr<U, PtrTraitsU>& b)
     a.swap(b);
 }
 
+template<typename T>
+inline RefPtr<T> adopt_ref_if_nonnull(T* object)
+{
+    if (object)
+        return RefPtr<T>(RefPtr<T>::Adopt, *object);
+    return {};
 }
 
+}
+
+using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
