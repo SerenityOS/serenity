@@ -93,6 +93,16 @@ static bool can_access_pid(pid_t pid)
 
 int main(int argc, char** argv)
 {
+    {
+        // Before we do anything else, boost our process priority to the maximum allowed.
+        // It's very frustrating when the system is bogged down under load and you just want
+        // System Monitor to work.
+        sched_param param {
+            .sched_priority = THREAD_PRIORITY_MAX,
+        };
+        sched_setparam(0, &param);
+    }
+
     if (pledge("stdio proc recvfd sendfd accept rpath exec unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
