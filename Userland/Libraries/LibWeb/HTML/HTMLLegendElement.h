@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -16,6 +17,8 @@ public:
 
     HTMLLegendElement(DOM::Document&, QualifiedName);
     virtual ~HTMLLegendElement() override;
+
+    virtual RefPtr<Layout::Node> create_layout_node() override;
 };
 
 }

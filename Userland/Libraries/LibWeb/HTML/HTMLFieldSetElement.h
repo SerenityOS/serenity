@@ -17,6 +17,8 @@ public:
     HTMLFieldSetElement(DOM::Document&, QualifiedName);
     virtual ~HTMLFieldSetElement() override;
 
+    virtual RefPtr<Layout::Node> create_layout_node() override;
+
     const String& type() const
     {
         static String fieldset = "fieldset";

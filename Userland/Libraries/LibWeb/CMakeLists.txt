@@ -164,6 +164,7 @@ set(SOURCES
     Layout/ButtonBox.cpp
     Layout/CanvasBox.cpp
     Layout/CheckBox.cpp
+    Layout/FieldSet.cpp
     Layout/FlexFormattingContext.cpp
     Layout/FormattingContext.cpp
     Layout/FrameBox.cpp
@@ -173,6 +174,7 @@ set(SOURCES
     Layout/InlineNode.cpp
     Layout/Label.cpp
     Layout/LayoutPosition.cpp
+    Layout/Legend.cpp
     Layout/LineBox.cpp
     Layout/LineBoxFragment.cpp
     Layout/ListItemBox.cpp
