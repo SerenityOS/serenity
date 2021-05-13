@@ -48,7 +48,7 @@ private:
     ObjectClassRegistration* m_parent_class { nullptr };
 };
 
-class RPCClient;
+class InspectorServerConnection;
 
 enum class TimerShouldFireWhenNotVisible {
     No = 0,
@@ -155,8 +155,8 @@ public:
 
     bool is_being_inspected() const { return m_inspector_count; }
 
-    void increment_inspector_count(Badge<RPCClient>);
-    void decrement_inspector_count(Badge<RPCClient>);
+    void increment_inspector_count(Badge<InspectorServerConnection>);
+    void decrement_inspector_count(Badge<InspectorServerConnection>);
 
     virtual bool load_from_json(const JsonObject&, RefPtr<Core::Object> (*)(const String&)) { return false; }
 
