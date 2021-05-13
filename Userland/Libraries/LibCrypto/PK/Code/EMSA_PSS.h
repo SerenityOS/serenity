@@ -33,7 +33,7 @@ public:
         auto& hash_fn = this->hasher();
         hash_fn.update(in);
         auto message_hash = hash_fn.digest();
-        auto hash_length = hash_fn.DigestSize;
+        constexpr auto hash_length = hash_fn.DigestSize;
         auto em_length = (em_bits + 7) / 8;
         u8 salt[SaltLength];
 
@@ -51,8 +51,9 @@ public:
         hash_fn.update(m_buffer);
         auto hash = hash_fn.digest();
 
-        u8 DB_data[em_length - HashFunction::DigestSize - 1];
-        auto DB = Bytes { DB_data, em_length - HashFunction::DigestSize - 1 };
+        Vector<u8, 256> DB_data;
+        DB_data.resize(em_length - HashFunction::DigestSize - 1);
+        Bytes DB = DB_data;
         auto DB_offset = 0;
 
         for (size_t i = 0; i < em_length - SaltLength - HashFunction::DigestSize - 2; ++i)
@@ -64,8 +65,9 @@ public:
 
         auto mask_length = em_length - HashFunction::DigestSize - 1;
 
-        u8 DB_mask[mask_length];
-        auto DB_mask_buffer = Bytes { DB_mask, mask_length };
+        Vector<u8, 256> DB_mask;
+        DB_mask.resize(mask_length);
+        Bytes DB_mask_buffer { DB_mask };
         // FIXME: we should probably allow reading from u8*
         MGF1(ReadonlyBytes { hash.data, HashFunction::DigestSize }, mask_length, DB_mask_buffer);
 
@@ -102,11 +104,13 @@ public:
             if ((octet >> (8 - i)) & 0x01)
                 return VerificationConsistency::Inconsistent;
 
-        u8 DB_mask[mask_length];
-        auto DB_mask_buffer = Bytes { DB_mask, mask_length };
+        Vector<u8, 256> DB_mask;
+        DB_mask.resize(mask_length);
+        Bytes DB_mask_buffer { DB_mask };
         MGF1(H, mask_length, DB_mask_buffer);
 
-        u8 DB[mask_length];
+        Vector<u8, 256> DB;
+        DB.resize(mask_length);
 
         for (size_t i = 0; i < mask_length; ++i)
             DB[i] = masked_DB[i] ^ DB_mask[i];
@@ -122,8 +126,8 @@ public:
         if (DB[check_octets + 1] != 0x01)
             return VerificationConsistency::Inconsistent;
 
-        auto* salt = DB + mask_length - SaltLength;
-        u8 m_prime[8 + HashFunction::DigestSize + SaltLength] { 0, 0, 0, 0, 0, 0, 0, 0 };
+        auto* salt = DB.span().offset(mask_length - SaltLength);
+        u8 m_prime[8 + HashFunction::DigestSize + SaltLength] { 0 };
 
         auto m_prime_buffer = Bytes { m_prime, sizeof(m_prime) };
 
@@ -133,7 +137,7 @@ public:
         hash_fn.update(m_prime_buffer);
         auto H_prime = hash_fn.digest();
 
-        if (__builtin_memcmp(message_hash.data, H_prime.data, HashFunction::DigestSize))
+        if (__builtin_memcmp(message_hash.data, H_prime.data, HashFunction::DigestSize) != 0)
             return VerificationConsistency::Inconsistent;
 
         return VerificationConsistency::Consistent;
