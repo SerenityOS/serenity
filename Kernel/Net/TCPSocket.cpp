@@ -242,56 +242,6 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     return KSuccess;
 }
 
-void TCPSocket::do_retransmit_packets()
-{
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
-    if (routing_decision.is_zero())
-        return;
-
-    Locker locker(m_not_acked_lock, Lock::Mode::Shared);
-    for (auto& packet : m_not_acked) {
-        packet.tx_counter++;
-
-        if constexpr (TCP_SOCKET_DEBUG) {
-            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
-            dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
-                local_address(), local_port(),
-                peer_address(), peer_port(),
-                (tcp_packet.has_syn() ? "SYN " : ""),
-                (tcp_packet.has_ack() ? "ACK " : ""),
-                (tcp_packet.has_fin() ? "FIN " : ""),
-                (tcp_packet.has_rst() ? "RST " : ""),
-                tcp_packet.sequence_number(),
-                tcp_packet.ack_number(),
-                packet.tx_counter);
-        }
-
-        auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
-        int err = routing_decision.adapter->send_ipv4(
-            local_address(), routing_decision.next_hop, peer_address(),
-            IPv4Protocol::TCP, packet_buffer, packet.buffer.size(), ttl());
-        if (err < 0) {
-            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
-            dmesgln("Error ({}) sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
-                err,
-                local_address(),
-                local_port(),
-                peer_address(),
-                peer_port(),
-                (tcp_packet.has_syn() ? "SYN " : ""),
-                (tcp_packet.has_ack() ? "ACK " : ""),
-                (tcp_packet.has_fin() ? "FIN " : ""),
-                (tcp_packet.has_rst() ? "RST " : ""),
-                tcp_packet.sequence_number(),
-                tcp_packet.ack_number(),
-                packet.tx_counter);
-        } else {
-            m_packets_out++;
-            m_bytes_out += packet.buffer.size();
-        }
-    }
-}
-
 void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
 {
     if (packet.has_ack()) {
@@ -566,7 +516,52 @@ void TCPSocket::retransmit_packets()
         return;
     }
 
-    do_retransmit_packets();
+    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    if (routing_decision.is_zero())
+        return;
+
+    Locker locker(m_not_acked_lock, Lock::Mode::Shared);
+    for (auto& packet : m_not_acked) {
+        packet.tx_counter++;
+
+        if constexpr (TCP_SOCKET_DEBUG) {
+            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
+            dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
+                local_address(), local_port(),
+                peer_address(), peer_port(),
+                (tcp_packet.has_syn() ? "SYN " : ""),
+                (tcp_packet.has_ack() ? "ACK " : ""),
+                (tcp_packet.has_fin() ? "FIN " : ""),
+                (tcp_packet.has_rst() ? "RST " : ""),
+                tcp_packet.sequence_number(),
+                tcp_packet.ack_number(),
+                packet.tx_counter);
+        }
+
+        auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
+        int err = routing_decision.adapter->send_ipv4(
+            local_address(), routing_decision.next_hop, peer_address(),
+            IPv4Protocol::TCP, packet_buffer, packet.buffer.size(), ttl());
+        if (err < 0) {
+            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
+            dmesgln("Error ({}) sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
+                err,
+                local_address(),
+                local_port(),
+                peer_address(),
+                peer_port(),
+                (tcp_packet.has_syn() ? "SYN " : ""),
+                (tcp_packet.has_ack() ? "ACK " : ""),
+                (tcp_packet.has_fin() ? "FIN " : ""),
+                (tcp_packet.has_rst() ? "RST " : ""),
+                tcp_packet.sequence_number(),
+                tcp_packet.ack_number(),
+                packet.tx_counter);
+        } else {
+            m_packets_out++;
+            m_bytes_out += packet.buffer.size();
+        }
+    }
 }
 
 }
