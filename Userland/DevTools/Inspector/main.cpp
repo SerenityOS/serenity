@@ -9,7 +9,6 @@
 #include "RemoteObjectPropertyModel.h"
 #include "RemoteProcess.h"
 #include <AK/URL.h>
-#include <LibCore/ProcessStatisticsReader.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -23,6 +22,7 @@
 #include <LibGUI/TreeView.h>
 #include <LibGUI/Window.h>
 #include <stdio.h>
+#include <unistd.h>
 
 using namespace Inspector;
 
@@ -95,19 +95,6 @@ int main(int argc, char** argv)
     if (pid == getpid()) {
         GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
         return 1;
-    }
-
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    for (auto& it : all_processes.value()) {
-        if (it.value.pid != pid)
-            continue;
-        if (it.value.pledge.is_empty())
-            break;
-        if (!it.value.pledge.contains("accept")) {
-            GUI::MessageBox::show(window, String::formatted("{} ({}) has not pledged accept!", it.value.name, pid), "Error", GUI::MessageBox::Type::Error);
-            return 1;
-        }
-        break;
     }
 
     window->set_title("Inspector");
