@@ -328,6 +328,18 @@ public:
     }
 
     template<typename U>
+    U* first_child_of_type_including_subtree()
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (is<U>(*child))
+                return &downcast<U>(*child);
+            if (auto child_result = child->template first_child_of_type_including_subtree<U>())
+                return child_result;
+        }
+        return nullptr;
+    }
+
+    template<typename U>
     U* last_child_of_type()
     {
         for (auto* child = last_child(); child; child = child->previous_sibling()) {
