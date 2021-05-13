@@ -93,6 +93,7 @@ public:
         FINDuringConnect,
         RSTDuringConnect,
         UnexpectedFlagsDuringConnect,
+        RetransmitTimeout,
     };
 
     static const char* to_string(Error error)
@@ -136,7 +137,6 @@ public:
 
     KResult send_ack(bool allow_duplicate = false);
     KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
-    void send_outgoing_packets(RoutingDecision&);
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
     bool should_delay_next_ack() const;
@@ -151,6 +151,9 @@ public:
     bool has_originator() { return !!m_originator; }
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
+
+    static Lockable<HashTable<TCPSocket*>>& sockets_for_retransmit();
+    void retransmit_packets();
 
     virtual KResult close() override;
 
@@ -173,6 +176,10 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
+    void do_retransmit_packets();
+    void enqueue_for_retransmit();
+    void dequeue_for_retransmit();
+
     WeakPtr<TCPSocket> m_originator;
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
@@ -190,7 +197,6 @@ private:
         u32 ack_number { 0 };
         ByteBuffer buffer;
         int tx_counter { 0 };
-        Time tx_time {};
     };
 
     Lock m_not_acked_lock { "TCPSocket unacked packets" };
@@ -200,6 +206,11 @@ private:
 
     u32 m_last_ack_number_sent { 0 };
     Time m_last_ack_sent_time;
+
+    // FIXME: Make this configurable (sysctl)
+    static constexpr u32 maximum_retransmits = 5;
+    Time m_last_retransmit_time;
+    u32 m_retransmit_attempts { 0 };
 };
 
 }
