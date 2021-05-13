@@ -42,20 +42,9 @@ void InitialContainingBlockBox::build_stacking_context_tree()
     });
 }
 
-void InitialContainingBlockBox::paint_document_background(PaintContext& context)
-{
-    context.painter().fill_rect(Gfx::IntRect { {}, context.viewport_rect().size() }, document().background_color(context.palette()));
-    context.painter().translate(-context.viewport_rect().location());
-
-    if (auto background_bitmap = document().background_image()) {
-        Gfx::IntRect background_rect = { 0, 0, context.viewport_rect().x() + context.viewport_rect().width(), context.viewport_rect().y() + context.viewport_rect().height() };
-        paint_background_image(context, *background_bitmap, document().background_repeat_x(), document().background_repeat_y(), move(background_rect));
-    }
-}
-
 void InitialContainingBlockBox::paint_all_phases(PaintContext& context)
 {
-    paint_document_background(context);
+    context.painter().translate(-context.viewport_rect().location());
     stacking_context()->paint(context);
 }
 
