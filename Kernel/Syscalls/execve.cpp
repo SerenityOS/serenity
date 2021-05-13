@@ -530,7 +530,13 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     set_dumpable(!executable_is_setid);
 
-    m_space = load_result.space.release_nonnull();
+    {
+        // We must disable global profiling (especially kfree tracing) here because
+        // we might otherwise end up walking the stack into the process' space that
+        // is about to be destroyed.
+        TemporaryChange global_profiling_disabler(g_profiling_all_threads, false);
+        m_space = load_result.space.release_nonnull();
+    }
     MemoryManager::enter_space(*m_space);
 
     auto signal_trampoline_region = m_space->allocate_region_with_vmobject(signal_trampoline_range.value(), g_signal_trampoline_region->vmobject(), 0, "Signal trampoline", PROT_READ | PROT_EXEC, true);

@@ -442,6 +442,11 @@ void Scheduler::prepare_for_idle_loop()
     scheduler_data.m_in_scheduler = true;
 }
 
+bool Scheduler::colonel_initialized()
+{
+    return !!s_colonel_process;
+}
+
 Process* Scheduler::colonel()
 {
     VERIFY(s_colonel_process);

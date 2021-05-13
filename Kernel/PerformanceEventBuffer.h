@@ -52,6 +52,16 @@ struct [[gnu::packed]] ContextSwitchPerformanceEvent {
     u32 next_tid;
 };
 
+struct [[gnu::packed]] KMallocPerformanceEvent {
+    size_t size;
+    FlatPtr ptr;
+};
+
+struct [[gnu::packed]] KFreePerformanceEvent {
+    size_t size;
+    FlatPtr ptr;
+};
+
 struct [[gnu::packed]] PerformanceEvent {
     u16 type { 0 };
     u8 stack_size { 0 };
@@ -68,6 +78,8 @@ struct [[gnu::packed]] PerformanceEvent {
         ProcessExecPerformanceEvent process_exec;
         ThreadCreatePerformanceEvent thread_create;
         ContextSwitchPerformanceEvent context_switch;
+        KMallocPerformanceEvent kmalloc;
+        KFreePerformanceEvent kfree;
     } data;
     static constexpr size_t max_stack_frame_count = 64;
     FlatPtr stack[max_stack_frame_count];

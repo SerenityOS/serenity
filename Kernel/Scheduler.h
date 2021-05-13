@@ -43,6 +43,7 @@ public:
     static void leave_on_first_switch(u32 flags);
     static void prepare_after_exec();
     static void prepare_for_idle_loop();
+    static bool colonel_initialized();
     static Process* colonel();
     static void idle_loop(void*);
     static void invoke_async();

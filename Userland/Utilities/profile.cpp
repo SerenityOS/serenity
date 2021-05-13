@@ -40,6 +40,10 @@ int main(int argc, char** argv)
                 event_mask |= PERF_EVENT_SAMPLE;
             else if (event_type == "context_switch")
                 event_mask |= PERF_EVENT_CONTEXT_SWITCH;
+            else if (event_type == "kmalloc")
+                event_mask |= PERF_EVENT_KMALLOC;
+            else if (event_type == "kfree")
+                event_mask |= PERF_EVENT_KFREE;
             else {
                 warnln("Unknown event type '{}' specified.", event_type);
                 exit(1);
@@ -49,7 +53,7 @@ int main(int argc, char** argv)
 
     auto print_types = [] {
         outln();
-        outln("Event type can be one of: sample and context_switch.");
+        outln("Event type can be one of: sample, context_switch, kmalloc and kfree.");
     };
 
     if (!args_parser.parse(argc, argv, false)) {

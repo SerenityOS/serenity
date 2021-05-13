@@ -18,6 +18,7 @@
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SpinLock.h>
@@ -189,6 +190,7 @@ __attribute__((section(".heap"))) static u8 kmalloc_pool_heap[POOL_SIZE];
 static size_t g_kmalloc_bytes_eternal = 0;
 static size_t g_kmalloc_call_count;
 static size_t g_kfree_call_count;
+static size_t g_nested_kfree_calls;
 bool g_dump_kmalloc_stacks;
 
 static u8* s_next_eternal_ptr;
@@ -255,6 +257,12 @@ void* kmalloc(size_t size)
         PANIC("kmalloc: Out of memory (requested size: {})", size);
     }
 
+    Process* current_process = Process::current();
+    if (!current_process && Scheduler::colonel_initialized())
+        current_process = Scheduler::colonel();
+    if (current_process)
+        PerformanceManager::add_kmalloc_perf_event(*current_process, size, (FlatPtr)ptr);
+
     return ptr;
 }
 
@@ -266,8 +274,18 @@ void kfree(void* ptr)
     kmalloc_verify_nospinlock_held();
     ScopedSpinLock lock(s_lock);
     ++g_kfree_call_count;
+    ++g_nested_kfree_calls;
+
+    if (g_nested_kfree_calls == 1) {
+        Process* current_process = Process::current();
+        if (!current_process && Scheduler::colonel_initialized())
+            current_process = Scheduler::colonel();
+        if (current_process)
+            PerformanceManager::add_kfree_perf_event(*current_process, 0, (FlatPtr)ptr);
+    }
 
     g_kmalloc_global->m_heap.deallocate(ptr);
+    --g_nested_kfree_calls;
 }
 
 void* krealloc(void* ptr, size_t new_size)
