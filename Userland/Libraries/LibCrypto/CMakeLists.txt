@@ -1,3 +1,5 @@
+add_compile_options(-Wvla)
+
 set(SOURCES
     ASN1/ASN1.cpp
     ASN1/DER.cpp
