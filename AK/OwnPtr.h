@@ -192,6 +192,14 @@ inline void swap(OwnPtr<T>& a, OwnPtr<U>& b)
 }
 
 template<typename T>
+inline OwnPtr<T> adopt_own_if_nonnull(T* object)
+{
+    if (object)
+        return OwnPtr<T>(object);
+    return {};
+}
+
+template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = T*;
     using ConstPeekType = const T*;
@@ -201,4 +209,5 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
 
 }
 
+using AK::adopt_own_if_nonnull;
 using AK::OwnPtr;
