@@ -9,6 +9,7 @@
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockFormattingContext.h>
 #include <LibWeb/Layout/Box.h>
+#include <LibWeb/Layout/FieldSet.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ListItemBox.h>
@@ -404,6 +405,9 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
         //        Instead, we should generate the marker box during the tree build.
         if (is<ListItemBox>(child_box))
             downcast<ListItemBox>(child_box).layout_marker();
+
+        if (is<FieldSet>(child_box))
+            downcast<FieldSet>(child_box).layout_legend();
 
         content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box().bottom);
         content_width = max(content_width, downcast<Box>(child_box).width());
