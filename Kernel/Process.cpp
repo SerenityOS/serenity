@@ -660,9 +660,13 @@ void Process::set_tty(TTY* tty)
     m_tty = tty;
 }
 
-void Process::start_tracing_from(ProcessID tracer)
+KResult Process::start_tracing_from(ProcessID tracer)
 {
-    m_tracer = ThreadTracer::create(tracer);
+    auto thread_tracer = ThreadTracer::create(tracer);
+    if (!thread_tracer)
+        return ENOMEM;
+    m_tracer = move(thread_tracer);
+    return KSuccess;
 }
 
 void Process::stop_tracing()
