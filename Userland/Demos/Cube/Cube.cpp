@@ -128,13 +128,13 @@ void Cube::timer_event(Core::TimerEvent&)
     static float angle = 0;
     angle += 0.02f;
 
-    auto matrix = FloatMatrix4x4::translate(FloatVector3(0, 0, 1.5f))
-        * FloatMatrix4x4::rotate(FloatVector3(1, 0, 0), angle * 1.17356641f)
-        * FloatMatrix4x4::rotate(FloatVector3(0, 1, 0), angle * 0.90533273f)
-        * FloatMatrix4x4::rotate(FloatVector3(0, 0, 1), angle);
+    auto matrix = Gfx::translation_matrix(FloatVector3(0, 0, 1.5f))
+        * Gfx::rotation_matrix(FloatVector3(1, 0, 0), angle * 1.17356641f)
+        * Gfx::rotation_matrix(FloatVector3(0, 1, 0), angle * 0.90533273f)
+        * Gfx::rotation_matrix(FloatVector3(0, 0, 1), angle);
 
     for (int i = 0; i < 8; i++) {
-        transformed_vertices[i] = matrix.transform_point(vertices[i]);
+        transformed_vertices[i] = transform_point(matrix, vertices[i]);
     }
 
     GUI::Painter painter(*m_bitmap);

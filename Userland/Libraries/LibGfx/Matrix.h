@@ -44,8 +44,8 @@ public:
     constexpr Matrix operator*(const Matrix& other) const
     {
         Matrix product;
-        for (int i = 0; i < N; ++i) {
-            for (int j = 0; j < N; ++j) {
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
                 auto& element = product.m_elements[i][j];
 
                 if constexpr (N == 4) {
@@ -73,6 +73,31 @@ public:
         }
 
         return product;
+    }
+
+    constexpr static Matrix identity()
+    {
+        Matrix result;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
+                if (i == j)
+                    result.m_elements[i][j] = 1;
+                else
+                    result.m_elements[i][j] = 0;
+            }
+        }
+        return result;
+    }
+
+    constexpr Matrix transpose() const
+    {
+        Matrix result;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
+                result.m_elements[i][j] = m_elements[j][i];
+            }
+        }
+        return result;
     }
 
 private:

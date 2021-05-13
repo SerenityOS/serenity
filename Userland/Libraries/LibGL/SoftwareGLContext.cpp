@@ -576,7 +576,7 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
 
     FloatVector3 axis = { (float)x, (float)y, (float)z };
     axis.normalize();
-    auto rotation_mat = FloatMatrix4x4::rotate(axis, angle);
+    auto rotation_mat = Gfx::rotation_matrix(axis, static_cast<float>(angle));
 
     if (m_current_matrix_mode == GL_MODELVIEW)
         m_model_view_matrix = m_model_view_matrix * rotation_mat;
@@ -596,9 +596,9 @@ void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
     }
 
     if (m_current_matrix_mode == GL_MODELVIEW) {
-        m_model_view_matrix = m_model_view_matrix * FloatMatrix4x4::scale({ static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+        m_model_view_matrix = m_model_view_matrix * Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
     } else if (m_current_matrix_mode == GL_PROJECTION) {
-        m_projection_matrix = m_projection_matrix * FloatMatrix4x4::scale({ static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
+        m_projection_matrix = m_projection_matrix * Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
     }
 
     m_error = GL_NO_ERROR;
@@ -614,9 +614,9 @@ void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
     }
 
     if (m_current_matrix_mode == GL_MODELVIEW) {
-        m_model_view_matrix = m_model_view_matrix * FloatMatrix4x4::translate({ (float)x, (float)y, (float)z });
+        m_model_view_matrix = m_model_view_matrix * Gfx::translation_matrix(FloatVector3 { (float)x, (float)y, (float)z });
     } else if (m_current_matrix_mode == GL_PROJECTION) {
-        m_projection_matrix = m_projection_matrix * FloatMatrix4x4::translate({ (float)x, (float)y, (float)z });
+        m_projection_matrix = m_projection_matrix * Gfx::translation_matrix(FloatVector3 { (float)x, (float)y, (float)z });
     }
 
     m_error = GL_NO_ERROR;
