@@ -31,7 +31,7 @@ static NonnullRefPtr<GUI::Menu> build_system_menu();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept proc exec rpath unix cpath fattr sigaction", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd proc exec rpath unix sigaction", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     // We need to obtain the WM connection here as well before the pledge shortening.
     GUI::WindowManagerServerConnection::the();
 
-    if (pledge("stdio recvfd sendfd accept proc exec rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

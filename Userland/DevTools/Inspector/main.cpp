@@ -34,7 +34,7 @@ using namespace Inspector;
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd rpath accept unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -179,7 +179,7 @@ int main(int argc, char** argv)
     window->show();
     remote_process.update();
 
-    if (pledge("stdio recvfd sendfd rpath accept unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

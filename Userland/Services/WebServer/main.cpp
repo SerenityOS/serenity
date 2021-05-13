@@ -37,7 +37,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (pledge("stdio accept rpath inet unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio accept rpath inet unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

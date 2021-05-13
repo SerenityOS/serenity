@@ -103,17 +103,12 @@ int main(int argc, char** argv)
         sched_setparam(0, &param);
     }
 
-    if (pledge("stdio proc recvfd sendfd accept rpath exec unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio proc recvfd sendfd rpath exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio proc recvfd sendfd accept rpath exec unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     if (unveil("/etc/passwd", "r") < 0) {
         perror("unveil");

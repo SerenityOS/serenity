@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     RefPtr<Core::ConfigFile> config = Core::ConfigFile::get_for_app("Chess");
 
-    if (pledge("stdio rpath accept wpath cpath recvfd sendfd thread proc exec", nullptr) < 0) {
+    if (pledge("stdio rpath wpath cpath recvfd sendfd thread proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

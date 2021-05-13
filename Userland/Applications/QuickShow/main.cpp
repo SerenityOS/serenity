@@ -31,17 +31,12 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept rpath wpath cpath unix fattr thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath wpath cpath unix thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd accept cpath rpath wpath unix thread", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/QuickShow")) {
         warnln("Failed to set up allowed launch URLs");

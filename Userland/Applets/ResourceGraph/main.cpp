@@ -183,14 +183,14 @@ private:
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio recvfd sendfd accept proc exec rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd proc exec rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd accept proc exec rpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

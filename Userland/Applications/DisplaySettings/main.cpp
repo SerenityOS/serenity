@@ -19,14 +19,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread recvfd sendfd rpath accept cpath wpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath cpath wpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread recvfd sendfd rpath accept cpath wpath", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
