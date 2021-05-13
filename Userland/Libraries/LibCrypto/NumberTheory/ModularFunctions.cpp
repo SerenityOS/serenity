@@ -273,9 +273,10 @@ UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBi
     UnsignedBigInteger base;
     auto size = range.trimmed_length() * sizeof(u32) + 2;
     // "+2" is intentional (see below).
-    // Also, if we're about to crash anyway, at least produce a nice error:
-    VERIFY(size < 8 * MiB);
-    u8 buf[size];
+    ByteBuffer buffer;
+    buffer.grow(size);
+    auto* buf = buffer.data();
+
     fill_with_random(buf, size);
     UnsignedBigInteger random { buf, size };
     // At this point, `random` is a large number, in the range [0, 256^size).

@@ -21,8 +21,8 @@ public:
 
     using DigestType = DigestT;
 
-    static size_t block_size() { return BlockSize; };
-    static size_t digest_size() { return DigestSize; };
+    constexpr static size_t block_size() { return BlockSize; };
+    constexpr static size_t digest_size() { return DigestSize; };
 
     virtual void update(const u8*, size_t) = 0;
 
