@@ -755,6 +755,13 @@ void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     }
 
     m_name_allocator.allocate(n, textures);
+
+    // Let's allocate a new texture for each texture name
+    for (auto i = 0; i < n; i++) {
+        GLuint name = textures[i];
+
+        m_allocated_textures.set(name, adopt_ref(*new Texture()));
+    }
 }
 
 void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
@@ -770,6 +777,62 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
     }
 
     m_name_allocator.free(n, textures);
+
+    // Let's allocate a new texture for each texture name
+    for (auto i = 0; i < n; i++) {
+        GLuint name = textures[i];
+
+        m_allocated_textures.remove(name);
+    }
+}
+
+void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // We only support GL_TEXTURE_2D for now
+    if (target != GL_TEXTURE_2D) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    // We only support symbolic constants for now
+    if (!(internal_format == GL_RGB || internal_format == GL_RGBA)) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (type != GL_UNSIGNED_BYTE) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (level < 0 || level > Texture::LOG2_MAX_TEXTURE_SIZE) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (width < 0 || height < 0 || width > (2 + Texture::MAX_TEXTURE_SIZE) || height > (2 + Texture::MAX_TEXTURE_SIZE)) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if ((width & 2) != 0 || (height & 2) != 0) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    if (border < 0 || border > 1) {
+        m_error = GL_INVALID_VALUE;
+        return;
+    }
+
+    // TODO: Load texture from the currently active texture unit
+    // This is to test the functionality of texture data upload
+    m_allocated_textures.find(1)->value->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
 }
 
 void SoftwareGLContext::gl_front_face(GLenum face)
