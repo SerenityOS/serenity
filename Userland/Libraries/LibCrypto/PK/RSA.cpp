@@ -293,8 +293,9 @@ void RSA_EMSA_PSS<HashFunction>::sign(ReadonlyBytes in, Bytes& out)
     // -- encode via EMSA_PSS
     auto mod_bits = m_rsa.private_key().modulus().trimmed_length() * sizeof(u32) * 8;
 
-    u8 EM[mod_bits];
-    auto EM_buf = Bytes { EM, mod_bits };
+    Vector<u8, 2048> EM;
+    EM.resize(mod_bits);
+    auto EM_buf = Bytes { EM };
     m_emsa_pss.encode(in, EM_buf, mod_bits - 1);
 
     // -- sign via RSA
@@ -308,8 +309,9 @@ VerificationConsistency RSA_EMSA_PSS<HashFunction>::verify(ReadonlyBytes in)
     if (in.size() != mod_bytes)
         return VerificationConsistency::Inconsistent;
 
-    u8 EM[mod_bytes];
-    auto EM_buf = Bytes { EM, mod_bytes };
+    Vector<u8, 256> EM;
+    EM.resize(mod_bytes);
+    auto EM_buf = Bytes { EM };
 
     // -- verify via RSA
     m_rsa.verify(in, EM_buf);
@@ -333,22 +335,20 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     }
 
     auto ps_length = mod_len - in.size() - 3;
-    u8 ps[ps_length];
+    Vector<u8, 8096> ps;
+    ps.resize(ps_length);
 
-    // FIXME: Without this assertion, GCC refuses to compile due to a memcpy overflow(!?)
-    VERIFY(ps_length < 16384);
-
-    fill_with_random(ps, ps_length);
+    fill_with_random(ps.data(), ps_length);
     // since arc4random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
         while (!ps[i])
-            fill_with_random(ps + i, 1);
+            fill_with_random(ps.span().offset(i), 1);
 
     u8 paddings[] { 0x00, 0x02 };
 
     out.overwrite(0, paddings, 2);
-    out.overwrite(2, ps, ps_length);
+    out.overwrite(2, ps.data(), ps_length);
     out.overwrite(2 + ps_length, paddings, 1);
     out.overwrite(3 + ps_length, in.data(), in.size());
     out = out.trim(3 + ps_length + in.size()); // should be a single block
