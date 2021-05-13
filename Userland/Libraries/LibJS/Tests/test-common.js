@@ -174,13 +174,19 @@ class ExpectationError extends Error {
 
         toBeTrue() {
             this.__doMatcher(() => {
-                this.__expect(this.target === true);
+                this.__expect(
+                    this.target === true,
+                    () => `toBeTrue: expected target to be true, got _${String(this.target)}_`
+                );
             });
         }
 
         toBeFalse() {
             this.__doMatcher(() => {
-                this.__expect(this.target === false);
+                this.__expect(
+                    this.target === false,
+                    () => `toBeTrue: expected target to be false, got _${String(this.target)}_`
+                );
             });
         }
 
