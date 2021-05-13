@@ -49,23 +49,23 @@ public:
                 auto& element = product.m_elements[i][j];
 
                 if constexpr (N == 4) {
-                    element = m_elements[0][j] * other.m_elements[i][0]
-                        + m_elements[1][j] * other.m_elements[i][1]
-                        + m_elements[2][j] * other.m_elements[i][2]
-                        + m_elements[3][j] * other.m_elements[i][3];
+                    element = m_elements[i][0] * other.m_elements[0][j]
+                        + m_elements[i][1] * other.m_elements[1][j]
+                        + m_elements[i][2] * other.m_elements[2][j]
+                        + m_elements[i][3] * other.m_elements[3][j];
                 } else if constexpr (N == 3) {
-                    element = m_elements[0][j] * other.m_elements[i][0]
-                        + m_elements[1][j] * other.m_elements[i][1]
-                        + m_elements[2][j] * other.m_elements[i][2];
+                    element = m_elements[i][0] * other.m_elements[0][j]
+                        + m_elements[i][1] * other.m_elements[1][j]
+                        + m_elements[i][2] * other.m_elements[2][j];
                 } else if constexpr (N == 2) {
-                    element = m_elements[0][j] * other.m_elements[i][0]
-                        + m_elements[1][j] * other.m_elements[i][1];
+                    element = m_elements[i][0] * other.m_elements[0][j]
+                        + m_elements[i][1] * other.m_elements[1][j];
                 } else if constexpr (N == 1) {
-                    element = m_elements[0][j] * other.m_elements[i][0];
+                    element = m_elements[i][0] * other.m_elements[0][j];
                 } else {
                     T value {};
                     for (size_t k = 0; k < N; ++k)
-                        value += m_elements[k][j] * other.m_elements[i][k];
+                        value += m_elements[i][k] * other.m_elements[k][j];
 
                     element = value;
                 }
