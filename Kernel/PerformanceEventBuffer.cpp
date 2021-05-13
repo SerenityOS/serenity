@@ -133,6 +133,7 @@ template<typename Serializer>
 bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
 {
     auto array = object.add_array("events");
+    bool seen_first_sample = false;
     for (size_t i = 0; i < m_count; ++i) {
         auto& event = at(i);
         auto event_object = array.add_object();
@@ -183,7 +184,9 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
         event_object.add("pid", event.pid);
         event_object.add("tid", event.tid);
         event_object.add("timestamp", event.timestamp);
-        event_object.add("lost_samples", i != 0 ? event.lost_samples : 0);
+        event_object.add("lost_samples", seen_first_sample ? event.lost_samples : 0);
+        if (event.type == PERF_EVENT_SAMPLE)
+            seen_first_sample = true;
         auto stack_array = event_object.add_array("stack");
         for (size_t j = 0; j < event.stack_size; ++j) {
             stack_array.add(event.stack[j]);
