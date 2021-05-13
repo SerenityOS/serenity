@@ -5,6 +5,7 @@
  */
 
 #include "InspectableProcess.h"
+#include <AK/JsonObject.h>
 #include <InspectorServer/ClientConnection.h>
 
 namespace InspectorServer {
