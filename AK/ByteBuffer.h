@@ -277,7 +277,8 @@ inline void ByteBufferImpl::grow(size_t size)
         return;
     }
     u8* new_data = static_cast<u8*>(kmalloc(size));
-    __builtin_memcpy(new_data, m_data, m_size);
+    if (m_data)
+        __builtin_memcpy(new_data, m_data, m_size);
     u8* old_data = m_data;
     m_data = new_data;
     m_size = size;
