@@ -4,28 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Debug.h>
 #include <AK/FlyString.h>
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringHash.h>
 #include <AK/StringImpl.h>
 #include <AK/kmalloc.h>
-
-#if STRINGIMPL_DEBUG
-unsigned g_stringimpl_count;
-static HashTable<StringImpl*>* g_all_live_stringimpls;
-
-void dump_all_stringimpls();
-void dump_all_stringimpls()
-{
-    unsigned i = 0;
-    for (auto& it : *g_all_live_stringimpls) {
-        dbgln("{}: \"{}\"", i, *it);
-        ++i;
-    }
-}
-#endif
 
 namespace AK {
 
@@ -43,22 +27,12 @@ StringImpl& StringImpl::the_empty_stringimpl()
 StringImpl::StringImpl(ConstructWithInlineBufferTag, size_t length)
     : m_length(length)
 {
-#if STRINGIMPL_DEBUG
-    if (!g_all_live_stringimpls)
-        g_all_live_stringimpls = new HashTable<StringImpl*>;
-    ++g_stringimpl_count;
-    g_all_live_stringimpls->set(this);
-#endif
 }
 
 StringImpl::~StringImpl()
 {
     if (m_fly)
         FlyString::did_destroy_impl({}, *this);
-#if STRINGIMPL_DEBUG
-    --g_stringimpl_count;
-    g_all_live_stringimpls->remove(this);
-#endif
 }
 
 static inline size_t allocation_size_for_stringimpl(size_t length)
