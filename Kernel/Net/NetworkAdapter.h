@@ -8,8 +8,8 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
+#include <AK/IntrusiveList.h>
 #include <AK/MACAddress.h>
-#include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
@@ -86,18 +86,26 @@ private:
     IPv4Address m_ipv4_netmask;
     IPv4Address m_ipv4_gateway;
 
-    struct PacketWithTimestamp {
-        KBuffer packet;
+    struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
+        PacketWithTimestamp(KBuffer buffer, Time timestamp)
+            : buffer(move(buffer))
+            , timestamp(timestamp)
+        {
+        }
+
+        KBuffer buffer;
         Time timestamp;
+        IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
     };
 
     // FIXME: Make this configurable
     static constexpr size_t max_packet_buffers = 1024;
 
-    SinglyLinkedList<PacketWithTimestamp> m_packet_queue;
+    using PacketList = IntrusiveList<PacketWithTimestamp, RefPtr<PacketWithTimestamp>, &PacketWithTimestamp::packet_node>;
+
+    PacketList m_packet_queue;
     size_t m_packet_queue_size { 0 };
-    SinglyLinkedList<KBuffer> m_unused_packet_buffers;
-    size_t m_unused_packet_buffers_count { 0 };
+    PacketList m_unused_packets;
     String m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };
