@@ -50,8 +50,6 @@ AHCIPort::AHCIPort(const AHCIPortHandler& handler, volatile AHCI::PortRegisters&
     }
     m_command_list_region = MM.allocate_kernel_region(m_command_list_page->paddr(), PAGE_SIZE, "AHCI Port Command List", Region::Access::Read | Region::Access::Write, Region::Cacheable::No);
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Command list region at {}", representative_port_index(), m_command_list_region->vaddr());
-
-    m_interrupt_enable.set_all();
 }
 
 void AHCIPort::clear_sata_error_register() const
