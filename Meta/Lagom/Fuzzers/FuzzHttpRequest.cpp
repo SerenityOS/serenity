@@ -14,7 +14,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (!request_wrapper.has_value())
         return 1;
 
-    auto request = request_wrapper.value();
+    auto& request = request_wrapper.value();
     VERIFY(request.method() != HTTP::HttpRequest::Method::Invalid);
 
     return 0;
