@@ -13,6 +13,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
 #include <LibDesktop/AppFile.h>
+#include <errno.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>

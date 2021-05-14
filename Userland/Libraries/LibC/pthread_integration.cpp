@@ -8,6 +8,7 @@
 #include <AK/NeverDestroyed.h>
 #include <AK/Vector.h>
 #include <bits/pthread_integration.h>
+#include <errno.h>
 #include <sched.h>
 #include <unistd.h>
 

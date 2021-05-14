@@ -11,6 +11,7 @@
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Dictionary.h>
 #include <LibIPC/File.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/socket.h>

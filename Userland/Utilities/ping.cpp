@@ -6,6 +6,7 @@
 
 #include <LibCore/ArgsParser.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <netinet/ip_icmp.h>

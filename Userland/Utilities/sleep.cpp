@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ArgsParser.h>
+#include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>

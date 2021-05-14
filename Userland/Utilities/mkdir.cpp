@@ -8,6 +8,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <unistd.h>
 

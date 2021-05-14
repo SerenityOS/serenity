@@ -11,6 +11,7 @@
 #include <LibELF/AuxiliaryVector.h>
 #include <LibThread/Lock.h>
 #include <assert.h>
+#include <errno.h>
 #include <mallocdefs.h>
 #include <serenity.h>
 #include <stdio.h>
