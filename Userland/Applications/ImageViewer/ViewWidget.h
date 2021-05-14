@@ -9,9 +9,8 @@
 
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/Point.h>
+#include <LibImageDecoderClient/Client.h>
 
 namespace ImageViewer {
 
@@ -65,8 +64,8 @@ private:
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
     Gfx::IntRect m_bitmap_rect;
+    Optional<ImageDecoderClient::DecodedImage> m_decoded_image;
 
-    RefPtr<Gfx::ImageDecoder> m_image_decoder;
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;

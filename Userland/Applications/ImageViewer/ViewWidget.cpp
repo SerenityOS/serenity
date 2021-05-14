@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -15,6 +15,7 @@
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
+#include <LibImageDecoderClient/Client.h>
 
 namespace ImageViewer {
 
@@ -241,22 +242,28 @@ void ViewWidget::load_from_file(const String& path)
     }
 
     auto& mapped_file = *file_or_error.value();
-    m_image_decoder = Gfx::ImageDecoder::create((const u8*)mapped_file.data(), mapped_file.size());
-    auto bitmap = m_image_decoder->bitmap();
-    if (!bitmap) {
+
+    // Spawn a new ImageDecoder service process and connect to it.
+    auto client = ImageDecoderClient::Client::construct();
+
+    // FIXME: Find a way to avoid the memory copying here.
+    auto decoded_image_or_error = client->decode_image(ByteBuffer::copy(mapped_file.bytes()));
+    if (!decoded_image_or_error.has_value()) {
         show_error();
         return;
     }
 
-    if (m_image_decoder->is_animated() && m_image_decoder->frame_count() > 1) {
-        const auto& first_frame = m_image_decoder->frame(0);
+    m_decoded_image = decoded_image_or_error.release_value();
+    m_bitmap = m_decoded_image->frames[0].bitmap;
+
+    if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
+        const auto& first_frame = m_decoded_image->frames[0];
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
     }
 
     m_path = path;
-    m_bitmap = bitmap;
     m_scale = -1;
     reset_view();
 }
@@ -304,18 +311,21 @@ void ViewWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 // Same as ImageWidget::animate(), you probably want to keep any changes in sync
 void ViewWidget::animate()
 {
-    m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
+    if (!m_decoded_image.has_value())
+        return;
 
-    const auto& current_frame = m_image_decoder->frame(m_current_frame_index);
-    set_bitmap(current_frame.image);
+    m_current_frame_index = (m_current_frame_index + 1) % m_decoded_image->frames.size();
 
-    if (current_frame.duration != m_timer->interval()) {
+    const auto& current_frame = m_decoded_image->frames[m_current_frame_index];
+    set_bitmap(current_frame.bitmap);
+
+    if ((int)current_frame.duration != m_timer->interval()) {
         m_timer->restart(current_frame.duration);
     }
 
-    if (m_current_frame_index == m_image_decoder->frame_count() - 1) {
+    if (m_current_frame_index == m_decoded_image->frames.size() - 1) {
         ++m_loops_completed;
-        if (m_loops_completed > 0 && m_loops_completed == m_image_decoder->loop_count()) {
+        if (m_loops_completed > 0 && m_loops_completed == m_decoded_image->loop_count) {
             m_timer->stop();
         }
     }
