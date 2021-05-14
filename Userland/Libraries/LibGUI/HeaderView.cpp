@@ -54,8 +54,10 @@ int HeaderView::section_size(int section) const
 
 HeaderView::SectionData& HeaderView::section_data(int section) const
 {
-    if (static_cast<size_t>(section) >= m_section_data.size())
-        m_section_data.resize(section + 1);
+    VERIFY(model());
+    if (static_cast<size_t>(section) >= m_section_data.size()) {
+        m_section_data.resize(section_count());
+    }
     return m_section_data.at(section);
 }
 
