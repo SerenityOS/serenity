@@ -28,6 +28,10 @@ void UUID::convert_string_view_to_uuid(const StringView& uuid_string_view)
     auto fourth_unit = decode_hex(uuid_string_view.substring_view(19, 4));
     auto fifth_unit = decode_hex(uuid_string_view.substring_view(24, 12));
 
+    VERIFY(first_unit.value().size() == 4 && second_unit.value().size() == 2
+        && third_unit.value().size() == 2 && fourth_unit.value().size() == 2
+        && fifth_unit.value().size() == 6);
+
     m_uuid_buffer.span().overwrite(0, first_unit.value().data(), first_unit.value().size());
     m_uuid_buffer.span().overwrite(4, second_unit.value().data(), second_unit.value().size());
     m_uuid_buffer.span().overwrite(6, third_unit.value().data(), third_unit.value().size());
