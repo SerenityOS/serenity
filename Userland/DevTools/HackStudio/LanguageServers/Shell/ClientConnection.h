@@ -17,8 +17,10 @@ class ClientConnection final : public LanguageServers::ClientConnection {
     ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
         : LanguageServers::ClientConnection(move(socket), client_id)
     {
-        m_autocomplete_engine = make<AutoComplete>(*this, m_filedb);
-        m_autocomplete_engine->set_declarations_of_document_callback = &ClientConnection::set_declarations_of_document_callback;
+        m_autocomplete_engine = make<AutoComplete>(m_filedb);
+        m_autocomplete_engine->set_declarations_of_document_callback = [this](const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations) {
+            async_declarations_in_document(filename, move(declarations));
+        };
     }
     virtual ~ClientConnection() override = default;
 

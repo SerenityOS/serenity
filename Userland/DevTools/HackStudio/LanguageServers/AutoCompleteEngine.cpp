@@ -8,9 +8,8 @@
 
 namespace LanguageServers {
 
-AutoCompleteEngine::AutoCompleteEngine(ClientConnection& connection, const FileDB& filedb, bool should_store_all_declarations)
-    : m_connection(connection)
-    , m_filedb(filedb)
+AutoCompleteEngine::AutoCompleteEngine(const FileDB& filedb, bool should_store_all_declarations)
+    : m_filedb(filedb)
     , m_store_all_declarations(should_store_all_declarations)
 {
 }
@@ -29,6 +28,6 @@ void AutoCompleteEngine::set_declarations_of_document(const String& filename, Ve
     }
     if (m_store_all_declarations)
         m_all_declarations.set(filename, declarations);
-    set_declarations_of_document_callback(m_connection, filename, move(declarations));
+    set_declarations_of_document_callback(filename, move(declarations));
 }
 }

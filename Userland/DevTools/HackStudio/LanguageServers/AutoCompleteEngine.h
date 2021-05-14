@@ -17,7 +17,7 @@ class ClientConnection;
 
 class AutoCompleteEngine {
 public:
-    AutoCompleteEngine(ClientConnection&, const FileDB& filedb, bool store_all_declarations = false);
+    AutoCompleteEngine(const FileDB& filedb, bool store_all_declarations = false);
     virtual ~AutoCompleteEngine();
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
@@ -29,7 +29,7 @@ public:
     virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String&, const GUI::TextPosition&) { return {}; };
 
 public:
-    Function<void(ClientConnection&, String, Vector<GUI::AutocompleteProvider::Declaration>)> set_declarations_of_document_callback;
+    Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
 
 protected:
     const FileDB& filedb() const { return m_filedb; }
@@ -37,7 +37,6 @@ protected:
     const HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>>& all_declarations() const { return m_all_declarations; }
 
 private:
-    ClientConnection& m_connection;
     HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>> m_all_declarations;
     const FileDB& m_filedb;
     bool m_store_all_declarations { false };
