@@ -264,6 +264,60 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::BorderRadius) {
+        // FIXME: Allow for two values per corner to support elliptical radii.
+        // FIXME: Add support the '/' to specify elliptical radii.
+        if (value.is_length()) {
+            style.set_property(CSS::PropertyID::BorderTopLeftRadius, value);
+            style.set_property(CSS::PropertyID::BorderTopRightRadius, value);
+            style.set_property(CSS::PropertyID::BorderBottomRightRadius, value);
+            style.set_property(CSS::PropertyID::BorderBottomLeftRadius, value);
+            return;
+        }
+        if (value.is_string()) {
+            auto parts = split_on_whitespace(value.to_string());
+            if (value.is_string() && parts.size() == 2) {
+                auto diagonal1 = parse_css_value(context, parts[0]);
+                auto diagonal2 = parse_css_value(context, parts[1]);
+                if (diagonal1 && diagonal2) {
+                    style.set_property(CSS::PropertyID::BorderTopLeftRadius, *diagonal1);
+                    style.set_property(CSS::PropertyID::BorderBottomRightRadius, *diagonal1);
+                    style.set_property(CSS::PropertyID::BorderTopRightRadius, *diagonal2);
+                    style.set_property(CSS::PropertyID::BorderBottomLeftRadius, *diagonal2);
+                }
+                return;
+            }
+            if (value.is_string() && parts.size() == 3) {
+                auto top_left = parse_css_value(context, parts[0]);
+                auto diagonal = parse_css_value(context, parts[1]);
+                auto bottom_right = parse_css_value(context, parts[2]);
+                if (top_left && diagonal && bottom_right) {
+                    style.set_property(CSS::PropertyID::BorderTopLeftRadius, *top_left);
+                    style.set_property(CSS::PropertyID::BorderBottomRightRadius, *bottom_right);
+                    style.set_property(CSS::PropertyID::BorderTopRightRadius, *diagonal);
+                    style.set_property(CSS::PropertyID::BorderBottomLeftRadius, *diagonal);
+                }
+                return;
+            }
+            if (value.is_string() && parts.size() == 4) {
+                auto top_left = parse_css_value(context, parts[0]);
+                auto top_right = parse_css_value(context, parts[1]);
+                auto bottom_right = parse_css_value(context, parts[2]);
+                auto bottom_left = parse_css_value(context, parts[3]);
+                if (top_left && top_right && bottom_right && bottom_left) {
+                    style.set_property(CSS::PropertyID::BorderTopLeftRadius, *top_left);
+                    style.set_property(CSS::PropertyID::BorderBottomRightRadius, *bottom_right);
+                    style.set_property(CSS::PropertyID::BorderTopRightRadius, *top_right);
+                    style.set_property(CSS::PropertyID::BorderBottomLeftRadius, *bottom_left);
+                }
+                return;
+            }
+            dbgln("Unsure what to do with CSS border-radius value '{}'", value.to_string());
+            return;
+        }
+        return;
+    }
+
     if (property_id == CSS::PropertyID::BorderTop
         || property_id == CSS::PropertyID::BorderRight
         || property_id == CSS::PropertyID::BorderBottom
