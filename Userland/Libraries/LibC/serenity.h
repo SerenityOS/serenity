@@ -85,7 +85,8 @@ enum {
     PERF_EVENT_PROCESS_EXEC,
     PERF_EVENT_PROCESS_EXIT,
     PERF_EVENT_THREAD_CREATE,
-    PERF_EVENT_THREAD_EXIT
+    PERF_EVENT_THREAD_EXIT,
+    PERF_EVENT_CONTEXT_SWITCH,
 };
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
