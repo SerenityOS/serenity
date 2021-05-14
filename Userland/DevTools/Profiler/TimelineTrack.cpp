@@ -72,8 +72,8 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
             continue;
 
         if (!m_profile.show_scheduler() && !event.frames.is_empty()) {
-            auto top_frame = event.frames[event.frames.size() - 1];
-            if (top_frame.symbol == "Kernel::Scheduler::yield()")
+            const auto& top_frame = event.frames[event.frames.size() - 1];
+            if (top_frame.symbol == "Kernel::Scheduler::yield()"sv)
                 continue;
         }
 
