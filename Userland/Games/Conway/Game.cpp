@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <AK/Random.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <stdlib.h>
@@ -40,11 +41,9 @@ void Game::seed_universe()
 
     switch (m_pattern) {
     case Pattern::Random:
-        for (int y = 0; y < m_rows; y++) {
-            for (int x = 0; x < m_columns; x++) {
-                m_universe[y][x] = (arc4random() % 2) ? 1 : 0;
-            }
-        }
+        for (int y = 0; y < m_rows; y++)
+            for (int x = 0; x < m_columns; x++)
+                m_universe[y][x] = (get_random<u32>() % 2) ? 1 : 0;
         break;
     case Pattern::GosperGliderGun:
         set(20, 25, "........................O............");

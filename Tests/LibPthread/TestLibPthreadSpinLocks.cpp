@@ -6,6 +6,7 @@
 
 #include <LibPthread/pthread.h>
 #include <LibTest/TestCase.h>
+#include <errno.h>
 #include <unistd.h>
 
 TEST_CASE(spin_init_process_scope)

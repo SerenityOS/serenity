@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
-#include <errno_numbers.h>
+#include <errno.h>
 #include <shadow.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -9,12 +9,13 @@
 
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
-#include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
 #include <LibGfx/Point.h>
+#include <LibImageDecoderClient/Client.h>
 
-class QSWidget final : public GUI::Frame {
-    C_OBJECT(QSWidget)
+namespace ImageViewer {
+
+class ViewWidget final : public GUI::Frame {
+    C_OBJECT(ViewWidget)
 public:
     enum Directions {
         First,
@@ -23,7 +24,7 @@ public:
         Last
     };
 
-    virtual ~QSWidget() override;
+    virtual ~ViewWidget() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
@@ -43,7 +44,7 @@ public:
     Function<void(const GUI::DropEvent&)> on_drop;
 
 private:
-    QSWidget();
+    ViewWidget();
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
@@ -63,8 +64,8 @@ private:
     String m_path;
     RefPtr<Gfx::Bitmap> m_bitmap;
     Gfx::IntRect m_bitmap_rect;
+    Optional<ImageDecoderClient::DecodedImage> m_decoded_image;
 
-    RefPtr<Gfx::ImageDecoder> m_image_decoder;
     size_t m_current_frame_index { 0 };
     size_t m_loops_completed { 0 };
     NonnullRefPtr<Core::Timer> m_timer;
@@ -76,3 +77,5 @@ private:
     Gfx::FloatPoint m_saved_pan_origin;
     Vector<String> m_files_in_same_dir;
 };
+
+}

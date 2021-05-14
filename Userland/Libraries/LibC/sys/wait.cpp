@@ -5,6 +5,7 @@
  */
 
 #include <assert.h>
+#include <errno.h>
 #include <sys/wait.h>
 #include <syscall.h>
 #include <unistd.h>

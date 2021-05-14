@@ -5,11 +5,12 @@
  */
 
 #include <LibCore/ArgsParser.h>
-#include <mman.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <unistd.h>
 
 static int mutex_test();

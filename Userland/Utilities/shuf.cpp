@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <errno.h>
@@ -38,7 +39,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     // Fisher-Yates shuffle
     String tmp;
     for (size_t i = lines.size() - 1; i >= 1; --i) {
-        size_t j = arc4random_uniform(i + 1);
+        size_t j = get_random_uniform(i + 1);
         // Swap i and j
         if (i == j)
             continue;

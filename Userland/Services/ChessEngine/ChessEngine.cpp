@@ -7,6 +7,7 @@
 #include "ChessEngine.h"
 #include "MCTSTree.h"
 #include <AK/Debug.h>
+#include <AK/Random.h>
 #include <LibCore/ElapsedTimer.h>
 
 using namespace Chess::UCI;
@@ -34,7 +35,7 @@ void ChessEngine::handle_go(const GoCommand& command)
     // FIXME: Add different ways to terminate search.
     VERIFY(command.movetime.has_value());
 
-    srand(arc4random());
+    srand(get_random<u32>());
 
     Core::ElapsedTimer elapsed_time;
     elapsed_time.start();
