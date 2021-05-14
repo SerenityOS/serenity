@@ -59,3 +59,13 @@ GLenum glGetError()
 {
     return g_gl_context->gl_get_error();
 }
+
+void glFlush()
+{
+    return g_gl_context->gl_flush();
+}
+
+void glFinish()
+{
+    return g_gl_context->gl_finish();
+}

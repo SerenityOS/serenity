@@ -124,6 +124,8 @@ void glCallList(GLuint list);
 void glDeleteLists(GLuint list, GLsizei range);
 void glEndList(void);
 void glNewList(GLuint list, GLenum mode);
+void glFlush();
+void glFinish();
 
 #ifdef __cplusplus
 }
