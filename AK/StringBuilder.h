@@ -62,13 +62,11 @@ public:
 
 private:
     void will_append(size_t);
-    u8* data() { return m_buffer.is_null() ? m_inline_buffer : m_buffer.data(); }
-    const u8* data() const { return m_buffer.is_null() ? m_inline_buffer : m_buffer.data(); }
-    bool using_inline_buffer() const { return m_buffer.is_null(); }
+    u8* data() { return m_buffer.data(); }
+    const u8* data() const { return m_buffer.data(); }
 
     static constexpr size_t inline_capacity = 128;
-    u8 m_inline_buffer[inline_capacity];
-    ByteBuffer m_buffer;
+    AK::Detail::ByteBuffer<inline_capacity> m_buffer;
     size_t m_length { 0 };
 };
 

@@ -169,7 +169,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     }));
     edit_menu.add_separator();
     edit_menu.add_action(GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
-        auto old_buffer = m_search_buffer.isolated_copy();
+        auto old_buffer = m_search_buffer;
         if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
 
             bool same_buffers = false;
