@@ -47,6 +47,8 @@ public:
     virtual void gl_delete_lists(GLuint list, GLsizei range) = 0;
     virtual void gl_end_list(void) = 0;
     virtual void gl_new_list(GLuint list, GLenum mode) = 0;
+    virtual void gl_flush() = 0;
+    virtual void gl_finish() = 0;
 
     virtual void present() = 0;
 };

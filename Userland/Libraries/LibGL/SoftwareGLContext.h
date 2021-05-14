@@ -53,6 +53,8 @@ public:
     virtual void gl_delete_lists(GLuint list, GLsizei range) override;
     virtual void gl_end_list(void) override;
     virtual void gl_new_list(GLuint list, GLenum mode) override;
+    virtual void gl_flush() override;
+    virtual void gl_finish() override;
 
     virtual void present() override;
 

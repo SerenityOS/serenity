@@ -839,6 +839,26 @@ void SoftwareGLContext::gl_new_list(GLuint list, GLenum mode)
     m_current_listing_index = CurrentListing { {}, static_cast<size_t>(list - 1), mode };
 }
 
+void SoftwareGLContext::gl_flush()
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // No-op since SoftwareGLContext is completely synchronous at the moment
+}
+
+void SoftwareGLContext::gl_finish()
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // No-op since SoftwareGLContext is completely synchronous at the moment
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
