@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/String.h>
 #include <math.h>
 
 namespace Gfx {
@@ -123,6 +124,11 @@ public:
         return sqrt(m_x * m_x + m_y * m_y + m_z * m_z + m_w * m_w);
     }
 
+    constexpr String to_string() const
+    {
+        return String::formatted("[{},{},{},{}]", x(), y(), z(), w());
+    }
+
 private:
     T m_x;
     T m_y;
@@ -132,6 +138,18 @@ private:
 
 typedef Vector4<float> FloatVector4;
 typedef Vector4<double> DoubleVector4;
+
+}
+
+namespace AK {
+
+template<typename T>
+struct Formatter<Gfx::Vector4<T>> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const Gfx::Vector4<T>& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
+};
 
 }
 
