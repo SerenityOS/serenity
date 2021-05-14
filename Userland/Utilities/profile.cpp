@@ -21,6 +21,9 @@ int main(int argc, char** argv)
     bool enable = false;
     bool disable = false;
     bool all_processes = false;
+    u64 event_mask = PERF_EVENT_MMAP | PERF_EVENT_MUNMAP | PERF_EVENT_PROCESS_CREATE
+        | PERF_EVENT_PROCESS_EXEC | PERF_EVENT_PROCESS_EXIT | PERF_EVENT_THREAD_CREATE | PERF_EVENT_THREAD_EXIT;
+    bool seen_event_type_arg = false;
 
     args_parser.add_option(pid_argument, "Target PID", nullptr, 'p', "PID");
     args_parser.add_option(all_processes, "Profile all processes (super-user only)", nullptr, 'a');
@@ -29,13 +32,39 @@ int main(int argc, char** argv)
     args_parser.add_option(free, "Free the profiling buffer for the associated process(es).", nullptr, 'f');
     args_parser.add_option(wait, "Enable profiling and wait for user input to disable.", nullptr, 'w');
     args_parser.add_option(cmd_argument, "Command", nullptr, 'c', "command");
+    args_parser.add_option(Core::ArgsParser::Option {
+        true, "Enable tracking specific event type", nullptr, 't', "event_type",
+        [&](String event_type) {
+            seen_event_type_arg = true;
+            if (event_type == "sample")
+                event_mask |= PERF_EVENT_SAMPLE;
+            else if (event_type == "context_switch")
+                event_mask |= PERF_EVENT_CONTEXT_SWITCH;
+            else {
+                warnln("Unknown event type '{}' specified.", event_type);
+                exit(1);
+            }
+            return true;
+        } });
 
-    args_parser.parse(argc, argv);
+    auto print_types = [] {
+        outln();
+        outln("Event type can be one of: sample and context_switch.");
+    };
+
+    if (!args_parser.parse(argc, argv, false)) {
+        print_types();
+        exit(1);
+    }
 
     if (!pid_argument && !cmd_argument && !all_processes) {
         args_parser.print_usage(stdout, argv[0]);
+        print_types();
         return 0;
     }
+
+    if (!seen_event_type_arg)
+        event_mask |= PERF_EVENT_SAMPLE;
 
     if (pid_argument || all_processes) {
         if (!(enable ^ disable ^ wait ^ free)) {
@@ -46,7 +75,7 @@ int main(int argc, char** argv)
         pid_t pid = all_processes ? -1 : atoi(pid_argument);
 
         if (wait || enable) {
-            if (profiling_enable(pid) < 0) {
+            if (profiling_enable(pid, event_mask) < 0) {
                 perror("profiling_enable");
                 return 1;
             }
@@ -85,7 +114,7 @@ int main(int argc, char** argv)
     cmd_argv.append(nullptr);
 
     dbgln("Enabling profiling for PID {}", getpid());
-    profiling_enable(getpid());
+    profiling_enable(getpid(), event_mask);
     if (execvp(cmd_argv[0], const_cast<char**>(cmd_argv.data())) < 0) {
         perror("execv");
         return 1;
