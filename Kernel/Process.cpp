@@ -144,7 +144,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     if (!cwd)
         cwd = VFS::the().root_custody();
 
-    auto process = adopt_ref(*new Process(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty));
+    auto process = Process::create(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty);
     if (!first_thread)
         return {};
     if (!process->m_fds.try_resize(m_max_open_file_descriptors)) {
@@ -175,8 +175,8 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
 
 RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data, u32 affinity)
 {
-    auto process = adopt_ref(*new Process(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true));
-    if (!first_thread)
+    auto process = Process::create(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true);
+    if (!first_thread || !process)
         return {};
     first_thread->tss().eip = (FlatPtr)entry;
     first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
@@ -203,7 +203,18 @@ void Process::unprotect_data()
     MM.set_page_writable_direct(VirtualAddress { this }, true);
 }
 
-Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+{
+    auto process = adopt_ref_if_nonnull(new Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
+    if (!process)
+        return {};
+    auto result = process->attach_resources(first_thread, fork_parent);
+    if (result.is_error())
+        return {};
+    return process;
+}
+
+Process::Process(const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty)
     : m_name(move(name))
     , m_is_kernel_process(is_kernel_process)
     , m_executable(move(executable))
@@ -224,19 +235,28 @@ Process::Process(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gi
     m_sgid = gid;
 
     dbgln_if(PROCESS_DEBUG, "Created new process {}({})", m_name, this->pid().value());
+}
 
+KResult Process::attach_resources(RefPtr<Thread>& first_thread, Process* fork_parent)
+{
     m_space = Space::create(*this, fork_parent ? &fork_parent->space() : nullptr);
+    if (!m_space)
+        return ENOMEM;
 
     if (fork_parent) {
         // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
         first_thread = Thread::current()->clone(*this);
+        if (!first_thread)
+            return ENOMEM;
     } else {
         // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
         auto thread_or_error = Thread::try_create(*this);
-        VERIFY(!thread_or_error.is_error());
+        if (thread_or_error.is_error())
+            return thread_or_error.error();
         first_thread = thread_or_error.release_value();
         first_thread->detach();
     }
+    return KSuccess;
 }
 
 Process::~Process()
