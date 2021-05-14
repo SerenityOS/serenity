@@ -16,13 +16,13 @@ RingBuffer::RingBuffer(String region_name, size_t capacity)
 {
 }
 
-bool RingBuffer::copy_data_in(const UserOrKernelBuffer& buffer, size_t offset, size_t length, PhysicalAddress& start_of_copied_data, size_t& bytes_copied)
+bool RingBuffer::copy_data_in(const UserOrKernelBuffer& buffer, size_t length, PhysicalAddress& start_of_copied_data, size_t& bytes_copied)
 {
     size_t start_of_free_area = (m_start_of_used + m_num_used_bytes) % m_capacity_in_bytes;
     bytes_copied = min(m_capacity_in_bytes - m_num_used_bytes, min(m_capacity_in_bytes - start_of_free_area, length));
     if (bytes_copied == 0)
         return false;
-    if (buffer.read(m_region->vaddr().offset(start_of_free_area).as_ptr(), offset, bytes_copied)) {
+    if (buffer.read(m_region->vaddr().offset(start_of_free_area).as_ptr(), bytes_copied)) {
         m_num_used_bytes += bytes_copied;
         start_of_copied_data = m_region->physical_page(start_of_free_area / PAGE_SIZE)->paddr().offset(start_of_free_area % PAGE_SIZE);
         return true;

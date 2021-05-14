@@ -121,7 +121,7 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription& desc, u64, const UserOrK
         PhysicalAddress start_of_chunk;
         size_t length_of_chunk;
 
-        if (!m_transmit_buffer->copy_data_in(data, total_bytes_copied, size - total_bytes_copied, start_of_chunk, length_of_chunk)) {
+        if (!m_transmit_buffer->copy_data_in(data.offset(total_bytes_copied), size - total_bytes_copied, start_of_chunk, length_of_chunk)) {
             chain.release_buffer_slots_to_queue();
             return EINVAL;
         }
