@@ -259,8 +259,7 @@ void TLSv12::build_random(PacketBuilder& builder)
 
     m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
 
-    // const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
-    Optional<size_t> certificate_option = 0;
+    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
     if (!certificate_option.has_value()) {
         dbgln("certificate verification failed :(");
         alert(AlertLevel::Critical, AlertDescription::BadCertificate);
