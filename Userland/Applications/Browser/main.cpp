@@ -67,9 +67,11 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    // Connect to the RequestServer and the WebSocket service immediately so we can drop the "unix" pledge.
-    Web::ResourceLoader::the();
-    Web::HTML::WebSocketClientManager::the();
+    if (Browser::s_single_process) {
+        // Connect to the RequestServer and the WebSocket service immediately so we don't need to unveil their portals.
+        Web::ResourceLoader::the();
+        Web::HTML::WebSocketClientManager::the();
+    }
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
