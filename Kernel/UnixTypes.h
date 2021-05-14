@@ -680,6 +680,7 @@ struct rtentry {
 #define RTF_GATEWAY 0x2 /* the route is a gateway and not an end host */
 
 #define AT_FDCWD -100
+#define AT_SYMLINK_NOFOLLOW 0x100
 
 #define PURGE_ALL_VOLATILE 0x1
 #define PURGE_ALL_CLEAN_INODE 0x2

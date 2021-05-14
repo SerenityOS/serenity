@@ -422,6 +422,7 @@ struct SC_waitid_params {
 };
 
 struct SC_stat_params {
+    int dirfd;
     StringArgument path;
     struct stat* statbuf;
     int follow_symlinks;
