@@ -175,7 +175,12 @@ For troubleshooting purposes, you can add the following command line arguments i
 Because iPXE (unlike GRUB) doesn't support VESA VBE modesetting when booting a multiboot kernel,
 you might not see any output, so add the `boot_mode=text` argument as well to boot into VGA text mode.
 
-In the `src` folder you should run:
+Afterwards you will need to enable the `console` iPXE command by uncommenting the following line in `src/config/general.h`:
+```c
+//#define CONSOLE_CMD		/* Console command */
+```
+
+Finally, in the `src` folder you should run:
 ```sh
 make EMBED=../script.ipxe bin/ipxe.usb
 ```
