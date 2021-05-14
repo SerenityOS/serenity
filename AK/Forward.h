@@ -10,8 +10,13 @@
 
 namespace AK {
 
-class Bitmap;
+namespace Detail {
+template<size_t inline_capacity>
 class ByteBuffer;
+}
+
+class Bitmap;
+using ByteBuffer = AK::Detail::ByteBuffer<32>;
 class IPv4Address;
 class JsonArray;
 class JsonObject;
