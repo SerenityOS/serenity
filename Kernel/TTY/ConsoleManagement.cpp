@@ -38,6 +38,11 @@ UNMAP_AFTER_INIT ConsoleManagement::ConsoleManagement()
 UNMAP_AFTER_INIT void ConsoleManagement::initialize()
 {
     for (size_t index = 0; index < 4; index++) {
+        // FIXME: Better determine the debug TTY we chose...
+        if (index == 1) {
+            m_consoles.append(VirtualConsole::create_with_preset_log(index, ConsoleDevice::the().logbuffer()));
+            continue;
+        }
         m_consoles.append(VirtualConsole::create(index));
     }
     // Note: By default the active console is the first one.

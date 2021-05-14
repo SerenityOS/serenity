@@ -74,6 +74,7 @@ public:
 
 public:
     static NonnullRefPtr<VirtualConsole> create(size_t index);
+    static NonnullRefPtr<VirtualConsole> create_with_preset_log(size_t index, const CircularQueue<char, 16384>&);
 
     virtual ~VirtualConsole() override;
 
@@ -85,7 +86,8 @@ public:
     void emit_char(char);
 
 private:
-    VirtualConsole(const unsigned index);
+    explicit VirtualConsole(const unsigned index);
+    VirtualConsole(const unsigned index, const CircularQueue<char, 16384>&);
     // ^KeyboardClient
     virtual void on_key_pressed(KeyEvent) override;
 
@@ -119,6 +121,8 @@ private:
     RecursiveSpinLock m_lock;
 
 private:
+    void initialize();
+
     void invalidate_cursor(size_t row);
 
     void clear();
