@@ -62,7 +62,7 @@ trap cleanup EXIT
 
 printf "creating partition table... "
 if [ "$1" = "mbr" ]; then
-    parted -s "${dev}" mklabel msdos mkpart primary ext2 32k 100% -a minimal set 1 boot on || die "couldn't partition disk"
+    parted -s "${dev}" mklabel msdos mkpart primary ext2 1MiB 100% -a minimal set 1 boot on || die "couldn't partition disk"
     partition_number="p1"
     partition_scheme="mbr"
 elif [ "$1" = "gpt" ]; then
@@ -74,7 +74,7 @@ elif [ "$1" = "ebr" ]; then
     partition_number="p5"
     partition_scheme="ebr"
 else
-    parted -s "${dev}" mklabel msdos mkpart primary ext2 32k 100% -a minimal set 1 boot on || die "couldn't partition disk"
+    parted -s "${dev}" mklabel msdos mkpart primary ext2 1MiB 100% -a minimal set 1 boot on || die "couldn't partition disk"
     partition_number="p1"
     partition_scheme="mbr"
 fi
