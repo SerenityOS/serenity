@@ -287,7 +287,7 @@ void init_stage2(void*)
 
     if (boot_profiling) {
         dbgln("Starting full system boot profiling");
-        auto result = Process::current()->sys$profiling_enable(-1);
+        auto result = Process::current()->sys$profiling_enable(-1, ~0ull);
         VERIFY(!result.is_error());
     }
 
