@@ -157,7 +157,7 @@ protected:
     auto mapping_for_bar(u8) -> MappedMMIO&;
 
     u8 read_status_bits();
-    void clear_status_bit(u8);
+    void mask_status_bits(u8 status_mask);
     void set_status_bit(u8);
     u64 get_device_features();
     bool setup_queues(u16 requested_queue_count = 0);
