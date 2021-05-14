@@ -105,7 +105,7 @@ void SerialDevice::set_line_control(ParitySelect parity_select, StopBits stop_bi
     m_stop_bits = stop_bits;
     m_word_length = word_length;
 
-    IO::out8(m_base_addr + 3, IO::in8(m_base_addr + 3) & (0xc0 | parity_select | stop_bits | word_length));
+    IO::out8(m_base_addr + 3, (IO::in8(m_base_addr + 3) & ~0x3f) | parity_select | stop_bits | word_length);
 }
 
 void SerialDevice::set_break_enable(bool break_enable)
