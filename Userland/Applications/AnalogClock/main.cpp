@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     auto app_icon = GUI::Icon::default_icon("app-analog-clock");
     auto window = GUI::Window::construct();
-    window->set_title(Core::DateTime::now().to_string("Clock %d-%m-%Y"));
+    window->set_title(Core::DateTime::now().to_string("%Y-%m-%d"));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->resize(170, 170);
     window->set_resizable(false);
