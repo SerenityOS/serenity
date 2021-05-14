@@ -16,7 +16,7 @@
 #include <AK/Vector.h>
 #include <LibC/bits/pthread_integration.h>
 #include <LibC/link.h>
-#include <LibC/mman.h>
+#include <LibC/sys/mman.h>
 #include <LibC/unistd.h>
 #include <LibDl/dlfcn.h>
 #include <LibDl/dlfcn_integration.h>
