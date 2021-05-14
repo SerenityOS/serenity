@@ -153,27 +153,34 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
     m_packets_in++;
     m_bytes_in += payload.size();
 
-    Optional<KBuffer> buffer;
-
     if (m_packet_queue_size == max_packet_buffers) {
         // FIXME: Keep track of the number of dropped packets
         return;
     }
 
-    if (m_unused_packet_buffers.is_empty()) {
-        buffer = KBuffer::copy(payload.data(), payload.size());
+    RefPtr<PacketWithTimestamp> packet;
+
+    if (m_unused_packets.is_empty()) {
+        auto buffer = KBuffer::copy(payload.data(), payload.size());
+        packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
     } else {
-        buffer = m_unused_packet_buffers.take_first();
-        --m_unused_packet_buffers_count;
-        if (payload.size() <= buffer.value().capacity()) {
-            memcpy(buffer.value().data(), payload.data(), payload.size());
-            buffer.value().set_size(payload.size());
+        packet = m_unused_packets.take_first();
+        if (payload.size() <= packet->buffer.capacity()) {
+            memcpy(packet->buffer.data(), payload.data(), payload.size());
+            packet->buffer.set_size(payload.size());
+            packet->timestamp = kgettimeofday();
         } else {
-            buffer = KBuffer::copy(payload.data(), payload.size());
+            auto buffer = KBuffer::copy(payload.data(), payload.size());
+            packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
         }
     }
 
-    m_packet_queue.append({ buffer.value(), kgettimeofday() });
+    if (!packet) {
+        dbgln("Discarding packet because we're out of memory");
+        return;
+    }
+
+    m_packet_queue.append(*packet);
     m_packet_queue_size++;
 
     if (on_receive)
@@ -187,13 +194,12 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
         return 0;
     auto packet_with_timestamp = m_packet_queue.take_first();
     m_packet_queue_size--;
-    packet_timestamp = packet_with_timestamp.timestamp;
-    auto packet = move(packet_with_timestamp.packet);
-    size_t packet_size = packet.size();
+    packet_timestamp = packet_with_timestamp->timestamp;
+    auto& packet_buffer = packet_with_timestamp->buffer;
+    size_t packet_size = packet_buffer.size();
     VERIFY(packet_size <= buffer_size);
-    memcpy(buffer, packet.data(), packet_size);
-    m_unused_packet_buffers.append(packet);
-    ++m_unused_packet_buffers_count;
+    memcpy(buffer, packet_buffer.data(), packet_size);
+    m_unused_packets.append(*packet_with_timestamp);
     return packet_size;
 }
 
