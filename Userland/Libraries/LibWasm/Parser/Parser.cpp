@@ -303,7 +303,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
                 result.value().values.append(Instruction { Instructions::structured_end });
 
                 // Transform op(..., instr*) -> op(...) instr* op(end(ip))
-                result.value().values.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, ip, {} } });
+                result.value().values.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, ++ip, {} } });
                 return result.release_value().values;
             }
 
