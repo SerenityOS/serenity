@@ -130,7 +130,7 @@ void AnalogClock::paint_event(GUI::PaintEvent& event)
 
 void AnalogClock::update_title_date()
 {
-    window()->set_title(Core::DateTime::now().to_string("Clock %d-%m-%Y"));
+    window()->set_title(Core::DateTime::now().to_string("%Y-%m-%d"));
 }
 
 void AnalogClock::context_menu_event(GUI::ContextMenuEvent& event)
