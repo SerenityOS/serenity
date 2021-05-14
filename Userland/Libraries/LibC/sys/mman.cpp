@@ -5,9 +5,9 @@
  */
 
 #include <errno.h>
-#include <mman.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <syscall.h>
 
 extern "C" {
