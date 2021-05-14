@@ -24,9 +24,9 @@ DwarfInfo::DwarfInfo(const ELF::Image& elf)
 ReadonlyBytes DwarfInfo::section_data(const String& section_name) const
 {
     auto section = m_elf.lookup_section(section_name);
-    if (section.is_undefined())
+    if (!section.has_value())
         return {};
-    return section.bytes();
+    return section->bytes();
 }
 
 void DwarfInfo::populate_compilation_units()
