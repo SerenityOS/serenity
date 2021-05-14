@@ -61,6 +61,7 @@ public:
     virtual String column_name(int column) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual void update() override;
+    virtual bool is_column_sortable(int column_index) const override { return column_index != Column::Icon; }
 
     struct CpuInfo {
         u32 id;
