@@ -1,6 +1,5 @@
 {
-  "background": {
-  },
+  "background": {},
   "background-attachment": {
     "inherited": false,
     "initial": "scroll"
@@ -72,6 +71,14 @@
     "initial": "currentColor",
     "inherited": false
   },
+  "border-bottom-left-radius": {
+    "initial": 0,
+    "inherited": false
+  },
+  "border-bottom-right-radius": {
+    "initial": 0,
+    "inherited": false
+  },
   "border-bottom-style": {
     "initial": "none",
     "inherited": false
@@ -104,6 +111,14 @@
     "initial": "medium",
     "inherited": false
   },
+  "border-radius": {
+    "longhands": [
+      "border-top-left-radius",
+      "border-top-right-radius",
+      "border-bottom-left-radius",
+      "border-bottom-right-radius"
+    ]
+  },
   "border-right-color": {
     "initial": "currentColor",
     "inherited": false
@@ -130,6 +145,14 @@
   },
   "border-top-color": {
     "initial": "currentColor",
+    "inherited": false
+  },
+  "border-top-left-radius": {
+    "initial": 0,
+    "inherited": false
+  },
+  "border-top-right-radius": {
+    "initial": 0,
     "inherited": false
   },
   "border-top-style": {
