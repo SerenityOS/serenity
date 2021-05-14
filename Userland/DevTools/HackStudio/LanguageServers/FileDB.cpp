@@ -67,7 +67,8 @@ String FileDB::to_absolute_path(const String& filename) const
     if (LexicalPath { filename }.is_absolute()) {
         return filename;
     }
-    VERIFY(!m_project_root.is_null());
+    if (m_project_root.is_null())
+        return filename;
     return LexicalPath { String::formatted("{}/{}", m_project_root, filename) }.string();
 }
 
