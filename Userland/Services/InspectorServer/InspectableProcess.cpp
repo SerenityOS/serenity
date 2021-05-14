@@ -22,7 +22,7 @@ InspectableProcess::InspectableProcess(pid_t pid, NonnullRefPtr<Core::LocalSocke
 {
     m_socket->set_blocking(true);
     m_socket->on_ready_to_read = [this] {
-        auto buffer = m_socket->read(1);
+        [[maybe_unused]] auto buffer = m_socket->read(1);
         if (m_socket->eof()) {
             g_processes.remove(m_pid);
             return;

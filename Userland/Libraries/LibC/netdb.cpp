@@ -466,7 +466,7 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
             }
             auto alias = split_line[i].to_byte_buffer();
             alias.append("\0", sizeof(char));
-            __getserv_alias_list_buffer.append(alias);
+            __getserv_alias_list_buffer.append(move(alias));
         }
     }
 
@@ -636,7 +636,7 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
                 break;
             auto alias = split_line[i].to_byte_buffer();
             alias.append("\0", sizeof(char));
-            __getproto_alias_list_buffer.append(alias);
+            __getproto_alias_list_buffer.append(move(alias));
         }
     }
 

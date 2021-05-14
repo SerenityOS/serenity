@@ -13,7 +13,7 @@ Vector<String> MimeData::formats() const
 {
     Vector<String> mime_types;
     mime_types.ensure_capacity(m_data.size());
-    for (auto it : m_data)
+    for (auto& it : m_data)
         mime_types.unchecked_append(it.key);
     return mime_types;
 }

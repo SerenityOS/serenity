@@ -383,6 +383,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         if (m_context.connection_status != ConnectionStatus::KeyExchange) {
             dbgln("unexpected change cipher message");
             auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
+            write_packet(packet);
             payload_res = (i8)Error::UnexpectedMessage;
         } else {
             dbgln_if(TLS_DEBUG, "change cipher spec message");
