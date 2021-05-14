@@ -30,12 +30,13 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
             g_global_perf_events = PerformanceEventBuffer::try_create_with_size(32 * MiB).leak_ptr();
 
         ScopedSpinLock lock(g_processes_lock);
-        g_profiling_all_threads = true;
+        if (!TimeManagement::the().enable_profile_timer())
+            return ENOTSUP;
         Process::for_each([](auto& process) {
             PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
         });
-        TimeManagement::the().enable_profile_timer();
+        g_profiling_all_threads = true;
         return 0;
     }
 
@@ -49,8 +50,9 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         return EPERM;
     if (!process->create_perf_events_buffer_if_needed())
         return ENOMEM;
+    if (!TimeManagement::the().enable_profile_timer())
+        return ENOTSUP;
     process->set_profiling(true);
-    TimeManagement::the().enable_profile_timer();
     return 0;
 }
 
@@ -62,8 +64,9 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
         if (!is_superuser())
             return EPERM;
         ScopedCritical critical;
+        if (!TimeManagement::the().disable_profile_timer())
+            return ENOTSUP;
         g_profiling_all_threads = false;
-        TimeManagement::the().disable_profile_timer();
         return 0;
     }
 
@@ -75,7 +78,9 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
         return EPERM;
     if (!process->is_profiling())
         return EINVAL;
-    TimeManagement::the().disable_profile_timer();
+    // FIXME: If we enabled the profile timer and it's not supported, how do we disable it now?
+    if (!TimeManagement::the().disable_profile_timer())
+        return ENOTSUP;
     process->set_profiling(false);
     return 0;
 }
