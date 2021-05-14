@@ -23,7 +23,7 @@ using namespace ::Cpp;
 
 class ParserAutoComplete : public AutoCompleteEngine {
 public:
-    ParserAutoComplete(ClientConnection&, const FileDB& filedb);
+    ParserAutoComplete(const FileDB& filedb);
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
     virtual void on_edit(const String& file) override;
