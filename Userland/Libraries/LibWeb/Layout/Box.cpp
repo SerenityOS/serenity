@@ -58,10 +58,118 @@ void Box::paint(PaintContext& context, PaintPhase phase)
 void Box::paint_border(PaintContext& context)
 {
     auto bordered_rect = this->bordered_rect();
-    Painting::paint_border(context, Painting::BorderEdge::Left, bordered_rect, computed_values());
-    Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, computed_values());
-    Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
-    Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
+    auto border_rect = enclosing_int_rect(bordered_rect);
+
+    // FIXME: Support elliptical border radii.
+
+    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
+    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+
+    Gfx::FloatRect top_border_rect = {
+        border_rect.x() + top_left_radius,
+        border_rect.y(),
+        border_rect.width() - top_left_radius - top_right_radius,
+        border_rect.height()
+    };
+    Gfx::FloatRect right_border_rect = {
+        border_rect.x(),
+        border_rect.y() + top_right_radius,
+        border_rect.width(),
+        border_rect.height() - top_right_radius - bottom_right_radius
+    };
+    Gfx::FloatRect bottom_border_rect = {
+        border_rect.x() + bottom_left_radius,
+        border_rect.y(),
+        border_rect.width() - bottom_left_radius - bottom_right_radius,
+        border_rect.height()
+    };
+    Gfx::FloatRect left_border_rect = {
+        border_rect.x(),
+        border_rect.y() + top_left_radius,
+        border_rect.width(),
+        border_rect.height() - top_left_radius - bottom_left_radius
+    };
+
+    Painting::paint_border(context, Painting::BorderEdge::Top, top_border_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Right, right_border_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Bottom, bottom_border_rect, computed_values());
+    Painting::paint_border(context, Painting::BorderEdge::Left, left_border_rect, computed_values());
+
+    // Draws a quarter cirle clockwise
+    auto draw_quarter_circle = [&](Gfx::IntPoint& from, Gfx::IntPoint& to, Gfx::Color color, int thickness) {
+        Gfx::IntPoint center = { 0, 0 };
+        Gfx::IntPoint offset = { 0, 0 };
+        Gfx::IntPoint circle_position = { 0, 0 };
+
+        auto radius = abs(from.x() - to.x());
+
+        if (from.x() < to.x() && from.y() > to.y()) {
+            // top-left
+            center.set_x(radius);
+            center.set_y(radius);
+            offset.set_y(1);
+        } else if (from.x() < to.x() && from.y() < to.y()) {
+            // top-right
+            circle_position.set_x(from.x());
+            center.set_y(radius);
+            offset.set_x(-1);
+            offset.set_y(1);
+        } else if (from.x() > to.x() && from.y() < to.y()) {
+            // bottom-right
+            circle_position.set_x(to.x());
+            circle_position.set_y(from.y());
+            offset.set_x(-1);
+        } else if (from.x() > to.x() && from.y() > to.y()) {
+            // bottom-left
+            circle_position.set_y(to.y());
+            center.set_x(radius);
+        } else {
+            // How did you get here?
+            VERIFY_NOT_REACHED();
+        }
+
+        Gfx::IntRect circle_rect = {
+            border_rect.x() + circle_position.x(),
+            border_rect.y() + circle_position.y(),
+            radius,
+            radius
+        };
+
+        context.painter().draw_circle_arc_intersecting(
+            circle_rect,
+            center + offset,
+            radius,
+            color,
+            thickness);
+    };
+
+    // FIXME: Which color to use?
+    if (top_left_radius) {
+        Gfx::IntPoint arc_start = { 0, (int)top_left_radius };
+        Gfx::IntPoint arc_end = { (int)top_left_radius, 0 };
+        draw_quarter_circle(arc_start, arc_end, computed_values().border_top().color, computed_values().border_top().width);
+    }
+
+    if (top_right_radius) {
+        Gfx::IntPoint arc_start = { (int)top_left_radius + (int)top_border_rect.width(), 0 };
+        Gfx::IntPoint arc_end = { (int)bordered_rect.width(), (int)top_right_radius };
+        draw_quarter_circle(arc_start, arc_end, computed_values().border_top().color, computed_values().border_top().width);
+    }
+
+    if (bottom_right_radius) {
+        Gfx::IntPoint arc_start = { (int)bordered_rect.width(), (int)top_right_radius + (int)right_border_rect.height() };
+        Gfx::IntPoint arc_end = { (int)bottom_border_rect.width() + (int)bottom_left_radius, (int)bordered_rect.height() };
+        draw_quarter_circle(arc_start, arc_end, computed_values().border_bottom().color, computed_values().border_bottom().width);
+    }
+
+    if (bottom_left_radius) {
+        Gfx::IntPoint arc_start = { (int)bottom_left_radius, (int)bordered_rect.height() };
+        Gfx::IntPoint arc_end = { 0, (int)bordered_rect.height() - (int)bottom_left_radius };
+        draw_quarter_circle(arc_start, arc_end, computed_values().border_bottom().color, computed_values().border_bottom().width);
+    }
 }
 
 void Box::paint_background(PaintContext& context)
