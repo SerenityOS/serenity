@@ -32,7 +32,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
         print_usage(stderr);
         exit(1);
     }
-    if (char* dot = strchr(d_string, '.'))
+    if (const char* dot = strchr(d_string, '.'))
         *number_of_decimals = strlen(dot + 1);
     else
         *number_of_decimals = 0;
