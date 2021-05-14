@@ -212,11 +212,11 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     if (!file_or_error.is_error())
         kernel_elf = make<ELF::Image>(file_or_error.value()->bytes());
 
-    auto events_value = object.get("events");
-    if (!events_value.is_array())
+    auto events_value = object.get_ptr("events");
+    if (!events_value || !events_value->is_array())
         return String { "Malformed profile (events is not an array)" };
 
-    auto& perf_events = events_value.as_array();
+    auto& perf_events = events_value->as_array();
 
     NonnullOwnPtrVector<Process> all_processes;
     HashMap<pid_t, Process*> current_processes;
@@ -299,7 +299,9 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
         }
 
-        auto stack_array = perf_event.get("stack").as_array();
+        auto* stack = perf_event.get_ptr("stack");
+        VERIFY(stack);
+        auto& stack_array = stack->as_array();
         for (ssize_t i = stack_array.values().size() - 1; i >= 0; --i) {
             auto& frame = stack_array.at(i);
             auto ptr = frame.to_number<u32>();
