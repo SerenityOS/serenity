@@ -150,7 +150,7 @@ KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_
     if (params.sigmask && !copy_from_user(&sigmask, params.sigmask))
         return EFAULT;
 
-    Vector<pollfd> fds_copy;
+    Vector<pollfd, FD_SETSIZE> fds_copy;
     if (params.nfds > 0) {
         Checked nfds_checked = sizeof(pollfd);
         nfds_checked *= params.nfds;
