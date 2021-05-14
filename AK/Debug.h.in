@@ -350,10 +350,6 @@
 #cmakedefine01 SQL_DEBUG
 #endif
 
-#ifndef STRINGIMPL_DEBUG
-#cmakedefine01 STRINGIMPL_DEBUG
-#endif
-
 #ifndef SYNTAX_HIGHLIGHTING_DEBUG
 #cmakedefine01 SYNTAX_HIGHLIGHTING_DEBUG
 #endif
