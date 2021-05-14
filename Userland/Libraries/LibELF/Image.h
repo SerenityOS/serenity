@@ -216,6 +216,9 @@ private:
         Optional<Image::Symbol> symbol;
     };
 
+    void sort_symbols() const;
+    SortedSymbol* find_sorted_symbol(FlatPtr) const;
+
     mutable Vector<SortedSymbol> m_sorted_symbols;
 };
 
