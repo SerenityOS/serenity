@@ -14,8 +14,8 @@ namespace LanguageServers::Shell {
 
 RefPtr<::Shell::Shell> AutoComplete::s_shell {};
 
-AutoComplete::AutoComplete(ClientConnection& connection, const FileDB& filedb)
-    : AutoCompleteEngine(connection, filedb, true)
+AutoComplete::AutoComplete(const FileDB& filedb)
+    : AutoCompleteEngine(filedb, true)
 {
 }
 

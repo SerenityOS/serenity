@@ -36,8 +36,6 @@ protected:
     virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void set_auto_complete_mode(String const&) override = 0;
 
-    static void set_declarations_of_document_callback(ClientConnection&, const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
-
     FileDB m_filedb;
     OwnPtr<AutoCompleteEngine> m_autocomplete_engine;
 };

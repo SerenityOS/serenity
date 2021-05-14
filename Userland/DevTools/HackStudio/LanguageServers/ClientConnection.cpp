@@ -118,9 +118,4 @@ void ClientConnection::find_declaration(GUI::AutocompleteProvider::ProjectLocati
     async_declaration_location(GUI::AutocompleteProvider::ProjectLocation { decl_location.value().file, decl_location.value().line, decl_location.value().column });
 }
 
-void ClientConnection::set_declarations_of_document_callback(ClientConnection& instance, const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
-{
-    instance.async_declarations_in_document(filename, move(declarations));
-}
-
 }

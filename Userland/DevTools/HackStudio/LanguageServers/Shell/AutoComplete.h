@@ -13,7 +13,7 @@ namespace LanguageServers::Shell {
 
 class AutoComplete : public AutoCompleteEngine {
 public:
-    AutoComplete(ClientConnection&, const FileDB& filedb);
+    AutoComplete(const FileDB& filedb);
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& position) override;
     virtual void on_edit(const String& file) override;
     virtual void file_opened([[maybe_unused]] const String& file) override;

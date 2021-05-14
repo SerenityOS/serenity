@@ -11,8 +11,8 @@
 
 namespace LanguageServers::Cpp {
 
-LexerAutoComplete::LexerAutoComplete(ClientConnection& connection, const FileDB& filedb)
-    : AutoCompleteEngine(connection, filedb)
+LexerAutoComplete::LexerAutoComplete(const FileDB& filedb)
+    : AutoCompleteEngine(filedb)
 {
 }
 
