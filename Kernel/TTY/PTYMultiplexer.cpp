@@ -40,9 +40,11 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
     if (m_freelist.is_empty())
         return EBUSY;
     auto master_index = m_freelist.take_last();
-    auto master = adopt_ref(*new MasterPTY(master_index));
+    auto master = adopt_ref_if_nonnull(new MasterPTY(master_index));
+    if (!master)
+        return ENOMEM;
     dbgln_if(PTMX_DEBUG, "PTYMultiplexer::open: Vending master {}", master->index());
-    auto description = FileDescription::create(move(master));
+    auto description = FileDescription::create(*master);
     if (!description.is_error()) {
         description.value()->set_rw_mode(options);
         description.value()->set_file_flags(options);
