@@ -108,13 +108,13 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription& desc, u64, const UserOrK
     if (!size)
         return 0;
 
-    if (!can_write(desc, size))
-        return EAGAIN;
-
     ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
     auto& queue = get_queue(TRANSMITQ);
     ScopedSpinLock queue_lock(queue.lock());
     VirtIOQueueChain chain(queue);
+
+    if (!can_write(desc, size))
+        return EAGAIN;
 
     size_t total_bytes_copied = 0;
     do {
