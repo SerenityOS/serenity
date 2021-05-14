@@ -107,6 +107,10 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
         break;
     case PERF_EVENT_THREAD_EXIT:
         break;
+    case PERF_EVENT_CONTEXT_SWITCH:
+        event.data.context_switch.next_pid = arg1;
+        event.data.context_switch.next_tid = arg2;
+        break;
     default:
         return EINVAL;
     }
@@ -179,6 +183,11 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             break;
         case PERF_EVENT_THREAD_EXIT:
             event_object.add("type", "thread_exit");
+            break;
+        case PERF_EVENT_CONTEXT_SWITCH:
+            event_object.add("type", "context_switch");
+            event_object.add("next_pid", static_cast<u64>(event.data.context_switch.next_pid));
+            event_object.add("next_tid", static_cast<u64>(event.data.context_switch.next_tid));
             break;
         }
         event_object.add("pid", event.pid);
