@@ -131,6 +131,8 @@ int main(int argc, char* argv[])
             }
 
             auto result = machine.invoke(run_address.value(), move(values));
+            if (result.is_trap())
+                warnln("Execution trapped!");
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
