@@ -277,11 +277,11 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
         s_event_loop_stack->append(this);
 
 #ifdef __serenity__
-        if (make_inspectable == MakeInspectable::Yes) {
-            if (!s_inspector_server_connection) {
-                if (!connect_to_inspector_server())
-                    dbgln("Core::EventLoop: Failed to connect to InspectorServer");
-            }
+        if (getuid() != 0
+            && make_inspectable == MakeInspectable::Yes
+            && !s_inspector_server_connection) {
+            if (!connect_to_inspector_server())
+                dbgln("Core::EventLoop: Failed to connect to InspectorServer");
         }
 #endif
     }
