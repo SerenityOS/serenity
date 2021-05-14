@@ -85,6 +85,13 @@ public:
         }
     }
 
+    inline static void add_context_switch_perf_event(Thread& current_thread, Thread& next_thread)
+    {
+        if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
+            [[maybe_unused]] auto res = event_buffer->append(PERF_EVENT_CONTEXT_SWITCH, next_thread.pid().value(), next_thread.tid().value(), nullptr);
+        }
+    }
+
     inline static void timer_tick(RegisterState const& regs)
     {
         static Time last_wakeup;

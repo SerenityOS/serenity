@@ -10,6 +10,7 @@
 #include <AK/Time.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Panic.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
@@ -364,6 +365,8 @@ bool Scheduler::context_switch(Thread* thread)
         thread->set_initialized(true);
     }
     thread->set_state(Thread::Running);
+
+    PerformanceManager::add_context_switch_perf_event(*from_thread, *thread);
 
     proc.switch_context(from_thread, thread);
 

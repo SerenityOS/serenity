@@ -47,6 +47,11 @@ struct [[gnu::packed]] ThreadCreatePerformanceEvent {
     pid_t parent_tid;
 };
 
+struct [[gnu::packed]] ContextSwitchPerformanceEvent {
+    pid_t next_pid;
+    u32 next_tid;
+};
+
 struct [[gnu::packed]] PerformanceEvent {
     u8 type { 0 };
     u8 stack_size { 0 };
@@ -62,6 +67,7 @@ struct [[gnu::packed]] PerformanceEvent {
         ProcessCreatePerformanceEvent process_create;
         ProcessExecPerformanceEvent process_exec;
         ThreadCreatePerformanceEvent thread_create;
+        ContextSwitchPerformanceEvent context_switch;
     } data;
     static constexpr size_t max_stack_frame_count = 64;
     FlatPtr stack[max_stack_frame_count];
