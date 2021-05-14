@@ -16,7 +16,6 @@ set(LIBC_SOURCES
     link.cpp
     locale.cpp
     malloc.cpp
-    mman.cpp
     mntent.cpp
     net.cpp
     netdb.cpp
@@ -40,6 +39,7 @@ set(LIBC_SOURCES
     strings.cpp
     stubs.cpp
     syslog.cpp
+    sys/mman.cpp
     sys/prctl.cpp
     sys/ptrace.cpp
     sys/select.cpp
