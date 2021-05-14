@@ -6,6 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
