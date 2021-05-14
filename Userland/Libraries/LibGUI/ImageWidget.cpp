@@ -51,7 +51,7 @@ void ImageWidget::set_auto_resize(bool value)
         set_fixed_size(m_bitmap->size());
 }
 
-// Same as QSWidget::animate(), you probably want to keep any changes in sync
+// Same as ImageViewer::ViewWidget::animate(), you probably want to keep any changes in sync
 void ImageWidget::animate()
 {
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();

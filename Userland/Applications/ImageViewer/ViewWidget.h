@@ -13,8 +13,10 @@
 #include <LibGfx/ImageDecoder.h>
 #include <LibGfx/Point.h>
 
-class QSWidget final : public GUI::Frame {
-    C_OBJECT(QSWidget)
+namespace ImageViewer {
+
+class ViewWidget final : public GUI::Frame {
+    C_OBJECT(ViewWidget)
 public:
     enum Directions {
         First,
@@ -23,7 +25,7 @@ public:
         Last
     };
 
-    virtual ~QSWidget() override;
+    virtual ~ViewWidget() override;
 
     const Gfx::Bitmap* bitmap() const { return m_bitmap.ptr(); }
     const String& path() const { return m_path; }
@@ -43,7 +45,7 @@ public:
     Function<void(const GUI::DropEvent&)> on_drop;
 
 private:
-    QSWidget();
+    ViewWidget();
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void resize_event(GUI::ResizeEvent&) override;
@@ -76,3 +78,5 @@ private:
     Gfx::FloatPoint m_saved_pan_origin;
     Vector<String> m_files_in_same_dir;
 };
+
+}
