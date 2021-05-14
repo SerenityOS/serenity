@@ -125,6 +125,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     kmalloc_init();
     slab_alloc_init();
 
+    ConsoleDevice::initialize();
     s_bsp_processor.initialize(0);
 
     CommandLine::initialize();
@@ -138,8 +139,6 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     // Note that we want to do this as early as possible.
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
         (*ctor)();
-
-    ConsoleDevice::initialize();
 
     APIC::initialize();
     InterruptManagement::initialize();
