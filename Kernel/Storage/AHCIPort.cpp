@@ -64,7 +64,7 @@ void AHCIPort::handle_interrupt()
     if (m_interrupt_status.raw_value() == 0) {
         return;
     }
-    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC) && m_interrupt_status.is_set(AHCI::PortInterruptFlag::PC)) {
+    if (m_interrupt_status.is_set(AHCI::PortInterruptFlag::PRC)) {
         clear_sata_error_register();
         m_wait_connect_for_completion = true;
     }
