@@ -3,6 +3,7 @@
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
+
 #include "TreeMapWidget.h"
 #include <AK/LexicalPath.h>
 #include <AK/Queue.h>
