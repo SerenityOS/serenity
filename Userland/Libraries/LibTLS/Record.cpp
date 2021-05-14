@@ -34,7 +34,7 @@ void TLSv12::write_packet(ByteBuffer& packet)
 void TLSv12::update_packet(ByteBuffer& packet)
 {
     u32 header_size = 5;
-    *(u16*)packet.offset_pointer(3) = AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size));
+    ByteReader::store(packet.offset_pointer(3), AK::convert_between_host_and_network_endian((u16)(packet.size() - header_size)));
 
     if (packet[0] != (u8)MessageType::ChangeCipher) {
         if (packet[0] == (u8)MessageType::Handshake && packet.size() > header_size) {
@@ -159,7 +159,7 @@ void TLSv12::update_packet(ByteBuffer& packet)
                 // store the correct ciphertext length into the packet
                 u16 ct_length = (u16)ct.size() - header_size;
 
-                *(u16*)ct.offset_pointer(header_size - 2) = AK::convert_between_host_and_network_endian(ct_length);
+                ByteReader::store(ct.offset_pointer(header_size - 2), AK::convert_between_host_and_network_endian(ct_length));
 
                 // replace the packet with the ciphertext
                 packet = ct;
@@ -222,13 +222,14 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
     // FIXME: Read the version and verify it
 
     if constexpr (TLS_DEBUG) {
-        auto version = (Version) * (const u16*)buffer.offset_pointer(buffer_position);
+        auto version = ByteReader::load16(buffer.offset_pointer(buffer_position));
         dbgln("type={}, version={}", (u8)type, (u16)version);
     }
 
     buffer_position += 2;
 
-    auto length = AK::convert_between_host_and_network_endian(*(const u16*)buffer.offset_pointer(buffer_position));
+    auto length = AK::convert_between_host_and_network_endian(ByteReader::load16(buffer.offset_pointer(buffer_position)));
+
     dbgln_if(TLS_DEBUG, "record length: {} at offset: {}", length, buffer_position);
     buffer_position += 2;
 
