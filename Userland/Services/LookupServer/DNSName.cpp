@@ -6,6 +6,7 @@
  */
 
 #include "DNSName.h"
+#include <AK/Random.h>
 #include <AK/Vector.h>
 #include <ctype.h>
 
@@ -64,7 +65,7 @@ void DNSName::randomize_case()
     for (char c : m_name) {
         // Randomize the 0x20 bit in every ASCII character.
         if (isalpha(c)) {
-            if (arc4random_uniform(2))
+            if (get_random_uniform(2))
                 c |= 0x20;
             else
                 c &= ~0x20;

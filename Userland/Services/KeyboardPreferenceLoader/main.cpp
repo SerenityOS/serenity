@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ConfigFile.h>
+#include <errno.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <unistd.h>

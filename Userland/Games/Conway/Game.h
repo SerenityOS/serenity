@@ -17,6 +17,17 @@ public:
     int rows() const { return m_rows; };
     int columns() const { return m_columns; };
 
+    enum class Pattern {
+        Random,
+        GosperGliderGun,
+        SimkinGliderGun,
+        Infinite1,
+        Infinite2,
+        Infinite3
+    };
+
+    void set_pattern(Pattern pattern) { m_pattern = pattern; };
+
 private:
     Game();
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -29,6 +40,7 @@ private:
     void seed_universe();
     void update_universe();
     void interact_at(const Gfx::IntPoint&);
+    void clear_universe();
 
     const Gfx::Color m_alive_color { Color::Green };
     const Gfx::Color m_dead_color { Color::Black };
@@ -36,6 +48,6 @@ private:
     const int m_columns { 200 };
     const int m_sleep { 100 };
     GUI::MouseButton m_last_button { GUI::MouseButton::None };
-
+    Pattern m_pattern { Pattern::Random };
     bool m_universe[200][200];
 };

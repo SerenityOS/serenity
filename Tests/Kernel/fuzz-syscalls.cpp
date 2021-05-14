@@ -5,15 +5,16 @@
  */
 
 #include <AK/Format.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <errno.h>
-#include <mman.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <syscall.h>
 
 static bool is_deadly_syscall(int fn)
@@ -80,7 +81,7 @@ static void do_systematic_tests()
 static void randomize_from(size_t* buffer, size_t len, const Vector<size_t>& values)
 {
     for (size_t i = 0; i < len; ++i) {
-        buffer[i] = values[arc4random_uniform(values.size())];
+        buffer[i] = values[get_random_uniform(values.size())];
     }
 }
 
@@ -139,7 +140,7 @@ static void do_random_tests()
     }
     for (size_t i = 0; i < fuzz_syscall_count; ++i) {
         // Construct a nice syscall:
-        int syscall_fn = arc4random_uniform(Syscall::Function::__Count);
+        int syscall_fn = get_random_uniform(Syscall::Function::__Count);
         randomize_from(direct_sc_args, array_size(direct_sc_args), interesting_values);
         randomize_from(fake_sc_params, fake_params_count, interesting_values);
 

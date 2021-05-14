@@ -5,6 +5,8 @@
  */
 
 #include "Game.h"
+#include <AK/Random.h>
+#include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
 #include <stdlib.h>
 #include <time.h>
@@ -21,6 +23,7 @@ Game::~Game()
 void Game::reset()
 {
     stop_timer();
+    clear_universe();
     seed_universe();
     start_timer(m_sleep);
     update();
@@ -28,11 +31,80 @@ void Game::reset()
 
 void Game::seed_universe()
 {
-    for (int y = 0; y < m_rows; y++) {
-        for (int x = 0; x < m_columns; x++) {
-            m_universe[y][x] = (arc4random() % 2) ? 1 : 0;
+    auto set = [&](int x, int y, String s) {
+        int p = 0;
+        for (auto c : s) {
+            m_universe[y][x + p] = c == 'O' ? 1 : 0;
+            p++;
         }
+    };
+
+    switch (m_pattern) {
+    case Pattern::Random:
+        for (int y = 0; y < m_rows; y++)
+            for (int x = 0; x < m_columns; x++)
+                m_universe[y][x] = (get_random<u32>() % 2) ? 1 : 0;
+        break;
+    case Pattern::GosperGliderGun:
+        set(20, 25, "........................O............");
+        set(20, 26, "......................O.O............");
+        set(20, 27, "............OO......OO............OO.");
+        set(20, 28, "...........O...O....OO............OO.");
+        set(20, 29, "OO........O.....O...OO...............");
+        set(20, 30, "OO........O...O.OO....O.O............");
+        set(20, 31, "..........O.....O.......O............");
+        set(20, 32, "...........O...O.....................");
+        set(20, 33, "............OO.......................");
+        break;
+    case Pattern::SimkinGliderGun:
+        set(20, 25, "OO.....OO........................");
+        set(20, 26, "OO.....OO........................");
+        set(20, 27, ".................................");
+        set(20, 28, "....OO...........................");
+        set(20, 29, "....OO...........................");
+        set(20, 30, ".................................");
+        set(20, 31, ".................................");
+        set(20, 32, ".................................");
+        set(20, 33, ".................................");
+        set(20, 34, "......................OO.OO......");
+        set(20, 35, ".....................O.....O.....");
+        set(20, 36, ".....................O......O..OO");
+        set(20, 37, ".....................OOO...O...OO");
+        set(20, 38, "..........................O......");
+        set(20, 39, ".................................");
+        set(20, 40, ".................................");
+        set(20, 41, ".................................");
+        set(20, 42, "....................OO...........");
+        set(20, 43, "....................O............");
+        set(20, 44, ".....................OOO.........");
+        set(20, 45, ".......................O.........");
+        break;
+    case Pattern::Infinite1:
+        set(20, 80, "OOOOOOOO.OOOOO...OOO......OOOOOOO.OOOOO");
+        break;
+    case Pattern::Infinite2:
+        set(27, 80, "......O.");
+        set(27, 81, "....O.OO");
+        set(27, 82, "....O.O.");
+        set(27, 83, "....O...");
+        set(27, 84, "..O.....");
+        set(27, 85, "O.O.....");
+        break;
+    case Pattern::Infinite3:
+        set(20, 85, "OOO.O");
+        set(20, 86, "O....");
+        set(20, 87, "...OO");
+        set(20, 88, ".OO.O");
+        set(20, 89, "O.O.O");
+        break;
     }
+}
+
+void Game::clear_universe()
+{
+    for (int y = 0; y < m_rows; y++)
+        for (int x = 0; x < m_columns; x++)
+            m_universe[y][x] = 0;
 }
 
 void Game::update_universe()

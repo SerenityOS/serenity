@@ -22,6 +22,7 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -170,7 +171,7 @@ static void populate_filesize_tree(TreeNode& root, Vector<MountInfo>& mounts, Ha
                 int name_len = name.length();
                 builder.append(name);
                 struct stat st;
-                int stat_result = lstat(builder.to_string().characters(), &st);
+                int stat_result = fstatat(dir_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW);
                 if (stat_result < 0) {
                     int error_sum = error_accumulator.get(errno).value_or(0);
                     error_accumulator.set(errno, error_sum + 1);

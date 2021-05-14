@@ -6,6 +6,7 @@
 
 #include "ChessWidget.h"
 #include "PromotionDialog.h"
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
@@ -382,7 +383,7 @@ void ChessWidget::reset()
     m_playback_move_number = 0;
     m_board_playback = Chess::Board();
     m_board = Chess::Board();
-    m_side = (arc4random() % 2) ? Chess::Color::White : Chess::Color::Black;
+    m_side = (get_random<u32>() % 2) ? Chess::Color::White : Chess::Color::Black;
     m_drag_enabled = true;
     input_engine_move();
     update();
