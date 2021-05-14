@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/Debug.h>
 #include <AK/Demangle.h>
 #include <AK/Memory.h>
@@ -309,36 +310,45 @@ Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
     return found;
 }
 
+Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
+{
+    if (m_sorted_symbols.is_empty())
+        sort_symbols();
+
+    size_t index = 0;
+    binary_search(m_sorted_symbols, nullptr, &index, [&address](auto, auto& candidate) {
+        return address - candidate.address;
+    });
+    // FIXME: The error path here feels strange, index == 0 means error but what about symbol #0?
+    if (index == 0)
+        return nullptr;
+    return &m_sorted_symbols[index];
+}
+
 Optional<Image::Symbol> Image::find_symbol(u32 address, u32* out_offset) const
 {
     auto symbol_count = this->symbol_count();
     if (!symbol_count)
         return {};
 
-    SortedSymbol* sorted_symbols = nullptr;
-    if (m_sorted_symbols.is_empty()) {
-        m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](const auto& symbol) {
-            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
-            return IterationDecision::Continue;
-        });
-        quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
-            return a.address < b.address;
-        });
-    }
-    sorted_symbols = m_sorted_symbols.data();
+    auto* symbol = find_sorted_symbol(address);
+    if (!symbol)
+        return {};
+    if (out_offset)
+        *out_offset = address - symbol->address;
+    return symbol->symbol;
+}
 
-    for (size_t i = 0; i < symbol_count; ++i) {
-        if (sorted_symbols[i].address > address) {
-            if (i == 0)
-                return {};
-            auto& symbol = sorted_symbols[i - 1];
-            if (out_offset)
-                *out_offset = address - symbol.address;
-            return symbol.symbol;
-        }
-    }
-    return {};
+NEVER_INLINE void Image::sort_symbols() const
+{
+    m_sorted_symbols.ensure_capacity(symbol_count());
+    for_each_symbol([this](const auto& symbol) {
+        m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
+        return IterationDecision::Continue;
+    });
+    quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
+        return a.address < b.address;
+    });
 }
 
 String Image::symbolicate(u32 address, u32* out_offset) const
@@ -349,43 +359,23 @@ String Image::symbolicate(u32 address, u32* out_offset) const
             *out_offset = 0;
         return "??";
     }
-    SortedSymbol* sorted_symbols = nullptr;
-    if (m_sorted_symbols.is_empty()) {
-        m_sorted_symbols.ensure_capacity(symbol_count);
-        for_each_symbol([this](const auto& symbol) {
-            m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
-            return IterationDecision::Continue;
-        });
-        quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
-            return a.address < b.address;
-        });
+
+    auto* symbol = find_sorted_symbol(address);
+    if (!symbol) {
+        if (out_offset)
+            *out_offset = 0;
+        return "??";
     }
-    sorted_symbols = m_sorted_symbols.data();
 
-    for (size_t i = 0; i < symbol_count; ++i) {
-        if (sorted_symbols[i].address > address) {
-            if (i == 0) {
-                if (out_offset)
-                    *out_offset = 0;
-                return "!!";
-            }
-            auto& symbol = sorted_symbols[i - 1];
+    auto& demangled_name = symbol->demangled_name;
+    if (demangled_name.is_null())
+        demangled_name = demangle(symbol->name);
 
-            auto& demangled_name = symbol.demangled_name;
-            if (demangled_name.is_null()) {
-                demangled_name = demangle(symbol.name);
-            }
-
-            if (out_offset) {
-                *out_offset = address - symbol.address;
-                return demangled_name;
-            }
-            return String::formatted("{} +{:#x}", demangled_name, address - symbol.address);
-        }
+    if (out_offset) {
+        *out_offset = address - symbol->address;
+        return demangled_name;
     }
-    if (out_offset)
-        *out_offset = 0;
-    return "??";
+    return String::formatted("{} +{:#x}", demangled_name, address - symbol->address);
 }
 
 } // end namespace ELF
