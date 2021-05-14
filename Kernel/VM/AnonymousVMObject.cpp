@@ -47,7 +47,7 @@ RefPtr<VMObject> AnonymousVMObject::clone()
     // or reset all pages to be copied again if we were previously cloned
     ensure_or_reset_cow_map();
 
-    return adopt_ref(*new AnonymousVMObject(*this));
+    return adopt_ref_if_nonnull(new AnonymousVMObject(*this));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, AllocationStrategy commit)
@@ -57,7 +57,7 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, Alloc
         if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
             return {};
     }
-    return adopt_ref(*new AnonymousVMObject(size, commit));
+    return adopt_ref_if_nonnull(new AnonymousVMObject(size, commit));
 }
 
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
@@ -76,7 +76,7 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalA
         dbgln("Shenanigans! create_for_physical_range({}, {}) would wrap around", paddr, size);
         return nullptr;
     }
-    return adopt_ref(*new AnonymousVMObject(paddr, size));
+    return adopt_ref_if_nonnull(new AnonymousVMObject(paddr, size));
 }
 
 AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)
