@@ -21,16 +21,12 @@ public:
     static NonnullRefPtr<ByteBufferImpl> create_zeroed(size_t);
     static NonnullRefPtr<ByteBufferImpl> copy(const void*, size_t);
 
-    ByteBufferImpl() = delete;
-    ~ByteBufferImpl() { clear(); }
-
-    void clear()
+    void operator delete(void* ptr)
     {
-        if (!m_data)
-            return;
-        kfree(m_data);
-        m_data = nullptr;
+        kfree(ptr);
     }
+
+    ByteBufferImpl() = delete;
 
     u8& operator[](size_t i)
     {
@@ -67,16 +63,13 @@ public:
         m_size = size;
     }
 
-    void grow(size_t size);
-
     void zero_fill();
 
 private:
     explicit ByteBufferImpl(size_t);
-    ByteBufferImpl(const void*, size_t);
 
-    u8* m_data { nullptr };
     size_t m_size { 0 };
+    u8 m_data[];
 };
 
 class ByteBuffer {
@@ -205,10 +198,12 @@ public:
 
     void grow(size_t size)
     {
-        if (!m_impl)
-            m_impl = ByteBufferImpl::create_uninitialized(size);
-        else
-            m_impl->grow(size);
+        if (m_impl && size < m_impl->size())
+            return;
+        auto new_impl = ByteBufferImpl::create_uninitialized(size);
+        if (m_impl)
+            __builtin_memcpy(new_impl->data(), m_impl->data(), m_impl->size());
+        m_impl = new_impl;
     }
 
     void append(const void* data, size_t data_size)
@@ -253,37 +248,6 @@ private:
 inline ByteBufferImpl::ByteBufferImpl(size_t size)
     : m_size(size)
 {
-    if (size != 0)
-        m_data = static_cast<u8*>(kmalloc(size));
-}
-
-inline ByteBufferImpl::ByteBufferImpl(const void* data, size_t size)
-    : m_size(size)
-{
-    if (size != 0) {
-        m_data = static_cast<u8*>(kmalloc(size));
-        __builtin_memcpy(m_data, data, size);
-    }
-}
-
-inline void ByteBufferImpl::grow(size_t size)
-{
-    VERIFY(size > m_size);
-    if (size == 0) {
-        if (m_data)
-            kfree(m_data);
-        m_data = nullptr;
-        m_size = 0;
-        return;
-    }
-    u8* new_data = static_cast<u8*>(kmalloc(size));
-    if (m_data)
-        __builtin_memcpy(new_data, m_data, m_size);
-    u8* old_data = m_data;
-    m_data = new_data;
-    m_size = size;
-    if (old_data)
-        kfree(old_data);
 }
 
 inline void ByteBufferImpl::zero_fill()
@@ -293,12 +257,14 @@ inline void ByteBufferImpl::zero_fill()
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(size_t size)
 {
-    return ::adopt_ref(*new ByteBufferImpl(size));
+    auto* buffer = kmalloc(sizeof(ByteBufferImpl) + size);
+    VERIFY(buffer);
+    return ::adopt_ref(*new (buffer) ByteBufferImpl(size));
 }
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 {
-    auto buffer = ::adopt_ref(*new ByteBufferImpl(size));
+    auto buffer = create_uninitialized(size);
     if (size != 0)
         __builtin_memset(buffer->data(), 0, size);
     return buffer;
@@ -306,7 +272,9 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(size_t size)
 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, size_t size)
 {
-    return ::adopt_ref(*new ByteBufferImpl(data, size));
+    auto buffer = create_uninitialized(size);
+    __builtin_memcpy(buffer->data(), data, size);
+    return buffer;
 }
 
 }
