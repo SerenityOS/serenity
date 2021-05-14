@@ -328,7 +328,7 @@ void ParserAutoComplete::on_edit(const String& file)
 
 void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
 {
-    set_document_data(file, create_document_data_for(file));
+    get_or_create_document_data(file);
 }
 
 Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
