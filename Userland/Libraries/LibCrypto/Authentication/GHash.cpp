@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ByteReader.h>
 #include <AK/Debug.h>
 #include <AK/MemoryStream.h>
 #include <AK/Types.h>
@@ -15,14 +16,13 @@ namespace {
 
 static u32 to_u32(const u8* b)
 {
-    return AK::convert_between_host_and_big_endian(*(const u32*)b);
+    return AK::convert_between_host_and_big_endian(ByteReader::load32(b));
 }
 
 static void to_u8s(u8* b, const u32* w)
 {
     for (auto i = 0; i < 4; ++i) {
-        auto& e = *((u32*)(b + i * 4));
-        e = AK::convert_between_host_and_big_endian(w[i]);
+        ByteReader::store(b + i * 4, AK::convert_between_host_and_big_endian(w[i]));
     }
 }
 
