@@ -60,14 +60,14 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, Alloc
     return adopt_ref_if_nonnull(new AnonymousVMObject(size, commit));
 }
 
-NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
+RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
 {
-    return adopt_ref(*new AnonymousVMObject(physical_pages));
+    return adopt_ref_if_nonnull(new AnonymousVMObject(physical_pages));
 }
 
-NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
+RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
 {
-    return adopt_ref(*new AnonymousVMObject(page));
+    return adopt_ref_if_nonnull(new AnonymousVMObject(page));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
