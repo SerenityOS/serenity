@@ -116,10 +116,12 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create(size_t ind
     return adopt_ref(*new VirtualConsole(index));
 }
 
-UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
-    : TTY(4, index)
-    , m_index(index)
-    , m_console_impl(*this)
+UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_preset_log(size_t index, const CircularQueue<char, 16384>& log)
+{
+    return adopt_ref(*new VirtualConsole(index, log));
+}
+
+UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
     m_tty_name = String::formatted("/dev/tty{}", m_index);
     VERIFY(GraphicsManagement::the().console());
@@ -136,6 +138,25 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
     }
     clear();
     VERIFY(m_cells);
+}
+
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
+    : TTY(4, index)
+    , m_index(index)
+    , m_console_impl(*this)
+{
+    initialize();
+}
+
+UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, const CircularQueue<char, 16384>& log)
+    : TTY(4, index)
+    , m_index(index)
+    , m_console_impl(*this)
+{
+    initialize();
+    for (auto& ch : log) {
+        echo(ch);
+    }
 }
 
 UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
