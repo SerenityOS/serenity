@@ -28,7 +28,7 @@ In SerenityOS, we treat human language as seriously as we do programming languag
 
 The following applies to all user-facing strings, code, comments, and commit messages:
 
-* The official project language is American English.
+* The official project language is American English with ISO 8601 dates and metric units.
 * Use proper spelling, grammar, and punctuation.
 * Write in an authoritative and technical tone.
 
