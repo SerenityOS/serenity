@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <AK/Random.h>
 #include <LibGUI/Painter.h>
 #include <stdlib.h>
 #include <time.h>
@@ -30,7 +31,7 @@ void Game::seed_universe()
 {
     for (int y = 0; y < m_rows; y++) {
         for (int x = 0; x < m_columns; x++) {
-            m_universe[y][x] = (arc4random() % 2) ? 1 : 0;
+            m_universe[y][x] = (get_random<u32>() % 2) ? 1 : 0;
         }
     }
 }
