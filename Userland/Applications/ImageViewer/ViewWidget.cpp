@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "QSWidget.h"
+#include "ViewWidget.h"
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/DirIterator.h>
@@ -16,17 +16,19 @@
 #include <LibGfx/Orientation.h>
 #include <LibGfx/Palette.h>
 
-QSWidget::QSWidget()
+namespace ImageViewer {
+
+ViewWidget::ViewWidget()
     : m_timer(Core::Timer::construct())
 {
     set_fill_with_background_color(false);
 }
 
-QSWidget::~QSWidget()
+ViewWidget::~ViewWidget()
 {
 }
 
-void QSWidget::clear()
+void ViewWidget::clear()
 {
     m_bitmap = nullptr;
     m_path = {};
@@ -35,7 +37,7 @@ void QSWidget::clear()
     update();
 }
 
-void QSWidget::flip(Gfx::Orientation orientation)
+void ViewWidget::flip(Gfx::Orientation orientation)
 {
     m_bitmap = m_bitmap->flipped(orientation);
     set_scale(m_scale);
@@ -43,7 +45,7 @@ void QSWidget::flip(Gfx::Orientation orientation)
     resize_window();
 }
 
-void QSWidget::rotate(Gfx::RotationDirection rotation_direction)
+void ViewWidget::rotate(Gfx::RotationDirection rotation_direction)
 {
     m_bitmap = m_bitmap->rotated(rotation_direction);
     set_scale(m_scale);
@@ -51,7 +53,7 @@ void QSWidget::rotate(Gfx::RotationDirection rotation_direction)
     resize_window();
 }
 
-void QSWidget::navigate(Directions direction)
+void ViewWidget::navigate(Directions direction)
 {
     if (m_path == nullptr)
         return;
@@ -102,7 +104,7 @@ void QSWidget::navigate(Directions direction)
     this->load_from_file(m_files_in_same_dir.at(index));
 }
 
-void QSWidget::set_scale(int scale)
+void ViewWidget::set_scale(int scale)
 {
     if (m_bitmap.is_null())
         return;
@@ -131,7 +133,7 @@ void QSWidget::set_scale(int scale)
     relayout();
 }
 
-void QSWidget::relayout()
+void ViewWidget::relayout()
 {
     if (m_bitmap.is_null())
         return;
@@ -146,18 +148,18 @@ void QSWidget::relayout()
     update();
 }
 
-void QSWidget::resize_event(GUI::ResizeEvent& event)
+void ViewWidget::resize_event(GUI::ResizeEvent& event)
 {
     relayout();
     GUI::Widget::resize_event(event);
 }
 
-void QSWidget::doubleclick_event(GUI::MouseEvent&)
+void ViewWidget::doubleclick_event(GUI::MouseEvent&)
 {
     on_doubleclick();
 }
 
-void QSWidget::paint_event(GUI::PaintEvent& event)
+void ViewWidget::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
 
@@ -171,7 +173,7 @@ void QSWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_scaled_bitmap(m_bitmap_rect, *m_bitmap, m_bitmap->rect());
 }
 
-void QSWidget::mousedown_event(GUI::MouseEvent& event)
+void ViewWidget::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left)
         return;
@@ -179,9 +181,9 @@ void QSWidget::mousedown_event(GUI::MouseEvent& event)
     m_saved_pan_origin = m_pan_origin;
 }
 
-void QSWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event) { }
+void ViewWidget::mouseup_event([[maybe_unused]] GUI::MouseEvent& event) { }
 
-void QSWidget::mousemove_event(GUI::MouseEvent& event)
+void ViewWidget::mousemove_event(GUI::MouseEvent& event)
 {
     if (!(event.buttons() & GUI::MouseButton::Left))
         return;
@@ -194,7 +196,7 @@ void QSWidget::mousemove_event(GUI::MouseEvent& event)
     relayout();
 }
 
-void QSWidget::mousewheel_event(GUI::MouseEvent& event)
+void ViewWidget::mousewheel_event(GUI::MouseEvent& event)
 {
     int new_scale = m_scale - event.wheel_delta() * 10;
     if (new_scale < 10)
@@ -226,7 +228,7 @@ void QSWidget::mousewheel_event(GUI::MouseEvent& event)
     set_scale(new_scale);
 }
 
-void QSWidget::load_from_file(const String& path)
+void ViewWidget::load_from_file(const String& path)
 {
     auto show_error = [&] {
         GUI::MessageBox::show(window(), String::formatted("Failed to open {}", path), "Cannot open image", GUI::MessageBox::Type::Error);
@@ -259,14 +261,14 @@ void QSWidget::load_from_file(const String& path)
     reset_view();
 }
 
-void QSWidget::drop_event(GUI::DropEvent& event)
+void ViewWidget::drop_event(GUI::DropEvent& event)
 {
     event.accept();
     if (on_drop)
         on_drop(event);
 }
 
-void QSWidget::resize_window()
+void ViewWidget::resize_window()
 {
     if (window()->is_fullscreen())
         return;
@@ -285,13 +287,13 @@ void QSWidget::resize_window()
     window()->resize(new_size);
 }
 
-void QSWidget::reset_view()
+void ViewWidget::reset_view()
 {
     m_pan_origin = { 0, 0 };
     set_scale(100);
 }
 
-void QSWidget::set_bitmap(const Gfx::Bitmap* bitmap)
+void ViewWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 {
     if (m_bitmap == bitmap)
         return;
@@ -300,7 +302,7 @@ void QSWidget::set_bitmap(const Gfx::Bitmap* bitmap)
 }
 
 // Same as ImageWidget::animate(), you probably want to keep any changes in sync
-void QSWidget::animate()
+void ViewWidget::animate()
 {
     m_current_frame_index = (m_current_frame_index + 1) % m_image_decoder->frame_count();
 
@@ -317,4 +319,6 @@ void QSWidget::animate()
             m_timer->stop();
         }
     }
+}
+
 }

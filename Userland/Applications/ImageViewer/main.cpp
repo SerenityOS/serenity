@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "QSWidget.h"
+#include "ViewWidget.h"
 #include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/MimeData.h>
@@ -28,6 +28,8 @@
 #include <serenity.h>
 #include <stdio.h>
 #include <string.h>
+
+using namespace ImageViewer;
 
 int main(int argc, char** argv)
 {
@@ -75,7 +77,7 @@ int main(int argc, char** argv)
     auto& toolbar_container = root_widget.add<GUI::ToolbarContainer>();
     auto& main_toolbar = toolbar_container.add<GUI::Toolbar>();
 
-    auto& widget = root_widget.add<QSWidget>();
+    auto& widget = root_widget.add<ViewWidget>();
     widget.on_scale_change = [&](int scale, Gfx::IntRect rect) {
         if (!widget.bitmap()) {
             window->set_title("Image Viewer");
@@ -185,22 +187,22 @@ int main(int argc, char** argv)
 
     auto go_first_action = GUI::Action::create("Go to &First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
-            widget.navigate(QSWidget::Directions::First);
+            widget.navigate(ViewWidget::Directions::First);
         });
 
     auto go_back_action = GUI::Action::create("Go &Back", { Mod_None, Key_Left }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"),
         [&](auto&) {
-            widget.navigate(QSWidget::Directions::Back);
+            widget.navigate(ViewWidget::Directions::Back);
         });
 
     auto go_forward_action = GUI::Action::create("Go &Forward", { Mod_None, Key_Right }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"),
         [&](auto&) {
-            widget.navigate(QSWidget::Directions::Forward);
+            widget.navigate(ViewWidget::Directions::Forward);
         });
 
     auto go_last_action = GUI::Action::create("Go to &Last", { Mod_None, Key_End }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-last.png"),
         [&](auto&) {
-            widget.navigate(QSWidget::Directions::Last);
+            widget.navigate(ViewWidget::Directions::Last);
         });
 
     auto full_sceen_action = GUI::CommonActions::make_fullscreen_action(
