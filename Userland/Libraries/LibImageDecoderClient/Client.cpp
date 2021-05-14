@@ -51,6 +51,9 @@ Optional<DecodedImage> Client::decode_image(const ByteBuffer& encoded_data)
 
     auto& response = response_or_error.value();
 
+    if (response.bitmaps().is_empty())
+        return {};
+
     DecodedImage image;
     image.is_animated = response.is_animated();
     image.loop_count = response.loop_count();
