@@ -1,6 +1,6 @@
 set(SOURCES
     main.cpp
-    QSWidget.cpp
+        ViewWidget.cpp
 )
 
 serenity_app(ImageViewer ICON filetype-image)
