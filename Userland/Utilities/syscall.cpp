@@ -8,10 +8,10 @@
 #include <AK/Iterator.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-#include <mman.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <syscall.h>
 
 #define SC_NARG 4

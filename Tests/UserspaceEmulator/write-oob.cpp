@@ -6,10 +6,10 @@
 
 #include <AK/Assertions.h>
 #include <LibCore/ArgsParser.h>
-#include <mman.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 static void write8(void* ptr) { *(volatile uint8_t*)ptr = 1; }
 static void write16(void* ptr) { *(volatile uint16_t*)ptr = 1; }

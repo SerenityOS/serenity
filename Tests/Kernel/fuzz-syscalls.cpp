@@ -10,11 +10,11 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <errno.h>
-#include <mman.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <syscall.h>
 
 static bool is_deadly_syscall(int fn)
