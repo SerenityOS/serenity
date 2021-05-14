@@ -29,6 +29,7 @@ public:
     bool has_next();
     String next_path();
     String next_full_path();
+    int fd() const;
 
 private:
     DIR* m_dir = nullptr;

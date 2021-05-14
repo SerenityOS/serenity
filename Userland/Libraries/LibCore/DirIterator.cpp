@@ -99,4 +99,11 @@ String find_executable_in_path(String filename)
     return {};
 }
 
+int DirIterator::fd() const
+{
+    if (!m_dir)
+        return -1;
+    return dirfd(m_dir);
+}
+
 }
