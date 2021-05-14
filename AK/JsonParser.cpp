@@ -98,7 +98,7 @@ Optional<JsonValue> JsonParser::parse_object()
         auto value = parse_helper();
         if (!value.has_value())
             return {};
-        object.set(name, move(value.value()));
+        object.set(name, value.release_value());
         ignore_while(isspace);
         if (peek() == '}')
             break;
@@ -110,7 +110,7 @@ Optional<JsonValue> JsonParser::parse_object()
     }
     if (!consume_specific('}'))
         return {};
-    return object;
+    return JsonValue { move(object) };
 }
 
 Optional<JsonValue> JsonParser::parse_array()
@@ -125,7 +125,7 @@ Optional<JsonValue> JsonParser::parse_array()
         auto element = parse_helper();
         if (!element.has_value())
             return {};
-        array.append(element.value());
+        array.append(element.release_value());
         ignore_while(isspace);
         if (peek() == ']')
             break;
@@ -138,7 +138,7 @@ Optional<JsonValue> JsonParser::parse_array()
     ignore_while(isspace);
     if (!consume_specific(']'))
         return {};
-    return array;
+    return JsonValue { move(array) };
 }
 
 Optional<JsonValue> JsonParser::parse_string()
