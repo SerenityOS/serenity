@@ -6,6 +6,7 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <ctype.h>
+#include <errno.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <string.h>

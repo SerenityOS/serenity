@@ -7,6 +7,7 @@
  */
 
 #include <AK/Format.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <pty.h>
 #include <stdlib.h>

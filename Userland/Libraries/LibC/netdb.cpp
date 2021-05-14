@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <Kernel/Net/IPv4.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>

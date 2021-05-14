@@ -9,6 +9,7 @@
 #include <AK/Time.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
+#include <errno.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <sys/time.h>
