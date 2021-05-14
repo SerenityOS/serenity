@@ -114,8 +114,7 @@ public:
         u32 address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         ReadonlyBytes bytes() const { return { raw_data(), size() }; }
-        bool is_undefined() const { return m_section_index == SHN_UNDEF; }
-        RelocationSection relocations() const;
+        Optional<RelocationSection> relocations() const;
         u32 flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
@@ -177,9 +176,7 @@ public:
     template<typename F>
     void for_each_program_header(F) const;
 
-    // NOTE: Returns section(0) if section with name is not found.
-    // FIXME: I don't love this API.
-    Section lookup_section(const String& name) const;
+    Optional<Section> lookup_section(String const& name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }

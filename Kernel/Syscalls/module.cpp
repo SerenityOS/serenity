@@ -65,7 +65,9 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
             return IterationDecision::Continue;
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         VERIFY(section_storage);
-        section.relocations().for_each_relocation([&](const ELF::Image::Relocation& relocation) {
+        auto relocations = section.relocations();
+        VERIFY(relocations.has_value());
+        relocations->for_each_relocation([&](const ELF::Image::Relocation& relocation) {
             auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(section_storage + relocation.offset());
             switch (relocation.type()) {
             case R_386_PC32: {
