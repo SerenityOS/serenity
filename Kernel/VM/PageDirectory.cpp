@@ -36,7 +36,7 @@ extern "C" PageDirectoryEntry boot_pd3[1024];
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(0xc1000000), 0x30800000);
+    m_range_allocator.initialize_with_range(VirtualAddress(0xc2000000), 0x2f000000);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 
     // Adopt the page tables already set up by boot.S
