@@ -262,10 +262,16 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
 
     VERIFY(periodic_timers.size() + non_periodic_timers.size() > 0);
 
-    if (periodic_timers.size() > 0)
-        m_system_timer = periodic_timers[0];
-    else
-        m_system_timer = non_periodic_timers[0];
+    size_t taken_periodic_timers_count = 0;
+    size_t taken_non_periodic_timers_count = 0;
+
+    if (periodic_timers.size() > taken_periodic_timers_count) {
+        m_system_timer = periodic_timers[taken_periodic_timers_count];
+        taken_periodic_timers_count += 1;
+    } else if (non_periodic_timers.size() > taken_non_periodic_timers_count) {
+        m_system_timer = non_periodic_timers[taken_non_periodic_timers_count];
+        taken_non_periodic_timers_count += 1;
+    }
 
     m_system_timer->set_callback([this](const RegisterState& regs) {
         // Update the time. We don't really care too much about the
@@ -291,13 +297,18 @@ UNMAP_AFTER_INIT bool TimeManagement::probe_and_set_non_legacy_hardware_timers()
     // can query the timer.
     m_time_keeper_timer = m_system_timer;
 
-    if (periodic_timers.size() > 1)
-        m_profile_timer = periodic_timers[1];
-    else
-        m_profile_timer = non_periodic_timers[1];
+    if (periodic_timers.size() > taken_periodic_timers_count) {
+        m_profile_timer = periodic_timers[taken_periodic_timers_count];
+        taken_periodic_timers_count += 1;
+    } else if (non_periodic_timers.size() > taken_non_periodic_timers_count) {
+        m_profile_timer = non_periodic_timers[taken_non_periodic_timers_count];
+        taken_non_periodic_timers_count += 1;
+    }
 
-    m_profile_timer->set_callback(PerformanceManager::timer_tick);
-    m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+    if (m_profile_timer) {
+        m_profile_timer->set_callback(PerformanceManager::timer_tick);
+        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+    }
 
     return true;
 }
@@ -389,16 +400,22 @@ void TimeManagement::system_timer_tick(const RegisterState& regs)
     Scheduler::timer_tick(regs);
 }
 
-void TimeManagement::enable_profile_timer()
+bool TimeManagement::enable_profile_timer()
 {
-    if (m_profile_enable_count.fetch_add(1) == 0)
+    if (m_profile_timer && m_profile_enable_count.fetch_add(1) == 0) {
         m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE));
+        return true;
+    }
+    return false;
 }
 
-void TimeManagement::disable_profile_timer()
+bool TimeManagement::disable_profile_timer()
 {
-    if (m_profile_enable_count.fetch_sub(1) == 1)
+    if (m_profile_timer && m_profile_enable_count.fetch_sub(1) == 1) {
         m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+        return true;
+    }
+    return false;
 }
 
 }
