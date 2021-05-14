@@ -12,6 +12,7 @@
 #include <Kernel/API/Syscall.h>
 #include <LibSystem/syscall.h>
 #include <bits/pthread_integration.h>
+#include <errno.h>
 #include <limits.h>
 #include <pthread.h>
 #include <serenity.h>
