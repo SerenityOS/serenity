@@ -16,6 +16,7 @@
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <Kernel/kstdio.h>
 
+#include <Kernel/VirtIO/VirtIOConsole.h>
 #include <LibC/stdarg.h>
 
 static bool serial_debug;
@@ -157,8 +158,18 @@ extern "C" void dbgputstr(const char* characters, size_t length)
     if (!characters)
         return;
     ScopedSpinLock lock(s_log_lock);
-    for (size_t i = 0; i < length; ++i)
-        debugger_out(characters[i]);
+#if !VIRTIO_DEBUG && !INTERRUPT_DEBUG && !LOCK_DEBUG && !LOCK_RESTORE_DEBUG && !LOCK_TRACE_DEBUG
+    auto main_console = VirtIOConsole::main_console();
+#else
+    // We can't use virtio console in this case, since it would cause a crash due to self-reference
+    VirtIOConsole* main_console = nullptr;
+#endif
+    if (main_console) {
+        main_console->write_from_kernel(characters, length);
+    } else {
+        for (size_t i = 0; i < length; ++i)
+            debugger_out(characters[i]);
+    }
 }
 
 extern "C" void kernelputstr(const char* characters, size_t length)

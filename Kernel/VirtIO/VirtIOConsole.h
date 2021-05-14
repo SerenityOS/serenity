@@ -25,6 +25,9 @@ public:
     VirtIOConsole(PCI::Address);
     virtual ~VirtIOConsole() override;
 
+    static VirtIOConsole* main_console();
+    size_t write_from_kernel(const char* data, size_t size);
+
 private:
     constexpr static size_t RINGBUFFER_SIZE = 2 * PAGE_SIZE;
     virtual const char* class_name() const override { return m_class_name.characters(); }
@@ -44,6 +47,7 @@ private:
     OwnPtr<RingBuffer> m_transmit_buffer;
 
     static unsigned next_device_id;
+    static Atomic<VirtIOConsole*> g_main_console;
 };
 
 }

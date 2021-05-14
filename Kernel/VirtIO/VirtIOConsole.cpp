@@ -8,6 +8,7 @@
 
 namespace Kernel {
 
+Atomic<VirtIOConsole*> VirtIOConsole::g_main_console;
 unsigned VirtIOConsole::next_device_id = 0;
 
 VirtIOConsole::VirtIOConsole(PCI::Address address)
@@ -43,6 +44,8 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             m_receive_buffer = make<RingBuffer>("VirtIOConsole Receive", RINGBUFFER_SIZE);
             m_transmit_buffer = make<RingBuffer>("VirtIOConsole Transmit", RINGBUFFER_SIZE);
         }
+        if (success && minor() == 0)
+            g_main_console = this;
     }
 }
 
@@ -134,6 +137,44 @@ KResultOr<size_t> VirtIOConsole::write(FileDescription& desc, u64, const UserOrK
     supply_chain_and_notify(TRANSMITQ, chain);
 
     return total_bytes_copied;
+}
+
+size_t VirtIOConsole::write_from_kernel(const char* data, size_t size)
+{
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(const_cast<u8*>(reinterpret_cast<const u8*>(data)));
+    auto can_write = [this]() {
+        return get_queue(TRANSMITQ).has_free_slots() && m_transmit_buffer->has_space();
+    };
+
+    ScopedSpinLock ringbuffer_lock(m_transmit_buffer->lock());
+    auto& queue = get_queue(TRANSMITQ);
+    ScopedSpinLock queue_lock(queue.lock());
+    VirtIOQueueChain chain(queue);
+
+    if (!can_write())
+        return 0;
+
+    size_t total_bytes_copied = 0;
+    do {
+        PhysicalAddress start_of_chunk;
+        size_t length_of_chunk;
+
+        auto copied_in = m_transmit_buffer->copy_data_in(buffer.offset(total_bytes_copied), size - total_bytes_copied, start_of_chunk, length_of_chunk);
+        VERIFY(copied_in);
+
+        bool did_add_buffer = chain.add_buffer_to_chain(start_of_chunk, length_of_chunk, BufferType::DeviceReadable);
+        VERIFY(did_add_buffer);
+        total_bytes_copied += length_of_chunk;
+    } while (total_bytes_copied < size && can_write());
+
+    supply_chain_and_notify(TRANSMITQ, chain);
+
+    return total_bytes_copied;
+}
+
+VirtIOConsole* VirtIOConsole::main_console()
+{
+    return g_main_console.load();
 }
 
 }
