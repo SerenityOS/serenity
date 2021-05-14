@@ -84,7 +84,7 @@ public:
             CTR<T>::encrypt(in, out, iv);
 
         auto auth_tag = m_ghash->process(aad, out);
-        block0.apply_initialization_vector(auth_tag.data);
+        block0.apply_initialization_vector({ auth_tag.data, array_size(auth_tag.data) });
         block0.bytes().copy_to(tag);
     }
 
@@ -103,7 +103,7 @@ public:
         CTR<T>::increment(iv);
 
         auto auth_tag = m_ghash->process(aad, in);
-        block0.apply_initialization_vector(auth_tag.data);
+        block0.apply_initialization_vector({ auth_tag.data, array_size(auth_tag.data) });
 
         auto test_consistency = [&] {
             if (block0.block_size() != tag.size() || __builtin_memcmp(block0.bytes().data(), tag.data(), tag.size()) != 0)
