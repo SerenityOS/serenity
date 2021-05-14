@@ -37,6 +37,7 @@ public:
     virtual String column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual void update() override;
+    virtual bool is_column_sortable(int) const override { return false; }
 
 private:
     explicit SamplesModel(Profile&);
