@@ -433,7 +433,9 @@ Optional<AsyncDeviceRequest::RequestResult> AHCIPort::prepare_and_set_scatter_li
         allocated_dma_regions.append(m_dma_buffers.at(index));
     }
 
-    m_current_scatter_list = ScatterGatherList::create(request, allocated_dma_regions, m_connected_device->block_size());
+    m_current_scatter_list = ScatterGatherList::create(request, move(allocated_dma_regions), m_connected_device->block_size());
+    if (!m_current_scatter_list)
+        return AsyncDeviceRequest::Failure;
     if (request.request_type() == AsyncBlockDeviceRequest::Write) {
         if (!request.read_from_buffer(request.buffer(), m_current_scatter_list->dma_region().as_ptr(), m_connected_device->block_size() * request.block_count())) {
             return AsyncDeviceRequest::MemoryFault;
