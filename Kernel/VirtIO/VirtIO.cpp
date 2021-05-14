@@ -161,9 +161,9 @@ u8 VirtIODevice::read_status_bits()
     return config_read8(*m_common_cfg, COMMON_CFG_DEVICE_STATUS);
 }
 
-void VirtIODevice::clear_status_bit(u8 status_bit)
+void VirtIODevice::mask_status_bits(u8 status_mask)
 {
-    m_status &= status_bit;
+    m_status &= status_mask;
     if (!m_common_cfg)
         out<u8>(REG_DEVICE_STATUS, m_status);
     else
@@ -241,7 +241,7 @@ void VirtIODevice::reset_device()
 {
     dbgln_if(VIRTIO_DEBUG, "{}: Reset device", m_class_name);
     if (!m_common_cfg) {
-        clear_status_bit(0);
+        mask_status_bits(0);
         while (read_status_bits() != 0) {
             // TODO: delay a bit?
         }
