@@ -129,7 +129,7 @@ void AbstractTableView::update_row_sizes()
     int row_count = model.row_count();
 
     for (int row = 0; row < row_count; ++row) {
-        if (!column_header().is_section_visible(row))
+        if (!row_header().is_section_visible(row))
             continue;
         row_header().set_section_size(row, row_height());
     }
