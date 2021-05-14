@@ -3,14 +3,14 @@
 script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path/.." || exit 1
 
-# Ensure copyright headers match this format:
+# Ensure copyright headers match this format and are followed by a blank line:
 # /*
 #  * Copyright (c) YYYY(-YYYY), Whatever
 #  * ... more of these ...
 #  *
 #  * SPDX-License-Identifier: BSD-2-Clause
 #  */
-GOOD_LICENSE_HEADER_PATTERN=$'^/\*\n( \* Copyright \(c\) [0-9]{4}(-[0-9]{4})?, .*\n)+ \*\n \* SPDX-License-Identifier: BSD-2-Clause\n \*/\n'
+GOOD_LICENSE_HEADER_PATTERN=$'^/\*\n( \* Copyright \(c\) [0-9]{4}(-[0-9]{4})?, .*\n)+ \*\n \* SPDX-License-Identifier: BSD-2-Clause\n \*/\n\n'
 BAD_LICENSE_HEADER_ERRORS=()
 LICENSE_HEADER_CHECK_EXCUDES=(AK/Checked.h AK/Function.h Userland/Libraries/LibC/elf.h)
 
