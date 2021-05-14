@@ -168,7 +168,7 @@ protected:
 
             cipher.encrypt_block(m_cipher_block, m_cipher_block);
             if (in) {
-                m_cipher_block.apply_initialization_vector(in->data() + offset);
+                m_cipher_block.apply_initialization_vector(in->slice(offset));
             }
             auto write_size = min(block_size, length);
 
