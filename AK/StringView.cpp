@@ -214,13 +214,6 @@ template Optional<u64> StringView::to_uint() const;
 template Optional<long> StringView::to_uint() const;
 template Optional<long long> StringView::to_uint() const;
 
-unsigned StringView::hash() const
-{
-    if (is_empty())
-        return 0;
-    return string_hash(characters_without_null_termination(), length());
-}
-
 bool StringView::operator==(const String& string) const
 {
     if (string.is_null())

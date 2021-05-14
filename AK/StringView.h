@@ -11,6 +11,7 @@
 #include <AK/Forward.h>
 #include <AK/Span.h>
 #include <AK/StdLibExtras.h>
+#include <AK/StringHash.h>
 #include <AK/StringUtils.h>
 #include <AK/Vector.h>
 
@@ -49,7 +50,7 @@ public:
     [[nodiscard]] constexpr bool is_null() const { return !m_characters; }
     [[nodiscard]] constexpr bool is_empty() const { return m_length == 0; }
 
-    [[nodiscard]] const char* characters_without_null_termination() const { return m_characters; }
+    [[nodiscard]] constexpr char const* characters_without_null_termination() const { return m_characters; }
     [[nodiscard]] constexpr size_t length() const { return m_length; }
 
     [[nodiscard]] ReadonlyBytes bytes() const { return { m_characters, m_length }; }
@@ -61,7 +62,12 @@ public:
     [[nodiscard]] constexpr ConstIterator begin() const { return ConstIterator::begin(*this); }
     [[nodiscard]] constexpr ConstIterator end() const { return ConstIterator::end(*this); }
 
-    [[nodiscard]] unsigned hash() const;
+    [[nodiscard]] constexpr unsigned hash() const
+    {
+        if (is_empty())
+            return 0;
+        return string_hash(characters_without_null_termination(), length());
+    }
 
     [[nodiscard]] bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool ends_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
