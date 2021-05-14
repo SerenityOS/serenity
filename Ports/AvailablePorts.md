@@ -8,6 +8,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`bc`](bc/)                            | bc                                                         | 2.5.1                    | https://github.com/gavinhoward/bc                                              |
 | [`binutils`](binutils/)                | GNU Binutils                                               | 2.36.1                   | https://www.gnu.org/software/binutils/                                         |
 | [`bison`](bison/)                      | GNU Bison                                                  | 1.25                     | https://www.gnu.org/software/bison/                                            |
+| [`brogue`](brogue/)                    | BrogueCE                                                   | 1.9.3                    | https://github.com/tmewett/BrogueCE                                            |
 | [`byacc`](byacc/)                      | Berkeley Yacc                                              | 20191125                 | https://invisible-island.net/byacc/byacc.html                                  |
 | [`bzip2`](bzip2/)                      | bzip2                                                      | 1.0.8                    | https://sourceware.org/bzip2/                                                  |
 | [`carl`](carl/)                        | Crypto Ancienne Resource Loader                            | 1.5                      | https://github.com/classilla/cryanc                                            |
