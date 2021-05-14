@@ -141,6 +141,7 @@ public:
     }
 
     auto& values() const { return m_values; }
+    auto& values() { return m_values; }
     auto is_trap() const { return m_is_trap; }
 
 private:
@@ -314,6 +315,11 @@ public:
 
     auto is_mutable() const { return m_mutable; }
     auto& value() const { return m_value; }
+    void set_value(Value value)
+    {
+        VERIFY(is_mutable());
+        m_value = move(value);
+    }
 
 private:
     bool m_mutable { false };
@@ -391,7 +397,7 @@ public:
     [[nodiscard]] bool is_empty() const { return m_data.is_empty(); }
     void push(EntryType entry) { m_data.append(move(entry)); }
     auto pop() { return m_data.take_last(); }
-    auto& last() { return m_data.last(); }
+    auto& peek() const { return m_data.last(); }
 
     auto size() const { return m_data.size(); }
     auto& entries() const { return m_data; }
