@@ -58,9 +58,9 @@ ALWAYS_INLINE static u32 inverse_wrapped(u32 value)
 {
     VERIFY(value & 1);
 
-    i64 b = static_cast<i64>(value);
-    i64 k0 = (2 - b);
-    i64 t = (b - 1);
+    u64 b = static_cast<u64>(value);
+    u64 k0 = (2 - b);
+    u64 t = (b - 1);
     size_t i = 1;
     while (i < 32) {
         t = t * t;
