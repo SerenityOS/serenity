@@ -10,6 +10,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ConfigFile.h>
@@ -194,7 +195,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, const String& namese
 {
     DNSPacket request;
     request.set_is_query();
-    request.set_id(arc4random_uniform(UINT16_MAX));
+    request.set_id(get_random_uniform(UINT16_MAX));
     DNSName name_in_question = name;
     if (should_randomize_case == ShouldRandomizeCase::Yes)
         name_in_question.randomize_case();

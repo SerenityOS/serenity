@@ -9,6 +9,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Optional.h>
+#include <AK/Random.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
@@ -115,7 +116,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    u32 i = arc4random_uniform(quotes.size());
+    u32 i = get_random_uniform(quotes.size());
     const auto& chosen_quote = quotes[i];
     auto datetime = Core::DateTime::from_timestamp(chosen_quote.utc_time());
 
