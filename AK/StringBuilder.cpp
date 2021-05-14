@@ -21,23 +21,12 @@ inline void StringBuilder::will_append(size_t size)
     Checked<size_t> needed_capacity = m_length;
     needed_capacity += size;
     VERIFY(!needed_capacity.has_overflow());
-    if (needed_capacity < inline_capacity)
-        return;
-    Checked<size_t> expanded_capacity = needed_capacity;
-    expanded_capacity *= 2;
-    VERIFY(!expanded_capacity.has_overflow());
-    if (m_buffer.is_null()) {
-        m_buffer.grow(expanded_capacity.value());
-        memcpy(m_buffer.data(), m_inline_buffer, m_length);
-    } else if (needed_capacity.value() > m_buffer.size()) {
-        m_buffer.grow(expanded_capacity.value());
-    }
+    m_buffer.grow(needed_capacity.value());
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
+    : m_buffer(decltype(m_buffer)::create_uninitialized(initial_capacity))
 {
-    if (initial_capacity > inline_capacity)
-        m_buffer.grow(initial_capacity);
 }
 
 void StringBuilder::append(const StringView& str)
@@ -94,7 +83,6 @@ StringView StringBuilder::string_view() const
 void StringBuilder::clear()
 {
     m_buffer.clear();
-    m_inline_buffer[0] = '\0';
     m_length = 0;
 }
 
