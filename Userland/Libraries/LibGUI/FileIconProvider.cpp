@@ -176,10 +176,10 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         auto section = image.lookup_section(icon_section.section_name);
 
         RefPtr<Gfx::Bitmap> bitmap;
-        if (section.is_undefined()) {
+        if (!section.has_value()) {
             bitmap = s_executable_icon.bitmap_for_size(icon_section.image_size);
         } else {
-            bitmap = Gfx::load_png_from_memory(reinterpret_cast<const u8*>(section.raw_data()), section.size());
+            bitmap = Gfx::load_png_from_memory(reinterpret_cast<u8 const*>(section->raw_data()), section->size());
         }
 
         if (!bitmap) {

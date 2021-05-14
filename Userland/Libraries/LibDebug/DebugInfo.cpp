@@ -79,10 +79,10 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 void DebugInfo::prepare_lines()
 {
     auto section = elf().lookup_section(".debug_line");
-    if (section.is_undefined())
+    if (!section.has_value())
         return;
 
-    InputMemoryStream stream { section.bytes() };
+    InputMemoryStream stream { section->bytes() };
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {

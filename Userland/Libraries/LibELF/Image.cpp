@@ -257,21 +257,21 @@ Image::Relocation Image::RelocationSection::relocation(unsigned index) const
     return Relocation(m_image, rels[index]);
 }
 
-Image::RelocationSection Image::Section::relocations() const
+Optional<Image::RelocationSection> Image::Section::relocations() const
 {
     StringBuilder builder;
     builder.append(".rel"sv);
     builder.append(name());
 
     auto relocation_section = m_image.lookup_section(builder.to_string());
-    if (relocation_section.type() != SHT_REL)
-        return static_cast<const RelocationSection>(m_image.section(0));
+    if (!relocation_section.has_value())
+        return {};
 
-    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.name());
-    return static_cast<const RelocationSection>(relocation_section);
+    dbgln_if(ELF_IMAGE_DEBUG, "Found relocations for {} in {}", name(), relocation_section.value().name());
+    return static_cast<RelocationSection>(relocation_section.value());
 }
 
-Image::Section Image::lookup_section(const String& name) const
+Optional<Image::Section> Image::lookup_section(const String& name) const
 {
     VERIFY(m_valid);
     for (unsigned i = 0; i < section_count(); ++i) {
@@ -279,7 +279,7 @@ Image::Section Image::lookup_section(const String& name) const
         if (section.name() == name)
             return section;
     }
-    return section(0);
+    return {};
 }
 
 StringView Image::Symbol::raw_data() const
