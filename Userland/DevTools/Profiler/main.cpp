@@ -280,7 +280,7 @@ bool generate_profile(pid_t& pid)
         process_name = "(unknown)";
     }
 
-    if (profiling_enable(pid) < 0) {
+    if (profiling_enable(pid, PERF_EVENT_MASK_ALL) < 0) {
         int saved_errno = errno;
         GUI::MessageBox::show(nullptr, String::formatted("Unable to profile process {}({}): {}", process_name, pid, strerror(saved_errno)), "Profiler", GUI::MessageBox::Type::Error);
         return false;

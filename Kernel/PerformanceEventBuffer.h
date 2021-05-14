@@ -53,7 +53,7 @@ struct [[gnu::packed]] ContextSwitchPerformanceEvent {
 };
 
 struct [[gnu::packed]] PerformanceEvent {
-    u8 type { 0 };
+    u16 type { 0 };
     u8 stack_size { 0 };
     u32 pid { 0 };
     u32 tid { 0 };
@@ -116,5 +116,6 @@ private:
 
 extern bool g_profiling_all_threads;
 extern PerformanceEventBuffer* g_global_perf_events;
+extern u64 g_profiling_event_mask;
 
 }

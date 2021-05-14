@@ -15,8 +15,9 @@ namespace Kernel {
 
 bool g_profiling_all_threads;
 PerformanceEventBuffer* g_global_perf_events;
+u64 g_profiling_event_mask;
 
-KResultOr<int> Process::sys$profiling_enable(pid_t pid)
+KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 {
     REQUIRE_NO_PROMISES;
 
@@ -24,6 +25,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         if (!is_superuser())
             return EPERM;
         ScopedCritical critical;
+        g_profiling_event_mask = event_mask;
         if (g_global_perf_events)
             g_global_perf_events->clear();
         else
@@ -33,6 +35,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         if (!TimeManagement::the().enable_profile_timer())
             return ENOTSUP;
         g_profiling_all_threads = true;
+        PerformanceManager::add_process_created_event(*Scheduler::colonel());
         Process::for_each([](auto& process) {
             PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
@@ -52,6 +55,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         return ENOMEM;
     if (!TimeManagement::the().enable_profile_timer())
         return ENOTSUP;
+    g_profiling_event_mask = event_mask;
     process->set_profiling(true);
     return 0;
 }

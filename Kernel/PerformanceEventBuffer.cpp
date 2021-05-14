@@ -60,6 +60,9 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
     if (count() >= capacity())
         return ENOBUFS;
 
+    if ((g_profiling_event_mask & type) == 0)
+        return EINVAL;
+
     PerformanceEvent event;
     event.type = type;
     event.lost_samples = lost_samples;

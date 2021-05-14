@@ -17,7 +17,7 @@ int disown(pid_t);
 int module_load(const char* path, size_t path_length);
 int module_unload(const char* name, size_t name_length);
 
-int profiling_enable(pid_t);
+int profiling_enable(pid_t, uint64_t);
 int profiling_disable(pid_t);
 int profiling_free_buffer(pid_t);
 
@@ -76,18 +76,20 @@ int futex(uint32_t* userspace_address, int futex_op, uint32_t value, const struc
 int purge(int mode);
 
 enum {
-    PERF_EVENT_SAMPLE,
-    PERF_EVENT_MALLOC,
-    PERF_EVENT_FREE,
-    PERF_EVENT_MMAP,
-    PERF_EVENT_MUNMAP,
-    PERF_EVENT_PROCESS_CREATE,
-    PERF_EVENT_PROCESS_EXEC,
-    PERF_EVENT_PROCESS_EXIT,
-    PERF_EVENT_THREAD_CREATE,
-    PERF_EVENT_THREAD_EXIT,
-    PERF_EVENT_CONTEXT_SWITCH,
+    PERF_EVENT_SAMPLE = 1,
+    PERF_EVENT_MALLOC = 2,
+    PERF_EVENT_FREE = 4,
+    PERF_EVENT_MMAP = 8,
+    PERF_EVENT_MUNMAP = 16,
+    PERF_EVENT_PROCESS_CREATE = 32,
+    PERF_EVENT_PROCESS_EXEC = 64,
+    PERF_EVENT_PROCESS_EXIT = 128,
+    PERF_EVENT_THREAD_CREATE = 256,
+    PERF_EVENT_THREAD_EXIT = 512,
+    PERF_EVENT_CONTEXT_SWITCH = 1024,
 };
+
+#define PERF_EVENT_MASK_ALL (~0ull)
 
 int perf_event(int type, uintptr_t arg1, uintptr_t arg2);
 

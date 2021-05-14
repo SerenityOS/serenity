@@ -392,7 +392,7 @@ public:
     KResultOr<int> sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*>);
     KResultOr<int> sys$module_load(Userspace<const char*> path, size_t path_length);
     KResultOr<int> sys$module_unload(Userspace<const char*> name, size_t name_length);
-    KResultOr<int> sys$profiling_enable(pid_t);
+    KResultOr<int> sys$profiling_enable(pid_t, u64);
     KResultOr<int> sys$profiling_disable(pid_t);
     KResultOr<int> sys$profiling_free_buffer(pid_t);
     KResultOr<int> sys$futex(Userspace<const Syscall::SC_futex_params*>);
