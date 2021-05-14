@@ -56,8 +56,8 @@ public:
 
     static bool is_hpet_periodic_mode_allowed();
 
-    void enable_profile_timer();
-    void disable_profile_timer();
+    bool enable_profile_timer();
+    bool disable_profile_timer();
 
     u64 uptime_ms() const;
     static Time now();
