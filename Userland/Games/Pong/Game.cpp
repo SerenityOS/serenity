@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <AK/Random.h>
 
 namespace Pong {
 
@@ -100,11 +101,11 @@ void Game::reset_ball(int serve_to_player)
 {
     int position_y_min = (game_width / 2) - 50;
     int position_y_max = (game_width / 2) + 50;
-    int position_y = arc4random() % (position_y_max - position_y_min + 1) + position_y_min;
+    int position_y = get_random<u32>() % (position_y_max - position_y_min + 1) + position_y_min;
     int position_x = (game_height / 2);
-    int velocity_y = arc4random() % 3 + 1;
+    int velocity_y = get_random<u32>() % 3 + 1;
     int velocity_x = 5 + (5 - velocity_y);
-    if (arc4random() % 2)
+    if (get_random<u32>() % 2)
         velocity_y = velocity_y * -1;
     if (serve_to_player == 2)
         velocity_x = velocity_x * -1;

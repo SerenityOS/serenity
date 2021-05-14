@@ -6,6 +6,7 @@
 
 #include "Game.h"
 #include "LevelSelectDialog.h"
+#include <AK/Random.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
@@ -191,11 +192,11 @@ void Game::reset_ball()
 {
     int position_x_min = (game_width / 2) - 50;
     int position_x_max = (game_width / 2) + 50;
-    int position_x = arc4random() % (position_x_max - position_x_min + 1) + position_x_min;
+    int position_x = get_random<u32>() % (position_x_max - position_x_min + 1) + position_x_min;
     int position_y = 200;
-    int velocity_x = arc4random() % 3 + 1;
+    int velocity_x = get_random<u32>() % 3 + 1;
     int velocity_y = 3 + (3 - velocity_x);
-    if (arc4random() % 2)
+    if (get_random<u32>() % 2)
         velocity_x = velocity_x * -1;
 
     m_ball = {};

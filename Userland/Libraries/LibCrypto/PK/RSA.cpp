@@ -339,7 +339,7 @@ void RSA_PKCS1_EME::encrypt(ReadonlyBytes in, Bytes& out)
     ps.resize(ps_length);
 
     fill_with_random(ps.data(), ps_length);
-    // since arc4random can create zeros (shocking!)
+    // since fill_with_random can create zeros (shocking!)
     // we have to go through and un-zero the zeros
     for (size_t i = 0; i < ps_length; ++i)
         while (!ps[i])

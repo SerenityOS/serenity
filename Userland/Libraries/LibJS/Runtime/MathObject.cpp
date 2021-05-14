@@ -6,6 +6,7 @@
  */
 
 #include <AK/Function.h>
+#include <AK/Random.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <math.h>
@@ -86,7 +87,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 {
 #ifdef __serenity__
-    double r = (double)arc4random() / (double)UINT32_MAX;
+    double r = (double)get_random<u32>() / (double)UINT32_MAX;
 #else
     double r = (double)rand() / (double)RAND_MAX;
 #endif
