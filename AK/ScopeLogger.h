@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/SourceLocation.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
