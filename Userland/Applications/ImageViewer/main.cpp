@@ -38,13 +38,13 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/QuickShow")) {
+    if (!Desktop::Launcher::add_allowed_handler_with_any_url("/bin/ImageViewer")) {
         warnln("Failed to set up allowed launch URLs");
         return 1;
     }
 
     if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md") })) {
+            "/bin/Help", { URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md") })) {
         warnln("Failed to set up allowed launch URLs");
         return 1;
     }
@@ -65,7 +65,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(true);
     window->resize(300, 200);
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("QuickShow");
+    window->set_title("Image Viewer");
 
     auto& root_widget = window->set_main_widget<GUI::Widget>();
     root_widget.set_fill_with_background_color(true);
@@ -78,11 +78,11 @@ int main(int argc, char** argv)
     auto& widget = root_widget.add<QSWidget>();
     widget.on_scale_change = [&](int scale, Gfx::IntRect rect) {
         if (!widget.bitmap()) {
-            window->set_title("QuickShow");
+            window->set_title("Image Viewer");
             return;
         }
 
-        window->set_title(String::formatted("{} {} {}% - QuickShow", widget.path(), widget.bitmap()->size().to_string(), scale));
+        window->set_title(String::formatted("{} {} {}% - Image Viewer", widget.path(), widget.bitmap()->size().to_string(), scale));
 
         if (window->is_fullscreen())
             return;
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
         widget.load_from_file(urls.first().path());
 
         for (size_t i = 1; i < urls.size(); ++i) {
-            Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/QuickShow");
+            Desktop::Launcher::open(URL::create_with_file_protocol(urls[i].path().characters()), "/bin/ImageViewer");
         }
     };
     widget.on_doubleclick = [&] {
@@ -278,9 +278,9 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
-        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/QuickShow.md"), "/bin/Help");
+        Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/ImageViewer.md"), "/bin/Help");
     }));
-    help_menu.add_action(GUI::CommonActions::make_about_action("QuickShow", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Image Viewer", app_icon, window));
 
     window->set_menubar(move(menubar));
 
