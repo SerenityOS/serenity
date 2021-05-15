@@ -247,6 +247,143 @@ void Painter::fill_rect_with_gradient(const IntRect& a_rect, Color gradient_star
     return fill_rect_with_gradient(Orientation::Horizontal, a_rect, gradient_start, gradient_end);
 }
 
+void Painter::fill_rect_with_rounded_corners(const IntRect& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
+{
+    // Fasttrack for rects without any border radii
+    if (!top_left_radius && !top_right_radius && !bottom_right_radius && !bottom_left_radius)
+        return fill_rect(a_rect, color);
+
+    // Fully transparent, dont care.
+    if (color.alpha() == 0)
+        return;
+
+    // FIXME: Allow for elliptically rounded corners
+    IntRect top_left_corner = {
+        a_rect.x(),
+        a_rect.y(),
+        top_left_radius,
+        top_left_radius
+    };
+    IntRect top_right_corner = {
+        a_rect.x() + a_rect.width() - top_right_radius,
+        a_rect.y(),
+        top_right_radius,
+        top_right_radius
+    };
+    IntRect bottom_right_corner = {
+        a_rect.x() + a_rect.width() - bottom_right_radius,
+        a_rect.y() + a_rect.height() - bottom_right_radius,
+        bottom_right_radius,
+        bottom_right_radius
+    };
+    IntRect bottom_left_corner = {
+        a_rect.x(),
+        a_rect.y() + a_rect.height() - bottom_left_radius,
+        bottom_left_radius,
+        bottom_left_radius
+    };
+
+    IntRect top_rect = {
+        a_rect.x() + top_left_radius,
+        a_rect.y(),
+        a_rect.width() - top_left_radius - top_right_radius, top_left_radius
+    };
+    IntRect right_rect = {
+        a_rect.x() + a_rect.width() - top_right_radius,
+        a_rect.y() + top_right_radius,
+        top_right_radius,
+        a_rect.height() - top_right_radius - bottom_right_radius
+    };
+    IntRect bottom_rect = {
+        a_rect.x() + bottom_left_radius,
+        a_rect.y() + a_rect.height() - bottom_right_radius,
+        a_rect.width() - bottom_left_radius - bottom_right_radius,
+        bottom_right_radius
+    };
+    IntRect left_rect = {
+        a_rect.x(),
+        a_rect.y() + top_left_radius,
+        bottom_left_radius,
+        a_rect.height() - top_left_radius - bottom_left_radius
+    };
+
+    IntRect inner = {
+        left_rect.x() + left_rect.width(),
+        left_rect.y(),
+        a_rect.width() - left_rect.width() - right_rect.width(),
+        a_rect.height() - top_rect.height() - bottom_rect.height()
+    };
+
+    fill_rect(top_rect, color);
+    fill_rect(right_rect, color);
+    fill_rect(bottom_rect, color);
+    fill_rect(left_rect, color);
+
+    fill_rect(inner, color);
+
+    if (top_left_radius)
+        fill_rounded_corner(top_left_corner, top_left_radius, color, CornerOrientation::TopLeft);
+    if (top_right_radius)
+        fill_rounded_corner(top_right_corner, top_right_radius, color, CornerOrientation::TopRight);
+    if (bottom_left_radius)
+        fill_rounded_corner(bottom_left_corner, bottom_left_radius, color, CornerOrientation::BottomLeft);
+    if (bottom_right_radius)
+        fill_rounded_corner(bottom_right_corner, bottom_right_radius, color, CornerOrientation::BottomRight);
+}
+
+void Painter::fill_rounded_corner(const IntRect& a_rect, int radius, Color color, CornerOrientation orientation)
+{
+    // Care about clipping
+    auto translated_a_rect = a_rect.translated(translation());
+    auto rect = translated_a_rect.intersected(clip_rect());
+
+    if (rect.is_empty())
+        return;
+    VERIFY(m_target->rect().contains(rect));
+
+    // We got cut on the top!
+    // FIXME: Also account for clipping on the x-axis
+    int clip_offset = 0;
+    if (translated_a_rect.y() < rect.y())
+        clip_offset = rect.y() - translated_a_rect.y();
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    IntPoint circle_center;
+    switch (orientation) {
+    case CornerOrientation::TopLeft:
+        circle_center = { radius, radius + 1 };
+        break;
+    case CornerOrientation::TopRight:
+        circle_center = { -1, radius + 1 };
+        break;
+    case CornerOrientation::BottomRight:
+        circle_center = { -1, 0 };
+        break;
+    case CornerOrientation::BottomLeft:
+        circle_center = { radius, 0 };
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    int radius2 = radius * radius;
+    auto is_in_circle = [&](int x, int y) {
+        int distance2 = (circle_center.x() - x) * (circle_center.x() - x) + (circle_center.y() - y) * (circle_center.y() - y);
+        // To reflect the grid and be compatible with the draw_circle_arc_intersecting algorithm
+        // add 1/2 to the radius
+        return distance2 <= (radius2 + radius + 0.25);
+    };
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        for (int j = 0; j < rect.width(); ++j)
+            if (is_in_circle(j, rect.height() - i + clip_offset))
+                dst[j] = color.value();
+        dst += dst_skip;
+    }
+}
+
 void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
@@ -2040,5 +2177,4 @@ void Gfx::Painter::draw_ui_text(const Gfx::IntRect& rect, const StringView& text
         }
     }
 }
-
 }
