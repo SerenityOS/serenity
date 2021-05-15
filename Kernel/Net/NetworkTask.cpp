@@ -428,7 +428,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             return;
         }
         default:
-            dbgln("handle_tcp: unexpected flags in Listen state");
+            dbgln("handle_tcp: unexpected flags in Listen state ({:x})", tcp_packet.flags());
             // socket->send_tcp_packet(TCPFlags::RST);
             return;
         }
@@ -461,7 +461,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in SynSent state");
+            dbgln("handle_tcp: unexpected flags in SynSent state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
@@ -500,7 +500,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in SynReceived state");
+            dbgln("handle_tcp: unexpected flags in SynReceived state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -508,7 +508,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
     case TCPSocket::State::CloseWait:
         switch (tcp_packet.flags()) {
         default:
-            dbgln("handle_tcp: unexpected flags in CloseWait state");
+            dbgln("handle_tcp: unexpected flags in CloseWait state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -520,7 +520,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in LastAck state");
+            dbgln("handle_tcp: unexpected flags in LastAck state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -536,7 +536,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             socket->set_state(TCPSocket::State::Closing);
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in FinWait1 state");
+            dbgln("handle_tcp: unexpected flags in FinWait1 state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -551,7 +551,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in FinWait2 state");
+            dbgln("handle_tcp: unexpected flags in FinWait2 state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
@@ -563,7 +563,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             socket->set_state(TCPSocket::State::TimeWait);
             return;
         default:
-            dbgln("handle_tcp: unexpected flags in Closing state");
+            dbgln("handle_tcp: unexpected flags in Closing state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
             return;
