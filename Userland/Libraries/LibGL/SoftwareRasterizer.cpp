@@ -38,6 +38,66 @@ static Gfx::RGBA32 to_rgba32(const FloatVector4& v)
     return a << 24 | b << 16 | g << 8 | r;
 }
 
+static FloatVector4 to_vec4(Gfx::RGBA32 rgba)
+{
+    return {
+        (rgba & 0xff) / 255.0f,
+        ((rgba >> 8) & 0xff) / 255.0f,
+        ((rgba >> 16) & 0xff) / 255.0f,
+        ((rgba >> 24) & 0xff) / 255.0f
+    };
+}
+
+static constexpr void setup_blend_factors(GLenum mode, FloatVector4& constant, float& src_alpha, float& dst_alpha, float& src_color, float& dst_color)
+{
+    constant = { 0.0f, 0.0f, 0.0f, 0.0f };
+    src_alpha = 0;
+    dst_alpha = 0;
+    src_color = 0;
+    dst_color = 0;
+
+    switch (mode) {
+    case GL_ZERO:
+        break;
+    case GL_ONE:
+        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        break;
+    case GL_SRC_COLOR:
+        src_color = 1;
+        break;
+    case GL_ONE_MINUS_SRC_COLOR:
+        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        src_color = -1;
+        break;
+    case GL_SRC_ALPHA:
+        src_alpha = 1;
+        break;
+    case GL_ONE_MINUS_SRC_ALPHA:
+        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        src_alpha = -1;
+        break;
+    case GL_DST_ALPHA:
+        dst_alpha = -1;
+        break;
+    case GL_ONE_MINUS_DST_ALPHA:
+        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        dst_alpha = -1;
+        break;
+    case GL_DST_COLOR:
+        dst_color = 1;
+        break;
+    case GL_ONE_MINUS_DST_COLOR:
+        constant = { 1.0f, 1.0f, 1.0f, 1.0f };
+        dst_color = -1;
+        break;
+    case GL_SRC_ALPHA_SATURATE:
+        // FIXME: How do we implement this?
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
 template<typename PS>
 static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& render_target, DepthBuffer& depth_buffer, const GLTriangle& triangle, PS pixel_shader)
 {
@@ -56,6 +116,36 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
         return;
 
     float one_over_area = 1.0f / area;
+
+    FloatVector4 src_constant {};
+    float src_factor_src_alpha = 0;
+    float src_factor_dst_alpha = 0;
+    float src_factor_src_color = 0;
+    float src_factor_dst_color = 0;
+
+    FloatVector4 dst_constant {};
+    float dst_factor_src_alpha = 0;
+    float dst_factor_dst_alpha = 0;
+    float dst_factor_src_color = 0;
+    float dst_factor_dst_color = 0;
+
+    if (options.enable_blending) {
+        setup_blend_factors(
+            options.blend_source_factor,
+            src_constant,
+            src_factor_src_alpha,
+            src_factor_dst_alpha,
+            src_factor_src_color,
+            src_factor_dst_color);
+
+        setup_blend_factors(
+            options.blend_source_factor,
+            dst_constant,
+            dst_factor_src_alpha,
+            dst_factor_dst_alpha,
+            dst_factor_src_color,
+            dst_factor_dst_color);
+    }
 
     // Obey top-left rule:
     // This sets up "zero" for later pixel coverage tests.
@@ -96,6 +186,8 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
 
     static_assert(RASTERIZER_BLOCK_SIZE < sizeof(int) * 8, "RASTERIZER_BLOCK_SIZE must be smaller than the pixel_mask's width in bits");
     int pixel_mask[RASTERIZER_BLOCK_SIZE];
+
+    FloatVector4 pixel_buffer[RASTERIZER_BLOCK_SIZE][RASTERIZER_BLOCK_SIZE];
 
     // Iterate over all blocks within the bounds of the triangle
     for (int by = by0; by < by1; by++) {
@@ -191,7 +283,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     continue;
                 }
 
-                auto* pixel = &render_target.scanline(y0 + y)[x0];
+                auto* pixel = pixel_buffer[y];
                 for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, coords += dbdx, pixel++) {
                     if (~pixel_mask[y] & (1 << x))
                         continue;
@@ -215,7 +307,47 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                         FloatVector2(triangle.vertices[2].u, triangle.vertices[2].v),
                         barycentric);
 
-                    *pixel = to_rgba32(pixel_shader(uv, rgba));
+                    *pixel = pixel_shader(uv, rgba);
+                }
+            }
+
+            if (options.enable_blending) {
+                // Blend color values from pixel_buffer into render_target
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    auto src = pixel_buffer[y];
+                    auto dst = &render_target.scanline(y + y0)[x0];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
+                        if (~pixel_mask[y] & (1 << x))
+                            continue;
+
+                        auto float_dst = to_vec4(*dst);
+
+                        auto src_factor = src_constant
+                            + *src * src_factor_src_color
+                            + FloatVector4(src->w(), src->w(), src->w(), src->w()) * src_factor_src_alpha
+                            + float_dst * src_factor_dst_color
+                            + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * src_factor_dst_alpha;
+
+                        auto dst_factor = dst_constant
+                            + *src * dst_factor_src_color
+                            + FloatVector4(src->w(), src->w(), src->w(), src->w()) * dst_factor_src_alpha
+                            + float_dst * dst_factor_dst_color
+                            + FloatVector4(float_dst.w(), float_dst.w(), float_dst.w(), float_dst.w()) * dst_factor_dst_alpha;
+
+                        *dst = to_rgba32(*src * src_factor + float_dst * dst_factor);
+                    }
+                }
+            } else {
+                // Copy color values from pixel_buffer into render_target
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    auto src = pixel_buffer[y];
+                    auto dst = &render_target.scanline(y + y0)[x0];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++, dst++) {
+                        if (~pixel_mask[y] & (1 << x))
+                            continue;
+
+                        *dst = to_rgba32(*src);
+                    }
                 }
             }
         }
