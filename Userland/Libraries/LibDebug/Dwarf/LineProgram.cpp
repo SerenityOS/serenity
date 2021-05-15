@@ -130,14 +130,14 @@ void LineProgram::append_to_line_info()
     if (m_file_index >= m_source_files.size())
         return;
 
-    String directory = m_source_directories[m_source_files[m_file_index].directory_index];
+    auto const& directory = m_source_directories[m_source_files[m_file_index].directory_index];
 
     StringBuilder full_path(directory.length() + m_source_files[m_file_index].name.length() + 1);
     full_path.append(directory);
     full_path.append('/');
     full_path.append(m_source_files[m_file_index].name);
 
-    m_lines.append({ m_address, full_path.to_string(), m_line });
+    m_lines.append({ m_address, FlyString { full_path.string_view() }, m_line });
 }
 
 void LineProgram::reset_registers()
