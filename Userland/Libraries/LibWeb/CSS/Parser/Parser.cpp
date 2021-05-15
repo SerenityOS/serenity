@@ -648,7 +648,7 @@ Optional<QualifiedStyleRule> Parser::parse_as_rule()
 
     for (;;) {
         auto maybe_whitespace = peek_token();
-        if (!token.is_whitespace()) {
+        if (!maybe_whitespace.is_whitespace()) {
             break;
         }
         next_token();
@@ -710,7 +710,7 @@ Optional<StyleComponentValueRule> Parser::parse_as_component_value()
 
     for (;;) {
         auto maybe_whitespace = peek_token();
-        if (!token.is_whitespace()) {
+        if (!maybe_whitespace.is_whitespace()) {
             break;
         }
         next_token();
