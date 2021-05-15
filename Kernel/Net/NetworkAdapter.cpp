@@ -65,7 +65,7 @@ NetworkAdapter::~NetworkAdapter()
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
 {
     size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
-    auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
+    auto buffer = NetworkByteBuffer::create_zeroed(size_in_bytes);
     auto* eth = (EthernetFrameHeader*)buffer.data();
     eth->set_source(mac_address());
     eth->set_destination(destination);
@@ -83,7 +83,7 @@ KResult NetworkAdapter::send_ipv4(const IPv4Address& source_ipv4, const MACAddre
         return send_ipv4_fragmented(source_ipv4, destination_mac, destination_ipv4, protocol, payload, payload_size, ttl);
 
     size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
-    auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
+    auto buffer = NetworkByteBuffer::create_zeroed(ethernet_frame_size);
     auto& eth = *(EthernetFrameHeader*)buffer.data();
     eth.set_source(mac_address());
     eth.set_destination(destination_mac);
@@ -121,7 +121,7 @@ KResult NetworkAdapter::send_ipv4_fragmented(const IPv4Address& source_ipv4, con
     for (size_t packet_index = 0; packet_index < fragment_block_count; ++packet_index) {
         auto is_last_block = packet_index + 1 == fragment_block_count;
         auto packet_payload_size = is_last_block ? last_block_size : packet_boundary_size;
-        auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
+        auto buffer = NetworkByteBuffer::create_zeroed(ethernet_frame_size);
         auto& eth = *(EthernetFrameHeader*)buffer.data();
         eth.set_source(mac_address());
         eth.set_destination(destination_mac);
