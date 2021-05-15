@@ -61,7 +61,7 @@ PaletteWidget::PaletteWidget()
     set_frame_thickness(0);
     set_fill_with_background_color(true);
 
-    set_fixed_height(34);
+    set_fixed_height(33);
 
     m_secondary_color_widget = add<GUI::Frame>();
     m_secondary_color_widget->set_relative_rect({ 0, 2, 60, 31 });
