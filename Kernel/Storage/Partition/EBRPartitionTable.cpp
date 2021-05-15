@@ -64,9 +64,7 @@ EBRPartitionTable::EBRPartitionTable(const StorageDevice& device)
         if (entry.offset == 0x00) {
             continue;
         }
-        auto partition_type = ByteBuffer::create_zeroed(sizeof(u8));
-        partition_type.data()[0] = entry.type;
-        m_partitions.append(DiskPartitionMetadata({ entry.offset, (entry.offset + entry.length), partition_type }));
+        m_partitions.empend(entry.offset, (entry.offset + entry.length), entry.type);
     }
 }
 
