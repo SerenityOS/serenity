@@ -6,6 +6,7 @@
 
 #include "Expression.h"
 
+#include <AK/Format.h>
 #include <AK/MemoryStream.h>
 #include <sys/arch/i386/regs.h>
 
