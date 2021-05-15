@@ -401,16 +401,6 @@ int main(int argc, char** argv)
         image->add_layer(*bg_layer);
         bg_layer->bitmap().fill(Color::White);
 
-        auto fg_layer1 = PixelPaint::Layer::create_with_size(*image, { 200, 200 }, "FG Layer 1");
-        fg_layer1->set_location({ 50, 50 });
-        image->add_layer(*fg_layer1);
-        fg_layer1->bitmap().fill(Color::Yellow);
-
-        auto fg_layer2 = PixelPaint::Layer::create_with_size(*image, { 100, 100 }, "FG Layer 2");
-        fg_layer2->set_location({ 300, 300 });
-        image->add_layer(*fg_layer2);
-        fg_layer2->bitmap().fill(Color::Blue);
-
         layer_list_widget.set_image(image);
 
         image_editor.set_image(image);
