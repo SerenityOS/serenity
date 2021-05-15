@@ -62,6 +62,8 @@ set(KERNEL_SOURCES
     Storage/AHCIController.cpp
     Storage/AHCIPort.cpp
     Storage/AHCIPortHandler.cpp
+    Storage/IntelAHCIController.cpp
+    Storage/IntelAHCIPort.cpp
     Storage/SATADiskDevice.cpp
     Storage/BMIDEChannel.cpp
     Storage/IDEController.cpp

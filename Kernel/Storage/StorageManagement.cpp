@@ -12,6 +12,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/IDEController.h>
+#include <Kernel/Storage/IntelAHCIController.h>
 #include <Kernel/Storage/Partition/EBRPartitionTable.h>
 #include <Kernel/Storage/Partition/GUIDPartitionTable.h>
 #include <Kernel/Storage/Partition/MBRPartitionTable.h>
@@ -53,9 +54,12 @@ UNMAP_AFTER_INIT NonnullRefPtrVector<StorageController> StorageManagement::enume
                 }
             });
         }
-        PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
+        PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
             if (PCI::get_class(address) == 0x1 && PCI::get_subclass(address) == 0x6 && PCI::get_programming_interface(address) == 0x1) {
-                controllers.append(AHCIController::initialize(address));
+                if (id.vendor_id == 0x8086) { // Intel
+                    controllers.append(IntelAHCIController::initialize(address));
+                } else
+                    controllers.append(AHCIController::initialize(address));
             }
         });
     }
