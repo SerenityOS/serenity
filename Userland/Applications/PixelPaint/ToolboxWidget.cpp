@@ -73,14 +73,12 @@ ToolboxWidget::ToolboxWidget()
 {
     set_fill_with_background_color(true);
 
-    set_frame_thickness(1);
-    set_frame_shape(Gfx::FrameShape::Panel);
-    set_frame_shadow(Gfx::FrameShadow::Raised);
-
-    set_fixed_width(48);
+    set_frame_thickness(0);
+    set_fixed_width(28);
 
     set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_margins({ 4, 4, 4, 4 });
+    layout()->set_spacing(0);
+    layout()->set_margins({ 2, 2, 2, 2 });
 
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);
@@ -98,8 +96,9 @@ void ToolboxWidget::setup_tools()
         m_tools.append(tool.ptr());
         auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
         button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-        button.set_fixed_height(32);
+        button.set_fixed_size(24, 24);
         button.set_checkable(true);
+        button.set_button_style(Gfx::ButtonStyle::Coolbar);
         button.set_icon(Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)));
         return button;
     };
