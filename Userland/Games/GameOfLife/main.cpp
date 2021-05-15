@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     game_menu.add_separator();
     game_menu.add_action(toggle_running_action);
     game_menu.add_action(run_one_generation_action);
-
+    game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
