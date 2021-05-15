@@ -137,7 +137,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
     if (m_new_game_animation || m_game_over_animation)
         return;
 
-    if (event.key() == KeyCode::Key_F12)
+    if (event.shift() && (event.key() == KeyCode::Key_F12))
         start_game_over_animation();
 }
 
