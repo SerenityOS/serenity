@@ -47,7 +47,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Make sure your commits are rebased on the master branch.
 * Wrap your commit messages at 72 characters.
 * The first line of the commit message is the subject line, and should have the format "Category: Brief description of what's being changed". The "category" can be a subdirectory, but also something like "POSIX compliance" or "ClassName". Whatever seems logical.
-* Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work")
+* Write the commit message subject line in the imperative mood ("Foo: Change the way dates work", not "Foo: Changed the way dates work").
 * Write your commit messages in proper English, with care and punctuation.
 * Squash your commits when making revisions after a patch review.
 * Add your personal copyright line to files when making substantive changes. (Optional but encouraged!)
@@ -59,6 +59,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Touch anything outside the stated scope of the PR.
 * Iterate excessively on your design across multiple commits.
 * Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
+* End commit message subject lines with a period.
 * Include commented-out code.
 * Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
 * Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
