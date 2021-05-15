@@ -36,6 +36,7 @@ public:
     void fill_rect_with_checkerboard(const IntRect&, const IntSize&, Color color_dark, Color color_light);
     void fill_rect_with_gradient(Orientation, const IntRect&, Color gradient_start, Color gradient_end);
     void fill_rect_with_gradient(const IntRect&, Color gradient_start, Color gradient_end);
+    void fill_rect_with_rounded_corners(const IntRect&, Color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius);
     void fill_ellipse(const IntRect&, Color);
     void draw_rect(const IntRect&, Color, bool rough = false);
     void draw_focus_rect(const IntRect&, Color);
@@ -70,6 +71,14 @@ public:
     void draw_glyph(const IntPoint&, u32, const Font&, Color);
     void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const IntPoint&, u32 code_point, const Font&, Color);
+
+    enum class CornerOrientation {
+        TopLeft,
+        TopRight,
+        BottomRight,
+        BottomLeft
+    };
+    void fill_rounded_corner(const IntRect&, int radius, Color, CornerOrientation);
 
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&);
     static void for_each_line_segment_on_bezier_curve(const FloatPoint& control_point, const FloatPoint& p1, const FloatPoint& p2, Function<void(const FloatPoint&, const FloatPoint&)>&&);
