@@ -167,7 +167,7 @@ static size_t get_number_of_free_cells(const Game::Board& board)
 {
     size_t accumulator = 0;
     for (auto& row : board)
-        for (auto& cell: row)
+        for (auto& cell : row)
             accumulator += cell == 0;
     return accumulator;
 }
@@ -224,7 +224,7 @@ void Game::add_evil_tile()
     auto worst_column = 0;
     auto worst_value = 2;
 
-    auto most_free_cells = m_grid_size * m_grid_size;  // a big value to min() against
+    auto most_free_cells = m_grid_size * m_grid_size; // a big value to min() against
     auto stalled = false;
 
     for (size_t row = 0; row < m_grid_size && !stalled; row++)
@@ -232,7 +232,7 @@ void Game::add_evil_tile()
             if (m_board[row][column] != 0)
                 continue;
 
-            for (auto value: Array{2, 4}) {
+            for (auto value : Array { 2, 4 }) {
                 auto saved_state = *this;
                 saved_state.m_board[row][column] = value;
 
@@ -247,10 +247,10 @@ void Game::add_evil_tile()
                 }
 
                 auto best_outcome = 0ul;
-                for (auto direction: Array{Direction::Down, Direction::Left, Direction::Right, Direction::Up}) {
+                for (auto direction : Array { Direction::Down, Direction::Left, Direction::Right, Direction::Up }) {
                     auto moved_state = saved_state;
                     auto moved = moved_state.slide_tiles(direction);
-                    if (!moved)  // invalid move
+                    if (!moved) // invalid move
                         continue;
                     best_outcome = max(best_outcome, get_number_of_free_cells(moved_state.board()));
                 }
