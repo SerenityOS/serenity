@@ -22,6 +22,7 @@ Game::Game()
 
     m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
     m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
+    m_stacks[Play] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play);
     m_stacks[Foundation4] = CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
     m_stacks[Foundation3] = CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation);
     m_stacks[Foundation2] = CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation);
@@ -148,16 +149,26 @@ void Game::mousedown_event(GUI::MouseEvent& event)
 
     auto click_location = event.position();
     for (auto& to_check : m_stacks) {
+        if (to_check.type() == CardStack::Type::Waste)
+            continue;
+
         if (to_check.bounding_box().contains(click_location)) {
             if (to_check.type() == CardStack::Type::Stock) {
                 auto& waste = stack(Waste);
                 auto& stock = stack(Stock);
+                auto& play = stack(Play);
 
                 if (stock.is_empty()) {
-                    if (waste.is_empty())
+                    if (waste.is_empty() && play.is_empty())
                         return;
 
                     update(waste.bounding_box());
+                    update(play.bounding_box());
+
+                    while (!play.is_empty()) {
+                        auto card = play.pop();
+                        stock.push(card);
+                    }
 
                     while (!waste.is_empty()) {
                         auto card = waste.pop();
@@ -167,9 +178,9 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     update_score(-100);
                     update(stock.bounding_box());
                 } else {
-                    move_card(stock, waste);
+                    play.move_to_stack(waste);
+                    move_card(stock, play);
                 }
-
             } else if (!to_check.is_empty()) {
                 auto& top_card = to_check.peek();
 
@@ -213,12 +224,21 @@ void Game::mouseup_event(GUI::MouseEvent& event)
                         m_focused_stack->pop();
                     }
 
+                    if (m_focused_stack->type() == CardStack::Type::Play) {
+                        auto& waste = this->stack(Waste);
+                        if (m_focused_stack->is_empty() && !waste.is_empty()) {
+                            auto card = waste.pop();
+                            m_focused_cards.append(card);
+                            m_focused_stack->push(move(card));
+                        }
+                    }
+
                     update(m_focused_stack->bounding_box());
                     update(stack.bounding_box());
 
-                    if (m_focused_stack->type() == CardStack::Type::Waste && stack.type() == CardStack::Type::Normal) {
+                    if (m_focused_stack->type() == CardStack::Type::Play && stack.type() == CardStack::Type::Normal) {
                         update_score(5);
-                    } else if (m_focused_stack->type() == CardStack::Type::Waste && stack.type() == CardStack::Type::Foundation) {
+                    } else if (m_focused_stack->type() == CardStack::Type::Play && stack.type() == CardStack::Type::Foundation) {
                         update_score(10);
                     } else if (m_focused_stack->type() == CardStack::Type::Normal && stack.type() == CardStack::Type::Foundation) {
                         update_score(10);
@@ -279,7 +299,7 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 
     auto click_location = event.position();
     for (auto& to_check : m_stacks) {
-        if (to_check.type() == CardStack::Type::Foundation || to_check.type() == CardStack::Type::Stock)
+        if (to_check.type() == CardStack::Type::Foundation || to_check.type() == CardStack::Type::Stock || to_check.type() == CardStack::Type::Waste)
             continue;
 
         if (to_check.bounding_box().contains(click_location) && !to_check.is_empty()) {
@@ -295,6 +315,15 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
                     move_card(to_check, stack(Foundation4));
                 else
                     break;
+
+                if (to_check.type() == CardStack::Type::Play) {
+                    auto& waste = this->stack(Waste);
+                    if (to_check.is_empty() && !waste.is_empty()) {
+                        auto card = waste.pop();
+                        m_focused_cards.append(card);
+                        to_check.push(move(card));
+                    }
+                }
 
                 update_score(10);
             }
