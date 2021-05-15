@@ -16,19 +16,19 @@
 #include "Tool.h"
 #include "ToolPropertiesWidget.h"
 #include "ToolboxWidget.h"
+#include <Applications/PixelPaint/PixelPaintWindowGML.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
-#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Toolbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/Matrix4x4.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -58,34 +58,24 @@ int main(int argc, char** argv)
     window->resize(950, 570);
     window->set_icon(app_icon.bitmap_for_size(16));
 
-    auto& horizontal_container = window->set_main_widget<GUI::Widget>();
-    horizontal_container.set_layout<GUI::HorizontalBoxLayout>();
-    horizontal_container.layout()->set_spacing(0);
+    auto& main_widget = window->set_main_widget<GUI::Widget>();
+    main_widget.load_from_gml(pixel_paint_window_gml);
 
-    auto& toolbox = horizontal_container.add<PixelPaint::ToolboxWidget>();
-
-    auto& vertical_container = horizontal_container.add<GUI::Widget>();
-    vertical_container.set_layout<GUI::VerticalBoxLayout>();
-    vertical_container.layout()->set_spacing(0);
-
-    auto& image_editor = vertical_container.add<PixelPaint::ImageEditor>();
+    auto& toolbox = *main_widget.find_descendant_of_type_named<PixelPaint::ToolboxWidget>("toolbox");
+    auto& image_editor = *main_widget.find_descendant_of_type_named<PixelPaint::ImageEditor>("image_editor");
     image_editor.set_focus(true);
 
-    vertical_container.add<PixelPaint::PaletteWidget>(image_editor);
+    auto& palette_widget = *main_widget.find_descendant_of_type_named<PixelPaint::PaletteWidget>("palette_widget");
+    palette_widget.set_image_editor(image_editor);
 
-    auto& right_panel = horizontal_container.add<GUI::Widget>();
-    right_panel.set_fill_with_background_color(true);
-    right_panel.set_fixed_width(230);
-    right_panel.set_layout<GUI::VerticalBoxLayout>();
-
-    auto& layer_list_widget = right_panel.add<PixelPaint::LayerListWidget>();
+    auto& layer_list_widget = *main_widget.find_descendant_of_type_named<PixelPaint::LayerListWidget>("layer_list_widget");
     layer_list_widget.on_layer_select = [&](auto* layer) {
         image_editor.set_active_layer(layer);
     };
 
-    auto& layer_properties_widget = right_panel.add<PixelPaint::LayerPropertiesWidget>();
+    auto& layer_properties_widget = *main_widget.find_descendant_of_type_named<PixelPaint::LayerPropertiesWidget>("layer_properties_widget");
 
-    auto& tool_properties_widget = right_panel.add<PixelPaint::ToolPropertiesWidget>();
+    auto& tool_properties_widget = *main_widget.find_descendant_of_type_named<PixelPaint::ToolPropertiesWidget>("tool_properties_widget");
 
     toolbox.on_tool_selection = [&](auto* tool) {
         image_editor.set_active_tool(tool);

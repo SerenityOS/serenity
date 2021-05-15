@@ -21,10 +21,12 @@ public:
     void set_primary_color(Color);
     void set_secondary_color(Color);
 
-private:
-    explicit PaletteWidget(ImageEditor&);
+    void set_image_editor(ImageEditor&);
 
-    ImageEditor& m_editor;
+private:
+    explicit PaletteWidget();
+
+    ImageEditor* m_editor { nullptr };
     RefPtr<GUI::Frame> m_primary_color_widget;
     RefPtr<GUI::Frame> m_secondary_color_widget;
 };

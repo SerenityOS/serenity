@@ -14,6 +14,8 @@
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
 
+REGISTER_WIDGET(PixelPaint, LayerPropertiesWidget);
+
 namespace PixelPaint {
 
 LayerPropertiesWidget::LayerPropertiesWidget()

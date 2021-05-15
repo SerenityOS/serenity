@@ -1,3 +1,5 @@
+compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
+
 set(SOURCES
     BrushTool.cpp
     BucketTool.cpp
@@ -16,6 +18,7 @@ set(SOURCES
     PaletteWidget.cpp
     PenTool.cpp
     PickerTool.cpp
+    PixelPaintWindowGML.h
     RectangleTool.cpp
     SprayTool.cpp
     ToolboxWidget.cpp

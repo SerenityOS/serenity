@@ -9,6 +9,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/GroupBox.h>
 
+REGISTER_WIDGET(PixelPaint, ToolPropertiesWidget);
+
 namespace PixelPaint {
 
 ToolPropertiesWidget::ToolPropertiesWidget()

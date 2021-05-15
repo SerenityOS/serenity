@@ -14,6 +14,8 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 
+REGISTER_WIDGET(PixelPaint, ImageEditor);
+
 namespace PixelPaint {
 
 ImageEditor::ImageEditor()

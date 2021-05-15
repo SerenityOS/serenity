@@ -11,6 +11,8 @@
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(PixelPaint, LayerListWidget);
+
 namespace PixelPaint {
 
 LayerListWidget::LayerListWidget()
