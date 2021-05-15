@@ -8,6 +8,7 @@
 #include <Games/Solitaire/SolitaireGML.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Action.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
@@ -86,12 +87,31 @@ int main(int argc, char** argv)
             timer->stop();
     };
 
+    GUI::ActionGroup draw_settng_actions;
+    draw_settng_actions.set_exclusive(true);
+
+    auto single_card_draw_action = GUI::Action::create_checkable("&Single Card Draw", [&](auto&) {
+        game.setup(Solitaire::Mode::SingleCardDraw);
+    });
+    single_card_draw_action->set_checked(true);
+    single_card_draw_action->set_status_tip("Draw one card at a time");
+    draw_settng_actions.add_action(single_card_draw_action);
+
+    auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw", [&](auto&) {
+        game.setup(Solitaire::Mode::ThreeCardDraw);
+    });
+    three_card_draw_action->set_status_tip("Draw three cards at a time");
+    draw_settng_actions.add_action(three_card_draw_action);
+
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
 
     game_menu.add_action(GUI::Action::create("&New Game", { Mod_None, Key_F2 }, [&](auto&) {
-        game.setup();
+        game.setup(game.mode());
     }));
+    game_menu.add_separator();
+    game_menu.add_action(single_card_draw_action);
+    game_menu.add_action(three_card_draw_action);
     game_menu.add_separator();
     game_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
@@ -103,7 +123,7 @@ int main(int argc, char** argv)
     window->set_menubar(move(menubar));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
-    game.setup();
+    game.setup(game.mode());
 
     return app->exec();
 }
