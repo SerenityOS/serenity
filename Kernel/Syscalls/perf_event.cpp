@@ -11,9 +11,13 @@ namespace Kernel {
 
 KResultOr<int> Process::sys$perf_event(int type, FlatPtr arg1, FlatPtr arg2)
 {
-    if (!create_perf_events_buffer_if_needed())
-        return ENOMEM;
-    return perf_events()->append(type, arg1, arg2, nullptr);
+    auto events_buffer = current_perf_events_buffer();
+    if (!events_buffer) {
+        if (!create_perf_events_buffer_if_needed())
+            return ENOMEM;
+        events_buffer = perf_events();
+    }
+    return events_buffer->append(type, arg1, arg2, nullptr);
 }
 
 }
