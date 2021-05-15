@@ -178,9 +178,11 @@ void Painter::fill_rect_with_checkerboard(const IntRect& a_rect, const IntSize& 
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     for (int i = 0; i < rect.height(); ++i) {
+        int y = rect.y() + i;
+        int cell_row = y / cell_size.height();
         for (int j = 0; j < rect.width(); ++j) {
-            int cell_row = i / cell_size.height();
-            int cell_col = j / cell_size.width();
+            int x = rect.x() + j;
+            int cell_col = x / cell_size.width();
             dst[j] = ((cell_row % 2) ^ (cell_col % 2)) ? color_light.value() : color_dark.value();
         }
         dst += dst_skip;
