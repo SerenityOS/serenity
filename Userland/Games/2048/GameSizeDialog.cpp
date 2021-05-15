@@ -57,6 +57,10 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent)
         tile_value_label.set_text(String::number(target_tile()));
     };
 
+    auto& evil_ai_checkbox = main_widget.add<GUI::CheckBox>("Evil AI");
+    evil_ai_checkbox.set_checked(m_evil_ai);
+    evil_ai_checkbox.on_checked = [this](auto checked) { m_evil_ai = checked; };
+
     auto& temp_checkbox = main_widget.add<GUI::CheckBox>("Temporary");
     temp_checkbox.set_checked(m_temporary);
     temp_checkbox.on_checked = [this](auto checked) { m_temporary = checked; };

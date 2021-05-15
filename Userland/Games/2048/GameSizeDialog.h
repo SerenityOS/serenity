@@ -16,10 +16,12 @@ public:
 
     size_t board_size() const { return m_board_size; }
     u32 target_tile() const { return 1u << m_target_tile_power; }
+    bool evil_ai() const { return m_evil_ai; }
     bool temporary() const { return m_temporary; }
 
 private:
     size_t m_board_size { 4 };
     size_t m_target_tile_power { 11 };
+    bool m_evil_ai { false };
     bool m_temporary { true };
 };
