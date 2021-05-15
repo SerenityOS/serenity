@@ -52,6 +52,8 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
         }
         break;
     case Waste:
+        break;
+    case Play:
         if (is_empty() || (m_stack.size() == 1 && peek().is_moving()))
             painter.draw_rect(m_base, background_color.darkened(0.5));
         break;
@@ -131,7 +133,7 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
 
 bool CardStack::is_allowed_to_push(const Card& card) const
 {
-    if (m_type == Stock || m_type == Waste)
+    if (m_type == Stock || m_type == Waste || m_type == Play)
         return false;
 
     if (m_type == Normal && is_empty())
@@ -189,6 +191,17 @@ NonnullRefPtr<Card> CardStack::pop()
 
     m_stack_positions.take_last();
     return card;
+}
+
+void CardStack::move_to_stack(CardStack& stack)
+{
+    while (!m_stack.is_empty()) {
+        auto card = m_stack.take_first();
+        m_stack_positions.take_first();
+        stack.push(move(card));
+    }
+
+    calculate_bounding_box();
 }
 
 void CardStack::calculate_bounding_box()
