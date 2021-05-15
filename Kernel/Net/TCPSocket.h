@@ -194,7 +194,7 @@ private:
 
     struct OutgoingPacket {
         u32 ack_number { 0 };
-        ByteBuffer buffer;
+        NetworkByteBuffer buffer;
         int tx_counter { 0 };
     };
 

@@ -186,7 +186,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
     const size_t header_size = sizeof(TCPPacket) + options_size;
     const size_t buffer_size = header_size + payload_size;
-    auto buffer = ByteBuffer::create_zeroed(buffer_size);
+    auto buffer = NetworkByteBuffer::create_zeroed(buffer_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.data());
     VERIFY(local_port());
     tcp_packet.set_source_port(local_port());

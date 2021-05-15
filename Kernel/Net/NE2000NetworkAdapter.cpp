@@ -406,7 +406,7 @@ void NE2000NetworkAdapter::receive()
         dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Packet received {} length={}", (packet_ok ? "intact" : "damaged"), header.length);
 
         if (packet_ok) {
-            auto packet = ByteBuffer::create_uninitialized(sizeof(received_packet_header) + header.length);
+            auto packet = NetworkByteBuffer::create_uninitialized(sizeof(received_packet_header) + header.length);
             int bytes_left = packet.size();
             int current_offset = 0;
             int ring_offset = header_address;
