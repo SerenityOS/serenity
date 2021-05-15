@@ -26,3 +26,4 @@ Serenity boots to a graphical desktop on all machines unless otherwise noted.
 | Intel Desktop Board D875PBZ              | Pentium 4 HT CPU                           |
 | Gigabyte G31M-ES2L                       | ICH7 2009 machine with IDE controller only |
 | Asus PRIME B360-PLUS                     | Has only one PS2 port, AHCI works          |
+| Asus H81M-K                              | w/ Intel Core i3-4170, AHCI works          |
