@@ -154,6 +154,21 @@ NonnullRefPtr<Action> make_properties_action(Function<void(Action&)> callback, C
     return Action::create("&Properties", { Mod_Alt, Key_Return }, Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"), move(callback), parent);
 }
 
+NonnullRefPtr<Action> make_zoom_in_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return GUI::Action::create("Zoom &In", { Mod_Ctrl, Key_Equal }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"), move(callback), parent);
+}
+
+NonnullRefPtr<Action> make_reset_zoom_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return GUI::Action::create("&Reset Zoom", { Mod_Ctrl, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"), move(callback), parent);
+}
+
+NonnullRefPtr<Action> make_zoom_out_action(Function<void(Action&)> callback, Core::Object* parent)
+{
+    return GUI::Action::create("Zoom &Out", { Mod_Ctrl, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"), move(callback), parent);
+}
+
 }
 
 NonnullRefPtr<Action> Action::create(String text, Function<void(Action&)> callback, Core::Object* parent)
