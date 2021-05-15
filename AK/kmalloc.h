@@ -8,6 +8,12 @@
 
 #ifndef __serenity__
 #    include <new>
+
+#    ifndef AK_OS_MACOS
+inline size_t malloc_good_size(size_t size) { return size; }
+#    else
+#        include <malloc/malloc.h>
+#    endif
 #endif
 
 #ifdef KERNEL
@@ -27,6 +33,7 @@
 
 #    define kcalloc calloc
 #    define kmalloc malloc
+#    define kmalloc_good_size malloc_good_size
 #    define kfree free
 #    define krealloc realloc
 
