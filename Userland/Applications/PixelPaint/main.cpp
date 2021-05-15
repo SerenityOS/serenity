@@ -82,10 +82,21 @@ int main(int argc, char** argv)
         tool_properties_widget.set_active_tool(tool);
     };
 
-    window->show();
+    auto new_image_action = GUI::Action::create(
+        "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
+            auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
+            if (dialog->exec() == GUI::Dialog::ExecOK) {
+                auto image = PixelPaint::Image::create_with_size(dialog->image_size());
+                auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
+                image->add_layer(*bg_layer);
+                bg_layer->bitmap().fill(Color::White);
 
-    auto menubar = GUI::Menubar::construct();
-    auto& file_menu = menubar->add_menu("&File");
+                image_editor.set_image(image);
+                layer_list_widget.set_image(image);
+                image_editor.set_active_layer(bg_layer);
+            }
+        },
+        window);
 
     auto open_image_file = [&](auto& path) {
         auto image = PixelPaint::Image::create_from_file(path);
@@ -97,36 +108,28 @@ int main(int argc, char** argv)
         layer_list_widget.set_image(image);
     };
 
-    file_menu.add_action(
-        GUI::Action::create(
-            "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
-                auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
-                if (dialog->exec() == GUI::Dialog::ExecOK) {
-                    auto image = PixelPaint::Image::create_with_size(dialog->image_size());
-                    auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
-                    image->add_layer(*bg_layer);
-                    bg_layer->bitmap().fill(Color::White);
-
-                    image_editor.set_image(image);
-                    layer_list_widget.set_image(image);
-                    image_editor.set_active_layer(bg_layer);
-                }
-            },
-            window));
-    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+    auto open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
         if (!open_path.has_value())
             return;
         open_image_file(open_path.value());
-    }));
-    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
+    });
+
+    auto save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         if (!image_editor.image())
             return;
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
         if (!save_path.has_value())
             return;
         image_editor.image()->save(save_path.value());
-    }));
+    });
+
+    auto menubar = GUI::Menubar::construct();
+    auto& file_menu = menubar->add_menu("&File");
+
+    file_menu.add_action(new_image_action);
+    file_menu.add_action(open_image_action);
+    file_menu.add_action(save_image_as_action);
     auto& export_submenu = file_menu.add_submenu("&Export");
     export_submenu.add_action(
         GUI::Action::create(
@@ -369,6 +372,19 @@ int main(int argc, char** argv)
 
     window->set_menubar(move(menubar));
 
+    auto& toolbar = *main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    toolbar.add_action(new_image_action);
+    toolbar.add_action(open_image_action);
+    toolbar.add_action(save_image_as_action);
+    toolbar.add_separator();
+    toolbar.add_action(paste_action);
+    toolbar.add_action(undo_action);
+    toolbar.add_action(redo_action);
+    toolbar.add_separator();
+    toolbar.add_action(zoom_in_action);
+    toolbar.add_action(zoom_out_action);
+    toolbar.add_action(reset_zoom_action);
+
     image_editor.on_active_layer_change = [&](auto* layer) {
         layer_list_widget.set_selected_layer(layer);
         layer_properties_widget.set_layer(layer);
@@ -400,5 +416,6 @@ int main(int argc, char** argv)
         image_editor.set_active_layer(bg_layer);
     }
 
+    window->show();
     return app->exec();
 }
