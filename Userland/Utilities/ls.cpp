@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/NumberFormat.h>
 #include <AK/QuickSort.h>
