@@ -48,9 +48,6 @@ VirtIODevice::VirtIODevice(PCI::Address address, String class_name)
     PCI::enable_interrupt_line(pci_address());
     enable_irq();
 
-    reset_device();
-    set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
-
     auto capabilities = PCI::get_physical_id(address).capabilities();
     for (auto& capability : capabilities) {
         if (capability.id() == PCI_CAPABILITY_VENDOR_SPECIFIC) {
@@ -89,6 +86,9 @@ VirtIODevice::VirtIODevice(PCI::Address address, String class_name)
         m_notify_cfg = get_config(ConfigurationType::Notify, 0);
         m_isr_cfg = get_config(ConfigurationType::ISR, 0);
     }
+
+    reset_device();
+    set_status_bit(DEVICE_STATUS_ACKNOWLEDGE);
 
     set_status_bit(DEVICE_STATUS_DRIVER);
 }
