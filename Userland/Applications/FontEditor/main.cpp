@@ -27,7 +27,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd thread rpath cpath wpath", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd thread rpath unix cpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
