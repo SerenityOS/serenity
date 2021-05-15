@@ -60,13 +60,13 @@ void Box::paint_border(PaintContext& context)
     auto bordered_rect = this->bordered_rect();
     auto border_rect = enclosing_int_rect(bordered_rect);
 
-    // FIXME: Support elliptical border radii.
+    auto border_radius_data = normalized_border_radius_data();
+    auto top_left_radius = border_radius_data.top_left;
+    auto top_right_radius = border_radius_data.top_right;
+    auto bottom_right_radius = border_radius_data.bottom_right;
+    auto bottom_left_radius = border_radius_data.bottom_left;
 
-    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
-    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+    // FIXME: Support elliptical border radii.
 
     Gfx::FloatRect top_border_rect = {
         border_rect.x() + top_left_radius,
@@ -202,10 +202,11 @@ void Box::paint_background(PaintContext& context)
     }
 
     // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
-    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
-    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto border_radius_data = normalized_border_radius_data();
+    auto top_left_radius = border_radius_data.top_left;
+    auto top_right_radius = border_radius_data.top_right;
+    auto bottom_right_radius = border_radius_data.bottom_right;
+    auto bottom_left_radius = border_radius_data.bottom_left;
 
     context.painter().fill_rect_with_rounded_corners(background_rect, move(background_color), top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius);
 
@@ -245,6 +246,29 @@ void Box::paint_background_image(
     }
 
     context.painter().blit_tiled(background_rect, background_image, background_image.rect());
+}
+
+Box::BorderRadiusData Box::normalized_border_radius_data()
+{
+    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
+    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+
+    // Scale overlapping curves according to https://www.w3.org/TR/css-backgrounds-3/#corner-overlap
+    auto f = 1.0f;
+    f = min(f, bordered_rect().width() / (float)(top_left_radius + top_right_radius));
+    f = min(f, bordered_rect().height() / (float)(top_right_radius + bottom_right_radius));
+    f = min(f, bordered_rect().width() / (float)(bottom_left_radius + bottom_right_radius));
+    f = min(f, bordered_rect().height() / (float)(top_left_radius + bottom_left_radius));
+
+    top_left_radius = (int)(top_left_radius * f);
+    top_right_radius = (int)(top_right_radius * f);
+    bottom_right_radius = (int)(bottom_right_radius * f);
+    bottom_left_radius = (int)(bottom_left_radius * f);
+
+    return { (int)top_left_radius, (int)top_right_radius, (int)bottom_right_radius, (int)bottom_left_radius };
 }
 
 HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) const
