@@ -1291,17 +1291,19 @@ bool Parser::match_name()
 NonnullRefPtr<Name> Parser::parse_name(ASTNode& parent)
 {
     NonnullRefPtr<Name> name_node = create_ast_node<Name>(parent, position(), {});
-    while (!eof() && (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType)) {
+    while (!eof() && (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType) && peek(1).type() == Token::Type::ColonColon) {
         auto token = consume();
         name_node->m_scope.append(create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text()));
-        if (peek().type() == Token::Type::ColonColon)
-            consume();
-        else
-            break;
+        consume(Token::Type::ColonColon);
     }
 
-    VERIFY(!name_node->m_scope.is_empty());
-    name_node->m_name = name_node->m_scope.take_last();
+    if (peek().type() == Token::Type::Identifier || peek().type() == Token::Type::KnownType) {
+        auto token = consume();
+        name_node->m_name = create_ast_node<Identifier>(*name_node, token.start(), token.end(), token.text());
+    } else {
+        name_node->set_end(position());
+        return name_node;
+    }
 
     if (match_template_arguments()) {
         consume(Token::Type::Less);
