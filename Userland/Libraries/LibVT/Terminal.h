@@ -133,7 +133,7 @@ private:
 
     void emit_string(const StringView&);
 
-    void alter_mode(bool should_set, bool question_param, Parameters);
+    void alter_mode(bool should_set, Parameters, Intermediates);
 
     // CUU – Cursor Up
     void CUU(Parameters);
@@ -169,10 +169,10 @@ private:
     void DECSTBM(Parameters);
 
     // RM – Reset Mode
-    void RM(Parameters);
+    void RM(Parameters, Intermediates);
 
     // SM – Set Mode
-    void SM(Parameters);
+    void SM(Parameters, Intermediates);
 
     // DA - Device Attributes
     void DA(Parameters);
