@@ -40,9 +40,11 @@ int main(int argc, char** argv)
 
     size_t board_size = config->read_num_entry("", "board_size", 4);
     u32 target_tile = config->read_num_entry("", "target_tile", 0);
+    bool evil_ai = config->read_bool_entry("", "evil_ai", false);
 
     config->write_num_entry("", "board_size", board_size);
     config->write_num_entry("", "target_tile", target_tile);
+    config->write_bool_entry("", "evil_ai", evil_ai);
 
     config->sync();
 
@@ -98,11 +100,13 @@ int main(int argc, char** argv)
 
         board_size = size_dialog->board_size();
         target_tile = size_dialog->target_tile();
+        evil_ai = size_dialog->evil_ai();
 
         if (!size_dialog->temporary()) {
 
             config->write_num_entry("", "board_size", board_size);
             config->write_num_entry("", "target_tile", target_tile);
+            config->write_bool_entry("", "evil_ai", evil_ai);
 
             if (!config->sync()) {
                 GUI::MessageBox::show(window, "Configuration could not be synced", "Error", GUI::MessageBox::Type::Error);
