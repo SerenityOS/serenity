@@ -563,7 +563,7 @@ public:
     {
         if (m_capacity >= needed_capacity)
             return true;
-        size_t new_capacity = needed_capacity;
+        size_t new_capacity = kmalloc_good_size(needed_capacity * sizeof(T)) / sizeof(T);
         auto* new_buffer = (T*)kmalloc(new_capacity * sizeof(T));
         if (new_buffer == nullptr)
             return false;

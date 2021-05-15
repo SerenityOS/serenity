@@ -277,6 +277,11 @@ void* krealloc(void* ptr, size_t new_size)
     return g_kmalloc_global->m_heap.reallocate(ptr, new_size);
 }
 
+size_t kmalloc_good_size(size_t size)
+{
+    return size;
+}
+
 void* operator new(size_t size) noexcept
 {
     return kmalloc(size);
