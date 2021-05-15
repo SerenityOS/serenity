@@ -101,7 +101,7 @@ struct PNGLoadingContext {
     bool has_alpha() const { return color_type & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
     RefPtr<Gfx::Bitmap> bitmap;
-    ByteBuffer decompression_buffer;
+    ByteBuffer* decompression_buffer { nullptr };
     Vector<u8> compressed_data;
     Vector<PaletteEntry> palette_data;
     Vector<u8> palette_transparency_data;
@@ -580,7 +580,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
 
 static bool decode_png_bitmap_simple(PNGLoadingContext& context)
 {
-    Streamer streamer(context.decompression_buffer.data(), context.decompression_buffer.size());
+    Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
 
     for (int y = 0; y < context.height; ++y) {
         u8 filter;
@@ -726,7 +726,7 @@ static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, in
 
 static bool decode_png_adam7(PNGLoadingContext& context)
 {
-    Streamer streamer(context.decompression_buffer.data(), context.decompression_buffer.size());
+    Streamer streamer(context.decompression_buffer->data(), context.decompression_buffer->size());
     context.bitmap = Bitmap::create_purgeable(context.has_alpha() ? BitmapFormat::BGRA8888 : BitmapFormat::BGRx8888, { context.width, context.height });
     if (!context.bitmap)
         return false;
@@ -759,7 +759,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         context.state = PNGLoadingContext::State::Error;
         return false;
     }
-    context.decompression_buffer = result.value();
+    context.decompression_buffer = &result.value();
     context.compressed_data.clear();
 
     context.scanlines.ensure_capacity(context.height);
@@ -777,7 +777,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         return false;
     }
 
-    context.decompression_buffer.clear();
+    context.decompression_buffer = nullptr;
 
     context.state = PNGLoadingContext::State::BitmapDecoded;
     return true;
