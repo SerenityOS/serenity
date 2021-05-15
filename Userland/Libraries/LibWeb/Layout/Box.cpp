@@ -179,12 +179,11 @@ void Box::paint_background(PaintContext& context)
     if (is_body() && document().html_element()->should_use_body_background_properties())
         return;
 
-    Gfx::IntRect background_rect;
-
     Color background_color = computed_values().background_color();
     const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
     CSS::Repeat background_repeat_x = computed_values().background_repeat_x();
     CSS::Repeat background_repeat_y = computed_values().background_repeat_y();
+    auto background_rect = enclosing_int_rect(padded_rect);
 
     if (is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
@@ -202,7 +201,14 @@ void Box::paint_background(PaintContext& context)
         background_rect = enclosing_int_rect(padded_rect);
     }
 
-    context.painter().fill_rect(background_rect, move(background_color));
+    // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
+    auto bottom_left_radius = computed_values().border_bottom_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto bottom_right_radius = computed_values().border_bottom_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_left_radius = computed_values().border_top_left_radius().resolved_or_zero(*this, width()).to_px(*this);
+    auto top_right_radius = computed_values().border_top_right_radius().resolved_or_zero(*this, width()).to_px(*this);
+
+    context.painter().fill_rect_with_rounded_corners(background_rect, move(background_color), top_left_radius, top_right_radius, bottom_right_radius, bottom_left_radius);
+
     if (background_image)
         paint_background_image(context, *background_image, background_repeat_x, background_repeat_y, move(background_rect));
 }
