@@ -47,6 +47,8 @@ public:
     }
 
 private:
+    bool slide_tiles(Direction);
+
     void add_random_tile();
 
     size_t m_grid_size { 0 };
