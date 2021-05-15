@@ -32,11 +32,11 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid)
         ScopedSpinLock lock(g_processes_lock);
         if (!TimeManagement::the().enable_profile_timer())
             return ENOTSUP;
+        g_profiling_all_threads = true;
         Process::for_each([](auto& process) {
             PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
         });
-        g_profiling_all_threads = true;
         return 0;
     }
 
