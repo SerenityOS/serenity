@@ -119,13 +119,13 @@ GLAPI void glEnable(GLenum cap);
 GLAPI void glDisable(GLenum cap);
 GLAPI void glCullFace(GLenum mode);
 GLAPI void glFrontFace(GLenum mode);
-GLuint glGenLists(GLsizei range);
-void glCallList(GLuint list);
-void glDeleteLists(GLuint list, GLsizei range);
-void glEndList(void);
-void glNewList(GLuint list, GLenum mode);
-void glFlush();
-void glFinish();
+GLAPI GLuint glGenLists(GLsizei range);
+GLAPI void glCallList(GLuint list);
+GLAPI void glDeleteLists(GLuint list, GLsizei range);
+GLAPI void glEndList(void);
+GLAPI void glNewList(GLuint list, GLenum mode);
+GLAPI void glFlush();
+GLAPI void glFinish();
 
 #ifdef __cplusplus
 }
