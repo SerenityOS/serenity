@@ -97,7 +97,7 @@ void test_complete_type()
     String content = R"(
 struct MyStruct {
 int x;
-}
+};
 void foo(){
 MyS
 }
