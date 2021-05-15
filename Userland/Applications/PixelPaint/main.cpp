@@ -49,13 +49,13 @@ int main(int argc, char** argv)
 
     const char* image_file = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(image_file, "PixelPaint image file (*.pp) to open", "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(image_file, "Pixel Paint image file (*.pp) to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");
 
     auto window = GUI::Window::construct();
-    window->set_title("PixelPaint");
+    window->set_title("Pixel Paint");
     window->resize(800, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
@@ -369,7 +369,7 @@ int main(int argc, char** argv)
     }));
 
     auto& help_menu = menubar->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("PixelPaint", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("Pixel Paint", app_icon, window));
 
     window->set_menubar(move(menubar));
 
