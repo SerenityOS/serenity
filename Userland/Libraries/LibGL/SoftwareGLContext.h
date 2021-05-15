@@ -55,6 +55,7 @@ public:
     virtual void gl_new_list(GLuint list, GLenum mode) override;
     virtual void gl_flush() override;
     virtual void gl_finish() override;
+    virtual void gl_blend_func(GLenum src_factor, GLenum dst_factor) override;
 
     virtual void present() override;
 
@@ -104,6 +105,9 @@ private:
     bool m_cull_faces = false;
     GLenum m_front_face = GL_CCW;
     GLenum m_culled_sides = GL_BACK;
+
+    GLenum m_blend_source_factor = GL_ONE;
+    GLenum m_blend_destination_factor = GL_ZERO;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 

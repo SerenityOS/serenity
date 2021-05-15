@@ -859,6 +859,57 @@ void SoftwareGLContext::gl_finish()
     // No-op since SoftwareGLContext is completely synchronous at the moment
 }
 
+void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // FIXME: The list of allowed enums differs between API versions
+    // This was taken from the 2.0 spec on https://docs.gl/gl2/glBlendFunc
+
+    if (!(src_factor == GL_ZERO
+            || src_factor == GL_ONE
+            || src_factor == GL_SRC_COLOR
+            || src_factor == GL_ONE_MINUS_SRC_COLOR
+            || src_factor == GL_DST_COLOR
+            || src_factor == GL_ONE_MINUS_DST_COLOR
+            || src_factor == GL_SRC_ALPHA
+            || src_factor == GL_ONE_MINUS_SRC_ALPHA
+            || src_factor == GL_DST_ALPHA
+            || src_factor == GL_ONE_MINUS_DST_ALPHA
+            || src_factor == GL_CONSTANT_COLOR
+            || src_factor == GL_ONE_MINUS_CONSTANT_COLOR
+            || src_factor == GL_CONSTANT_ALPHA
+            || src_factor == GL_ONE_MINUS_CONSTANT_ALPHA
+            || src_factor == GL_SRC_ALPHA_SATURATE)) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    if (!(dst_factor == GL_ZERO
+            || dst_factor == GL_ONE
+            || dst_factor == GL_SRC_COLOR
+            || dst_factor == GL_ONE_MINUS_SRC_COLOR
+            || dst_factor == GL_DST_COLOR
+            || dst_factor == GL_ONE_MINUS_DST_COLOR
+            || dst_factor == GL_SRC_ALPHA
+            || dst_factor == GL_ONE_MINUS_SRC_ALPHA
+            || dst_factor == GL_DST_ALPHA
+            || dst_factor == GL_ONE_MINUS_DST_ALPHA
+            || dst_factor == GL_CONSTANT_COLOR
+            || dst_factor == GL_ONE_MINUS_CONSTANT_COLOR
+            || dst_factor == GL_CONSTANT_ALPHA
+            || dst_factor == GL_ONE_MINUS_CONSTANT_ALPHA)) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    m_blend_source_factor = src_factor;
+    m_blend_destination_factor = dst_factor;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

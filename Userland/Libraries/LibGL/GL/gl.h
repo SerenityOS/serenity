@@ -42,6 +42,19 @@ extern "C" {
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
 
+/* Blend factors */
+#define GL_ZERO 0
+#define GL_ONE 1
+#define GL_SRC_COLOR 0x0300
+#define GL_ONE_MINUS_SRC_COLOR 0x0301
+#define GL_SRC_ALPHA 0x0302
+#define GL_ONE_MINUS_SRC_ALPHA 0x0303
+#define GL_DST_ALPHA 0x0304
+#define GL_ONE_MINUS_DST_ALPHA 0x0305
+#define GL_DST_COLOR 0x0306
+#define GL_ONE_MINUS_DST_COLOR 0x0307
+#define GL_SRC_ALPHA_SATURATE 0x0308
+
 // Culled face side
 #define GL_FRONT 0x0404
 #define GL_BACK 0x0405
@@ -64,6 +77,12 @@ extern "C" {
 // Listing enums
 #define GL_COMPILE 0x1300
 #define GL_COMPILE_AND_EXECUTE 0x1301
+
+// More blend factors
+#define GL_CONSTANT_COLOR 0x8001
+#define GL_ONE_MINUS_CONSTANT_COLOR 0x8002
+#define GL_CONSTANT_ALPHA 0x8003
+#define GL_ONE_MINUS_CONSTANT_ALPHA 0x8004
 
 //
 // OpenGL typedefs
@@ -126,6 +145,7 @@ GLAPI void glEndList(void);
 GLAPI void glNewList(GLuint list, GLenum mode);
 GLAPI void glFlush();
 GLAPI void glFinish();
+GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);
 
 #ifdef __cplusplus
 }
