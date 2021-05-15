@@ -683,6 +683,11 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.enable_depth_test = true;
         update_rasterizer_options = true;
         break;
+    case GL_BLEND:
+        m_blend_enabled = true;
+        rasterizer_options.enable_blending = true;
+        update_rasterizer_options = true;
+        break;
     default:
         m_error = GL_INVALID_ENUM;
         break;
@@ -712,6 +717,11 @@ void SoftwareGLContext::gl_disable(GLenum capability)
         m_depth_test_enabled = false;
         rasterizer_options.enable_depth_test = false;
         update_rasterizer_options = true;
+        break;
+    case GL_BLEND:
+        m_blend_enabled = false;
+        rasterizer_options.enable_blending = false;
+        update_rasterizer_options = false;
         break;
     default:
         m_error = GL_INVALID_ENUM;
@@ -908,6 +918,11 @@ void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
 
     m_blend_source_factor = src_factor;
     m_blend_destination_factor = dst_factor;
+
+    auto options = m_rasterizer.options();
+    options.blend_source_factor = m_blend_source_factor;
+    options.blend_destination_factor = m_blend_destination_factor;
+    m_rasterizer.set_options(options);
 }
 
 void SoftwareGLContext::present()
