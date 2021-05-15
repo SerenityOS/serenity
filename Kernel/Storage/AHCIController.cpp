@@ -183,7 +183,7 @@ RefPtr<StorageDevice> AHCIController::device_by_port(u32 port_index) const
 RefPtr<StorageDevice> AHCIController::device(u32 index) const
 {
     NonnullRefPtrVector<StorageDevice> connected_devices;
-    for (size_t index = 0; index < (size_t)(hba().control_regs.cap & 0x1F); index++) {
+    for (size_t index = 0; index < capabilities().ports_count; index++) {
         auto checked_device = device_by_port(index);
         if (checked_device.is_null())
             continue;
