@@ -356,7 +356,7 @@ void AHCIPort::try_disambiguate_sata_error()
         if (m_port_registers.serr & AHCI::SErr::ERR_T)
             dmesgln("AHCI Port {}: - Transient data integrity error", representative_port_index());
         if (m_port_registers.serr & AHCI::SErr::ERR_M)
-            dmesgln("AHCI Port {}: - Received communications error", representative_port_index());
+            dmesgln("AHCI Port {}: - Recovered communications error", representative_port_index());
         if (m_port_registers.serr & AHCI::SErr::ERR_I)
             dmesgln("AHCI Port {}: - Recovered data integrity error", representative_port_index());
     } else {
