@@ -10,6 +10,8 @@
 #include <LibGUI/ColorPicker.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(PixelPaint, PaletteWidget);
+
 namespace PixelPaint {
 
 class ColorWidget : public GUI::Frame {
@@ -52,8 +54,7 @@ private:
     Color m_color;
 };
 
-PaletteWidget::PaletteWidget(ImageEditor& editor)
-    : m_editor(editor)
+PaletteWidget::PaletteWidget()
 {
     set_frame_shape(Gfx::FrameShape::Panel);
     set_frame_shadow(Gfx::FrameShadow::Raised);
@@ -65,22 +66,12 @@ PaletteWidget::PaletteWidget(ImageEditor& editor)
     m_secondary_color_widget = add<GUI::Frame>();
     m_secondary_color_widget->set_relative_rect({ 2, 2, 60, 31 });
     m_secondary_color_widget->set_fill_with_background_color(true);
-    set_secondary_color(m_editor.secondary_color());
 
     m_primary_color_widget = add<GUI::Frame>();
     Gfx::IntRect rect { 0, 0, 38, 15 };
     rect.center_within(m_secondary_color_widget->relative_rect());
     m_primary_color_widget->set_relative_rect(rect);
     m_primary_color_widget->set_fill_with_background_color(true);
-    set_primary_color(m_editor.primary_color());
-
-    m_editor.on_primary_color_change = [this](Color color) {
-        set_primary_color(color);
-    };
-
-    m_editor.on_secondary_color_change = [this](Color color) {
-        set_secondary_color(color);
-    };
 
     auto& color_container = add<GUI::Widget>();
     color_container.set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
@@ -134,13 +125,28 @@ PaletteWidget::PaletteWidget(ImageEditor& editor)
     add_color_widget(bottom_color_container, Color::from_rgb(0xff8040));
 }
 
+void PaletteWidget::set_image_editor(ImageEditor& editor)
+{
+    m_editor = &editor;
+    set_primary_color(editor.primary_color());
+    set_secondary_color(editor.secondary_color());
+
+    editor.on_primary_color_change = [this](Color color) {
+        set_primary_color(color);
+    };
+
+    editor.on_secondary_color_change = [this](Color color) {
+        set_secondary_color(color);
+    };
+}
+
 PaletteWidget::~PaletteWidget()
 {
 }
 
 void PaletteWidget::set_primary_color(Color color)
 {
-    m_editor.set_primary_color(color);
+    m_editor->set_primary_color(color);
     auto pal = m_primary_color_widget->palette();
     pal.set_color(ColorRole::Background, color);
     m_primary_color_widget->set_palette(pal);
@@ -149,7 +155,7 @@ void PaletteWidget::set_primary_color(Color color)
 
 void PaletteWidget::set_secondary_color(Color color)
 {
-    m_editor.set_secondary_color(color);
+    m_editor->set_secondary_color(color);
     auto pal = m_secondary_color_widget->palette();
     pal.set_color(ColorRole::Background, color);
     m_secondary_color_widget->set_palette(pal);

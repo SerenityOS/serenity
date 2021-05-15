@@ -21,6 +21,8 @@
 #include <LibGUI/Button.h>
 #include <LibGUI/Toolbar.h>
 
+REGISTER_WIDGET(PixelPaint, ToolboxWidget);
+
 namespace PixelPaint {
 
 ToolboxWidget::ToolboxWidget()
