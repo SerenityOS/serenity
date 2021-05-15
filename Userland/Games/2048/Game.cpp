@@ -161,7 +161,7 @@ static bool is_stalled(const Game::Board& board)
     return true;
 }
 
-Game::MoveOutcome Game::attempt_move(Direction direction)
+bool Game::slide_tiles(Direction direction)
 {
     size_t successful_merge_score = 0;
     Board new_board;
@@ -184,9 +184,18 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
     bool moved = new_board != m_board;
     if (moved) {
         m_board = new_board;
+        m_score += successful_merge_score;
+    }
+
+    return moved;
+}
+
+Game::MoveOutcome Game::attempt_move(Direction direction)
+{
+    bool moved = slide_tiles(direction);
+    if (moved) {
         m_turns++;
         add_random_tile();
-        m_score += successful_merge_score;
     }
 
     if (is_complete(m_board, m_target_tile))
