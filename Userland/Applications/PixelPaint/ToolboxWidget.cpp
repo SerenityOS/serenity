@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -16,65 +16,18 @@
 #include "RectangleTool.h"
 #include "SprayTool.h"
 #include "ZoomTool.h"
-#include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
-#include <LibGUI/Window.h>
+#include <LibGUI/Toolbar.h>
 
 namespace PixelPaint {
-
-class ToolButton final : public GUI::Button {
-    C_OBJECT(ToolButton)
-public:
-    ToolButton(ToolboxWidget& toolbox, const String& name, const GUI::Shortcut& shortcut, OwnPtr<Tool> tool)
-        : m_toolbox(toolbox)
-        , m_tool(move(tool))
-    {
-        StringBuilder builder;
-        builder.append(name);
-        builder.append(" (");
-        builder.append(shortcut.to_string());
-        builder.append(")");
-        set_tooltip(builder.to_string());
-
-        m_action = GUI::Action::create_checkable(
-            name, shortcut, [this](auto& action) {
-                if (action.is_checked())
-                    m_toolbox.on_tool_selection(m_tool);
-                else
-                    m_toolbox.on_tool_selection(nullptr);
-            },
-            toolbox.window());
-
-        m_tool->set_action(m_action);
-        set_action(*m_action);
-        m_toolbox.m_action_group.add_action(*m_action);
-    }
-
-    const Tool& tool() const { return *m_tool; }
-    Tool& tool() { return *m_tool; }
-
-    virtual bool is_uncheckable() const override { return false; }
-
-    virtual void context_menu_event(GUI::ContextMenuEvent& event) override
-    {
-        m_action->activate();
-        m_tool->on_tool_button_contextmenu(event);
-    }
-
-private:
-    ToolboxWidget& m_toolbox;
-    OwnPtr<Tool> m_tool;
-    RefPtr<GUI::Action> m_action;
-};
 
 ToolboxWidget::ToolboxWidget()
 {
     set_fill_with_background_color(true);
 
-    set_frame_thickness(0);
-    set_fixed_width(28);
+    set_fixed_width(26);
 
     set_layout<GUI::VerticalBoxLayout>();
     layout()->set_spacing(0);
@@ -83,6 +36,7 @@ ToolboxWidget::ToolboxWidget()
     m_action_group.set_exclusive(true);
     m_action_group.set_unchecking_allowed(false);
 
+    m_toolbar = add<GUI::Toolbar>(Gfx::Orientation::Vertical);
     setup_tools();
 }
 
@@ -92,15 +46,22 @@ ToolboxWidget::~ToolboxWidget()
 
 void ToolboxWidget::setup_tools()
 {
-    auto add_tool = [&](const StringView& name, const StringView& icon_name, const GUI::Shortcut& shortcut, NonnullOwnPtr<Tool> tool) -> ToolButton& {
-        m_tools.append(tool.ptr());
-        auto& button = add<ToolButton>(*this, name, shortcut, move(tool));
-        button.set_focus_policy(GUI::FocusPolicy::TabFocus);
-        button.set_fixed_size(24, 24);
-        button.set_checkable(true);
-        button.set_button_style(Gfx::ButtonStyle::Coolbar);
-        button.set_icon(Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)));
-        return button;
+    auto add_tool = [&](String name, StringView const& icon_name, GUI::Shortcut const& shortcut, NonnullOwnPtr<Tool> tool) {
+        auto action = GUI::Action::create_checkable(move(name), shortcut, Gfx::Bitmap::load_from_file(String::formatted("/res/icons/pixelpaint/{}.png", icon_name)),
+            [this, tool = tool.ptr()](auto& action) {
+                if (action.is_checked())
+                    on_tool_selection(tool);
+                else
+                    on_tool_selection(nullptr);
+            });
+        m_action_group.add_action(action);
+        auto& button = m_toolbar->add_action(action);
+        button.on_context_menu_request = [action = action.ptr(), tool = tool.ptr()](auto& event) {
+            action->activate();
+            tool->on_tool_button_contextmenu(event);
+        };
+        tool->set_action(action);
+        m_tools.append(move(tool));
     };
 
     add_tool("Move", "move", { 0, Key_M }, make<MoveTool>());
