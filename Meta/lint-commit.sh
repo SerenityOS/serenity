@@ -28,6 +28,10 @@ while read -r line; do
     error "Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)"
   fi
 
+  if [[ $line_number -eq 1 ]] && [[ "$line" =~ \.$ ]]; then
+    error "Commit title ends in a period"
+  fi
+
   if [[ $line_length -gt 72 ]]; then
     error "Commit message lines are too long (maximum allowed is 72 characters)"
   fi
