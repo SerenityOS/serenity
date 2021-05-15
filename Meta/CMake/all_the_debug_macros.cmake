@@ -182,6 +182,7 @@ set(WASM_BINPARSER_DEBUG ON)
 set(WASM_TRACE_DEBUG ON)
 set(PDF_DEBUG ON)
 set(SOLITAIRE_DEBUG ON)
+set(DDS_DEBUG ON)
 
 # False positive: DEBUG is a flag but it works differently.
 # set(DEBUG ON)

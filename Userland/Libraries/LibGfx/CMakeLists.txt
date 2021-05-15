@@ -8,6 +8,7 @@ set(SOURCES
     ClassicStylePainter.cpp
     ClassicWindowTheme.cpp
     Color.cpp
+    DDSLoader.cpp
     DisjointRectSet.cpp
     Emoji.cpp
     FontDatabase.cpp
