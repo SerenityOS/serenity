@@ -248,3 +248,31 @@ TEST_CASE(count_in_range)
     test_with_value(true);
     test_with_value(false);
 }
+
+TEST_CASE(byte_aligned_access)
+{
+    {
+        Bitmap bitmap(16, true);
+        EXPECT_EQ(bitmap.count_in_range(0, 16, true), 16u);
+        EXPECT_EQ(bitmap.count_in_range(8, 8, true), 8u);
+        EXPECT_EQ(bitmap.count_in_range(0, 8, true), 8u);
+        EXPECT_EQ(bitmap.count_in_range(4, 8, true), 8u);
+    }
+    {
+        Bitmap bitmap(16, false);
+        bitmap.set_range(4, 8, true);
+        EXPECT_EQ(bitmap.count_in_range(0, 16, true), 8u);
+        EXPECT_EQ(bitmap.count_in_range(8, 8, true), 4u);
+        EXPECT_EQ(bitmap.count_in_range(0, 8, true), 4u);
+        EXPECT_EQ(bitmap.count_in_range(4, 8, true), 8u);
+    }
+    {
+        Bitmap bitmap(8, false);
+        bitmap.set(2, true);
+        bitmap.set(4, true);
+        EXPECT_EQ(bitmap.count_in_range(0, 2, true), 0u);
+        EXPECT_EQ(bitmap.count_in_range(0, 4, true), 1u);
+        EXPECT_EQ(bitmap.count_in_range(0, 8, true), 2u);
+        EXPECT_EQ(bitmap.count_in_range(4, 4, true), 1u);
+    }
+}

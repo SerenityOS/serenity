@@ -52,7 +52,7 @@ public:
             return 0;
 
         static const u8 bitmask_first_byte[8] = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
-        static const u8 bitmask_last_byte[8] = { 0x0, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
+        static const u8 bitmask_last_byte[8] = { 0x00, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
 
         size_t count;
         const u8* first = &m_data[start / 8];
@@ -64,9 +64,12 @@ public:
             count = __builtin_popcount(byte);
         } else {
             count = __builtin_popcount(byte);
-            byte = *last;
-            byte &= bitmask_last_byte[(start + len) % 8];
-            count += __builtin_popcount(byte);
+            // Don't access *last if it's out of bounds
+            if (last < &m_data[size_in_bytes()]) {
+                byte = *last;
+                byte &= bitmask_last_byte[(start + len) % 8];
+                count += __builtin_popcount(byte);
+            }
             if (++first < last) {
                 const u32* ptr32 = (const u32*)(((FlatPtr)first + sizeof(u32) - 1) & ~(sizeof(u32) - 1));
                 if ((const u8*)ptr32 > last)
