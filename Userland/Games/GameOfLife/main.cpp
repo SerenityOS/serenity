@@ -113,15 +113,15 @@ int main(int argc, char** argv)
     main_toolbar.add_action(randomize_cells_action);
 
     auto menubar = GUI::Menubar::construct();
-    auto& app_menu = menubar->add_menu("Game Of Life");
+    auto& game_menu = menubar->add_menu("Game");
 
-    app_menu.add_action(clear_board_action);
-    app_menu.add_action(randomize_cells_action);
-    app_menu.add_separator();
-    app_menu.add_action(toggle_running_action);
-    app_menu.add_action(run_one_generation_action);
+    game_menu.add_action(clear_board_action);
+    game_menu.add_action(randomize_cells_action);
+    game_menu.add_separator();
+    game_menu.add_action(toggle_running_action);
+    game_menu.add_action(run_one_generation_action);
 
-    app_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
+    game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
 
