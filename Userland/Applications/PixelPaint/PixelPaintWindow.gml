@@ -6,6 +6,14 @@
         spacing: 2
     }
 
+    @GUI::ToolbarContainer {
+        name: "toolbar_container"
+
+        @GUI::Toolbar {
+            name: "toolbar"
+        }
+    }
+
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
             spacing: 0
