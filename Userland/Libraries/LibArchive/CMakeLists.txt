@@ -1,4 +1,5 @@
 set(SOURCES
+        Tar.cpp
         TarStream.cpp
         Zip.cpp
         )
