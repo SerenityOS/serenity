@@ -1244,7 +1244,23 @@ void TextEditor::insert_at_cursor_or_replace_selection(const StringView& text)
     VERIFY(is_editable());
     if (has_selection())
         delete_selection();
+
+    // Check if adding a newline leaves the previous line as just whitespace.
+    auto const clear_length = m_cursor.column();
+    auto const should_clear_last_line = text == "\n"
+        && clear_length > 0
+        && current_line().leading_spaces() == clear_length;
+
     execute<InsertTextCommand>(text, m_cursor);
+
+    if (should_clear_last_line) { // If it does leave just whitespace, clear it.
+        auto const original_cursor_position = cursor();
+        TextPosition start(original_cursor_position.line() - 1, 0);
+        TextPosition end(original_cursor_position.line() - 1, clear_length);
+        TextRange erased_range(start, end);
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
+        set_cursor(original_cursor_position);
+    }
 }
 
 void TextEditor::cut()
