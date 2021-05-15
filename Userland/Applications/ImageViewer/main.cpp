@@ -210,20 +210,23 @@ int main(int argc, char** argv)
             widget.on_doubleclick();
         });
 
-    auto zoom_in_action = GUI::Action::create("Zoom &In", { Mod_None, Key_Plus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-in.png"),
+    auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
         [&](auto&) {
             widget.set_scale(widget.scale() + 10);
-        });
+        },
+        window);
 
-    auto zoom_reset_action = GUI::Action::create("Zoom to &100%", { Mod_None, Key_0 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-reset.png"),
+    auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
         [&](auto&) {
             widget.set_scale(100);
-        });
+        },
+        window);
 
-    auto zoom_out_action = GUI::Action::create("Zoom &Out", { Mod_None, Key_Minus }, Gfx::Bitmap::load_from_file("/res/icons/16x16/zoom-out.png"),
+    auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
         [&](auto&) {
             widget.set_scale(widget.scale() - 10);
-        });
+        },
+        window);
 
     auto hide_show_toolbar_action = GUI::Action::create("Hide/Show &Toolbar", { Mod_Ctrl, Key_T },
         [&](auto&) {
@@ -244,7 +247,7 @@ int main(int argc, char** argv)
     main_toolbar.add_action(go_last_action);
     main_toolbar.add_separator();
     main_toolbar.add_action(zoom_in_action);
-    main_toolbar.add_action(zoom_reset_action);
+    main_toolbar.add_action(reset_zoom_action);
     main_toolbar.add_action(zoom_out_action);
 
     auto menubar = GUI::Menubar::construct();
@@ -273,7 +276,7 @@ int main(int argc, char** argv)
     view_menu.add_action(full_sceen_action);
     view_menu.add_separator();
     view_menu.add_action(zoom_in_action);
-    view_menu.add_action(zoom_reset_action);
+    view_menu.add_action(reset_zoom_action);
     view_menu.add_action(zoom_out_action);
     view_menu.add_separator();
     view_menu.add_action(hide_show_toolbar_action);
