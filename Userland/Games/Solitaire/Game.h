@@ -84,6 +84,7 @@ private:
     enum StackLocation {
         Stock,
         Waste,
+        Play,
         Foundation1,
         Foundation2,
         Foundation3,

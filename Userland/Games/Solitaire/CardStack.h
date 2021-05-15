@@ -18,6 +18,7 @@ public:
         Stock,
         Normal,
         Waste,
+        Play,
         Foundation
     };
 
@@ -36,6 +37,7 @@ public:
 
     void push(NonnullRefPtr<Card> card);
     NonnullRefPtr<Card> pop();
+    void move_to_stack(CardStack&);
     void rebound_cards();
 
     bool is_allowed_to_push(const Card&) const;
@@ -59,8 +61,11 @@ private:
         case Normal:
             return { 0, 20, 1, 3 };
         case Stock:
-        case Waste:
             return { 2, 1, 8, 1 };
+        case Waste:
+            return { 0, 0, 1, 0 };
+        case Play:
+            return { 20, 0, 1, 0 };
         default:
             return {};
         }
