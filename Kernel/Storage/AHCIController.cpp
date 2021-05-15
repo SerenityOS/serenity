@@ -79,13 +79,14 @@ volatile AHCI::HBA& AHCIController::hba() const
     return static_cast<volatile AHCI::HBA&>(*(volatile AHCI::HBA*)(m_hba_region->vaddr().as_ptr()));
 }
 
-AHCIController::AHCIController(PCI::Address address)
+AHCIController::AHCIController(PCI::Address address, bool init)
     : StorageController()
     , PCI::DeviceController(address)
     , m_hba_region(hba_region())
     , m_capabilities(capabilities())
 {
-    initialize();
+    if (init)
+        initialize();
 }
 
 AHCI::HBADefinedCapabilities AHCIController::capabilities() const

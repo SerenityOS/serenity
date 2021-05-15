@@ -35,6 +35,7 @@ class AHCIPort : public RefCounted<AHCIPort> {
 
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIPort> create(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
+    virtual ~AHCIPort() = default;
 
     u32 port_index() const { return m_port_index; }
     u32 representative_port_index() const { return port_index() + 1; }
@@ -48,13 +49,13 @@ public:
     UNMAP_AFTER_INIT bool initialize_without_reset();
     void handle_interrupt();
 
-private:
+protected:
     bool is_phy_enabled() const { return (m_port_registers.ssts & 0xf) == 3; }
-    bool initialize(ScopedSpinLock<SpinLock<u8>>&);
+    bool virtual initialize(ScopedSpinLock<SpinLock<u8>>&);
 
     UNMAP_AFTER_INIT AHCIPort(const AHCIPortHandler&, volatile AHCI::PortRegisters&, u32 port_index);
 
-    ALWAYS_INLINE void clear_sata_error_register() const;
+    void clear_sata_error_register() const;
 
     void eject();
 
@@ -65,8 +66,8 @@ private:
     void rebase();
     void recover_from_fatal_error();
     bool shutdown();
-    ALWAYS_INLINE void spin_up() const;
-    ALWAYS_INLINE void power_on() const;
+    void spin_up() const;
+    void power_on() const;
 
     void start_request(AsyncBlockDeviceRequest&);
     void complete_current_request(AsyncDeviceRequest::RequestResult);
@@ -74,27 +75,27 @@ private:
     size_t calculate_descriptors_count(size_t block_count) const;
     [[nodiscard]] Optional<AsyncDeviceRequest::RequestResult> prepare_and_set_scatter_list(AsyncBlockDeviceRequest& request);
 
-    ALWAYS_INLINE bool is_interrupts_enabled() const;
+    bool is_interrupts_enabled() const;
 
     bool spin_until_ready() const;
 
     bool identify_device(ScopedSpinLock<SpinLock<u8>>&);
 
-    ALWAYS_INLINE void start_command_list_processing() const;
-    ALWAYS_INLINE void mark_command_header_ready_to_process(u8 command_header_index) const;
-    ALWAYS_INLINE void stop_command_list_processing() const;
+    void start_command_list_processing() const;
+    void mark_command_header_ready_to_process(u8 command_header_index) const;
+    void stop_command_list_processing() const;
 
-    ALWAYS_INLINE void start_fis_receiving() const;
-    ALWAYS_INLINE void stop_fis_receiving() const;
+    void start_fis_receiving() const;
+    void stop_fis_receiving() const;
 
-    ALWAYS_INLINE void set_active_state() const;
-    ALWAYS_INLINE void set_sleep_state() const;
+    void set_active_state() const;
+    void set_sleep_state() const;
 
     void set_interface_state(AHCI::DeviceDetectionInitialization);
 
     Optional<u8> try_to_find_unused_command_header();
 
-    ALWAYS_INLINE bool is_interface_disabled() const { return (m_port_registers.ssts & 0xf) == 4; };
+    bool is_interface_disabled() const { return (m_port_registers.ssts & 0xf) == 4; };
 
     // Data members
 

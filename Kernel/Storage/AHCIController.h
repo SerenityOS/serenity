@@ -18,12 +18,11 @@ namespace Kernel {
 class AsyncBlockDeviceRequest;
 class AHCIPortHandler;
 class AHCIPort;
-class AHCIController final : public StorageController
+class AHCIController : public StorageController
     , public PCI::DeviceController {
     friend class AHCIPortHandler;
     friend class AHCIPort;
     AK_MAKE_ETERNAL
-public:
 public:
     UNMAP_AFTER_INIT static NonnullRefPtr<AHCIController> initialize(PCI::Address address);
     virtual ~AHCIController() override;
@@ -37,12 +36,12 @@ public:
 
     const AHCI::HBADefinedCapabilities& hba_capabilities() const { return m_capabilities; };
 
-private:
+protected:
     void disable_global_interrupts() const;
     void enable_global_interrupts() const;
 
-    UNMAP_AFTER_INIT explicit AHCIController(PCI::Address address);
-    UNMAP_AFTER_INIT void initialize();
+    UNMAP_AFTER_INIT explicit AHCIController(PCI::Address address, bool init = true);
+    UNMAP_AFTER_INIT virtual void initialize();
 
     AHCI::HBADefinedCapabilities capabilities() const;
     RefPtr<StorageDevice> device_by_port(u32 index) const;
