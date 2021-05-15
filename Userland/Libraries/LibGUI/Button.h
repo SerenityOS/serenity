@@ -28,7 +28,7 @@ public:
     Gfx::TextAlignment text_alignment() const { return m_text_alignment; }
 
     Function<void(unsigned modifiers)> on_click;
-    Function<void(const ContextMenuEvent&)> on_context_menu_request;
+    Function<void(ContextMenuEvent&)> on_context_menu_request;
 
     void set_button_style(Gfx::ButtonStyle style) { m_button_style = style; }
     Gfx::ButtonStyle button_style() const { return m_button_style; }
