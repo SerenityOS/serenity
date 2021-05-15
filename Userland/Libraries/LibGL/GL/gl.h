@@ -36,6 +36,7 @@ extern "C" {
 // Enable capabilities
 #define GL_CULL_FACE 0x0B44
 #define GL_DEPTH_TEST 0x0B71
+#define GL_BLEND 0x0BE2
 
 // Utility
 #define GL_VENDOR 0x1F00

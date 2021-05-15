@@ -106,6 +106,7 @@ private:
     GLenum m_front_face = GL_CCW;
     GLenum m_culled_sides = GL_BACK;
 
+    bool m_blend_enabled = false;
     GLenum m_blend_source_factor = GL_ONE;
     GLenum m_blend_destination_factor = GL_ZERO;
 
