@@ -66,6 +66,10 @@
 #cmakedefine01 CURSOR_TOOL_DEBUG
 #endif
 
+#ifndef DDS_DEBUG
+#cmakedefine01 DDS_DEBUG
+#endif
+
 #ifndef DEFERRED_INVOKE_DEBUG
 #cmakedefine01 DEFERRED_INVOKE_DEBUG
 #endif

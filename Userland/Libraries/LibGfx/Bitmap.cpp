@@ -13,6 +13,7 @@
 #include <AK/String.h>
 #include <LibGfx/BMPLoader.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/DDSLoader.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/JPGLoader.h>

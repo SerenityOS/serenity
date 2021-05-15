@@ -5,6 +5,7 @@
  */
 
 #include <LibGfx/BMPLoader.h>
+#include <LibGfx/DDSLoader.h>
 #include <LibGfx/GIFLoader.h>
 #include <LibGfx/ICOLoader.h>
 #include <LibGfx/ImageDecoder.h>
@@ -47,6 +48,10 @@ ImageDecoder::ImageDecoder(const u8* data, size_t size)
         return;
 
     m_plugin = make<JPGImageDecoderPlugin>(data, size);
+    if (m_plugin->sniff())
+        return;
+
+    m_plugin = make<DDSImageDecoderPlugin>(data, size);
     if (m_plugin->sniff())
         return;
 
