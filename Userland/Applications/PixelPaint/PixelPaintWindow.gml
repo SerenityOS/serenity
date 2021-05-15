@@ -43,13 +43,20 @@
 
         @GUI::Widget {
             fill_with_background_color: true
-            fixed_width: 230
+            fixed_width: 200
 
             layout: @GUI::VerticalBoxLayout {
             }
 
-            @PixelPaint::LayerListWidget {
-                name: "layer_list_widget"
+            @GUI::GroupBox {
+                title: "Layers"
+                layout: @GUI::VerticalBoxLayout {
+                    margins: [4, 16, 4, 8]
+                }
+
+                @PixelPaint::LayerListWidget {
+                    name: "layer_list_widget"
+                }
             }
 
             @PixelPaint::LayerPropertiesWidget {
