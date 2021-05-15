@@ -23,6 +23,8 @@ namespace Kernel {
 
 class NetworkAdapter;
 
+using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
+
 class NetworkAdapter : public RefCounted<NetworkAdapter> {
 public:
     template<typename Callback>
