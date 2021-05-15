@@ -16,11 +16,15 @@
 
     @GUI::Widget {
         layout: @GUI::HorizontalBoxLayout {
-            spacing: 0
+            spacing: 2
         }
 
-        @PixelPaint::ToolboxWidget {
-            name: "toolbox"
+        @GUI::ToolbarContainer {
+            name: "toolbar_container"
+
+            @PixelPaint::ToolboxWidget {
+                name: "toolbox"
+            }
         }
 
         @GUI::Widget {
