@@ -26,6 +26,7 @@
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
@@ -415,6 +416,19 @@ int main(int argc, char** argv)
         image_editor.set_image(image);
         image_editor.set_active_layer(bg_layer);
     }
+
+    auto& statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+
+    app->on_action_enter = [&statusbar](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    app->on_action_leave = [&statusbar](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     window->show();
     return app->exec();
