@@ -10,8 +10,9 @@
 
 class Game final {
 public:
-    Game(size_t board_size, size_t target_tile = 0);
+    Game(size_t grid_size, size_t target_tile, bool evil_ai);
     Game(const Game&) = default;
+    Game& operator=(const Game&) = default;
 
     enum class MoveOutcome {
         OK,
@@ -49,10 +50,21 @@ public:
 private:
     bool slide_tiles(Direction);
 
+    void add_tile()
+    {
+        if (m_evil_ai)
+            add_evil_tile();
+        else
+            add_random_tile();
+    }
+
     void add_random_tile();
+    void add_evil_tile();
 
     size_t m_grid_size { 0 };
     u32 m_target_tile { 0 };
+
+    bool m_evil_ai { false };
 
     Board m_board;
     size_t m_score { 0 };
