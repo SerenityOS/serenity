@@ -5,11 +5,13 @@
  */
 
 #include "Game.h"
+#include <AK/Array.h>
 #include <AK/String.h>
 #include <stdlib.h>
 
-Game::Game(size_t grid_size, size_t target_tile)
+Game::Game(size_t grid_size, size_t target_tile, bool evil_ai)
     : m_grid_size(grid_size)
+    , m_evil_ai(evil_ai)
 {
     if (target_tile == 0)
         m_target_tile = 2048;
@@ -25,8 +27,8 @@ Game::Game(size_t grid_size, size_t target_tile)
             row.append(0);
     }
 
-    add_random_tile();
-    add_random_tile();
+    add_tile();
+    add_tile();
 }
 
 void Game::add_random_tile()
@@ -161,6 +163,15 @@ static bool is_stalled(const Game::Board& board)
     return true;
 }
 
+static size_t get_number_of_free_cells(const Game::Board& board)
+{
+    size_t accumulator = 0;
+    for (auto& row : board)
+        for (auto& cell: row)
+            accumulator += cell == 0;
+    return accumulator;
+}
+
 bool Game::slide_tiles(Direction direction)
 {
     size_t successful_merge_score = 0;
@@ -195,7 +206,7 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
     bool moved = slide_tiles(direction);
     if (moved) {
         m_turns++;
-        add_random_tile();
+        add_tile();
     }
 
     if (is_complete(m_board, m_target_tile))
@@ -205,6 +216,56 @@ Game::MoveOutcome Game::attempt_move(Direction direction)
     if (moved)
         return MoveOutcome::OK;
     return MoveOutcome::InvalidMove;
+}
+
+void Game::add_evil_tile()
+{
+    auto worst_row = 0;
+    auto worst_column = 0;
+    auto worst_value = 2;
+
+    auto most_free_cells = m_grid_size * m_grid_size;  // a big value to min() against
+    auto stalled = false;
+
+    for (size_t row = 0; row < m_grid_size && !stalled; row++)
+        for (size_t column = 0; column < m_grid_size && !stalled; column++) {
+            if (m_board[row][column] != 0)
+                continue;
+
+            for (auto value: Array{2, 4}) {
+                auto saved_state = *this;
+                saved_state.m_board[row][column] = value;
+
+                if (is_stalled(saved_state.m_board)) {
+                    stalled = true;
+
+                    worst_row = row;
+                    worst_column = column;
+                    worst_value = value;
+
+                    break;
+                }
+
+                auto best_outcome = 0ul;
+                for (auto direction: Array{Direction::Down, Direction::Left, Direction::Right, Direction::Up}) {
+                    auto moved_state = saved_state;
+                    auto moved = moved_state.slide_tiles(direction);
+                    if (!moved)  // invalid move
+                        continue;
+                    best_outcome = max(best_outcome, get_number_of_free_cells(moved_state.board()));
+                }
+
+                if (best_outcome < most_free_cells) {
+                    worst_row = row;
+                    worst_column = column;
+                    worst_value = value;
+
+                    most_free_cells = best_outcome;
+                }
+            }
+        }
+
+    m_board[worst_row][worst_column] = worst_value;
 }
 
 u32 Game::largest_tile() const
