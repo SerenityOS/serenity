@@ -96,10 +96,13 @@ private:
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
-    String scope_of_declaration(const Declaration&);
+    String scope_of_declaration(const Declaration&) const;
+    String scope_of_name_or_identifier(const ASTNode& node) const;
     Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
 
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 };
