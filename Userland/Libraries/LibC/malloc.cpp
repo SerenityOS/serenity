@@ -392,6 +392,13 @@ size_t malloc_size(void* ptr)
     return size;
 }
 
+size_t malloc_good_size(size_t size)
+{
+    size_t good_size;
+    allocator_for_size(size, good_size);
+    return good_size;
+}
+
 void* realloc(void* ptr, size_t size)
 {
     if (!ptr)

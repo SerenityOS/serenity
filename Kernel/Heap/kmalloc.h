@@ -66,4 +66,6 @@ inline void kfree_aligned(void* ptr)
     kfree((u8*)ptr - ((const ptrdiff_t*)ptr)[-1]);
 }
 
+size_t kmalloc_good_size(size_t);
+
 void kmalloc_enable_expand();
