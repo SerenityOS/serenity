@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("PixelPaint");
-    window->resize(950, 570);
+    window->resize(800, 480);
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
@@ -395,9 +395,9 @@ int main(int argc, char** argv)
     if (Core::File::exists(image_file_real_path)) {
         open_image_file(image_file_real_path);
     } else {
-        auto image = PixelPaint::Image::create_with_size({ 640, 480 });
+        auto image = PixelPaint::Image::create_with_size({ 480, 360 });
 
-        auto bg_layer = PixelPaint::Layer::create_with_size(*image, { 640, 480 }, "Background");
+        auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
         image->add_layer(*bg_layer);
         bg_layer->bitmap().fill(Color::White);
 
