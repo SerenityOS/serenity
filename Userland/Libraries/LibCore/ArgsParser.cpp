@@ -106,7 +106,8 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
     // We're done processing options, now let's parse positional arguments.
 
     int values_left = argc - optind;
-    int num_values_for_arg[m_positional_args.size()];
+    Vector<int, 16> num_values_for_arg;
+    num_values_for_arg.resize(m_positional_args.size(), true);
     int total_values_required = 0;
     for (size_t i = 0; i < m_positional_args.size(); i++) {
         auto& arg = m_positional_args[i];
