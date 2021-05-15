@@ -7,6 +7,7 @@
 #pragma once
 
 #include <Kernel/Devices/CharacterDevice.h>
+#include <Kernel/IO.h>
 
 namespace Kernel {
 
@@ -18,7 +19,7 @@ namespace Kernel {
 class SerialDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    SerialDevice(u32 base_addr, unsigned minor);
+    SerialDevice(IOAddress base_addr, unsigned minor);
     virtual ~SerialDevice() override;
 
     // ^CharacterDevice
@@ -122,7 +123,7 @@ private:
     void set_modem_control(u8 modem_control);
     u8 get_line_status() const;
 
-    u32 m_base_addr { 0 };
+    IOAddress m_base_addr;
     bool m_interrupt_enable { false };
     u8 m_fifo_control { 0 };
     Baud m_baud { Baud38400 };
