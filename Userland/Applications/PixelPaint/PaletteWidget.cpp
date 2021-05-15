@@ -20,6 +20,7 @@ public:
         : m_palette_widget(palette_widget)
         , m_color(color)
     {
+        set_fixed_width(16);
     }
 
     virtual ~ColorWidget() override
