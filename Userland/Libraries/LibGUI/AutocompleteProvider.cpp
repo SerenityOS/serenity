@@ -88,7 +88,6 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 
     m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
-    m_suggestion_view->set_column_width(1, 100);
 }
 
 void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
@@ -99,6 +98,7 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
         model.set_suggestions(move(suggestions));
     } else {
         m_suggestion_view->set_model(adopt_ref(*new AutocompleteSuggestionModel(move(suggestions))));
+        m_suggestion_view->set_column_width(1, 100);
         m_suggestion_view->update();
         if (has_suggestions)
             m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
