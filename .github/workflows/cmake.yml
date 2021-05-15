@@ -1,0 +1,296 @@
+name: Build, lint, and test
+
+on: [push, pull_request]
+
+env:
+  # Don't mix these up!
+  # runner.workspace = /home/runner/work/serenity
+  # github.workspace = /home/runner/work/serenity/serenity
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+
+jobs:
+  build_and_test_serenity:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        debug-macros: ['ALL_DEBUG', 'NORMAL_DEBUG']
+        os: [ubuntu-20.04]
+        # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
+        ccache-mark: [0]
+
+    steps:
+    - uses: actions/checkout@v2
+    # Set default Python to python 3.x, and set Python path such that pip install works properly
+    - uses: actions/setup-python@v2
+
+    # === OS SETUP ===
+
+    # Do we need to update the package cache first?
+    # sudo apt-get update -qq
+
+    - name: Purge interfering packages
+      # Remove GCC 9 and clang-format 10 (installed by default)
+      run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev clang-format-10
+    - name: "Install Ubuntu dependencies"
+      # These packages are already part of the ubuntu-20.04 image:
+      # cmake gcc-10 g++-10 shellcheck libgmp-dev
+      # These aren't:
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
+        sudo apt-get update
+        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
+    - name: Use GCC 10 instead
+      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+
+    - name: Install JS dependencies
+      run: sudo npm install -g prettier@2.2.1
+    - name: Install Python dependencies
+      # The setup-python action set default python to python3.x. Note that we are not using system python here.
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 requests
+    - name: Check versions
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version
+
+    # === PREPARE FOR BUILDING ===
+
+    - name: Lint (Phase 1/2)
+      run: ${{ github.workspace }}/Meta/lint-ci.sh
+    - name: Prepare useful stamps
+      id: stamps
+      shell: cmake -P {0}
+      run: |
+        string(TIMESTAMP current_date "%Y_%m_%d_%H_%M_%S" UTC)
+        # Output everything twice to make it visible both in the logs
+        # *and* as actual output variable, in this order.
+        message("  set-output name=time::${current_date}")
+        message("::set-output name=time::${current_date}")
+        message("  set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+        message("::set-output name=libc_headers::${{ hashFiles('Userland/Libraries/LibC/**/*.h', 'Userland/Libraries/LibPthread/**/*.h', 'Toolchain/Patches/*.patch', 'Toolchain/BuildIt.sh') }}")
+    - name: Toolchain cache
+      uses: actions/cache@v2
+      with:
+        path: ${{ github.workspace }}/Toolchain/Cache/
+        # This assumes that *ALL* LibC and LibPthread headers have an impact on the Toolchain.
+        # This is wrong, and causes more Toolchain rebuilds than necessary.
+        # However, we want to avoid false cache hits at all costs.
+        key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}
+    - name: Restore or regenerate Toolchain
+      run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
+    - name: ccache(1) cache
+      # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
+      uses: actions/cache@v2
+      with:
+        path: /home/runner/.ccache
+        # If you're here because ccache broke (it never should), increment matrix.ccache-mark.
+        # We want to always reuse the last cache, but upload a new one.
+        # This is achieved by using the "prefix-timestamp" format,
+        # and permitting the restore-key "prefix-" without specifying a timestamp.
+        # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
+        key: ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+        # IMPORTANT: Keep these two in sync!
+        restore-keys: |
+          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
+    - name: Show ccache stats before build and configure
+      run: |
+        # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
+        # Currently, we use about 65 MB for the toolchain, and two ccache caches:
+        # One with ALL_DEBUG and one with NORMAL_DEBUG.
+        # Therefore, using 2.47 GB or more per ccache cache causes disaster.
+        # Building from scratch fills the ccache cache from 0 to about 0.7 GB, so 1.5 GB is plenty.
+        ccache -M 1500M
+        ccache -s
+    - name: Create build environment with debug macros
+      working-directory: ${{ github.workspace }}
+      # Build the entire project with debug macros turned on, to prevent code rot.
+      # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      if: ${{ matrix.debug-macros == 'ALL_DEBUG' }}
+    - name: Create build environment
+      working-directory: ${{ github.workspace }}
+      # Note that this needs to run *even if* the Toolchain was built,
+      # in order to set options like BUILD_LAGOM.
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG' }}
+
+    # === ACTUALLY BUILD ===
+
+    - name: Build Serenity and Tests
+      working-directory: ${{ github.workspace }}/Build
+      run: cmake --build .
+    - name: Show ccache stats after build
+      run: ccache -s
+    - name: Lint (Phase 2/2)
+      working-directory: ${{ github.workspace }}/Meta
+      run: ./check-symbols.sh
+
+    - name: Create Serenity Rootfs
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
+      working-directory: ${{ github.workspace }}/Build
+      run: ninja install && ninja image
+
+    - name: Run On-Target Tests
+      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
+      working-directory: ${{ github.workspace }}/Build
+      env:
+        SERENITY_KERNEL_CMDLINE: "boot_mode=self-test"
+        SERENITY_RUN: "ci"
+      run: |
+        echo "::group::ninja run # Qemu output"
+        run_worked=y
+        ninja run || run_worked=n
+        echo "::endgroup::"
+        echo "::group::cat debug.log # Serenity output"
+        if [ "y" = "${run_worked}" ] ; then
+          cat debug.log
+        else
+          echo "skipped (qemu had non-zero exit-code)"
+        fi
+        echo "::endgroup::"
+        [ "y" = ${run_worked} ]
+      timeout-minutes: 10
+      # FIXME: When stable, remove continue on error. (See issue #5541)
+      continue-on-error: true
+
+  build_and_test_lagom:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - with-fuzzers: FUZZ
+            os: ubuntu-20.04
+            allow-test-failure: false
+          - with-fuzzers: NO_FUZZ
+            os: ubuntu-20.04
+            allow-test-failure: false
+          - with-fuzzers: NO_FUZZ
+            os: macos-10.15
+            allow-test-failure: true
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # === OS SETUP ===
+    #
+    - name: Install Ubuntu dependencies
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main"
+        sudo apt-get purge -y clang-10
+        sudo apt-get update
+        sudo apt-get install clang-12 ninja-build
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 60
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 60
+      if: ${{ runner.os == 'Linux' }}
+    - name: Install macOS dependencies
+      run: brew install ninja
+      if: ${{ runner.os == 'macOS' }}
+    - name: Check versions
+      run: set +e; clang --version; clang++ --version; ninja --version
+
+    # === PREPARE FOR BUILDING ===
+
+    # TODO: ccache
+    # https://cristianadam.eu/20200113/speeding-up-c-plus-plus-github-actions-using-ccache/
+    # https://github.com/cristianadam/HelloWorld/blob/master/.github/workflows/build_cmake.yml
+    # Ignore for now, since the other step dominates
+    - name: Create build environment (fuzz)
+      working-directory: ${{ github.workspace }}/Meta/Lagom
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_FUZZER_SANITIZER=ON -DENABLE_ADDRESS_SANITIZER=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ ..
+      if: ${{ matrix.with-fuzzers == 'FUZZ' }}
+
+    - name: Create build environment (no fuzz)
+      working-directory: ${{ github.workspace }}/Meta/Lagom
+      run: |
+        mkdir -p Build
+        cd Build
+        cmake -GNinja -DBUILD_LAGOM=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
+
+    # === ACTUALLY BUILD AND TEST ===
+
+    - name: Build Lagom
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: cmake --build .
+
+    - name: Run CMake tests
+      working-directory: ${{ github.workspace }}/Meta/Lagom/Build
+      run: CTEST_OUTPUT_ON_FAILURE=1 ninja test || ${{ matrix.allow-test-failure }}
+      timeout-minutes: 4
+      if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
+
+  lint_commits:
+    runs-on: ubuntu-20.04
+    if: always() && github.event_name == 'pull_request'
+
+    steps:
+    - name: Get PR Commits
+      id: 'get-pr-commits'
+      uses: tim-actions/get-pr-commits@55b867b9b28954e6f5c1a0fe2f729dc926c306d0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Check linebreaks
+      if: ${{ success() || failure() }}
+      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
+      with:
+        commits: ${{ steps.get-pr-commits.outputs.commits }}
+        pattern: '^[^\r]*$'
+        error: 'Commit message contains CRLF line breaks (only unix-style LF linebreaks are allowed)'
+
+    - name: Check Line Length
+      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
+      with:
+        commits: ${{ steps.get-pr-commits.outputs.commits }}
+        pattern: '^.{0,72}(\n.{0,72})*$'
+        error: 'Commit message lines are too long (maximum allowed is 72 characters)'
+
+    - name: Check subsystem
+      if: ${{ success() || failure() }}
+      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
+      with:
+        commits: ${{ steps.get-pr-commits.outputs.commits }}
+        pattern: '^\S.*?: .+'
+        error: 'Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)'
+
+  notify_irc:
+    needs: [build_and_test_serenity, build_and_test_lagom, lint_commits]
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
+
+    steps:
+    - uses: actions/checkout@v2
+    # Sets environment variable env.WORKFLOW_CONCLUSION to one of [neutral, success, skipped, cancelled, timed_out, action_required, failure]
+    # depending on result of all needs jobs
+    - uses: technote-space/workflow-conclusion-action@v2
+
+    # === NOTIFICATIONS ===
+
+    - name: Dump event info
+      if: always()
+      # Usually unnecessary, but insanely useful if IRC notifications fail.
+      run: |
+        cat <<"EOF"
+        ${{ toJSON(github.event) }}
+        ${{ toJSON(needs) }}
+        EOF
+    - name: Generate IRC message
+      if: always()
+      run: |
+        ${{ github.workspace }}/Meta/notify_irc.py <<"EOF"
+        ["${{ github.actor }}", ${{ github.run_id }}, "${{ env.WORKFLOW_CONCLUSION }}",
+        ${{ toJSON(github.event) }}
+        ]
+        EOF

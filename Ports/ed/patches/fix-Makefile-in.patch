@@ -1,0 +1,11 @@
+--- ed-1.15/Makefile.in.orig	Sat Feb  1 14:22:52 2020
++++ ed-1.15/Makefile.in	Sat Feb  1 14:23:06 2020
+@@ -20,7 +20,7 @@
+ all : $(progname) r$(progname)
+ 
+ $(progname) : $(objs)
+-	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(objs)
++	$(CC) $(LDFLAGS) $(CFLAGS) -o $@ $(objs) -lpcre2-posix -lpcre2-8
+ 
+ r$(progname) : r$(progname).in
+ 	cat $(VPATH)/r$(progname).in > $@

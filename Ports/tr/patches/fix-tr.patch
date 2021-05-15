@@ -1,0 +1,10 @@
+--- tr-6.7/tr.c.orig	Sun May 10 10:14:40 2020
++++ tr-6.7/tr.c	Sun May 10 10:14:53 2020
+@@ -32,6 +32,7 @@
+ 
+ #include <sys/types.h>
+ 
++#include <getopt.h>
+ #include <stdio.h>
+ #include <stdlib.h>
+ #include <string.h>

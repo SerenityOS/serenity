@@ -1,0 +1,13 @@
+interface HTMLScriptElement : HTMLElement {
+
+    [Reflect] attribute DOMString src;
+    [Reflect] attribute DOMString type;
+    [Reflect=nomodule] attribute boolean noModule;
+    [Reflect] attribute boolean defer;
+    [Reflect] attribute DOMString integrity;
+
+    [Reflect] attribute DOMString charset;
+    [Reflect] attribute DOMString event;
+    [Reflect=for] attribute DOMString htmlFor;
+
+};

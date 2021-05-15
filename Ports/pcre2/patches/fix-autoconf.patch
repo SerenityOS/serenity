@@ -1,0 +1,10 @@
+--- pcre2-10.34/config.sub.orig	Sun Jan 19 18:21:01 2020
++++ pcre2-10.34/config.sub	Sun Jan 19 18:21:19 2020
+@@ -1364,6 +1364,7 @@
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \

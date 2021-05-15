@@ -1,0 +1,4 @@
+[App]
+Name=Profiler
+Executable=/bin/Profiler
+Category=Development

@@ -1,0 +1,8 @@
+--- gnucobol-3.1.2/bin/cob-config.in	2020-12-23 02:51:16.000000000 -0800
++++ gnucobol-3.1.2/bin/cob-config.in	2021-04-08 03:05:22.989720870 -0700
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/bin/bash
+ #
+ # cob-config
+ #

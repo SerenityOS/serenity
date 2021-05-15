@@ -1,0 +1,7 @@
+endpoint ClipboardServer
+{
+    greet() => ()
+
+    get_clipboard_data() => (Core::AnonymousBuffer data, [UTF8] String mime_type, IPC::Dictionary metadata)
+    set_clipboard_data(Core::AnonymousBuffer data, [UTF8] String mime_type, IPC::Dictionary metadata) =|
+}

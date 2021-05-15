@@ -1,0 +1,13 @@
+--- a/apps/ocsp.c	2020-04-05 16:49:54.499380971 +0100
++++ b/apps/ocsp.c	2020-04-05 16:50:13.175380426 +0100
+@@ -94,6 +94,10 @@
+ #  endif
+ # endif
+ 
++# if defined(OPENSSL_SYS_SERENITY)
++#  include <sys/select.h>
++# endif
++
+ /* Maximum leeway in validity period: default 5 minutes */
+ # define MAX_VALIDITY_PERIOD     (5 * 60)
+ 

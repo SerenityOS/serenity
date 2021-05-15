@@ -1,0 +1,7 @@
+set(SOURCES
+    Client.cpp
+    main.cpp
+)
+
+serenity_bin(EchoServer)
+target_link_libraries(EchoServer LibCore)

@@ -1,0 +1,11 @@
+--- flex-2.6.4/src/flexdef.h.orig	Thu Jan 23 22:38:30 2020
++++ flex-2.6.4/src/flexdef.h	Thu Jan 23 22:38:45 2020
+@@ -72,7 +72,7 @@
+ #include <stdbool.h>
+ #include <stdarg.h>
+ /* Required: regcomp(), regexec() and regerror() in <regex.h> */
+-#include <regex.h>
++#include <pcre2posix.h>
+ /* Required: strcasecmp() in <strings.h> */
+ #include <strings.h>
+ #include "flexint.h"

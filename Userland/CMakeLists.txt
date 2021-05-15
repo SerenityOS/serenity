@@ -1,0 +1,12 @@
+add_compile_options(-O2)
+
+add_subdirectory(Applications)
+add_subdirectory(Demos)
+add_subdirectory(DevTools)
+add_subdirectory(DynamicLoader)
+add_subdirectory(Games)
+add_subdirectory(Libraries)
+add_subdirectory(Applets)
+add_subdirectory(Services)
+add_subdirectory(Shell)
+add_subdirectory(Utilities)

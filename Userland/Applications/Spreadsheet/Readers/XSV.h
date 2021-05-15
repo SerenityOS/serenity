@@ -1,0 +1,199 @@
+/*
+ * Copyright (c) 2020, the SerenityOS developers.
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/GenericLexer.h>
+#include <AK/String.h>
+#include <AK/StringView.h>
+#include <AK/Types.h>
+#include <AK/Vector.h>
+
+namespace Reader {
+
+enum class ParserBehaviour : u32 {
+    None = 0,
+    ReadHeaders = 1,
+    AllowNewlinesInFields = ReadHeaders << 1,
+    TrimLeadingFieldSpaces = ReadHeaders << 2,
+    TrimTrailingFieldSpaces = ReadHeaders << 3,
+    QuoteOnlyInFieldStart = ReadHeaders << 4,
+    Lenient = ReadHeaders << 5, // This is the typical "spreadsheet import" behavior
+                                // Currently, it:
+                                // - fills in missing fields with empty values
+                                // - updates previous rows with extra columns
+};
+
+ParserBehaviour operator&(ParserBehaviour left, ParserBehaviour right);
+ParserBehaviour operator|(ParserBehaviour left, ParserBehaviour right);
+
+struct ParserTraits {
+    String separator;
+    String quote { "\"" };
+    enum QuoteEscape {
+        Repeat,
+        Backslash,
+    } quote_escape { Repeat };
+};
+
+#define ENUMERATE_READ_ERRORS()                                                   \
+    E(None, "No errors")                                                          \
+    E(NonConformingColumnCount, "Header count does not match given column count") \
+    E(QuoteFailure, "Quoting failure")                                            \
+    E(InternalError, "Internal error")                                            \
+    E(DataPastLogicalEnd, "Exrta data past the logical end of the rows")
+
+enum class ReadError {
+#define E(name, _) name,
+    ENUMERATE_READ_ERRORS()
+#undef E
+};
+
+constexpr ParserBehaviour default_behaviours()
+{
+    return ParserBehaviour::QuoteOnlyInFieldStart;
+}
+
+class XSV {
+public:
+    XSV(StringView source, const ParserTraits& traits, ParserBehaviour behaviours = default_behaviours())
+        : m_source(source)
+        , m_lexer(m_source)
+        , m_traits(traits)
+        , m_behaviours(behaviours)
+    {
+        parse();
+    }
+
+    virtual ~XSV() { }
+
+    bool has_error() const { return m_error != ReadError::None; }
+    ReadError error() const { return m_error; }
+    String error_string() const
+    {
+        switch (m_error) {
+#define E(x, y)        \
+    case ReadError::x: \
+        return y;
+
+            ENUMERATE_READ_ERRORS();
+#undef E
+        }
+        VERIFY_NOT_REACHED();
+    }
+
+    size_t size() const { return m_rows.size(); }
+    Vector<String> headers() const;
+    [[nodiscard]] bool has_explicit_headers() const { return (static_cast<u32>(m_behaviours) & static_cast<u32>(ParserBehaviour::ReadHeaders)) != 0; }
+
+    class Row {
+    public:
+        explicit Row(XSV& xsv, size_t index)
+            : m_xsv(xsv)
+            , m_index(index)
+        {
+        }
+
+        StringView operator[](StringView name) const;
+        StringView operator[](size_t column) const;
+
+        template<typename T>
+        StringView at(T column) const { return this->operator[](column); }
+
+        size_t index() const { return m_index; }
+        size_t size() const { return m_xsv.headers().size(); }
+
+        // FIXME: Implement begin() and end(), keeping `Field' out of the API.
+
+    private:
+        XSV& m_xsv;
+        size_t m_index { 0 };
+    };
+
+    template<bool const_>
+    class RowIterator {
+    public:
+        explicit RowIterator(const XSV& xsv, size_t init_index = 0) requires(const_)
+            : m_xsv(const_cast<XSV&>(xsv))
+            , m_index(init_index)
+        {
+        }
+
+        explicit RowIterator(XSV& xsv, size_t init_index = 0) requires(!const_)
+            : m_xsv(xsv)
+            , m_index(init_index)
+        {
+        }
+
+        Row operator*() const { return Row { m_xsv, m_index }; }
+        Row operator*() requires(!const_) { return Row { m_xsv, m_index }; }
+
+        RowIterator& operator++()
+        {
+            ++m_index;
+            return *this;
+        }
+
+        bool is_end() const { return m_index == m_xsv.m_rows.size(); }
+        bool operator==(const RowIterator& other) const
+        {
+            return m_index == other.m_index && &m_xsv == &other.m_xsv;
+        }
+        bool operator==(const RowIterator<!const_>& other) const
+        {
+            return m_index == other.m_index && &m_xsv == &other.m_xsv;
+        }
+
+    private:
+        XSV& m_xsv;
+        size_t m_index { 0 };
+    };
+
+    const Row operator[](size_t index) const;
+    Row operator[](size_t index);
+
+    Row at(size_t index) const;
+
+    auto begin() { return RowIterator<false>(*this); }
+    auto end() { return RowIterator<false>(*this, m_rows.size()); }
+
+    auto begin() const { return RowIterator<true>(*this); }
+    auto end() const { return RowIterator<true>(*this, m_rows.size()); }
+
+    using ConstIterator = RowIterator<true>;
+    using Iterator = RowIterator<false>;
+
+private:
+    struct Field {
+        StringView as_string_view;
+        String as_string; // This member only used if the parser couldn't use the original source verbatim.
+        bool is_string_view { true };
+
+        bool operator==(StringView other) const
+        {
+            if (is_string_view)
+                return other == as_string_view;
+            return as_string == other;
+        }
+    };
+    void set_error(ReadError error);
+    void parse();
+    void read_headers();
+    Vector<Field> read_row(bool header_row = false);
+    Field read_one_field();
+    Field read_one_quoted_field();
+    Field read_one_unquoted_field();
+
+    StringView m_source;
+    GenericLexer m_lexer;
+    const ParserTraits& m_traits;
+    ParserBehaviour m_behaviours;
+    Vector<Field> m_names;
+    Vector<Vector<Field>> m_rows;
+    ReadError m_error { ReadError::None };
+};
+
+}

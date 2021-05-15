@@ -1,0 +1,4 @@
+endpoint LookupClient
+{
+    dummy() =|
+}

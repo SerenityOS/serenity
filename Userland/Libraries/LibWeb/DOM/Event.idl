@@ -1,0 +1,28 @@
+interface Event {
+
+    // FIXME: second parameter: 'optional EventInit eventInitDict = {}'
+    constructor(DOMString type);
+
+    readonly attribute DOMString type;
+    readonly attribute EventTarget? target;
+    readonly attribute EventTarget? srcTarget;
+    readonly attribute EventTarget? currentTarget;
+
+    readonly attribute unsigned short eventPhase;
+
+    undefined stopPropagation();
+    attribute boolean cancelBubble;
+    undefined stopImmediatePropagation();
+
+    readonly attribute boolean bubbles;
+    readonly attribute boolean cancelable;
+    attribute boolean returnValue;
+    undefined preventDefault();
+    readonly attribute boolean defaultPrevented;
+    readonly attribute boolean composed;
+
+    readonly attribute boolean isTrusted;
+
+    undefined initEvent(DOMString type, optional boolean bubbles = false, optional boolean cancelable = false);
+
+};

@@ -1,0 +1,7 @@
+[App]
+Name=Sound Player
+Executable=/bin/SoundPlayer
+Category=Sound
+
+[Launcher]
+FileTypes=wav

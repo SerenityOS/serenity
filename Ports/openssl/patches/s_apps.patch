@@ -1,0 +1,13 @@
+--- a/apps/s_apps.h	2020-04-05 13:52:44.967691150 +0100
++++ b/apps/s_apps.h	2020-04-05 13:52:50.147690999 +0100
+@@ -122,6 +122,10 @@
+ # define _kbhit kbhit
+ #endif
+ 
++#if defined(OPENSSL_SYS_SERENITY)
++# include <sys/select.h>
++#endif
++
+ #if defined(OPENSSL_SYS_VMS) && !defined(FD_SET)
+ /*
+  * VAX C does not defined fd_set and friends, but it's actually quite simple

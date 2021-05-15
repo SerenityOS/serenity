@@ -1,0 +1,29 @@
+diff --git a/lib/printf-args.c b/lib/printf-args.c
+index 2259d53..5318bcc 100644
+--- a/lib/printf-args.c
++++ b/lib/printf-args.c
+@@ -80,10 +80,7 @@ printf_fetchargs (va_list args, arguments *a)
+ 	/* Although ISO C 99 7.24.1.(2) says that wint_t is "unchanged by
+ 	   default argument promotions", this is not the case in mingw32,
+ 	   where wint_t is 'unsigned short'.  */
+-	ap->a.a_wide_char =
+-	  (sizeof (wint_t) < sizeof (int)
+-	   ? va_arg (args, int)
+-	   : va_arg (args, wint_t));
++	ap->a.a_wide_char = va_arg (args, int);
+ 	break;
+ #endif
+       case TYPE_STRING:
+diff --git a/lib/printf-args.h b/lib/printf-args.h
+index 74a18d9..acc37f5 100644
+--- a/lib/printf-args.h
++++ b/lib/printf-args.h
+@@ -98,7 +98,7 @@ typedef struct
+ #endif
+     int				a_char;
+ #if HAVE_WINT_T
+-    wint_t			a_wide_char;
++    int  			a_wide_char;
+ #endif
+     const char*			a_string;
+ #if HAVE_WCHAR_T

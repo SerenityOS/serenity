@@ -1,0 +1,5 @@
+interface HTMLBRElement : HTMLElement {
+
+    [Reflect] attribute DOMString clear;
+
+};

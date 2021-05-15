@@ -1,0 +1,5 @@
+interface StyleSheetList {
+    // FIXME: item() should be a WebIDL "getter"
+    CSSStyleSheet? item(unsigned long index);
+    readonly attribute unsigned long length;
+};

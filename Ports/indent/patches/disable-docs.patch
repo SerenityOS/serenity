@@ -1,0 +1,11 @@
+--- indent-2.2.11/Makefile.in.orig	2020-11-09 01:22:06.155330703 -0800
++++ indent-2.2.11/Makefile.in	2020-11-09 01:22:26.199212026 -0800
+@@ -237,7 +237,7 @@
+ top_builddir = @top_builddir@
+ top_srcdir = @top_srcdir@
+ AUTOMAKE_OPTIONS = no-texinfo.tex
+-SUBDIRS = intl src doc po man
++SUBDIRS = intl src po
+ BUILT_SOURCES = 
+ EXTRA_DIST = README \
+ 		config/config.rpath config/mkinstalldirs \

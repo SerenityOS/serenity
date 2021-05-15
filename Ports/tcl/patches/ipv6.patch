@@ -1,0 +1,27 @@
+diff -Naur tcl8.6.11/unix/tclUnixSock.c tcl8.6.11.serenity/unix/tclUnixSock.c
+--- unix/tclUnixSock.c	2020-09-21 17:15:49.000000000 +0200
++++ unix.serenity/tclUnixSock.c	2021-04-25 09:39:28.224340150 +0200
+@@ -706,6 +706,7 @@
+ IPv6AddressNeedsNumericRendering(
+     struct in6_addr addr)
+ {
++#ifndef __serenity__
+     if (IN6_ARE_ADDR_EQUAL(&addr, &in6addr_any)) {
+         return 1;
+     }
+@@ -716,11 +717,15 @@
+      */
+ 
+     if (!IN6_IS_ADDR_V4MAPPED(&addr)) {
++#else
+         return 0;
++#endif
++#ifndef __serenity__
+     }
+ 
+     return (addr.s6_addr[12] == 0 && addr.s6_addr[13] == 0
+             && addr.s6_addr[14] == 0 && addr.s6_addr[15] == 0);
++#endif
+ }
+ #if defined (__clang__) || ((__GNUC__)  && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+ #pragma GCC diagnostic pop

@@ -1,0 +1,11 @@
+--- Python-3.9.5/Include/pyport.h	2021-02-21 20:22:43.946024250 +0100
++++ Python-3.9.5/Include/pyport.h	2021-02-21 20:29:32.457743589 +0100
+@@ -838,7 +838,7 @@
+ #  error "Py_TRACE_REFS ABI is not compatible with release and debug ABI"
+ #endif
+ 
+-#if defined(__ANDROID__) || defined(__VXWORKS__)
++#if defined(__ANDROID__) || defined(__VXWORKS__) || defined(__serenity__)
+    /* Ignore the locale encoding: force UTF-8 */
+ #  define _Py_FORCE_UTF8_LOCALE
+ #endif

@@ -1,0 +1,4 @@
+[App]
+Name=Pong
+Executable=/bin/Pong
+Category=Games

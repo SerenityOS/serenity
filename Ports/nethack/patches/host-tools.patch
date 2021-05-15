@@ -1,0 +1,157 @@
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.top NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.top
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.top	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.top	2021-04-11 19:43:41.471996943 +0200
+@@ -188,7 +188,7 @@
+ 
+ dlb:
+ 	( cd util ; $(MAKE) dlb )
+-	( cd dat ; LC_ALL=C ; ../util/dlb cf nhdat $(DATDLB) )
++	( cd dat ; LC_ALL=C ; ../util/dlb.host cf nhdat $(DATDLB) )
+ 
+ # recover can be used when INSURANCE is defined in include/config.h
+ # and the checkpoint option is true
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.dat NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.dat
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.dat	2021-04-11 19:39:50.410956379 +0200
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.dat	2021-04-11 19:41:47.699843567 +0200
+@@ -129,36 +129,36 @@
+ spec_levs: ../util/lev_comp \
+ 	bigroom.des castle.des endgame.des gehennom.des knox.des medusa.des \
+ 	mines.des oracle.des sokoban.des tower.des yendor.des
+-	../util/lev_comp bigroom.des
+-	../util/lev_comp castle.des
+-	../util/lev_comp endgame.des
+-	../util/lev_comp gehennom.des
+-	../util/lev_comp knox.des
+-	../util/lev_comp medusa.des
+-	../util/lev_comp mines.des
+-	../util/lev_comp oracle.des
+-	../util/lev_comp sokoban.des
+-	../util/lev_comp tower.des
+-	../util/lev_comp yendor.des
++	../util/lev_comp.host bigroom.des
++	../util/lev_comp.host castle.des
++	../util/lev_comp.host endgame.des
++	../util/lev_comp.host gehennom.des
++	../util/lev_comp.host knox.des
++	../util/lev_comp.host medusa.des
++	../util/lev_comp.host mines.des
++	../util/lev_comp.host oracle.des
++	../util/lev_comp.host sokoban.des
++	../util/lev_comp.host tower.des
++	../util/lev_comp.host yendor.des
+ 	touch spec_levs
+ 
+ quest_levs: ../util/lev_comp \
+ 	Arch.des Barb.des Caveman.des Healer.des Knight.des Monk.des \
+ 	Priest.des Ranger.des Rogue.des Samurai.des Tourist.des Valkyrie.des \
+ 	Wizard.des
+-	../util/lev_comp Arch.des
+-	../util/lev_comp Barb.des
+-	../util/lev_comp Caveman.des
+-	../util/lev_comp Healer.des
+-	../util/lev_comp Knight.des
+-	../util/lev_comp Monk.des
+-	../util/lev_comp Priest.des
+-	../util/lev_comp Ranger.des
+-	../util/lev_comp Rogue.des
+-	../util/lev_comp Samurai.des
+-	../util/lev_comp Tourist.des
+-	../util/lev_comp Valkyrie.des
+-	../util/lev_comp Wizard.des
++	../util/lev_comp.host Arch.des
++	../util/lev_comp.host Barb.des
++	../util/lev_comp.host Caveman.des
++	../util/lev_comp.host Healer.des
++	../util/lev_comp.host Knight.des
++	../util/lev_comp.host Monk.des
++	../util/lev_comp.host Priest.des
++	../util/lev_comp.host Ranger.des
++	../util/lev_comp.host Rogue.des
++	../util/lev_comp.host Samurai.des
++	../util/lev_comp.host Tourist.des
++	../util/lev_comp.host Valkyrie.des
++	../util/lev_comp.host Wizard.des
+ 	touch quest_levs
+ 
+ dungeon: dungeon.def ../util/makedefs ../util/dgn_comp
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.utl NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.utl
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.utl	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.utl	2021-04-11 19:19:59.714969159 +0200
+@@ -239,11 +239,11 @@
+ 	perl mdgrep.pl
+ 
+ ../include/onames.h: makedefs
+-	./makedefs -o
++	./makedefs.host -o
+ ../include/pm.h: makedefs
+-	./makedefs -p
++	./makedefs.host -p
+ ../include/vis_tab.h: makedefs
+-	./makedefs -z
++	./makedefs.host -z
+ # makedefs -z makes both vis_tab.h and vis_tab.c, but writes the .h first
+ ../src/vis_tab.c: ../include/vis_tab.h
+ 
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.dat NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.dat
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.dat	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.dat	2021-04-11 19:32:23.365816407 +0200
+@@ -101,29 +101,29 @@
+ 
+ 
+ data:	data.base ../util/makedefs
+-	../util/makedefs -d
++	../util/makedefs.host -d
+ 
+ rumors:	rumors.tru rumors.fal ../util/makedefs
+-	../util/makedefs -r
++	../util/makedefs.host -r
+ 
+ quest.dat:	quest.txt ../util/makedefs
+-	../util/makedefs -q
++	../util/makedefs.host -q
+ 
+ oracles:	oracles.txt ../util/makedefs
+-	../util/makedefs -h
++	../util/makedefs.host -h
+ 
+ engrave:	engrave.txt ../util/makedefs
+-	../util/makedefs -s
++	../util/makedefs.host -s
+ 
+ epitaph:	epitaph.txt ../util/makedefs
+-	../util/makedefs -s
++	../util/makedefs.host -s
+ 
+ bogusmon:	bogusmon.txt ../util/makedefs
+-	../util/makedefs -s
++	../util/makedefs.host -s
+ 
+ # note: 'options' should have already been made when include/date.h was created
+ options:	../util/makedefs
+-	../util/makedefs -v
++	../util/makedefs.host -v
+ 
+ 
+ spec_levs: ../util/lev_comp \
+@@ -162,7 +162,7 @@
+ 	touch quest_levs
+ 
+ dungeon: dungeon.def ../util/makedefs ../util/dgn_comp
+-	../util/makedefs -e
++	../util/makedefs.host -e
+-	../util/dgn_comp dungeon.pdf
++	../util/dgn_comp.host dungeon.pdf
+ 
+ # gitinfo.txt is optionally made by src/Makefile when creating date.h
+diff -Naur NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.src NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.src
+--- NetHack-NetHack-3.6.6_Released/sys/unix/Makefile.src	2020-03-08 18:29:31.000000000 +0100
++++ NetHack-NetHack-3.6.6_Released.serenity/sys/unix/Makefile.src	2021-04-11 19:32:32.012647179 +0200
+@@ -670,7 +670,7 @@
+ #	up to date before being executed
+ ../include/date.h:	$(VERSOURCES) $(HACK_H)
+ 	-$(SHELL) ../sys/unix/gitinfo.sh $(GITINFO) #before 'makedefs -v'
+-	../util/makedefs -v
++	../util/makedefs.host -v
+ 
+ 
+ lint:

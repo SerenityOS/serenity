@@ -1,0 +1,10 @@
+--- mawk-1.3.4-20200120/config.sub.orig	Wed Jan 22 22:00:37 2020
++++ mawk-1.3.4-20200120/config.sub	Wed Jan 22 22:00:46 2020
+@@ -1339,6 +1339,7 @@
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# sysv* is not here because it comes later, after sysvr4.
+ 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	     | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \

@@ -1,0 +1,40 @@
+endpoint WindowClient
+{
+    paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> rects) =|
+    mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> mime_types) =|
+    mouse_down(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    mouse_double_click(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    mouse_up(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    mouse_wheel(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    window_entered(i32 window_id) =|
+    window_left(i32 window_id) =|
+    window_input_entered(i32 window_id) =|
+    window_input_left(i32 window_id) =|
+    key_down(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode) =|
+    key_up(i32 window_id, u32 code_point, u32 key, u32 modifiers, u32 scancode) =|
+    window_activated(i32 window_id) =|
+    window_deactivated(i32 window_id) =|
+    window_state_changed(i32 window_id, bool minimized, bool occluded) =|
+    window_close_request(i32 window_id) =|
+    window_resized(i32 window_id, Gfx::IntRect new_rect) =|
+
+    menu_item_activated(i32 menu_id, u32 identifier) =|
+    menu_item_entered(i32 menu_id, u32 identifier) =|
+    menu_item_left(i32 menu_id, u32 identifier) =|
+    menu_visibility_did_change(i32 menu_id, bool visible) =|
+
+    screen_rect_changed(Gfx::IntRect rect) =|
+
+    set_wallpaper_finished(bool success) =|
+
+    drag_accepted() =|
+    drag_cancelled() =|
+
+    drag_dropped(i32 window_id, Gfx::IntPoint mouse_position, [UTF8] String text, HashMap<String,ByteBuffer> mime_data) =|
+
+    update_system_theme(Core::AnonymousBuffer theme_buffer) =|
+
+    display_link_notification() =|
+
+    ping() =|
+}

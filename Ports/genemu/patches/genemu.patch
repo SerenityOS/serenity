@@ -1,0 +1,111 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 94ae8ef..bfb4631 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,11 +1,17 @@
+ cmake_minimum_required(VERSION 2.6)
+-set(CMAKE_BUILD_TYPE "Debug")
+-
+ 
+ INCLUDE(FindPkgConfig)
+-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
++find_package(SDL2 REQUIRED)
+ 
+-set_source_files_properties( mem.cpp PROPERTIES COMPILE_FLAGS " -O0 -UNDEBUG " )
++set_source_files_properties( mem.cpp PROPERTIES COMPILE_FLAGS " -Og")
+ add_executable(genemu genemu.cpp cpu.cpp vdp.cpp mem.cpp state.cpp gfx.cpp ioports.cpp hw.c Z80/Z80.c m68k/m68kcpu.c m68k/m68kops.c m68k/m68kopac.c m68k/m68kopdm.c m68k/m68kopnz.c m68k/m68kdasm.c ym2612/ym2612.c)
+-target_link_libraries(genemu ${SDL2_LIBRARIES})
++target_include_directories(genemu SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
++
++if("${SDL2_LIBRARIES}" STREQUAL "")
++    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
++    set(SDL2_LIBRARIES "SDL2::SDL2")
++endif()
++
++target_link_libraries(genemu PRIVATE ${SDL2_LIBRARIES})
++
++install(TARGETS genemu RUNTIME DESTINATION bin)
+\ No newline at end of file
+diff --git a/gfx.cpp b/gfx.cpp
+index 04daf6e..2848422 100644
+--- a/gfx.cpp
++++ b/gfx.cpp
+@@ -3,7 +3,7 @@
+ #include <assert.h>
+ #include <memory.h>
+ #include <stdio.h>
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ extern "C" {
+     #include "hw.h"
+ }
+diff --git a/hw.c b/hw.c
+index 6b864df..1f34423 100644
+--- a/hw.c
++++ b/hw.c
+@@ -1,5 +1,5 @@
+ #include "hw.h"
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ #include <assert.h>
+ #include <time.h>
+ 
+@@ -105,7 +105,7 @@ void hw_enable_video(int enable)
+         screen = SDL_CreateWindow("Genemu - Sega Genesis Emulator",
+             SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+             WINDOW_WIDTH, WINDOW_WIDTH*3/4, SDL_WINDOW_RESIZABLE);
+-        renderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_PRESENTVSYNC);
++        renderer = SDL_CreateRenderer(screen, -1, SDL_RENDERER_SOFTWARE);
+ 
+         SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");  // make the scaled rendering look smoother.
+         SDL_RenderSetLogicalSize(renderer, 320, 240);
+diff --git a/ioports.cpp b/ioports.cpp
+index 9c3f14f..9295163 100644
+--- a/ioports.cpp
++++ b/ioports.cpp
+@@ -1,5 +1,5 @@
+ #include "mem.h"
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ extern "C" {
+         #include "hw.h"
+ }
+diff --git a/mem.cpp b/mem.cpp
+index fd36d68..4cf0b30 100644
+--- a/mem.cpp
++++ b/mem.cpp
+@@ -10,6 +10,7 @@ extern "C" {
+ #include "vdp.h"
+ #include "cpu.h"
+ #include "ioports.h"
++#include <cstdlib>
+ 
+ uint8_t *ROM;
+ uint8_t RAM[0x10000];
+diff --git a/mem.h b/mem.h
+index 8c96952..6c39fd6 100644
+--- a/mem.h
++++ b/mem.h
+@@ -7,7 +7,7 @@
+ #define MAX(a,b)          ((a)>(b)?(a):(b))
+ #define MIN(a,b)          ((a)<(b)?(a):(b))
+ 
+-#define DISABLE_LOGGING   0
++#define DISABLE_LOGGING   1
+ 
+ void mem_init(int romsize);
+ int load_bin(const char *fn);
+diff --git a/state.cpp b/state.cpp
+index 38bc547..aa70962 100644
+--- a/state.cpp
++++ b/state.cpp
+@@ -3,7 +3,7 @@
+ #include "vdp.h"
+ #include "cpu.h"
+ #include "hw.h"
+-#include <SDL.h>
++#include <SDL2/SDL.h>
+ 
+ extern "C" {
+     #include "m68k/m68k.h"

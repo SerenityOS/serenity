@@ -1,0 +1,15 @@
+endpoint NotificationServer
+{
+    // Basic protocol
+    greet() => ()
+
+    show_notification([UTF8] String text, [UTF8] String title, Gfx::ShareableBitmap icon) => ()
+
+    update_notification_text([UTF8] String text, [UTF8] String title) => (bool still_showing)
+
+    update_notification_icon(Gfx::ShareableBitmap icon) => (bool still_showing)
+
+    is_showing() => (bool still_showing)
+
+    close_notification() => ()
+}

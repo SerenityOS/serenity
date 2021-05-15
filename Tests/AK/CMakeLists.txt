@@ -1,0 +1,70 @@
+set(AK_TEST_SOURCES
+    TestAllOf.cpp
+    TestAnyOf.cpp
+    TestArray.cpp
+    TestAtomic.cpp
+    TestBadge.cpp
+    TestBase64.cpp
+    TestBinaryHeap.cpp
+    TestBinarySearch.cpp
+    TestBitCast.cpp
+    TestBitmap.cpp
+    TestByteBuffer.cpp
+    TestChecked.cpp
+    TestCircularDeque.cpp
+    TestCircularDuplexStream.cpp
+    TestCircularQueue.cpp
+    TestComplex.cpp
+    TestDistinctNumeric.cpp
+    TestDoublyLinkedList.cpp
+    TestEndian.cpp
+    TestEnumBits.cpp
+    TestFind.cpp
+    TestFormat.cpp
+    TestGenericLexer.cpp
+    TestHashFunctions.cpp
+    TestHashMap.cpp
+    TestHashTable.cpp
+    TestHex.cpp
+    TestIPv4Address.cpp
+    TestIndexSequence.cpp
+    TestIntrusiveList.cpp
+    TestIntrusiveRedBlackTree.cpp
+    TestJSON.cpp
+    TestLexicalPath.cpp
+    TestMACAddress.cpp
+    TestMemMem.cpp
+    TestMemoryStream.cpp
+    TestNeverDestroyed.cpp
+    TestNonnullRefPtr.cpp
+    TestNumberFormat.cpp
+    TestOptional.cpp
+    TestQueue.cpp
+    TestQuickSort.cpp
+    TestRedBlackTree.cpp
+    TestRefPtr.cpp
+    TestSinglyLinkedList.cpp
+    TestSourceGenerator.cpp
+    TestSourceLocation.cpp
+    TestSpan.cpp
+    TestString.cpp
+    TestStringUtils.cpp
+    TestStringView.cpp
+    TestTime.cpp
+    TestTrie.cpp
+    TestTuple.cpp
+    TestTypeTraits.cpp
+    TestTypedTransfer.cpp
+    TestURL.cpp
+    TestUtf8.cpp
+    TestVariant.cpp
+    TestVector.cpp
+    TestWeakPtr.cpp
+)
+
+foreach(source ${AK_TEST_SOURCES})
+    serenity_test(${source} AK)
+endforeach()
+
+get_filename_component(TEST_FRM_RESOLVED ./test.frm REALPATH)
+install(FILES ${TEST_FRM_RESOLVED} DESTINATION usr/Tests/AK)

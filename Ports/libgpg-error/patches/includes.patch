@@ -1,0 +1,11 @@
+diff -Naur libgpg-error-1.42/src/mkerrcodes.c libgpg-error-1.42.serenity/src/mkerrcodes.c
+--- libgpg-error-1.42/src/mkerrcodes.c	2016-11-16 13:22:03.000000000 +0100
++++ libgpg-error-1.42.serenity/src/mkerrcodes.c	2021-04-14 01:38:44.112242487 +0200
+@@ -22,6 +22,7 @@
+    system, while this file will be run on the build system.  */
+ 
+ #include <stdio.h>
++#include <errno.h>
+ 
+ #include "mkerrcodes.h"
+ 

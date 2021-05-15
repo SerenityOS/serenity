@@ -1,0 +1,36 @@
+/*
+ * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/VM/PrivateInodeVMObject.h>
+
+namespace Kernel {
+
+NonnullRefPtr<PrivateInodeVMObject> PrivateInodeVMObject::create_with_inode(Inode& inode)
+{
+    return adopt_ref(*new PrivateInodeVMObject(inode, inode.size()));
+}
+
+RefPtr<VMObject> PrivateInodeVMObject::clone()
+{
+    return adopt_ref(*new PrivateInodeVMObject(*this));
+}
+
+PrivateInodeVMObject::PrivateInodeVMObject(Inode& inode, size_t size)
+    : InodeVMObject(inode, size)
+{
+}
+
+PrivateInodeVMObject::PrivateInodeVMObject(const PrivateInodeVMObject& other)
+    : InodeVMObject(other)
+{
+}
+
+PrivateInodeVMObject::~PrivateInodeVMObject()
+{
+}
+
+}

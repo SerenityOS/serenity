@@ -1,0 +1,4 @@
+[App]
+Name=System Monitor
+Executable=/bin/SystemMonitor
+Category=Utilities

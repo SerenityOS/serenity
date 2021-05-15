@@ -1,0 +1,4 @@
+endpoint SymbolClient
+{
+    dummy() =|
+}

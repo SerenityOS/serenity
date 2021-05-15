@@ -1,0 +1,4 @@
+endpoint ClipboardClient
+{
+    clipboard_data_changed([UTF8] String mime_type) =|
+}

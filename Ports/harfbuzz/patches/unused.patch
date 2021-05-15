@@ -1,0 +1,12 @@
+diff -Naur harfbuzz-2.8.1/src/hb-buffer.hh harfbuzz-2.8.1.serenity/src/hb-buffer.hh
+--- harfbuzz-2.8.1/src/hb-buffer.hh	2021-05-04 02:09:38.000000000 +0200
++++ harfbuzz-2.8.1.serenity/src/hb-buffer.hh	2021-05-08 05:22:34.579810445 +0200
+@@ -166,7 +166,7 @@
+ #ifndef HB_NDEBUG
+     unsigned int end = start + count;
+     assert (end <= 8);
+-    unsigned int bits = (1u<<end) - (1u<<start);
++    [[maybe_unused]] unsigned int bits = (1u<<end) - (1u<<start);
+     assert (bits == (allocated_var_bits & bits));
+ #endif
+   }

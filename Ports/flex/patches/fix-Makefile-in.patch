@@ -1,0 +1,11 @@
+--- flex-2.6.4/src/Makefile.in.orig	Thu Jan 23 22:45:32 2020
++++ flex-2.6.4/src/Makefile.in	Thu Jan 23 22:46:15 2020
+@@ -342,7 +342,7 @@
+ LIBINTL = @LIBINTL@
+ LIBOBJS = @LIBOBJS@
+ LIBPTHREAD = @LIBPTHREAD@
+-LIBS = @LIBS@
++LIBS = @LIBS@ -lpcre2-posix -lpcre2-8
+ LIBTOOL = @LIBTOOL@
+ LIPO = @LIPO@
+ LN_S = @LN_S@

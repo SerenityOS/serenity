@@ -1,0 +1,11 @@
+--- bc-2.5.1/include/args.h.orig	Fri Jan 24 19:27:06 2020
++++ bc-2.5.1/include/args.h	Fri Jan 24 19:27:14 2020
+@@ -36,6 +36,8 @@
+ #ifndef BC_ARGS_H
+ #define BC_ARGS_H
+ 
++#include <getopt.h>
++
+ #include <status.h>
+ #include <vm.h>
+ 

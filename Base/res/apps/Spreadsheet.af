@@ -1,0 +1,7 @@
+[App]
+Name=Spreadsheet
+Executable=/bin/Spreadsheet
+Category=Utilities
+
+[Launcher]
+FileTypes=sheets

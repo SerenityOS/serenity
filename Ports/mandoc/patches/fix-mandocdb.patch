@@ -1,0 +1,10 @@
+--- mandoc-1.14.5/mandocdb.c.orig	Sat Jan 25 20:18:09 2020
++++ mandoc-1.14.5/mandocdb.c	Sat Jan 25 20:18:22 2020
+@@ -45,6 +45,7 @@
+ #include <stdlib.h>
+ #include <string.h>
+ #include <unistd.h>
++#include <getopt.h>
+ 
+ #include "mandoc_aux.h"
+ #include "mandoc_ohash.h"

@@ -1,0 +1,28 @@
+endpoint WebContentServer
+{
+    greet() => ()
+
+    update_system_theme(Core::AnonymousBuffer theme_buffer) =|
+    update_screen_rect(Gfx::IntRect rect) =|
+
+    load_url(URL url) =|
+    load_html(String html, URL url) =|
+
+    add_backing_store(i32 backing_store_id, Gfx::ShareableBitmap bitmap) =|
+    remove_backing_store(i32 backing_store_id) =|
+
+    paint(Gfx::IntRect content_rect, i32 backing_store_id) =|
+    set_viewport_rect(Gfx::IntRect rect) =|
+
+    mouse_down(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_move(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_up(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers) =|
+    mouse_wheel(Gfx::IntPoint position, unsigned button, unsigned buttons, unsigned modifiers, i32 wheel_delta) =|
+
+    key_down(i32 key, unsigned modifiers, u32 code_point) =|
+
+    debug_request(String request, String argument) =|
+    get_source() =|
+    js_console_initialize() =|
+    js_console_input(String js_source) =|
+}

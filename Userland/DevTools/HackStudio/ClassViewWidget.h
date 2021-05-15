@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2021, Itamar S. <itamar8910@gmail.com>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/StringView.h>
+#include <AK/Vector.h>
+#include <LibGUI/AutocompleteProvider.h>
+#include <LibGUI/TreeView.h>
+#include <LibGUI/Widget.h>
+
+namespace HackStudio {
+
+class ClassViewWidget final : public GUI::Widget {
+    C_OBJECT(ClassViewWidget)
+public:
+    virtual ~ClassViewWidget() override { }
+    ClassViewWidget();
+
+    void refresh();
+
+private:
+    RefPtr<GUI::TreeView> m_class_tree;
+};
+
+// Note: A ClassViewNode stores a raw pointer to the Declaration from ProjectDeclarations and a StringView into its name.
+// We should take care to update the ClassViewModel whenever the declarations change, because otherwise we may be holding pointers to freed memory.
+// This is currently achieved with the on_update callback of ProjectDeclarations.
+struct ClassViewNode {
+    StringView name;
+    const GUI::AutocompleteProvider::Declaration* declaration { nullptr };
+    NonnullOwnPtrVector<ClassViewNode> children;
+    ClassViewNode* parent { nullptr };
+
+    explicit ClassViewNode(const StringView& name)
+        : name(name) {};
+};
+
+class ClassViewModel final : public GUI::Model {
+public:
+    static RefPtr<ClassViewModel> create();
+    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override;
+    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
+    virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole role) const override;
+    virtual void update() override { did_update(); }
+    virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
+    virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& parent_index = GUI::ModelIndex()) const override;
+
+private:
+    explicit ClassViewModel();
+    void add_declaration(const GUI::AutocompleteProvider::Declaration&);
+    NonnullOwnPtrVector<ClassViewNode> m_root_scope;
+};
+
+}

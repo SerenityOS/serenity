@@ -1,0 +1,10 @@
+--- diffutils-3.5/build-aux/config.sub.orig	Sat Jan 25 19:30:30 2020
++++ diffutils-3.5/build-aux/config.sub	Sat Jan 25 19:30:39 2020
+@@ -1382,6 +1382,7 @@
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \

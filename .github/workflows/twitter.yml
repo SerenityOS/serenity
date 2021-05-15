@@ -1,0 +1,24 @@
+name: Twitter notifications
+
+on: [ push ]
+
+jobs:
+  notify_twitter:
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node_version: '14'
+      - run: npm i twit
+      - run: |
+          node ${{ github.workspace }}/Meta/tweet-commits.js << EOF
+          ${{ toJSON(github.event) }}
+          EOF
+        env:
+          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+          CONSUMER_SECRET: ${{ secrets.CONSUMER_SECRET }}
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          ACCESS_TOKEN_SECRET: ${{ secrets.ACCESS_TOKEN_SECRET }}

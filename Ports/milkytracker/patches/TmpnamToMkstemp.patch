@@ -1,0 +1,11 @@
+--- MilkyTracker-1.03.00/src/ppui/osinterface/posix/PPSystem_POSIX.cpp	2021-04-27 15:17:42.529000000 +1000
++++ MilkyTracker-1.03.00/src/ppui/osinterface/posix/PPSystem_POSIX.cpp	2021-04-27 15:17:42.529000000 +1000
+@@ -67,7 +69,7 @@
+ 	// instead of a file name.
+ #pragma clang diagnostic push
+ #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+-	if ((tmpnam(buffer) == NULL))
++	if ((mkstemp(buffer) == NULL))
+ #pragma clang diagnostic pop
+ 	{
+ 		// should not be the case, if it is the case, create something that

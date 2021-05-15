@@ -1,0 +1,4 @@
+[App]
+Name=File Manager
+Executable=/bin/FileManager
+Category=Utilities

@@ -1,0 +1,21 @@
+endpoint AudioServer
+{
+    // Basic protocol
+    greet() => ()
+
+    // Mixer functions
+    set_muted(bool muted) => ()
+    get_muted() => (bool muted)
+    get_main_mix_volume() => (i32 volume)
+    set_main_mix_volume(i32 volume) => ()
+
+    // Buffer playback
+    enqueue_buffer(Core::AnonymousBuffer buffer, i32 buffer_id, int sample_count) => (bool success)
+    set_paused(bool paused) => ()
+    clear_buffer(bool paused) => ()
+
+    //Buffer information
+    get_remaining_samples() => (int remaining_samples)
+    get_played_samples() => (int played_samples)
+    get_playing_buffer() => (i32 buffer_id)
+}

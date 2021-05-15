@@ -1,0 +1,133 @@
+interface Document : Node {
+
+    constructor();
+
+    readonly attribute DOMImplementation implementation;
+
+    readonly attribute DOMString characterSet;
+    readonly attribute DOMString charset;
+    readonly attribute DOMString inputEncoding;
+    readonly attribute DOMString contentType;
+
+    readonly attribute Window? defaultView;
+
+    attribute DOMString cookie;
+
+    Element? getElementById(DOMString id);
+    HTMLCollection getElementsByName(DOMString name);
+    HTMLCollection getElementsByTagName(DOMString tagName);
+    HTMLCollection getElementsByClassName(DOMString className);
+
+    readonly attribute HTMLCollection applets;
+    readonly attribute HTMLCollection anchors;
+    readonly attribute HTMLCollection images;
+    readonly attribute HTMLCollection embeds;
+    readonly attribute HTMLCollection plugins;
+    readonly attribute HTMLCollection links;
+    readonly attribute HTMLCollection forms;
+    readonly attribute HTMLCollection scripts;
+
+    Element createElement(DOMString tagName);
+    Element createElementNS(DOMString? namespace, DOMString qualifiedName);
+    DocumentFragment createDocumentFragment();
+    Text createTextNode(DOMString data);
+    Comment createComment(DOMString data);
+    Range createRange();
+    Event createEvent(DOMString interface);
+
+    [CEReactions, ImplementedAs=adopt_node_binding] Node adoptNode(Node node);
+
+    [ImplementedAs=style_sheets_for_bindings] readonly attribute StyleSheetList styleSheets;
+
+    readonly attribute DOMString compatMode;
+    readonly attribute DocumentType? doctype;
+
+    readonly attribute Element? documentElement;
+    attribute HTMLElement? body;
+    readonly attribute HTMLHeadElement? head;
+    readonly attribute HTMLScriptElement? currentScript;
+
+    readonly attribute DOMString readyState;
+
+    attribute DOMString title;
+
+    // FIXME: These should all come from a ParentNode mixin
+    readonly attribute Element? firstElementChild;
+    readonly attribute Element? lastElementChild;
+    readonly attribute unsigned long childElementCount;
+
+    Element? querySelector(DOMString selectors);
+    ArrayFromVector querySelectorAll(DOMString selectors);
+
+    // FIXME: These should all come from a GlobalEventHandlers mixin
+    attribute EventHandler onabort;
+    attribute EventHandler onauxclick;
+    attribute EventHandler onblur;
+    attribute EventHandler oncancel;
+    attribute EventHandler oncanplay;
+    attribute EventHandler oncanplaythrough;
+    attribute EventHandler onchange;
+    attribute EventHandler onclick;
+    attribute EventHandler onclose;
+    attribute EventHandler oncontextmenu;
+    attribute EventHandler oncuechange;
+    attribute EventHandler ondblclick;
+    attribute EventHandler ondrag;
+    attribute EventHandler ondragend;
+    attribute EventHandler ondragenter;
+    attribute EventHandler ondragleave;
+    attribute EventHandler ondragover;
+    attribute EventHandler ondragstart;
+    attribute EventHandler ondrop;
+    attribute EventHandler ondurationchange;
+    attribute EventHandler onemptied;
+    attribute EventHandler onended;
+
+    // FIXME: Should be an OnErrorEventHandler
+    attribute EventHandler onerror;
+
+    attribute EventHandler onfocus;
+    attribute EventHandler onformdata;
+    attribute EventHandler oninput;
+    attribute EventHandler oninvalid;
+    attribute EventHandler onkeydown;
+    attribute EventHandler onkeypress;
+    attribute EventHandler onkeyup;
+    attribute EventHandler onload;
+    attribute EventHandler onloadeddata;
+    attribute EventHandler onloadedmetadata;
+    attribute EventHandler onloadstart;
+    attribute EventHandler onmousedown;
+    [LegacyLenientThis] attribute EventHandler onmouseenter;
+    [LegacyLenientThis] attribute EventHandler onmouseleave;
+    attribute EventHandler onmousemove;
+    attribute EventHandler onmouseout;
+    attribute EventHandler onmouseover;
+    attribute EventHandler onmouseup;
+    attribute EventHandler onpause;
+    attribute EventHandler onplay;
+    attribute EventHandler onplaying;
+    attribute EventHandler onprogress;
+    attribute EventHandler onratechange;
+    attribute EventHandler onreset;
+    attribute EventHandler onresize;
+    attribute EventHandler onscroll;
+    attribute EventHandler onsecuritypolicyviolation;
+    attribute EventHandler onseeked;
+    attribute EventHandler onseeking;
+    attribute EventHandler onselect;
+    attribute EventHandler onslotchange;
+    attribute EventHandler onstalled;
+    attribute EventHandler onsubmit;
+    attribute EventHandler onsuspend;
+    attribute EventHandler ontimeupdate;
+    attribute EventHandler ontoggle;
+    attribute EventHandler onvolumechange;
+    attribute EventHandler onwaiting;
+    attribute EventHandler onwebkitanimationend;
+    attribute EventHandler onwebkitanimationiteration;
+    attribute EventHandler onwebkitanimationstart;
+    attribute EventHandler onwebkittransitionend;
+    attribute EventHandler onwheel;
+
+};

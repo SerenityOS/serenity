@@ -1,0 +1,8 @@
+interface MouseEvent : Event {
+
+    readonly attribute double offsetX;
+    readonly attribute double offsetY;
+    readonly attribute double clientX;
+    readonly attribute double clientY;
+
+};

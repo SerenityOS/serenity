@@ -1,0 +1,6 @@
+endpoint LanguageClient
+{
+    auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> suggestions) =|
+    declaration_location(GUI::AutocompleteProvider::ProjectLocation location) =|
+    declarations_in_document(String filename, Vector<GUI::AutocompleteProvider::Declaration> declarations) =|
+}

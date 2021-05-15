@@ -1,0 +1,234 @@
+html {
+    font-family: sans-serif;
+}
+
+a {
+    cursor: pointer;
+}
+
+head,
+link,
+meta,
+script,
+style,
+title {
+    display: none;
+}
+
+body {
+    margin: 8px;
+}
+
+h1,
+h2 {
+    font-family: Pebbleton;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+h3,
+h4,
+h5,
+h6 {
+    font-weight: bold;
+}
+
+pre {
+    font-family: monospace;
+    margin-bottom: 8px;
+    margin-top: 8px;
+    white-space: pre;
+}
+
+code {
+    font-family: monospace;
+}
+
+u,
+ins {
+    text-decoration: underline;
+}
+
+strong,
+b {
+    font-weight: bold;
+}
+
+html,
+address,
+blockquote,
+body,
+dd,
+div,
+dl,
+dt,
+fieldset,
+form,
+frame,
+frameset,
+hgroup,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+noframes,
+ol,
+p,
+ul,
+center,
+dir,
+hr,
+menu,
+pre,
+header,
+footer,
+nav,
+main,
+article,
+aside,
+section {
+    display: block;
+}
+
+center {
+    text-align: -libweb-center;
+}
+
+h1,
+h2,
+h3 {
+    margin: 8px 0 8px 0;
+}
+
+h4,
+p,
+blockquote,
+ul,
+fieldset,
+form,
+ol,
+dl,
+dir,
+menu {
+    margin: 4px 0 4px 0;
+}
+
+h5,
+h6 {
+    margin: 2px 0 2px 0;
+}
+
+li {
+    display: list-item;
+    margin-left: 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+}
+
+a:link {
+    color: -libweb-link;
+    text-decoration: underline;
+}
+
+a:hover {
+    color: red;
+}
+
+hr {
+    margin-top: 0.5em;
+    margin-bottom: 0.5em;
+    border: 1px inset #888888;
+}
+
+blink {
+    display: inline;
+}
+
+table {
+    display: table;
+}
+
+thead {
+    display: table-header-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tbody {
+    display: table-row-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tfoot {
+    display: table-footer-group;
+    vertical-align: middle;
+    border-color: inherit;
+}
+
+tr {
+    display: table-row;
+}
+
+td,
+th {
+    display: table-cell;
+}
+
+col {
+    display: table-column;
+}
+
+colgroup {
+    display: table-column-group;
+}
+
+basefont {
+    display: block;
+}
+
+blockquote {
+    margin-left: 25px;
+    margin-right: 25px;
+}
+
+ul,
+ol {
+    padding-left: 20px;
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+/* FIXME: Implement these using :is() :^) */
+/* :is(ul, ol) ul */
+ul ul,
+ol ul {
+    list-style-type: circle;
+}
+
+/* :is(ul, ol) :is(ul, ol) ul */
+ul ul ul,
+ol ul ul,
+ul ol ul,
+ol ol ul {
+    list-style-type: square;
+}
+
+/* FIXME: This is a temporary hack until we can render a native-looking frame for these. */
+input[type=text] {
+    border: 1px solid black;
+    min-width: 80px;
+    min-height: 16px;
+}
+
+option {
+    display: none;
+}

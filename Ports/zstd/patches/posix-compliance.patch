@@ -1,0 +1,15 @@
+--- zstd-1.4.4/programs/platform.h.orig	Sat Mar 14 15:22:06 2020
++++ zstd-1.4.4/programs/platform.h	Sat Mar 14 15:22:41 2020
+@@ -97,7 +97,11 @@
+ #    endif
+ #    include <unistd.h>  /* declares _POSIX_VERSION */
+ #    if defined(_POSIX_VERSION)  /* POSIX compliant */
+-#      define PLATFORM_POSIX_VERSION _POSIX_VERSION
++#      if defined(__serenity__)
++#        define PLATFORM_POSIX_VERSION 1
++#      else
++#        define PLATFORM_POSIX_VERSION _POSIX_VERSION
++#      endif
+ #    else
+ #      define PLATFORM_POSIX_VERSION 1
+ #    endif

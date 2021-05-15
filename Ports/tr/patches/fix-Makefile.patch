@@ -1,0 +1,12 @@
+--- tr-6.7/Makefile.orig	Sun May 10 10:31:10 2020
++++ tr-6.7/Makefile	Sun May 10 10:31:45 2020
+@@ -6,5 +6,9 @@
+ all: ${OBJS}
+ 	${CC} ${LDFLAGS} -o ${PROG} ${OBJS} -L/usr/local/lib -lpuffy
+ 
++install:
++	install -c -m 755 tr ${DESTDIR}/usr/local/bin
++	install -c -m 644 tr.1 ${DESTDIR}/usr/local/share/man/man1
++
+ clean:
+ 	rm -f ${PROG} ${OBJS}

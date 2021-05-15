@@ -1,0 +1,8 @@
+interface HTMLOListElement : HTMLElement {
+
+    [Reflect] attribute boolean reversed;
+    [Reflect] attribute DOMString type;
+
+    [Reflect] attribute boolean compact;
+
+};

@@ -1,0 +1,17 @@
+diff -Naur libpuffy-1.0/fmt_scaled.c libpuffy-1.0.serenity/fmt_scaled.c
+--- libpuffy-1.0/fmt_scaled.c	2020-03-14 21:04:34.000000000 +0100
++++ libpuffy-1.0.serenity/fmt_scaled.c	2021-05-01 22:39:53.429380002 +0200
+@@ -207,11 +207,13 @@
+ 	return -1;
+ }
+ 
++#ifndef __serenity__
+ static long long
+ llabs(long long j)
+ {
+ 	return (j < 0 ? -j : j);
+ }
++#endif
+ 
+ /* Format the given "number" into human-readable form in "result".
+  * Result must point to an allocated buffer of length FMT_SCALED_STRSIZE.
