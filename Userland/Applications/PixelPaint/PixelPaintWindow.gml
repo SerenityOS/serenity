@@ -61,4 +61,8 @@
             }
         }
     }
+
+    @GUI::Statusbar {
+        name: "statusbar"
+    }
 }
