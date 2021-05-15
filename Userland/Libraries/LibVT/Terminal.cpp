@@ -39,62 +39,52 @@ void Terminal::clear_including_history()
     m_client.terminal_history_changed();
 }
 
-void Terminal::alter_mode(bool should_set, bool question_param, Parameters params)
+void Terminal::alter_mode(bool should_set, Parameters params, Intermediates intermediates)
 {
-    int mode = 2;
-    if (params.size() > 0) {
-        mode = params[0];
-    }
-    if (!question_param) {
-        switch (mode) {
-        // FIXME: implement *something* for this
-        default:
-            dbgln("Terminal::alter_mode: Unimplemented mode {} (set={})", mode, should_set);
-            break;
+    if (intermediates.size() > 0 && intermediates[0] == '?') {
+        for (auto mode : params) {
+            switch (mode) {
+            case 3: {
+                // 80/132-column mode (DECCOLM)
+                unsigned new_columns = should_set ? 80 : 132;
+                dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
+                set_size(new_columns, rows());
+                clear();
+                break;
+            }
+            case 25:
+                // Hide cursor command, but doesn't need to be run (for now, because
+                // we don't do inverse control codes anyways)
+                if (should_set)
+                    dbgln("Terminal: Hide Cursor escapecode received. Not needed: ignored.");
+                else
+                    dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
+                break;
+            default:
+                dbgln("Terminal::alter_mode: Unimplemented private mode {}", mode);
+                break;
+            }
         }
     } else {
-        switch (mode) {
-        case 3: {
-            // 80/132-column mode (DECCOLM)
-            unsigned new_columns = should_set ? 80 : 132;
-            dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
-            set_size(new_columns, rows());
-            clear();
-            break;
-        }
-        case 25:
-            // Hide cursor command, but doesn't need to be run (for now, because
-            // we don't do inverse control codes anyways)
-            if (should_set)
-                dbgln("Terminal: Hide Cursor escapecode received. Not needed: ignored.");
-            else
-                dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
-            break;
-        default:
-            dbgln("Terminal::alter_mode: Unimplemented private mode {}", mode);
-            break;
+        for (auto mode : params) {
+            switch (mode) {
+            // FIXME: implement *something* for this
+            default:
+                dbgln("Terminal::alter_mode: Unimplemented mode {} (set={})", mode, should_set);
+                break;
+            }
         }
     }
 }
 
-void Terminal::RM(Parameters params)
+void Terminal::RM(Parameters params, Intermediates intermediates)
 {
-    bool question_param = false;
-    if (params.size() > 0 && params[0] == '?') {
-        question_param = true;
-        params = params.slice(1);
-    }
-    alter_mode(true, question_param, params);
+    alter_mode(true, params, intermediates);
 }
 
-void Terminal::SM(Parameters params)
+void Terminal::SM(Parameters params, Intermediates intermediates)
 {
-    bool question_param = false;
-    if (params.size() > 0 && params[0] == '?') {
-        question_param = true;
-        params = params.slice(1);
-    }
-    alter_mode(false, question_param, params);
+    alter_mode(false, params, intermediates);
 }
 
 void Terminal::SGR(Parameters params)
@@ -804,10 +794,10 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
         DECSTBM(parameters);
         break;
     case 'l':
-        RM(parameters);
+        RM(parameters, intermediates);
         break;
     case 'h':
-        SM(parameters);
+        SM(parameters, intermediates);
         break;
     case 'c':
         DA(parameters);
