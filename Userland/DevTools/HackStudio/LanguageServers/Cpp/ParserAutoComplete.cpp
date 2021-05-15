@@ -63,32 +63,56 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
         return {};
 
     const auto& document = *document_ptr;
+    auto containing_token = document.parser().token_at(position);
     auto node = document.parser().node_at(position);
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
         return {};
     }
 
-    if (node->is_identifier()) {
-        if (is_property(*node)) {
-            return autocomplete_property(document, (MemberExpression&)(*node->parent()), document.parser().text_of_node(*node));
-        }
+    if (node->parent() && node->parent()->parent())
+        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "node: {}, parent: {}, grandparent: {}", node->class_name(), node->parent()->class_name(), node->parent()->parent()->class_name());
 
-        return autocomplete_name(document, *node, document.parser().text_of_node(*node));
+    if (!node->parent())
+        return {};
+
+    auto results = autocomplete_property(document, *node, containing_token);
+    if (results.has_value())
+        return results.value();
+
+    results = autocomplete_name(document, *node, containing_token);
+    if (results.has_value())
+        return results.value();
+    return {};
+}
+
+Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+{
+    auto partial_text = String::empty();
+    if (containing_token.has_value() && containing_token.value().type() != Token::Type::ColonColon) {
+        partial_text = containing_token.value().text();
+    }
+    return autocomplete_name(document, node, partial_text);
+}
+
+Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocomplete_property(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+{
+    if (!containing_token.has_value())
+        return {};
+
+    if (!node.parent()->is_member_expression())
+        return {};
+
+    const auto& parent = static_cast<const MemberExpression&>(*node.parent());
+
+    auto partial_text = String::empty();
+    if (containing_token.value().type() != Token::Type::Dot) {
+        if (&node != parent.m_property)
+            return {};
+        partial_text = containing_token.value().text();
     }
 
-    if (is_empty_property(document, *node, position)) {
-        VERIFY(node->parent()->is_member_expression());
-        return autocomplete_property(document, (MemberExpression&)(*node->parent()), "");
-    }
-
-    String partial_text = String::empty();
-    auto containing_token = document.parser().token_at(position);
-    if (containing_token.has_value()) {
-        partial_text = document.parser().text_of_token(containing_token.value());
-    }
-
-    return autocomplete_name(document, *node, partial_text.view());
+    return autocomplete_property(document, parent, partial_text);
 }
 
 NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(const DocumentData& document, const ASTNode& node, RecurseIntoScopes recurse_into_scopes) const
@@ -106,28 +130,38 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(
 
 Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const String& partial_text) const
 {
+    auto target_scope = scope_of_name_or_identifier(node);
+
     auto available_declarations = get_available_declarations(document, node, RecurseIntoScopes::No);
+
     Vector<StringView> available_names;
-    auto add_name = [&available_names](auto& name) {
+    auto add_if_valid = [this, &available_names, &target_scope](auto& decl) {
+        auto name = decl.m_name;
         if (name.is_null() || name.is_empty())
+            return;
+        auto scope = scope_of_declaration(decl);
+        if (scope.is_null())
+            scope = String::empty();
+        if (scope != target_scope)
             return;
         if (!available_names.contains_slow(name))
             available_names.append(name);
     };
+
     for (auto& decl : available_declarations) {
         if (decl.filename() == node.filename() && decl.start().line > node.start().line)
             continue;
         if (decl.is_variable_or_parameter_declaration()) {
-            add_name(((Cpp::VariableOrParameterDeclaration&)decl).m_name);
+            add_if_valid(decl);
         }
         if (decl.is_struct_or_class()) {
-            add_name(((Cpp::StructOrClassDeclaration&)decl).m_name);
+            add_if_valid(decl);
         }
         if (decl.is_function()) {
-            add_name(((Cpp::FunctionDeclaration&)decl).m_name);
+            add_if_valid(decl);
         }
         if (decl.is_namespace()) {
-            add_name(((Cpp::NamespaceDeclaration&)decl).m_name);
+            add_if_valid(decl);
         }
     }
 
@@ -138,13 +172,38 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
         }
     }
 
-    for (auto& preprocessor_name : document.parser().preprocessor_definitions().keys()) {
-        if (preprocessor_name.starts_with(partial_text)) {
-            suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
+    if (target_scope.is_empty()) {
+        for (auto& preprocessor_name : document.parser().preprocessor_definitions().keys()) {
+            if (preprocessor_name.starts_with(partial_text)) {
+                suggestions.append({ preprocessor_name.to_string(), partial_text.length(), GUI::AutocompleteProvider::CompletionKind::PreprocessorDefinition });
+            }
         }
     }
 
     return suggestions;
+}
+
+String ParserAutoComplete::scope_of_name_or_identifier(const ASTNode& node) const
+{
+    const Name* name = nullptr;
+    if (node.is_name()) {
+        name = reinterpret_cast<const Name*>(&node);
+    } else if (node.is_identifier()) {
+        auto* parent = node.parent();
+        if (!(parent && parent->is_name()))
+            return {};
+        name = reinterpret_cast<const Name*>(parent);
+    } else {
+        return String::empty();
+    }
+
+    VERIFY(name->is_name());
+
+    Vector<StringView> scope_parts;
+    for (auto& scope_part : name->m_scope) {
+        scope_parts.append(scope_part.m_name);
+    }
+    return String::join("::", scope_parts);
 }
 
 Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_property(const DocumentData& document, const MemberExpression& parent, const String partial_text) const
@@ -507,7 +566,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     return document_data;
 }
 
-String ParserAutoComplete::scope_of_declaration(const Declaration& decl)
+String ParserAutoComplete::scope_of_declaration(const Declaration& decl) const
 {
     auto parent = decl.parent();
     if (!parent)
