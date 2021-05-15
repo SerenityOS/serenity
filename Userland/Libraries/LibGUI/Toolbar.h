@@ -16,7 +16,7 @@ class Toolbar : public Widget {
 public:
     virtual ~Toolbar() override;
 
-    void add_action(Action&);
+    GUI::Button& add_action(GUI::Action&);
     void add_separator();
 
     bool has_frame() const { return m_has_frame; }

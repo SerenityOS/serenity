@@ -88,7 +88,7 @@ private:
     }
 };
 
-void Toolbar::add_action(Action& action)
+GUI::Button& Toolbar::add_action(Action& action)
 {
     auto item = make<Item>();
     item->type = Item::Type::Action;
@@ -98,6 +98,7 @@ void Toolbar::add_action(Action& action)
     button.set_fixed_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
+    return button;
 }
 
 void Toolbar::add_separator()
