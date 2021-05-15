@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.set_fill_with_background_color(true);
 
-    Game game { board_size, target_tile };
+    Game game { board_size, target_tile, evil_ai };
 
     auto& board_view = main_widget.add<BoardView>(&game.board());
     board_view.set_focus(true);
@@ -123,7 +123,7 @@ int main(int argc, char** argv)
         undo_stack.clear();
         redo_stack.clear();
 
-        game = Game(board_size, target_tile);
+        game = Game(board_size, target_tile, evil_ai);
 
         // This ensures that the sizes are correct.
         board_view.set_board(nullptr);
