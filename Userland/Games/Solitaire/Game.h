@@ -12,6 +12,11 @@
 
 namespace Solitaire {
 
+enum class Mode {
+    SingleCardDraw,
+    ThreeCardDraw,
+};
+
 class Game final : public GUI::Frame {
     C_OBJECT(Game)
 public:
@@ -19,7 +24,9 @@ public:
     static constexpr int height = 480;
 
     virtual ~Game() override;
-    void setup();
+
+    Mode mode() const { return m_mode; }
+    void setup(Mode);
 
     Function<void(uint32_t)> on_score_update;
     Function<void()> on_game_start;
@@ -120,6 +127,8 @@ private:
     virtual void doubleclick_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+
+    Mode m_mode { Mode::SingleCardDraw };
 
     NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;

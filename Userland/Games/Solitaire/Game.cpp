@@ -93,9 +93,10 @@ void Game::stop_game_over_animation()
     stop_timer();
 }
 
-void Game::setup()
+void Game::setup(Mode mode)
 {
     stop_game_over_animation();
+    m_mode = mode;
 
     if (on_game_end)
         on_game_end();
@@ -178,8 +179,30 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     update_score(-100);
                     update(stock.bounding_box());
                 } else {
+                    auto play_bounding_box = play.bounding_box();
                     play.move_to_stack(waste);
-                    move_card(stock, play);
+
+                    size_t cards_to_draw = 0;
+                    switch (m_mode) {
+                    case Mode::SingleCardDraw:
+                        cards_to_draw = 1;
+                        break;
+                    case Mode::ThreeCardDraw:
+                        cards_to_draw = 3;
+                        break;
+                    }
+
+                    update(stock.bounding_box());
+
+                    for (size_t i = 0; (i < cards_to_draw) && !stock.is_empty(); ++i) {
+                        auto card = stock.pop();
+                        play.push(move(card));
+                    }
+
+                    if (play.bounding_box().size().width() > play_bounding_box.size().width())
+                        update(play.bounding_box());
+                    else
+                        update(play_bounding_box);
                 }
             } else if (!to_check.is_empty()) {
                 auto& top_card = to_check.peek();
@@ -290,7 +313,7 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 
     if (m_game_over_animation) {
         start_game_over_animation();
-        setup();
+        setup(mode());
         return;
     }
 
