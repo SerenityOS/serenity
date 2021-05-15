@@ -199,23 +199,28 @@ int main(int argc, char** argv)
     edit_menu.add_action(redo_action);
 
     auto& view_menu = menubar->add_menu("&View");
-    view_menu.add_action(GUI::Action::create(
-        "Zoom &In", { Mod_Ctrl, Key_Equal }, [&](auto&) {
+
+    auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
+        [&](auto&) {
             image_editor.scale_by(0.1f);
         },
-        window));
+        window);
 
-    view_menu.add_action(GUI::Action::create(
-        "Zoom &Out", { Mod_Ctrl, Key_Minus }, [&](auto&) {
+    auto zoom_out_action = GUI::CommonActions::make_zoom_out_action(
+        [&](auto&) {
             image_editor.scale_by(-0.1f);
         },
-        window));
+        window);
 
-    view_menu.add_action(GUI::Action::create(
-        "&Reset Zoom", { Mod_Ctrl, Key_0 }, [&](auto&) {
+    auto reset_zoom_action = GUI::CommonActions::make_reset_zoom_action(
+        [&](auto&) {
             image_editor.reset_scale_and_position();
         },
-        window));
+        window);
+
+    view_menu.add_action(zoom_in_action);
+    view_menu.add_action(zoom_out_action);
+    view_menu.add_action(reset_zoom_action);
 
     auto& tool_menu = menubar->add_menu("&Tool");
     toolbox.for_each_tool([&](auto& tool) {
