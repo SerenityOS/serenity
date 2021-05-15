@@ -77,8 +77,10 @@ UNMAP_AFTER_INIT void UHCIController::detect()
             return;
 
         if (PCI::get_class(address) == 0xc && PCI::get_subclass(address) == 0x03 && PCI::get_programming_interface(address) == 0) {
-            if (!s_the)
+            if (!s_the) {
                 s_the = new UHCIController(address, id);
+                s_the->spawn_port_proc();
+            }
         }
     });
 }
@@ -93,8 +95,6 @@ UNMAP_AFTER_INIT UHCIController::UHCIController(PCI::Address address, PCI::ID id
 
     reset();
     start();
-
-    spawn_port_proc();
 }
 
 UNMAP_AFTER_INIT UHCIController::~UHCIController()
@@ -134,7 +134,7 @@ void UHCIController::reset()
 
 UNMAP_AFTER_INIT void UHCIController::create_structures()
 {
-    // Let's allocate memory for botht the QH and TD pools
+    // Let's allocate memory for both the QH and TD pools
     // First the QH pool and all of the Interrupt QH's
     auto qh_pool_vmobject = ContiguousVMObject::create_with_size(2 * PAGE_SIZE);
     m_qh_pool = MemoryManager::the().allocate_kernel_region_with_vmobject(*qh_pool_vmobject, 2 * PAGE_SIZE, "UHCI Queue Head Pool", Region::Access::Write);
