@@ -27,36 +27,8 @@ void Box::paint(PaintContext& context, PaintPhase phase)
     auto padded_rect = this->padded_rect();
 
     if (phase == PaintPhase::Background) {
-        // If the body's background properties were propagated to the root element, do no re-paint the body's background.
-        if (is_body() && document().html_element()->should_use_body_background_properties())
-            return;
 
-        Gfx::IntRect background_rect;
-
-        Color background_color = computed_values().background_color();
-        const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
-        CSS::Repeat background_repeat_x = computed_values().background_repeat_x();
-        CSS::Repeat background_repeat_y = computed_values().background_repeat_y();
-
-        if (is_root_element()) {
-            // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
-            background_rect = context.viewport_rect();
-
-            // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
-            // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
-            if (document().html_element()->should_use_body_background_properties()) {
-                background_color = document().background_color(context.palette());
-                background_image = document().background_image();
-                background_repeat_x = document().background_repeat_x();
-                background_repeat_y = document().background_repeat_y();
-            }
-        } else {
-            background_rect = enclosing_int_rect(padded_rect);
-        }
-
-        context.painter().fill_rect(background_rect, move(background_color));
-        if (background_image)
-            paint_background_image(context, *background_image, background_repeat_x, background_repeat_y, move(background_rect));
+        paint_background(context);
     }
 
     if (phase == PaintPhase::Border) {
@@ -90,6 +62,41 @@ void Box::paint_border(PaintContext& context)
     Painting::paint_border(context, Painting::BorderEdge::Right, bordered_rect, computed_values());
     Painting::paint_border(context, Painting::BorderEdge::Top, bordered_rect, computed_values());
     Painting::paint_border(context, Painting::BorderEdge::Bottom, bordered_rect, computed_values());
+}
+
+void Box::paint_background(PaintContext& context)
+{
+    auto padded_rect = this->padded_rect();
+    // If the body's background properties were propagated to the root element, do no re-paint the body's background.
+    if (is_body() && document().html_element()->should_use_body_background_properties())
+        return;
+
+    Gfx::IntRect background_rect;
+
+    Color background_color = computed_values().background_color();
+    const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
+    CSS::Repeat background_repeat_x = computed_values().background_repeat_x();
+    CSS::Repeat background_repeat_y = computed_values().background_repeat_y();
+
+    if (is_root_element()) {
+        // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
+        background_rect = context.viewport_rect();
+
+        // Section 2.11.2: If the computed value of background-image on the root element is none and its background-color is transparent,
+        // user agents must instead propagate the computed values of the background properties from that element’s first HTML BODY child element.
+        if (document().html_element()->should_use_body_background_properties()) {
+            background_color = document().background_color(context.palette());
+            background_image = document().background_image();
+            background_repeat_x = document().background_repeat_x();
+            background_repeat_y = document().background_repeat_y();
+        }
+    } else {
+        background_rect = enclosing_int_rect(padded_rect);
+    }
+
+    context.painter().fill_rect(background_rect, move(background_color));
+    if (background_image)
+        paint_background_image(context, *background_image, background_repeat_x, background_repeat_y, move(background_rect));
 }
 
 void Box::paint_background_image(
@@ -226,5 +233,4 @@ float Box::width_of_logical_containing_block() const
     VERIFY(containing_block);
     return containing_block->width();
 }
-
 }
