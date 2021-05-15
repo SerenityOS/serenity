@@ -5,8 +5,8 @@
  */
 
 #include <AK/Format.h>
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/Panic.h>
 #include <Kernel/UBSanitizer.h>
 
 using namespace Kernel;
@@ -24,8 +24,10 @@ static void print_location(const SourceLocation& location)
         dbgln("KUBSAN: at {}, line {}, column: {}", location.filename(), location.line(), location.column());
     }
     dump_backtrace();
-    if (g_ubsan_is_deadly)
-        PANIC("UB is configured to be deadly.");
+    if (g_ubsan_is_deadly) {
+        dbgln("UB is configured to be deadly, halting the system.");
+        Processor::halt();
+    }
 }
 
 void __ubsan_handle_load_invalid_value(const InvalidValueData&, ValueHandle) __attribute__((used));
