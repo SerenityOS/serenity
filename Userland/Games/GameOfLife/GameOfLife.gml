@@ -48,6 +48,11 @@
                 max: 5000
                 fixed_width: 60
             }
+
+            @GUI::Label {
+                text: " ms"
+                autosize: true
+            }
         }
     }
 
