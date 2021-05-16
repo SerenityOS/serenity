@@ -256,6 +256,15 @@ bool HexEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    auto result = GUI::MessageBox::show(window(), "The file has been modified. Quit without saving?", "Quit without saving?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-    return result == GUI::MessageBox::ExecOK;
+    auto result = GUI::MessageBox::show(window(), "The file has been modified. Would you like to save?" , "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    if (result == GUI::Dialog::ExecResult::ExecYes)
+    {
+        m_save_action->activate();
+        return true;
+    }
+
+    if (result == GUI::Dialog::ExecResult::ExecNo)
+        return true;
+    
+    return false;
 }
