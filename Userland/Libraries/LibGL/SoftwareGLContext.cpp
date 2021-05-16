@@ -688,6 +688,11 @@ void SoftwareGLContext::gl_enable(GLenum capability)
         rasterizer_options.enable_blending = true;
         update_rasterizer_options = true;
         break;
+    case GL_ALPHA_TEST:
+        m_alpha_test_enabled = true;
+        rasterizer_options.enable_alpha_test = true;
+        update_rasterizer_options = true;
+        break;
     default:
         m_error = GL_INVALID_ENUM;
         break;
@@ -721,6 +726,11 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_BLEND:
         m_blend_enabled = false;
         rasterizer_options.enable_blending = false;
+        update_rasterizer_options = false;
+        break;
+    case GL_ALPHA_TEST:
+        m_alpha_test_enabled = false;
+        rasterizer_options.enable_alpha_test = false;
         update_rasterizer_options = false;
         break;
     default:
@@ -943,6 +953,29 @@ void SoftwareGLContext::gl_shade_model(GLenum mode)
 
     auto options = m_rasterizer.options();
     options.shade_smooth = (mode == GL_SMOOTH);
+    m_rasterizer.set_options(options);
+}
+
+void SoftwareGLContext::gl_alpha_func(GLenum func, GLclampf ref)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_alpha_func, func, ref);
+
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (func < GL_NEVER || func > GL_ALWAYS) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    m_alpha_test_func = func;
+    m_alpha_test_ref_value = ref;
+
+    auto options = m_rasterizer.options();
+    options.alpha_test_func = m_alpha_test_func;
+    options.alpha_test_ref_value = m_alpha_test_ref_value;
     m_rasterizer.set_options(options);
 }
 
