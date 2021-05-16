@@ -58,7 +58,6 @@ int main(int argc, char** argv)
     auto size_changed_function = [&] {
         statusbar.set_text(click_tip);
         board_widget.resize_board(rows_spinbox.value(), columns_spinbox.value());
-        board_widget.randomize_cells();
         board_widget.update();
     };
 
