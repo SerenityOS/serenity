@@ -10,23 +10,7 @@
 @anywhere {
     0x18         => (Ground, Execute)
     0x1a         => (Ground, Execute)
-    [0x80..0x8f] => (Ground, Execute)
-    [0x91..0x97] => (Ground, Execute)
-    0x99         => (Ground, Execute)
-    0x9a         => (Ground, Execute)
-    0x9c         => (Ground, _)
-
     0x1b         => (Escape, _)
-
-    0x90         => (DcsEntry, _)
-
-    0x98         => (SosPmApcString, _)
-    0x9e         => (SosPmApcString, _)
-    0x9f         => (SosPmApcString, _)
-
-    0x9d         => (OscString, _)
-
-    0x9b         => (CsiEntry, _)
 }
 
 Ground {
