@@ -56,6 +56,7 @@ public:
     virtual void gl_flush() override;
     virtual void gl_finish() override;
     virtual void gl_blend_func(GLenum src_factor, GLenum dst_factor) override;
+    virtual void gl_shade_model(GLenum mode) override;
 
     virtual void present() override;
 
