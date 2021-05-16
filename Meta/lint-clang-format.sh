@@ -12,7 +12,8 @@ if [ "$#" -eq "1" ]; then
             '*.h' \
             ':!:Base' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
-            ':!:Userland/Libraries/LibC/syslog.h'
+            ':!:Userland/Libraries/LibC/syslog.h' \
+            ':!:Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/*'
     )
 else
     files=()
