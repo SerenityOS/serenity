@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
     auto size_changed_function = [&] {
         statusbar.set_text(click_tip);
-        board_widget.update_board(rows_spinbox.value(), columns_spinbox.value());
+        board_widget.resize_board(rows_spinbox.value(), columns_spinbox.value());
         board_widget.randomize_cells();
         board_widget.update();
     };
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
         statusbar.set_text("Stalled...");
     };
 
-    board_widget.on_cell_toggled = [&](auto, auto) {
+    board_widget.on_cell_toggled = [&](auto, auto, auto) {
         statusbar.set_text(click_tip);
     };
 
