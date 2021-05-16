@@ -71,6 +71,7 @@ public:
     void draw_glyph(const IntPoint&, u32, const Font&, Color);
     void draw_emoji(const IntPoint&, const Gfx::Bitmap&, const Font&);
     void draw_glyph_or_emoji(const IntPoint&, u32 code_point, const Font&, Color);
+    void draw_circle_arc_intersecting(const IntRect&, const IntPoint&, int radius, Color, int thickness);
 
     enum class CornerOrientation {
         TopLeft,
