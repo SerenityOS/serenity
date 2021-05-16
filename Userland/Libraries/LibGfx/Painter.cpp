@@ -384,6 +384,49 @@ void Painter::fill_rounded_corner(const IntRect& a_rect, int radius, Color color
     }
 }
 
+void Painter::draw_circle_arc_intersecting(const IntRect& a_rect, const IntPoint& center, int radius, Color color, int thickness)
+{
+    if (thickness <= 0)
+        return;
+
+    // Care about clipping
+    auto translated_a_rect = a_rect.translated(translation());
+    auto rect = translated_a_rect.intersected(clip_rect());
+
+    if (rect.is_empty())
+        return;
+    VERIFY(m_target->rect().contains(rect));
+
+    // We got cut on the top!
+    // FIXME: Also account for clipping on the x-axis
+    int clip_offset = 0;
+    if (translated_a_rect.y() < rect.y())
+        clip_offset = rect.y() - translated_a_rect.y();
+
+    if (thickness > radius)
+        thickness = radius;
+
+    int radius2 = radius * radius;
+    auto is_on_arc = [&](int x, int y) {
+        int distance2 = (center.x() - x) * (center.x() - x) + (center.y() - y) * (center.y() - y);
+        // Is within a circle of radius 1/2 around (x,y), so basically within the current pixel.
+        // Technically this is angle-dependent and should be between 1/2 and sqrt(2)/2, but this works.
+        return distance2 <= (radius2 + radius + 0.25) && distance2 >= (radius2 - radius + 0.25);
+    };
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        for (int j = 0; j < rect.width(); ++j)
+            if (is_on_arc(j, rect.height() - i + clip_offset))
+                dst[j] = color.value();
+        dst += dst_skip;
+    }
+
+    return draw_circle_arc_intersecting(a_rect, center, radius - 1, color, thickness - 1);
+}
+
 void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
