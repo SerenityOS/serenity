@@ -11,6 +11,9 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
+#define TTYDEFCHARS
+#include <LibC/sys/ttydefaults.h>
+#undef TTYDEFCHARS
 
 namespace Kernel {
 
@@ -27,9 +30,13 @@ TTY::~TTY()
 void TTY::set_default_termios()
 {
     memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_lflag |= ISIG | ECHO | ICANON;
-    static const char default_cc[32] = "\003\034\010\025\004\0\1\0\021\023\032\0\022\017\027\026\0\024";
-    memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
+    m_termios.c_iflag = TTYDEF_IFLAG;
+    m_termios.c_oflag = TTYDEF_OFLAG;
+    m_termios.c_cflag = TTYDEF_CFLAG;
+    m_termios.c_lflag = TTYDEF_LFLAG;
+    m_termios.c_ispeed = TTYDEF_SPEED;
+    m_termios.c_ospeed = TTYDEF_SPEED;
+    memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
 KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
