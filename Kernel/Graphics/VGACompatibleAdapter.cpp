@@ -51,6 +51,8 @@ UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address
     , m_framebuffer_pitch(framebuffer_pitch)
 {
     m_framebuffer_console = Graphics::FramebufferConsole::initialize(framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch);
+    // FIXME: This is a very wrong way to do this...
+    GraphicsManagement::the().m_console = m_framebuffer_console;
 }
 
 void VGACompatibleAdapter::enable_consoles()
