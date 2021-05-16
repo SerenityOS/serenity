@@ -99,10 +99,15 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
     float p1_step = 0;
     float p2_step = 0;
 
+    bool has_top_left_radius = !style.border_top_left_radius().is_undefined();
+    bool has_top_right_radius = !style.border_top_right_radius().is_undefined();
+    bool has_bottom_left_radius = !style.border_bottom_left_radius().is_undefined();
+    bool has_bottom_right_radius = !style.border_bottom_right_radius().is_undefined();
+
     switch (edge) {
     case BorderEdge::Top:
-        p1_step = style.border_left().width / (float)int_width;
-        p2_step = style.border_right().width / (float)int_width;
+        p1_step = has_top_left_radius ? 0 : style.border_left().width / (float)int_width;
+        p2_step = has_top_right_radius ? 0 : style.border_right().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
             p1.translate_by(p1_step, 1);
@@ -110,8 +115,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         }
         break;
     case BorderEdge::Right:
-        p1_step = style.border_top().width / (float)int_width;
-        p2_step = style.border_bottom().width / (float)int_width;
+        p1_step = has_top_right_radius ? 0 : style.border_top().width / (float)int_width;
+        p2_step = has_bottom_right_radius ? 0 : style.border_bottom().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
             p1.translate_by(-1, p1_step);
@@ -119,8 +124,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         }
         break;
     case BorderEdge::Bottom:
-        p1_step = style.border_left().width / (float)int_width;
-        p2_step = style.border_right().width / (float)int_width;
+        p1_step = has_bottom_left_radius ? 0 : style.border_left().width / (float)int_width;
+        p2_step = has_bottom_right_radius ? 0 : style.border_right().width / (float)int_width;
         for (int i = int_width - 1; i >= 0; --i) {
             draw_line(p1, p2);
             p1.translate_by(p1_step, -1);
@@ -128,8 +133,8 @@ void paint_border(PaintContext& context, BorderEdge edge, const Gfx::FloatRect& 
         }
         break;
     case BorderEdge::Left:
-        p1_step = style.border_top().width / (float)int_width;
-        p2_step = style.border_bottom().width / (float)int_width;
+        p1_step = has_top_left_radius ? 0 : style.border_top().width / (float)int_width;
+        p2_step = has_bottom_left_radius ? 0 : style.border_bottom().width / (float)int_width;
         for (int i = 0; i < int_width; ++i) {
             draw_line(p1, p2);
             p1.translate_by(1, p1_step);
