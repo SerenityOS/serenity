@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Concepts.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -112,7 +113,7 @@ public:
         return false;
     }
 
-    template<typename F>
+    template<IteratorFunction<T&> F>
     IterationDecision for_each(F func) const
     {
         for (T* node = m_head; node; node = node->next()) {
@@ -121,6 +122,13 @@ public:
                 return decision;
         }
         return IterationDecision::Continue;
+    }
+
+    template<VoidFunction<T&> F>
+    void for_each(F func) const
+    {
+        for (T* node = m_head; node; node = node->next())
+            func(*node);
     }
 
     using Iterator = InlineLinkedListIterator<T>;

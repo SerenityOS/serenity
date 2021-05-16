@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Concepts.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <Kernel/VirtualAddress.h>
@@ -125,8 +126,11 @@ public:
         unsigned relocation_count() const { return entry_count(); }
         Relocation relocation(unsigned index) const;
         Relocation relocation_at_offset(unsigned offset) const;
-        template<typename F>
+
+        template<IteratorFunction<DynamicObject::Relocation&> F>
         void for_each_relocation(F) const;
+        template<VoidFunction<DynamicObject::Relocation&> F>
+        void for_each_relocation(F func) const;
     };
 
     class Relocation {
@@ -251,16 +255,18 @@ public:
     ElfW(Half) program_header_count() const;
     const ElfW(Phdr) * program_headers() const;
 
-    template<typename F>
+    template<VoidFunction<StringView> F>
     void for_each_needed_library(F) const;
 
-    template<typename F>
+    template<VoidFunction<InitializationFunction&> F>
     void for_each_initialization_array_function(F f) const;
 
-    template<typename F>
+    template<IteratorFunction<DynamicEntry&> F>
     void for_each_dynamic_entry(F) const;
+    template<VoidFunction<DynamicEntry&> F>
+    void for_each_dynamic_entry(F func) const;
 
-    template<typename F>
+    template<VoidFunction<Symbol&> F>
     void for_each_symbol(F) const;
 
     struct SymbolLookupResult {
@@ -341,7 +347,7 @@ private:
     // End Section information from DT_* entries
 };
 
-template<typename F>
+template<IteratorFunction<DynamicObject::Relocation&> F>
 inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
 {
     for (unsigned i = 0; i < relocation_count(); ++i) {
@@ -353,16 +359,24 @@ inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
     }
 }
 
-template<typename F>
+template<VoidFunction<DynamicObject::Relocation&> F>
+inline void DynamicObject::RelocationSection::for_each_relocation(F func) const
+{
+    for_each_relocation([&](auto& reloc) {
+        func(reloc);
+        return IterationDecision::Continue;
+    });
+}
+
+template<VoidFunction<DynamicObject::Symbol&> F>
 inline void DynamicObject::for_each_symbol(F func) const
 {
     for (unsigned i = 0; i < symbol_count(); ++i) {
-        if (func(symbol(i)) == IterationDecision::Break)
-            break;
+        func(symbol(i));
     }
 }
 
-template<typename F>
+template<IteratorFunction<DynamicObject::DynamicEntry&> F>
 inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
     auto* dyns = reinterpret_cast<const ElfW(Dyn)*>(m_dynamic_address.as_ptr());
@@ -374,21 +388,29 @@ inline void DynamicObject::for_each_dynamic_entry(F func) const
             break;
     }
 }
-template<typename F>
-inline void DynamicObject::for_each_needed_library(F func) const
+
+template<VoidFunction<DynamicObject::DynamicEntry&> F>
+inline void DynamicObject::for_each_dynamic_entry(F func) const
 {
-    for_each_dynamic_entry([func, this](auto entry) {
-        if (entry.tag() != DT_NEEDED)
-            return IterationDecision::Continue;
-        ElfW(Word) offset = entry.val();
-        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
-        if (func(StringView(name)) == IterationDecision::Break)
-            return IterationDecision::Break;
+    for_each_dynamic_entry([&](auto& dyn) {
+        func(dyn);
         return IterationDecision::Continue;
     });
 }
 
-template<typename F>
+template<VoidFunction<StringView> F>
+inline void DynamicObject::for_each_needed_library(F func) const
+{
+    for_each_dynamic_entry([func, this](auto entry) {
+        if (entry.tag() != DT_NEEDED)
+            return;
+        ElfW(Word) offset = entry.val();
+        StringView name { (const char*)(m_base_address.offset(m_string_table_offset).offset(offset)).as_ptr() };
+        func(name);
+    });
+}
+
+template<VoidFunction<DynamicObject::InitializationFunction&> F>
 void DynamicObject::for_each_initialization_array_function(F f) const
 {
     if (!has_init_array_section())

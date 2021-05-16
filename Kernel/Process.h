@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Checked.h>
+#include <AK/Concepts.h>
 #include <AK/HashMap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullOwnPtrVector.h>
@@ -224,16 +225,30 @@ public:
     RefPtr<FileDescription> file_description(int fd) const;
     int fd_flags(int fd) const;
 
-    template<typename Callback>
+    // Breakable iteration functions
+    template<IteratorFunction<Process&> Callback>
     static void for_each(Callback);
-    template<typename Callback>
+    template<IteratorFunction<Process&> Callback>
     static void for_each_in_pgrp(ProcessGroupID, Callback);
-    template<typename Callback>
+    template<IteratorFunction<Process&> Callback>
     void for_each_child(Callback);
 
-    template<typename Callback>
+    template<IteratorFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback);
-    template<typename Callback>
+    template<IteratorFunction<Thread&> Callback>
+    IterationDecision for_each_thread(Callback callback) const;
+
+    // Non-breakable iteration functions
+    template<VoidFunction<Process&> Callback>
+    static void for_each(Callback);
+    template<VoidFunction<Process&> Callback>
+    static void for_each_in_pgrp(ProcessGroupID, Callback);
+    template<VoidFunction<Process&> Callback>
+    void for_each_child(Callback);
+
+    template<VoidFunction<Thread&> Callback>
+    IterationDecision for_each_thread(Callback);
+    template<VoidFunction<Thread&> Callback>
     IterationDecision for_each_thread(Callback callback) const;
 
     void die();
@@ -628,7 +643,7 @@ private:
 extern InlineLinkedList<Process>* g_processes;
 extern RecursiveSpinLock g_processes_lock;
 
-template<typename Callback>
+template<IteratorFunction<Process&> Callback>
 inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
@@ -641,7 +656,7 @@ inline void Process::for_each(Callback callback)
     }
 }
 
-template<typename Callback>
+template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_child(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
@@ -657,7 +672,7 @@ inline void Process::for_each_child(Callback callback)
     }
 }
 
-template<typename Callback>
+template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback) const
 {
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
@@ -669,7 +684,7 @@ inline IterationDecision Process::for_each_thread(Callback callback) const
     return IterationDecision::Continue;
 }
 
-template<typename Callback>
+template<IteratorFunction<Thread&> Callback>
 inline IterationDecision Process::for_each_thread(Callback callback)
 {
     ScopedSpinLock thread_list_lock(m_thread_list_lock);
@@ -681,7 +696,7 @@ inline IterationDecision Process::for_each_thread(Callback callback)
     return IterationDecision::Continue;
 }
 
-template<typename Callback>
+template<IteratorFunction<Process&> Callback>
 inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
@@ -694,6 +709,51 @@ inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
         }
         process = next_process;
     }
+}
+
+template<VoidFunction<Process&> Callback>
+inline void Process::for_each(Callback callback)
+{
+    return for_each([&](auto& item) {
+        callback(item);
+        return IterationDecision::Continue;
+    });
+}
+
+template<VoidFunction<Process&> Callback>
+inline void Process::for_each_child(Callback callback)
+{
+    return for_each_child([&](auto& item) {
+        callback(item);
+        return IterationDecision::Continue;
+    });
+}
+
+template<VoidFunction<Thread&> Callback>
+inline IterationDecision Process::for_each_thread(Callback callback) const
+{
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    for (auto& thread : m_thread_list)
+        callback(thread);
+    return IterationDecision::Continue;
+}
+
+template<VoidFunction<Thread&> Callback>
+inline IterationDecision Process::for_each_thread(Callback callback)
+{
+    ScopedSpinLock thread_list_lock(m_thread_list_lock);
+    for (auto& thread : m_thread_list)
+        callback(thread);
+    return IterationDecision::Continue;
+}
+
+template<VoidFunction<Process&> Callback>
+inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
+{
+    return for_each_in_pgrp(pgid, [&](auto& item) {
+        callback(item);
+        return IterationDecision::Continue;
+    });
 }
 
 inline bool InodeMetadata::may_read(const Process& process) const

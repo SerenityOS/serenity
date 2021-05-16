@@ -230,7 +230,6 @@ void PerformanceEventBuffer::add_process(const Process& process, ProcessEventTyp
     process.for_each_thread([&](auto& thread) {
         [[maybe_unused]] auto rc = append_with_eip_and_ebp(process.pid(), thread.tid().value(),
             0, 0, PERF_EVENT_THREAD_CREATE, 0, 0, 0, nullptr);
-        return IterationDecision::Continue;
     });
 
     for (auto& region : process.space().regions()) {

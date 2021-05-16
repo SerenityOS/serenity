@@ -172,7 +172,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     RequiredLoadRange range {};
     elf_image.for_each_program_header([&range](const auto& pheader) {
         if (pheader.type() != PT_LOAD)
-            return IterationDecision::Continue;
+            return;
 
         auto region_start = (FlatPtr)pheader.vaddr().as_ptr();
         auto region_end = region_start + pheader.size_in_memory();
@@ -180,7 +180,6 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
             range.start = region_start;
         if (range.end == 0 || region_end > range.end)
             range.end = region_end;
-        return IterationDecision::Continue;
     });
 
     VERIFY(range.end > range.start);

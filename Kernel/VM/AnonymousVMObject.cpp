@@ -23,13 +23,11 @@ RefPtr<VMObject> AnonymousVMObject::clone()
     // so that the parent is still guaranteed to be able to have all
     // non-volatile memory available.
     size_t need_cow_pages = 0;
-    {
-        // We definitely need to commit non-volatile areas
-        for_each_nonvolatile_range([&](const VolatilePageRange& nonvolatile_range) {
-            need_cow_pages += nonvolatile_range.count;
-            return IterationDecision::Continue;
-        });
-    }
+
+    // We definitely need to commit non-volatile areas
+    for_each_nonvolatile_range([&](const VolatilePageRange& nonvolatile_range) {
+        need_cow_pages += nonvolatile_range.count;
+    });
 
     dbgln_if(COMMIT_DEBUG, "Cloning {:p}, need {} committed cow pages", this, need_cow_pages);
 
@@ -220,7 +218,6 @@ int AnonymousVMObject::purge_impl()
                 }
             });
         }
-        return IterationDecision::Continue;
     });
     return purged_page_count;
 }
@@ -284,7 +281,6 @@ void AnonymousVMObject::update_volatile_cache()
     m_volatile_ranges_cache.clear();
     for_each_nonvolatile_range([&](const VolatilePageRange& range) {
         m_volatile_ranges_cache.add_unchecked(range);
-        return IterationDecision::Continue;
     });
 
     m_volatile_ranges_cache_dirty = false;

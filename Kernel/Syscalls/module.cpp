@@ -51,18 +51,18 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
-            return IterationDecision::Continue;
+            return;
         auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Region::Access::Read | Region::Access::Write | Region::Access::Execute);
         section_storage_by_name.set(section.name(), section_storage.data());
         module->sections.append(move(section_storage));
-        return IterationDecision::Continue;
     });
 
     bool missing_symbols = false;
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELF::Image::Section& section) {
         if (!section.size())
-            return IterationDecision::Continue;
+            return;
+
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         VERIFY(section_storage);
         auto relocations = section.relocations();
@@ -103,10 +103,7 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
                 }
                 break;
             }
-            return IterationDecision::Continue;
         });
-
-        return IterationDecision::Continue;
     });
 
     if (missing_symbols)
@@ -129,7 +126,6 @@ KResultOr<int> Process::sys$module_load(Userspace<const char*> user_path, size_t
             if (storage)
                 module->name = String((const char*)(storage + symbol.value()));
         }
-        return IterationDecision::Continue;
     });
 
     if (!module->module_init)

@@ -8,6 +8,7 @@
 
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
+#include <AK/Concepts.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 
@@ -733,7 +734,7 @@ public:
 
     static size_t processor_count() { return processors().size(); }
 
-    template<typename Callback>
+    template<IteratorFunction<Processor&> Callback>
     static inline IterationDecision for_each(Callback callback)
     {
         auto& procs = processors();
@@ -742,6 +743,16 @@ public:
             if (callback(*procs[i]) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
+        return IterationDecision::Continue;
+    }
+
+    template<VoidFunction<Processor&> Callback>
+    static inline IterationDecision for_each(Callback callback)
+    {
+        auto& procs = processors();
+        size_t count = procs.size();
+        for (size_t i = 0; i < count; i++)
+            callback(*procs[i]);
         return IterationDecision::Continue;
     }
 

@@ -688,7 +688,7 @@ static bool procfs$cpuinfo(InodeIdentifier, KBufferBuilder& builder)
 {
     JsonArraySerializer array { builder };
     Processor::for_each(
-        [&](Processor& proc) -> IterationDecision {
+        [&](Processor& proc) {
             auto& info = proc.info();
             auto obj = array.add_object();
             JsonArray features;
@@ -702,7 +702,6 @@ static bool procfs$cpuinfo(InodeIdentifier, KBufferBuilder& builder)
             obj.add("stepping", info.stepping());
             obj.add("type", info.type());
             obj.add("brandstr", info.brandstr());
-            return IterationDecision::Continue;
         });
     array.finish();
     return true;
@@ -826,7 +825,6 @@ static bool procfs$all(InodeIdentifier, KBufferBuilder& builder)
             thread_object.add("unix_socket_write_bytes", thread.unix_socket_write_bytes());
             thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes());
             thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes());
-            return IterationDecision::Continue;
         });
     };
 
@@ -1328,10 +1326,9 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         auto process = Process::from_pid(pid);
         if (!process)
             return ENOENT;
-        process->for_each_thread([&](const Thread& thread) -> IterationDecision {
+        process->for_each_thread([&](const Thread& thread) {
             int tid = thread.tid().value();
             callback({ String::number(tid), to_identifier_with_stack(fsid(), tid), 0 });
-            return IterationDecision::Continue;
         });
     } break;
 

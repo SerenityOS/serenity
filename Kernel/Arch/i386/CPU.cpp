@@ -2090,12 +2090,11 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
     VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
-        [&](Processor& proc) -> IterationDecision {
+        [&](Processor& proc) {
             if (&proc != &cur_proc) {
                 if (proc.smp_queue_message(msg))
                     need_broadcast = true;
             }
-            return IterationDecision::Continue;
         });
 
     // Now trigger an IPI on all other APs (unless all targets already had messages queued)
@@ -2215,9 +2214,8 @@ void Processor::smp_broadcast_halt()
     // We don't want to use a message, because this could have been triggered
     // by being out of memory and we might not be able to get a message
     for_each(
-        [&](Processor& proc) -> IterationDecision {
+        [&](Processor& proc) {
             proc.m_halt_requested.store(true, AK::MemoryOrder::memory_order_release);
-            return IterationDecision::Continue;
         });
 
     // Now trigger an IPI on all other APs

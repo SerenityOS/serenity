@@ -49,7 +49,6 @@ void DynamicObject::dump() const
         String name_field = String::formatted("({})", name_for_dtag(entry.tag()));
         builder.appendff("{:#08x} {:17} {:#08x}\n", entry.tag(), name_field, entry.val());
         num_dynamic_sections++;
-        return IterationDecision::Continue;
     });
 
     if (m_has_soname)
@@ -171,7 +170,6 @@ void DynamicObject::parse()
             VERIFY_NOT_REACHED(); // FIXME: Maybe just break out here and return false?
             break;
         }
-        return IterationDecision::Continue;
     });
 
     if (!m_size_of_relocation_entry) {

@@ -523,7 +523,6 @@ int main(int argc, char** argv)
                 printf("%08x ", section.size());
                 printf("%u", section.flags());
                 printf("\n");
-                return IterationDecision::Continue;
             });
         }
         printf("\n");
@@ -556,8 +555,6 @@ int main(int argc, char** argv)
 
                 if (program_header.type() == PT_INTERP)
                     printf("      [Interpreter: %s]\n", program_header.raw_data());
-
-                return IterationDecision::Continue;
             });
         }
 
@@ -586,7 +583,6 @@ int main(int argc, char** argv)
             Vector<String> libraries;
             object->for_each_needed_library([&libraries](StringView entry) {
                 libraries.append(String::formatted("{}", entry).characters());
-                return IterationDecision::Continue;
             });
 
             auto library_index = 0;
@@ -607,7 +603,6 @@ int main(int argc, char** argv)
                 } else {
                     printf("0x%08x\n", entry.val());
                 }
-                return IterationDecision::Continue;
             });
         }
 
@@ -630,7 +625,6 @@ int main(int argc, char** argv)
                     printf(" 0x%08x ", reloc.symbol().value());
                     printf(" %s", reloc.symbol().name().to_string().characters());
                     printf("\n");
-                    return IterationDecision::Continue;
                 });
             }
             printf("\n");
@@ -646,7 +640,6 @@ int main(int argc, char** argv)
                     printf(" 0x%08x ", reloc.symbol().value());
                     printf(" %s", reloc.symbol().name().to_string().characters());
                     printf("\n");
-                    return IterationDecision::Continue;
                 });
             }
         } else {
@@ -666,7 +659,7 @@ int main(int argc, char** argv)
         auto found_notes = false;
         elf_image.for_each_program_header([&found_notes](const ELF::Image::ProgramHeader& program_header) {
             if (program_header.type() != PT_NOTE)
-                return IterationDecision::Continue;
+                return;
 
             found_notes = true;
 
@@ -674,8 +667,6 @@ int main(int argc, char** argv)
 
             // FIXME: Parse CORE notes. Notes are in JSON format on SerenityOS, but vary between systems.
             printf("%s\n", program_header.raw_data());
-
-            return IterationDecision::Continue;
         });
 
         if (!found_notes)
@@ -714,7 +705,6 @@ int main(int argc, char** argv)
                     printf("%-8s ", object_symbol_binding_to_string(sym.bind()));
                     printf("%s", StringView(sym.name()).to_string().characters());
                     printf("\n");
-                    return IterationDecision::Continue;
                 });
             }
         }
@@ -738,7 +728,6 @@ int main(int argc, char** argv)
                 printf("%-8s ", object_symbol_binding_to_string(sym.bind()));
                 printf("%s", StringView(sym.name()).to_string().characters());
                 printf("\n");
-                return IterationDecision::Continue;
             });
         } else {
             printf("Symbol table '%s' contains zero entries.\n", ELF_SYMTAB);

@@ -97,7 +97,6 @@ void Image::dump() const
         dbgln("      offset: {:x}", program_header.offset());
         dbgln("       flags: {:x}", program_header.flags());
         dbgln("    }}");
-        return IterationDecision::Continue;
     });
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
@@ -344,7 +343,6 @@ NEVER_INLINE void Image::sort_symbols() const
     m_sorted_symbols.ensure_capacity(symbol_count());
     for_each_symbol([this](const auto& symbol) {
         m_sorted_symbols.append({ symbol.value(), symbol.name(), {}, symbol });
-        return IterationDecision::Continue;
     });
     quick_sort(m_sorted_symbols, [](auto& a, auto& b) {
         return a.address < b.address;
