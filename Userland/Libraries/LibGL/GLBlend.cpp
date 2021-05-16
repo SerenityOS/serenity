@@ -13,3 +13,8 @@ void glBlendFunc(GLenum sfactor, GLenum dfactor)
 {
     return g_gl_context->gl_blend_func(sfactor, dfactor);
 }
+
+void glAlphaFunc(GLenum func, GLclampf ref)
+{
+    return g_gl_context->gl_alpha_func(func, ref);
+}

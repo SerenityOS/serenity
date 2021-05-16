@@ -29,6 +29,16 @@ extern "C" {
 #define GL_TRIANGLE_STRIP 0x0103
 #define GL_POLYGON 0x0104
 
+// Depth buffer and alpha test compare functions
+#define GL_NEVER 0x0200
+#define GL_LESS 0x0201
+#define GL_EQUAL 0x0202
+#define GL_LEQUAL 0x0203
+#define GL_GREATER 0x0204
+#define GL_NOTEQUAL 0x0205
+#define GL_GEQUAL 0x0206
+#define GL_ALWAYS 0x0207
+
 // Buffer bits
 #define GL_COLOR_BUFFER_BIT 0x0200
 #define GL_DEPTH_BUFFER_BIT 0x0400
@@ -36,6 +46,13 @@ extern "C" {
 // Enable capabilities
 #define GL_CULL_FACE 0x0B44
 #define GL_DEPTH_TEST 0x0B71
+
+// Alpha testing
+#define GL_ALPHA_TEST 0x0BC0
+#define GL_ALPHA_TEST_REF 0x0BC2
+#define GL_ALPHA_TEST_FUNC 0x0BC1
+
+// Alpha blending
 #define GL_BLEND 0x0BE2
 
 // Utility
@@ -43,7 +60,7 @@ extern "C" {
 #define GL_RENDERER 0x1F01
 #define GL_VERSION 0x1F02
 
-/* Blend factors */
+// Blend factors
 #define GL_ZERO 0
 #define GL_ONE 1
 #define GL_SRC_COLOR 0x0300
@@ -152,6 +169,7 @@ GLAPI void glFlush();
 GLAPI void glFinish();
 GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);
 GLAPI void glShadeModel(GLenum mode);
+GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 
 #ifdef __cplusplus
 }
