@@ -162,7 +162,9 @@ private:
             decltype(&SoftwareGLContext::gl_disable),
             decltype(&SoftwareGLContext::gl_front_face),
             decltype(&SoftwareGLContext::gl_cull_face),
-            decltype(&SoftwareGLContext::gl_call_list)>;
+            decltype(&SoftwareGLContext::gl_call_list),
+            decltype(&SoftwareGLContext::gl_blend_func),
+            decltype(&SoftwareGLContext::gl_shade_model)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
