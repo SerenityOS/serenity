@@ -27,6 +27,7 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/Frame.h>
+#include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 #include <LibWeb/Bindings/WindowObjectHelper.h>
 
@@ -71,6 +72,9 @@ void WindowObject::initialize_global_object()
 
     define_property("navigator", heap().allocate<NavigatorObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
     define_property("location", heap().allocate<LocationObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
+
+    // WebAssembly "namespace"
+    define_property("WebAssembly", heap().allocate<WebAssemblyObject>(*this, *this), JS::Attribute::Enumerable | JS::Attribute::Configurable);
 
     ADD_WINDOW_OBJECT_INTERFACES;
 }
