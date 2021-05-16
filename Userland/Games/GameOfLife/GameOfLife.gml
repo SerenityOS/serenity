@@ -53,6 +53,9 @@
                 text: " ms"
                 autosize: true
             }
+
+            @GUI::VerticalSeparator {
+            }
         }
     }
 
