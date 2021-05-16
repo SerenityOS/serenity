@@ -1,5 +1,5 @@
 set(SOURCES
-    ParserAutoComplete.cpp
+    CppComprehensionEngine.cpp
     Tests.cpp
     main.cpp
 )
