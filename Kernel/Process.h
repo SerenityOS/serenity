@@ -364,7 +364,7 @@ public:
     KResultOr<int> sys$socket(int domain, int type, int protocol);
     KResultOr<int> sys$bind(int sockfd, Userspace<const sockaddr*> addr, socklen_t);
     KResultOr<int> sys$listen(int sockfd, int backlog);
-    KResultOr<int> sys$accept(int sockfd, Userspace<sockaddr*>, Userspace<socklen_t*>);
+    KResultOr<int> sys$accept4(Userspace<const Syscall::SC_accept4_params*>);
     KResultOr<int> sys$connect(int sockfd, Userspace<const sockaddr*>, socklen_t);
     KResultOr<int> sys$shutdown(int sockfd, int how);
     KResultOr<ssize_t> sys$sendmsg(int sockfd, Userspace<const struct msghdr*>, int flags);
