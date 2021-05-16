@@ -114,6 +114,7 @@ private:
     void stop_game_over_animation();
     void create_new_animation_card();
     void check_for_game_over();
+    void dump_layout() const;
 
     ALWAYS_INLINE CardStack& stack(StackLocation location)
     {

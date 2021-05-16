@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Array.h>
+#include <AK/Format.h>
 #include <LibCore/Object.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
@@ -21,6 +23,9 @@ public:
     static constexpr int width = 80;
     static constexpr int height = 100;
     static constexpr int card_count = 13;
+    static constexpr Array<StringView, card_count> labels = {
+        "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
+    };
 
     enum Type {
         Clubs,
@@ -67,3 +72,30 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Solitaire::Card> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, const Solitaire::Card& card)
+    {
+        StringView type;
+
+        switch (card.type()) {
+        case Solitaire::Card::Type::Clubs:
+            type = "C"sv;
+            break;
+        case Solitaire::Card::Type::Diamonds:
+            type = "D"sv;
+            break;
+        case Solitaire::Card::Type::Hearts:
+            type = "H"sv;
+            break;
+        case Solitaire::Card::Type::Spades:
+            type = "S"sv;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        Formatter<FormatString>::format(builder, "{:>2}{}", Solitaire::Card::labels[card.value()], type);
+    }
+};
