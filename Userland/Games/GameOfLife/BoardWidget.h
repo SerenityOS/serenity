@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,10 @@
 #pragma once
 
 #include "Board.h"
+#include <AK/Function.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/Optional.h>
+#include <AK/RefPtr.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Widget.h>
 
@@ -23,28 +28,23 @@ public:
     {
         m_toggling_cells = toggling;
         if (!toggling)
-            m_last_cell_toggled = m_board->total_size();
+            m_last_cell_toggled = { m_board->rows(), m_board->columns() };
     }
 
-    size_t last_toggled() const { return m_last_cell_toggled; }
-    bool is_toggling() const { return m_toggling_cells; }
-
-    void toggle_cell(size_t index);
+    void toggle_cell(size_t row, size_t column);
     void clear_cells() { m_board->clear(); }
     void randomize_cells() { m_board->randomize(); }
 
     int get_cell_size() const;
     Gfx::IntSize get_board_offset() const;
 
-    size_t get_index_for_point(int x, int y) const;
+    Optional<Board::RowAndColumn> get_row_and_column_for_point(int x, int y) const;
 
-    void update_board(size_t rows, size_t columns);
+    void resize_board(size_t rows, size_t columns);
     const Board* board() const { return m_board.ptr(); }
 
     bool is_running() const { return m_running; }
     void set_running(bool r);
-
-    void set_toolbar_enabled(bool);
 
     void run_generation();
 
@@ -53,15 +53,15 @@ public:
 
     Function<void()> on_running_state_change;
     Function<void()> on_stall;
-    Function<void(Board*, size_t)> on_cell_toggled;
+    Function<void(Board*, size_t row, size_t column)> on_cell_toggled;
 
 private:
     BoardWidget(size_t rows, size_t columns);
 
     bool m_toggling_cells { false };
-    size_t m_last_cell_toggled { 0 };
+    Board::RowAndColumn m_last_cell_toggled {};
 
-    OwnPtr<Board> m_board { nullptr };
+    NonnullOwnPtr<Board> m_board;
 
     bool m_running { false };
 

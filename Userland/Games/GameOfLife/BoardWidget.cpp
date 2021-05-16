@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <LibGUI/Painter.h>
 
 BoardWidget::BoardWidget(size_t rows, size_t columns)
+    : m_board(make<Board>(rows, columns))
 {
     m_timer = add<Core::Timer>();
     m_timer->stop();
@@ -15,8 +17,6 @@ BoardWidget::BoardWidget(size_t rows, size_t columns)
         run_generation();
     };
     m_timer->set_interval(m_running_timer_interval);
-
-    update_board(rows, columns);
 }
 
 void BoardWidget::run_generation()
@@ -30,19 +30,12 @@ void BoardWidget::run_generation()
     };
 }
 
-void BoardWidget::update_board(size_t rows, size_t columns)
+void BoardWidget::resize_board(size_t rows, size_t columns)
 {
-    set_running(false);
-
-    m_last_cell_toggled = columns * rows;
-
-    if (m_board) {
-        if (columns == m_board->columns() && rows == m_board->rows()) {
-            return;
-        }
-    }
-
-    m_board = make<Board>(rows, columns);
+    if (columns == m_board->columns() && rows == m_board->rows())
+        return;
+    m_board->resize(rows, columns);
+    m_last_cell_toggled = { rows, columns };
 }
 
 void BoardWidget::set_running_timer_interval(int interval)
@@ -76,16 +69,16 @@ void BoardWidget::set_running(bool running)
     update();
 }
 
-void BoardWidget::toggle_cell(size_t index)
+void BoardWidget::toggle_cell(size_t row, size_t column)
 {
-    if (m_running || !m_toggling_cells || m_last_cell_toggled == index)
+    if (m_running || !m_toggling_cells || (m_last_cell_toggled.row == row && m_last_cell_toggled.column == column))
         return;
 
-    m_last_cell_toggled = index;
-    m_board->toggle_cell(index);
+    m_last_cell_toggled = { row, column };
+    m_board->toggle_cell(row, column);
 
     if (on_cell_toggled)
-        on_cell_toggled(m_board, index);
+        on_cell_toggled(m_board, row, column);
 
     update();
 }
@@ -145,17 +138,23 @@ void BoardWidget::paint_event(GUI::PaintEvent& event)
 
 void BoardWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    size_t index = get_index_for_point(event.x(), event.y());
     set_toggling_cells(true);
-    toggle_cell(index);
+    auto row_and_column = get_row_and_column_for_point(event.x(), event.y());
+    if (!row_and_column.has_value())
+        return;
+    auto [row, column] = row_and_column.value();
+    toggle_cell(row, column);
 }
 
 void BoardWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    size_t index = get_index_for_point(event.x(), event.y());
-    if (is_toggling()) {
-        if (last_toggled() != index)
-            toggle_cell(index);
+    auto row_and_column = get_row_and_column_for_point(event.x(), event.y());
+    if (!row_and_column.has_value())
+        return;
+    auto [row, column] = row_and_column.value();
+    if (m_toggling_cells) {
+        if (m_last_cell_toggled.row != row || m_last_cell_toggled.column != column)
+            toggle_cell(row, column);
     }
 }
 
@@ -164,9 +163,18 @@ void BoardWidget::mouseup_event(GUI::MouseEvent&)
     set_toggling_cells(false);
 }
 
-size_t BoardWidget::get_index_for_point(int x, int y) const
+Optional<Board::RowAndColumn> BoardWidget::get_row_and_column_for_point(int x, int y) const
 {
-    int cell_size = get_cell_size();
-    Gfx::IntSize board_offset = get_board_offset();
-    return m_board->columns() * ((y - board_offset.height()) / cell_size) + (x - board_offset.width()) / cell_size;
+    auto board_offset = get_board_offset();
+    auto cell_size = get_cell_size();
+    auto board_width = m_board->columns() * cell_size;
+    auto board_height = m_board->rows() * cell_size;
+    if (x <= board_offset.width() || static_cast<size_t>(x) >= board_offset.width() + board_width)
+        return {};
+    if (y <= board_offset.height() || static_cast<size_t>(y) >= board_offset.height() + board_height)
+        return {};
+    return { {
+        .row = static_cast<size_t>((y - board_offset.height()) / cell_size),
+        .column = static_cast<size_t>((x - board_offset.width()) / cell_size),
+    } };
 }
