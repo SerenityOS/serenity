@@ -42,6 +42,7 @@ enum class OpenMode : unsigned {
     Append = 4,
     Truncate = 8,
     MustBeNew = 16,
+    KeepOnExec = 32,
 };
 
 enum class SeekMode {
