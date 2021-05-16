@@ -474,9 +474,7 @@ ssize_t TLSv12::handle_payload(ReadonlyBytes vbuffer)
             }
             break;
         case Finished:
-            if (m_context.cached_handshake) {
-                m_context.cached_handshake.clear();
-            }
+            m_context.cached_handshake.clear();
             if (m_context.handshake_messages[10] >= 1) {
                 dbgln("unexpected finished message");
                 payload_res = (i8)Error::UnexpectedMessage;

@@ -41,7 +41,7 @@ void Client::start()
 {
     m_socket->on_ready_to_read = [this] {
         auto raw_request = m_socket->read_all();
-        if (raw_request.is_null()) {
+        if (raw_request.is_empty()) {
             die();
             return;
         }

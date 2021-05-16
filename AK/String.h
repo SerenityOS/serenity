@@ -240,8 +240,6 @@ public:
     template<typename BufferType>
     [[nodiscard]] static String copy(const BufferType& buffer, ShouldChomp should_chomp = NoChomp)
     {
-        if (buffer.is_null())
-            return {};
         if (buffer.is_empty())
             return empty();
         return String((const char*)buffer.data(), buffer.size(), should_chomp);

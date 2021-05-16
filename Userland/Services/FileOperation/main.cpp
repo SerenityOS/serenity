@@ -143,7 +143,7 @@ int perform_copy(const String& source, const String& destination)
         while (true) {
             print_progress();
             auto buffer = source_file.read(65536);
-            if (buffer.is_null())
+            if (buffer.is_empty())
                 break;
             if (!destination_file.write(buffer)) {
                 report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
