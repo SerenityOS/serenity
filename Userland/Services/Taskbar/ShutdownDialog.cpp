@@ -95,6 +95,7 @@ ShutdownDialog::ShutdownDialog()
     auto& button_container = right_container.add<GUI::Widget>();
     button_container.set_fixed_height(23);
     button_container.set_layout<GUI::HorizontalBoxLayout>();
+    button_container.layout()->set_spacing(5);
     button_container.layout()->add_spacer();
     auto& ok_button = button_container.add<GUI::Button>("OK");
     ok_button.set_fixed_size(80, 23);
@@ -109,7 +110,7 @@ ShutdownDialog::ShutdownDialog()
 
     resize(413, 235);
     center_on_screen();
-    set_resizable(true);
+    set_resizable(false);
     set_title("Exit SerenityOS");
     set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/power.png"));
 
