@@ -42,6 +42,7 @@ public:
     Function<void(int, Gfx::IntRect)> on_scale_change;
     Function<void()> on_doubleclick;
     Function<void(const GUI::DropEvent&)> on_drop;
+    Function<void(const Gfx::Bitmap*)> on_image_change;
 
 private:
     ViewWidget();
