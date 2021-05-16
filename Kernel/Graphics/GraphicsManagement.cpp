@@ -66,9 +66,9 @@ UNMAP_AFTER_INIT RefPtr<GraphicsDevice> GraphicsManagement::determine_graphics_d
             dmesgln("Graphics: Using a preset resolution from the bootloader");
             return VGACompatibleAdapter::initialize_with_preset_resolution(address,
                 PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                multiboot_info_ptr->framebuffer_pitch,
                 multiboot_info_ptr->framebuffer_width,
-                multiboot_info_ptr->framebuffer_height);
+                multiboot_info_ptr->framebuffer_height,
+                multiboot_info_ptr->framebuffer_pitch);
         }
         return VGACompatibleAdapter::initialize(address);
     }

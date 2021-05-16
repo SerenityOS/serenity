@@ -94,7 +94,7 @@ UNMAP_AFTER_INIT void FramebufferDevice::initialize()
     VERIFY(m_swapped_framebuffer_region);
 }
 
-UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
+UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(PhysicalAddress addr, size_t width, size_t height, size_t pitch)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)

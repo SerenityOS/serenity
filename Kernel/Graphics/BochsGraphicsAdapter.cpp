@@ -63,7 +63,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
 UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
 {
     // FIXME: Find a better way to determine default resolution...
-    m_framebuffer_device = BochsFramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024 * 4, 1024, 768);
+    m_framebuffer_device = BochsFramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     m_framebuffer_device->initialize();
 }
 

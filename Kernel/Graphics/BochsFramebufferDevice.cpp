@@ -17,13 +17,13 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<BochsFramebufferDevice> BochsFramebufferDevice::create(const BochsGraphicsAdapter& adapter, PhysicalAddress framebuffer_address, size_t pitch, size_t width, size_t height)
+UNMAP_AFTER_INIT NonnullRefPtr<BochsFramebufferDevice> BochsFramebufferDevice::create(const BochsGraphicsAdapter& adapter, PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {
     return adopt_ref(*new BochsFramebufferDevice(adapter, framebuffer_address, pitch, width, height));
 }
 
-UNMAP_AFTER_INIT BochsFramebufferDevice::BochsFramebufferDevice(const BochsGraphicsAdapter& adapter, PhysicalAddress framebuffer_address, size_t pitch, size_t width, size_t height)
-    : FramebufferDevice(framebuffer_address, pitch, width, height)
+UNMAP_AFTER_INIT BochsFramebufferDevice::BochsFramebufferDevice(const BochsGraphicsAdapter& adapter, PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
+    : FramebufferDevice(framebuffer_address, width, height, pitch)
     , m_bochs_adapter(adapter)
 {
     m_bochs_adapter->set_safe_resolution();

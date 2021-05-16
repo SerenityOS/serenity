@@ -8,12 +8,12 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT NonnullRefPtr<RawFramebufferDevice> RawFramebufferDevice::create(const GraphicsDevice&, PhysicalAddress framebuffer_address, size_t pitch, size_t width, size_t height)
+UNMAP_AFTER_INIT NonnullRefPtr<RawFramebufferDevice> RawFramebufferDevice::create(const GraphicsDevice&, PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
 {
-    return adopt_ref(*new RawFramebufferDevice(framebuffer_address, pitch, width, height));
+    return adopt_ref(*new RawFramebufferDevice(framebuffer_address, width, height, pitch));
 }
-UNMAP_AFTER_INIT RawFramebufferDevice::RawFramebufferDevice(PhysicalAddress framebuffer_address, size_t pitch, size_t width, size_t height)
-    : FramebufferDevice(framebuffer_address, pitch, width, height)
+UNMAP_AFTER_INIT RawFramebufferDevice::RawFramebufferDevice(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
+    : FramebufferDevice(framebuffer_address, width, height, pitch)
 {
 }
 
