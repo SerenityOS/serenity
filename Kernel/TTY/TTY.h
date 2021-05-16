@@ -38,7 +38,7 @@ public:
         return 0;
     }
 
-    void set_termios(const termios&);
+    int set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }

@@ -5,6 +5,7 @@
  */
 
 #include <AK/ScopeGuard.h>
+#include <AK/StringView.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>
@@ -50,16 +51,12 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     if (m_input_buffer.size() < static_cast<size_t>(size))
         size = m_input_buffer.size();
 
-    KResultOr<size_t> result = 0;
     bool need_evaluate_block_conditions = false;
-    if (in_canonical_mode()) {
-        result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
-            size_t i = 0;
-            for (; i < data_size; i++) {
-                u8 ch = m_input_buffer.dequeue();
+    auto result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
+        for (size_t i = 0; i < data_size; ++i) {
+            u8 ch = m_input_buffer.dequeue();
+            if (in_canonical_mode()) {
                 if (ch == '\0') {
-                    //Here we handle a ^D line, so we don't add the
-                    //character to the output.
                     m_available_lines--;
                     need_evaluate_block_conditions = true;
                     break;
@@ -69,23 +66,11 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
                     m_available_lines--;
                     break;
                 }
-                data[i] = ch;
             }
-            return i;
-        });
-    } else {
-        result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
-            for (size_t i = 0; i < data_size; i++) {
-                auto ch = m_input_buffer.dequeue();
-                if (ch == '\r' && m_termios.c_iflag & ICRNL)
-                    ch = '\n';
-                else if (ch == '\n' && m_termios.c_iflag & INLCR)
-                    ch = '\r';
-                data[i] = ch;
-            }
-            return data_size;
-        });
-    }
+            data[i] = ch;
+        }
+        return data_size;
+    });
     if ((!result.is_error() && result.value() > 0) || need_evaluate_block_conditions)
         evaluate_block_conditions();
     return result;
@@ -104,9 +89,11 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
         size_t extra_chars = 0;
         for (size_t i = 0; i < buffer_bytes; ++i) {
             auto ch = data[i];
-            if (ch == '\n' && (m_termios.c_oflag & (OPOST | ONLCR))) {
-                modified_data[i + extra_chars] = '\r';
-                extra_chars++;
+            if (m_termios.c_oflag & OPOST) {
+                if (ch == '\n' && (m_termios.c_oflag & ONLCR)) {
+                    modified_data[i + extra_chars] = '\r';
+                    extra_chars++;
+                }
             }
             modified_data[i + extra_chars] = ch;
         }
@@ -155,6 +142,9 @@ bool TTY::is_werase(u8 ch) const
 
 void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 {
+    if (m_termios.c_iflag & ISTRIP)
+        ch &= 0x7F;
+
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINFO]) {
             dbgln("{}: VINFO pressed!", tty_name());
@@ -187,6 +177,11 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             evaluate_block_conditions();
     });
 
+    if (ch == '\r' && (m_termios.c_iflag & ICRNL))
+        ch = '\n';
+    else if (ch == '\n' && (m_termios.c_iflag & INLCR))
+        ch = '\r';
+
     if (in_canonical_mode()) {
         if (is_eof(ch)) {
             m_available_lines++;
@@ -195,11 +190,11 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             m_input_buffer.enqueue('\0');
             return;
         }
-        if (is_kill(ch)) {
+        if (is_kill(ch) && m_termios.c_lflag & ECHOK) {
             kill_line();
             return;
         }
-        if (is_erase(ch)) {
+        if (is_erase(ch) && m_termios.c_lflag & ECHOE) {
             do_backspace();
             return;
         }
@@ -207,12 +202,23 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             erase_word();
             return;
         }
-        if (ch == '\n' || is_eol(ch)) {
+
+        if (is_eol(ch)) {
             m_available_lines++;
         }
+
+        if (ch == '\n') {
+            if (m_termios.c_lflag & ECHO || m_termios.c_lflag & ECHONL)
+                echo('\n');
+            m_input_buffer.enqueue('\n');
+            m_available_lines++;
+            return;
+        }
     }
+
     m_input_buffer.enqueue(ch);
-    echo(ch);
+    if (m_termios.c_lflag & ECHO)
+        echo(ch);
 }
 
 bool TTY::can_do_backspace() const
@@ -303,8 +309,9 @@ void TTY::flush_input()
     evaluate_block_conditions();
 }
 
-void TTY::set_termios(const termios& t)
+int TTY::set_termios(const termios& t)
 {
+    int rc = 0;
     m_termios = t;
 
     dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
@@ -321,6 +328,79 @@ void TTY::set_termios(const termios& t)
         ((m_termios.c_iflag & IGNCR) != 0),
         ((m_termios.c_oflag & OPOST) != 0),
         ((m_termios.c_oflag & ONLCR) != 0));
+
+    struct FlagDescription {
+        tcflag_t value;
+        StringView name;
+    };
+
+    static constexpr FlagDescription unimplemented_iflags[] = {
+        { IGNBRK, "IGNBRK" },
+        { BRKINT, "BRKINT" },
+        { IGNPAR, "IGNPAR" },
+        { PARMRK, "PARMRK" },
+        { INPCK, "INPCK" },
+        { IGNCR, "IGNCR" },
+        { IUCLC, "IUCLC" },
+        { IXON, "IXON" },
+        { IXANY, "IXANY" },
+        { IXOFF, "IXOFF" },
+        { IMAXBEL, "IMAXBEL" },
+        { IUTF8, "IUTF8" }
+    };
+    for (auto flag : unimplemented_iflags) {
+        if (m_termios.c_iflag & flag.value) {
+            dbgln("FIXME: iflag {} unimplemented", flag.name);
+            rc = -ENOTIMPL;
+        }
+    }
+
+    static constexpr FlagDescription unimplemented_oflags[] = {
+        { OLCUC, "OLCUC" },
+        { ONOCR, "ONOCR" },
+        { ONLRET, "ONLRET" },
+        { OFILL, "OFILL" },
+        { OFDEL, "OFDEL" }
+    };
+    for (auto flag : unimplemented_oflags) {
+        if (m_termios.c_oflag & flag.value) {
+            dbgln("FIXME: oflag {} unimplemented", flag.name);
+            rc = -ENOTIMPL;
+        }
+    }
+
+    static constexpr FlagDescription unimplemented_cflags[] = {
+        { CSIZE, "CSIZE" },
+        { CS5, "CS5" },
+        { CS6, "CS6" },
+        { CS7, "CS7" },
+        { CS8, "CS8" },
+        { CSTOPB, "CSTOPB" },
+        { CREAD, "CREAD" },
+        { PARENB, "PARENB" },
+        { PARODD, "PARODD" },
+        { HUPCL, "HUPCL" },
+        { CLOCAL, "CLOCAL" }
+    };
+    for (auto flag : unimplemented_cflags) {
+        if (m_termios.c_cflag & flag.value) {
+            dbgln("FIXME: cflag {} unimplemented", flag.name);
+            rc = -ENOTIMPL;
+        }
+    }
+
+    static constexpr FlagDescription unimplemented_lflags[] = {
+        { TOSTOP, "TOSTOP" },
+        { IEXTEN, "IEXTEN" }
+    };
+    for (auto flag : unimplemented_lflags) {
+        if (m_termios.c_lflag & flag.value) {
+            dbgln("FIXME: lflag {} unimplemented", flag.name);
+            rc = -ENOTIMPL;
+        }
+    }
+
+    return rc;
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
@@ -381,10 +461,10 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         termios termios;
         if (!copy_from_user(&termios, user_termios))
             return -EFAULT;
-        set_termios(termios);
+        int rc = set_termios(termios);
         if (request == TCSETSF)
             flush_input();
-        return 0;
+        return rc;
     }
     case TCFLSH:
         // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
