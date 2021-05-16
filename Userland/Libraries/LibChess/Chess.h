@@ -55,10 +55,10 @@ struct Piece {
 constexpr Piece EmptyPiece = { Color::None, Type::None };
 
 struct Square {
-    unsigned rank; // zero indexed;
-    unsigned file;
+    int rank; // zero indexed;
+    int file;
     Square(const StringView& name);
-    Square(const unsigned& rank, const unsigned& file)
+    Square(const int& rank, const int& file)
         : rank(rank)
         , file(file)
     {
@@ -76,7 +76,7 @@ struct Square {
         }
     }
 
-    bool in_bounds() const { return rank < 8 && file < 8; }
+    bool in_bounds() const { return rank >= 0 && file >= 0 && rank < 8 && file < 8; }
     bool is_light() const { return (rank % 2) != (file % 2); }
     String to_algebraic() const;
 };
