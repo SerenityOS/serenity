@@ -20,7 +20,11 @@ fi
 
 disk_usage() {
     # shellcheck disable=SC2003
+if [ "$(uname -s)" = "Darwin" ]; then
     expr "$(du -sk "$1" | cut -f1)" / 1024
+else
+    expr "$(du -sk --apparent-size "$1" | cut -f1)" / 1024
+fi
 }
 
 DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 100))
