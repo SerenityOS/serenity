@@ -33,7 +33,7 @@ public:
         auto& hash_fn = this->hasher();
         hash_fn.update(in);
         auto message_hash = hash_fn.digest();
-        constexpr auto hash_length = hash_fn.DigestSize;
+        constexpr auto hash_length = HashFunction::DigestSize;
         auto em_length = (em_bits + 7) / 8;
         u8 salt[SaltLength];
 
