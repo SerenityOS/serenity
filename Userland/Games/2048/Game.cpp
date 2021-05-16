@@ -227,6 +227,7 @@ void Game::add_evil_tile()
     u32 worst_value = 2;
 
     size_t most_free_cells = NumericLimits<size_t>::max();
+    size_t worst_score = NumericLimits<size_t>::max();
 
     for (size_t row = 0; row < m_grid_size; row++) {
         for (size_t column = 0; column < m_grid_size; column++) {
@@ -246,24 +247,34 @@ void Game::add_evil_tile()
                     goto found_worst_tile;
                 }
 
-                // This is the best outcome the player can achieve in one move.
+                // These are the best outcome and score the player can achieve in one move.
                 // We want this to be as low as possible.
                 size_t best_outcome = 0;
+                size_t best_score = 0;
                 for (auto direction : Array { Direction::Down, Direction::Left, Direction::Right, Direction::Up }) {
                     Game moved_state = saved_state;
                     bool moved = moved_state.slide_tiles(direction);
                     if (!moved) // invalid move
                         continue;
                     best_outcome = max(best_outcome, get_number_of_free_cells(moved_state.board()));
+                    best_score = max(best_score, moved_state.score());
                 }
 
-                if (best_outcome < most_free_cells) {
-                    worst_row = row;
-                    worst_column = column;
-                    worst_value = value;
+                // We already know a worse cell placement; discard.
+                if (best_outcome > most_free_cells)
+                    continue;
 
-                    most_free_cells = best_outcome;
-                }
+                // This tile is the same as the worst we know in terms of board population,
+                // but the player can achieve the same or better score; discard.
+                if (best_outcome == most_free_cells && best_score >= worst_score)
+                    continue;
+
+                worst_row = row;
+                worst_column = column;
+                worst_value = value;
+
+                most_free_cells = best_outcome;
+                worst_score = best_score;
             }
         }
     }
