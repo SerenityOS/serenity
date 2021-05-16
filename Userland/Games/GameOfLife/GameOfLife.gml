@@ -8,8 +8,8 @@
             name: "toolbar"
 
             @GUI::Label {
-                text: "Columns:"
-                fixed_width: 60
+                text: "Columns: "
+                autosize: true
             }
 
             @GUI::SpinBox {
@@ -18,11 +18,13 @@
                 max: 999
                 fixed_width: 40
             }
+
             @GUI::VerticalSeparator {
             }
+
             @GUI::Label {
-                text: "Rows:"
-                fixed_width: 40
+                text: "Rows: "
+                autosize: true
             }
 
             @GUI::SpinBox {
@@ -31,12 +33,15 @@
                 max: 999
                 fixed_width: 40
             }
+
             @GUI::VerticalSeparator {
             }
+
             @GUI::Label {
-                text: "Update Speed:"
-                fixed_width: 90
+                text: "Update Speed: "
+                autosize: true
             }
+
             @GUI::SpinBox {
                 name: "interval_spinbox"
                 min: 10
