@@ -28,7 +28,6 @@ public:
     {
         grow(other.size());
         VERIFY(m_size == other.size());
-        VERIFY(!m_is_null);
         __builtin_memcpy(data(), other.data(), other.size());
     }
 
@@ -96,10 +95,6 @@ public:
 
     bool operator!=(ByteBuffer const& other) const { return !(*this == other); }
 
-    operator bool() const { return !is_null(); }
-    bool operator!() const { return is_null(); }
-    [[nodiscard]] bool is_null() const { return m_is_null; }
-
     [[nodiscard]] u8& operator[](size_t i)
     {
         VERIFY(i < m_size);
@@ -152,7 +147,6 @@ public:
 
     void grow(size_t new_size)
     {
-        m_is_null = false;
         if (new_size <= m_size)
             return;
         if (new_size <= capacity()) {
@@ -208,20 +202,17 @@ private:
     ByteBuffer(size_t size)
     {
         grow(size);
-        VERIFY(!m_is_null);
         VERIFY(m_size == size);
     }
 
     void move_from(ByteBuffer&& other)
     {
-        m_is_null = other.m_is_null;
         m_size = other.m_size;
         if (other.m_size > inline_capacity) {
             m_outline_buffer = other.m_outline_buffer;
             m_outline_capacity = other.m_outline_capacity;
         } else
             __builtin_memcpy(m_inline_buffer, other.m_inline_buffer, other.m_size);
-        other.m_is_null = true;
         other.m_size = 0;
     }
 
@@ -242,7 +233,6 @@ private:
     size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
 
     size_t m_size { 0 };
-    bool m_is_null { true };
     union {
         u8 m_inline_buffer[inline_capacity];
         struct {

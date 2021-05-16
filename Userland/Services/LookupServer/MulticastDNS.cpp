@@ -168,7 +168,7 @@ Vector<DNSAnswer> MulticastDNS::lookup(const DNSName& name, DNSRecordType record
         }
 
         auto buffer = receive(1024);
-        if (!buffer)
+        if (buffer.is_empty())
             return {};
         auto optional_packet = DNSPacket::from_raw_packet(buffer.data(), buffer.size());
         if (!optional_packet.has_value()) {
