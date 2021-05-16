@@ -31,6 +31,8 @@ ViewWidget::~ViewWidget()
 
 void ViewWidget::clear()
 {
+    m_timer->stop();
+    m_decoded_image.clear();
     m_bitmap = nullptr;
     if (on_image_change)
         on_image_change(m_bitmap);
@@ -265,6 +267,8 @@ void ViewWidget::load_from_file(const String& path)
         m_timer->set_interval(first_frame.duration);
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();
+    } else {
+        m_timer->stop();
     }
 
     m_path = path;
