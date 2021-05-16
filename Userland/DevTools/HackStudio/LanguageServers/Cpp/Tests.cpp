@@ -6,7 +6,7 @@
 
 #include "Tests.h"
 #include "../FileDB.h"
-#include "ParserAutoComplete.h"
+#include "CppComprehensionEngine.h"
 
 using namespace LanguageServers;
 using namespace LanguageServers::Cpp;
@@ -57,8 +57,8 @@ ar
 }
 )";
     filedb.add("a.cpp", content);
-    ParserAutoComplete autocomplete(filedb);
-    auto suggestions = autocomplete.get_suggestions("a.cpp", { 2, 2 });
+    CppComprehensionEngine engine(filedb);
+    auto suggestions = engine.get_suggestions("a.cpp", { 2, 2 });
     if (suggestions.size() != 2)
         FAIL(bad size);
 
@@ -79,7 +79,7 @@ myv
 }
 )";
     filedb.add("a.cpp", content);
-    ParserAutoComplete autocomplete(filedb);
+    CppComprehensionEngine autocomplete(filedb);
     auto suggestions = autocomplete.get_suggestions("a.cpp", { 3, 3 });
     if (suggestions.size() != 1)
         FAIL(bad size);
@@ -103,7 +103,7 @@ MyS
 }
 )";
     filedb.add("a.cpp", content);
-    ParserAutoComplete autocomplete(filedb);
+    CppComprehensionEngine autocomplete(filedb);
     auto suggestions = autocomplete.get_suggestions("a.cpp", { 5, 3 });
     if (suggestions.size() != 1)
         FAIL(bad size);
@@ -124,8 +124,8 @@ argv = nullptr;
 }
 )";
     filedb.add("a.cpp", content);
-    ParserAutoComplete autocomplete(filedb);
-    auto position = autocomplete.find_declaration_of("a.cpp", { 2, 1 });
+    CppComprehensionEngine engine(filedb);
+    auto position = engine.find_declaration_of("a.cpp", { 2, 1 });
     if (!position.has_value())
         FAIL("declaration not found");
 
