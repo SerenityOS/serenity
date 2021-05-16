@@ -267,6 +267,11 @@ For the changes to take effect, SerenityOS needs to be recompiled and the disk i
 
 To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run `./package.sh`. The sourcecode for the package will be downloaded and the package will be built. After that, rebuild the disk image. The next time you start Serenity, `curl` will be available.
 
+## Tests
+
+For information on running host and target tests, see [Running Tests](RunningTests.md). The documentation there explains the difference between host tests run with Lagom and
+target tests run on SerenityOS. It also contains useful information for debugging CI test failures.
+
 ## Customize disk image
 
 To add, modify or remove files of the disk image's file system, e.g. to change the default keyboard layout, you can create a shell script with the name `sync-local.sh` in the project root, with content like this:
