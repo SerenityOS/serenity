@@ -431,7 +431,7 @@ public:
         if (type != CSS::Selector::SimpleSelector::Type::Universal) {
             while (is_valid_selector_char(peek()))
                 buffer.append(consume_one());
-            PARSE_VERIFY(!buffer.is_null());
+            PARSE_VERIFY(!buffer.is_empty());
         }
 
         auto value = String::copy(buffer);

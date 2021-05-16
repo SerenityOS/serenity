@@ -189,7 +189,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     }));
 
     edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
-        if (m_search_text.is_empty() || m_search_buffer.is_empty() || m_search_buffer.is_null()) {
+        if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
             GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
             return;
         }

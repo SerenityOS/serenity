@@ -110,7 +110,7 @@ void Job::on_socket_connected()
             auto read_size = 64 * KiB;
 
             auto payload = receive(read_size);
-            if (!payload) {
+            if (payload.is_empty()) {
                 if (eof()) {
                     finish_up();
                     return IterationDecision::Break;
