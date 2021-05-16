@@ -24,6 +24,11 @@ RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
     for (auto line = obj_file_or_error.value()->line_begin(); !line.at_end(); ++line) {
         auto object_line = *line;
 
+        // FIXME: Parse texture coordinates and vertex normals
+        if (object_line.starts_with("vt") || object_line.starts_with("vn")) {
+            continue;
+        }
+
         // This line describes a vertex (a position in 3D space)
         if (object_line.starts_with("v")) {
             auto vertex_line = object_line.split_view(' ');
@@ -43,6 +48,12 @@ RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
             if (face_line.size() != 4) {
                 dbgln("Wavefront: Malformed face line. Aborting.");
                 return nullptr;
+            }
+
+            if (object_line.contains("/")) {
+                for (int i = 1; i <= 3; ++i) {
+                    face_line.at(i) = face_line.at(i).split_view("/").at(0);
+                }
             }
 
             // Create a new triangle
