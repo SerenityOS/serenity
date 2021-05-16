@@ -32,7 +32,7 @@ public:
     static bool is_initialized();
     bool initialize();
 
-    unsigned current_minor_number() { return m_current_minor_number++; };
+    unsigned allocate_minor_device_number() { return m_current_minor_number++; };
     GraphicsManagement();
 
     bool framebuffer_devices_allowed() const { return m_framebuffer_devices_allowed; }

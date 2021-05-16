@@ -95,7 +95,7 @@ UNMAP_AFTER_INIT void FramebufferDevice::initialize()
 }
 
 UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(PhysicalAddress addr, size_t pitch, size_t width, size_t height)
-    : BlockDevice(29, GraphicsManagement::the().current_minor_number())
+    : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)
     , m_framebuffer_width(width)
