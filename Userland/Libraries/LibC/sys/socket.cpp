@@ -34,7 +34,13 @@ int listen(int sockfd, int backlog)
 
 int accept(int sockfd, sockaddr* addr, socklen_t* addrlen)
 {
-    int rc = syscall(SC_accept, sockfd, addr, addrlen);
+    return accept4(sockfd, addr, addrlen, 0);
+}
+
+int accept4(int sockfd, sockaddr* addr, socklen_t* addrlen, int flags)
+{
+    Syscall::SC_accept4_params params { sockfd, addr, addrlen, flags };
+    int rc = syscall(SC_accept4, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

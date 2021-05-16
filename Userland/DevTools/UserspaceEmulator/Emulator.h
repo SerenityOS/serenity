@@ -137,7 +137,7 @@ private:
     int virt$getpeername(FlatPtr);
     int virt$select(FlatPtr);
     int virt$get_stack_bounds(FlatPtr, FlatPtr);
-    int virt$accept(int sockfd, FlatPtr address, FlatPtr address_length);
+    int virt$accept4(FlatPtr);
     int virt$bind(int sockfd, FlatPtr address, socklen_t address_length);
     int virt$recvmsg(int sockfd, FlatPtr msg_addr, int flags);
     int virt$sendmsg(int sockfd, FlatPtr msg_addr, int flags);

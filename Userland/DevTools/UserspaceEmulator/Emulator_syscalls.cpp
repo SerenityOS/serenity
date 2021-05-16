@@ -168,8 +168,8 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
         return virt$fchmod(arg1, arg2);
     case SC_fchown:
         return virt$fchown(arg1, arg2, arg3);
-    case SC_accept:
-        return virt$accept(arg1, arg2, arg3);
+    case SC_accept4:
+        return virt$accept4(arg1);
     case SC_setsockopt:
         return virt$setsockopt(arg1);
     case SC_getsockname:
@@ -452,17 +452,20 @@ mode_t Emulator::virt$umask(mode_t mask)
     return syscall(SC_umask, mask);
 }
 
-int Emulator::virt$accept(int sockfd, FlatPtr address, FlatPtr address_length)
+int Emulator::virt$accept4(FlatPtr params_addr)
 {
-    socklen_t host_address_length = 0;
-    mmu().copy_from_vm(&host_address_length, address_length, sizeof(host_address_length));
-    auto host_buffer = ByteBuffer::create_zeroed(host_address_length);
-    int rc = syscall(SC_accept, sockfd, host_buffer.data(), &host_address_length);
-    if (rc < 0)
-        return rc;
-    mmu().copy_to_vm(address, host_buffer.data(), min((socklen_t)host_buffer.size(), host_address_length));
-    mmu().copy_to_vm(address_length, &host_address_length, sizeof(host_address_length));
-    return rc;
+    Syscall::SC_accept4_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+    sockaddr_storage addr = {};
+    socklen_t addrlen;
+    mmu().copy_from_vm(&addrlen, (FlatPtr)params.addrlen, sizeof(socklen_t));
+    VERIFY(addrlen <= sizeof(addr));
+    int rc = accept4(params.sockfd, (sockaddr*)&addr, &addrlen, params.flags);
+    if (rc == 0) {
+        mmu().copy_to_vm((FlatPtr)params.addr, &addr, addrlen);
+        mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(socklen_t));
+    }
+    return rc < 0 ? -errno : rc;
 }
 
 int Emulator::virt$bind(int sockfd, FlatPtr address, socklen_t address_length)

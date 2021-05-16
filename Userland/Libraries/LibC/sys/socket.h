@@ -127,6 +127,7 @@ int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);
 int listen(int sockfd, int backlog);
 int accept(int sockfd, struct sockaddr*, socklen_t*);
+int accept4(int sockfd, struct sockaddr*, socklen_t*, int);
 int connect(int sockfd, const struct sockaddr*, socklen_t);
 int shutdown(int sockfd, int how);
 ssize_t send(int sockfd, const void*, size_t, int flags);

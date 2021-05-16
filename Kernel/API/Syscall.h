@@ -99,7 +99,7 @@ namespace Kernel {
     S(chmod)                      \
     S(socket)                     \
     S(bind)                       \
-    S(accept)                     \
+    S(accept4)                    \
     S(listen)                     \
     S(connect)                    \
     S(link)                       \
@@ -267,6 +267,13 @@ struct SC_clock_nanosleep_params {
     int flags;
     const struct timespec* requested_sleep;
     struct timespec* remaining_sleep;
+};
+
+struct SC_accept4_params {
+    int sockfd;
+    sockaddr* addr;
+    socklen_t* addrlen;
+    int flags;
 };
 
 struct SC_getsockopt_params {
