@@ -871,6 +871,8 @@ void SoftwareGLContext::gl_finish()
 
 void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_blend_func, src_factor, dst_factor);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
@@ -927,6 +929,8 @@ void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
 
 void SoftwareGLContext::gl_shade_model(GLenum mode)
 {
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_shade_model, mode);
+
     if (m_in_draw_state) {
         m_error = GL_INVALID_OPERATION;
         return;
