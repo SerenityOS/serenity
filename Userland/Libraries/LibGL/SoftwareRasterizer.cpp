@@ -316,6 +316,48 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                 }
             }
 
+            if (options.enable_alpha_test && options.alpha_test_func != GL_ALWAYS) {
+                // FIXME: I'm not sure if this is the right place to test this.
+                // If we tested this right at the beginning of our rasterizer routine
+                // we could skip a lot of work but the GL spec might disagree.
+                if (options.alpha_test_func == GL_NEVER)
+                    continue;
+
+                for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
+                    auto src = pixel_buffer[y];
+                    for (int x = 0; x < RASTERIZER_BLOCK_SIZE; x++, src++) {
+                        if (~pixel_mask[y] & (1 << x))
+                            continue;
+
+                        bool passed = true;
+
+                        switch (options.alpha_test_func) {
+                        case GL_LESS:
+                            passed = src->w() < options.alpha_test_ref_value;
+                            break;
+                        case GL_EQUAL:
+                            passed = src->w() == options.alpha_test_ref_value;
+                            break;
+                        case GL_LEQUAL:
+                            passed = src->w() <= options.alpha_test_ref_value;
+                            break;
+                        case GL_GREATER:
+                            passed = src->w() > options.alpha_test_ref_value;
+                            break;
+                        case GL_NOTEQUAL:
+                            passed = src->w() != options.alpha_test_ref_value;
+                            break;
+                        case GL_GEQUAL:
+                            passed = src->w() >= options.alpha_test_ref_value;
+                            break;
+                        }
+
+                        if (!passed)
+                            pixel_mask[y] ^= (1 << x);
+                    }
+                }
+            }
+
             if (options.enable_blending) {
                 // Blend color values from pixel_buffer into render_target
                 for (int y = 0; y < RASTERIZER_BLOCK_SIZE; y++) {
