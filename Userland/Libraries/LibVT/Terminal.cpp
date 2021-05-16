@@ -706,7 +706,7 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
             return;
         case '\\':
             // ST (string terminator) -- do nothing
-            return;  
+            return;
         }
     } else if (intermediates[0] == '#') {
         switch (last_byte) {
