@@ -86,7 +86,7 @@ UNMAP_AFTER_INIT void FramebufferDevice::initialize()
 {
     m_real_framebuffer_vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, page_round_up(framebuffer_size_in_bytes()));
     VERIFY(m_real_framebuffer_vmobject);
-    m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, framebuffer_size_in_bytes(), "Framebuffer", Region::Access::Read | Region::Access::Write);
+    m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Region::Access::Read | Region::Access::Write);
     VERIFY(m_real_framebuffer_region);
     m_swapped_framebuffer_vmobject = AnonymousVMObject::create_with_size(page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
     VERIFY(m_swapped_framebuffer_vmobject);
