@@ -19,12 +19,12 @@ class RawFramebufferDevice : public FramebufferDevice {
     friend class GraphicsDevice;
 
 public:
-    static NonnullRefPtr<RawFramebufferDevice> create(const GraphicsDevice&, PhysicalAddress, size_t pitch, size_t width, size_t height);
+    static NonnullRefPtr<RawFramebufferDevice> create(const GraphicsDevice&, PhysicalAddress, size_t width, size_t height, size_t pitch);
 
     virtual ~RawFramebufferDevice() {};
 
 private:
-    RawFramebufferDevice(PhysicalAddress, size_t pitch, size_t width, size_t height);
+    RawFramebufferDevice(PhysicalAddress, size_t width, size_t height, size_t pitch);
     virtual const char* class_name() const override { return "RawFramebuffer"; }
 };
 
