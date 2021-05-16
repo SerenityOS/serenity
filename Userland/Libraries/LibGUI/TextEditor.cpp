@@ -1190,7 +1190,7 @@ bool TextEditor::write_to_file(const String& path)
             return false;
         }
     }
-
+    document().set_unmodified();
     return true;
 }
 
