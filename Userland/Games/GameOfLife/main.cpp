@@ -13,12 +13,9 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
-#include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 
 const char* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
