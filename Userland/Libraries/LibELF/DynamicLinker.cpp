@@ -125,9 +125,8 @@ static Vector<String> get_dependencies(const String& name)
 
     lib->for_each_needed_library([&dependencies, &name](auto needed_name) {
         if (name == needed_name)
-            return IterationDecision::Continue;
+            return;
         dependencies.append(needed_name);
-        return IterationDecision::Continue;
     });
     return dependencies;
 }

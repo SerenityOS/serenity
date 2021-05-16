@@ -47,8 +47,6 @@ KResult Process::do_killpg(ProcessGroupID pgrp, int signal)
             any_succeeded = true;
         else
             error = res;
-
-        return IterationDecision::Continue;
     });
 
     if (group_was_empty)
