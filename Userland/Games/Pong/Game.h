@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Optional.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/MessageBox.h>
@@ -97,6 +98,10 @@ private:
     int m_score_to_win = 21;
     int m_player_1_score = 0;
     int m_player_2_score = 0;
+
+    Optional<int> m_cursor_paddle_target_y;
+    bool m_up_key_held = false;
+    bool m_down_key_held = false;
 };
 
 }

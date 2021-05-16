@@ -11,7 +11,6 @@ namespace Pong {
 
 Game::Game()
 {
-    set_override_cursor(Gfx::StandardCursor::Hidden);
     start_timer(16);
     reset();
 }
@@ -22,9 +21,12 @@ Game::~Game()
 
 void Game::reset_paddles()
 {
+    m_cursor_paddle_target_y.clear();
+
     m_player1_paddle.moving_up = false;
     m_player1_paddle.moving_down = false;
     m_player1_paddle.rect = { game_width - 12, game_height / 2 - 40, m_player1_paddle.width, m_player1_paddle.height };
+
     m_player2_paddle.moving_up = false;
     m_player2_paddle.moving_down = false;
     m_player2_paddle.rect = { 4, game_height / 2 - 40, m_player2_paddle.width, m_player2_paddle.height };
@@ -54,6 +56,13 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(enclosing_int_rect(m_player1_paddle.rect), m_player1_paddle.color);
     painter.fill_rect(enclosing_int_rect(m_player2_paddle.rect), m_player2_paddle.color);
 
+    if (m_cursor_paddle_target_y.has_value()) {
+        int radius = 3;
+        int center_x = m_player1_paddle.rect.center().x();
+        int center_y = *m_cursor_paddle_target_y + m_player1_paddle.rect.height() / 2;
+        painter.fill_ellipse(Gfx::IntRect { center_x - radius, center_y - radius, 2 * radius, 2 * radius }, Color::Blue);
+    }
+
     painter.draw_text(player_1_score_rect(), String::formatted("{}", m_player_1_score), Gfx::TextAlignment::TopLeft, Color::White);
     painter.draw_text(player_2_score_rect(), String::formatted("{}", m_player_2_score), Gfx::TextAlignment::TopLeft, Color::White);
 }
@@ -62,9 +71,11 @@ void Game::keyup_event(GUI::KeyEvent& event)
 {
     switch (event.key()) {
     case Key_Up:
+        m_up_key_held = false;
         m_player1_paddle.moving_up = false;
         break;
     case Key_Down:
+        m_down_key_held = false;
         m_player1_paddle.moving_down = false;
         break;
     default:
@@ -79,10 +90,16 @@ void Game::keydown_event(GUI::KeyEvent& event)
         GUI::Application::the()->quit();
         break;
     case Key_Up:
+        m_up_key_held = true;
         m_player1_paddle.moving_up = true;
+        m_player1_paddle.moving_down = false;
+        m_cursor_paddle_target_y.clear();
         break;
     case Key_Down:
+        m_down_key_held = true;
+        m_player1_paddle.moving_up = false;
         m_player1_paddle.moving_down = true;
+        m_cursor_paddle_target_y.clear();
         break;
     default:
         break;
@@ -91,10 +108,19 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
 void Game::mousemove_event(GUI::MouseEvent& event)
 {
-    float new_paddle_y = event.y() - m_player1_paddle.rect.height() / 2;
-    new_paddle_y = max(0.0f, new_paddle_y);
-    new_paddle_y = min(game_height - m_player1_paddle.rect.height(), new_paddle_y);
-    m_player1_paddle.rect.set_y(new_paddle_y);
+    if (m_up_key_held || m_down_key_held) {
+        // We're using the keyboard to move the paddle, the cursor is doing something else
+        return;
+    }
+
+    m_cursor_paddle_target_y = clamp(event.y() - m_player1_paddle.rect.height() / 2, 0.f, game_height - m_player1_paddle.rect.height());
+    if (m_player1_paddle.rect.y() > *m_cursor_paddle_target_y) {
+        m_player1_paddle.moving_up = true;
+        m_player1_paddle.moving_down = false;
+    } else if (m_player1_paddle.rect.y() < *m_cursor_paddle_target_y) {
+        m_player1_paddle.moving_up = false;
+        m_player1_paddle.moving_down = true;
+    }
 }
 
 void Game::reset_ball(int serve_to_player)
@@ -209,9 +235,17 @@ void Game::tick()
 
     if (m_player1_paddle.moving_up) {
         m_player1_paddle.rect.set_y(max(0.0f, m_player1_paddle.rect.y() - m_player1_paddle.speed));
+        if (m_cursor_paddle_target_y.has_value() && m_player1_paddle.rect.y() <= *m_cursor_paddle_target_y) {
+            m_cursor_paddle_target_y.clear();
+            m_player1_paddle.moving_up = false;
+        }
     }
     if (m_player1_paddle.moving_down) {
         m_player1_paddle.rect.set_y(min(game_height - m_player1_paddle.rect.height(), m_player1_paddle.rect.y() + m_player1_paddle.speed));
+        if (m_cursor_paddle_target_y.has_value() && m_player1_paddle.rect.y() >= *m_cursor_paddle_target_y) {
+            m_cursor_paddle_target_y.clear();
+            m_player1_paddle.moving_down = false;
+        }
     }
 
     calculate_move();
