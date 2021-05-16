@@ -3,6 +3,7 @@ set(SOURCES
     GLBlend.cpp
     GLColor.cpp
     GLContext.cpp
+    GLLights.cpp
     GLLists.cpp
     GLMat.cpp
     GLUtils.cpp
