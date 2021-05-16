@@ -584,7 +584,7 @@ void dump_thread_list()
         return thread.get_register_dump_from_stack().eip;
     };
 
-    Thread::for_each([&](Thread& thread) -> IterationDecision {
+    Thread::for_each([&](Thread& thread) {
         switch (thread.state()) {
         case Thread::Dying:
             dbgln("  {:14} {:30} @ {:04x}:{:08x} Finalizable: {}, (nsched: {})",
@@ -605,8 +605,6 @@ void dump_thread_list()
                 thread.times_scheduled());
             break;
         }
-
-        return IterationDecision::Continue;
     });
 }
 

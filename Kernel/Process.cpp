@@ -103,15 +103,16 @@ void Process::kill_threads_except_self()
 
     auto current_thread = Thread::current();
     for_each_thread([&](Thread& thread) {
-        if (&thread == current_thread
-            || thread.state() == Thread::State::Dead
-            || thread.state() == Thread::State::Dying)
-            return IterationDecision::Continue;
+        if (&thread == current_thread)
+            return;
+
+        if (auto state = thread.state(); state == Thread::State::Dead
+            || state == Thread::State::Dying)
+            return;
 
         // We need to detach this thread in case it hasn't been joined
         thread.detach();
         thread.set_should_die();
-        return IterationDecision::Continue;
     });
 
     big_lock().clear_waiters();
@@ -123,7 +124,6 @@ void Process::kill_all_threads()
         // We need to detach this thread in case it hasn't been joined
         thread.detach();
         thread.set_should_die();
-        return IterationDecision::Continue;
     });
 }
 
@@ -562,7 +562,6 @@ void Process::die()
 
     for_each_thread([&](auto& thread) {
         m_threads_for_coredump.append(thread);
-        return IterationDecision::Continue;
     });
 
     {
