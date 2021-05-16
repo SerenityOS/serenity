@@ -342,6 +342,10 @@
 #cmakedefine01 SH_LANGUAGE_SERVER_DEBUG
 #endif
 
+#ifndef SOLITAIRE_DEBUG
+#cmakedefine01 SOLITAIRE_DEBUG
+#endif
+
 #ifndef SPAM_DEBUG
 #cmakedefine01 SPAM_DEBUG
 #endif
