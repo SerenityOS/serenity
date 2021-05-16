@@ -59,7 +59,7 @@
         }
     }
 
-    @GUI::Widget {
+    @GUI::Frame {
         name: "board_widget_container"
         fill_with_background_color: true
     }
