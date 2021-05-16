@@ -141,18 +141,32 @@ void Game::round_over(int winner)
 
 void Game::calculate_move()
 {
-    if ((m_ball.y() + m_ball.radius) < (m_player2_paddle.rect.y() + (m_player2_paddle.rect.height() / 2))) {
-        m_player2_paddle.moving_up = true;
-        m_player2_paddle.moving_down = false;
-        return;
+    int player_2_paddle_top = m_player2_paddle.rect.top();
+    int player_2_paddle_bottom = m_player2_paddle.rect.bottom();
+
+    int ball_position = m_ball.y() + m_ball.radius;
+
+    // AI paddle begins moving when the ball crosses the begin_trigger,
+    // but stops only if it crosses the end_trigger. end_trigger forces
+    // overcorrection, so that the paddle moves more smoothly.
+    int begin_trigger = m_player2_paddle.rect.height() / 4;
+    int end_trigger = m_player2_paddle.rect.height() / 2;
+
+    if (m_player2_paddle.moving_up) {
+        if (player_2_paddle_top + end_trigger < ball_position)
+            m_player2_paddle.moving_up = false;
+    } else {
+        if (player_2_paddle_top + begin_trigger > ball_position)
+            m_player2_paddle.moving_up = true;
     }
-    if ((m_ball.y() + m_ball.radius) > (m_player2_paddle.rect.y() + (m_player2_paddle.rect.height() / 2))) {
-        m_player2_paddle.moving_up = false;
-        m_player2_paddle.moving_down = true;
-        return;
+
+    if (m_player2_paddle.moving_down) {
+        if (player_2_paddle_bottom - end_trigger > ball_position)
+            m_player2_paddle.moving_down = false;
+    } else {
+        if (player_2_paddle_bottom - begin_trigger < ball_position)
+            m_player2_paddle.moving_down = true;
     }
-    m_player2_paddle.moving_up = false;
-    m_player2_paddle.moving_down = false;
 }
 
 void Game::tick()
