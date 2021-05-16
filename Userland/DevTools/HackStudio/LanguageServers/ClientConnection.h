@@ -7,7 +7,7 @@
 #pragma once
 
 #include "../AutoCompleteResponse.h"
-#include "AutoCompleteEngine.h"
+#include "CodeComprehensionEngine.h"
 #include "FileDB.h"
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
@@ -36,7 +36,7 @@ protected:
     virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
 
     FileDB m_filedb;
-    OwnPtr<AutoCompleteEngine> m_autocomplete_engine;
+    OwnPtr<CodeComprehensionEngine> m_autocomplete_engine;
 };
 
 }

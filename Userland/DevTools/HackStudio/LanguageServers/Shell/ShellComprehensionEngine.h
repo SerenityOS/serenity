@@ -6,14 +6,14 @@
 
 #pragma once
 
-#include <DevTools/HackStudio/LanguageServers/AutoCompleteEngine.h>
+#include <DevTools/HackStudio/LanguageServers/CodeComprehensionEngine.h>
 #include <Shell/Shell.h>
 
 namespace LanguageServers::Shell {
 
-class AutoComplete : public AutoCompleteEngine {
+class ShellComprehensionEngine : public CodeComprehensionEngine {
 public:
-    AutoComplete(const FileDB& filedb);
+    ShellComprehensionEngine(const FileDB& filedb);
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& position) override;
     virtual void on_edit(const String& file) override;
     virtual void file_opened([[maybe_unused]] const String& file) override;
@@ -42,7 +42,7 @@ private:
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(const DocumentData&);
 
-    static size_t resolve(const AutoComplete::DocumentData& document, const GUI::TextPosition& position);
+    static size_t resolve(const ShellComprehensionEngine::DocumentData& document, const GUI::TextPosition& position);
 
     ::Shell::Shell& shell()
     {

@@ -1,5 +1,5 @@
 set(SOURCES
-    AutoComplete.cpp
+    ShellComprehensionEngine.cpp
     main.cpp
 )
 

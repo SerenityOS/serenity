@@ -2,7 +2,7 @@ compile_ipc(LanguageServer.ipc LanguageServerEndpoint.h)
 compile_ipc(LanguageClient.ipc LanguageClientEndpoint.h)
 
 set(SOURCES
-        AutoCompleteEngine.cpp
+        CodeComprehensionEngine.cpp
         ClientConnection.cpp
         FileDB.cpp)
 set(GENERATED_SOURCES

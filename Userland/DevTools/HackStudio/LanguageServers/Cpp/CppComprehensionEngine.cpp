@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ParserAutoComplete.h"
+#include "CppComprehensionEngine.h"
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
@@ -17,12 +17,12 @@
 
 namespace LanguageServers::Cpp {
 
-ParserAutoComplete::ParserAutoComplete(const FileDB& filedb)
-    : AutoCompleteEngine(filedb, true)
+CppComprehensionEngine::CppComprehensionEngine(const FileDB& filedb)
+    : CodeComprehensionEngine(filedb, true)
 {
 }
 
-const ParserAutoComplete::DocumentData* ParserAutoComplete::get_or_create_document_data(const String& file)
+const CppComprehensionEngine::DocumentData* CppComprehensionEngine::get_or_create_document_data(const String& file)
 {
     auto absolute_path = filedb().to_absolute_path(file);
     if (!m_documents.contains(absolute_path)) {
@@ -31,7 +31,7 @@ const ParserAutoComplete::DocumentData* ParserAutoComplete::get_or_create_docume
     return get_document_data(absolute_path);
 }
 
-const ParserAutoComplete::DocumentData* ParserAutoComplete::get_document_data(const String& file) const
+const CppComprehensionEngine::DocumentData* CppComprehensionEngine::get_document_data(const String& file) const
 {
     auto absolute_path = filedb().to_absolute_path(file);
     auto document_data = m_documents.get(absolute_path);
@@ -39,7 +39,7 @@ const ParserAutoComplete::DocumentData* ParserAutoComplete::get_document_data(co
     return document_data.value();
 }
 
-OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data_for(const String& file)
+OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data_for(const String& file)
 {
     auto document = filedb().get_or_create_from_filesystem(file);
     if (!document)
@@ -47,16 +47,16 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     return create_document_data(document->text(), file);
 }
 
-void ParserAutoComplete::set_document_data(const String& file, OwnPtr<DocumentData>&& data)
+void CppComprehensionEngine::set_document_data(const String& file, OwnPtr<DocumentData>&& data)
 {
     m_documents.set(filedb().to_absolute_path(file), move(data));
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position)
+Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position)
 {
     Cpp::Position position { autocomplete_position.line(), autocomplete_position.column() > 0 ? autocomplete_position.column() - 1 : 0 };
 
-    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "ParserAutoComplete position {}:{}", position.line, position.column);
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "CppComprehensionEngine position {}:{}", position.line, position.column);
 
     const auto* document_ptr = get_or_create_document_data(file);
     if (!document_ptr)
@@ -86,7 +86,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::get_suggestions(con
     return {};
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::autocomplete_name(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
 {
     auto partial_text = String::empty();
     if (containing_token.has_value() && containing_token.value().type() != Token::Type::ColonColon) {
@@ -95,7 +95,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocompl
     return autocomplete_name(document, node, partial_text);
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocomplete_property(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::autocomplete_property(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
 {
     if (!containing_token.has_value())
         return {};
@@ -115,7 +115,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> ParserAutoComplete::autocompl
     return autocomplete_property(document, parent, partial_text);
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(const DocumentData& document, const ASTNode& node, RecurseIntoScopes recurse_into_scopes) const
+NonnullRefPtrVector<Declaration> CppComprehensionEngine::get_available_declarations(const DocumentData& document, const ASTNode& node, RecurseIntoScopes recurse_into_scopes) const
 {
     const Cpp::ASTNode* current = &node;
     NonnullRefPtrVector<Declaration> available_declarations;
@@ -128,7 +128,7 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_available_declarations(
     return available_declarations;
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(const DocumentData& document, const ASTNode& node, const String& partial_text) const
+Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_name(const DocumentData& document, const ASTNode& node, const String& partial_text) const
 {
     auto target_scope = scope_of_name_or_identifier(node);
 
@@ -183,7 +183,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_name(c
     return suggestions;
 }
 
-String ParserAutoComplete::scope_of_name_or_identifier(const ASTNode& node) const
+String CppComprehensionEngine::scope_of_name_or_identifier(const ASTNode& node) const
 {
     const Name* name = nullptr;
     if (node.is_name()) {
@@ -206,7 +206,7 @@ String ParserAutoComplete::scope_of_name_or_identifier(const ASTNode& node) cons
     return String::join("::", scope_parts);
 }
 
-Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_property(const DocumentData& document, const MemberExpression& parent, const String partial_text) const
+Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_property(const DocumentData& document, const MemberExpression& parent, const String partial_text) const
 {
     auto type = type_of(document, *parent.m_object);
     if (type.is_null()) {
@@ -223,7 +223,7 @@ Vector<GUI::AutocompleteProvider::Entry> ParserAutoComplete::autocomplete_proper
     return suggestions;
 }
 
-bool ParserAutoComplete::is_property(const ASTNode& node) const
+bool CppComprehensionEngine::is_property(const ASTNode& node) const
 {
     if (!node.parent()->is_member_expression())
         return false;
@@ -232,7 +232,7 @@ bool ParserAutoComplete::is_property(const ASTNode& node) const
     return parent.m_property.ptr() == &node;
 }
 
-bool ParserAutoComplete::is_empty_property(const DocumentData& document, const ASTNode& node, const Position& autocomplete_position) const
+bool CppComprehensionEngine::is_empty_property(const DocumentData& document, const ASTNode& node, const Position& autocomplete_position) const
 {
     if (node.parent() == nullptr)
         return false;
@@ -244,7 +244,7 @@ bool ParserAutoComplete::is_empty_property(const DocumentData& document, const A
     return previous_token.value().type() == Token::Type::Dot;
 }
 
-String ParserAutoComplete::type_of_property(const DocumentData& document, const Identifier& identifier) const
+String CppComprehensionEngine::type_of_property(const DocumentData& document, const Identifier& identifier) const
 {
     auto& parent = (const MemberExpression&)(*identifier.parent());
     auto properties = properties_of_type(document, type_of(document, *parent.m_object));
@@ -255,7 +255,7 @@ String ParserAutoComplete::type_of_property(const DocumentData& document, const 
     return {};
 }
 
-String ParserAutoComplete::type_of_variable(const Identifier& identifier) const
+String CppComprehensionEngine::type_of_variable(const Identifier& identifier) const
 {
     const ASTNode* current = &identifier;
     while (current) {
@@ -272,7 +272,7 @@ String ParserAutoComplete::type_of_variable(const Identifier& identifier) const
     return {};
 }
 
-String ParserAutoComplete::type_of(const DocumentData& document, const Expression& expression) const
+String CppComprehensionEngine::type_of(const DocumentData& document, const Expression& expression) const
 {
     if (expression.is_member_expression()) {
         auto& member_expression = (const MemberExpression&)expression;
@@ -297,7 +297,7 @@ String ParserAutoComplete::type_of(const DocumentData& document, const Expressio
     return type_of_variable(*identifier);
 }
 
-Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(const DocumentData& document, const String& type) const
+Vector<CppComprehensionEngine::PropertyInfo> CppComprehensionEngine::properties_of_type(const DocumentData& document, const String& type) const
 {
     auto declarations = get_global_declarations_including_headers(document, RecurseIntoScopes::Yes);
     Vector<PropertyInfo> properties;
@@ -314,7 +314,7 @@ Vector<ParserAutoComplete::PropertyInfo> ParserAutoComplete::properties_of_type(
     return properties;
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations_including_headers(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
+NonnullRefPtrVector<Declaration> CppComprehensionEngine::get_global_declarations_including_headers(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& decl : document.m_declarations_from_headers)
@@ -325,14 +325,14 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations_inc
     return declarations;
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_global_declarations(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
+NonnullRefPtrVector<Declaration> CppComprehensionEngine::get_global_declarations(const DocumentData& document, RecurseIntoScopes recurse_into_scopes) const
 {
     if (recurse_into_scopes == RecurseIntoScopes::Yes)
         return get_declarations_recursive(*document.parser().root_node());
     return document.parser().root_node()->declarations();
 }
 
-NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_recursive(const ASTNode& node) const
+NonnullRefPtrVector<Declaration> CppComprehensionEngine::get_declarations_recursive(const ASTNode& node) const
 {
     NonnullRefPtrVector<Declaration> declarations;
 
@@ -351,7 +351,7 @@ NonnullRefPtrVector<Declaration> ParserAutoComplete::get_declarations_recursive(
     return declarations;
 }
 
-String ParserAutoComplete::document_path_from_include_path(const StringView& include_path) const
+String CppComprehensionEngine::document_path_from_include_path(const StringView& include_path) const
 {
     static Regex<PosixExtended> library_include("<(.+)>");
     static Regex<PosixExtended> user_defined_include("\"(.+)\"");
@@ -380,17 +380,17 @@ String ParserAutoComplete::document_path_from_include_path(const StringView& inc
     return result;
 }
 
-void ParserAutoComplete::on_edit(const String& file)
+void CppComprehensionEngine::on_edit(const String& file)
 {
     set_document_data(file, create_document_data_for(file));
 }
 
-void ParserAutoComplete::file_opened([[maybe_unused]] const String& file)
+void CppComprehensionEngine::file_opened([[maybe_unused]] const String& file)
 {
     get_or_create_document_data(file);
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position)
 {
     const auto* document_ptr = get_or_create_document_data(filename);
     if (!document_ptr)
@@ -409,7 +409,7 @@ Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_de
     return find_preprocessor_definition(document, identifier_position);
 }
 
-Optional<GUI::AutocompleteProvider::ProjectLocation> ParserAutoComplete::find_preprocessor_definition(const DocumentData& document, const GUI::TextPosition& text_position)
+Optional<GUI::AutocompleteProvider::ProjectLocation> CppComprehensionEngine::find_preprocessor_definition(const DocumentData& document, const GUI::TextPosition& text_position)
 {
     Position cpp_position { text_position.line(), text_position.column() };
 
@@ -457,7 +457,7 @@ static Optional<TargetDeclaration> get_target_declaration(const ASTNode& node)
     return TargetDeclaration { TargetDeclaration::Type::Variable, name };
 }
 
-RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
+RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentData& document_data, const ASTNode& node) const
 {
     dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "find_declaration_of: {} ({})", document_data.parser().text_of_node(node), node.class_name());
     auto target_decl = get_target_declaration(node);
@@ -493,7 +493,7 @@ RefPtr<Declaration> ParserAutoComplete::find_declaration_of(const DocumentData& 
     return {};
 }
 
-void ParserAutoComplete::update_declared_symbols(DocumentData& document)
+void CppComprehensionEngine::update_declared_symbols(DocumentData& document)
 {
     for (auto& include : document.preprocessor().included_paths()) {
         auto included_document = get_or_create_document_data(document_path_from_include_path(include));
@@ -516,7 +516,7 @@ void ParserAutoComplete::update_declared_symbols(DocumentData& document)
     set_declarations_of_document(document.filename(), move(declarations));
 }
 
-GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declaration(const Declaration& decl)
+GUI::AutocompleteProvider::DeclarationType CppComprehensionEngine::type_of_declaration(const Declaration& decl)
 {
     if (decl.is_struct())
         return GUI::AutocompleteProvider::DeclarationType::Struct;
@@ -533,7 +533,7 @@ GUI::AutocompleteProvider::DeclarationType ParserAutoComplete::type_of_declarati
     return GUI::AutocompleteProvider::DeclarationType::Variable;
 }
 
-OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_data(String&& text, const String& filename)
+OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data(String&& text, const String& filename)
 {
     auto document_data = make<DocumentData>();
     document_data->m_filename = move(filename);
@@ -566,7 +566,7 @@ OwnPtr<ParserAutoComplete::DocumentData> ParserAutoComplete::create_document_dat
     return document_data;
 }
 
-String ParserAutoComplete::scope_of_declaration(const Declaration& decl) const
+String CppComprehensionEngine::scope_of_declaration(const Declaration& decl) const
 {
     auto parent = decl.parent();
     if (!parent)

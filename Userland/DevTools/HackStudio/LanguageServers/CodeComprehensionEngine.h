@@ -15,10 +15,10 @@ namespace LanguageServers {
 
 class ClientConnection;
 
-class AutoCompleteEngine {
+class CodeComprehensionEngine {
 public:
-    AutoCompleteEngine(const FileDB& filedb, bool store_all_declarations = false);
-    virtual ~AutoCompleteEngine();
+    CodeComprehensionEngine(const FileDB& filedb, bool store_all_declarations = false);
+    virtual ~CodeComprehensionEngine();
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) = 0;
 

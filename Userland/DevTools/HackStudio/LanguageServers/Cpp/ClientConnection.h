@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "ParserAutoComplete.h"
+#include "CppComprehensionEngine.h"
 #include <DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
 namespace LanguageServers::Cpp {
@@ -18,7 +18,7 @@ public:
     ClientConnection(NonnullRefPtr<Core::LocalSocket> socket, int client_id)
         : LanguageServers::ClientConnection(move(socket), client_id)
     {
-        m_autocomplete_engine = make<ParserAutoComplete>(m_filedb);
+        m_autocomplete_engine = make<CppComprehensionEngine>(m_filedb);
         m_autocomplete_engine->set_declarations_of_document_callback = [this](const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations) {
             async_declarations_in_document(filename, move(declarations));
         };
