@@ -1799,9 +1799,9 @@ static void rsa_test_encrypt()
         ByteBuffer data { "hellohellohellohellohellohellohellohellohellohellohellohello123-"_b };
         u8 result[] { 0x6f, 0x7b, 0xe2, 0xd3, 0x95, 0xf8, 0x8d, 0x87, 0x6d, 0x10, 0x5e, 0xc3, 0xcd, 0xf7, 0xbb, 0xa6, 0x62, 0x8e, 0x45, 0xa0, 0xf1, 0xe5, 0x0f, 0xdf, 0x69, 0xcb, 0xb6, 0xd5, 0x42, 0x06, 0x7d, 0x72, 0xa9, 0x5e, 0xae, 0xbf, 0xbf, 0x0f, 0xe0, 0xeb, 0x31, 0x31, 0xca, 0x8a, 0x81, 0x1e, 0xb9, 0xec, 0x6d, 0xcc, 0xb8, 0xa4, 0xac, 0xa3, 0x31, 0x05, 0xa9, 0xac, 0xc9, 0xd3, 0xe6, 0x2a, 0x18, 0xfe };
         Crypto::PK::RSA rsa(
-            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
-            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
-            "65537"_bigint);
+            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"bigint,
+            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"bigint,
+            "65537"bigint);
         u8 buffer[rsa.output_size()];
         auto buf = Bytes { buffer, sizeof(buffer) };
         rsa.encrypt(data, buf);
@@ -1816,9 +1816,9 @@ static void rsa_test_encrypt()
         I_TEST((RSA PKCS #1 1.5 | Encryption));
         ByteBuffer data { "hellohellohellohellohellohellohellohellohello123-"_b };
         Crypto::PK::RSA_PKCS1_EME rsa(
-            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"_bigint,
-            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint,
-            "65537"_bigint);
+            "8126832723025844890518845777858816391166654950553329127845898924164623511718747856014227624997335860970996746552094406240834082304784428582653994490504519"bigint,
+            "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"bigint,
+            "65537"bigint);
         u8 buffer[rsa.output_size()];
         auto buf = Bytes { buffer, sizeof(buffer) };
         rsa.encrypt(data, buf);
@@ -1860,7 +1860,7 @@ nrDlBQpuxz7bwSyQO7UCIHrYMnDohgNbwtA5ZpW3H1cKKQQvueWm6sxW9P5sUrZ3
 
         Crypto::PK::RSA rsa(privkey);
         if (rsa.public_key().public_exponent() == 65537) {
-            if (rsa.private_key().private_exponent() == "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"_bigint) {
+            if (rsa.private_key().private_exponent() == "4234603516465654167360850580101327813936403862038934287300450163438938741499875303761385527882335478349599685406941909381269804396099893549838642251053393"bigint) {
                 PASS;
             } else
                 FAIL(Invalid private exponent);
@@ -1902,7 +1902,7 @@ l3vmuDEF3/Bo1C1HTg0xRV/l
 
         Crypto::PK::RSA rsa(privkey);
         if (rsa.public_key().public_exponent() == 65537) {
-            if (rsa.private_key().private_exponent() == "16848664331299797559656678180469464902267415922431923391961407795209879741791261105581093539484181644099608161661780611501562625272630894063592208758992911105496755004417051031019663332258403844985328863382168329621318366311519850803972480500782200178279692319955495383119697563295214236936264406600739633470565823022975212999060908747002623721589308539473108154612454595201561671949550531384574873324370774408913092560971930541734744950937900805812300970883306404011323308000168926094053141613790857814489531436452649384151085451448183385611208320292948291211969430321231180227006521681776197974694030147965578466993"_bigint) {
+            if (rsa.private_key().private_exponent() == "16848664331299797559656678180469464902267415922431923391961407795209879741791261105581093539484181644099608161661780611501562625272630894063592208758992911105496755004417051031019663332258403844985328863382168329621318366311519850803972480500782200178279692319955495383119697563295214236936264406600739633470565823022975212999060908747002623721589308539473108154612454595201561671949550531384574873324370774408913092560971930541734744950937900805812300970883306404011323308000168926094053141613790857814489531436452649384151085451448183385611208320292948291211969430321231180227006521681776197974694030147965578466993"bigint) {
                 PASS;
             } else
                 FAIL(Invalid private exponent);
@@ -1917,9 +1917,9 @@ static void rsa_test_encrypt_decrypt()
     I_TEST((RSA | Encrypt));
     dbgln(" creating rsa object");
     Crypto::PK::RSA rsa(
-        "9527497237087650398000977129550904920919162360737979403539302312977329868395261515707123424679295515888026193056908173564681660256268221509339074678416049"_bigint,
-        "39542231845947188736992321577701849924317746648774438832456325878966594812143638244746284968851807975097653255909707366086606867657273809465195392910913"_bigint,
-        "65537"_bigint);
+        "9527497237087650398000977129550904920919162360737979403539302312977329868395261515707123424679295515888026193056908173564681660256268221509339074678416049"bigint,
+        "39542231845947188736992321577701849924317746648774438832456325878966594812143638244746284968851807975097653255909707366086606867657273809465195392910913"bigint,
+        "65537"bigint);
 
     dbgln("Output size: {}", rsa.output_size());
 
@@ -2477,14 +2477,14 @@ static void bigint_theory_modular_power()
             Crypto::UnsignedBigInteger mod;
             Crypto::UnsignedBigInteger expected;
         } mod_pow_tests[] = {
-            { "2988348162058574136915891421498819466320163312926952423791023078876139"_bigint, "2351399303373464486466122544523690094744975233415544072992656881240319"_bigint, "10000"_bigint, "3059"_bigint },
-            { "24231"_bigint, "12448"_bigint, "14679"_bigint, "4428"_bigint },
-            { "1005404"_bigint, "8352654"_bigint, "8161408"_bigint, "2605696"_bigint },
-            { "3665005778"_bigint, "3244425589"_bigint, "565668506"_bigint, "524766494"_bigint },
-            { "10662083169959689657"_bigint, "11605678468317533000"_bigint, "1896834583057209739"_bigint, "1292743154593945858"_bigint },
-            { "99667739213529524852296932424683448520"_bigint, "123394910770101395416306279070921784207"_bigint, "238026722756504133786938677233768788719"_bigint, "197165477545023317459748215952393063201"_bigint },
-            { "49368547511968178788919424448914214709244872098814465088945281575062739912239"_bigint, "25201856190991298572337188495596990852134236115562183449699512394891190792064"_bigint, "45950460777961491021589776911422805972195170308651734432277141467904883064645"_bigint, "39917885806532796066922509794537889114718612292469285403012781055544152450051"_bigint },
-            { "48399385336454791246880286907257136254351739111892925951016159217090949616810"_bigint, "5758661760571644379364752528081901787573279669668889744323710906207949658569"_bigint, "32812120644405991429173950312949738783216437173380339653152625840449006970808"_bigint, "7948464125034399875323770213514649646309423451213282653637296324080400293584"_bigint },
+            { "2988348162058574136915891421498819466320163312926952423791023078876139"bigint, "2351399303373464486466122544523690094744975233415544072992656881240319"bigint, "10000"bigint, "3059"bigint },
+            { "24231"bigint, "12448"bigint, "14679"bigint, "4428"bigint },
+            { "1005404"bigint, "8352654"bigint, "8161408"bigint, "2605696"bigint },
+            { "3665005778"bigint, "3244425589"bigint, "565668506"bigint, "524766494"bigint },
+            { "10662083169959689657"bigint, "11605678468317533000"bigint, "1896834583057209739"bigint, "1292743154593945858"bigint },
+            { "99667739213529524852296932424683448520"bigint, "123394910770101395416306279070921784207"bigint, "238026722756504133786938677233768788719"bigint, "197165477545023317459748215952393063201"bigint },
+            { "49368547511968178788919424448914214709244872098814465088945281575062739912239"bigint, "25201856190991298572337188495596990852134236115562183449699512394891190792064"bigint, "45950460777961491021589776911422805972195170308651734432277141467904883064645"bigint, "39917885806532796066922509794537889114718612292469285403012781055544152450051"bigint },
+            { "48399385336454791246880286907257136254351739111892925951016159217090949616810"bigint, "5758661760571644379364752528081901787573279669668889744323710906207949658569"bigint, "32812120644405991429173950312949738783216437173380339653152625840449006970808"bigint, "7948464125034399875323770213514649646309423451213282653637296324080400293584"bigint },
         };
 
         for (auto test_case : mod_pow_tests) {
@@ -2509,22 +2509,22 @@ static void bigint_theory_primality()
         Crypto::UnsignedBigInteger candidate;
         bool expected_result;
     } primality_tests[] = {
-        { "1180591620717411303424"_bigint, false },                  // 2**70
-        { "620448401733239439360000"_bigint, false },                // 25!
-        { "953962166440690129601298432"_bigint, false },             // 12**25
-        { "620448401733239439360000"_bigint, false },                // 25!
-        { "147926426347074375"_bigint, false },                      // 35! / 2**32
-        { "340282366920938429742726440690708343523"_bigint, false }, // 2 factors near 2^64
-        { "73"_bigint, true },
-        { "6967"_bigint, true },
-        { "787649"_bigint, true },
-        { "73513949"_bigint, true },
-        { "6691236901"_bigint, true },
-        { "741387182759"_bigint, true },
-        { "67466615915827"_bigint, true },
-        { "9554317039214687"_bigint, true },
-        { "533344522150170391"_bigint, true },
-        { "18446744073709551557"_bigint, true }, // just below 2**64
+        { "1180591620717411303424"bigint, false },                  // 2**70
+        { "620448401733239439360000"bigint, false },                // 25!
+        { "953962166440690129601298432"bigint, false },             // 12**25
+        { "620448401733239439360000"bigint, false },                // 25!
+        { "147926426347074375"bigint, false },                      // 35! / 2**32
+        { "340282366920938429742726440690708343523"bigint, false }, // 2 factors near 2^64
+        { "73"bigint, true },
+        { "6967"bigint, true },
+        { "787649"bigint, true },
+        { "73513949"bigint, true },
+        { "6691236901"bigint, true },
+        { "741387182759"bigint, true },
+        { "67466615915827"bigint, true },
+        { "9554317039214687"bigint, true },
+        { "533344522150170391"bigint, true },
+        { "18446744073709551557"bigint, true }, // just below 2**64
     };
 
     for (auto test_case : primality_tests) {
@@ -2547,10 +2547,10 @@ static void bigint_theory_random_number()
             Crypto::UnsignedBigInteger min;
             Crypto::UnsignedBigInteger max;
         } random_number_tests[] = {
-            { "1"_bigint, "1000000"_bigint },
-            { "10000000000"_bigint, "20000000000"_bigint },
-            { "1000"_bigint, "200000000000000000"_bigint },
-            { "200000000000000000"_bigint, "200000000000010000"_bigint },
+            { "1"bigint, "1000000"bigint },
+            { "10000000000"bigint, "20000000000"bigint },
+            { "1000"bigint, "200000000000000000"bigint },
+            { "200000000000000000"bigint, "200000000000010000"bigint },
         };
 
         for (auto test_case : random_number_tests) {
@@ -2570,12 +2570,12 @@ static void bigint_theory_random_number()
     {
         I_TEST((BigInteger | Random distribution));
         auto actual_result = Crypto::NumberTheory::random_number(
-            "1"_bigint,
-            "100000000000000000000000000000"_bigint);         // 10**29
-        if (actual_result < "100000000000000000000"_bigint) { // 10**20
+            "1"bigint,
+            "100000000000000000000000000000"bigint);         // 10**29
+        if (actual_result < "100000000000000000000"bigint) { // 10**20
             FAIL(Too small);
             printf("The generated number %s is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
-        } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
+        } else if ("99999999900000000000000000000"bigint < actual_result) { // 10**29 - 10**20
             FAIL(Too large);
             printf("The generated number %s is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
         } else {
@@ -2601,7 +2601,7 @@ static void bigint_import_export()
     {
         I_TEST((BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
-        auto encoded = "12345678901234567890"_bigint;
+        auto encoded = "12345678901234567890"bigint;
         auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::UnsignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
@@ -2612,7 +2612,7 @@ static void bigint_import_export()
     {
         I_TEST((BigInteger | BigEndian Import));
         auto number = Crypto::UnsignedBigInteger::import_data("hello");
-        if (number == "448378203247"_bigint) {
+        if (number == "448378203247"bigint) {
             PASS;
         } else {
             FAIL(Invalid value);
@@ -2620,7 +2620,7 @@ static void bigint_import_export()
     }
     {
         I_TEST((BigInteger | BigEndian Export));
-        auto number = "448378203247"_bigint;
+        auto number = "448378203247"bigint;
         char exported[8] { 0 };
         auto exported_length = number.export_data({ exported, 8 }, true);
         if (exported_length == 5 && memcmp(exported + 3, "hello", 5) == 0) {
@@ -2636,8 +2636,8 @@ static void bigint_bitwise()
 {
     {
         I_TEST((BigInteger | Basic bitwise or));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "1234567"_bigint;
+        auto num1 = "1234567"bigint;
+        auto num2 = "1234567"bigint;
         if (num1.bitwise_or(num2) == num1) {
             PASS;
         } else {
@@ -2646,9 +2646,9 @@ static void bigint_bitwise()
     }
     {
         I_TEST((BigInteger | Bitwise or handles different lengths));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "123456789012345678901234567890"_bigint;
-        auto expected = "123456789012345678901234622167"_bigint;
+        auto num1 = "1234567"bigint;
+        auto num2 = "123456789012345678901234567890"bigint;
+        auto expected = "123456789012345678901234622167"bigint;
         auto result = num1.bitwise_or(num2);
         if (result == expected) {
             PASS;
@@ -2658,9 +2658,9 @@ static void bigint_bitwise()
     }
     {
         I_TEST((BigInteger | Basic bitwise and));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "1234561"_bigint;
-        if (num1.bitwise_and(num2) == "1234561"_bigint) {
+        auto num1 = "1234567"bigint;
+        auto num2 = "1234561"bigint;
+        if (num1.bitwise_and(num2) == "1234561"bigint) {
             PASS;
         } else {
             FAIL(Invalid value);
@@ -2668,9 +2668,9 @@ static void bigint_bitwise()
     }
     {
         I_TEST((BigInteger | Bitwise and handles different lengths));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "123456789012345678901234567890"_bigint;
-        if (num1.bitwise_and(num2) == "1180290"_bigint) {
+        auto num1 = "1234567"bigint;
+        auto num2 = "123456789012345678901234567890"bigint;
+        if (num1.bitwise_and(num2) == "1180290"bigint) {
             PASS;
         } else {
             FAIL(Invalid value);
@@ -2678,8 +2678,8 @@ static void bigint_bitwise()
     }
     {
         I_TEST((BigInteger | Basic bitwise xor));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "1234561"_bigint;
+        auto num1 = "1234567"bigint;
+        auto num2 = "1234561"bigint;
         if (num1.bitwise_xor(num2) == 6) {
             PASS;
         } else {
@@ -2688,9 +2688,9 @@ static void bigint_bitwise()
     }
     {
         I_TEST((BigInteger | Bitwise xor handles different lengths));
-        auto num1 = "1234567"_bigint;
-        auto num2 = "123456789012345678901234567890"_bigint;
-        if (num1.bitwise_xor(num2) == "123456789012345678901233441877"_bigint) {
+        auto num1 = "1234567"bigint;
+        auto num2 = "123456789012345678901234567890"bigint;
+        if (num1.bitwise_xor(num2) == "123456789012345678901233441877"bigint) {
             PASS;
         } else {
             FAIL(Invalid value);
@@ -2918,7 +2918,7 @@ static void bigint_signed_import_export()
     {
         I_TEST((Signed BigInteger | BigEndian Encode / Decode roundtrip));
         u8 target_buffer[128];
-        auto encoded = "-12345678901234567890"_sbigint;
+        auto encoded = "-12345678901234567890"sbigint;
         auto size = encoded.export_data({ target_buffer, 128 });
         auto decoded = Crypto::SignedBigInteger::import_data(target_buffer, size);
         if (encoded != decoded)
@@ -2932,8 +2932,8 @@ static void bigint_signed_bitwise()
 {
     {
         I_TEST((Signed BigInteger | Bitwise or handles sign));
-        auto num1 = "-1234567"_sbigint;
-        auto num2 = "1234567"_sbigint;
+        auto num1 = "-1234567"sbigint;
+        auto num2 = "1234567"sbigint;
         if (num1.bitwise_or(num2) == num1) {
             PASS;
         } else {

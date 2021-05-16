@@ -109,7 +109,7 @@ struct AK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
 };
 
 inline Crypto::UnsignedBigInteger
-operator""_bigint(const char* string, size_t length)
+operator"" bigint(const char* string, size_t length)
 {
     return Crypto::UnsignedBigInteger::from_base10({ string, length });
 }

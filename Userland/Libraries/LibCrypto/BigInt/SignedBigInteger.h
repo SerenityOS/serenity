@@ -122,7 +122,7 @@ struct SignedDivisionResult {
 }
 
 inline Crypto::SignedBigInteger
-operator""_sbigint(const char* string, size_t length)
+operator"" sbigint(const char* string, size_t length)
 {
     return Crypto::SignedBigInteger::from_base10({ string, length });
 }
