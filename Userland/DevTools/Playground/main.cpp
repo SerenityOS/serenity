@@ -104,6 +104,21 @@ int main(int argc, char** argv)
     editor.set_should_autocomplete_automatically(true);
     editor.set_automatic_indentation_enabled(true);
 
+    String file_path;
+    auto update_title = [&] {
+        StringBuilder builder;
+        if (file_path.is_empty())
+            builder.append("Untitled");
+        else
+            builder.append(file_path);
+
+        if (window->is_modified())
+            builder.append("[*]");
+
+        builder.append(" - GML Playground");
+        window->set_title(builder.to_string());
+    };
+
     if (String(path).is_empty()) {
         editor.set_text(R"~~~(@GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
@@ -113,6 +128,7 @@ int main(int argc, char** argv)
 }
 )~~~");
         editor.set_cursor(4, 28); // after "...widgets!"
+        update_title();
     } else {
         auto file = Core::File::construct(path);
         if (!file->open(Core::OpenMode::ReadOnly)) {
@@ -123,7 +139,9 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", path), "Error", GUI::MessageBox::Type::Error);
             return 1;
         }
+        file_path = path;
         editor.set_text(file->read_all());
+        update_title();
     }
 
     editor.on_change = [&] {
@@ -133,10 +151,35 @@ int main(int argc, char** argv)
         });
     };
 
+    editor.on_modified_change = [&](bool modified) {
+        window->set_modified(modified);
+        update_title();
+    };
+
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
 
+    auto save_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
+        if (!save_path.has_value())
+            return;
+
+        if (!editor.write_to_file(save_path.value())) {
+            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+        update_title();
+    });
+
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        if (!file_path.is_empty() && window->is_modified()) {
+            auto save_document_first_result = GUI::MessageBox::show(window, "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+                save_action->activate();
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
+                return;
+        }
+
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
 
         if (!open_path.has_value())
@@ -152,22 +195,13 @@ int main(int argc, char** argv)
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error", GUI::MessageBox::Type::Error);
             return;
         }
-
+        file_path = open_path.value();
         editor.set_text(file->read_all());
         editor.set_focus(true);
+        update_title();
     }));
 
-    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
-        if (!save_path.has_value())
-            return;
-
-        if (!editor.write_to_file(save_path.value())) {
-            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-    }));
-
+    file_menu.add_action(save_action);
     file_menu.add_separator();
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -210,7 +244,21 @@ int main(int argc, char** argv)
     help_menu.add_action(GUI::CommonActions::make_about_action("GML Playground", app_icon, window));
 
     window->set_menubar(move(menubar));
+    window->on_close_request = [&] {
+        if (!window->is_modified())
+            return GUI::Window::CloseRequestDecision::Close;
 
+        auto result = GUI::MessageBox::show(window, "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+        if (result == GUI::MessageBox::ExecYes) {
+            save_action->activate();
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        if (result == GUI::MessageBox::ExecNo)
+            return GUI::Window::CloseRequestDecision::Close;
+
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
     window->show();
     return app->exec();
 }
