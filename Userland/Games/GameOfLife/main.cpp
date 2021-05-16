@@ -10,7 +10,6 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/SpinBox.h>
@@ -73,12 +72,6 @@ int main(int argc, char** argv)
     };
 
     interval_spinbox.set_value(150);
-
-    auto interval_label = GUI::Label::construct();
-    interval_label->set_fixed_width(15);
-    interval_label->set_text("ms");
-
-    main_toolbar.add_child(interval_label);
 
     auto paused_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png");
     auto play_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png");
