@@ -575,7 +575,7 @@ int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
     int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
     dbgln("find_and_highlight: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
 
-    auto end_of_match = relative_offset + needle;
+    auto end_of_match = relative_offset + needle.size();
     set_position(relative_offset);
     m_selection_start = relative_offset;
     m_selection_end = end_of_match;
