@@ -79,9 +79,18 @@ KResultOr<int> Process::sys$listen(int sockfd, int backlog)
     return socket.listen(backlog);
 }
 
-KResultOr<int> Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*> user_address, Userspace<socklen_t*> user_address_size)
+KResultOr<int> Process::sys$accept4(Userspace<const Syscall::SC_accept4_params*> user_params)
 {
     REQUIRE_PROMISE(accept);
+
+    Syscall::SC_accept4_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+
+    int accepting_socket_fd = params.sockfd;
+    Userspace<sockaddr*> user_address((FlatPtr)params.addr);
+    Userspace<socklen_t*> user_address_size((FlatPtr)params.addrlen);
+    int flags = params.flags;
 
     socklen_t address_size = 0;
     if (user_address && !copy_from_user(&address_size, static_ptr_cast<const socklen_t*>(user_address_size)))
@@ -125,7 +134,12 @@ KResultOr<int> Process::sys$accept(int accepting_socket_fd, Userspace<sockaddr*>
 
     accepted_socket_description_result.value()->set_readable(true);
     accepted_socket_description_result.value()->set_writable(true);
-    m_fds[accepted_socket_fd].set(accepted_socket_description_result.release_value(), 0);
+    if (flags & SOCK_NONBLOCK)
+        accepted_socket_description_result.value()->set_blocking(false);
+    int fd_flags = 0;
+    if (flags & SOCK_CLOEXEC)
+        fd_flags |= FD_CLOEXEC;
+    m_fds[accepted_socket_fd].set(accepted_socket_description_result.release_value(), fd_flags);
 
     // NOTE: Moving this state to Completed is what causes connect() to unblock on the client side.
     accepted_socket->set_setup_state(Socket::SetupState::Completed);
