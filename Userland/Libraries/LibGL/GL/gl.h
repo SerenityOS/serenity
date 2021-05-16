@@ -79,6 +79,10 @@ extern "C" {
 #define GL_COMPILE 0x1300
 #define GL_COMPILE_AND_EXECUTE 0x1301
 
+// Lighting related defines
+#define GL_FLAT 0x1D00
+#define GL_SMOOTH 0x1D01
+
 // More blend factors
 #define GL_CONSTANT_COLOR 0x8001
 #define GL_ONE_MINUS_CONSTANT_COLOR 0x8002
@@ -147,6 +151,7 @@ GLAPI void glNewList(GLuint list, GLenum mode);
 GLAPI void glFlush();
 GLAPI void glFinish();
 GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);
+GLAPI void glShadeModel(GLenum mode);
 
 #ifdef __cplusplus
 }

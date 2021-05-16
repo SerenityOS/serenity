@@ -295,11 +295,16 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                     barycentric = barycentric * FloatVector3(triangle.vertices[0].w, triangle.vertices[1].w, triangle.vertices[2].w) * interpolated_w;
 
                     // FIXME: make this more generic. We want to interpolate more than just color and uv
-                    auto rgba = interpolate(
-                        FloatVector4(triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a),
-                        FloatVector4(triangle.vertices[1].r, triangle.vertices[1].g, triangle.vertices[1].b, triangle.vertices[1].a),
-                        FloatVector4(triangle.vertices[2].r, triangle.vertices[2].g, triangle.vertices[2].b, triangle.vertices[2].a),
-                        barycentric);
+                    FloatVector4 vertex_color;
+                    if (options.shade_smooth) {
+                        vertex_color = interpolate(
+                            FloatVector4(triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a),
+                            FloatVector4(triangle.vertices[1].r, triangle.vertices[1].g, triangle.vertices[1].b, triangle.vertices[1].a),
+                            FloatVector4(triangle.vertices[2].r, triangle.vertices[2].g, triangle.vertices[2].b, triangle.vertices[2].a),
+                            barycentric);
+                    } else {
+                        vertex_color = { triangle.vertices[0].r, triangle.vertices[0].g, triangle.vertices[0].b, triangle.vertices[0].a };
+                    }
 
                     auto uv = interpolate(
                         FloatVector2(triangle.vertices[0].u, triangle.vertices[0].v),
@@ -307,7 +312,7 @@ static void rasterize_triangle(const RasterizerOptions& options, Gfx::Bitmap& re
                         FloatVector2(triangle.vertices[2].u, triangle.vertices[2].v),
                         barycentric);
 
-                    *pixel = pixel_shader(uv, rgba);
+                    *pixel = pixel_shader(uv, vertex_color);
                 }
             }
 

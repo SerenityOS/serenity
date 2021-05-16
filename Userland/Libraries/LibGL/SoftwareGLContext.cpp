@@ -925,6 +925,23 @@ void SoftwareGLContext::gl_blend_func(GLenum src_factor, GLenum dst_factor)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_shade_model(GLenum mode)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (mode != GL_FLAT && mode != GL_SMOOTH) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    auto options = m_rasterizer.options();
+    options.shade_smooth = (mode == GL_SMOOTH);
+    m_rasterizer.set_options(options);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
