@@ -7,6 +7,8 @@
 #include "Tests.h"
 #include "../FileDB.h"
 #include "CppComprehensionEngine.h"
+#include <AK/LexicalPath.h>
+#include <LibCore/File.h>
 
 using namespace LanguageServers;
 using namespace LanguageServers::Cpp;
@@ -33,6 +35,8 @@ static bool s_some_test_failed = false;
         return;                        \
     } while (0)
 
+constexpr char TESTS_ROOT_DIR[] = "/home/anon/cpp-tests/comprehension";
+
 static void test_complete_local_args();
 static void test_complete_local_vars();
 static void test_complete_type();
@@ -47,18 +51,20 @@ int run_tests()
     return s_some_test_failed ? 1 : 0;
 }
 
+static void add_file(FileDB& filedb, const String& name)
+{
+    auto file = Core::File::open(LexicalPath::join(TESTS_ROOT_DIR, name).string(), Core::OpenMode::ReadOnly);
+    VERIFY(!file.is_error());
+    filedb.add(name, file.value()->fd());
+}
+
 void test_complete_local_args()
 {
     I_TEST(Complete Local Args)
     FileDB filedb;
-    String content = R"(
-int main(int argc, char** argv){
-ar
-}
-)";
-    filedb.add("a.cpp", content);
+    add_file(filedb, "complete_local_args.cpp");
     CppComprehensionEngine engine(filedb);
-    auto suggestions = engine.get_suggestions("a.cpp", { 2, 2 });
+    auto suggestions = engine.get_suggestions("complete_local_args.cpp", { 2, 6 });
     if (suggestions.size() != 2)
         FAIL(bad size);
 
@@ -72,15 +78,9 @@ void test_complete_local_vars()
 {
     I_TEST(Complete Local Vars)
     FileDB filedb;
-    String content = R"(
-int main(int argc, char** argv){
-int myvar1 = 3;
-myv
-}
-)";
-    filedb.add("a.cpp", content);
+    add_file(filedb, "complete_local_vars.cpp");
     CppComprehensionEngine autocomplete(filedb);
-    auto suggestions = autocomplete.get_suggestions("a.cpp", { 3, 3 });
+    auto suggestions = autocomplete.get_suggestions("complete_local_vars.cpp", { 3, 7 });
     if (suggestions.size() != 1)
         FAIL(bad size);
 
@@ -94,17 +94,9 @@ void test_complete_type()
 {
     I_TEST(Complete Type)
     FileDB filedb;
-    String content = R"(
-struct MyStruct {
-int x;
-};
-void foo(){
-MyS
-}
-)";
-    filedb.add("a.cpp", content);
+    add_file(filedb, "complete_type.cpp");
     CppComprehensionEngine autocomplete(filedb);
-    auto suggestions = autocomplete.get_suggestions("a.cpp", { 5, 3 });
+    auto suggestions = autocomplete.get_suggestions("complete_type.cpp", { 5, 7 });
     if (suggestions.size() != 1)
         FAIL(bad size);
 
@@ -118,18 +110,13 @@ void test_find_variable_definition()
 {
     I_TEST(Find Variable Declaration)
     FileDB filedb;
-    String content = R"(
-int main(int argc, char** argv){
-argv = nullptr;
-}
-)";
-    filedb.add("a.cpp", content);
+    add_file(filedb, "find_variable_declaration.cpp");
     CppComprehensionEngine engine(filedb);
-    auto position = engine.find_declaration_of("a.cpp", { 2, 1 });
+    auto position = engine.find_declaration_of("find_variable_declaration.cpp", { 2, 5 });
     if (!position.has_value())
         FAIL("declaration not found");
 
-    if (position.value().file == "a.cpp" && position.value().line == 1 && position.value().column >= 19)
+    if (position.value().file == "find_variable_declaration.cpp" && position.value().line == 0 && position.value().column >= 19)
         PASS;
     FAIL("wrong declaration location");
 }

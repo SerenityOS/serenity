@@ -12,7 +12,7 @@ cd "$script_path/.." || exit 1
 #  */
 GOOD_LICENSE_HEADER_PATTERN=$'^/\*\n( \* Copyright \(c\) [0-9]{4}(-[0-9]{4})?, .*\n)+ \*\n \* SPDX-License-Identifier: BSD-2-Clause\n \*/\n\n'
 BAD_LICENSE_HEADER_ERRORS=()
-LICENSE_HEADER_CHECK_EXCUDES=(AK/Checked.h AK/Function.h Userland/Libraries/LibC/elf.h)
+LICENSE_HEADER_CHECK_EXCLUDES=(AK/Checked.h AK/Function.h Userland/Libraries/LibC/elf.h Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/*)
 
 # We check that "#pragma once" is present
 PRAGMA_ONCE_PATTERN='#pragma once'
@@ -28,7 +28,7 @@ LIBM_MATH_H_INCLUDE_ERRORS=()
 
 while IFS= read -r f; do
     file_content="$(< "$f")"
-    if [[ ! "${LICENSE_HEADER_CHECK_EXCUDES[*]} " =~ $f ]]; then
+    if [[ ! "${LICENSE_HEADER_CHECK_EXCLUDES[*]} " =~ $f ]]; then
         if [[ ! "$file_content" =~ $GOOD_LICENSE_HEADER_PATTERN ]]; then
             BAD_LICENSE_HEADER_ERRORS+=("$f")
         fi
