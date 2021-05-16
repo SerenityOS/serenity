@@ -23,8 +23,8 @@ void Game::reset_paddles()
 {
     m_cursor_paddle_target_y.clear();
 
-    m_player1_paddle.moving_up = false;
-    m_player1_paddle.moving_down = false;
+    m_player1_paddle.moving_up = m_up_key_held;
+    m_player1_paddle.moving_down = m_down_key_held;
     m_player1_paddle.rect = { game_width - 12, game_height / 2 - 40, m_player1_paddle.width, m_player1_paddle.height };
 
     m_player2_paddle.moving_up = false;
