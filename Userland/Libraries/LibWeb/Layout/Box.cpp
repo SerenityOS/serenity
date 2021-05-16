@@ -179,11 +179,11 @@ void Box::paint_background(PaintContext& context)
     if (is_body() && document().html_element()->should_use_body_background_properties())
         return;
 
+    Gfx::IntRect background_rect;
     Color background_color = computed_values().background_color();
     const Gfx::Bitmap* background_image = this->background_image() ? this->background_image()->bitmap() : nullptr;
     CSS::Repeat background_repeat_x = computed_values().background_repeat_x();
     CSS::Repeat background_repeat_y = computed_values().background_repeat_y();
-    auto background_rect = enclosing_int_rect(padded_rect);
 
     if (is_root_element()) {
         // CSS 2.1 Appendix E.2: If the element is a root element, paint the background over the entire canvas.
@@ -200,6 +200,11 @@ void Box::paint_background(PaintContext& context)
     } else {
         background_rect = enclosing_int_rect(padded_rect);
     }
+
+    // HACK: If the Box has a border, use the bordered_rect to paint the background.
+    //       This way if we have a border-radius there will be no gap between the filling and actual border.
+    if (computed_values().border_top().width || computed_values().border_right().width || computed_values().border_bottom().width || computed_values().border_left().width)
+        background_rect = enclosing_int_rect(bordered_rect());
 
     // FIXME: some values should be relative to the height() if specified, but which? For now, all relative values are relative to the width.
     auto border_radius_data = normalized_border_radius_data();
