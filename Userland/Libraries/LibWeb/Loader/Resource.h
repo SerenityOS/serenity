@@ -42,7 +42,7 @@ public:
     bool is_failed() const { return m_failed; }
     const String& error() const { return m_error; }
 
-    bool has_encoded_data() const { return !m_encoded_data.is_null(); }
+    bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
 
     const URL& url() const { return m_request.url(); }
     const ByteBuffer& encoded_data() const { return m_encoded_data; }

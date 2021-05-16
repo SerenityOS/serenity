@@ -106,7 +106,8 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         auto file = Core::File::construct(exclude_from);
         bool success = file->open(Core::OpenMode::ReadOnly);
         VERIFY(success);
-        if (const auto buff = file->read_all()) {
+        const auto buff = file->read_all();
+        if (!buff.is_empty()) {
             String patterns = String::copy(buff, Chomp);
             du_option.excluded_patterns.append(patterns.split('\n'));
         }

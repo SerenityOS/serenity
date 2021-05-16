@@ -33,8 +33,6 @@ const char* IODevice::error_string() const
 int IODevice::read(u8* buffer, int length)
 {
     auto read_buffer = read(length);
-    if (read_buffer.is_null())
-        return 0;
     memcpy(buffer, read_buffer.data(), length);
     return read_buffer.size();
 }
@@ -151,8 +149,6 @@ ByteBuffer IODevice::read_all()
         }
         data.append((const u8*)read_buffer, nread);
     }
-    if (data.is_empty())
-        return {};
     return ByteBuffer::copy(data.data(), data.size());
 }
 

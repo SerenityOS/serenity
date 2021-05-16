@@ -563,11 +563,6 @@ int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
     if (m_buffer.is_empty())
         return -1;
 
-    if (needle.is_null()) {
-        dbgln("needle is null");
-        return -1;
-    }
-
     auto raw_offset = memmem(m_buffer.data() + start, m_buffer.size(), needle.data(), needle.size());
     if (raw_offset == NULL)
         return -1;

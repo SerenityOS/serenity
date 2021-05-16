@@ -150,8 +150,6 @@ public:
         return false;
     }
 
-    // NOTE: Vector::is_null() exists for the benefit of String::copy().
-    bool is_null() const { return false; }
     bool is_empty() const { return size() == 0; }
     ALWAYS_INLINE size_t size() const { return m_size; }
     size_t capacity() const { return m_capacity; }
