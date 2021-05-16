@@ -23,8 +23,5 @@ class ClientConnection final : public LanguageServers::ClientConnection {
         };
     }
     virtual ~ClientConnection() override = default;
-
-private:
-    virtual void set_auto_complete_mode(String const&) override { }
 };
 }

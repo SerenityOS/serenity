@@ -84,13 +84,6 @@ void LanguageClient::provide_autocomplete_suggestions(const Vector<GUI::Autocomp
     // Otherwise, drop it on the floor :shrug:
 }
 
-void LanguageClient::set_autocomplete_mode(const String& mode)
-{
-    if (!m_connection_wrapper.connection())
-        return;
-    m_connection_wrapper.connection()->async_set_auto_complete_mode(mode);
-}
-
 void LanguageClient::set_active_client()
 {
     if (!m_connection_wrapper.connection())
