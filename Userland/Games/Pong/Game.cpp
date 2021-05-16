@@ -130,7 +130,7 @@ void Game::reset_ball(int serve_to_player)
     int position_y = get_random<u32>() % (position_y_max - position_y_min + 1) + position_y_min;
     int position_x = (game_height / 2);
     int velocity_y = get_random<u32>() % 3 + 1;
-    int velocity_x = 5 + (5 - velocity_y);
+    int velocity_x = 4 + (5 - velocity_y);
     if (get_random<u32>() % 2)
         velocity_y = velocity_y * -1;
     if (serve_to_player == 2)
@@ -169,6 +169,13 @@ void Game::calculate_move()
 {
     int player_2_paddle_top = m_player2_paddle.rect.top();
     int player_2_paddle_bottom = m_player2_paddle.rect.bottom();
+
+    if (m_ball.velocity.x() > 0 || m_ball.x() > game_width / 2) {
+        // The ball is in the opponent's court, relax.
+        m_player2_paddle.moving_up = false;
+        m_player2_paddle.moving_down = false;
+        return;
+    }
 
     int ball_position = m_ball.y() + m_ball.radius;
 
