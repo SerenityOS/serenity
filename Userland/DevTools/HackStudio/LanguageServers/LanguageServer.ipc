@@ -8,6 +8,5 @@ endpoint LanguageServer
     set_file_content(String filename, String content) =|
 
     auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation location) =|
-    set_auto_complete_mode(String mode) =|
     find_declaration(GUI::AutocompleteProvider::ProjectLocation location) =|
 }

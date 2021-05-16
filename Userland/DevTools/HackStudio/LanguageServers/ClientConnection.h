@@ -34,7 +34,6 @@ protected:
     virtual void set_file_content(String const&, String const&) override;
     virtual void auto_complete_suggestions(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void find_declaration(GUI::AutocompleteProvider::ProjectLocation const&) override;
-    virtual void set_auto_complete_mode(String const&) override = 0;
 
     FileDB m_filedb;
     OwnPtr<AutoCompleteEngine> m_autocomplete_engine;

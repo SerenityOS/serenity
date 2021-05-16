@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "LexerAutoComplete.h"
 #include "ParserAutoComplete.h"
 #include <DevTools/HackStudio/LanguageServers/ClientConnection.h>
 
@@ -26,15 +25,5 @@ public:
     }
 
     virtual ~ClientConnection() override = default;
-
-private:
-    virtual void set_auto_complete_mode(String const& mode) override
-    {
-        dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "SetAutoCompleteMode: {}", mode);
-        if (mode == "Parser")
-            m_autocomplete_engine = make<ParserAutoComplete>(m_filedb);
-        else
-            m_autocomplete_engine = make<LexerAutoComplete>(m_filedb);
-    }
 };
 }
