@@ -5,6 +5,7 @@
  */
 
 #include "Game.h"
+#include <AK/Debug.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
 #include <time.h>
@@ -139,6 +140,8 @@ void Game::keydown_event(GUI::KeyEvent& event)
 
     if (event.shift() && (event.key() == KeyCode::Key_F12))
         start_game_over_animation();
+    else if (event.shift() && (event.key() == KeyCode::Key_F11))
+        dump_layout();
 }
 
 void Game::mousedown_event(GUI::MouseEvent& event)
@@ -463,6 +466,15 @@ void Game::paint_event(GUI::PaintEvent& event)
             m_focused_stack->set_focused(false);
             m_focused_stack = nullptr;
         }
+    }
+}
+
+void Game::dump_layout() const
+{
+    if constexpr (SOLITAIRE_DEBUG) {
+        dbgln("------------------------------");
+        for (const auto& stack : m_stacks)
+            dbgln("{}", stack);
     }
 }
 

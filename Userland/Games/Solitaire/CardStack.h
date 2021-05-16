@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Card.h"
+#include <AK/Format.h>
 #include <AK/Vector.h>
 
 namespace Solitaire {
@@ -28,6 +29,7 @@ public:
     bool is_empty() const { return m_stack.is_empty(); }
     bool is_focused() const { return m_focused; }
     Type type() const { return m_type; }
+    const NonnullRefPtrVector<Card>& stack() const { return m_stack; }
     size_t count() const { return m_stack.size(); }
     const Card& peek() const { return m_stack.last(); }
     Card& peek() { return m_stack.last(); }
@@ -84,3 +86,41 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<Solitaire::CardStack> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, const Solitaire::CardStack& stack)
+    {
+        StringView type;
+
+        switch (stack.type()) {
+        case Solitaire::CardStack::Type::Stock:
+            type = "Stock"sv;
+            break;
+        case Solitaire::CardStack::Type::Normal:
+            type = "Normal"sv;
+            break;
+        case Solitaire::CardStack::Type::Foundation:
+            type = "Foundation"sv;
+            break;
+        case Solitaire::CardStack::Type::Waste:
+            type = "Waste"sv;
+            break;
+        case Solitaire::CardStack::Type::Play:
+            type = "Play"sv;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+
+        StringBuilder cards;
+        bool first_card = true;
+
+        for (const auto& card : stack.stack()) {
+            cards.appendff("{}{}", (first_card ? "" : " "), card);
+            first_card = false;
+        }
+
+        Formatter<FormatString>::format(builder, "{:<10} {:>16}: {}", type, stack.bounding_box(), cards.build());
+    }
+};

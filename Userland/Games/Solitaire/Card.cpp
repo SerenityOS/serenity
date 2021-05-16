@@ -89,7 +89,6 @@ Card::Card(Type type, uint8_t value)
 
     Gfx::Painter painter(m_front);
     auto& font = Gfx::FontDatabase::default_bold_font();
-    static const String labels[] = { "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K" };
 
     auto label = labels[value];
     m_front->fill(Color::White);
