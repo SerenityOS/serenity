@@ -706,9 +706,11 @@ int Emulator::virt$getsockname(FlatPtr params_addr)
 {
     Syscall::SC_getsockname_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
-    struct sockaddr addr = {};
-    socklen_t addrlen = {};
-    auto rc = getsockname(params.sockfd, &addr, &addrlen);
+    sockaddr_storage addr = {};
+    socklen_t addrlen;
+    mmu().copy_from_vm(&addrlen, (FlatPtr)params.addrlen, sizeof(socklen_t));
+    VERIFY(addrlen <= sizeof(addr));
+    auto rc = getsockname(params.sockfd, (sockaddr*)&addr, &addrlen);
     mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
     mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
     return rc;
@@ -718,9 +720,11 @@ int Emulator::virt$getpeername(FlatPtr params_addr)
 {
     Syscall::SC_getpeername_params params;
     mmu().copy_from_vm(&params, params_addr, sizeof(params));
-    struct sockaddr addr = {};
-    socklen_t addrlen = {};
-    auto rc = getpeername(params.sockfd, &addr, &addrlen);
+    sockaddr_storage addr = {};
+    socklen_t addrlen;
+    mmu().copy_from_vm(&addrlen, (FlatPtr)params.addrlen, sizeof(socklen_t));
+    VERIFY(addrlen <= sizeof(addr));
+    auto rc = getpeername(params.sockfd, (sockaddr*)&addr, &addrlen);
     mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
     mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
     return rc;
