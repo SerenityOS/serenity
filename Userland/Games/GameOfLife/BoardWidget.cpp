@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Ryan Wilson <ryan@rdwilson.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -143,7 +144,11 @@ void BoardWidget::mousedown_event(GUI::MouseEvent& event)
     if (!row_and_column.has_value())
         return;
     auto [row, column] = row_and_column.value();
-    toggle_cell(row, column);
+    if (m_active_pattern == nullptr) {
+        toggle_cell(row, column);
+    } else {
+        place_pattern(row, column);
+    }
 }
 
 void BoardWidget::mousemove_event(GUI::MouseEvent& event)
@@ -177,4 +182,26 @@ Optional<Board::RowAndColumn> BoardWidget::get_row_and_column_for_point(int x, i
         .row = static_cast<size_t>((y - board_offset.height()) / cell_size),
         .column = static_cast<size_t>((x - board_offset.width()) / cell_size),
     } };
+}
+
+void BoardWidget::place_pattern(size_t row, size_t column)
+{
+    int y_offset = 0;
+    for (auto line : m_active_pattern->m_pattern) {
+        int x_offset = 0;
+        for (auto c : line) {
+            if (c == 'O' && (row + y_offset) < m_board->rows() && (column + x_offset) < m_board->columns())
+                toggle_cell(row + y_offset, column + x_offset);
+            x_offset++;
+        }
+        y_offset++;
+    }
+}
+
+void BoardWidget::set_active_pattern(Pattern* pattern)
+{
+    if (m_active_pattern == pattern)
+        return;
+
+    m_active_pattern = pattern;
 }

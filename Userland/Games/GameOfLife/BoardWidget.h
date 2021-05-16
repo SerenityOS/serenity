@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Ryan Wilson <ryan@rdwilson.xyz>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #pragma once
 
 #include "Board.h"
+#include "Pattern.h"
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Optional.h>
@@ -15,6 +17,7 @@
 #include <LibCore/Timer.h>
 #include <LibGUI/Widget.h>
 
+class Pattern;
 class BoardWidget final : public GUI::Widget {
     C_OBJECT(BoardWidget);
 
@@ -46,6 +49,11 @@ public:
     bool is_running() const { return m_running; }
     void set_running(bool r);
 
+    void set_active_pattern(Pattern*);
+    void place_pattern(size_t row, size_t column);
+
+    void set_toolbar_enabled(bool);
+
     void run_generation();
 
     int running_timer_interval() const { return m_running_timer_interval; }
@@ -62,6 +70,8 @@ private:
     Board::RowAndColumn m_last_cell_toggled {};
 
     NonnullOwnPtr<Board> m_board;
+
+    Pattern* m_active_pattern { nullptr };
 
     bool m_running { false };
 
