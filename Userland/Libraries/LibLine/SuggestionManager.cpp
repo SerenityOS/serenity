@@ -99,29 +99,27 @@ SuggestionManager::CompletionAttemptResult SuggestionManager::attempt_completion
 
     if (m_next_suggestion_index < m_suggestions.size()) {
         auto can_complete = m_next_suggestion_invariant_offset <= m_largest_common_suggestion_prefix_length;
-        if (!m_last_shown_suggestion.text.is_null()) {
-            ssize_t actual_offset;
-            size_t shown_length = m_last_shown_suggestion_display_length;
-            switch (mode) {
-            case CompletePrefix:
+        ssize_t actual_offset;
+        size_t shown_length = m_last_shown_suggestion_display_length;
+        switch (mode) {
+        case CompletePrefix:
+            actual_offset = 0;
+            break;
+        case ShowSuggestions:
+            actual_offset = 0 - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
+            if (can_complete)
+                shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trivia_view.length();
+            break;
+        default:
+            if (m_last_shown_suggestion_display_length == 0)
                 actual_offset = 0;
-                break;
-            case ShowSuggestions:
-                actual_offset = 0 - m_largest_common_suggestion_prefix_length + m_next_suggestion_invariant_offset;
-                if (can_complete)
-                    shown_length = m_largest_common_suggestion_prefix_length + m_last_shown_suggestion.trivia_view.length();
-                break;
-            default:
-                if (m_last_shown_suggestion_display_length == 0)
-                    actual_offset = 0;
-                else
-                    actual_offset = 0 - m_last_shown_suggestion_display_length + m_next_suggestion_invariant_offset;
-                break;
-            }
-
-            result.offset_region_to_remove = { m_next_suggestion_invariant_offset, shown_length };
-            result.new_cursor_offset = actual_offset;
+            else
+                actual_offset = 0 - m_last_shown_suggestion_display_length + m_next_suggestion_invariant_offset;
+            break;
         }
+
+        result.offset_region_to_remove = { m_next_suggestion_invariant_offset, shown_length };
+        result.new_cursor_offset = actual_offset;
 
         auto& suggestion = suggest();
         set_current_suggestion_initiation_index(initiation_start_index);

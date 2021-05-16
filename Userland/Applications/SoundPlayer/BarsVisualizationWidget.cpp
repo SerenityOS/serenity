@@ -23,7 +23,7 @@ void BarsVisualizationWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(event.rect());
     painter.fill_rect(frame_inner_rect(), Color::Black);
 
-    if (m_sample_buffer.is_null() || m_sample_buffer.is_empty())
+    if (m_sample_buffer.is_empty())
         return;
 
     fft(m_sample_buffer, false);
