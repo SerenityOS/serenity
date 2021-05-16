@@ -32,6 +32,8 @@ ViewWidget::~ViewWidget()
 void ViewWidget::clear()
 {
     m_bitmap = nullptr;
+    if (on_image_change)
+        on_image_change(m_bitmap);
     m_path = {};
 
     reset_view();
@@ -255,6 +257,8 @@ void ViewWidget::load_from_file(const String& path)
 
     m_decoded_image = decoded_image_or_error.release_value();
     m_bitmap = m_decoded_image->frames[0].bitmap;
+    if (on_image_change)
+        on_image_change(m_bitmap);
 
     if (m_decoded_image->is_animated && m_decoded_image->frames.size() > 1) {
         const auto& first_frame = m_decoded_image->frames[0];

@@ -205,7 +205,7 @@ int main(int argc, char** argv)
             widget.navigate(ViewWidget::Directions::Last);
         });
 
-    auto full_sceen_action = GUI::CommonActions::make_fullscreen_action(
+    auto full_screen_action = GUI::CommonActions::make_fullscreen_action(
         [&](auto&) {
             widget.on_doubleclick();
         });
@@ -237,6 +237,26 @@ int main(int argc, char** argv)
         if (widget.bitmap())
             GUI::Clipboard::the().set_bitmap(*widget.bitmap());
     });
+
+    widget.on_image_change = [&](const Gfx::Bitmap* bitmap) {
+        bool should_enable_image_actions = (bitmap != nullptr);
+        delete_action->set_enabled(should_enable_image_actions);
+        rotate_left_action->set_enabled(should_enable_image_actions);
+        rotate_right_action->set_enabled(should_enable_image_actions);
+        vertical_flip_action->set_enabled(should_enable_image_actions);
+        horizontal_flip_action->set_enabled(should_enable_image_actions);
+        desktop_wallpaper_action->set_enabled(should_enable_image_actions);
+        go_first_action->set_enabled(should_enable_image_actions);
+        go_back_action->set_enabled(should_enable_image_actions);
+        go_forward_action->set_enabled(should_enable_image_actions);
+        go_last_action->set_enabled(should_enable_image_actions);
+        zoom_in_action->set_enabled(should_enable_image_actions);
+        reset_zoom_action->set_enabled(should_enable_image_actions);
+        zoom_out_action->set_enabled(should_enable_image_actions);
+        if (!should_enable_image_actions) {
+            window->set_title("Image Viewer");
+        }
+    };
 
     main_toolbar.add_action(open_action);
     main_toolbar.add_action(delete_action);
@@ -273,7 +293,7 @@ int main(int argc, char** argv)
     navigate_menu.add_action(go_last_action);
 
     auto& view_menu = menubar->add_menu("&View");
-    view_menu.add_action(full_sceen_action);
+    view_menu.add_action(full_screen_action);
     view_menu.add_separator();
     view_menu.add_action(zoom_in_action);
     view_menu.add_action(reset_zoom_action);
@@ -291,6 +311,8 @@ int main(int argc, char** argv)
 
     if (path != nullptr) {
         widget.load_from_file(path);
+    } else {
+        widget.clear();
     }
 
     window->show();
