@@ -10,7 +10,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/AutoCompleteResponse.h>
-#include <DevTools/HackStudio/LanguageServers/AutoCompleteEngine.h>
+#include <DevTools/HackStudio/LanguageServers/CodeComprehensionEngine.h>
 #include <DevTools/HackStudio/LanguageServers/FileDB.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Parser.h>
@@ -21,9 +21,9 @@ namespace LanguageServers::Cpp {
 
 using namespace ::Cpp;
 
-class ParserAutoComplete : public AutoCompleteEngine {
+class CppComprehensionEngine : public CodeComprehensionEngine {
 public:
-    ParserAutoComplete(const FileDB& filedb);
+    CppComprehensionEngine(const FileDB& filedb);
 
     virtual Vector<GUI::AutocompleteProvider::Entry> get_suggestions(const String& file, const GUI::TextPosition& autocomplete_position) override;
     virtual void on_edit(const String& file) override;

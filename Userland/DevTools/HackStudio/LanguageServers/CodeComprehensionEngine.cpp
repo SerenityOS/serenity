@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "AutoCompleteEngine.h"
+#include "CodeComprehensionEngine.h"
 
 namespace LanguageServers {
 
-AutoCompleteEngine::AutoCompleteEngine(const FileDB& filedb, bool should_store_all_declarations)
+CodeComprehensionEngine::CodeComprehensionEngine(const FileDB& filedb, bool should_store_all_declarations)
     : m_filedb(filedb)
     , m_store_all_declarations(should_store_all_declarations)
 {
 }
 
-AutoCompleteEngine::~AutoCompleteEngine()
+CodeComprehensionEngine::~CodeComprehensionEngine()
 {
 }
-void AutoCompleteEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
+void CodeComprehensionEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
     if (!set_declarations_of_document_callback)
         return;
