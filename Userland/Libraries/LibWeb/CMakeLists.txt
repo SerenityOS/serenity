@@ -221,6 +221,7 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    WebAssembly/WebAssemblyObject.cpp
     WebContentClient.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
@@ -466,6 +467,6 @@ add_custom_command(
 )
 
 serenity_lib(LibWeb web)
-target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient)
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibWasm)
 
 add_subdirectory(DumpLayoutTree)
