@@ -256,6 +256,8 @@ private:
     void handle_interrupt_event();
     void handle_read_event();
 
+    void ensure_free_lines_from_origin(size_t count);
+
     Vector<size_t, 2> vt_dsr();
     void remove_at_index(size_t);
 

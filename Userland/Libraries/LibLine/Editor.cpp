@@ -185,6 +185,24 @@ Editor::~Editor()
         restore();
 }
 
+void Editor::ensure_free_lines_from_origin(size_t count)
+{
+    if (count > m_num_lines) {
+        // It's hopeless...
+        TODO();
+    }
+
+    if (m_origin_row + count <= m_num_lines)
+        return;
+
+    auto diff = m_origin_row + count - m_num_lines - 1;
+    out(stderr, "\x1b[{}S", diff);
+    fflush(stderr);
+    m_origin_row -= diff;
+    m_refresh_needed = false;
+    m_chars_touched_in_the_middle = 0;
+}
+
 void Editor::get_terminal_size()
 {
     struct winsize ws;
@@ -1379,15 +1397,10 @@ void Editor::reposition_cursor(bool to_end)
     auto line = cursor_line() - 1;
     auto column = offset_in_line();
 
+    ensure_free_lines_from_origin(line);
+
     VERIFY(column + m_origin_column <= m_num_columns);
     VT::move_absolute(line + m_origin_row, column + m_origin_column);
-
-    if (line + m_origin_row > m_num_lines) {
-        for (size_t i = m_num_lines; i < line + m_origin_row; ++i)
-            fputc('\n', stderr);
-        m_origin_row -= line + m_origin_row - m_num_lines;
-        VT::move_relative(0, column + m_origin_column);
-    }
 
     m_cursor = saved_cursor;
 }
