@@ -39,7 +39,7 @@ struct ScopeFrame {
 };
 
 struct CallFrame {
-    const ASTNode* current_node;
+    const ASTNode* current_node { nullptr };
     FlyString function_name;
     Value callee;
     Value this_value;
