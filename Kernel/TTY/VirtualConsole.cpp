@@ -394,10 +394,8 @@ String VirtualConsole::device_name() const
 
 void VirtualConsole::echo(u8 ch)
 {
-    if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        on_tty_write(buffer, 1);
-    }
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
+    on_tty_write(buffer, 1);
 }
 
 VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)

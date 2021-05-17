@@ -38,10 +38,8 @@ String const& SlavePTY::tty_name() const
 
 void SlavePTY::echo(u8 ch)
 {
-    if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        m_master->on_slave_write(buffer, 1);
-    }
+    auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
+    m_master->on_slave_write(buffer, 1);
 }
 
 void SlavePTY::on_master_write(const UserOrKernelBuffer& buffer, ssize_t size)
