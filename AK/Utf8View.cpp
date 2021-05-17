@@ -53,7 +53,7 @@ size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
     return it.m_ptr - begin_ptr();
 }
 
-Utf8View Utf8View::substring_view(int byte_offset, int byte_length) const
+Utf8View Utf8View::substring_view(size_t byte_offset, size_t byte_length) const
 {
     StringView string = m_string.substring_view(byte_offset, byte_length);
     return Utf8View { string };
