@@ -40,5 +40,5 @@ int main(int argc, char** argv)
         dbgln("{}", error);
     }
 
-    root->dump(0);
+    root->dump();
 }
