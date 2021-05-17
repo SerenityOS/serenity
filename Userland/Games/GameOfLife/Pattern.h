@@ -11,18 +11,16 @@
 #include <LibGUI/Event.h>
 #include <LibGUI/Forward.h>
 
-class Board;
-
 class Pattern {
 public:
     Pattern(Vector<String>);
     virtual ~Pattern();
-
-    virtual void on_pattern_button_contextmenu(GUI::ContextMenuEvent&) { }
+    Vector<String> pattern() { return m_pattern; };
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);
-    Vector<String> m_pattern;
+    void rotate_clockwise();
 
-protected:
+private:
     RefPtr<GUI::Action> m_action;
+    Vector<String> m_pattern;
 };

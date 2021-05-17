@@ -58,19 +58,11 @@
             }
         }
     }
-    @GUI::Widget {
-    name: "patterns_widget_container"
-        layout: @GUI::HorizontalBoxLayout {
-            spacing: 2
-        }
-        @GUI::ToolbarContainer {
-            name: "pattern_container"
-        }
+
     @GUI::Frame {
         name: "board_widget_container"
         fill_with_background_color: true
     }
-}
 
     @GUI::Statusbar {
         name: "statusbar"

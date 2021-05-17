@@ -5,7 +5,6 @@
  */
 
 #include "BoardWidget.h"
-#include "PatternWidget.h"
 #include <Games/GameOfLife/GameOfLifeGML.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -47,12 +46,6 @@ int main(int argc, char** argv)
     board_layout.set_spacing(0);
     auto& board_widget = board_widget_container.add<BoardWidget>(board_rows, board_columns);
     board_widget.randomize_cells();
-
-    auto& patterns_widget_container = *main_widget.find_descendant_of_type_named<GUI::ToolbarContainer>("pattern_container");
-    auto& patterns_widget = patterns_widget_container.add<PatternWidget>();
-    patterns_widget.on_pattern_selection = [&](auto* pattern) {
-        board_widget.set_active_pattern(pattern);
-    };
 
     auto& statusbar = *main_widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(click_tip);
@@ -110,6 +103,12 @@ int main(int argc, char** argv)
     });
     main_toolbar.add_action(randomize_cells_action);
 
+    auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"), [&](auto&) {
+        if (board_widget.selected_pattern() != nullptr)
+            board_widget.selected_pattern()->rotate_clockwise();
+    });
+    main_toolbar.add_action(rotate_pattern_action);
+
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
 
@@ -122,13 +121,6 @@ int main(int argc, char** argv)
     game_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
-
-    auto& pattern_menu = menubar->add_menu("&Pattern");
-    patterns_widget.for_each_pattern([&](auto& pattern) {
-        if (pattern.action())
-            pattern_menu.add_action(*pattern.action());
-        return IterationDecision::Continue;
-    });
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Game Of Life", app_icon, window));
