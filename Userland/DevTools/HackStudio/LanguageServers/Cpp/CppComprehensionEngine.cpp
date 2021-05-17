@@ -559,7 +559,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     auto root = document_data->parser().parse();
 
     if constexpr (CPP_LANGUAGE_SERVER_DEBUG)
-        root->dump(0);
+        root->dump();
 
     update_declared_symbols(*document_data);
 
