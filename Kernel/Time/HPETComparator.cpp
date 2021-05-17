@@ -83,7 +83,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
 {
     InterruptDisabler disabler;
     if (!is_capable_of_frequency(frequency)) {
-        dbgln("HPETComparator: not cable of frequency: {}", frequency);
+        dbgln("HPETComparator: not capable of frequency: {}", frequency);
         return false;
     }
 
