@@ -45,7 +45,7 @@ public:
         calculate();
     }
 
-    i32 mandelbrot(double px, double py, i32 max_iterations)
+    double mandelbrot(double px, double py, i32 max_iterations)
     {
         // Based on https://en.wikipedia.org/wiki/Plotting_algorithms_for_the_Mandelbrot_set
         const double x0 = px * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start;
@@ -64,15 +64,30 @@ public:
             iteration++;
         }
 
-        return iteration;
+        if (iteration == max_iterations)
+            return iteration;
+
+        auto lz = sqrt(x * x + y * y) / 2;
+        return 1 + iteration + log(lz / log(2)) / log(2);
+    }
+
+    static double linear_interpolate(double v0, double v1, double t)
+    {
+        return v0 + t * (v1 - v0);
     }
 
     void calculate_pixel(int px, int py, int max_iterations)
     {
         auto iterations = mandelbrot(px, py, max_iterations);
-        double hue = (double)iterations * 360.0 / (double)max_iterations;
-        if (hue == 360.0)
-            hue = 0.0;
+        auto whole_iterations = floor(iterations);
+        auto partial_iterations = fmod(iterations, 1);
+        double hue1 = whole_iterations * 360.0 / max_iterations;
+        if (hue1 >= 360.0)
+            hue1 = 0.0;
+        double hue2 = (whole_iterations + 1) * 360.0 / max_iterations;
+        if (hue2 >= 360.0)
+            hue2 = 0.0;
+        double hue = linear_interpolate(hue1, hue2, partial_iterations);
         double saturation = 1.0;
         double value = iterations < max_iterations ? 1.0 : 0;
         m_bitmap->set_pixel(px, py, Color::from_hsv(hue, saturation, value));
