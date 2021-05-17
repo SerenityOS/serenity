@@ -118,14 +118,27 @@ size_t GzipDecompressor::read(Bytes bytes)
                 m_input_stream.discard_or_error(length);
             }
 
+            auto discard_string = [&]() {
+                char next_char;
+                do {
+                    m_input_stream >> next_char;
+                    if (m_input_stream.has_any_error()) {
+                        set_fatal_error();
+                        break;
+                    }
+                } while (next_char);
+            };
+
             if (header.flags & Flags::FNAME) {
-                String original_filename;
-                m_input_stream >> original_filename;
+                discard_string();
+                if (has_any_error())
+                    break;
             }
 
             if (header.flags & Flags::FCOMMENT) {
-                String comment;
-                m_input_stream >> comment;
+                discard_string();
+                if (has_any_error())
+                    break;
             }
 
             if (header.flags & Flags::FHCRC) {
