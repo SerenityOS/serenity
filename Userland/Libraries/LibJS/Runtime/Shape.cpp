@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,10 +23,23 @@ Shape* Shape::create_unique_clone() const
     return new_shape;
 }
 
+Shape* Shape::get_or_prune_cached_forward_transition(TransitionKey const& key)
+{
+    auto it = m_forward_transitions.find(key);
+    if (it == m_forward_transitions.end())
+        return nullptr;
+    if (!it->value) {
+        // The cached forward transition has gone stale (from garbage collection). Prune it.
+        m_forward_transitions.remove(it);
+        return nullptr;
+    }
+    return it->value;
+}
+
 Shape* Shape::create_put_transition(const StringOrSymbol& property_name, PropertyAttributes attributes)
 {
     TransitionKey key { property_name, attributes };
-    if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
+    if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Put);
     m_forward_transitions.set(key, new_shape);
@@ -36,7 +49,7 @@ Shape* Shape::create_put_transition(const StringOrSymbol& property_name, Propert
 Shape* Shape::create_configure_transition(const StringOrSymbol& property_name, PropertyAttributes attributes)
 {
     TransitionKey key { property_name, attributes };
-    if (auto* existing_shape = m_forward_transitions.get(key).value_or(nullptr))
+    if (auto* existing_shape = get_or_prune_cached_forward_transition(key))
         return existing_shape;
     auto* new_shape = heap().allocate_without_global_object<Shape>(*this, property_name, attributes, TransitionType::Configure);
     m_forward_transitions.set(key, new_shape);
@@ -88,9 +101,6 @@ void Shape::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_prototype);
     visitor.visit(m_previous);
     m_property_name.visit_edges(visitor);
-    for (auto& it : m_forward_transitions)
-        visitor.visit(it.value);
-
     if (m_property_table) {
         for (auto& it : *m_property_table)
             it.key.visit_edges(visitor);
