@@ -30,6 +30,12 @@ public:
         fill(default_value);
     }
 
+    Bitmap(u8* data, size_t size)
+        : m_data(data)
+        , m_size(size)
+    {
+    }
+
     BitmapView view() { return { m_data, m_size }; }
     const BitmapView view() const { return { m_data, m_size }; }
 
@@ -102,86 +108,11 @@ public:
         }
     }
 
-    template<bool VALUE, bool verify_that_all_bits_flip = false>
-    void set_range(size_t start, size_t len)
-    {
-        VERIFY(start < m_size);
-        VERIFY(start + len <= m_size);
-        if (len == 0)
-            return;
+    template<bool VALUE>
+    void set_range(size_t start, size_t len) { return view().set_range<VALUE, false>(start, len); }
+    void set_range(size_t start, size_t len, bool value) { return view().set_range(start, len, value); }
 
-        static const u8 bitmask_first_byte[8] = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
-        static const u8 bitmask_last_byte[8] = { 0x0, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
-
-        u8* first = &m_data[start / 8];
-        u8* last = &m_data[(start + len) / 8];
-        u8 byte_mask = bitmask_first_byte[start % 8];
-        if (first == last) {
-            byte_mask &= bitmask_last_byte[(start + len) % 8];
-            if constexpr (verify_that_all_bits_flip) {
-                if constexpr (VALUE) {
-                    VERIFY((*first & byte_mask) == 0);
-                } else {
-                    VERIFY((*first & byte_mask) == byte_mask);
-                }
-            }
-            if constexpr (VALUE)
-                *first |= byte_mask;
-            else
-                *first &= ~byte_mask;
-        } else {
-            if constexpr (verify_that_all_bits_flip) {
-                if constexpr (VALUE) {
-                    VERIFY((*first & byte_mask) == 0);
-                } else {
-                    VERIFY((*first & byte_mask) == byte_mask);
-                }
-            }
-            if constexpr (VALUE)
-                *first |= byte_mask;
-            else
-                *first &= ~byte_mask;
-            byte_mask = bitmask_last_byte[(start + len) % 8];
-            if constexpr (verify_that_all_bits_flip) {
-                if constexpr (VALUE) {
-                    VERIFY((*last & byte_mask) == 0);
-                } else {
-                    VERIFY((*last & byte_mask) == byte_mask);
-                }
-            }
-            if constexpr (VALUE)
-                *last |= byte_mask;
-            else
-                *last &= ~byte_mask;
-            if (++first < last) {
-                if constexpr (VALUE)
-                    __builtin_memset(first, 0xFF, last - first);
-                else
-                    __builtin_memset(first, 0x0, last - first);
-            }
-        }
-    }
-
-    void set_range(size_t start, size_t len, bool value)
-    {
-        if (value)
-            set_range<true, false>(start, len);
-        else
-            set_range<false, false>(start, len);
-    }
-
-    void set_range_and_verify_that_all_bits_flip(size_t start, size_t len, bool value)
-    {
-        if (value)
-            set_range<true, true>(start, len);
-        else
-            set_range<false, true>(start, len);
-    }
-
-    void fill(bool value)
-    {
-        __builtin_memset(m_data, value ? 0xff : 0x00, size_in_bytes());
-    }
+    void fill(bool value) { view().fill(value); }
 
     Optional<size_t> find_one_anywhere_set(size_t hint = 0) const { return view().find_one_anywhere<true>(hint); }
     Optional<size_t> find_one_anywhere_unset(size_t hint = 0) const { return view().find_one_anywhere<false>(hint); }
