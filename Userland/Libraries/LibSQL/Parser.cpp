@@ -319,7 +319,7 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
         if (consume_if(TokenType::Offset)) {
             offset_expression = parse_expression();
         } else {
-            // Note: The limit clause may instead be definied as "offset-expression, limit-expression", effectively reversing the
+            // Note: The limit clause may instead be defined as "offset-expression, limit-expression", effectively reversing the
             // order of the expressions. SQLite notes "this is counter-intuitive" and "to avoid confusion, programmers are strongly
             // encouraged to ... avoid using a LIMIT clause with a comma-separated offset."
             VERIFY(!consume_if(TokenType::Comma));
@@ -907,7 +907,7 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
         return create_ast_node<ResultColumn>();
 
     // If we match an identifier now, we don't know whether it is a table-name of the form "table-name.*", or if it is the start of a
-    // column-name-expression, until we try to parse the asterisk. So if we consume an indentifier and a period, but don't find an
+    // column-name-expression, until we try to parse the asterisk. So if we consume an identifier and a period, but don't find an
     // asterisk, hold onto that information to form a column-name-expression later.
     String table_name;
     bool parsed_period = false;
