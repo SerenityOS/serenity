@@ -26,7 +26,6 @@ option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they sti
 option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks" ON)
 option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
-option(PRECOMPILE_COMMON_HEADERS "Precompile some common headers to speedup compilation" OFF)
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 
 add_custom_target(run
