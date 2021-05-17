@@ -222,6 +222,7 @@ set(SOURCES
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
     WebAssembly/WebAssemblyObject.cpp
+    WebAssembly/WebAssemblyObjectPrototype.cpp
     WebContentClient.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
