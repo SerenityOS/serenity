@@ -13,7 +13,8 @@ if [ "$#" -eq "1" ]; then
             ':!:Base' \
             ':!:Kernel/FileSystem/ext2_fs.h' \
             ':!:Userland/Libraries/LibC/syslog.h' \
-            ':!:Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/*'
+            ':!:Userland/DevTools/HackStudio/LanguageServers/Cpp/Tests/*' \
+            ':!:Userland/Libraries/LibCpp/Tests/*'
     )
 else
     files=()
