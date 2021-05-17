@@ -41,15 +41,6 @@ HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     , m_cell_size(cell_size)
 {
     VERIFY(cell_size >= sizeof(FreelistEntry));
-
-    FreelistEntry* next = nullptr;
-    for (ssize_t i = cell_count() - 1; i >= 0; i--) {
-        auto* freelist_entry = init_freelist_entry(i);
-        freelist_entry->set_live(false);
-        freelist_entry->next = next;
-        next = freelist_entry;
-    }
-    m_freelist = next;
 }
 
 void HeapBlock::deallocate(Cell* cell)

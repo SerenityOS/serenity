@@ -25,10 +25,12 @@ public:
 
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
-    bool is_full() const { return !m_freelist; }
+    bool is_full() const { return !has_lazy_freelist() && !m_freelist; }
 
     ALWAYS_INLINE Cell* allocate()
     {
+        if (has_lazy_freelist())
+            return cell(m_next_lazy_freelist_index++);
         if (!m_freelist)
             return nullptr;
         VERIFY(is_valid_cell_pointer(m_freelist));
@@ -40,7 +42,8 @@ public:
     template<typename Callback>
     void for_each_cell(Callback callback)
     {
-        for (size_t i = 0; i < cell_count(); ++i)
+        auto end = has_lazy_freelist() ? m_next_lazy_freelist_index : cell_count();
+        for (size_t i = 0; i < end; ++i)
             callback(cell(i));
     }
 
@@ -71,6 +74,8 @@ public:
 private:
     HeapBlock(Heap&, size_t cell_size);
 
+    bool has_lazy_freelist() const { return m_next_lazy_freelist_index < cell_count(); }
+
     struct FreelistEntry final : public Cell {
         FreelistEntry* next { nullptr };
 
@@ -89,6 +94,7 @@ private:
 
     Heap& m_heap;
     size_t m_cell_size { 0 };
+    size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     alignas(Cell) u8 m_storage[];
 };
