@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Heap/Cell.h>
 
 namespace JS {
 
