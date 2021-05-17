@@ -21,7 +21,10 @@ inline void StringBuilder::will_append(size_t size)
     Checked<size_t> needed_capacity = m_length;
     needed_capacity += size;
     VERIFY(!needed_capacity.has_overflow());
-    m_buffer.grow(needed_capacity.value());
+    Checked<size_t> expanded_capacity = needed_capacity;
+    expanded_capacity *= 2;
+    VERIFY(!expanded_capacity.has_overflow());
+    m_buffer.grow(expanded_capacity.value());
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
