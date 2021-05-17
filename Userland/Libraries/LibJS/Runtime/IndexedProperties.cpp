@@ -160,8 +160,9 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
     m_array_size--;
 
     auto result = m_sparse_elements.get(m_array_size);
+    if (!result.has_value())
+        return {};
     m_sparse_elements.remove(m_array_size);
-    VERIFY(result.has_value());
     return result.value();
 }
 
