@@ -102,12 +102,12 @@ struct BigAllocator {
 // are run. Similarly, we can not allow global destructors to destruct
 // them. We could have used AK::NeverDestoyed to prevent the latter,
 // but it would have not helped with the former.
-static u8 g_allocators_storage[sizeof(Allocator) * num_size_classes];
+static u8 g_allocators_storage[sizeof(Allocator) * size_classes.size()];
 static u8 g_big_allocators_storage[sizeof(BigAllocator)];
 
-static inline Allocator (&allocators())[num_size_classes]
+static inline Allocator (&allocators())[size_classes.size()]
 {
-    return reinterpret_cast<Allocator(&)[num_size_classes]>(g_allocators_storage);
+    return reinterpret_cast<Allocator(&)[size_classes.size()]>(g_allocators_storage);
 }
 
 static inline BigAllocator (&big_allocators())[1]
@@ -442,7 +442,7 @@ void __malloc_init()
     if (secure_getenv("LIBC_PROFILE_MALLOC"))
         s_profiling = true;
 
-    for (size_t i = 0; i < num_size_classes; ++i) {
+    for (size_t i = 0; i < size_classes.size(); ++i) {
         new (&allocators()[i]) Allocator();
         allocators()[i].size = size_classes[i];
     }
