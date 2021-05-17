@@ -34,6 +34,8 @@ public:
     const ClientConnection* client() const { return m_client; }
     int menu_id() const { return m_menu_id; }
 
+    bool is_open() const;
+
     u32 alt_shortcut_character() const { return m_alt_shortcut_character; }
 
     bool is_empty() const { return m_items.is_empty(); }
