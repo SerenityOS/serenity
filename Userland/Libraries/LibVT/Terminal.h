@@ -161,13 +161,13 @@ protected:
 #ifndef KERNEL
     void scroll_up();
     void scroll_down();
-    void newline();
+    void linefeed();
     void put_character_at(unsigned row, unsigned column, u32 ch);
     void set_window_title(const String&);
 #else
     virtual void scroll_up() = 0;
     virtual void scroll_down() = 0;
-    virtual void newline() = 0;
+    virtual void linefeed() = 0;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) = 0;
     virtual void set_window_title(const String&) = 0;
 #endif

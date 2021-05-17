@@ -38,7 +38,7 @@ private:
 
     virtual void scroll_up() override;
     virtual void scroll_down() override;
-    virtual void newline() override;
+    virtual void linefeed() override;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
     virtual void set_window_title(const String&) override;
 
@@ -137,7 +137,6 @@ private:
 
     void scroll_down();
     void scroll_up();
-    void newline();
     void clear_line(size_t index);
     void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
 

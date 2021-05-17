@@ -68,7 +68,7 @@ void ConsoleImpl::scroll_up()
 void ConsoleImpl::scroll_down()
 {
 }
-void ConsoleImpl::newline()
+void ConsoleImpl::linefeed()
 {
     u16 new_row = m_cursor_row;
     u16 max_row = rows() - 1;
@@ -381,10 +381,6 @@ void VirtualConsole::scroll_up()
     memmove(m_cells->vaddr().as_ptr(), m_cells->vaddr().offset(columns() * sizeof(Cell)).as_ptr(), ((rows() - 1) * columns() * sizeof(Cell)));
     clear_line(rows() - 1);
     m_console_impl.m_need_full_flush = true;
-}
-
-void VirtualConsole::newline()
-{
 }
 
 void VirtualConsole::clear_line(size_t y_index)
