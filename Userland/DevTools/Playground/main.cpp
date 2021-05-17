@@ -104,6 +104,35 @@ int main(int argc, char** argv)
     editor.set_should_autocomplete_automatically(true);
     editor.set_automatic_indentation_enabled(true);
 
+    RefPtr<GUI::Action> m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
+        if (!save_path.has_value())
+            return;
+
+        if (!editor.write_to_file(save_path.value())) {
+            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+    });
+
+    window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        if (!editor.document().is_modified())
+            return GUI::Window::CloseRequestDecision::Close;
+        auto result = GUI::MessageBox::show(window, "The file has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+
+        if (result == GUI::Dialog::ExecResult::ExecYes) {
+            m_save_as_action->activate();
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        if (result == GUI::Dialog::ExecResult::ExecNo) {
+            app->quit();
+            return GUI::Window::CloseRequestDecision::Close;
+        }
+
+        return GUI::Window::CloseRequestDecision::StayOpen;
+    };
+
     if (String(path).is_empty()) {
         editor.set_text(R"~~~(@GUI::Widget {
     layout: @GUI::VerticalBoxLayout {
@@ -157,21 +186,27 @@ int main(int argc, char** argv)
         editor.set_focus(true);
     }));
 
-    file_menu.add_action(GUI::CommonActions::make_save_as_action([&](auto&) {
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
-        if (!save_path.has_value())
-            return;
-
-        if (!editor.write_to_file(save_path.value())) {
-            GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-    }));
+    file_menu.add_action(*m_save_as_action);
 
     file_menu.add_separator();
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
-        app->quit();
+        if (!editor.document().is_modified()) {
+            app->quit();
+            return;
+        }
+        auto result = GUI::MessageBox::show(window, "The file has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+
+        if (result == GUI::Dialog::ExecResult::ExecYes) {
+            m_save_as_action->activate();
+            app->quit();
+            return;
+        }
+
+        if (result == GUI::Dialog::ExecResult::ExecNo)
+            app->quit();
+
+        return;
     }));
 
     auto& edit_menu = menubar->add_menu("&Edit");
