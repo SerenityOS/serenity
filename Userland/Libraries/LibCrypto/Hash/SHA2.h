@@ -39,6 +39,13 @@ constexpr static u32 InitializationHashes[8] = {
 };
 }
 
+namespace SHA384Constants {
+constexpr static u64 InitializationHashes[8] = {
+    0xcbbb9d5dc1059ed8, 0x629a292a367cd507, 0x9159015a3070dd17, 0x152fecd8f70e5939,
+    0x67332667ffc00b31, 0x8eb44a8768581511, 0xdb0c2e0d64f98fa7, 0x47b5481dbefa4fa4
+};
+}
+
 namespace SHA512Constants {
 constexpr static u64 RoundConstants[80] {
     0x428a2f98d728ae22, 0x7137449123ef65cd, 0xb5c0fbcfec4d3b2f, 0xe9b5dba58189dbbc, 0x3956c25bf348b538,
@@ -122,6 +129,56 @@ private:
 
     constexpr static auto FinalBlockDataSize = BlockSize - 8;
     constexpr static auto Rounds = 64;
+};
+
+class SHA384 final : public HashFunction<1024, SHA2Digest<384 / 8>> {
+public:
+    using HashFunction::update;
+
+    SHA384()
+    {
+        reset();
+    }
+
+    virtual void update(const u8*, size_t) override;
+
+    virtual DigestType digest() override;
+    virtual DigestType peek() override;
+
+    inline static DigestType hash(const u8* data, size_t length)
+    {
+        SHA384 sha;
+        sha.update(data, length);
+        return sha.digest();
+    }
+
+    inline static DigestType hash(const ByteBuffer& buffer) { return hash(buffer.data(), buffer.size()); }
+    inline static DigestType hash(const StringView& buffer) { return hash((const u8*)buffer.characters_without_null_termination(), buffer.length()); }
+
+    virtual String class_name() const override
+    {
+        return String::formatted("SHA{}", DigestSize * 8);
+    }
+
+    inline virtual void reset() override
+    {
+        m_data_length = 0;
+        m_bit_length = 0;
+        for (size_t i = 0; i < 8; ++i)
+            m_state[i] = SHA384Constants::InitializationHashes[i];
+    }
+
+private:
+    inline void transform(const u8*);
+
+    u8 m_data_buffer[BlockSize];
+    size_t m_data_length { 0 };
+
+    u64 m_bit_length { 0 };
+    u64 m_state[8];
+
+    constexpr static auto FinalBlockDataSize = BlockSize - 8;
+    constexpr static auto Rounds = 80;
 };
 
 class SHA512 final : public HashFunction<1024, SHA2Digest<512 / 8>> {
