@@ -10,16 +10,14 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
-#include <AK/StringView.h>
 #include <LibChess/Chess.h>
-#include <LibGUI/Widget.h>
+#include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 
-class ChessWidget final : public GUI::Widget {
-    C_OBJECT(ChessWidget)
+class ChessWidget final : public GUI::Frame {
+    C_OBJECT(ChessWidget);
+
 public:
-    ChessWidget();
-    ChessWidget(const StringView& set);
     virtual ~ChessWidget() override;
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -107,6 +105,8 @@ public:
     };
 
 private:
+    ChessWidget();
+
     Chess::Board m_board;
     Chess::Board m_board_playback;
     bool m_playback { false };
