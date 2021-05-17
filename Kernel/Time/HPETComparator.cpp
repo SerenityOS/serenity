@@ -99,6 +99,7 @@ bool HPETComparator::try_to_set_frequency(size_t frequency)
     } else {
         HPET::the().update_non_periodic_comparator_value(*this);
     }
+    HPET::the().enable(*this);
     enable_irq(); // Enable if we haven't already
     return true;
 }
