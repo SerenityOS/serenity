@@ -99,12 +99,10 @@ void ClientConnection::destroy_menubar(i32 menubar_id)
     m_menubars.remove(it);
 }
 
-Messages::WindowServer::CreateMenuResponse ClientConnection::create_menu(String const& menu_title)
+void ClientConnection::create_menu(i32 menu_id, String const& menu_title)
 {
-    int menu_id = m_next_menu_id++;
     auto menu = Menu::construct(this, menu_id, menu_title);
     m_menus.set(menu_id, move(menu));
-    return menu_id;
 }
 
 void ClientConnection::destroy_menu(i32 menu_id)

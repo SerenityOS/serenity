@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
+#include <AK/IDAllocator.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Menu.h>
@@ -14,6 +15,8 @@
 #include <LibGfx/Bitmap.h>
 
 namespace GUI {
+
+static IDAllocator s_menu_id_allocator;
 
 static HashMap<int, Menu*>& all_menus()
 {
@@ -85,7 +88,9 @@ void Menu::dismiss()
 int Menu::realize_menu(RefPtr<Action> default_action)
 {
     unrealize_menu();
-    m_menu_id = WindowServerConnection::the().create_menu(m_name);
+    m_menu_id = s_menu_id_allocator.allocate();
+
+    WindowServerConnection::the().async_create_menu(m_menu_id, m_name);
 
     dbgln_if(MENU_DEBUG, "GUI::Menu::realize_menu(): New menu ID: {}", m_menu_id);
     VERIFY(m_menu_id > 0);
