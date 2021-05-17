@@ -163,17 +163,38 @@ enum ClientVerificationStaus {
     VerificationNeeded,
 };
 
+// Note for the 16 iv length instead of 8:
+// 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
+// GCM specifically asks us to transmit only the nonce, the counter is zero
+// and the fixed IV is derived from the premaster key.
+#define ENUMERATE_CIPHERS(C)                                                                                                                    \
+    C(false, CipherSuite::AES_128_GCM_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)       \
+    C(false, CipherSuite::AES_256_GCM_SHA384, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)       \
+    C(false, CipherSuite::AES_128_CCM_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_CCM, Crypto::Hash::SHA256, 16, false)     \
+    C(false, CipherSuite::AES_128_CCM_8_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_CCM_8, Crypto::Hash::SHA256, 16, false) \
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)        \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)        \
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)   \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false)   \
+    C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
+    C(false, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
+
 struct Options {
+    static Vector<CipherSuite> default_usable_cipher_suites()
+    {
+        Vector<CipherSuite> cipher_suites;
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    if constexpr (is_supported)                                           \
+        cipher_suites.empend(suite);
+        ENUMERATE_CIPHERS(C)
+#undef C
+        return cipher_suites;
+    }
+    Vector<CipherSuite> usable_cipher_suites = default_usable_cipher_suites();
+
 #define OPTION_WITH_DEFAULTS(typ, name, ...)                    \
     static typ default_##name() { return typ { __VA_ARGS__ }; } \
     typ name = default_##name();
-
-    OPTION_WITH_DEFAULTS(Vector<CipherSuite>, usable_cipher_suites,
-        CipherSuite::RSA_WITH_AES_128_CBC_SHA256,
-        CipherSuite::RSA_WITH_AES_256_CBC_SHA256,
-        CipherSuite::RSA_WITH_AES_128_CBC_SHA,
-        CipherSuite::RSA_WITH_AES_256_CBC_SHA,
-        CipherSuite::RSA_WITH_AES_128_GCM_SHA256)
 
     OPTION_WITH_DEFAULTS(Version, version, Version::V12)
     OPTION_WITH_DEFAULTS(Vector<SignatureAndHashAlgorithm>, supported_signature_algorithms,
@@ -297,11 +318,15 @@ public:
 
     bool supports_cipher(CipherSuite suite) const
     {
-        return suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA256
-            || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA256
-            || suite == CipherSuite::RSA_WITH_AES_128_CBC_SHA
-            || suite == CipherSuite::RSA_WITH_AES_256_CBC_SHA
-            || suite == CipherSuite::RSA_WITH_AES_128_GCM_SHA256;
+        switch (suite) {
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return is_supported;
+            ENUMERATE_CIPHERS(C)
+#undef C
+        default:
+            return false;
+        }
     }
 
     bool supports_version(Version v) const
@@ -376,72 +401,50 @@ private:
     size_t key_length() const
     {
         switch (m_context.cipher) {
-        case CipherSuite::AES_128_CCM_8_SHA256:
-        case CipherSuite::AES_128_CCM_SHA256:
-        case CipherSuite::AES_128_GCM_SHA256:
-        case CipherSuite::Invalid:
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
-        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return cipher_key_size(cipher) / 8;
+            ENUMERATE_CIPHERS(C)
+#undef C
         default:
             return 128 / 8;
-        case CipherSuite::AES_256_GCM_SHA384:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
-        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
-            return 256 / 8;
         }
     }
+
     size_t mac_length() const
     {
         switch (m_context.cipher) {
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
-            return Crypto::Hash::SHA1::digest_size();
-        case CipherSuite::AES_256_GCM_SHA384:
-        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
-            return Crypto::Hash::SHA512::digest_size();
-        case CipherSuite::AES_128_CCM_8_SHA256:
-        case CipherSuite::AES_128_CCM_SHA256:
-        case CipherSuite::AES_128_GCM_SHA256:
-        case CipherSuite::Invalid:
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
-        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return hash ::digest_size();
+            ENUMERATE_CIPHERS(C)
+#undef C
         default:
             return Crypto::Hash::SHA256::digest_size();
         }
     }
+
     size_t iv_length() const
     {
         switch (m_context.cipher) {
-        case CipherSuite::AES_128_CCM_8_SHA256:
-        case CipherSuite::AES_128_CCM_SHA256:
-        case CipherSuite::Invalid:
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA256:
-        case CipherSuite::RSA_WITH_AES_128_CBC_SHA:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA256:
-        case CipherSuite::RSA_WITH_AES_256_CBC_SHA:
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return iv_size;
+            ENUMERATE_CIPHERS(C)
+#undef C
         default:
             return 16;
-        case CipherSuite::AES_128_GCM_SHA256:
-        case CipherSuite::AES_256_GCM_SHA384:
-        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
-        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
-            return 8; // 4 bytes of fixed IV, 8 random (nonce) bytes, 4 bytes for counter
-                      // GCM specifically asks us to transmit only the nonce, the counter is zero
-                      // and the fixed IV is derived from the premaster key.
         }
     }
 
     bool is_aead() const
     {
         switch (m_context.cipher) {
-        case CipherSuite::AES_128_GCM_SHA256:
-        case CipherSuite::AES_256_GCM_SHA384:
-        case CipherSuite::RSA_WITH_AES_128_GCM_SHA256:
-        case CipherSuite::RSA_WITH_AES_256_GCM_SHA384:
-            return true;
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return is_aead;
+            ENUMERATE_CIPHERS(C)
+#undef C
         default:
             return false;
         }
