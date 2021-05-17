@@ -55,7 +55,7 @@ void LexicalPath::canonicalize()
         }
     }
     if (canonical_parts.is_empty()) {
-        m_string = m_basename = m_dirname = "/";
+        m_string = m_basename = m_dirname = m_is_absolute ? "/" : ".";
         return;
     }
 
