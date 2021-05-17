@@ -11,7 +11,8 @@ namespace Wasm {
 
 Optional<Label> Configuration::nth_label(size_t i)
 {
-    for (auto& entry : m_stack.entries()) {
+    for (size_t index = m_stack.size(); index > 0; --index) {
+        auto& entry = m_stack.entries()[index - 1];
         if (auto ptr = entry.get_pointer<NonnullOwnPtr<Label>>()) {
             if (i == 0)
                 return **ptr;
