@@ -102,7 +102,8 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf((float*)matrix.elements());
 
-    m_mesh->draw();
+    if (!m_mesh.is_null())
+        m_mesh->draw();
 
     m_context->present();
     update();
@@ -111,7 +112,12 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
 bool GLContextWidget::load(const String& fname)
 {
     m_mesh = m_mesh_loader->load(fname);
-    return !m_mesh.is_null();
+    if (!m_mesh.is_null()) {
+        dbgln("GLTeapot: mesh has {} triangles.", m_mesh->triangle_count());
+        return true;
+    }
+
+    return false;
 }
 
 int main(int argc, char** argv)
@@ -159,6 +165,12 @@ int main(int argc, char** argv)
             return;
 
         auto file = Core::File::construct(open_path.value());
+
+        if (!file->filename().ends_with(".obj")) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: invalid file type", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
         if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
             GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
             return;
