@@ -26,14 +26,12 @@ void TLSv12WebSocketConnectionImpl::connect(ConnectionInfo const& connection)
     VERIFY(on_ready_to_read);
     m_socket = TLS::TLSv12::construct(this);
 
-    m_notifier = Core::Notifier::construct(m_socket->fd(), Core::Notifier::Read);
-    m_notifier->on_ready_to_read = [this] {
-        on_ready_to_read();
-    };
-
     m_socket->set_root_certificates(DefaultRootCACertificates::the().certificates());
     m_socket->on_tls_error = [this](TLS::AlertDescription) {
         on_connection_error();
+    };
+    m_socket->on_tls_ready_to_read = [this] {
+        on_ready_to_read();
     };
     m_socket->on_tls_ready_to_write = [this] {
         on_connected();
