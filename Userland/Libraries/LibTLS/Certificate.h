@@ -8,6 +8,7 @@
 
 #include <AK/ByteBuffer.h>
 #include <AK/Forward.h>
+#include <AK/Optional.h>
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <LibCore/DateTime.h>
@@ -25,7 +26,8 @@ enum class CertificateKeyAlgorithm {
     RSA_SHA512 = 0x0d,
 };
 
-struct Certificate {
+class Certificate {
+public:
     u16 version { 0 };
     CertificateKeyAlgorithm algorithm { CertificateKeyAlgorithm::Unsupported };
     CertificateKeyAlgorithm key_algorithm { CertificateKeyAlgorithm::Unsupported };
@@ -50,6 +52,8 @@ struct Certificate {
     ByteBuffer fingerprint {};
     ByteBuffer der {};
     ByteBuffer data {};
+
+    static Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false);
 
     bool is_valid() const;
 };

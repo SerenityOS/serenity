@@ -1,6 +1,7 @@
 add_compile_options(-Wvla)
 
 set(SOURCES
+    Certificate.cpp
     ClientHandshake.cpp
     Exchange.cpp
     Handshake.cpp
