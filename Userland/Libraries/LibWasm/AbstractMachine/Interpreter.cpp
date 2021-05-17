@@ -405,7 +405,6 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         return;
     }
     case Instructions::structured_end.value():
-        return;
     case Instructions::structured_else.value(): {
         auto label = configuration.nth_label(0);
         TRAP_IF_NOT(label.has_value());
