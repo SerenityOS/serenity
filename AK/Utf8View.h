@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,9 +58,13 @@ public:
     const unsigned char* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
     size_t byte_offset_of(const Utf8CodepointIterator&) const;
-    Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
-    bool is_empty() const { return m_string.is_empty(); }
 
+    Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
+    Utf8View substring_view(size_t byte_offset) const { return substring_view(byte_offset, byte_length() - byte_offset); }
+    Utf8View unicode_substring_view(size_t codepoint_offset, size_t codepoint_length) const;
+    Utf8View unicode_substring_view(size_t codepoint_offset) const { return unicode_substring_view(codepoint_offset, length() - codepoint_offset); }
+
+    bool is_empty() const { return m_string.is_empty(); }
     bool starts_with(const Utf8View&) const;
 
     size_t iterator_offset(const Utf8CodepointIterator& it) const

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -57,6 +58,25 @@ Utf8View Utf8View::substring_view(size_t byte_offset, size_t byte_length) const
 {
     StringView string = m_string.substring_view(byte_offset, byte_length);
     return Utf8View { string };
+}
+
+Utf8View Utf8View::unicode_substring_view(size_t codepoint_offset, size_t codepoint_length) const
+{
+    if (codepoint_length == 0)
+        return {};
+
+    size_t codepoint_index = 0, offset_in_bytes = 0;
+    for (auto iterator = begin(); !iterator.done(); ++iterator) {
+        if (codepoint_index == codepoint_offset)
+            offset_in_bytes = byte_offset_of(iterator);
+        if (codepoint_index == codepoint_offset + codepoint_length - 1) {
+            size_t length_in_bytes = byte_offset_of(++iterator) - offset_in_bytes;
+            return substring_view(offset_in_bytes, length_in_bytes);
+        }
+        ++codepoint_index;
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 static inline bool decode_first_byte(
