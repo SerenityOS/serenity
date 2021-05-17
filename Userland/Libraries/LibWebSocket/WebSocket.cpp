@@ -114,19 +114,27 @@ void WebSocket::drain_read()
         return;
     }
 
-    while (m_impl->can_read()) {
-        if (m_state == WebSocket::InternalState::WaitingForServerHandshake) {
-            read_server_handshake();
-            return;
-        }
-        if (m_state == WebSocket::InternalState::Open) {
-            read_frame();
-            return;
-        }
-        if (m_state == WebSocket::InternalState::Closing) {
-            read_frame();
-            return;
-        }
+    switch (m_state) {
+    case InternalState::NotStarted:
+    case InternalState::EstablishingProtocolConnection:
+    case InternalState::SendingClientHandshake: {
+        auto initializing_bytes = m_impl->read(1024);
+        dbgln("drain_read() was called on a websocket that isn't opened yet. Read {} bytes from the socket.", initializing_bytes.size());
+    } break;
+    case InternalState::WaitingForServerHandshake: {
+        read_server_handshake();
+    } break;
+    case InternalState::Open:
+    case InternalState::Closing: {
+        read_frame();
+    } break;
+    case InternalState::Closed:
+    case InternalState::Errored: {
+        auto closed_bytes = m_impl->read(1024);
+        dbgln("drain_read() was called on a closed websocket. Read {} bytes from the socket.", closed_bytes.size());
+    } break;
+    default:
+        VERIFY_NOT_REACHED();
     }
 }
 
