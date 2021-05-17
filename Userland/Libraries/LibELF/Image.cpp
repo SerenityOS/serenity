@@ -316,7 +316,12 @@ Image::SortedSymbol* Image::find_sorted_symbol(FlatPtr address) const
 
     size_t index = 0;
     binary_search(m_sorted_symbols, nullptr, &index, [&address](auto, auto& candidate) {
-        return address - candidate.address;
+        if (address < candidate.address)
+            return -1;
+        else if (address > candidate.address)
+            return 1;
+        else
+            return 0;
     });
     // FIXME: The error path here feels strange, index == 0 means error but what about symbol #0?
     if (index == 0)
