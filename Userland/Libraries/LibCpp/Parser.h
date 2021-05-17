@@ -35,6 +35,7 @@ public:
     void print_tokens() const;
     const Vector<String>& errors() const { return m_state.errors; }
     const Preprocessor::Definitions& preprocessor_definitions() const { return m_preprocessor_definitions; }
+    Vector<String> get_todo_entries() const;
 
     struct TokenAndPreprocessorDefinition {
         Token token;
