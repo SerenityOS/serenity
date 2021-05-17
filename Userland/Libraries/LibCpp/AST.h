@@ -206,6 +206,7 @@ public:
     {
     }
 
+    bool m_is_auto { false };
     RefPtr<Name> m_name;
     Vector<StringView> m_qualifiers;
 };

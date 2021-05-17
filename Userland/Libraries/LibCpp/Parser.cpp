@@ -235,6 +235,10 @@ bool Parser::match_type()
     ScopeGuard state_guard = [this] { load_state(); };
 
     parse_type_qualifiers();
+    if (match_keyword("auto")) {
+        return true;
+    }
+
     if (match_keyword("struct")) {
         consume(Token::Type::Keyword); // Consume struct prefix
     }
@@ -1104,16 +1108,22 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
     auto qualifiers = parse_type_qualifiers();
     type->m_qualifiers = move(qualifiers);
 
-    if (match_keyword("struct")) {
-        consume(Token::Type::Keyword); // Consume struct prefix
-    }
+    if (match_keyword("auto")) {
+        consume(Token::Type::Keyword);
+        type->m_is_auto = true;
+    } else {
 
-    if (!match_name()) {
-        type->set_end(position());
-        error(String::formatted("expected name instead of: {}", peek().text()));
-        return type;
+        if (match_keyword("struct")) {
+            consume(Token::Type::Keyword); // Consume struct prefix
+        }
+
+        if (!match_name()) {
+            type->set_end(position());
+            error(String::formatted("expected name instead of: {}", peek().text()));
+            return type;
+        }
+        type->m_name = parse_name(*type);
     }
-    type->m_name = parse_name(*type);
 
     while (!eof() && peek().type() == Token::Type::Asterisk) {
         type->set_end(position());
