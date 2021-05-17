@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/BitmapView.h>
+#include <AK/Bitmap.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
@@ -153,7 +153,7 @@ private:
     size_t m_total_chunks { 0 };
     size_t m_allocated_chunks { 0 };
     u8* m_chunks { nullptr };
-    BitmapView m_bitmap;
+    Bitmap m_bitmap;
 };
 
 template<typename ExpandHeap>
