@@ -160,7 +160,7 @@ int main(int, char**)
         auto sum_diff = current.sum_times_scheduled - prev.sum_times_scheduled;
 
         printf("\033[3J\033[H\033[2J");
-        printf("\033[47;30m%6s %3s %3s  %-9s  %-10s  %6s  %6s  %4s  %s\033[K\033[0m\n",
+        printf("\033[47;30m%6s %3s %3s  %-9s  %-13s  %6s  %6s  %4s  %s\033[K\033[0m\n",
             "PID",
             "TID",
             "PRI",
@@ -192,7 +192,7 @@ int main(int, char**)
 
         int row = 0;
         for (auto* thread : threads) {
-            int nprinted = printf("%6d %3d %2u   %-9s  %-10s  %6zu  %6zu  %2u.%1u  ",
+            int nprinted = printf("%6d %3d %2u   %-9s  %-13s  %6zu  %6zu  %2u.%1u  ",
                 thread->pid,
                 thread->tid,
                 thread->priority,
