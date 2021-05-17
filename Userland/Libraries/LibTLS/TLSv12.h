@@ -277,7 +277,6 @@ public:
         m_context.extensions.SNI = sni;
     }
 
-    Optional<Certificate> parse_asn1(ReadonlyBytes, bool client_cert = false) const;
     bool load_certificates(ReadonlyBytes pem_buffer);
     bool load_private_key(ReadonlyBytes pem_buffer);
 
