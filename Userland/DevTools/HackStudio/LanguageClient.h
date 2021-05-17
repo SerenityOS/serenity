@@ -46,6 +46,7 @@ protected:
     virtual void auto_complete_suggestions(Vector<GUI::AutocompleteProvider::Entry> const&) override;
     virtual void declaration_location(GUI::AutocompleteProvider::ProjectLocation const&) override;
     virtual void declarations_in_document(String const&, Vector<GUI::AutocompleteProvider::Declaration> const&) override;
+    virtual void todo_entries_in_document(String const&, Vector<String> const&) override;
     void set_wrapper(ServerConnectionWrapper& wrapper) { m_wrapper = &wrapper; }
 
     String m_project_path;

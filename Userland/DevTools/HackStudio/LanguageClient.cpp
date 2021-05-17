@@ -7,6 +7,7 @@
 #include "LanguageClient.h"
 #include "HackStudio.h"
 #include "ProjectDeclarations.h"
+#include "ToDoEntries.h"
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <DevTools/HackStudio/LanguageServers/LanguageServerEndpoint.h>
@@ -96,6 +97,11 @@ HashMap<String, NonnullOwnPtr<ServerConnectionWrapper>> ServerConnectionInstance
 void ServerConnection::declarations_in_document(const String& filename, const Vector<GUI::AutocompleteProvider::Declaration>& declarations)
 {
     ProjectDeclarations::the().set_declared_symbols(filename, declarations);
+}
+
+void ServerConnection::todo_entries_in_document(const String& filename, const Vector<String>& todo_entries)
+{
+    ToDoEntries::the().set_entries(filename, move(todo_entries));
 }
 
 void LanguageClient::search_declaration(const String& path, size_t line, size_t column)

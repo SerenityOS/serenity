@@ -520,6 +520,11 @@ void CppComprehensionEngine::update_declared_symbols(DocumentData& document)
     set_declarations_of_document(document.filename(), move(declarations));
 }
 
+void CppComprehensionEngine::update_todo_entries(DocumentData& document)
+{
+    set_todo_entries_of_document(document.filename(), document.parser().get_todo_entries());
+}
+
 GUI::AutocompleteProvider::DeclarationType CppComprehensionEngine::type_of_declaration(const Declaration& decl)
 {
     if (decl.is_struct())
@@ -574,6 +579,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
         root->dump();
 
     update_declared_symbols(*document_data);
+    update_todo_entries(*document_data);
 
     return document_data;
 }
