@@ -2,7 +2,7 @@ endpoint WindowServer
 {
     greet() => (Gfx::IntRect screen_rect, Core::AnonymousBuffer theme_buffer)
 
-    create_menubar() => (i32 menubar_id)
+    create_menubar(i32 menubar_id) =|
     destroy_menubar(i32 menubar_id) =|
 
     create_menu(i32 menu_id, [UTF8] String menu_title) =|

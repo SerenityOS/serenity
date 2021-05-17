@@ -5,12 +5,15 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/IDAllocator.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/MenuItem.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/WindowServerConnection.h>
 
 namespace GUI {
+
+static IDAllocator s_menubar_id_allocator;
 
 Menubar::Menubar()
 {
@@ -30,7 +33,9 @@ Menu& Menubar::add_menu(String name)
 
 int Menubar::realize_menubar()
 {
-    return WindowServerConnection::the().create_menubar();
+    auto menubar_id = s_menubar_id_allocator.allocate();
+    WindowServerConnection::the().async_create_menubar(menubar_id);
+    return menubar_id;
 }
 
 void Menubar::unrealize_menubar()
