@@ -29,12 +29,13 @@ public:
 
     ALWAYS_INLINE Cell* allocate()
     {
+        if (m_freelist) {
+            VERIFY(is_valid_cell_pointer(m_freelist));
+            return exchange(m_freelist, m_freelist->next);
+        }
         if (has_lazy_freelist())
             return cell(m_next_lazy_freelist_index++);
-        if (!m_freelist)
-            return nullptr;
-        VERIFY(is_valid_cell_pointer(m_freelist));
-        return exchange(m_freelist, m_freelist->next);
+        return nullptr;
     }
 
     void deallocate(Cell*);
