@@ -43,6 +43,7 @@ set(SOURCES
     ProjectFile.cpp
     ProjectTemplate.cpp
     TerminalWrapper.cpp
+    ToDoEntries.cpp
     main.cpp
 )
 

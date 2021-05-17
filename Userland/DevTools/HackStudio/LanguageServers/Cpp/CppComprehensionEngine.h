@@ -121,6 +121,7 @@ private:
     OwnPtr<DocumentData> create_document_data_for(const String& file);
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(DocumentData&);
+    void update_todo_entries(DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
     Vector<StringView> scope_of_node(const ASTNode&) const;
     Vector<StringView> scope_of_reference_to_symbol(const ASTNode&) const;
