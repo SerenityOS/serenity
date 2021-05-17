@@ -21,7 +21,7 @@ static char* generate_random_filename(const char* pattern)
     char* new_filename = strdup(pattern);
     int pattern_length = strlen(pattern);
 
-    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
     for (auto i = pattern_length - 1; i >= 0; --i) {
         if (pattern[i] != 'X')
             break;

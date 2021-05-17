@@ -165,7 +165,7 @@ inline int generate_unique_filename(char* pattern, Callback callback)
 
     size_t start = length - 6;
 
-    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+    constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 
     for (int attempt = 0; attempt < 100; ++attempt) {
         for (int i = 0; i < 6; ++i)
