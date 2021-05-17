@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/PropertyAttributes.h>
 #include <LibJS/Runtime/StringOrSymbol.h>
 #include <LibJS/Runtime/Value.h>

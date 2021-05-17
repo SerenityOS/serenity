@@ -9,7 +9,7 @@
 
 #include <AK/FlyString.h>
 #include <AK/Vector.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibJS/SourceRange.h>
 

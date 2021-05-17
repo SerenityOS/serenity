@@ -9,7 +9,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Heap/Cell.h>
 
 namespace JS {
 

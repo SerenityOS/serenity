@@ -10,7 +10,7 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Runtime/Cell.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/IndexedProperties.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/PrimitiveString.h>

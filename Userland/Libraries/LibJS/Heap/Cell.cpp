@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
-#include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
