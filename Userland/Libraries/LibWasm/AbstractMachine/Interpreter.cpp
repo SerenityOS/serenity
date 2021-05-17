@@ -59,7 +59,7 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
     for (; !configuration.stack().is_empty();) {
         auto& entry = configuration.stack().peek();
         if (entry.has<NonnullOwnPtr<Label>>()) {
-            if (drop_count-- == 0)
+            if (--drop_count == 0)
                 break;
         }
         configuration.stack().pop();
