@@ -66,6 +66,11 @@ RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
         }
     }
 
+    if (vertices.is_empty()) {
+        dbgln("Wavefront: Failed to read any data from 3D file: {}", fname);
+        return nullptr;
+    }
+
     dbgln("Wavefront: Done.");
     return adopt_ref(*new Mesh(vertices, triangles));
 }
