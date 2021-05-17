@@ -76,7 +76,14 @@ String Type::to_string() const
     String qualifiers_string;
     if (!m_qualifiers.is_empty())
         qualifiers_string = String::formatted("[{}] ", String::join(" ", m_qualifiers));
-    return String::formatted("{}{}", qualifiers_string, m_name.is_null() ? "" : m_name->full_name());
+
+    String name;
+    if (m_is_auto)
+        name = "auto";
+    else
+        name = m_name.is_null() ? "" : m_name->full_name();
+
+    return String::formatted("{}{}", qualifiers_string, name);
 }
 
 String Pointer::to_string() const
