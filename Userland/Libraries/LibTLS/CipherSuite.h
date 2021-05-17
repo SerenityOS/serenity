@@ -42,6 +42,31 @@ enum class SignatureAlgorithm : u8 {
     ECDSA = 3,
 };
 
+enum class CipherAlgorithm {
+    AES_128_CBC,
+    AES_128_GCM,
+    AES_128_CCM,
+    AES_128_CCM_8,
+    AES_256_CBC,
+    AES_256_GCM,
+};
+
+constexpr size_t cipher_key_size(CipherAlgorithm algorithm)
+{
+    switch (algorithm) {
+    case CipherAlgorithm::AES_128_CBC:
+    case CipherAlgorithm::AES_128_GCM:
+    case CipherAlgorithm::AES_128_CCM:
+    case CipherAlgorithm::AES_128_CCM_8:
+        return 128;
+    case CipherAlgorithm::AES_256_CBC:
+    case CipherAlgorithm::AES_256_GCM:
+        return 256;
+    default:
+        return 128;
+    }
+}
+
 struct SignatureAndHashAlgorithm {
     HashAlgorithm hash;
     SignatureAlgorithm signature;
