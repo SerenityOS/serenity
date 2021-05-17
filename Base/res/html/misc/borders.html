@@ -121,6 +121,24 @@ div + div {
     border-right-width: 10px;
     border-right-style: inset;
 }
+#two-part-border-attributes {
+    height: 50px;
+    border-color: red lime;
+    border-width: 8px 6px;
+    border-style: solid dashed;
+}
+#three-part-border-attributes {
+    height: 50px;
+    border-color: red lime blue;
+    border-width: 8px 6px 4px;
+    border-style: solid dashed dotted;
+}
+#four-part-border-attributes {
+    height: 50px;
+    border-color: red lime blue orange;
+    border-width: 8px 6px 4px 2px;
+    border-style: solid dashed dotted dotted;
+}
 </style>
 </head>
 <body>
@@ -146,5 +164,8 @@ div + div {
 <div id="dashed-5px">dashed (5px)</div>
 <div id="dashed-20px">dashed (20px)</div>
 <div id="mixed">mixed</div>
+<div id="two-part-border-attributes">two-part border attributes</div>
+<div id="three-part-border-attributes">three-part border attributes</div>
+<div id="four-part-border-attributes">four-part border attributes</div>
 </body>
 </html>
