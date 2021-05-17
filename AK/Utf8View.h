@@ -55,9 +55,9 @@ public:
     Utf8CodepointIterator end() const;
 
     const unsigned char* bytes() const { return begin_ptr(); }
-    int byte_length() const { return m_string.length(); }
+    size_t byte_length() const { return m_string.length(); }
     size_t byte_offset_of(const Utf8CodepointIterator&) const;
-    Utf8View substring_view(int byte_offset, int byte_length) const;
+    Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
     bool is_empty() const { return m_string.is_empty(); }
 
     bool starts_with(const Utf8View&) const;
