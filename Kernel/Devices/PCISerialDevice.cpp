@@ -26,7 +26,7 @@ void PCISerialDevice::detect()
 
             auto bar_base = PCI::get_BAR(address, board_definition.pci_bar) & ~1;
             // FIXME: We should support more than 1 PCI serial port (per card/multiple devices)
-            s_the = new SerialDevice(IOAddress(bar_base + board_definition.first_offset), 64);
+            s_the = new SerialDevice(IOAddress(bar_base + board_definition.first_offset), 68);
             if (board_definition.baud_rate != SerialDevice::Baud::Baud38400) // non-default baud
                 s_the->set_baud(board_definition.baud_rate);
 
