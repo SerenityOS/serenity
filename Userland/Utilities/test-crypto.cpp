@@ -64,6 +64,7 @@ static int aes_gcm_tests();
 static int md5_tests();
 static int sha1_tests();
 static int sha256_tests();
+static int sha384_tests();
 static int sha512_tests();
 
 // Authentication
@@ -269,6 +270,15 @@ static void hmac_sha256(const char* message, size_t len)
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
 
+static void sha384(const char* message, size_t len)
+{
+    auto digest = Crypto::Hash::SHA384::hash((const u8*)message, len);
+    if (binary)
+        printf("%.*s", (int)Crypto::Hash::SHA384::digest_size(), digest.data);
+    else
+        print_buffer({ digest.data, Crypto::Hash::SHA384::digest_size() }, -1);
+}
+
 static void sha512(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA512::hash((const u8*)message, len);
@@ -343,6 +353,11 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return sha256_tests();
             return run(sha256);
+        }
+        if (suite_sv == "SHA384") {
+            if (run_tests)
+                return sha384_tests();
+            return run(sha384);
         }
         if (suite_sv == "SHA512") {
             if (run_tests)
@@ -443,6 +458,7 @@ auto main(int argc, char** argv) -> int
         md5_tests();
         sha1_tests();
         sha256_tests();
+        sha384_tests();
         sha512_tests();
 
         hmac_md5_tests();
@@ -567,6 +583,9 @@ static void sha1_test_hash();
 
 static void sha256_test_name();
 static void sha256_test_hash();
+
+static void sha384_test_name();
+static void sha384_test_hash();
 
 static void sha512_test_name();
 static void sha512_test_hash();
@@ -1693,6 +1712,52 @@ static void hmac_sha256_test_process()
 
         if (memcmp(mac_0.data, mac_1.data, hmac.digest_size()) != 0) {
             FAIL(Cannot reuse);
+        } else
+            PASS;
+    }
+}
+
+static int sha384_tests()
+{
+    sha384_test_name();
+    sha384_test_hash();
+    return g_some_test_failed ? 1 : 0;
+}
+
+static void sha384_test_name()
+{
+    I_TEST((SHA384 class name));
+    Crypto::Hash::SHA384 sha;
+    if (sha.class_name() != "SHA384") {
+        FAIL(Invalid class name);
+        printf("%s\n", sha.class_name().characters());
+    } else
+        PASS;
+}
+
+static void sha384_test_hash()
+{
+    {
+        I_TEST((SHA384 Hashing | "Well hello friends"));
+        u8 result[] {
+            0x2f, 0x01, 0x8e, 0x9a, 0x4f, 0xd1, 0x36, 0xb9, 0x0f, 0xcc, 0x21, 0xde, 0x1a, 0xd4, 0x49, 0x51, 0x57, 0x82, 0x86, 0x84, 0x54, 0x09, 0x82, 0x7b, 0x54, 0x56, 0x93, 0xac, 0x2c, 0x46, 0x0c, 0x1f, 0x5e, 0xec, 0xe0, 0xf7, 0x8b, 0x0b, 0x84, 0x27, 0xc8, 0xb8, 0xbe, 0x49, 0xce, 0x8f, 0x1c, 0xff
+        };
+        auto digest = Crypto::Hash::SHA384::hash("Well hello friends");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA384::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer({ digest.data, Crypto::Hash::SHA384::digest_size() }, -1);
+        } else
+            PASS;
+    }
+    {
+        I_TEST((SHA384 Hashing | ""));
+        u8 result[] {
+            0x38, 0xb0, 0x60, 0xa7, 0x51, 0xac, 0x96, 0x38, 0x4c, 0xd9, 0x32, 0x7e, 0xb1, 0xb1, 0xe3, 0x6a, 0x21, 0xfd, 0xb7, 0x11, 0x14, 0xbe, 0x07, 0x43, 0x4c, 0x0c, 0xc7, 0xbf, 0x63, 0xf6, 0xe1, 0xda, 0x27, 0x4e, 0xde, 0xbf, 0xe7, 0x6f, 0x65, 0xfb, 0xd5, 0x1a, 0xd2, 0xf1, 0x48, 0x98, 0xb9, 0x5b
+        };
+        auto digest = Crypto::Hash::SHA384::hash("");
+        if (memcmp(result, digest.data, Crypto::Hash::SHA384::digest_size()) != 0) {
+            FAIL(Invalid hash);
+            print_buffer({ digest.data, Crypto::Hash::SHA384::digest_size() }, -1);
         } else
             PASS;
     }
