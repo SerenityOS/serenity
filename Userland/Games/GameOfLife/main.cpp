@@ -10,15 +10,11 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
-#include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
-#include <LibGUI/MessageBox.h>
-#include <LibGUI/Slider.h>
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
-#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 
 const char* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
@@ -42,6 +38,7 @@ int main(int argc, char** argv)
     main_widget.set_fill_with_background_color(true);
 
     auto& main_toolbar = *main_widget.find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    main_toolbar.layout()->set_margins({ 6, 0, 6, 0 });
 
     auto& board_widget_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("board_widget_container");
     auto& board_layout = board_widget_container.set_layout<GUI::VerticalBoxLayout>();
@@ -60,8 +57,7 @@ int main(int argc, char** argv)
 
     auto size_changed_function = [&] {
         statusbar.set_text(click_tip);
-        board_widget.update_board(rows_spinbox.value(), columns_spinbox.value());
-        board_widget.randomize_cells();
+        board_widget.resize_board(rows_spinbox.value(), columns_spinbox.value());
         board_widget.update();
     };
 
@@ -75,12 +71,6 @@ int main(int argc, char** argv)
     };
 
     interval_spinbox.set_value(150);
-
-    auto interval_label = GUI::Label::construct();
-    interval_label->set_fixed_width(15);
-    interval_label->set_text("ms");
-
-    main_toolbar.add_child(interval_label);
 
     auto paused_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/pause.png");
     auto play_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/play.png");
@@ -159,7 +149,7 @@ int main(int argc, char** argv)
         statusbar.set_text("Stalled...");
     };
 
-    board_widget.on_cell_toggled = [&](auto, auto) {
+    board_widget.on_cell_toggled = [&](auto, auto, auto) {
         statusbar.set_text(click_tip);
     };
 

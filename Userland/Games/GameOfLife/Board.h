@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andres Crucitti <dasc495@gmail.com>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,39 +13,45 @@
 
 class Board {
 public:
-    Board(size_t rows, size_t column);
+    Board(size_t rows, size_t columns);
     ~Board();
 
-    size_t total_size() const { return m_columns * m_rows; }
     size_t columns() const { return m_columns; }
     size_t rows() const { return m_rows; }
 
-    size_t calculate_index(size_t row, size_t column) const { return row * m_columns + column; };
-
-    void toggle_cell(size_t index);
     void toggle_cell(size_t row, size_t column);
-
     void set_cell(size_t row, size_t column, bool on);
-    void set_cell(size_t index, bool on);
-
     bool cell(size_t row, size_t column) const;
-    bool cell(size_t index) const;
-
-    const Vector<bool>& cells() const { return m_cells; }
+    const Vector<Vector<bool>>& cells() const { return m_cells; }
 
     void run_generation();
     bool is_stalled() const { return m_stalled; }
 
     void clear();
     void randomize();
+    void resize(size_t rows, size_t columns);
+
+    struct RowAndColumn {
+        size_t row { 0 };
+        size_t column { 0 };
+    };
 
 private:
-    bool calculate_next_value(size_t index) const;
+    bool calculate_next_value(size_t row, size_t column) const;
 
-    size_t m_columns { 1 };
-    size_t m_rows { 1 };
+    template<typename Callback>
+    void for_each_cell(Callback callback)
+    {
+        for (size_t row = 0; row < m_rows; ++row) {
+            for (size_t column = 0; column < m_columns; ++column)
+                callback(row, column);
+        }
+    }
+
+    size_t m_rows { 0 };
+    size_t m_columns { 0 };
 
     bool m_stalled { false };
 
-    Vector<bool> m_cells;
+    Vector<Vector<bool>> m_cells;
 };

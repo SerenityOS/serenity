@@ -14,13 +14,13 @@
 namespace Kernel::Graphics {
 class FramebufferConsole final : public Console {
 public:
-    static NonnullRefPtr<FramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t bpp);
+    static NonnullRefPtr<FramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t pitch);
 
     virtual size_t bytes_per_base_glyph() const override;
     virtual size_t chars_per_line() const override;
 
-    virtual size_t max_column() const { return m_width / 8; }
-    virtual size_t max_row() const { return m_height / 8; }
+    virtual size_t max_column() const override { return m_width / 8; }
+    virtual size_t max_row() const override { return m_height / 8; }
 
     virtual bool is_hardware_paged_capable() const override { return false; }
     virtual bool has_hardware_cursor() const override { return false; }
@@ -41,7 +41,7 @@ public:
 
 protected:
     void clear_glyph(size_t x, size_t y) const;
-    FramebufferConsole(PhysicalAddress, size_t width, size_t height, size_t bpp);
+    FramebufferConsole(PhysicalAddress, size_t width, size_t height, size_t pitch);
     OwnPtr<Region> m_framebuffer_region;
     PhysicalAddress m_framebuffer_address;
     size_t m_pitch;
