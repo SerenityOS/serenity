@@ -274,6 +274,51 @@ struct ConvertToRaw<double> {
     }
 };
 
+template<typename V, typename T>
+MakeSigned<T> Interpreter::checked_signed_truncate(V value)
+{
+    if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
+        m_do_trap = true;
+        return 0;
+    }
+
+    double truncated;
+    if constexpr (IsSame<float, V>)
+        truncated = truncf(value);
+    else
+        truncated = trunc(value);
+
+    using SignedT = MakeSigned<T>;
+    if (NumericLimits<SignedT>::min() <= truncated && static_cast<double>(NumericLimits<SignedT>::max()) >= truncated)
+        return static_cast<SignedT>(truncated);
+
+    dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
+    m_do_trap = true;
+    return true;
+}
+
+template<typename V, typename T>
+MakeUnsigned<T> Interpreter::checked_unsigned_truncate(V value)
+{
+    if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
+        m_do_trap = true;
+        return 0;
+    }
+    double truncated;
+    if constexpr (IsSame<float, V>)
+        truncated = truncf(value);
+    else
+        truncated = trunc(value);
+
+    using UnsignedT = MakeUnsigned<T>;
+    if (NumericLimits<UnsignedT>::min() <= truncated && static_cast<double>(NumericLimits<UnsignedT>::max()) >= truncated)
+        return static_cast<UnsignedT>(truncated);
+
+    dbgln_if(WASM_TRACE_DEBUG, "Truncate out of range error");
+    m_do_trap = true;
+    return true;
+}
+
 Vector<NonnullOwnPtr<Value>> Interpreter::pop_values(Configuration& configuration, size_t count)
 {
     Vector<NonnullOwnPtr<Value>> results;
@@ -753,20 +798,42 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         BINARY_PREFIX_NUMERIC_OPERATION(double, copysign, double);
     case Instructions::i32_wrap_i64.value():
         UNARY_MAP(i64, i32, i32);
-    case Instructions::i32_trunc_sf32.value():
-    case Instructions::i32_trunc_uf32.value():
-    case Instructions::i32_trunc_sf64.value():
-    case Instructions::i32_trunc_uf64.value():
-        goto unimplemented;
+    case Instructions::i32_trunc_sf32.value(): {
+        auto fn = [this](auto& v) { return checked_signed_truncate<float, i32>(v); };
+        UNARY_MAP(float, fn, i32);
+    }
+    case Instructions::i32_trunc_uf32.value(): {
+        auto fn = [this](auto& value) { return checked_unsigned_truncate<float, i32>(value); };
+        UNARY_MAP(float, fn, i32);
+    }
+    case Instructions::i32_trunc_sf64.value(): {
+        auto fn = [this](auto& value) { return checked_signed_truncate<double, i32>(value); };
+        UNARY_MAP(double, fn, i32);
+    }
+    case Instructions::i32_trunc_uf64.value(): {
+        auto fn = [this](auto& value) { return checked_unsigned_truncate<double, i32>(value); };
+        UNARY_MAP(double, fn, i32);
+    }
+    case Instructions::i64_trunc_sf32.value(): {
+        auto fn = [this](auto& value) { return checked_signed_truncate<float, i64>(value); };
+        UNARY_MAP(float, fn, i64);
+    }
+    case Instructions::i64_trunc_uf32.value(): {
+        auto fn = [this](auto& value) { return checked_unsigned_truncate<float, i64>(value); };
+        UNARY_MAP(float, fn, i64);
+    }
+    case Instructions::i64_trunc_sf64.value(): {
+        auto fn = [this](auto& value) { return checked_signed_truncate<double, i64>(value); };
+        UNARY_MAP(double, fn, i64);
+    }
+    case Instructions::i64_trunc_uf64.value(): {
+        auto fn = [this](auto& value) { return checked_unsigned_truncate<double, i64>(value); };
+        UNARY_MAP(double, fn, i64);
+    }
     case Instructions::i64_extend_si32.value():
         UNARY_MAP(i32, i64, i64);
     case Instructions::i64_extend_ui32.value():
         UNARY_MAP(u32, i64, i64);
-    case Instructions::i64_trunc_sf32.value():
-    case Instructions::i64_trunc_uf32.value():
-    case Instructions::i64_trunc_sf64.value():
-    case Instructions::i64_trunc_uf64.value():
-        goto unimplemented;
     case Instructions::f32_convert_si32.value():
         UNARY_MAP(i32, float, float);
     case Instructions::f32_convert_ui32.value():

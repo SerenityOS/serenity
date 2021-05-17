@@ -20,6 +20,13 @@ private:
     ReadonlyBytes load_from_memory(Configuration&, const Instruction&, size_t);
     void store_to_memory(Configuration&, const Instruction&, ReadonlyBytes data);
     void call_address(Configuration&, FunctionAddress);
+
+    template<typename V, typename T>
+    MakeUnsigned<T> checked_unsigned_truncate(V);
+
+    template<typename V, typename T>
+    MakeSigned<T> checked_signed_truncate(V);
+
     Vector<NonnullOwnPtr<Value>> pop_values(Configuration& configuration, size_t count);
     bool trap_if_not(bool value)
     {
