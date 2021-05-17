@@ -5,10 +5,15 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
+#include <LibCore/File.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
+#include <LibGUI/Menu.h>
+#include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
@@ -25,8 +30,11 @@ static constexpr u16 RENDER_HEIGHT = 480;
 class GLContextWidget final : public GUI::Widget {
     C_OBJECT(GLContextWidget)
 public:
+    bool load(const String& fname);
+
 private:
     GLContextWidget()
+        : m_mesh_loader(adopt_own(*new WavefrontOBJLoader()))
     {
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { RENDER_WIDTH, RENDER_HEIGHT });
         m_context = GL::create_context(*m_bitmap);
@@ -53,19 +61,19 @@ private:
         glEndList();
 
         // Load the teapot
-        auto mesh_loader = adopt_own(*new WavefrontOBJLoader());
-        m_teapot = mesh_loader->load("/res/gl/teapot.obj");
+        m_mesh = m_mesh_loader->load("/res/gl/teapot.obj");
 
-        dbgln("GLTeapot: teapot mesh has {} triangles.", m_teapot->triangle_count());
+        dbgln("GLTeapot: teapot mesh has {} triangles.", m_mesh->triangle_count());
     }
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
 private:
-    RefPtr<Mesh> m_teapot;
+    RefPtr<Mesh> m_mesh;
     RefPtr<Gfx::Bitmap> m_bitmap;
     OwnPtr<GL::GLContext> m_context;
+    NonnullOwnPtr<WavefrontOBJLoader> m_mesh_loader;
     GLuint m_init_list { 0 };
 };
 
@@ -94,10 +102,16 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glMatrixMode(GL_MODELVIEW);
     glLoadMatrixf((float*)matrix.elements());
 
-    m_teapot->draw();
+    m_mesh->draw();
 
     m_context->present();
     update();
+}
+
+bool GLContextWidget::load(const String& fname)
+{
+    m_mesh = m_mesh_loader->load(fname);
+    return !m_mesh.is_null();
 }
 
 int main(int argc, char** argv)
@@ -110,6 +124,11 @@ int main(int argc, char** argv)
     }
 
     if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/home", "r") < 0) {
         perror("unveil");
         return 1;
     }
@@ -128,8 +147,42 @@ int main(int argc, char** argv)
     window->resize(640, 480);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);
-    window->set_main_widget<GLContextWidget>();
+    auto& widget = window->set_main_widget<GLContextWidget>();
 
+    auto menubar = GUI::Menubar::construct();
+    auto& file_menu = menubar->add_menu("&File");
+
+    file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
+        Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
+
+        if (!open_path.has_value())
+            return;
+
+        auto file = Core::File::construct(open_path.value());
+        if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        if (file->is_device()) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        if (file->is_directory()) {
+            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open directories", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+            return;
+        }
+
+        if (!widget.load(file->filename()))
+            GUI::MessageBox::show(window, String::formatted("Reading \"{}\" failed.", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+    }));
+
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+        app->quit();
+    }));
+
+    window->set_menubar(move(menubar));
     window->show();
 
     return app->exec();
