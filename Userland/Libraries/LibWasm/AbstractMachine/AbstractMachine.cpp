@@ -21,10 +21,10 @@ Optional<FunctionAddress> Store::allocate(ModuleInstance& module, const Module::
     return address;
 }
 
-Optional<FunctionAddress> Store::allocate(const HostFunction& function)
+Optional<FunctionAddress> Store::allocate(HostFunction&& function)
 {
     FunctionAddress address { m_functions.size() };
-    m_functions.empend(HostFunction { function });
+    m_functions.empend(HostFunction { move(function) });
     return address;
 }
 

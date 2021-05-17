@@ -10,8 +10,6 @@
 
 namespace Wasm {
 
-typedef u64 (*HostFunctionType)(Store&, Vector<Value>&);
-
 class Configuration {
 public:
     explicit Configuration(Store& store)

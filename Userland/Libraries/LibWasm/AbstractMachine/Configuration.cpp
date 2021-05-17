@@ -47,13 +47,7 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
 
     // It better be a host function, else something is really wrong.
     auto& host_function = function->get<HostFunction>();
-    auto result = bit_cast<HostFunctionType>(host_function.ptr())(m_store, arguments);
-    auto count = host_function.type().results().size();
-    if (count == 0)
-        return Result { Vector<Value> {} };
-    if (count == 1)
-        return Result { Vector<Value> { Value { host_function.type().results().first(), result } } };
-    TODO();
+    return host_function.function()(*this, arguments);
 }
 
 Result Configuration::execute()
