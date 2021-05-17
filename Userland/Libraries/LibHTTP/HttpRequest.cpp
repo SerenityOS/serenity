@@ -37,7 +37,10 @@ ByteBuffer HttpRequest::to_raw_request() const
     StringBuilder builder;
     builder.append(method_name());
     builder.append(' ');
-    builder.append(m_url.path());
+    if (!m_url.path().is_empty())
+        builder.append(m_url.path());
+    else
+        builder.append('/');
     if (!m_url.query().is_empty()) {
         builder.append('?');
         builder.append(m_url.query());
