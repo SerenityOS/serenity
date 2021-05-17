@@ -93,6 +93,3 @@ set(SOURCES
 
 serenity_lib(LibJS js)
 target_link_libraries(LibJS LibM LibCore LibCrypto LibRegex LibSyntax)
-
-serenity_add_precompiled_header_to_target(LibJS ${CMAKE_CURRENT_SOURCE_DIR}/Heap/Heap.h)
-serenity_add_precompiled_header_to_target(LibJS ${CMAKE_CURRENT_SOURCE_DIR}/Runtime/GlobalObject.h)
