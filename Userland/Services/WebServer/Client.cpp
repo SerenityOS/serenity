@@ -40,15 +40,18 @@ void Client::die()
 void Client::start()
 {
     m_socket->on_ready_to_read = [this] {
-        auto raw_request = m_socket->read_all();
-        if (raw_request.is_empty()) {
-            die();
-            return;
+        StringBuilder builder;
+        for (;;) {
+            auto line = m_socket->read_line();
+            if (line.is_empty())
+                break;
+            builder.append(line);
+            builder.append("\r\n");
         }
 
-        dbgln("Got raw request: '{}'", String::copy(raw_request));
-
-        handle_request(raw_request.bytes());
+        auto request = builder.to_byte_buffer();
+        dbgln("Got raw request: '{}'", String::copy(request));
+        handle_request(request);
         die();
     };
 }
