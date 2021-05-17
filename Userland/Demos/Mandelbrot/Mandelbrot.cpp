@@ -152,7 +152,15 @@ void Mandelbrot::mousedown_event(GUI::MouseEvent& event)
 void Mandelbrot::mousemove_event(GUI::MouseEvent& event)
 {
     if (m_dragging) {
-        m_selection_end = event.position();
+        // Maintain aspect ratio
+        int selection_width = event.position().x() - m_selection_start.x();
+        int selection_height = event.position().y() - m_selection_start.y();
+        int aspect_corrected_selection_width = selection_height * width() / height();
+        int aspect_corrected_selection_height = selection_width * height() / width();
+        if (selection_width * aspect_corrected_selection_height > aspect_corrected_selection_width * selection_height)
+            m_selection_end = { event.position().x(), m_selection_start.y() + abs(aspect_corrected_selection_height) * ((selection_height < 0) ? -1 : 1) };
+        else
+            m_selection_end = { m_selection_start.x() + abs(aspect_corrected_selection_width) * ((selection_width < 0) ? -1 : 1), event.position().y() };
         update();
     }
 
