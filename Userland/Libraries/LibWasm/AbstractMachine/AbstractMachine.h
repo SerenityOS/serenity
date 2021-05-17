@@ -300,7 +300,7 @@ public:
     explicit MemoryInstance(const MemoryType& type)
         : m_type(type)
     {
-        grow(m_type.limits().min());
+        grow(m_type.limits().min() * Constants::page_size);
     }
 
     auto& type() const { return m_type; }

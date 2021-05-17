@@ -80,7 +80,7 @@ ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const 
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + size) > memory->size()) {
         m_do_trap = true;
-        dbgln("LibWasm: Memory access out of bounds (expected 0 > {} and {} > {})", instance_address, instance_address + size, memory->size());
+        dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + size, memory->size());
         return {};
     }
     dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, size);
@@ -98,7 +98,7 @@ void Interpreter::store_to_memory(Configuration& configuration, const Instructio
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
         m_do_trap = true;
-        dbgln("LibWasm: Memory access out of bounds (expected 0 > {} and {} > {})", instance_address, instance_address + data.size(), memory->size());
+        dbgln("LibWasm: Memory access out of bounds (expected 0 <= {} and {} <= {})", instance_address, instance_address + data.size(), memory->size());
         return;
     }
     dbgln_if(WASM_TRACE_DEBUG, "tempoaray({}b) -> store({})", data.size(), instance_address);

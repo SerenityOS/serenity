@@ -162,7 +162,8 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                             instantiation_result = InstantiationError { String::formatted("Data segment attempted to write to out-of-bounds memory ({}) of max {} bytes", data.init.size() + offset, instance->type().limits().max().value()) };
                             return;
                         }
-                        instance->grow(data.init.size() + offset - instance->size());
+                        if (instance->size() < data.init.size() + offset)
+                            instance->grow(data.init.size() + offset - instance->size());
                         instance->data().overwrite(offset, data.init.data(), data.init.size());
                     }
                 },
