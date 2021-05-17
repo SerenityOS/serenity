@@ -66,7 +66,7 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
                     dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
                 break;
             default:
-                dbgln("Terminal::alter_mode: Unimplemented private mode {}", mode);
+                dbgln("Terminal::alter_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
                 break;
             }
         }
@@ -75,7 +75,7 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
             switch (mode) {
             // FIXME: implement *something* for this
             default:
-                dbgln("Terminal::alter_mode: Unimplemented mode {} (set={})", mode, should_set);
+                dbgln("Terminal::alter_mode: Unimplemented mode {} (should_set={})", mode, should_set);
                 break;
             }
         }
@@ -98,111 +98,115 @@ void Terminal::SGR(Parameters params)
         m_current_attribute.reset();
         return;
     }
-    if (params.size() >= 3) {
-        bool should_set = true;
-        auto kind = params[1];
-        u32 color = 0;
-        switch (kind) {
-        case 5: // 8-bit
-            color = xterm_colors[params[2]];
-            break;
-        case 2: // 24-bit
-            for (size_t i = 0; i < 3; ++i) {
-                u8 component = 0;
-                if (params.size() - 2 > i) {
-                    component = params[i + 2];
-                }
-                color <<= 8;
-                color |= component;
-            }
-            break;
-        default:
-            should_set = false;
-            break;
-        }
 
-        if (should_set) {
-            if (params[0] == 38) {
-                m_current_attribute.foreground_color = color;
-                return;
-            } else if (params[0] == 48) {
-                m_current_attribute.background_color = color;
-                return;
-            }
+    auto parse_color = [&]() -> Optional<u32> {
+        if (params.size() < 2) {
+            dbgln("Color code has no type");
+            return {};
         }
-    }
-    for (auto param : params) {
-        switch (param) {
-        case 0:
-            // Reset
-            m_current_attribute.reset();
-            break;
-        case 1:
-            m_current_attribute.flags |= Attribute::Bold;
-            break;
-        case 3:
-            m_current_attribute.flags |= Attribute::Italic;
-            break;
-        case 4:
-            m_current_attribute.flags |= Attribute::Underline;
-            break;
-        case 5:
-            m_current_attribute.flags |= Attribute::Blink;
-            break;
-        case 7:
-            m_current_attribute.flags |= Attribute::Negative;
-            break;
-        case 22:
-            m_current_attribute.flags &= ~Attribute::Bold;
-            break;
-        case 23:
-            m_current_attribute.flags &= ~Attribute::Italic;
-            break;
-        case 24:
-            m_current_attribute.flags &= ~Attribute::Underline;
-            break;
-        case 25:
-            m_current_attribute.flags &= ~Attribute::Blink;
-            break;
-        case 27:
-            m_current_attribute.flags &= ~Attribute::Negative;
-            break;
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-        case 34:
-        case 35:
-        case 36:
-        case 37:
-            // Foreground color
-            if (m_current_attribute.flags & Attribute::Bold)
-                param += 8;
-            m_current_attribute.foreground_color = xterm_colors[param - 30];
-            break;
-        case 39:
-            // reset foreground
-            m_current_attribute.foreground_color = Attribute::default_foreground_color;
-            break;
-        case 40:
-        case 41:
-        case 42:
-        case 43:
-        case 44:
-        case 45:
-        case 46:
-        case 47:
-            // Background color
-            if (m_current_attribute.flags & Attribute::Bold)
-                param += 8;
-            m_current_attribute.background_color = xterm_colors[param - 40];
-            break;
-        case 49:
-            // reset background
-            m_current_attribute.background_color = Attribute::default_background_color;
-            break;
+        u32 color = 0;
+        switch (params[1]) {
+        case 5: // 8-bit
+            if (params.size() < 3) {
+                dbgln("8-bit color code has too few parameters");
+                return {};
+            }
+            return xterm_colors[params[2]];
+        case 2: // 24-bit
+            if (params.size() < 5) {
+                dbgln("24-bit color code has too few parameters");
+                return {};
+            }
+            for (size_t i = 0; i < 3; ++i) {
+                color <<= 8;
+                color |= params[i + 2];
+            }
+            return color;
         default:
-            dbgln("FIXME: SGR: p: {}", param);
+            dbgln("Unknown color type {}", params[1]);
+            return {};
+        }
+    };
+
+    if (params[0] == 38) {
+        m_current_attribute.foreground_color = parse_color().value_or(m_current_attribute.foreground_color);
+    } else if (params[0] == 48) {
+        m_current_attribute.background_color = parse_color().value_or(m_current_attribute.background_color);
+    } else {
+        // A single escape sequence may set multiple parameters.
+        for (auto param : params) {
+            switch (param) {
+            case 0:
+                // Reset
+                m_current_attribute.reset();
+                break;
+            case 1:
+                m_current_attribute.flags |= Attribute::Bold;
+                break;
+            case 3:
+                m_current_attribute.flags |= Attribute::Italic;
+                break;
+            case 4:
+                m_current_attribute.flags |= Attribute::Underline;
+                break;
+            case 5:
+                m_current_attribute.flags |= Attribute::Blink;
+                break;
+            case 7:
+                m_current_attribute.flags |= Attribute::Negative;
+                break;
+            case 22:
+                m_current_attribute.flags &= ~Attribute::Bold;
+                break;
+            case 23:
+                m_current_attribute.flags &= ~Attribute::Italic;
+                break;
+            case 24:
+                m_current_attribute.flags &= ~Attribute::Underline;
+                break;
+            case 25:
+                m_current_attribute.flags &= ~Attribute::Blink;
+                break;
+            case 27:
+                m_current_attribute.flags &= ~Attribute::Negative;
+                break;
+            case 30:
+            case 31:
+            case 32:
+            case 33:
+            case 34:
+            case 35:
+            case 36:
+            case 37:
+                // Foreground color
+                if (m_current_attribute.flags & Attribute::Bold)
+                    param += 8;
+                m_current_attribute.foreground_color = xterm_colors[param - 30];
+                break;
+            case 39:
+                // reset foreground
+                m_current_attribute.foreground_color = Attribute::default_foreground_color;
+                break;
+            case 40:
+            case 41:
+            case 42:
+            case 43:
+            case 44:
+            case 45:
+            case 46:
+            case 47:
+                // Background color
+                if (m_current_attribute.flags & Attribute::Bold)
+                    param += 8;
+                m_current_attribute.background_color = xterm_colors[param - 40];
+                break;
+            case 49:
+                // reset background
+                m_current_attribute.background_color = Attribute::default_background_color;
+                break;
+            default:
+                dbgln("FIXME: SGR: p: {}", param);
+            }
         }
     }
 }
