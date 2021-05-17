@@ -441,6 +441,25 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
                 style.set_property(CSS::PropertyID::BorderBottomColor, *bottom);
                 style.set_property(CSS::PropertyID::BorderLeftColor, *left);
             }
+        } else if (value.is_string() && parts.size() == 3) {
+            auto top = parse_css_value(context, parts[0]);
+            auto horizontal = parse_css_value(context, parts[1]);
+            auto bottom = parse_css_value(context, parts[2]);
+            if (top && horizontal && bottom) {
+                style.set_property(CSS::PropertyID::BorderTopColor, *top);
+                style.set_property(CSS::PropertyID::BorderRightColor, *horizontal);
+                style.set_property(CSS::PropertyID::BorderBottomColor, *bottom);
+                style.set_property(CSS::PropertyID::BorderLeftColor, *horizontal);
+            }
+        } else if (value.is_string() && parts.size() == 2) {
+            auto vertical = parse_css_value(context, parts[0]);
+            auto horizontal = parse_css_value(context, parts[1]);
+            if (vertical && horizontal) {
+                style.set_property(CSS::PropertyID::BorderTopColor, *vertical);
+                style.set_property(CSS::PropertyID::BorderRightColor, *horizontal);
+                style.set_property(CSS::PropertyID::BorderBottomColor, *vertical);
+                style.set_property(CSS::PropertyID::BorderLeftColor, *horizontal);
+            }
         } else {
             style.set_property(CSS::PropertyID::BorderTopColor, value);
             style.set_property(CSS::PropertyID::BorderRightColor, value);
