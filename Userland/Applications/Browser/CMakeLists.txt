@@ -5,17 +5,18 @@ compile_gml(Tab.gml TabGML.h tab_gml)
 set(SOURCES
     BookmarksBarWidget.cpp
     BrowserConsoleClient.cpp
+    BrowserWindow.cpp
+    BrowserWindowGML.h
     ConsoleWidget.cpp
     CookieJar.cpp
     DownloadWidget.cpp
+    EditBookmarkGML.h
     History.cpp
     InspectorWidget.cpp
-    main.cpp
     Tab.cpp
-    WindowActions.cpp
-    BrowserWindowGML.h
-    EditBookmarkGML.h
     TabGML.h
+    WindowActions.cpp
+    main.cpp
 )
 
 serenity_app(Browser ICON app-browser)
