@@ -9,7 +9,7 @@
 
 namespace Gfx {
 
-// FIXME: These should be parsed from the official UnicodeData.txt that specifies the class for each character (this function doesnt take into account a large amount of characters)
+// FIXME: These should be parsed from the official UnicodeData.txt that specifies the class for each character (this function doesn't take into account a large amount of characters)
 static consteval Array<BidirectionalClass, 0x1F000> generate_char_bidi_class_lookup_table()
 {
     Array<BidirectionalClass, 0x1F000> lookup_table {};
@@ -22,7 +22,7 @@ static consteval Array<BidirectionalClass, 0x1F000> generate_char_bidi_class_loo
         if ((ch >= 0x30 && ch <= 0x39) || (ch >= 0x660 && ch <= 0x669) || (ch >= 0x10D30 && ch <= 0x10E7E))
             char_class = BidirectionalClass::WEAK_NUMBERS; // Numerals
         if ((ch >= 0x23 && ch <= 0x25) || (ch >= 0x2B && ch <= 0x2F) || (ch == 0x3A))
-            char_class = BidirectionalClass::WEAK_SEPARATORS; // Seperators
+            char_class = BidirectionalClass::WEAK_SEPARATORS; // Separators
         if ((ch >= 0x9 && ch <= 0xD) || (ch >= 0x1C && ch <= 0x22) || (ch >= 0x26 && ch <= 0x2A) || (ch >= 0x3B && ch <= 0x40) || (ch >= 0x5B && ch <= 0x60) || (ch >= 0x7B && ch <= 0x7E))
             char_class = BidirectionalClass::NEUTRAL;
         lookup_table[ch] = char_class;

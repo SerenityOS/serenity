@@ -612,7 +612,7 @@ int pthread_spin_lock(pthread_spinlock_t* lock)
 int pthread_spin_trylock(pthread_spinlock_t* lock)
 {
     // We expect the current value to be unlocked, as the specification
-    // states that trylock should lock ony if it is not held by ANY thread.
+    // states that trylock should lock only if it is not held by ANY thread.
     auto current = spinlock_unlock_sentinel;
     auto desired = gettid();
 

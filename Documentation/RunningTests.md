@@ -34,7 +34,7 @@ export SERENITY_SOURCE_DIR=${PWD}/..
 ninja && ninja test
 ```
 
-To see the stdout/stderr output of failing tests, the reccommended way is to set the environment variable [`CTEST_OUTPUT_ON_FAILURE`](https://cmake.org/cmake/help/latest/manual/ctest.1.html#options) to 1.
+To see the stdout/stderr output of failing tests, the recommended way is to set the environment variable [`CTEST_OUTPUT_ON_FAILURE`](https://cmake.org/cmake/help/latest/manual/ctest.1.html#options) to 1.
 
 ```sh
 CTEST_OUTPUT_ON_FAILURE=1 ninja test
