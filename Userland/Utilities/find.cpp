@@ -457,8 +457,14 @@ static void walk_tree(const char* root_path, Command& command)
     if (dir_iterator.has_error() && dir_iterator.error() == ENOTDIR)
         return;
 
-    while (dir_iterator.has_next())
-        walk_tree(dir_iterator.next_full_path().characters(), command);
+    while (dir_iterator.has_next()) {
+        auto path = dir_iterator.next_full_path();
+        struct stat stat;
+        if (g_follow_symlinks || ::lstat(path.characters(), &stat) < 0 || !S_ISLNK(stat.st_mode))
+            walk_tree(path.characters(), command);
+        else
+            command.evaluate(path.characters());
+    }
 
     if (dir_iterator.has_error()) {
         fprintf(stderr, "%s: %s\n", root_path, dir_iterator.error_string());
