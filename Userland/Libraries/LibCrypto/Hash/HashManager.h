@@ -20,6 +20,7 @@ enum class HashKind {
     None,
     SHA1,
     SHA256,
+    SHA384,
     SHA512,
     MD5,
 };
@@ -37,6 +38,12 @@ struct MultiHashDigestVariant {
     MultiHashDigestVariant(SHA256::DigestType digest)
         : sha256(digest)
         , kind(HashKind::SHA256)
+    {
+    }
+
+    MultiHashDigestVariant(SHA384::DigestType digest)
+        : sha384(digest)
+        , kind(HashKind::SHA384)
     {
     }
 
@@ -61,6 +68,8 @@ struct MultiHashDigestVariant {
             return sha1.value().immutable_data();
         case HashKind::SHA256:
             return sha256.value().immutable_data();
+        case HashKind::SHA384:
+            return sha384.value().immutable_data();
         case HashKind::SHA512:
             return sha512.value().immutable_data();
         default:
@@ -79,6 +88,8 @@ struct MultiHashDigestVariant {
             return sha1.value().data_length();
         case HashKind::SHA256:
             return sha256.value().data_length();
+        case HashKind::SHA384:
+            return sha384.value().data_length();
         case HashKind::SHA512:
             return sha512.value().data_length();
         default:
@@ -90,6 +101,7 @@ struct MultiHashDigestVariant {
 
     Optional<SHA1::DigestType> sha1;
     Optional<SHA256::DigestType> sha256;
+    Optional<SHA384::DigestType> sha384;
     Optional<SHA512::DigestType> sha512;
     Optional<MD5::DigestType> md5;
     HashKind kind { HashKind::None };
@@ -120,6 +132,7 @@ public:
     {
         m_sha1 = nullptr;
         m_sha256 = nullptr;
+        m_sha384 = nullptr;
         m_sha512 = nullptr;
         m_md5 = nullptr;
     }
@@ -133,6 +146,8 @@ public:
             return m_sha1->digest_size();
         case HashKind::SHA256:
             return m_sha256->digest_size();
+        case HashKind::SHA384:
+            return m_sha384->digest_size();
         case HashKind::SHA512:
             return m_sha512->digest_size();
         default:
@@ -149,6 +164,8 @@ public:
             return m_sha1->block_size();
         case HashKind::SHA256:
             return m_sha256->block_size();
+        case HashKind::SHA384:
+            return m_sha384->block_size();
         case HashKind::SHA512:
             return m_sha512->block_size();
         default:
@@ -172,6 +189,9 @@ public:
             break;
         case HashKind::SHA256:
             m_sha256 = make<SHA256>();
+            break;
+        case HashKind::SHA384:
+            m_sha384 = make<SHA384>();
             break;
         case HashKind::SHA512:
             m_sha512 = make<SHA512>();
@@ -201,6 +221,11 @@ public:
                 m_sha256->update(m_pre_init_buffer);
             m_sha256->update(data, length);
             break;
+        case HashKind::SHA384:
+            if (size)
+                m_sha384->update(m_pre_init_buffer);
+            m_sha384->update(data, length);
+            break;
         case HashKind::SHA512:
             if (size)
                 m_sha512->update(m_pre_init_buffer);
@@ -224,6 +249,8 @@ public:
             return { m_sha1->peek() };
         case HashKind::SHA256:
             return { m_sha256->peek() };
+        case HashKind::SHA384:
+            return { m_sha384->peek() };
         case HashKind::SHA512:
             return { m_sha512->peek() };
         default:
@@ -253,6 +280,9 @@ public:
         case HashKind::SHA256:
             m_sha256->reset();
             break;
+        case HashKind::SHA384:
+            m_sha384->reset();
+            break;
         case HashKind::SHA512:
             m_sha512->reset();
             break;
@@ -271,6 +301,8 @@ public:
             return m_sha1->class_name();
         case HashKind::SHA256:
             return m_sha256->class_name();
+        case HashKind::SHA384:
+            return m_sha384->class_name();
         case HashKind::SHA512:
             return m_sha512->class_name();
         default:
@@ -287,6 +319,7 @@ public:
 private:
     OwnPtr<SHA1> m_sha1;
     OwnPtr<SHA256> m_sha256;
+    OwnPtr<SHA384> m_sha384;
     OwnPtr<SHA512> m_sha512;
     OwnPtr<MD5> m_md5;
     HashKind m_kind { HashKind::None };
