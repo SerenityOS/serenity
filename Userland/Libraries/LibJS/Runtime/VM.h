@@ -96,8 +96,8 @@ public:
     {
         VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
-        // This value is merely a guess and might need tweaking at a later point.
-        if (m_stack_info.size_free() < 16 * KiB)
+        // Note: the 32 kiB used to be 16 kiB, but that turned out to not be enough with ASAN enabled.
+        if (m_stack_info.size_free() < 32 * KiB)
             throw_exception<Error>(global_object, "Call stack size limit exceeded");
         else
             m_call_stack.append(&call_frame);
