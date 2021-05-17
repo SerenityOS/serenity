@@ -376,11 +376,12 @@ void Printer::print(const Wasm::GlobalSection::Global& entry)
 void Printer::print(const Wasm::GlobalType& type)
 {
     print_indent();
-    print("(type global {}mutable", type.is_mutable() ? "" : "im");
+    print("(type global {}mutable\n", type.is_mutable() ? "" : "im");
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         print(type.type());
     }
+    print_indent();
     print(")\n");
 }
 
@@ -418,10 +419,31 @@ void Printer::print(const Wasm::Instruction& instruction)
 {
     print_indent();
     print("({}", instruction_name(instruction.opcode()));
-    if (instruction.arguments().has<u8>())
+    if (instruction.arguments().has<u8>()) {
         print(")\n");
-    else
-        print("...)\n");
+    } else {
+        print(" ");
+        instruction.arguments().visit(
+            [&](const BlockType& type) { print(type); },
+            [&](const DataIndex& index) { print("(data index {})", index.value()); },
+            [&](const ElementIndex& index) { print("(element index {})", index.value()); },
+            [&](const FunctionIndex& index) { print("(function index {})", index.value()); },
+            [&](const GlobalIndex& index) { print("(global index {})", index.value()); },
+            [&](const LabelIndex& index) { print("(label index {})", index.value()); },
+            [&](const LocalIndex& index) { print("(local index {})", index.value()); },
+            [&](const TableIndex& index) { print("(table index {})", index.value()); },
+            [&](const Instruction::IndirectCallArgs& args) { print("(indirect (type index {}) (table index {}))", args.type.value(), args.table.value()); },
+            [&](const Instruction::MemoryArgument& args) { print("(memory (align {}) (offset {}))", args.align, args.offset); },
+            [&](const Instruction::StructuredInstructionArgs& args) { print("(structured (else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value()); },
+            [&](const Instruction::TableBranchArgs&) { print("(table_branch ...)"); },
+            [&](const Instruction::TableElementArgs& args) { print("(table_element (table index {}) (element index {}))", args.table_index.value(), args.element_index.value()); },
+            [&](const Instruction::TableTableArgs& args) { print("(table_table (table index {}) (table index {}))", args.lhs.value(), args.rhs.value()); },
+            [&](const ValueType& type) { print(type); },
+            [&](const Vector<ValueType>&) { print("(types...)"); },
+            [&](const auto& value) { print("{}", value); });
+
+        print(")\n");
+    }
 }
 
 void Printer::print(const Wasm::Limits& limits)
@@ -431,7 +453,7 @@ void Printer::print(const Wasm::Limits& limits)
     if (limits.max().has_value())
         print(" max={}", limits.max().value());
     else
-        print("unbounded");
+        print(" unbounded");
     print(")\n");
 }
 
