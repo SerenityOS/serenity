@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Bitmap.h>
+#include <AK/BitmapView.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
@@ -32,7 +32,7 @@ public:
     Heap(u8* memory, size_t memory_size)
         : m_total_chunks(calculate_chunks(memory_size))
         , m_chunks(memory)
-        , m_bitmap(m_total_chunks, false)
+        , m_bitmap(memory + m_total_chunks * CHUNK_SIZE, m_total_chunks)
     {
         // To keep the alignment of the memory passed in, place the bitmap
         // at the end of the memory block.
@@ -153,7 +153,7 @@ private:
     size_t m_total_chunks { 0 };
     size_t m_allocated_chunks { 0 };
     u8* m_chunks { nullptr };
-    Bitmap m_bitmap;
+    BitmapView m_bitmap;
 };
 
 template<typename ExpandHeap>
