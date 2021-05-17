@@ -402,20 +402,20 @@ void TimeManagement::system_timer_tick(const RegisterState& regs)
 
 bool TimeManagement::enable_profile_timer()
 {
-    if (m_profile_timer && m_profile_enable_count.fetch_add(1) == 0) {
-        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE));
-        return true;
-    }
-    return false;
+    if (!m_profile_timer)
+        return false;
+    if (m_profile_enable_count.fetch_add(1) == 0)
+        return m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(OPTIMAL_PROFILE_TICKS_PER_SECOND_RATE));
+    return true;
 }
 
 bool TimeManagement::disable_profile_timer()
 {
-    if (m_profile_timer && m_profile_enable_count.fetch_sub(1) == 1) {
-        m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
-        return true;
-    }
-    return false;
+    if (!m_profile_timer)
+        return false;
+    if (m_profile_enable_count.fetch_sub(1) == 1)
+        return m_profile_timer->try_to_set_frequency(m_profile_timer->calculate_nearest_possible_frequency(1));
+    return true;
 }
 
 }
