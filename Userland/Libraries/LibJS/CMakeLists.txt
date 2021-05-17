@@ -2,6 +2,7 @@ set(SOURCES
     AST.cpp
     Console.cpp
     Heap/Allocator.cpp
+    Heap/Cell.cpp
     Heap/Handle.cpp
     Heap/HeapBlock.cpp
     Heap/Heap.cpp
@@ -25,7 +26,6 @@ set(SOURCES
     Runtime/BooleanObject.cpp
     Runtime/BooleanPrototype.cpp
     Runtime/BoundFunction.cpp
-    Runtime/Cell.cpp
     Runtime/ConsoleObject.cpp
     Runtime/DateConstructor.cpp
     Runtime/Date.cpp

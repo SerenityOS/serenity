@@ -14,8 +14,8 @@
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Allocator.h>
+#include <LibJS/Heap/Cell.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Runtime/Cell.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
