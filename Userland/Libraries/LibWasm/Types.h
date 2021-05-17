@@ -998,6 +998,16 @@ public:
 
     auto& sections() const { return m_sections; }
     auto& functions() const { return m_functions; }
+    auto& type(TypeIndex index) const
+    {
+        const FunctionType* type = nullptr;
+        for_each_section_of_type<TypeSection>([&](const TypeSection& section) {
+            type = &section.types().at(index.value());
+        });
+
+        VERIFY(type != nullptr);
+        return *type;
+    }
 
     template<typename T, typename Callback>
     void for_each_section_of_type(Callback&& callback) const

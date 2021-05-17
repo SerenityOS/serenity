@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
@@ -13,6 +14,8 @@
 #include <LibWasm/Types.h>
 
 namespace Wasm {
+
+class Configuration;
 
 struct InstantiationError {
     String error { "Unknown error" };
@@ -235,17 +238,17 @@ private:
 
 class HostFunction {
 public:
-    explicit HostFunction(FlatPtr ptr, const FunctionType& type)
-        : m_ptr(ptr)
+    explicit HostFunction(AK::Function<Result(Configuration&, Vector<Value>&)> function, const FunctionType& type)
+        : m_function(move(function))
         , m_type(type)
     {
     }
 
-    auto ptr() const { return m_ptr; }
+    auto& function() { return m_function; }
     auto& type() const { return m_type; }
 
 private:
-    FlatPtr m_ptr { 0 };
+    AK::Function<Result(Configuration&, Vector<Value>&)> m_function;
     FunctionType m_type;
 };
 
@@ -352,7 +355,7 @@ public:
     Store() = default;
 
     Optional<FunctionAddress> allocate(ModuleInstance& module, const Module::Function& function);
-    Optional<FunctionAddress> allocate(const HostFunction&);
+    Optional<FunctionAddress> allocate(HostFunction&&);
     Optional<TableAddress> allocate(const TableType&);
     Optional<MemoryAddress> allocate(const MemoryType&);
     Optional<GlobalAddress> allocate(const GlobalType&, Value);
@@ -463,6 +466,12 @@ public:
 
     // Link a bunch of qualified values, also matches 'module name'.
     void link(const HashMap<Name, ExternValue>&);
+
+    auto& unresolved_imports()
+    {
+        populate();
+        return m_unresolved_imports;
+    }
 
     AK::Result<Vector<ExternValue>, LinkError> finish();
 

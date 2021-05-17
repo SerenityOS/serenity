@@ -13,6 +13,10 @@
 
 namespace Web::Bindings {
 
+static JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object);
+static JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object);
+static Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object);
+
 WebAssemblyObject::WebAssemblyObject(JS::GlobalObject& global_object)
     : Object(*global_object.object_prototype())
 {
@@ -89,16 +93,20 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 {
     // FIXME: This shouldn't block!
     auto buffer = vm.argument(0).to_object(global_object);
-    JS::Value rejection_value;
-    if (vm.exception()) {
-        rejection_value = vm.exception()->value();
-        vm.clear_exception();
-    }
     auto promise = JS::Promise::create(global_object);
-    if (!rejection_value.is_empty()) {
-        promise->reject(rejection_value);
+    auto take_exception_and_reject_if_needed = [&] {
+        if (vm.exception()) {
+            auto rejection_value = vm.exception()->value();
+            vm.clear_exception();
+            promise->reject(rejection_value);
+            return true;
+        }
+
+        return false;
+    };
+
+    if (take_exception_and_reject_if_needed())
         return promise;
-    }
 
     const Wasm::Module* module { nullptr };
     if (is<JS::ArrayBuffer>(buffer) || is<JS::TypedArrayBase>(buffer)) {
@@ -117,25 +125,81 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     }
     VERIFY(module);
 
-    HashMap<Wasm::Linker::Name, Wasm::ExternValue> import_values;
+    Wasm::Linker linker { *module };
+    HashMap<Wasm::Linker::Name, Wasm::ExternValue> resolved_imports;
     auto import_argument = vm.argument(1);
     if (!import_argument.is_undefined()) {
         [[maybe_unused]] auto import_object = import_argument.to_object(global_object);
-        if (vm.exception()) {
-            rejection_value = vm.exception()->value();
-            vm.clear_exception();
-        }
-        auto promise = JS::Promise::create(global_object);
-        if (!rejection_value.is_empty()) {
-            promise->reject(rejection_value);
+        if (take_exception_and_reject_if_needed())
             return promise;
+
+        dbgln("Trying to resolve stuff because import object was specified");
+        for (const Wasm::Linker::Name& import_name : linker.unresolved_imports()) {
+            dbgln("Trying to resolve {}::{}", import_name.module, import_name.name);
+            auto value = import_object->get(import_name.module);
+            if (vm.exception())
+                break;
+            auto object = value.to_object(global_object);
+            if (vm.exception())
+                break;
+
+            auto import_ = object->get(import_name.name);
+            if (vm.exception())
+                break;
+            import_name.type.visit(
+                [&](Wasm::TypeIndex index) {
+                    dbgln("Trying to resolve a function {}::{}, type index {}", import_name.module, import_name.name, index.value());
+                    auto& type = module->type(index);
+                    // FIXME: IsCallable()
+                    if (!import_.is_function())
+                        return;
+                    auto& function = import_.as_function();
+                    // FIXME: If this is a function created by create_native_function(),
+                    //        just extract its address and resolve to that.
+                    Wasm::HostFunction host_function {
+                        [&](auto&, auto& arguments) -> Wasm::Result {
+                            JS::MarkedValueList argument_values { vm.heap() };
+                            for (auto& entry : arguments)
+                                argument_values.append(to_js_value(entry, global_object));
+
+                            auto result = vm.call(function, JS::js_undefined(), move(argument_values));
+                            if (vm.exception()) {
+                                vm.clear_exception();
+                                return Wasm::Trap();
+                            }
+                            if (type.results().is_empty())
+                                return Wasm::Result { Vector<Wasm::Value> {} };
+
+                            if (type.results().size() == 1) {
+                                auto value = to_webassembly_value(result, type.results().first(), global_object);
+                                if (!value.has_value())
+                                    return Wasm::Trap {};
+
+                                return Wasm::Result { Vector<Wasm::Value> { value.release_value() } };
+                            }
+
+                            // FIXME: Multiple returns
+                            TODO();
+                        },
+                        type
+                    };
+                    auto address = s_abstract_machine.store().allocate(move(host_function));
+                    dbgln("Resolved to {}", address->value());
+                    // FIXME: LinkError instead.
+                    VERIFY(address.has_value());
+
+                    resolved_imports.set(import_name, Wasm::ExternValue { Wasm::FunctionAddress { *address } });
+                },
+                [&](const auto&) {
+                    // FIXME: Implement these.
+                });
         }
 
-        // FIXME: Populate the import values.
+        if (take_exception_and_reject_if_needed())
+            return promise;
     }
 
-    Wasm::Linker linker { *module };
-    linker.link(import_values);
+    linker.link(resolved_imports);
     auto link_result = linker.finish();
     if (link_result.is_error()) {
         // FIXME: Throw a LinkError.
@@ -149,6 +213,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
 
     auto instance_result = s_abstract_machine.instantiate(*module, link_result.release_value());
     if (instance_result.is_error()) {
+        // FIXME: Throw a LinkError instead.
         auto error = JS::TypeError::create(global_object, instance_result.error().error);
         promise->reject(error);
         return promise;
@@ -171,9 +236,7 @@ WebAssemblyInstanceObject::WebAssemblyInstanceObject(JS::GlobalObject& global_ob
 {
 }
 
-static JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object);
-
-static JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
+JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
 {
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
@@ -194,7 +257,7 @@ static JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_o
     VERIFY_NOT_REACHED();
 }
 
-static Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object)
+Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueType& type, JS::GlobalObject& global_object)
 {
     static Crypto::SignedBigInteger two_64 = "1"_sbigint.shift_left(64);
     auto& vm = global_object.vm();
