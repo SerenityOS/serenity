@@ -91,7 +91,7 @@ private:
     virtual Messages::WindowServer::GreetResponse greet() override;
     virtual Messages::WindowServer::CreateMenubarResponse create_menubar() override;
     virtual void destroy_menubar(i32) override;
-    virtual Messages::WindowServer::CreateMenuResponse create_menu(String const&) override;
+    virtual void create_menu(i32, String const&) override;
     virtual void destroy_menu(i32) override;
     virtual void add_menu_to_menubar(i32, i32) override;
     virtual void set_window_menubar(i32, i32) override;
@@ -161,7 +161,6 @@ private:
     RefPtr<Core::Timer> m_ping_timer;
 
     int m_next_menubar_id { 10000 };
-    int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
 
     bool m_has_display_link { false };
