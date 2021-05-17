@@ -265,6 +265,7 @@ using MakeUnsigned = typename __MakeUnsigned<T>::Type;
 
 template<typename T>
 struct __MakeSigned {
+    using Type = void;
 };
 template<>
 struct __MakeSigned<signed char> {
