@@ -60,7 +60,8 @@ public:
         if (pointer < reinterpret_cast<FlatPtr>(m_storage))
             return nullptr;
         size_t cell_index = (pointer - reinterpret_cast<FlatPtr>(m_storage)) / m_cell_size;
-        if (cell_index >= cell_count())
+        auto end = has_lazy_freelist() ? m_next_lazy_freelist_index : cell_count();
+        if (cell_index >= end)
             return nullptr;
         return cell(cell_index);
     }
