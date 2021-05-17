@@ -97,13 +97,13 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
      * 2. The bootloader specified settings of a pre-set framebuffer, and the 
      * kernel does not have a native driver for a detected display adapter, 
      * therefore the kernel will use the pre-set framebuffer. Modesetting is not
-     * availabe in this situation.
+     * available in this situation.
      * 3. The bootloader didn't specify settings of a pre-set framebuffer, and 
      * the kernel does not have a native driver for a detected display adapter, 
      * therefore the kernel will try to initialize a VGA text mode console.
      * In that situation, the kernel will assume that VGA text mode was already
      * initialized, but will still try to modeset it. No switching to graphical 
-     * enviroment is allowed in this case.
+     * environment is allowed in this case.
      * 
      * By default, the kernel assumes that no framebuffer was created until it
      * was proven that there's an existing framebuffer or we can modeset the 

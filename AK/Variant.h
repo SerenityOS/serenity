@@ -190,7 +190,7 @@ struct InheritFromPacks<IndexSequence<Is...>, Ps...>
     using InheritFromUniqueEntries<Is, Ps, IndexSequence<Is...>, Ps...>::InheritFromUniqueEntries...;
 };
 
-// Just a nice wrapper around InheritFromPacks, which will wrap any parameter packs in ParameterPack (unless it alread is one).
+// Just a nice wrapper around InheritFromPacks, which will wrap any parameter packs in ParameterPack (unless it already is one).
 template<typename... Ps>
 using MergeAndDeduplicatePacks = InheritFromPacks<MakeIndexSequence<sizeof...(Ps)>, Conditional<IsBaseOf<ParameterPackTag, Ps>, Ps, ParameterPack<Ps>>...>;
 

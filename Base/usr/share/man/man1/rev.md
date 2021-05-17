@@ -11,7 +11,7 @@ $ rev [files...]
 ## Description
 
 `rev` reads the specified files line by line, and prints them to standard
-output with each line being reversed characterwise. If no files are specifed,
+output with each line being reversed characterwise. If no files are specified,
 then `rev` will read from standard input.
 
 ## Examples

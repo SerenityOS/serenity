@@ -12,7 +12,7 @@ and set the following fields: (Assuming you use `Ninja` as the build system and 
 ## Excluding Build Artifacts
 
 Source files are copied to the `Build` directory during the build, if you do not exclude them from CLion indexing they will show up
-in search results. This is often confusing, unintuitive, and can result in your loosing changes you have made to files. To exclude
+in search results. This is often confusing, unintuitive, and can result in you losing changes you have made to files. To exclude
 these files navigate to the `Project` tool window, right-click the `Build` folder and select `Mark Directory as | Excluded`. If you
 want exclude Toolchain files as well, follow the same procedure with the following paths:
 - `Toolchain/Local`

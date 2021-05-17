@@ -89,7 +89,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
     // TODO:
     // This is a mess because the prelude is parsed as a string.
     // It should really be parsed as its class, but the cpp gods have forsaken me
-    // and i cant make it work due to cyclic includes.
+    // and I can't make it work due to cyclic includes.
 
     Vector<CSS::Selector::ComplexSelector> selectors;
 
