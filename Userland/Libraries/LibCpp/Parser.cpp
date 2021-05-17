@@ -851,9 +851,8 @@ void Parser::error(StringView message)
 
 bool Parser::match_expression()
 {
-    auto token_type = peek().type();
     return match_literal()
-        || token_type == Token::Type::Identifier
+        || match_name()
         || match_unary_expression()
         || match_cpp_cast_expression()
         || match_c_style_cast_expression()
