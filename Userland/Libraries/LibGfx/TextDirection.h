@@ -28,7 +28,7 @@ constexpr BidirectionalClass get_char_bidi_class(u32 ch)
     return char_bidi_class_lookup_table[ch];
 }
 
-// FIXME: These should be parsed from the official BidiMirroring.txt that specifies the mirroring character for each character (this function doesnt take into account a large amount of characters)
+// FIXME: These should be parsed from the official BidiMirroring.txt that specifies the mirroring character for each character (this function doesn't take into account a large amount of characters)
 constexpr u32 get_mirror_char(u32 ch)
 {
     if (ch == 0x28)

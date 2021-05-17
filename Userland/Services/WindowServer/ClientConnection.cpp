@@ -81,12 +81,10 @@ void ClientConnection::notify_about_new_screen_rect(Gfx::IntRect const& rect)
     async_screen_rect_changed(rect);
 }
 
-Messages::WindowServer::CreateMenubarResponse ClientConnection::create_menubar()
+void ClientConnection::create_menubar(i32 menubar_id)
 {
-    int menubar_id = m_next_menubar_id++;
     auto menubar = Menubar::create(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
-    return menubar_id;
 }
 
 void ClientConnection::destroy_menubar(i32 menubar_id)
@@ -99,12 +97,10 @@ void ClientConnection::destroy_menubar(i32 menubar_id)
     m_menubars.remove(it);
 }
 
-Messages::WindowServer::CreateMenuResponse ClientConnection::create_menu(String const& menu_title)
+void ClientConnection::create_menu(i32 menu_id, String const& menu_title)
 {
-    int menu_id = m_next_menu_id++;
     auto menu = Menu::construct(this, menu_id, menu_title);
     m_menus.set(menu_id, move(menu));
-    return menu_id;
 }
 
 void ClientConnection::destroy_menu(i32 menu_id)

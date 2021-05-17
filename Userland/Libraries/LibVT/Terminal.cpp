@@ -66,7 +66,7 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
                     dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
                 break;
             default:
-                dbgln("Terminal::alter_mode: Unimplemented private mode {}", mode);
+                dbgln("Terminal::alter_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
                 break;
             }
         }
@@ -75,7 +75,7 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
             switch (mode) {
             // FIXME: implement *something* for this
             default:
-                dbgln("Terminal::alter_mode: Unimplemented mode {} (set={})", mode, should_set);
+                dbgln("Terminal::alter_mode: Unimplemented mode {} (should_set={})", mode, should_set);
                 break;
             }
         }
@@ -98,111 +98,115 @@ void Terminal::SGR(Parameters params)
         m_current_attribute.reset();
         return;
     }
-    if (params.size() >= 3) {
-        bool should_set = true;
-        auto kind = params[1];
-        u32 color = 0;
-        switch (kind) {
-        case 5: // 8-bit
-            color = xterm_colors[params[2]];
-            break;
-        case 2: // 24-bit
-            for (size_t i = 0; i < 3; ++i) {
-                u8 component = 0;
-                if (params.size() - 2 > i) {
-                    component = params[i + 2];
-                }
-                color <<= 8;
-                color |= component;
-            }
-            break;
-        default:
-            should_set = false;
-            break;
-        }
 
-        if (should_set) {
-            if (params[0] == 38) {
-                m_current_attribute.foreground_color = color;
-                return;
-            } else if (params[0] == 48) {
-                m_current_attribute.background_color = color;
-                return;
-            }
+    auto parse_color = [&]() -> Optional<u32> {
+        if (params.size() < 2) {
+            dbgln("Color code has no type");
+            return {};
         }
-    }
-    for (auto param : params) {
-        switch (param) {
-        case 0:
-            // Reset
-            m_current_attribute.reset();
-            break;
-        case 1:
-            m_current_attribute.flags |= Attribute::Bold;
-            break;
-        case 3:
-            m_current_attribute.flags |= Attribute::Italic;
-            break;
-        case 4:
-            m_current_attribute.flags |= Attribute::Underline;
-            break;
-        case 5:
-            m_current_attribute.flags |= Attribute::Blink;
-            break;
-        case 7:
-            m_current_attribute.flags |= Attribute::Negative;
-            break;
-        case 22:
-            m_current_attribute.flags &= ~Attribute::Bold;
-            break;
-        case 23:
-            m_current_attribute.flags &= ~Attribute::Italic;
-            break;
-        case 24:
-            m_current_attribute.flags &= ~Attribute::Underline;
-            break;
-        case 25:
-            m_current_attribute.flags &= ~Attribute::Blink;
-            break;
-        case 27:
-            m_current_attribute.flags &= ~Attribute::Negative;
-            break;
-        case 30:
-        case 31:
-        case 32:
-        case 33:
-        case 34:
-        case 35:
-        case 36:
-        case 37:
-            // Foreground color
-            if (m_current_attribute.flags & Attribute::Bold)
-                param += 8;
-            m_current_attribute.foreground_color = xterm_colors[param - 30];
-            break;
-        case 39:
-            // reset foreground
-            m_current_attribute.foreground_color = Attribute::default_foreground_color;
-            break;
-        case 40:
-        case 41:
-        case 42:
-        case 43:
-        case 44:
-        case 45:
-        case 46:
-        case 47:
-            // Background color
-            if (m_current_attribute.flags & Attribute::Bold)
-                param += 8;
-            m_current_attribute.background_color = xterm_colors[param - 40];
-            break;
-        case 49:
-            // reset background
-            m_current_attribute.background_color = Attribute::default_background_color;
-            break;
+        u32 color = 0;
+        switch (params[1]) {
+        case 5: // 8-bit
+            if (params.size() < 3) {
+                dbgln("8-bit color code has too few parameters");
+                return {};
+            }
+            return xterm_colors[params[2]];
+        case 2: // 24-bit
+            if (params.size() < 5) {
+                dbgln("24-bit color code has too few parameters");
+                return {};
+            }
+            for (size_t i = 0; i < 3; ++i) {
+                color <<= 8;
+                color |= params[i + 2];
+            }
+            return color;
         default:
-            dbgln("FIXME: SGR: p: {}", param);
+            dbgln("Unknown color type {}", params[1]);
+            return {};
+        }
+    };
+
+    if (params[0] == 38) {
+        m_current_attribute.foreground_color = parse_color().value_or(m_current_attribute.foreground_color);
+    } else if (params[0] == 48) {
+        m_current_attribute.background_color = parse_color().value_or(m_current_attribute.background_color);
+    } else {
+        // A single escape sequence may set multiple parameters.
+        for (auto param : params) {
+            switch (param) {
+            case 0:
+                // Reset
+                m_current_attribute.reset();
+                break;
+            case 1:
+                m_current_attribute.flags |= Attribute::Bold;
+                break;
+            case 3:
+                m_current_attribute.flags |= Attribute::Italic;
+                break;
+            case 4:
+                m_current_attribute.flags |= Attribute::Underline;
+                break;
+            case 5:
+                m_current_attribute.flags |= Attribute::Blink;
+                break;
+            case 7:
+                m_current_attribute.flags |= Attribute::Negative;
+                break;
+            case 22:
+                m_current_attribute.flags &= ~Attribute::Bold;
+                break;
+            case 23:
+                m_current_attribute.flags &= ~Attribute::Italic;
+                break;
+            case 24:
+                m_current_attribute.flags &= ~Attribute::Underline;
+                break;
+            case 25:
+                m_current_attribute.flags &= ~Attribute::Blink;
+                break;
+            case 27:
+                m_current_attribute.flags &= ~Attribute::Negative;
+                break;
+            case 30:
+            case 31:
+            case 32:
+            case 33:
+            case 34:
+            case 35:
+            case 36:
+            case 37:
+                // Foreground color
+                if (m_current_attribute.flags & Attribute::Bold)
+                    param += 8;
+                m_current_attribute.foreground_color = xterm_colors[param - 30];
+                break;
+            case 39:
+                // reset foreground
+                m_current_attribute.foreground_color = Attribute::default_foreground_color;
+                break;
+            case 40:
+            case 41:
+            case 42:
+            case 43:
+            case 44:
+            case 45:
+            case 46:
+            case 47:
+                // Background color
+                if (m_current_attribute.flags & Attribute::Bold)
+                    param += 8;
+                m_current_attribute.background_color = xterm_colors[param - 40];
+                break;
+            case 49:
+                // reset background
+                m_current_attribute.background_color = Attribute::default_background_color;
+                break;
+            default:
+                dbgln("FIXME: SGR: p: {}", param);
+            }
         }
     }
 }
@@ -521,7 +525,7 @@ void Terminal::DCH(Parameters params)
 }
 #endif
 
-void Terminal::newline()
+void Terminal::linefeed()
 {
     u16 new_row = m_cursor_row;
     if (m_cursor_row == m_scroll_region_bottom) {
@@ -529,8 +533,11 @@ void Terminal::newline()
     } else {
         ++new_row;
     };
-    set_cursor(new_row, 0);
+    // We shouldn't jump to the first column after receiving a line feed.
+    // The TTY will take care of generating the carriage return.
+    set_cursor(new_row, m_cursor_column);
 }
+
 void Terminal::carriage_return()
 {
     set_cursor(m_cursor_row, 0);
@@ -591,7 +598,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
 
 void Terminal::NEL()
 {
-    newline();
+    linefeed();
     carriage_return();
 }
 
@@ -658,7 +665,7 @@ void Terminal::emit_code_point(u32 code_point)
     if (m_stomp) {
         m_stomp = false;
         carriage_return();
-        newline();
+        linefeed();
         put_character_at(m_cursor_row, m_cursor_column, code_point);
         set_cursor(m_cursor_row, 1);
     } else {
@@ -690,7 +697,9 @@ void Terminal::execute_control_code(u8 code)
         return;
     }
     case '\n':
-        newline();
+    case '\v':
+    case '\f':
+        linefeed();
         return;
     case '\r':
         carriage_return();
@@ -832,67 +841,67 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
 void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
 {
     auto stringview_ify = [&](size_t param_idx) {
-        return StringView((const char*)(&parameters[param_idx][0]), parameters[param_idx].size());
+        return StringView(parameters[param_idx]);
     };
 
-    if (parameters.size() > 0 && !parameters[0].is_empty()) {
-        auto command_number = stringview_ify(0).to_uint();
-        if (command_number.has_value()) {
-            switch (command_number.value()) {
-            case 0:
-            case 1:
-            case 2:
-                if (parameters[1].is_empty())
-                    dbgln("Attempted to set window title without any parameters");
-                else
-                    m_client.set_window_title(stringview_ify(1));
-                // FIXME: the split breaks titles containing semicolons.
-                // Should we expose the raw OSC string from the parser? Or join by semicolon?
-                break;
-            case 8:
+    if (parameters.size() == 0 || parameters[0].is_empty()) {
+        unimplemented_osc_sequence(parameters, last_byte);
+        return;
+    }
+
+    auto command_number = stringview_ify(0).to_uint();
+    if (!command_number.has_value()) {
+        unimplemented_osc_sequence(parameters, last_byte);
+        return;
+    }
+
+    switch (command_number.value()) {
+    case 0:
+    case 1:
+    case 2:
+        if (parameters.size() < 2)
+            dbgln("Attempted to set window title without any parameters");
+        else
+            m_client.set_window_title(stringview_ify(1));
+        // FIXME: the split breaks titles containing semicolons.
+        // Should we expose the raw OSC string from the parser? Or join by semicolon?
+        break;
+    case 8:
 #ifndef KERNEL
-                if (parameters.size() < 2) {
-                    dbgln("Attempted to set href but gave too few parameters");
-                } else if (parameters[2].is_empty()) {
-                    m_current_attribute.href = String();
-                    m_current_attribute.href_id = String();
-                } else {
-                    m_current_attribute.href = stringview_ify(2);
-                    // FIXME: Respect the provided ID
-                    m_current_attribute.href_id = String::number(m_next_href_id++);
-                }
-#endif
-                break;
-            case 9:
-                if (parameters.size() < 2 || parameters[1].is_empty() || parameters[2].is_empty())
-                    dbgln("Atttempted to set window progress but gave too few parameters");
-                else
-                    m_client.set_window_progress(stringview_ify(1).to_int().value_or(0), stringview_ify(2).to_int().value_or(0));
-                break;
-            default:
-                unimplemented_osc_sequence(parameters, last_byte);
-            }
+        if (parameters.size() < 3) {
+            dbgln("Attempted to set href but gave too few parameters");
+        } else if (parameters[1].is_empty() && parameters[2].is_empty()) {
+            // Clear hyperlink
+            m_current_attribute.href = String();
+            m_current_attribute.href_id = String();
         } else {
-            unimplemented_osc_sequence(parameters, last_byte);
+            m_current_attribute.href = stringview_ify(2);
+            // FIXME: Respect the provided ID
+            m_current_attribute.href_id = String::number(m_next_href_id++);
         }
-    } else {
+#endif
+        break;
+    case 9:
+        if (parameters.size() < 2)
+            dbgln("Atttempted to set window progress but gave too few parameters");
+        else if (parameters.size() == 2)
+            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), 0);
+        else
+            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), stringview_ify(2).to_int().value_or(0));
+        break;
+    default:
         unimplemented_osc_sequence(parameters, last_byte);
     }
 }
 
-void Terminal::dcs_hook(Parameters parameters, Intermediates intermediates, bool ignore, u8 last_byte)
+void Terminal::dcs_hook(Parameters, Intermediates, bool, u8)
 {
     dbgln("Received DCS parameters, but we don't support it yet");
-    (void)parameters;
-    (void)last_byte;
-    (void)intermediates;
-    (void)ignore;
 }
 
 void Terminal::receive_dcs_char(u8 byte)
 {
     dbgln_if(TERMINAL_DEBUG, "DCS string character {:c}", byte);
-    (void)byte;
 }
 
 void Terminal::execute_dcs_sequence()
@@ -960,6 +969,11 @@ void Terminal::handle_key_press(KeyCode key, u32 code_point, u8 flags)
         return;
     case KeyCode::Key_PageDown:
         emit_tilde_with_modifier(6);
+        return;
+    case KeyCode::Key_Return:
+        // The standard says that CR should be generated by the return key.
+        // The TTY will take care of translating it to CR LF for the terminal.
+        emit_string("\r");
         return;
     default:
         break;

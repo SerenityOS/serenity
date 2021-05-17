@@ -17,14 +17,9 @@
 #include <LibGfx/Path.h>
 #include <unistd.h>
 
-ChessWidget::ChessWidget(const StringView& set)
-{
-    set_piece_set(set);
-}
-
 ChessWidget::ChessWidget()
-    : ChessWidget("stelar7")
 {
+    set_piece_set("stelar7");
 }
 
 ChessWidget::~ChessWidget()
@@ -33,14 +28,16 @@ ChessWidget::~ChessWidget()
 
 void ChessWidget::paint_event(GUI::PaintEvent& event)
 {
-    GUI::Widget::paint_event(event);
+    GUI::Frame::paint_event(event);
 
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    size_t tile_width = width() / 8;
-    size_t tile_height = height() / 8;
-    unsigned coord_rank_file = (side() == Chess::Color::White) ? 0 : 7;
+    painter.translate(frame_thickness(), frame_thickness());
+
+    size_t tile_width = frame_inner_rect().width() / 8;
+    size_t tile_height = frame_inner_rect().height() / 8;
+    int coord_rank_file = (side() == Chess::Color::White) ? 0 : 7;
 
     Chess::Board& active_board = (m_playback ? board_playback() : board());
 
@@ -164,7 +161,8 @@ void ChessWidget::paint_event(GUI::PaintEvent& event)
 
 void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mousedown_event(event);
+    if (!frame_inner_rect().contains(event.position()))
+        return;
 
     if (event.button() == GUI::MouseButton::Right) {
         if (m_dragging_piece) {
@@ -197,7 +195,8 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
 
 void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mouseup_event(event);
+    if (!frame_inner_rect().contains(event.position()))
+        return;
 
     if (event.button() == GUI::MouseButton::Right) {
         m_current_marking.secondary_color = event.shift();
@@ -295,7 +294,9 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
 
 void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 {
-    GUI::Widget::mousemove_event(event);
+    if (!frame_inner_rect().contains(event.position()))
+        return;
+
     if (!m_dragging_piece)
         return;
 
@@ -361,13 +362,13 @@ void ChessWidget::set_piece_set(const StringView& set)
 
 Chess::Square ChessWidget::mouse_to_square(GUI::MouseEvent& event) const
 {
-    unsigned tile_width = width() / 8;
-    unsigned tile_height = height() / 8;
+    int tile_width = frame_inner_rect().width() / 8;
+    int tile_height = frame_inner_rect().height() / 8;
 
     if (side() == Chess::Color::White) {
-        return { (unsigned)(7 - (event.y() / tile_height)), (unsigned)(event.x() / tile_width) };
+        return { 7 - (event.y() / tile_height), event.x() / tile_width };
     } else {
-        return { (unsigned)(event.y() / tile_height), (unsigned)(7 - (event.x() / tile_width)) };
+        return { event.y() / tile_height, 7 - (event.x() / tile_width) };
     }
 }
 

@@ -16,6 +16,7 @@
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/MemoryDevice.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
@@ -144,6 +145,10 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
     InterruptManagement::initialize();
     ACPI::initialize();
 
+    // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
+    PCI::initialize();
+    PCISerialDevice::detect();
+
     VFS::initialize();
 
     dmesgln("Starting SerenityOS...");
@@ -154,15 +159,14 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     NullDevice::initialize();
     if (!get_serial_debug())
-        new SerialDevice(SERIAL_COM1_ADDR, 64);
-    new SerialDevice(SERIAL_COM2_ADDR, 65);
-    new SerialDevice(SERIAL_COM3_ADDR, 66);
-    new SerialDevice(SERIAL_COM4_ADDR, 67);
+        new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
+    new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
+    new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
+    new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
 
-    PCI::initialize();
     GraphicsManagement::the().initialize();
     ConsoleManagement::the().initialize();
 

@@ -19,25 +19,21 @@ bool g_report_to_debug = false;
 
 int main(int argc, char** argv, char** env)
 {
-    Vector<const char*> command;
+    Vector<String> arguments;
 
     Core::ArgsParser parser;
     parser.add_option(g_report_to_debug, "Write reports to the debug log", "report-to-debug", 0);
-    parser.add_positional_argument(command, "Command to emulate", "command");
+    parser.add_positional_argument(arguments, "Command to emulate", "command");
     parser.parse(argc, argv);
 
-    auto executable_path = Core::find_executable_in_path(command[0]);
+    String executable_path;
+    if (arguments[0].contains("/"sv))
+        executable_path = Core::File::real_path_for(arguments[0]);
+    else
+        executable_path = Core::find_executable_in_path(arguments[0]);
     if (executable_path.is_empty()) {
-        executable_path = Core::File::real_path_for(command[0]);
-        if (executable_path.is_empty()) {
-            reportln("Cannot find executable for '{}'.", executable_path);
-            return 1;
-        }
-    }
-
-    Vector<String> arguments;
-    for (auto arg : command) {
-        arguments.append(arg);
+        reportln("Cannot find executable for '{}'.", arguments[0]);
+        return 1;
     }
 
     Vector<String> environment;

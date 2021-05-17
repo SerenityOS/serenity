@@ -79,6 +79,8 @@ bool File::open_impl(OpenMode mode, mode_t permissions)
         flags |= O_TRUNC;
     if (has_flag(mode, OpenMode::MustBeNew))
         flags |= O_EXCL;
+    if (!has_flag(mode, OpenMode::KeepOnExec))
+        flags |= O_CLOEXEC;
     int fd = ::open(m_filename.characters(), flags, permissions);
     if (fd < 0) {
         set_error(errno);

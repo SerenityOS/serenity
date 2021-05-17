@@ -1853,8 +1853,8 @@ void SoftCPU::FLD_RM80(const X86::Instruction& insn)
     VERIFY(!insn.modrm().is_register());
 
     // long doubles can be up to 128 bits wide in memory for reasons (alignment) and only uses 80 bits of precision
-    // gcc uses 12 byte in 32 bit and 16 byte in 64 bit mode
-    // so in the 32 bit case we read a bit to much, but that shouldnt be that bad
+    // GCC uses 12 bytes in 32 bit and 16 bytes in 64 bit mode
+    // so in the 32 bit case we read a bit to much, but that shouldn't be an issue.
     auto new_f80 = insn.modrm().read128(*this, insn);
     // FIXME: Respect shadow values
     fpu_push(*(long double*)new_f80.value().bytes());
