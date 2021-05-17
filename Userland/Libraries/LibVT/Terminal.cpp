@@ -837,67 +837,67 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
 void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
 {
     auto stringview_ify = [&](size_t param_idx) {
-        return StringView((const char*)(&parameters[param_idx][0]), parameters[param_idx].size());
+        return StringView(parameters[param_idx]);
     };
 
-    if (parameters.size() > 0 && !parameters[0].is_empty()) {
-        auto command_number = stringview_ify(0).to_uint();
-        if (command_number.has_value()) {
-            switch (command_number.value()) {
-            case 0:
-            case 1:
-            case 2:
-                if (parameters[1].is_empty())
-                    dbgln("Attempted to set window title without any parameters");
-                else
-                    m_client.set_window_title(stringview_ify(1));
-                // FIXME: the split breaks titles containing semicolons.
-                // Should we expose the raw OSC string from the parser? Or join by semicolon?
-                break;
-            case 8:
+    if (parameters.size() == 0 || parameters[0].is_empty()) {
+        unimplemented_osc_sequence(parameters, last_byte);
+        return;
+    }
+
+    auto command_number = stringview_ify(0).to_uint();
+    if (!command_number.has_value()) {
+        unimplemented_osc_sequence(parameters, last_byte);
+        return;
+    }
+
+    switch (command_number.value()) {
+    case 0:
+    case 1:
+    case 2:
+        if (parameters.size() < 2)
+            dbgln("Attempted to set window title without any parameters");
+        else
+            m_client.set_window_title(stringview_ify(1));
+        // FIXME: the split breaks titles containing semicolons.
+        // Should we expose the raw OSC string from the parser? Or join by semicolon?
+        break;
+    case 8:
 #ifndef KERNEL
-                if (parameters.size() < 2) {
-                    dbgln("Attempted to set href but gave too few parameters");
-                } else if (parameters[2].is_empty()) {
-                    m_current_attribute.href = String();
-                    m_current_attribute.href_id = String();
-                } else {
-                    m_current_attribute.href = stringview_ify(2);
-                    // FIXME: Respect the provided ID
-                    m_current_attribute.href_id = String::number(m_next_href_id++);
-                }
-#endif
-                break;
-            case 9:
-                if (parameters.size() < 2 || parameters[1].is_empty() || parameters[2].is_empty())
-                    dbgln("Atttempted to set window progress but gave too few parameters");
-                else
-                    m_client.set_window_progress(stringview_ify(1).to_int().value_or(0), stringview_ify(2).to_int().value_or(0));
-                break;
-            default:
-                unimplemented_osc_sequence(parameters, last_byte);
-            }
+        if (parameters.size() < 3) {
+            dbgln("Attempted to set href but gave too few parameters");
+        } else if (parameters[1].is_empty() && parameters[2].is_empty()) {
+            // Clear hyperlink
+            m_current_attribute.href = String();
+            m_current_attribute.href_id = String();
         } else {
-            unimplemented_osc_sequence(parameters, last_byte);
+            m_current_attribute.href = stringview_ify(2);
+            // FIXME: Respect the provided ID
+            m_current_attribute.href_id = String::number(m_next_href_id++);
         }
-    } else {
+#endif
+        break;
+    case 9:
+        if (parameters.size() < 2)
+            dbgln("Atttempted to set window progress but gave too few parameters");
+        else if (parameters.size() == 2)
+            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), 0);
+        else
+            m_client.set_window_progress(stringview_ify(1).to_int().value_or(-1), stringview_ify(2).to_int().value_or(0));
+        break;
+    default:
         unimplemented_osc_sequence(parameters, last_byte);
     }
 }
 
-void Terminal::dcs_hook(Parameters parameters, Intermediates intermediates, bool ignore, u8 last_byte)
+void Terminal::dcs_hook(Parameters, Intermediates, bool, u8)
 {
     dbgln("Received DCS parameters, but we don't support it yet");
-    (void)parameters;
-    (void)last_byte;
-    (void)intermediates;
-    (void)ignore;
 }
 
 void Terminal::receive_dcs_char(u8 byte)
 {
     dbgln_if(TERMINAL_DEBUG, "DCS string character {:c}", byte);
-    (void)byte;
 }
 
 void Terminal::execute_dcs_sequence()
