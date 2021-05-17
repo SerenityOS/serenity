@@ -6,10 +6,9 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Random.h>
 #include <LibCrypto/PK/Code/Code.h>
-
-static constexpr u8 zeros[] { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 namespace Crypto {
 namespace PK {
@@ -44,7 +43,9 @@ public:
             return;
         }
 
-        m_buffer.overwrite(0, zeros, 8);
+        constexpr Array<u8, 8> zeros {};
+
+        m_buffer.overwrite(0, zeros.data(), 8);
         m_buffer.overwrite(8, message_hash.data, HashFunction::DigestSize);
         m_buffer.overwrite(8 + HashFunction::DigestSize, salt, SaltLength);
 
