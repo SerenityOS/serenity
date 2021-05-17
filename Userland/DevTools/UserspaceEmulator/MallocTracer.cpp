@@ -68,7 +68,7 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
             }));
         auto& malloc_data = *mmap_region.malloc_metadata();
 
-        bool is_chunked_block = malloc_data.chunk_size <= size_classes[num_size_classes - 1];
+        bool is_chunked_block = malloc_data.chunk_size <= size_classes[size_classes.size() - 1];
         if (is_chunked_block)
             malloc_data.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data.chunk_size);
         else
@@ -92,7 +92,7 @@ ALWAYS_INLINE Mallocation* MallocRegionMetadata::mallocation_for_address(FlatPtr
 
 ALWAYS_INLINE Optional<size_t> MallocRegionMetadata::chunk_index_for_address(FlatPtr address) const
 {
-    bool is_chunked_block = chunk_size <= size_classes[num_size_classes - 1];
+    bool is_chunked_block = chunk_size <= size_classes[size_classes.size() - 1];
     if (!is_chunked_block) {
         // This is a BigAllocationBlock
         return 0;
