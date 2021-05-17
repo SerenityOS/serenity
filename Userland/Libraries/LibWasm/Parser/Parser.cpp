@@ -82,7 +82,7 @@ struct ParseUntilAnyOfResult {
     Vector<T> values;
 };
 template<typename T, u8... terminators, typename... Args>
-static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args... args) requires(requires(InputStream& stream, Args... args) { T::parse(stream, args...); })
+static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& stream, Args&... args) requires(requires(InputStream& stream, Args... args) { T::parse(stream, args...); })
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger;
     ReconsumableStream new_stream { stream };
@@ -305,7 +305,8 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
                 result.value().values.append(Instruction { Instructions::structured_end });
 
                 // Transform op(..., instr*) -> op(...) instr* op(end(ip))
-                result.value().values.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, ++ip, {} } });
+                result.value().values.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, ip.value(), {} } });
+                ++ip;
                 return result.release_value().values;
             }
 
@@ -314,7 +315,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
             instructions.append(result.release_value().values);
             instructions.append(Instruction { Instructions::structured_else });
             ++ip;
-            else_ip = ip;
+            else_ip = ip.value();
         }
         // if with else
         {
@@ -324,7 +325,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
             instructions.append(result.release_value().values);
             instructions.append(Instruction { Instructions::structured_end });
             ++ip;
-            end_ip = ip;
+            end_ip = ip.value();
         }
 
         instructions.prepend(Instruction { opcode, StructuredInstructionArgs { BlockType { block_type.release_value() }, end_ip, else_ip } });

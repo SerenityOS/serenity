@@ -28,10 +28,12 @@ void Interpreter::interpret(Configuration& configuration)
 
     while (current_ip_value < max_ip_value) {
         auto& instruction = instructions[current_ip_value.value()];
+        auto old_ip = current_ip_value;
         interpret(configuration, current_ip_value, instruction);
         if (m_do_trap)
             return;
-        ++current_ip_value;
+        if (current_ip_value == old_ip) // If no jump occurred
+            ++current_ip_value;
     }
 }
 
@@ -46,18 +48,19 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
     size_t drop_count = index.value() + 1;
 
     for (; !configuration.stack().is_empty();) {
-        auto entry = configuration.stack().pop();
+        auto& entry = configuration.stack().peek();
         if (entry.has<NonnullOwnPtr<Label>>()) {
             if (drop_count-- == 0)
                 break;
         }
+        configuration.stack().pop();
     }
 
     // Push results in reverse
     for (size_t i = results.size(); i > 0; --i)
         configuration.stack().push(move(static_cast<Vector<NonnullOwnPtr<Value>>&>(results)[i - 1]));
 
-    configuration.ip() = label->continuation() + 1;
+    configuration.ip() = label->continuation();
 }
 
 ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const Instruction& instruction, size_t size)
@@ -321,7 +324,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
-        configuration.stack().push(make<Label>(arity, ip.value() + 1));
+        configuration.stack().push(make<Label>(arity, ip.value()));
         return;
     }
     case Instructions::if_.value(): {
