@@ -30,10 +30,12 @@ public:
 
 public:
     Function<void(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&)> set_declarations_of_document_callback;
+    Function<void(const String&, Vector<String>&&)> set_todo_entries_of_document_callback;
 
 protected:
     const FileDB& filedb() const { return m_filedb; }
     void set_declarations_of_document(const String&, Vector<GUI::AutocompleteProvider::Declaration>&&);
+    void set_todo_entries_of_document(const String&, Vector<String>&&);
     const HashMap<String, Vector<GUI::AutocompleteProvider::Declaration>>& all_declarations() const { return m_all_declarations; }
 
 private:
