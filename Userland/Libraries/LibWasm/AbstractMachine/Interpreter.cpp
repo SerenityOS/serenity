@@ -211,32 +211,35 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     } while (false)
 
 template<typename T>
-static T read_value(ReadonlyBytes data)
+T Interpreter::read_value(ReadonlyBytes data)
 {
     T value;
     InputMemoryStream stream { data };
     auto ok = IsSigned<T> ? LEB128::read_signed(stream, value) : LEB128::read_unsigned(stream, value);
-    VERIFY(ok);
+    if (stream.handle_any_error() || !ok)
+        m_do_trap = true;
     return value;
 }
 
 template<>
-float read_value<float>(ReadonlyBytes data)
+float Interpreter::read_value<float>(ReadonlyBytes data)
 {
     InputMemoryStream stream { data };
     LittleEndian<u32> raw_value;
     stream >> raw_value;
-    VERIFY(!stream.has_any_error());
+    if (stream.handle_any_error())
+        m_do_trap = true;
     return bit_cast<float>(static_cast<u32>(raw_value));
 }
 
 template<>
-double read_value<double>(ReadonlyBytes data)
+double Interpreter::read_value<double>(ReadonlyBytes data)
 {
     InputMemoryStream stream { data };
     LittleEndian<u64> raw_value;
     stream >> raw_value;
-    VERIFY(!stream.has_any_error());
+    if (stream.handle_any_error())
+        m_do_trap = true;
     return bit_cast<double>(static_cast<u64>(raw_value));
 }
 
