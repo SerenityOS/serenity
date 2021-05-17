@@ -115,6 +115,8 @@ public:
             [&](auto value) {
                 if constexpr (IsSame<T, decltype(value)>)
                     result = value;
+                else if constexpr (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)
+                    result = value;
             },
             [&](const FunctionAddress& address) {
                 if constexpr (IsSame<T, FunctionAddress>)
