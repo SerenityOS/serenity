@@ -31,8 +31,11 @@ private:
         SerialDevice::Baud baud_rate { SerialDevice::Baud::Baud38400 };
     };
 
-    static constexpr BoardDefinition board_definitions[1] = {
-        { { (u16)PCIVendorID::WCH, 0x3253 }, "WCH CH382 2S", 2, 0, 0xC0, 8, SerialDevice::Baud::Baud115200 }
+    static constexpr BoardDefinition board_definitions[4] = {
+        { { (u16)PCIVendorID::WCH, 0x3253 }, "WCH CH382 2S", 2, 0, 0xC0, 8, SerialDevice::Baud::Baud115200 },
+        { { (u16)PCIVendorID::RedHat, 0x0002 }, "QEMU PCI 16550A", 1, 0, 0, 8, SerialDevice::Baud::Baud115200 },
+        { { (u16)PCIVendorID::RedHat, 0x0003 }, "QEMU PCI Dual-port 16550A", 2, 0, 0, 8, SerialDevice::Baud::Baud115200 },
+        { { (u16)PCIVendorID::RedHat, 0x0004 }, "QEMU PCI Quad-port 16550A", 4, 0, 0, 8, SerialDevice::Baud::Baud115200 }
     };
 };
 
