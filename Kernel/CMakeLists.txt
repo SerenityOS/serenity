@@ -383,7 +383,6 @@ endif()
 target_link_libraries(Kernel kernel_heap gcc stdc++)
 add_dependencies(Kernel boot kernel_heap)
 install(TARGETS Kernel RUNTIME DESTINATION boot)
-serenity_add_ak_precompiled_headers_to_target(Kernel)
 
 add_custom_command(
     TARGET Kernel
