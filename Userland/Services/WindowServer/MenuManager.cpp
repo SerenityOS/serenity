@@ -291,7 +291,7 @@ void MenuManager::set_hovered_menu(Menu* menu)
 
 void MenuManager::open_menu(Menu& menu, bool as_current_menu)
 {
-    if (is_open(menu)) {
+    if (menu.is_open()) {
         if (as_current_menu || current_menu() != &menu) {
             // This menu is already open. If requested, or if the current
             // window doesn't match this one, then set it to this

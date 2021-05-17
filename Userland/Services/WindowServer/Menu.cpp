@@ -658,4 +658,9 @@ void Menu::set_hovered_index(int index, bool make_input)
     }
 }
 
+bool Menu::is_open() const
+{
+    return MenuManager::the().is_open(*this);
+}
+
 }
