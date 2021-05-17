@@ -14,10 +14,19 @@
 
 namespace Wasm {
 
-#define TRAP_IF_NOT(x)      \
-    do {                    \
-        if (trap_if_not(x)) \
-            return;         \
+#define TRAP_IF_NOT(x)                                                                         \
+    do {                                                                                       \
+        if (trap_if_not(x)) {                                                                  \
+            dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
+            return;                                                                            \
+        }                                                                                      \
+    } while (false)
+
+#define TRAP_IF_NOT_NORETURN(x)                                                                \
+    do {                                                                                       \
+        if (trap_if_not(x)) {                                                                  \
+            dbgln_if(WASM_TRACE_DEBUG, "Trapped because {} failed, at line {}", #x, __LINE__); \
+        }                                                                                      \
     } while (false)
 
 void Interpreter::interpret(Configuration& configuration)
@@ -56,9 +65,8 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
         configuration.stack().pop();
     }
 
-    // Push results in reverse
-    for (size_t i = results.size(); i > 0; --i)
-        configuration.stack().push(move(static_cast<Vector<NonnullOwnPtr<Value>>&>(results)[i - 1]));
+    for (auto& result : results)
+        configuration.stack().push(move(result));
 
     configuration.ip() = label->continuation();
 }
@@ -269,13 +277,12 @@ struct ConvertToRaw<double> {
 Vector<NonnullOwnPtr<Value>> Interpreter::pop_values(Configuration& configuration, size_t count)
 {
     Vector<NonnullOwnPtr<Value>> results;
-    // Pop results in order
     for (size_t i = 0; i < count; ++i) {
         auto top_of_stack = configuration.stack().pop();
         if (auto value = top_of_stack.get_pointer<NonnullOwnPtr<Value>>())
-            results.append(move(*value));
+            results.prepend(move(*value));
         else
-            trap_if_not(value);
+            TRAP_IF_NOT_NORETURN(value);
     }
     return results;
 }
@@ -361,9 +368,8 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
                 break;
         }
 
-        // Push results in reverse
-        for (size_t i = 1; i < results.size() + 1; ++i)
-            configuration.stack().push(move(static_cast<Vector<NonnullOwnPtr<Value>>&>(results)[results.size() - i]));
+        for (auto& result : results)
+            configuration.stack().push(move(result));
 
         if (instruction.opcode() == Instructions::structured_end)
             return;
