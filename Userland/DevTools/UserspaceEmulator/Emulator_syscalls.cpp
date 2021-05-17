@@ -714,9 +714,11 @@ int Emulator::virt$getsockname(FlatPtr params_addr)
     mmu().copy_from_vm(&addrlen, (FlatPtr)params.addrlen, sizeof(socklen_t));
     VERIFY(addrlen <= sizeof(addr));
     auto rc = getsockname(params.sockfd, (sockaddr*)&addr, &addrlen);
-    mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
-    mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
-    return rc;
+    if (rc == 0) {
+        mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
+        mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
+    }
+    return rc < 0 ? -errno : rc;
 }
 
 int Emulator::virt$getpeername(FlatPtr params_addr)
@@ -728,9 +730,11 @@ int Emulator::virt$getpeername(FlatPtr params_addr)
     mmu().copy_from_vm(&addrlen, (FlatPtr)params.addrlen, sizeof(socklen_t));
     VERIFY(addrlen <= sizeof(addr));
     auto rc = getpeername(params.sockfd, (sockaddr*)&addr, &addrlen);
-    mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
-    mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
-    return rc;
+    if (rc == 0) {
+        mmu().copy_to_vm((FlatPtr)params.addr, &addr, sizeof(addr));
+        mmu().copy_to_vm((FlatPtr)params.addrlen, &addrlen, sizeof(addrlen));
+    }
+    return rc < 0 ? -errno : rc;
 }
 
 int Emulator::virt$getgroups(ssize_t count, FlatPtr groups)
