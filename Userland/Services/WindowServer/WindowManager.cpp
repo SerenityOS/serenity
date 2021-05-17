@@ -709,10 +709,11 @@ bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Windo
 
     if (m_resize_window->resize_aspect_ratio().has_value()) {
         auto& ratio = m_resize_window->resize_aspect_ratio().value();
+        auto base_size = m_resize_window->base_size();
         if (abs(change_w) > abs(change_h)) {
-            new_rect.set_height(new_rect.width() * ratio.height() / ratio.width());
+            new_rect.set_height(base_size.height() + (new_rect.width() - base_size.width()) * ratio.height() / ratio.width());
         } else {
-            new_rect.set_width(new_rect.height() * ratio.width() / ratio.height());
+            new_rect.set_width(base_size.width() + (new_rect.height() - base_size.height()) * ratio.width() / ratio.height());
         }
     }
 
