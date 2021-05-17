@@ -492,8 +492,10 @@ void Process::finalize()
     if (is_dumpable()) {
         if (m_should_dump_core)
             dump_core();
-        if (m_perf_event_buffer)
+        if (m_perf_event_buffer) {
             dump_perfcore();
+            TimeManagement::the().disable_profile_timer();
+        }
     }
 
     m_threads_for_coredump.clear();
