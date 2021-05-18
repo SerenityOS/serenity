@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include <AK/AllOf.h>
-#include <AK/Array.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/Types.h>
 
@@ -16,10 +14,18 @@
 #define MALLOC_SCRUB_BYTE 0xdc
 #define FREE_SCRUB_BYTE 0xed
 
-static constexpr Array<unsigned short, 13> size_classes { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752 };
-static constexpr auto malloc_alignment = 8;
-static_assert(all_of(size_classes.begin(), size_classes.end(),
-    [](const auto val) { return val % malloc_alignment == 0; }));
+static constexpr unsigned short size_classes[] = { 8, 16, 32, 64, 128, 256, 504, 1016, 2032, 4088, 8184, 16376, 32752, 0 };
+static constexpr size_t num_size_classes = (sizeof(size_classes) / sizeof(unsigned short)) - 1;
+
+consteval bool check_size_classes_alignment()
+{
+    for (size_t i = 0; i < num_size_classes; i++) {
+        if ((size_classes[i] % 8) != 0)
+            return false;
+    }
+    return true;
+}
+static_assert(check_size_classes_alignment());
 
 struct CommonHeader {
     size_t m_magic;
