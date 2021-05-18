@@ -12,6 +12,8 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGfx/Palette.h>
 
+REGISTER_WIDGET(GUI, IconView);
+
 namespace GUI {
 
 IconView::IconView()
