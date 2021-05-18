@@ -5,6 +5,7 @@
  */
 
 #include "FuzzyHaystackModel.h"
+#include <AK/FuzzyMatch.h>
 #include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <Applications/FuzzySearch/FuzzySearchGML.h>
@@ -67,8 +68,7 @@ int main(int argc, char* argv[])
     Vector<HaystackEntry> haystack;
 
     bool frameless = false;
-    FuzzySearchAlgorithms::SearchOptions options { false };
-
+    FuzzyMatchOptions options { false };
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Fuzzy search on stdin");
     args_parser.add_option(options.ignore_case, "ignore case distinctions in patterns and data", "ignore-case", 'i');

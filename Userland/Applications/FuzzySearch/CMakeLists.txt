@@ -4,7 +4,6 @@ set(SOURCES
     main.cpp
     FuzzySearchGML.h
     FuzzyHaystackModel.h
-    FuzzySearchAlgorithms.cpp
 )
 
 serenity_app(FuzzySearch ICON app-fuzzy-search)

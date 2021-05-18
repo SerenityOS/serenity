@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "FuzzySearchAlgorithms.h"
+#include <AK/FuzzyMatch.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
@@ -15,12 +15,12 @@
 
 struct HaystackEntry {
     String text;
-    double score { 0 };
+    ssize_t score { 0 };
 };
 
 class FuzzyHaystackModel final : public GUI::Model {
 public:
-    static NonnullRefPtr<FuzzyHaystackModel> create(const Vector<HaystackEntry>& haystack, const FuzzySearchAlgorithms::SearchOptions& options)
+    static NonnullRefPtr<FuzzyHaystackModel> create(const Vector<HaystackEntry>& haystack, const FuzzyMatchOptions& options)
     {
         return adopt_ref(*new FuzzyHaystackModel(haystack, options));
     }
@@ -33,7 +33,7 @@ public:
     {
         m_filtered_haystack.clear_with_capacity();
         for (auto& entry : m_haystack) {
-            entry.score = FuzzySearchAlgorithms::fzf_match_v1(entry.text, m_needle, m_options);
+            entry.score = fuzzy_match(entry.text, m_needle, m_options);
             if (entry.score >= 0)
                 m_filtered_haystack.append(&entry);
         }
@@ -61,7 +61,7 @@ public:
     int unfiltered_row_count() const { return m_haystack.size(); }
 
 private:
-    explicit FuzzyHaystackModel(const Vector<HaystackEntry>& haystack, const FuzzySearchAlgorithms::SearchOptions& options)
+    explicit FuzzyHaystackModel(const Vector<HaystackEntry>& haystack, const FuzzyMatchOptions& options)
         : m_haystack(move(haystack))
         , m_options(move(options))
 
@@ -73,6 +73,6 @@ private:
 
     Vector<HaystackEntry*> m_filtered_haystack;
     Vector<HaystackEntry> m_haystack;
-    FuzzySearchAlgorithms::SearchOptions m_options { false };
+    FuzzyMatchOptions m_options { false };
     String m_needle;
 };
