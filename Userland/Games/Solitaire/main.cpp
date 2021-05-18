@@ -50,10 +50,18 @@ int main(int argc, char** argv)
     window->set_title("Solitaire");
 
     auto mode = static_cast<Solitaire::Mode>(config->read_num_entry("Settings", "Mode", static_cast<int>(Solitaire::Mode::SingleCardDraw)));
+    auto high_score = static_cast<u32>(config->read_num_entry("Game", "HighScore", 0));
 
     auto update_mode = [&](Solitaire::Mode new_mode) {
         mode = new_mode;
         config->write_num_entry("Settings", "Mode", static_cast<int>(mode));
+        if (!config->sync())
+            GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
+    };
+
+    auto update_high_score = [&](u32 new_high_score) {
+        high_score = new_high_score;
+        config->write_num_entry("Game", "HighScore", static_cast<int>(high_score));
         if (!config->sync())
             GUI::MessageBox::show(window, "Configuration could not be saved", "Error", GUI::MessageBox::Type::Error);
     };
@@ -84,6 +92,9 @@ int main(int argc, char** argv)
 
     game.on_score_update = [&](uint32_t score) {
         statusbar.set_text(0, String::formatted("Score: {}", score));
+
+        if (score > high_score)
+            update_high_score(score);
     };
 
     uint64_t seconds_elapsed = 0;
