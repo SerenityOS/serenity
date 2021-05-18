@@ -7,13 +7,16 @@
 
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/PNGWriter.h>
 #include <unistd.h>
 
 class MandelbrotSet {
@@ -126,6 +129,9 @@ private:
 
 class Mandelbrot : public GUI::Widget {
     C_OBJECT(Mandelbrot)
+
+    void export_image(String const& export_path);
+
 private:
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
@@ -203,15 +209,29 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
     m_set.resize(event.size());
 }
 
+void Mandelbrot::export_image(String const& export_path)
+{
+    auto png = Gfx::PNGWriter::encode(m_set.bitmap());
+    auto file = fopen(export_path.characters(), "wb");
+    if (!file) {
+        GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot", GUI::MessageBox::Type::Error);
+        return;
+    }
+    fwrite(png.data(), 1, png.size(), file);
+    fclose(file);
+    GUI::MessageBox::show(window(), "Image was successfully exported.", "Mandelbrot", GUI::MessageBox::Type::Information);
+}
+
 int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath wpath cpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
+#if 0
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
@@ -221,18 +241,27 @@ int main(int argc, char** argv)
         perror("unveil");
         return 1;
     }
+#endif
 
     auto window = GUI::Window::construct();
     window->set_double_buffering_enabled(false);
     window->set_title("Mandelbrot");
     window->set_minimum_size(320, 240);
     window->resize(window->minimum_size() * 2);
+    auto& mandelbrot = window->set_main_widget<Mandelbrot>();
 
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
+    file_menu.add_action(GUI::Action::create("&Export...", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/save.png"),
+        [&](GUI::Action&) {
+            Optional<String> export_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
+            if (!export_path.has_value())
+                return;
+            mandelbrot.export_image(export_path.value());
+        }));
+    file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
     window->set_menubar(move(menubar));
-    window->set_main_widget<Mandelbrot>();
     window->show();
 
     auto app_icon = GUI::Icon::default_icon("app-mandelbrot");
