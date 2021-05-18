@@ -225,6 +225,9 @@ void TLSv12::ensure_hmac(size_t digest_size, bool local)
     case Crypto::Hash::SHA256::DigestSize:
         hash_kind = Crypto::Hash::HashKind::SHA256;
         break;
+    case Crypto::Hash::SHA384::DigestSize:
+        hash_kind = Crypto::Hash::HashKind::SHA384;
+        break;
     case Crypto::Hash::SHA512::DigestSize:
         hash_kind = Crypto::Hash::HashKind::SHA512;
         break;
