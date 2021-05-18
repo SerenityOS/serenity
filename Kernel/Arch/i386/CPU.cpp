@@ -23,6 +23,7 @@
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/Thread.h>
@@ -243,8 +244,11 @@ void page_fault_handler(TrapFrame* trap)
 
     auto current_thread = Thread::current();
 
-    if (current_thread)
+    if (current_thread) {
         current_thread->set_handling_page_fault(true);
+        PerformanceManager::add_page_fault_event(*current_thread, regs);
+    }
+
     ScopeGuard guard = [current_thread] {
         if (current_thread)
             current_thread->set_handling_page_fault(false);
