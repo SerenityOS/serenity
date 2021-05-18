@@ -43,6 +43,7 @@ enum class SignatureAlgorithm : u8 {
 };
 
 enum class CipherAlgorithm {
+    Invalid,
     AES_128_CBC,
     AES_128_GCM,
     AES_128_CCM,
@@ -62,8 +63,9 @@ constexpr size_t cipher_key_size(CipherAlgorithm algorithm)
     case CipherAlgorithm::AES_256_CBC:
     case CipherAlgorithm::AES_256_GCM:
         return 256;
+    case CipherAlgorithm::Invalid:
     default:
-        return 128;
+        return 0;
     }
 }
 
