@@ -70,10 +70,14 @@ function(serenity_bin target_name)
 endfunction()
 
 function(serenity_test test_src sub_dir)
-    cmake_parse_arguments(SERENITY_TEST "CUSTOM_MAIN" "" "LIBS" ${ARGN})
+    cmake_parse_arguments(SERENITY_TEST "MAIN_ALREADY_DEFINED" "CUSTOM_MAIN" "LIBS" ${ARGN})
     set(TEST_SOURCES ${test_src})
-    if (NOT ${SERENITY_TEST_CUSTOM_MAIN})
-        list(APPEND TEST_SOURCES "${CMAKE_SOURCE_DIR}/Userland/Libraries/LibTest/TestMain.cpp")
+    if ("${SERENITY_TEST_CUSTOM_MAIN}" STREQUAL "")
+        set(SERENITY_TEST_CUSTOM_MAIN
+            "${CMAKE_SOURCE_DIR}/Userland/Libraries/LibTest/TestMain.cpp")
+    endif()
+    if (NOT ${SERENITY_TEST_MAIN_ALREADY_DEFINED})
+        list(PREPEND TEST_SOURCES "${SERENITY_TEST_CUSTOM_MAIN}")
     endif()
     get_filename_component(test_name ${test_src} NAME_WE)
     add_executable(${test_name} ${TEST_SOURCES})
@@ -82,6 +86,19 @@ function(serenity_test test_src sub_dir)
         target_link_libraries(${test_name} ${lib})
     endforeach()
     install(TARGETS ${test_name} RUNTIME DESTINATION usr/Tests/${sub_dir})
+endfunction()
+
+
+function(serenity_testjs_test test_src sub_dir)
+    cmake_parse_arguments(SERENITY_TEST "" "CUSTOM_MAIN" "LIBS" ${ARGN})
+    if ("${SERENITY_TEST_CUSTOM_MAIN}" STREQUAL "")
+        set(SERENITY_TEST_CUSTOM_MAIN
+            "${CMAKE_SOURCE_DIR}/Userland/Libraries/LibTest/JavaScriptTestRunnerMain.cpp")
+    endif()
+    list(APPEND SERENITY_TEST_LIBS LibJS LibCore)
+    serenity_test(${test_src} ${sub_dir}
+        CUSTOM_MAIN "${SERENITY_TEST_CUSTOM_MAIN}"
+        LIBS ${SERENITY_TEST_LIBS})
 endfunction()
 
 function(serenity_app target_name)
