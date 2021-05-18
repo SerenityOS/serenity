@@ -18,7 +18,7 @@ struct MD5Digest {
     u8 data[Size];
 
     const u8* immutable_data() const { return data; }
-    size_t data_length() { return Size; }
+    size_t data_length() const { return Size; }
 };
 
 namespace MD5Constants {
