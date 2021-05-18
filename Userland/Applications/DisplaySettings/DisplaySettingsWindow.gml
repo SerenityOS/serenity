@@ -7,8 +7,6 @@
 
     @DisplaySettings::MonitorWidget {
         name: "monitor_widget"
-        fixed_width: 338
-        fixed_height: 248
     }
 
     @GUI::Widget {

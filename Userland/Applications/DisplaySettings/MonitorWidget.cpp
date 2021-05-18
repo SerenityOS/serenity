@@ -14,7 +14,8 @@ namespace DisplaySettings {
 MonitorWidget::MonitorWidget()
 {
     m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/monitor.png");
-    m_monitor_rect = { 8, 9, 320, 180 };
+    m_monitor_rect = { 12, 13, 280, 158 };
+    set_fixed_size(304, 201);
 }
 
 bool MonitorWidget::set_wallpaper(String path)
