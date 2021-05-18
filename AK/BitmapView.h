@@ -6,12 +6,16 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <AK/Optional.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
+
+static constexpr Array bitmask_first_byte = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
+static constexpr Array bitmask_last_byte = { 0x00, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
 
 class BitmapView {
 public:
@@ -48,9 +52,6 @@ public:
         VERIFY(start + len <= m_size);
         if (len == 0)
             return 0;
-
-        static const u8 bitmask_first_byte[8] = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
-        static const u8 bitmask_last_byte[8] = { 0x00, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
 
         size_t count;
         const u8* first = &m_data[start / 8];
