@@ -205,7 +205,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
         headers.set("Accept-Encoding", "gzip, deflate");
 
         for (auto& it : request.headers()) {
-            headers.set(it.key, it.value);
+            headers.set(it.name, it.value);
         }
 
         auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body());
