@@ -56,9 +56,11 @@ static Optional<String> gzip_details(String description, const String& path)
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip", "gzip compressed data", gzip_details)         \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only)  \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json", "JSON data", description_only)                \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/tar", "tape archive", description_only)              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed", "7-Zip archive", description_only) \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi", "MIDI sound", description_only)                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/flac", "FLAC audio", description_only)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/iso-9660", "ISO 9660 CD/DVD image", description_only)      \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/sqlite", "sqlite database", description_only)              \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp", "BMP image data", image_details)                     \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif", "GIF image data", image_details)                     \
@@ -105,7 +107,8 @@ int main(int argc, char** argv)
             all_ok = false;
             continue;
         }
-        auto bytes = file->read(25);
+        // Read accounts for longest possible offset + signature we currently match against.
+        auto bytes = file->read(0x9006);
         auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
         auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes()).value_or(file_name_guess);
         auto human_readable_description = get_description_from_mime_type(mime_type, String(path)).value_or(mime_type);
