@@ -119,9 +119,6 @@ public:
         if (len == 0)
             return;
 
-        static const u8 bitmask_first_byte[8] = { 0xFF, 0xFE, 0xFC, 0xF8, 0xF0, 0xE0, 0xC0, 0x80 };
-        static const u8 bitmask_last_byte[8] = { 0x0, 0x1, 0x3, 0x7, 0xF, 0x1F, 0x3F, 0x7F };
-
         u8* first = &m_data[start / 8];
         u8* last = &m_data[(start + len) / 8];
         u8 byte_mask = bitmask_first_byte[start % 8];
