@@ -19,7 +19,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     , m_target_tile_power(log2(target))
     , m_evil_ai(evil_ai)
 {
-    set_rect({ 0, 0, 200, 150 });
+    set_rect({ 0, 0, 250, 150 });
     set_title("New Game");
     set_icon(parent->icon());
     set_resizable(false);
