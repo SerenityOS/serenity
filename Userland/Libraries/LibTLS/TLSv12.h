@@ -177,7 +177,7 @@ enum ClientVerificationStaus {
     C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)   \
     C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false)   \
     C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
-    C(false, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
+    C(true, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
 
 constexpr SignatureAlgorithm get_signature_algorithm(CipherSuite suite)
 {
@@ -225,6 +225,7 @@ struct Options {
     OPTION_WITH_DEFAULTS(Version, version, Version::V12)
     OPTION_WITH_DEFAULTS(Vector<SignatureAndHashAlgorithm>, supported_signature_algorithms,
         { HashAlgorithm::SHA512, SignatureAlgorithm::RSA },
+        { HashAlgorithm::SHA384, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA256, SignatureAlgorithm::RSA },
         { HashAlgorithm::SHA1, SignatureAlgorithm::RSA });
 
