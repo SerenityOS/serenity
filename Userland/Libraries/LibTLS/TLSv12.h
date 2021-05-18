@@ -179,6 +179,19 @@ enum ClientVerificationStaus {
     C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
     C(false, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
 
+constexpr CipherAlgorithm get_cipher_algorithm(CipherSuite suite)
+{
+    switch (suite) {
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return cipher;
+        ENUMERATE_CIPHERS(C)
+#undef C
+    default:
+        return CipherAlgorithm::Invalid;
+    }
+}
+
 struct Options {
     static Vector<CipherSuite> default_usable_cipher_suites()
     {
