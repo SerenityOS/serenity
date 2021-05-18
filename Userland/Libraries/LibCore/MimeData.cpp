@@ -93,6 +93,9 @@ String guess_mime_type_based_on_filename(const StringView& path)
     __ENUMERATE_MIME_TYPE_HEADER(gif_87, "image/gif", 0, 6, 'G', 'I', 'F', '8', '7', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gif_89, "image/gif", 0, 6, 'G', 'I', 'F', '8', '9', 'a')                                                        \
     __ENUMERATE_MIME_TYPE_HEADER(gzip, "application/gzip", 0, 2, 0x1F, 0x8B)                                                                     \
+    __ENUMERATE_MIME_TYPE_HEADER(iso9660_0, "extra/iso-9660", 0x8001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
+    __ENUMERATE_MIME_TYPE_HEADER(iso9660_1, "extra/iso-9660", 0x8801, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
+    __ENUMERATE_MIME_TYPE_HEADER(iso9660_2, "extra/iso-9660", 0x9001, 5, 0x43, 0x44, 0x30, 0x30, 0x31)                                           \
     __ENUMERATE_MIME_TYPE_HEADER(jpeg, "image/jpeg", 0, 4, 0xFF, 0xD8, 0xFF, 0xDB)                                                               \
     __ENUMERATE_MIME_TYPE_HEADER(jpeg_huh, "image/jpeg", 0, 4, 0xFF, 0xD8, 0xFF, 0xEE)                                                           \
     __ENUMERATE_MIME_TYPE_HEADER(jpeg_jfif, "image/jpeg", 0, 12, 0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10, 'J', 'F', 'I', 'F', 0x00, 0x01)             \
@@ -104,6 +107,7 @@ String guess_mime_type_based_on_filename(const StringView& path)
     __ENUMERATE_MIME_TYPE_HEADER(sevenzip, "application/x-7z-compressed", 0, 6, 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C)                              \
     __ENUMERATE_MIME_TYPE_HEADER(shell, "text/x-shellscript", 0, 10, '#', '!', '/', 'b', 'i', 'n', '/', 's', 'h', '\n')                          \
     __ENUMERATE_MIME_TYPE_HEADER(sqlite, "extra/sqlite", 0, 16, 'S', 'Q', 'L', 'i', 't', 'e', ' ', 'f', 'o', 'r', 'm', 'a', 't', ' ', '3', 0x00) \
+    __ENUMERATE_MIME_TYPE_HEADER(tar, "application/tar", 0x101, 5, 0x75, 0x73, 0x74, 0x61, 0x72)                                                 \
     __ENUMERATE_MIME_TYPE_HEADER(tiff, "image/tiff", 0, 4, 'I', 'I', '*', 0x00)                                                                  \
     __ENUMERATE_MIME_TYPE_HEADER(tiff_bigendian, "image/tiff", 0, 4, 'M', 'M', 0x00, '*')
 
