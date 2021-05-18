@@ -100,7 +100,7 @@ private:
     u32 m_count[2] { 0, 0 };
     Bytes m_buffer;
 
-    u8 m_data_buffer[64];
+    u8 m_data_buffer[64] {};
 };
 
 }

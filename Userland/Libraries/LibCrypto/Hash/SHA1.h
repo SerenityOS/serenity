@@ -73,7 +73,7 @@ public:
 private:
     inline void transform(const u8*);
 
-    u8 m_data_buffer[BlockSize];
+    u8 m_data_buffer[BlockSize] {};
     size_t m_data_length { 0 };
 
     u64 m_bit_length { 0 };
