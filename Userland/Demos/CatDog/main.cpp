@@ -53,15 +53,10 @@ int main(int argc, char** argv)
     catdog_widget.set_layout<GUI::VerticalBoxLayout>();
     catdog_widget.layout()->set_spacing(0);
 
-    auto menubar = GUI::Menubar::construct();
-
-    auto& file_menu = menubar->add_menu("&File");
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
-
-    auto& help_menu = menubar->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
-
-    window->set_menubar(move(menubar));
+    auto context_menu = GUI::Menu::construct();
+    context_menu->add_action(GUI::CommonActions::make_about_action("CatDog Demo", app_icon, window));
+    context_menu->add_separator();
+    context_menu->add_action(GUI::CommonActions::make_quit_action([&](auto&) { app->quit(); }));
 
     window->show();
     catdog_widget.track_cursor_globally();
@@ -104,6 +99,10 @@ int main(int argc, char** argv)
             advice_timer->stop();
         else
             advice_timer->start();
+    };
+
+    catdog_widget.on_context_menu_request = [&](GUI::ContextMenuEvent event) {
+        context_menu->popup(event.screen_position());
     };
 
     return app->exec();

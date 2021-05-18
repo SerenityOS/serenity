@@ -137,3 +137,9 @@ void CatDog::track_cursor_globally()
     set_global_cursor_tracking(true);
     GUI::WindowServerConnection::the().set_global_cursor_tracking(window_id, true);
 }
+
+void CatDog::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
