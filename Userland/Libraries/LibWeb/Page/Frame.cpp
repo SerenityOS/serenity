@@ -297,4 +297,20 @@ bool Frame::is_frame_nesting_allowed(URL const& url) const
     return m_frame_nesting_levels.get(url).value_or(0) < 3;
 }
 
+bool Frame::increment_cursor_position_offset()
+{
+    if (!m_cursor_position.increment_offset())
+        return false;
+    reset_cursor_blink_cycle();
+    return true;
+}
+
+bool Frame::decrement_cursor_position_offset()
+{
+    if (!m_cursor_position.decrement_offset())
+        return false;
+    reset_cursor_blink_cycle();
+    return true;
+}
+
 }
