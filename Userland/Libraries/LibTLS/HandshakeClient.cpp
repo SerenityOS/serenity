@@ -25,6 +25,7 @@ bool TLSv12::expand_key()
     }
 
     auto key_size = key_length();
+    VERIFY(key_size);
     auto mac_size = mac_length();
     auto iv_size = iv_length();
 
@@ -71,18 +72,36 @@ bool TLSv12::expand_key()
         }
     }
 
-    if (is_aead) {
-        memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
-        memcpy(m_context.crypto.remote_aead_iv, server_iv, iv_size);
-
-        m_cipher_local = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-        m_cipher_remote = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
-    } else {
+    switch (get_cipher_algorithm(m_context.cipher)) {
+    case CipherAlgorithm::AES_128_CBC:
+    case CipherAlgorithm::AES_256_CBC: {
+        VERIFY(!is_aead);
         memcpy(m_context.crypto.local_iv, client_iv, iv_size);
         memcpy(m_context.crypto.remote_iv, server_iv, iv_size);
 
         m_cipher_local = Crypto::Cipher::AESCipher::CBCMode(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
         m_cipher_remote = Crypto::Cipher::AESCipher::CBCMode(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        break;
+    }
+    case CipherAlgorithm::AES_128_GCM:
+    case CipherAlgorithm::AES_256_GCM: {
+        VERIFY(is_aead);
+        memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
+        memcpy(m_context.crypto.remote_aead_iv, server_iv, iv_size);
+
+        m_cipher_local = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_cipher_remote = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        break;
+    }
+    case CipherAlgorithm::AES_128_CCM:
+        dbgln("Requested unimplemented AES CCM cipher");
+        TODO();
+    case CipherAlgorithm::AES_128_CCM_8:
+        dbgln("Requested unimplemented AES CCM-8 block cipher");
+        TODO();
+    default:
+        dbgln("Requested unknown block cipher");
+        VERIFY_NOT_REACHED();
     }
 
     m_context.crypto.created = 1;
