@@ -97,8 +97,29 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
             }
             modified_data[i + extra_chars] = ch;
         }
-        on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), buffer_bytes + extra_chars);
-        return buffer_bytes;
+        ssize_t bytes_written = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), buffer_bytes + extra_chars);
+        VERIFY(bytes_written != 0);
+        if (bytes_written < 0 || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
+            return bytes_written;
+        if ((size_t)bytes_written == buffer_bytes + extra_chars)
+            return (ssize_t)buffer_bytes;
+
+        // Degenerate case where we converted some newlines and encountered a partial write
+
+        // Calculate where in the input buffer the last character would have been
+        size_t pos_data = 0;
+        for (ssize_t pos_modified_data = 0; pos_modified_data < bytes_written; ++pos_data) {
+            if (data[pos_data] == '\n')
+                pos_modified_data += 2;
+            else
+                pos_modified_data += 1;
+
+            // Handle case where the '\r' got written but not the '\n'
+            // FIXME: Our strategy is to retry writing both. We should really be queuing a write for the corresponding '\n'
+            if (pos_modified_data > bytes_written)
+                --pos_data;
+        }
+        return (ssize_t)pos_data;
     });
 }
 
