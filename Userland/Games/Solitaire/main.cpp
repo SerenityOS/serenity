@@ -77,7 +77,8 @@ int main(int argc, char** argv)
 
     auto& statusbar = *widget.find_descendant_of_type_named<GUI::Statusbar>("statusbar");
     statusbar.set_text(0, "Score: 0");
-    statusbar.set_text(1, "Time: 00:00:00");
+    statusbar.set_text(1, String::formatted("High Score: {}", high_score));
+    statusbar.set_text(2, "Time: 00:00:00");
 
     app->on_action_enter = [&](GUI::Action& action) {
         auto text = action.status_tip();
@@ -93,8 +94,10 @@ int main(int argc, char** argv)
     game.on_score_update = [&](uint32_t score) {
         statusbar.set_text(0, String::formatted("Score: {}", score));
 
-        if (score > high_score)
+        if (score > high_score) {
             update_high_score(score);
+            statusbar.set_text(1, String::formatted("High Score: {}", high_score));
+        }
     };
 
     uint64_t seconds_elapsed = 0;
@@ -106,7 +109,7 @@ int main(int argc, char** argv)
         uint64_t minutes = (seconds_elapsed / 60) % 60;
         uint64_t seconds = seconds_elapsed % 60;
 
-        statusbar.set_text(1, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds));
+        statusbar.set_text(2, String::formatted("Time: {:02}:{:02}:{:02}", hours, minutes, seconds));
     });
 
     game.on_game_start = [&]() {
