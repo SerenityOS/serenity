@@ -416,8 +416,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         if (key == KeyCode::Key_Backspace) {
             auto position = m_frame.cursor_position();
 
-            if (position.offset() == 0)
-                TODO();
+            if (position.offset() == 0) {
+                // FIXME: Move to the previous node and delete the last character there.
+                return true;
+            }
 
             auto new_position = m_frame.cursor_position();
             new_position.set_offset(position.offset() - 1);
@@ -429,8 +431,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         } else if (key == KeyCode::Key_Delete) {
             auto position = m_frame.cursor_position();
 
-            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length())
-                TODO();
+            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length()) {
+                // FIXME: Move to the next node and delete the first character there.
+                return true;
+            }
 
             m_edit_event_handler->handle_delete(DOM::Range::create(*position.node(), position.offset(), *position.node(), position.offset() + 1));
 
@@ -438,8 +442,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         } else if (key == KeyCode::Key_Right) {
             auto position = m_frame.cursor_position();
 
-            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length())
-                TODO();
+            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length()) {
+                // FIXME: Move to the next node.
+                return true;
+            }
 
             auto new_position = m_frame.cursor_position();
             new_position.set_offset(position.offset() + 1);
@@ -449,8 +455,10 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
         } else if (key == KeyCode::Key_Left) {
             auto position = m_frame.cursor_position();
 
-            if (position.offset() == 0)
-                TODO();
+            if (position.offset() == 0) {
+                // FIXME: Move to the previous node.
+                return true;
+            }
 
             auto new_position = m_frame.cursor_position();
             new_position.set_offset(new_position.offset() - 1);
