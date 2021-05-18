@@ -27,6 +27,7 @@
 
 namespace Browser {
 
+String g_search_engine;
 String g_home_url;
 bool g_single_process = false;
 
