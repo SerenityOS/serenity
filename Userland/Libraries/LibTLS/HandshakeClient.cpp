@@ -109,7 +109,7 @@ bool TLSv12::expand_key()
     return true;
 }
 
-bool TLSv12::compute_master_secret(size_t length)
+bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
 {
     if (m_context.premaster_key.size() == 0 || length < 48) {
         dbgln("there's no way I can make a master secret like this");
@@ -168,7 +168,7 @@ Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringV
     return {};
 }
 
-void TLSv12::build_random(PacketBuilder& builder)
+void TLSv12::build_rsa_pre_master_secret(PacketBuilder& builder)
 {
     u8 random_bytes[48];
     size_t bytes = 48;
@@ -215,7 +215,7 @@ void TLSv12::build_random(PacketBuilder& builder)
         print_buffer(outbuf);
     }
 
-    if (!compute_master_secret(bytes)) {
+    if (!compute_master_secret_from_pre_master_secret(bytes)) {
         dbgln("oh noes we could not derive a master key :(");
         return;
     }
@@ -282,7 +282,28 @@ ByteBuffer TLSv12::build_client_key_exchange()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
-    build_random(builder);
+
+    switch (get_signature_algorithm(m_context.cipher)) {
+    case SignatureAlgorithm::Anonymous:
+        dbgln("Client key exchange for Anonymous signature is not implemented");
+        TODO();
+        break;
+    case SignatureAlgorithm::RSA:
+        build_rsa_pre_master_secret(builder);
+        break;
+    case SignatureAlgorithm::DSA:
+        dbgln("Client key exchange for DSA signature is not implemented");
+        TODO();
+        break;
+    case SignatureAlgorithm::ECDSA:
+        dbgln("Client key exchange for ECDSA signature is not implemented");
+        TODO();
+        break;
+    default:
+        dbgln("Unknonwn client key exchange signature algorithm");
+        VERIFY_NOT_REACHED();
+        break;
+    }
 
     m_context.connection_status = ConnectionStatus::KeyExchange;
 

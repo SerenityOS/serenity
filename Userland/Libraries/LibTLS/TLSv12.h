@@ -179,6 +179,19 @@ enum ClientVerificationStaus {
     C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
     C(false, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
 
+constexpr SignatureAlgorithm get_signature_algorithm(CipherSuite suite)
+{
+    switch (suite) {
+#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
+    case suite:                                                           \
+        return signature;
+        ENUMERATE_CIPHERS(C)
+#undef C
+    default:
+        return SignatureAlgorithm::Anonymous;
+    }
+}
+
 constexpr CipherAlgorithm get_cipher_algorithm(CipherSuite suite)
 {
     switch (suite) {
@@ -389,7 +402,7 @@ private:
     ByteBuffer build_alert(bool critical, u8 code);
     ByteBuffer build_change_cipher_spec();
     ByteBuffer build_verify_request();
-    void build_random(PacketBuilder&);
+    void build_rsa_pre_master_secret(PacketBuilder&);
 
     bool flush();
     void write_into_socket();
@@ -465,7 +478,7 @@ private:
 
     bool expand_key();
 
-    bool compute_master_secret(size_t length);
+    bool compute_master_secret_from_pre_master_secret(size_t length);
 
     Optional<size_t> verify_chain_and_get_matching_certificate(const StringView& host) const;
 
