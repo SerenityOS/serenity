@@ -1,16 +1,19 @@
-loadPage("file:///res/html/misc/blank.html");
+describe("head", () => {
+    loadLocalPage("/res/html/misc/blank.html");
 
-afterInitialPageLoad(() => {
-    test("Basic functionality", () => {
-        expect(document.head).not.toBeNull();
-        // FIXME: Add this in once HTMLHeadElement's constructor is implemented.
-        //expect(document.head).toBeInstanceOf(HTMLHeadElement);
-        expect(document.head.nodeName).toBe("HEAD");
-    });
+    afterInitialPageLoad(page => {
+        test("Basic functionality", () => {
+            expect(page.document.head).not.toBeNull();
+            // FIXME: Add this in once HTMLHeadElement's constructor is implemented.
+            //expect(page.document.head).toBeInstanceOf(HTMLHeadElement);
+            expect(page.document.head.nodeName).toBe("HEAD");
+        });
 
-    // FIXME: Add this in once removeChild is implemented.
-    test.skip("Nullable", () => {
-        document.documentElement.removeChild(document.head);
-        expect(document.head).toBeNull();
+        // FIXME: Add this in once removeChild is implemented.
+        test.skip("Nullable", () => {
+            page.document.documentElement.removeChild(page.document.head);
+            expect(page.document.head).toBeNull();
+        });
     });
+    waitForPageToLoad();
 });

@@ -1,18 +1,22 @@
-loadPage("file:///res/html/misc/blank.html");
-
-afterInitialPageLoad(() => {
-    test("Basic functionality", () => {
-        expect(document.compatMode).toBe("CSS1Compat");
-        expect(document.doctype).not.toBeNull();
-        expect(document.doctype.name).toBe("html");
-        expect(document.doctype.publicId).toBe("");
-        expect(document.doctype.systemId).toBe("");
+describe("doctype", () => {
+    loadLocalPage("/res/html/misc/blank.html");
+    afterInitialPageLoad(page => {
+        test("Basic functionality", () => {
+            expect(page.document.compatMode).toBe("CSS1Compat");
+            expect(page.document.doctype).not.toBeNull();
+            expect(page.document.doctype.name).toBe("html");
+            expect(page.document.doctype.publicId).toBe("");
+            expect(page.document.doctype.systemId).toBe("");
+        });
     });
+    waitForPageToLoad();
 
-    libweb_tester.changePage("file:///res/html/misc/blank-no-doctype.html");
-
-    test("Quirks mode", () => {
-        expect(document.compatMode).toBe("BackCompat");
-        expect(document.doctype).toBeNull();
+    loadLocalPage("/res/html/misc/blank-no-doctype.html");
+    afterInitialPageLoad(page => {
+        test("Quirks mode", () => {
+            expect(page.document.compatMode).toBe("BackCompat");
+            expect(page.document.doctype).toBeNull();
+        });
     });
+    waitForPageToLoad();
 });
