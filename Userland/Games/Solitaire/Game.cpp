@@ -96,6 +96,9 @@ void Game::stop_game_over_animation()
 
 void Game::setup(Mode mode)
 {
+    if (m_new_game_animation)
+        stop_timer();
+
     stop_game_over_animation();
     m_mode = mode;
 
