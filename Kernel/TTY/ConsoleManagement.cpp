@@ -15,6 +15,13 @@ namespace Kernel {
 
 static AK::Singleton<ConsoleManagement> s_the;
 
+void ConsoleManagement::resolution_was_changed()
+{
+    for (auto& console : m_consoles) {
+        console.refresh_after_resolution_change();
+    }
+}
+
 bool ConsoleManagement::is_initialized()
 {
     if (!s_the.is_initialized())

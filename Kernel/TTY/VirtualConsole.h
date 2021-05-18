@@ -60,6 +60,7 @@ class VirtualConsole final : public TTY
 public:
     struct Line {
         bool dirty;
+        size_t length;
     };
 
     struct Cell {
@@ -79,6 +80,8 @@ public:
     virtual ~VirtualConsole() override;
 
     size_t index() const { return m_index; }
+
+    void refresh_after_resolution_change();
 
     bool is_graphical() { return m_graphical; }
     void set_graphical(bool graphical);

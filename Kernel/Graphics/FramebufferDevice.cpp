@@ -30,15 +30,15 @@ KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, c
     if (range.size() != page_round_up(framebuffer_size_in_bytes()))
         return EOVERFLOW;
 
-    // FIXME: We rely on the fact that only the WindowServer will mmap the framebuffer
-    // and only once when starting to work with it. If other program wants to do so, we need to fix this.
-    VERIFY(!m_userspace_framebuffer_region);
-    VERIFY(!m_userspace_real_framebuffer_vmobject);
-
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, page_round_up(framebuffer_size_in_bytes()));
     if (!vmobject)
         return ENOMEM;
     m_userspace_real_framebuffer_vmobject = vmobject;
+
+    m_real_framebuffer_vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, page_round_up(framebuffer_size_in_bytes()));
+    m_swapped_framebuffer_vmobject = AnonymousVMObject::create_with_size(page_round_up(framebuffer_size_in_bytes()), AllocationStrategy::AllocateNow);
+    m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Region::Access::Read | Region::Access::Write);
+    m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Region::Access::Read | Region::Access::Write);
 
     auto result = process.space().allocate_region_with_vmobject(
         range,

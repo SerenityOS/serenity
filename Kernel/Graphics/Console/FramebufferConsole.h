@@ -16,6 +16,8 @@ class FramebufferConsole final : public Console {
 public:
     static NonnullRefPtr<FramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t pitch);
 
+    void set_resolution(size_t width, size_t height, size_t pitch);
+
     virtual size_t bytes_per_base_glyph() const override;
     virtual size_t chars_per_line() const override;
 
