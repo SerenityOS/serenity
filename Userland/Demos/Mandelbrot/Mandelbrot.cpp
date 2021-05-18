@@ -221,7 +221,9 @@ void Mandelbrot::resize_event(GUI::ResizeEvent& event)
 
 void Mandelbrot::export_image(String const& export_path)
 {
+    m_set.resize(Gfx::IntSize { 1920, 1080 });
     auto png = Gfx::PNGWriter::encode(m_set.bitmap());
+    m_set.resize(size());
     auto file = fopen(export_path.characters(), "wb");
     if (!file) {
         GUI::MessageBox::show(window(), String::formatted("Could not open '{}' for writing.", export_path), "Mandelbrot", GUI::MessageBox::Type::Error);
