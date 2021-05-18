@@ -32,6 +32,7 @@
 #include <LibWeb/XHR/EventNames.h>
 #include <LibWeb/XHR/ProgressEvent.h>
 #include <LibWeb/XHR/XMLHttpRequest.h>
+#include <LibHTTP/Header.h>
 
 namespace Web::XHR {
 
@@ -372,39 +373,6 @@ Optional<MimeSniff::MimeType> XMLHttpRequest::extract_mime_type(HashMap<String, 
     return mime_type;
 }
 
-// https://fetch.spec.whatwg.org/#forbidden-header-name
-static bool is_forbidden_header_name(const String& header_name)
-{
-    if (header_name.starts_with("Proxy-", CaseSensitivity::CaseInsensitive) || header_name.starts_with("Sec-", CaseSensitivity::CaseInsensitive))
-        return true;
-
-    auto lowercase_header_name = header_name.to_lowercase();
-    return lowercase_header_name.is_one_of("accept-charset", "accept-encoding", "access-control-request-headers", "access-control-request-method", "connection", "content-length", "cookie", "cookie2", "date", "dnt", "expect", "host", "keep-alive", "origin", "referer", "te", "trailer", "transfer-encoding", "upgrade", "via");
-}
-
-// https://fetch.spec.whatwg.org/#forbidden-method
-static bool is_forbidden_method(const String& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    return lowercase_method.is_one_of("connect", "trace", "track");
-}
-
-// https://fetch.spec.whatwg.org/#concept-method-normalize
-static String normalize_method(const String& method)
-{
-    auto lowercase_method = method.to_lowercase();
-    if (lowercase_method.is_one_of("delete", "get", "head", "options", "post", "put"))
-        return method.to_uppercase();
-    return method;
-}
-
-// https://fetch.spec.whatwg.org/#concept-header-value-normalize
-static String normalize_header_value(const String& header_value)
-{
-    // FIXME: I'm not sure if this is the right trim, it should only be HTML whitespace bytes.
-    return header_value.trim_whitespace();
-}
-
 // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-setrequestheader
 DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, const String& value)
 {
@@ -417,11 +385,11 @@ DOM::ExceptionOr<void> XMLHttpRequest::set_request_header(const String& header, 
     // FIXME: Check if name matches the name production.
     // FIXME: Check if value matches the value production.
 
-    if (is_forbidden_header_name(header))
+    if (HTTP::is_forbidden_header_name(header))
         return {};
 
     // FIXME: Combine
-    m_request_headers.set(header, normalize_header_value(value));
+    m_request_headers.set(header, HTTP::normalize_header_value(value));
     return {};
 }
 
@@ -434,10 +402,10 @@ DOM::ExceptionOr<void> XMLHttpRequest::open(const String& method, const String& 
 
     // FIXME: Check that the method matches the method token production. https://tools.ietf.org/html/rfc7230#section-3.1.1
 
-    if (is_forbidden_method(method))
+    if (Fetch::is_forbidden_method(method))
         return DOM::SecurityError::create("Forbidden method, must not be 'CONNECT', 'TRACE', or 'TRACK'");
 
-    auto normalized_method = normalize_method(method);
+    auto normalized_method = Fetch::normalize_method(method);
 
     auto parsed_url = m_window->associated_document().parse_url(url);
     if (!parsed_url.is_valid())

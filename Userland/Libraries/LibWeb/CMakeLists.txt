@@ -641,4 +641,7 @@ add_custom_command(
 add_custom_target(generate_QuirksModeStyleSheetSource.cpp DEPENDS CSS/QuirksModeStyleSheetSource.cpp)
 add_dependencies(all_generated generate_QuirksModeStyleSheetSource.cpp)
 
+serenity_lib(LibWeb web)
+target_link_libraries(LibWeb LibCore LibJS LibMarkdown LibGemini LibGUI LibGfx LibTextCodec LibProtocol LibImageDecoderClient LibHTTP)
+
 add_subdirectory(DumpLayoutTree)

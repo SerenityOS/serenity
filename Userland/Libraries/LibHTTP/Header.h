@@ -17,4 +17,7 @@ struct Header {
     String value;
 };
 
+bool is_forbidden_header_name(String const& header_name);
+String normalize_header_value(String const& header_value);
+
 }
