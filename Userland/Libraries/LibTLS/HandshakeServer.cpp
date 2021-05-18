@@ -201,7 +201,26 @@ ByteBuffer TLSv12::build_server_key_exchange()
 
 ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
 {
-    dbgln("FIXME: parse_server_key_exchange");
+    switch (get_signature_algorithm(m_context.cipher)) {
+    case SignatureAlgorithm::Anonymous:
+        dbgln("Client key exchange for Anonymous signature is not implemented");
+        TODO();
+        break;
+    case SignatureAlgorithm::RSA:
+    case SignatureAlgorithm::DSA:
+        // RFC 5246 section 7.4.3. Server Key Exchange Message
+        // It is not legal to send the server key exchange message for RSA, DH_DSS, DH_RSA
+        dbgln("Server key exchange received for RSA or DSA is not legal");
+        return (i8)Error::UnexpectedMessage;
+    case SignatureAlgorithm::ECDSA:
+        dbgln("Client key exchange for ECDSA signature is not implemented");
+        TODO();
+        break;
+    default:
+        dbgln("Unknonwn client key exchange signature algorithm");
+        VERIFY_NOT_REACHED();
+        break;
+    }
     return 0;
 }
 
