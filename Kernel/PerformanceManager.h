@@ -106,6 +106,15 @@ public:
         }
     }
 
+    inline static void add_page_fault_event(Thread& thread, const RegisterState& regs)
+    {
+        if (auto* event_buffer = thread.process().current_perf_events_buffer()) {
+            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
+                thread.pid(), thread.tid(),
+                regs.eip, regs.ebp, PERF_EVENT_PAGE_FAULT, 0, 0, 0, nullptr);
+        }
+    }
+
     inline static void timer_tick(RegisterState const& regs)
     {
         static Time last_wakeup;
