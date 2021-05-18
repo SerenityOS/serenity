@@ -29,6 +29,11 @@ enum class HashKind {
 struct MultiHashDigestVariant {
     constexpr static size_t Size = 0;
 
+    MultiHashDigestVariant(Empty digest)
+        : m_digest(move(digest))
+    {
+    }
+
     MultiHashDigestVariant(MD5::DigestType digest)
         : m_digest(move(digest))
     {
@@ -99,74 +104,53 @@ public:
 
     ~Manager()
     {
-        m_sha1 = nullptr;
-        m_sha256 = nullptr;
-        m_sha384 = nullptr;
-        m_sha512 = nullptr;
-        m_md5 = nullptr;
+        m_algorithm = Empty {};
     }
 
     inline size_t digest_size() const
     {
-        switch (m_kind) {
-        case HashKind::MD5:
-            return m_md5->digest_size();
-        case HashKind::SHA1:
-            return m_sha1->digest_size();
-        case HashKind::SHA256:
-            return m_sha256->digest_size();
-        case HashKind::SHA384:
-            return m_sha384->digest_size();
-        case HashKind::SHA512:
-            return m_sha512->digest_size();
-        default:
-        case HashKind::None:
-            return 0;
-        }
+        size_t result = 0;
+        m_algorithm.visit(
+            [&](const Empty&) {},
+            [&](const auto& hash) { result = hash.digest_size(); });
+        return result;
     }
+
     inline size_t block_size() const
     {
-        switch (m_kind) {
-        case HashKind::MD5:
-            return m_md5->block_size();
-        case HashKind::SHA1:
-            return m_sha1->block_size();
-        case HashKind::SHA256:
-            return m_sha256->block_size();
-        case HashKind::SHA384:
-            return m_sha384->block_size();
-        case HashKind::SHA512:
-            return m_sha512->block_size();
-        default:
-        case HashKind::None:
-            return 0;
-        }
+        size_t result = 0;
+        m_algorithm.visit(
+            [&](const Empty&) {},
+            [&](const auto& hash) { result = hash.block_size(); });
+        return result;
     }
+
     inline void initialize(HashKind kind)
     {
-        if (m_kind != HashKind::None) {
+        if (!m_algorithm.has<Empty>()) {
             VERIFY_NOT_REACHED();
         }
 
         m_kind = kind;
         switch (kind) {
         case HashKind::MD5:
-            m_md5 = make<MD5>();
+            m_algorithm = MD5();
             break;
         case HashKind::SHA1:
-            m_sha1 = make<SHA1>();
+            m_algorithm = SHA1();
             break;
         case HashKind::SHA256:
-            m_sha256 = make<SHA256>();
+            m_algorithm = SHA256();
             break;
         case HashKind::SHA384:
-            m_sha384 = make<SHA384>();
+            m_algorithm = SHA384();
             break;
         case HashKind::SHA512:
-            m_sha512 = make<SHA512>();
+            m_algorithm = SHA512();
             break;
         default:
         case HashKind::None:
+            m_algorithm = Empty {};
             break;
         }
     }
@@ -174,59 +158,25 @@ public:
     virtual void update(const u8* data, size_t length) override
     {
         auto size = m_pre_init_buffer.size();
-        switch (m_kind) {
-        case HashKind::MD5:
-            if (size)
-                m_md5->update(m_pre_init_buffer);
-            m_md5->update(data, length);
-            break;
-        case HashKind::SHA1:
-            if (size)
-                m_sha1->update(m_pre_init_buffer);
-            m_sha1->update(data, length);
-            break;
-        case HashKind::SHA256:
-            if (size)
-                m_sha256->update(m_pre_init_buffer);
-            m_sha256->update(data, length);
-            break;
-        case HashKind::SHA384:
-            if (size)
-                m_sha384->update(m_pre_init_buffer);
-            m_sha384->update(data, length);
-            break;
-        case HashKind::SHA512:
-            if (size)
-                m_sha512->update(m_pre_init_buffer);
-            m_sha512->update(data, length);
-            break;
-        default:
-        case HashKind::None:
-            m_pre_init_buffer.append(data, length);
-            return;
+        if (size) {
+            m_algorithm.visit(
+                [&](Empty&) {},
+                [&](auto& hash) { hash.update(m_pre_init_buffer); });
         }
-        if (size)
+        m_algorithm.visit(
+            [&](Empty&) { m_pre_init_buffer.append(data, length); },
+            [&](auto& hash) { hash.update(data, length); });
+        if (size && m_kind != HashKind::None)
             m_pre_init_buffer.clear();
     }
 
     virtual DigestType peek() override
     {
-        switch (m_kind) {
-        case HashKind::MD5:
-            return { m_md5->peek() };
-        case HashKind::SHA1:
-            return { m_sha1->peek() };
-        case HashKind::SHA256:
-            return { m_sha256->peek() };
-        case HashKind::SHA384:
-            return { m_sha384->peek() };
-        case HashKind::SHA512:
-            return { m_sha512->peek() };
-        default:
-        case HashKind::None:
-            VERIFY_NOT_REACHED();
-            break;
-        }
+        DigestType result = Empty {};
+        m_algorithm.visit(
+            [&](Empty&) { VERIFY_NOT_REACHED(); },
+            [&](auto& hash) { result = hash.peek(); });
+        return result;
     }
 
     virtual DigestType digest() override
@@ -239,45 +189,18 @@ public:
     virtual void reset() override
     {
         m_pre_init_buffer.clear();
-        switch (m_kind) {
-        case HashKind::MD5:
-            m_md5->reset();
-            break;
-        case HashKind::SHA1:
-            m_sha1->reset();
-            break;
-        case HashKind::SHA256:
-            m_sha256->reset();
-            break;
-        case HashKind::SHA384:
-            m_sha384->reset();
-            break;
-        case HashKind::SHA512:
-            m_sha512->reset();
-            break;
-        default:
-        case HashKind::None:
-            break;
-        }
+        m_algorithm.visit(
+            [&](Empty&) {},
+            [&](auto& hash) { hash.reset(); });
     }
 
     virtual String class_name() const override
     {
-        switch (m_kind) {
-        case HashKind::MD5:
-            return m_md5->class_name();
-        case HashKind::SHA1:
-            return m_sha1->class_name();
-        case HashKind::SHA256:
-            return m_sha256->class_name();
-        case HashKind::SHA384:
-            return m_sha384->class_name();
-        case HashKind::SHA512:
-            return m_sha512->class_name();
-        default:
-        case HashKind::None:
-            return "UninitializedHashManager";
-        }
+        String result;
+        m_algorithm.visit(
+            [&](const Empty&) { result = "UninitializedHashManager"; },
+            [&](const auto& hash) { result = hash.class_name(); });
+        return result;
     }
 
     inline bool is(HashKind kind) const
@@ -286,11 +209,8 @@ public:
     }
 
 private:
-    OwnPtr<SHA1> m_sha1;
-    OwnPtr<SHA256> m_sha256;
-    OwnPtr<SHA384> m_sha384;
-    OwnPtr<SHA512> m_sha512;
-    OwnPtr<MD5> m_md5;
+    using AlgorithmVariant = Variant<Empty, MD5, SHA1, SHA256, SHA384, SHA512>;
+    AlgorithmVariant m_algorithm { Empty {} };
     HashKind m_kind { HashKind::None };
     ByteBuffer m_pre_init_buffer;
 };
