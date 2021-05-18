@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     auto app_icon = GUI::Icon::default_icon("app-pdf-viewer");
 
     auto window = GUI::Window::construct();
-    window->set_title("PDFViewer");
+    window->set_title("PDF Viewer");
     window->resize(640, 400);
 
     auto& pdf_viewer_widget = window->set_main_widget<PDFViewerWidget>();
