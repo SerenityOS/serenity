@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -378,6 +379,12 @@ bool EventHandler::focus_previous_element()
     return false;
 }
 
+constexpr bool should_ignore_keydown_event(u32 codepoint)
+{
+    // FIXME: There are probably also keys with non-zero codepoints that should be filtered out.
+    return codepoint == 0;
+}
+
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
 {
     if (key == KeyCode::Key_Tab) {
@@ -396,10 +403,9 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             m_frame.set_cursor_position({ *range->start_container(), range->start_offset() });
 
             if (key == KeyCode::Key_Backspace || key == KeyCode::Key_Delete) {
-
                 m_edit_event_handler->handle_delete(range);
                 return true;
-            } else {
+            } else if (!should_ignore_keydown_event(code_point)) {
                 m_edit_event_handler->handle_delete(range);
                 m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
 
@@ -465,13 +471,15 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             m_frame.set_cursor_position(move(new_position));
 
             return true;
-        } else {
+        } else if (!should_ignore_keydown_event(code_point)) {
             m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
 
             auto new_position = m_frame.cursor_position();
             new_position.set_offset(new_position.offset() + 1);
             m_frame.set_cursor_position(move(new_position));
-
+            return true;
+        } else {
+            // NOTE: Because modifier keys should be ignored, we need to return true.
             return true;
         }
     }
