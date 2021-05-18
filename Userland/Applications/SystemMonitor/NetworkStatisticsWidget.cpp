@@ -41,7 +41,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         sockets_group_box.set_layout<GUI::VerticalBoxLayout>();
         sockets_group_box.layout()->set_margins({ 6, 16, 6, 6 });
 
-        m_socket_table_view = sockets_group_box.add<GUI::TableView>();
+        m_tcp_socket_table_view = sockets_group_box.add<GUI::TableView>();
 
         Vector<GUI::JsonArrayModel::FieldSpec> net_tcp_fields;
         net_tcp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);
@@ -55,8 +55,18 @@ NetworkStatisticsWidget::NetworkStatisticsWidget()
         net_tcp_fields.empend("packets_out", "Pkt Out", Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_in", "Bytes In", Gfx::TextAlignment::CenterRight);
         net_tcp_fields.empend("bytes_out", "Bytes Out", Gfx::TextAlignment::CenterRight);
-        m_socket_model = GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields));
-        m_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_socket_model));
+        m_tcp_socket_model = GUI::JsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields));
+        m_tcp_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_tcp_socket_model));
+
+        m_udp_socket_table_view = sockets_group_box.add<GUI::TableView>();
+
+        Vector<GUI::JsonArrayModel::FieldSpec> net_udp_fields;
+        net_udp_fields.empend("peer_address", "Peer", Gfx::TextAlignment::CenterLeft);
+        net_udp_fields.empend("peer_port", "Port", Gfx::TextAlignment::CenterRight);
+        net_udp_fields.empend("local_address", "Local", Gfx::TextAlignment::CenterLeft);
+        net_udp_fields.empend("local_port", "Port", Gfx::TextAlignment::CenterRight);
+        m_udp_socket_model = GUI::JsonArrayModel::create("/proc/net/udp", move(net_udp_fields));
+        m_udp_socket_table_view->set_model(GUI::SortingProxyModel::create(*m_udp_socket_model));
 
         m_update_timer = add<Core::Timer>(
             1000, [this] {
@@ -74,5 +84,6 @@ NetworkStatisticsWidget::~NetworkStatisticsWidget()
 void NetworkStatisticsWidget::update_models()
 {
     m_adapter_table_view->model()->update();
-    m_socket_table_view->model()->update();
+    m_tcp_socket_table_view->model()->update();
+    m_udp_socket_table_view->model()->update();
 }
