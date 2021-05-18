@@ -19,8 +19,10 @@ private:
     void update_models();
 
     RefPtr<GUI::TableView> m_adapter_table_view;
-    RefPtr<GUI::TableView> m_socket_table_view;
+    RefPtr<GUI::TableView> m_tcp_socket_table_view;
+    RefPtr<GUI::TableView> m_udp_socket_table_view;
     RefPtr<GUI::JsonArrayModel> m_adapter_model;
-    RefPtr<GUI::JsonArrayModel> m_socket_model;
+    RefPtr<GUI::JsonArrayModel> m_tcp_socket_model;
+    RefPtr<GUI::JsonArrayModel> m_udp_socket_model;
     RefPtr<Core::Timer> m_update_timer;
 };
