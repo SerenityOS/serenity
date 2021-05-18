@@ -196,6 +196,9 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     case Mode::ThreeCardDraw:
                         cards_to_draw = 3;
                         break;
+                    default:
+                        VERIFY_NOT_REACHED();
+                        break;
                     }
 
                     update(stock.bounding_box());

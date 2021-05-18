@@ -12,9 +12,10 @@
 
 namespace Solitaire {
 
-enum class Mode {
+enum class Mode : u8 {
     SingleCardDraw,
     ThreeCardDraw,
+    __Count
 };
 
 class Game final : public GUI::Frame {
