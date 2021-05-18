@@ -8,6 +8,7 @@
 #include "Tab.h"
 #include "BookmarksBarWidget.h"
 #include "Browser.h"
+#include "BrowserWindow.h"
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include <AK/StringBuilder.h>
@@ -51,7 +52,7 @@ URL url_from_user_input(const String& input)
 
 void Tab::start_download(const URL& url)
 {
-    auto window = GUI::Window::construct(this->window());
+    auto window = GUI::Window::construct(&this->window());
     window->resize(300, 150);
     window->set_title(String::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
@@ -62,7 +63,7 @@ void Tab::start_download(const URL& url)
 
 void Tab::view_source(const URL& url, const String& source)
 {
-    auto window = GUI::Window::construct(this->window());
+    auto window = GUI::Window::construct(&this->window());
     auto& editor = window->set_main_widget<GUI::TextEditor>();
     editor.set_text(source);
     editor.set_mode(GUI::TextEditor::ReadOnly);
@@ -74,7 +75,7 @@ void Tab::view_source(const URL& url, const String& source)
     [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
-Tab::Tab(Type type)
+Tab::Tab(BrowserWindow& window, Type type)
     : m_type(type)
 {
     load_from_gml(tab_gml);
@@ -89,19 +90,10 @@ Tab::Tab(Type type)
     else
         m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
 
-    m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { go_back(); }, this);
-    m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { go_forward(); }, this);
-    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { load(g_home_url); }, this);
-    m_go_home_action->set_status_tip("Go to home page");
-
-    toolbar.add_action(*m_go_back_action);
-    toolbar.add_action(*m_go_forward_action);
-    toolbar.add_action(*m_go_home_action);
-
-    m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { reload(); }, this);
-    m_reload_action->set_status_tip("Reload current page");
-
-    toolbar.add_action(*m_reload_action);
+    toolbar.add_action(window.go_back_action());
+    toolbar.add_action(window.go_forward_action());
+    toolbar.add_action(window.go_home_action());
+    toolbar.add_action(window.reload_action());
 
     m_location_box = toolbar.add<GUI::TextBox>();
     m_location_box->set_placeholder("Address");
@@ -277,19 +269,19 @@ Tab::Tab(Type type)
 
     m_tab_context_menu = GUI::Menu::construct();
     m_tab_context_menu->add_action(GUI::Action::create("&Reload Tab", [this](auto&) {
-        m_reload_action->activate();
+        this->window().reload_action().activate();
     }));
     m_tab_context_menu->add_action(GUI::Action::create("&Close Tab", [this](auto&) {
         on_tab_close_request(*this);
     }));
 
     m_page_context_menu = GUI::Menu::construct();
-    m_page_context_menu->add_action(*m_go_back_action);
-    m_page_context_menu->add_action(*m_go_forward_action);
-    m_page_context_menu->add_action(*m_reload_action);
+    m_page_context_menu->add_action(window.go_back_action());
+    m_page_context_menu->add_action(window.go_forward_action());
+    m_page_context_menu->add_action(window.reload_action());
     m_page_context_menu->add_separator();
-    //m_page_context_menu->add_action(*view_source_action);
-    //m_page_context_menu->add_action(*inspect_dom_tree_action);
+    m_page_context_menu->add_action(window.view_source_action());
+    m_page_context_menu->add_action(window.inspect_dom_tree_action());
     hooks().on_context_menu_request = [&](auto& screen_position) {
         m_page_context_menu->popup(screen_position);
     };
@@ -337,8 +329,11 @@ void Tab::go_forward()
 
 void Tab::update_actions()
 {
-    m_go_back_action->set_enabled(m_history.can_go_back());
-    m_go_forward_action->set_enabled(m_history.can_go_forward());
+    auto& window = this->window();
+    if (this != &window.active_tab())
+        return;
+    window.go_back_action().set_enabled(m_history.can_go_back());
+    window.go_forward_action().set_enabled(m_history.can_go_forward());
 }
 
 void Tab::update_bookmark_button(const String& url)
@@ -378,9 +373,11 @@ void Tab::did_become_active()
     BookmarksBarWidget::the().remove_from_parent();
     m_toolbar_container->add_child(BookmarksBarWidget::the());
 
-    auto is_fullscreen = window()->is_fullscreen();
+    auto is_fullscreen = window().is_fullscreen();
     m_toolbar_container->set_visible(!is_fullscreen);
     m_statusbar->set_visible(!is_fullscreen);
+
+    update_actions();
 }
 
 void Tab::context_menu_requested(const Gfx::IntPoint& screen_position)
@@ -410,6 +407,16 @@ void Tab::action_entered(GUI::Action& action)
 void Tab::action_left(GUI::Action&)
 {
     m_statusbar->set_override_text({});
+}
+
+BrowserWindow const& Tab::window() const
+{
+    return static_cast<BrowserWindow const&>(*Widget::window());
+}
+
+BrowserWindow& Tab::window()
+{
+    return static_cast<BrowserWindow&>(*Widget::window());
 }
 
 }

@@ -21,6 +21,8 @@ class WebViewHooks;
 
 namespace Browser {
 
+class BrowserWindow;
+
 class Tab final : public GUI::Widget {
     C_OBJECT(Tab);
 
@@ -67,7 +69,10 @@ public:
     GUI::AbstractScrollableWidget& view();
 
 private:
-    explicit Tab(Type);
+    explicit Tab(BrowserWindow&, Type);
+
+    BrowserWindow const& window() const;
+    BrowserWindow& window();
 
     Web::WebViewHooks& hooks();
     void update_actions();
@@ -82,10 +87,6 @@ private:
     RefPtr<Web::InProcessWebView> m_page_view;
     RefPtr<Web::OutOfProcessWebView> m_web_content_view;
 
-    RefPtr<GUI::Action> m_go_back_action;
-    RefPtr<GUI::Action> m_go_forward_action;
-    RefPtr<GUI::Action> m_go_home_action;
-    RefPtr<GUI::Action> m_reload_action;
     RefPtr<GUI::TextBox> m_location_box;
     RefPtr<GUI::Button> m_bookmark_button;
     RefPtr<GUI::Window> m_dom_inspector_window;
