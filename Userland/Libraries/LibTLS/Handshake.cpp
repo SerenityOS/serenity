@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
+#include <AK/Endian.h>
 #include <AK/Random.h>
+
+#include <LibCore/Timer.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -121,22 +125,17 @@ ByteBuffer TLSv12::build_hello()
     return packet;
 }
 
-ByteBuffer TLSv12::build_alert(bool critical, u8 code)
+ByteBuffer TLSv12::build_change_cipher_spec()
 {
-    PacketBuilder builder(MessageType::Alert, (u16)m_context.options.version);
-    builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
-    builder.append(code);
-
-    if (critical)
-        m_context.critical_error = code;
-
+    PacketBuilder builder { MessageType::ChangeCipher, m_context.options.version, 64 };
+    builder.append((u8)1);
     auto packet = builder.build();
     update_packet(packet);
-
+    m_context.local_sequence_number = 0;
     return packet;
 }
 
-ByteBuffer TLSv12::build_finished()
+ByteBuffer TLSv12::build_handshake_finished()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
@@ -160,11 +159,371 @@ ByteBuffer TLSv12::build_finished()
     return packet;
 }
 
-void TLSv12::alert(AlertLevel level, AlertDescription code)
+ssize_t TLSv12::handle_handshake_finished(ReadonlyBytes buffer, WritePacketStage& write_packets)
 {
-    auto the_alert = build_alert(level == AlertLevel::Critical, (u8)code);
-    write_packet(the_alert);
-    flush();
+    if (m_context.connection_status < ConnectionStatus::KeyExchange || m_context.connection_status == ConnectionStatus::Established) {
+        dbgln("unexpected finished message");
+        return (i8)Error::UnexpectedMessage;
+    }
+
+    write_packets = WritePacketStage::Initial;
+
+    if (buffer.size() < 3) {
+        return (i8)Error::NeedMoreData;
+    }
+
+    size_t index = 3;
+
+    u32 size = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
+
+    if (size < 12) {
+        dbgln_if(TLS_DEBUG, "finished packet smaller than minimum size: {}", size);
+        return (i8)Error::BrokenPacket;
+    }
+
+    if (size < buffer.size() - index) {
+        dbgln_if(TLS_DEBUG, "not enough data after length: {} > {}", size, buffer.size() - index);
+        return (i8)Error::NeedMoreData;
+    }
+
+    // TODO: Compare Hashes
+    dbgln_if(TLS_DEBUG, "FIXME: handle_handshake_finished :: Check message validity");
+    m_context.connection_status = ConnectionStatus::Established;
+
+    if (m_handshake_timeout_timer) {
+        // Disable the handshake timeout timer as handshake has been established.
+        m_handshake_timeout_timer->stop();
+        m_handshake_timeout_timer->remove_from_parent();
+        m_handshake_timeout_timer = nullptr;
+    }
+
+    if (on_tls_ready_to_write)
+        on_tls_ready_to_write(*this);
+
+    return index + size;
 }
 
+ssize_t TLSv12::handle_handshake_payload(ReadonlyBytes vbuffer)
+{
+    if (m_context.connection_status == ConnectionStatus::Established) {
+        dbgln_if(TLS_DEBUG, "Renegotiation attempt ignored");
+        // FIXME: We should properly say "NoRenegotiation", but that causes a handshake failure
+        //        so we just roll with it and pretend that we _did_ renegotiate
+        //        This will cause issues when we decide to have long-lasting connections, but
+        //        we do not have those at the moment :^)
+        return 1;
+    }
+    auto buffer = vbuffer;
+    auto buffer_length = buffer.size();
+    auto original_length = buffer_length;
+    while (buffer_length >= 4 && !m_context.critical_error) {
+        ssize_t payload_res = 0;
+        if (buffer_length < 1)
+            return (i8)Error::NeedMoreData;
+        auto type = buffer[0];
+        auto write_packets { WritePacketStage::Initial };
+        size_t payload_size = buffer[1] * 0x10000 + buffer[2] * 0x100 + buffer[3] + 3;
+        dbgln_if(TLS_DEBUG, "payload size: {} buffer length: {}", payload_size, buffer_length);
+        if (payload_size + 1 > buffer_length)
+            return (i8)Error::NeedMoreData;
+
+        switch (type) {
+        case HelloRequest:
+            if (m_context.handshake_messages[0] >= 1) {
+                dbgln("unexpected hello request message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[0];
+            dbgln("hello request (renegotiation?)");
+            if (m_context.connection_status == ConnectionStatus::Established) {
+                // renegotiation
+                payload_res = (i8)Error::NoRenegotiation;
+            } else {
+                // :shrug:
+                payload_res = (i8)Error::UnexpectedMessage;
+            }
+            break;
+        case ClientHello:
+            // FIXME: We only support client mode right now
+            if (m_context.is_server) {
+                VERIFY_NOT_REACHED();
+            }
+            payload_res = (i8)Error::UnexpectedMessage;
+            break;
+        case ServerHello:
+            if (m_context.handshake_messages[2] >= 1) {
+                dbgln("unexpected server hello message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[2];
+            dbgln_if(TLS_DEBUG, "server hello");
+            if (m_context.is_server) {
+                dbgln("unsupported: server mode");
+                VERIFY_NOT_REACHED();
+            }
+            payload_res = handle_server_hello(buffer.slice(1, payload_size), write_packets);
+            break;
+        case HelloVerifyRequest:
+            dbgln("unsupported: DTLS");
+            payload_res = (i8)Error::UnexpectedMessage;
+            break;
+        case CertificateMessage:
+            if (m_context.handshake_messages[4] >= 1) {
+                dbgln("unexpected certificate message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[4];
+            dbgln_if(TLS_DEBUG, "certificate");
+            if (m_context.connection_status == ConnectionStatus::Negotiating) {
+                if (m_context.is_server) {
+                    dbgln("unsupported: server mode");
+                    VERIFY_NOT_REACHED();
+                }
+                payload_res = handle_certificate(buffer.slice(1, payload_size));
+                if (m_context.certificates.size()) {
+                    auto it = m_context.certificates.find_if([](const auto& cert) { return cert.is_valid(); });
+
+                    if (it.is_end()) {
+                        // no valid certificates
+                        dbgln("No valid certificates found");
+                        payload_res = (i8)Error::BadCertificate;
+                        m_context.critical_error = payload_res;
+                        break;
+                    }
+
+                    // swap the first certificate with the valid one
+                    if (it.index() != 0)
+                        swap(m_context.certificates[0], m_context.certificates[it.index()]);
+                }
+            } else {
+                payload_res = (i8)Error::UnexpectedMessage;
+            }
+            break;
+        case ServerKeyExchange:
+            if (m_context.handshake_messages[5] >= 1) {
+                dbgln("unexpected server key exchange message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[5];
+            dbgln_if(TLS_DEBUG, "server key exchange");
+            if (m_context.is_server) {
+                dbgln("unsupported: server mode");
+                VERIFY_NOT_REACHED();
+            } else {
+                payload_res = handle_server_key_exchange(buffer.slice(1, payload_size));
+            }
+            break;
+        case CertificateRequest:
+            if (m_context.handshake_messages[6] >= 1) {
+                dbgln("unexpected certificate request message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[6];
+            if (m_context.is_server) {
+                dbgln("invalid request");
+                dbgln("unsupported: server mode");
+                VERIFY_NOT_REACHED();
+            } else {
+                // we do not support "certificate request"
+                dbgln("certificate request");
+                if (on_tls_certificate_request)
+                    on_tls_certificate_request(*this);
+                m_context.client_verified = VerificationNeeded;
+            }
+            break;
+        case ServerHelloDone:
+            if (m_context.handshake_messages[7] >= 1) {
+                dbgln("unexpected server hello done message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[7];
+            dbgln_if(TLS_DEBUG, "server hello done");
+            if (m_context.is_server) {
+                dbgln("unsupported: server mode");
+                VERIFY_NOT_REACHED();
+            } else {
+                payload_res = handle_server_hello_done(buffer.slice(1, payload_size));
+                if (payload_res > 0)
+                    write_packets = WritePacketStage::ClientHandshake;
+            }
+            break;
+        case CertificateVerify:
+            if (m_context.handshake_messages[8] >= 1) {
+                dbgln("unexpected certificate verify message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[8];
+            dbgln_if(TLS_DEBUG, "certificate verify");
+            if (m_context.connection_status == ConnectionStatus::KeyExchange) {
+                payload_res = handle_certificate_verify(buffer.slice(1, payload_size));
+            } else {
+                payload_res = (i8)Error::UnexpectedMessage;
+            }
+            break;
+        case ClientKeyExchange:
+            if (m_context.handshake_messages[9] >= 1) {
+                dbgln("unexpected client key exchange message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[9];
+            dbgln_if(TLS_DEBUG, "client key exchange");
+            if (m_context.is_server) {
+                dbgln("unsupported: server mode");
+                VERIFY_NOT_REACHED();
+            } else {
+                payload_res = (i8)Error::UnexpectedMessage;
+            }
+            break;
+        case Finished:
+            m_context.cached_handshake.clear();
+            if (m_context.handshake_messages[10] >= 1) {
+                dbgln("unexpected finished message");
+                payload_res = (i8)Error::UnexpectedMessage;
+                break;
+            }
+            ++m_context.handshake_messages[10];
+            dbgln_if(TLS_DEBUG, "finished");
+            payload_res = handle_handshake_finished(buffer.slice(1, payload_size), write_packets);
+            if (payload_res > 0) {
+                memset(m_context.handshake_messages, 0, sizeof(m_context.handshake_messages));
+            }
+            break;
+        default:
+            dbgln("message type not understood: {}", type);
+            return (i8)Error::NotUnderstood;
+        }
+
+        if (type != HelloRequest) {
+            update_hash(buffer.slice(0, payload_size + 1), 0);
+        }
+
+        // if something went wrong, send an alert about it
+        if (payload_res < 0) {
+            switch ((Error)payload_res) {
+            case Error::UnexpectedMessage: {
+                auto packet = build_alert(true, (u8)AlertDescription::UnexpectedMessage);
+                write_packet(packet);
+                break;
+            }
+            case Error::CompressionNotSupported: {
+                auto packet = build_alert(true, (u8)AlertDescription::DecompressionFailure);
+                write_packet(packet);
+                break;
+            }
+            case Error::BrokenPacket: {
+                auto packet = build_alert(true, (u8)AlertDescription::DecodeError);
+                write_packet(packet);
+                break;
+            }
+            case Error::NotVerified: {
+                auto packet = build_alert(true, (u8)AlertDescription::BadRecordMAC);
+                write_packet(packet);
+                break;
+            }
+            case Error::BadCertificate: {
+                auto packet = build_alert(true, (u8)AlertDescription::BadCertificate);
+                write_packet(packet);
+                break;
+            }
+            case Error::UnsupportedCertificate: {
+                auto packet = build_alert(true, (u8)AlertDescription::UnsupportedCertificate);
+                write_packet(packet);
+                break;
+            }
+            case Error::NoCommonCipher: {
+                auto packet = build_alert(true, (u8)AlertDescription::InsufficientSecurity);
+                write_packet(packet);
+                break;
+            }
+            case Error::NotUnderstood: {
+                auto packet = build_alert(true, (u8)AlertDescription::InternalError);
+                write_packet(packet);
+                break;
+            }
+            case Error::NoRenegotiation: {
+                auto packet = build_alert(true, (u8)AlertDescription::NoRenegotiation);
+                write_packet(packet);
+                break;
+            }
+            case Error::DecryptionFailed: {
+                auto packet = build_alert(true, (u8)AlertDescription::DecryptionFailed);
+                write_packet(packet);
+                break;
+            }
+            case Error::NeedMoreData:
+                // Ignore this, as it's not an "error"
+                dbgln_if(TLS_DEBUG, "More data needed");
+                break;
+            default:
+                dbgln("Unknown TLS::Error with value {}", payload_res);
+                VERIFY_NOT_REACHED();
+                break;
+            }
+            if (payload_res < 0)
+                return payload_res;
+        }
+        switch (write_packets) {
+        case WritePacketStage::Initial:
+            // nothing to write
+            break;
+        case WritePacketStage::ClientHandshake:
+            if (m_context.client_verified == VerificationNeeded) {
+                dbgln_if(TLS_DEBUG, "> Client Certificate");
+                auto packet = build_certificate();
+                write_packet(packet);
+                m_context.client_verified = Verified;
+            }
+            {
+                dbgln_if(TLS_DEBUG, "> Key exchange");
+                auto packet = build_client_key_exchange();
+                write_packet(packet);
+            }
+            {
+                dbgln_if(TLS_DEBUG, "> change cipher spec");
+                auto packet = build_change_cipher_spec();
+                write_packet(packet);
+            }
+            m_context.cipher_spec_set = 1;
+            m_context.local_sequence_number = 0;
+            {
+                dbgln_if(TLS_DEBUG, "> client finished");
+                auto packet = build_handshake_finished();
+                write_packet(packet);
+            }
+            m_context.cipher_spec_set = 0;
+            break;
+        case WritePacketStage::ServerHandshake:
+            // server handshake
+            dbgln("UNSUPPORTED: Server mode");
+            VERIFY_NOT_REACHED();
+            break;
+        case WritePacketStage::Finished:
+            // finished
+            {
+                dbgln_if(TLS_DEBUG, "> change cipher spec");
+                auto packet = build_change_cipher_spec();
+                write_packet(packet);
+            }
+            {
+                dbgln_if(TLS_DEBUG, "> client finished");
+                auto packet = build_handshake_finished();
+                write_packet(packet);
+            }
+            m_context.connection_status = ConnectionStatus::Established;
+            break;
+        }
+        payload_size++;
+        buffer_length -= payload_size;
+        buffer = buffer.slice(payload_size, buffer_length);
+    }
+    return original_length;
+}
 }
