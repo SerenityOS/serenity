@@ -26,6 +26,8 @@ public:
     void switch_to(unsigned);
     void initialize();
 
+    void resolution_was_changed();
+
     void switch_to_debug() { switch_to(1); }
 
     NonnullRefPtr<VirtualConsole> first_tty() const { return m_consoles[0]; }
