@@ -20,6 +20,8 @@ void History::dump() const
 
 void History::push(const URL& url)
 {
+    if (!m_items.is_empty() && m_items[m_current] == url)
+        return;
     m_items.shrink(m_current + 1);
     m_items.append(url);
     m_current++;
