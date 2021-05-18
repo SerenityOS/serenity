@@ -74,6 +74,8 @@ public:
 
     const DOM::Position& cursor_position() const { return m_cursor_position; }
     void set_cursor_position(DOM::Position);
+    bool increment_cursor_position_offset();
+    bool decrement_cursor_position_offset();
 
     bool cursor_blink_state() const { return m_cursor_blink_state; }
 
