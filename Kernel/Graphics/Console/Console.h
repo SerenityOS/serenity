@@ -74,8 +74,8 @@ protected:
     Atomic<bool> m_enabled;
     Color m_default_foreground_color { Color::White };
     Color m_default_background_color { Color::Black };
-    const size_t m_width;
-    const size_t m_height;
+    size_t m_width;
+    size_t m_height;
     mutable size_t m_x { 0 };
     mutable size_t m_y { 0 };
 };

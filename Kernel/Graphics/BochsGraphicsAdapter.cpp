@@ -53,11 +53,11 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     : PCI::DeviceController(pci_address)
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
 {
-    set_safe_resolution();
     // We assume safe resolutio is 1024x768x32
     m_framebuffer_console = Graphics::FramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
+    set_safe_resolution();
 }
 
 UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
@@ -76,6 +76,7 @@ GraphicsDevice::Type BochsGraphicsAdapter::type() const
 
 void BochsGraphicsAdapter::set_safe_resolution()
 {
+    VERIFY(m_framebuffer_console);
     set_resolution(1024, 768);
 }
 
@@ -105,6 +106,7 @@ bool BochsGraphicsAdapter::try_to_set_resolution(size_t width, size_t height)
 
 bool BochsGraphicsAdapter::set_resolution(size_t width, size_t height)
 {
+    VERIFY(m_framebuffer_console);
     if (Checked<size_t>::multiplication_would_overflow(width, height, sizeof(u32)))
         return false;
 
@@ -112,6 +114,7 @@ bool BochsGraphicsAdapter::set_resolution(size_t width, size_t height)
         return false;
 
     dbgln("BochsGraphicsAdapter: resolution set to {}x{}", width, height);
+    m_framebuffer_console->set_resolution(width, height, width * sizeof(u32));
     return true;
 }
 
