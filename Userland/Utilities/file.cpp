@@ -52,18 +52,22 @@ static Optional<String> gzip_details(String description, const String& path)
     return String::formatted("{}, {}", description, gzip_details.value());
 }
 
-#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                               \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only) \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json", "JSON data", description_only)               \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/gzip", "gzip compressed data", gzip_details)              \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp", "BMP image data", image_details)                    \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif", "GIF image data", image_details)                    \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg", "JPEG image data", image_details)                  \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png", "PNG image data", image_details)                    \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-bitmap", "PBM image data", image_details)      \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-graymap", "PGM image data", image_details)     \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-pixmap", "PPM image data", image_details)      \
-    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown", "Markdown document", description_only)          \
+#define ENUMERATE_MIME_TYPE_DESCRIPTIONS                                                                \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/gzip", "gzip compressed data", gzip_details)         \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/javascript", "JavaScript source", description_only)  \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/json", "JSON data", description_only)                \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("application/x-7z-compressed", "7-Zip archive", description_only) \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("audio/midi", "MIDI sound", description_only)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/flac", "FLAC audio", description_only)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("extra/sqlite", "sqlite database", description_only)              \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/bmp", "BMP image data", image_details)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/gif", "GIF image data", image_details)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/jpeg", "JPEG image data", image_details)                   \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/png", "PNG image data", image_details)                     \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-bitmap", "PBM image data", image_details)       \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-graymap", "PGM image data", image_details)      \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("image/x-portable-pixmap", "PPM image data", image_details)       \
+    __ENUMERATE_MIME_TYPE_DESCRIPTION("text/markdown", "Markdown document", description_only)           \
     __ENUMERATE_MIME_TYPE_DESCRIPTION("text/x-shellscript", "POSIX shell script text executable", description_only)
 
 static Optional<String> get_description_from_mime_type(const String& mime, const String& path)
