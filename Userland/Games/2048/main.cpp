@@ -18,6 +18,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/Painter.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -86,6 +87,17 @@ int main(int argc, char** argv)
     auto& board_view = main_widget.add<BoardView>(&game.board());
     board_view.set_focus(true);
     auto& statusbar = main_widget.add<GUI::Statusbar>();
+
+    app->on_action_enter = [&](GUI::Action& action) {
+        auto text = action.status_tip();
+        if (text.is_empty())
+            text = Gfx::parse_ampersand_string(action.text());
+        statusbar.set_override_text(move(text));
+    };
+
+    app->on_action_leave = [&](GUI::Action&) {
+        statusbar.set_override_text({});
+    };
 
     auto update = [&]() {
         board_view.set_board(&game.board());
