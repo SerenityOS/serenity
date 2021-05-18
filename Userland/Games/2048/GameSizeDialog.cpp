@@ -65,7 +65,7 @@ GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t ta
     evil_ai_checkbox.set_checked(m_evil_ai);
     evil_ai_checkbox.on_checked = [this](auto checked) { m_evil_ai = checked; };
 
-    auto& temp_checkbox = main_widget.add<GUI::CheckBox>("Temporary");
+    auto& temp_checkbox = main_widget.add<GUI::CheckBox>("Temporarily apply changes");
     temp_checkbox.set_checked(m_temporary);
     temp_checkbox.on_checked = [this](auto checked) { m_temporary = checked; };
 
