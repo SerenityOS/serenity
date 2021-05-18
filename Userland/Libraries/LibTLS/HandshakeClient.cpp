@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/Random.h>
 #include <LibCrypto/ASN1/DER.h>
 #include <LibCrypto/PK/Code/EMSA_PSS.h>
 #include <LibTLS/TLSv12.h>
@@ -89,50 +90,6 @@ bool TLSv12::expand_key()
     return true;
 }
 
-void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
-{
-    if (!secret.size()) {
-        dbgln("null secret");
-        return;
-    }
-
-    // RFC 5246: "In this section, we define one PRF, based on HMAC.  This PRF with the
-    //            SHA-256 hash function is used for all cipher suites defined in this
-    //            document and in TLS documents published prior to this document when
-    //            TLS 1.2 is negotiated."
-    // Apparently this PRF _always_ uses SHA256
-
-    auto append_label_seed = [&](auto& hmac) {
-        hmac.update(label, label_length);
-        hmac.update(seed);
-        if (seed_b.size() > 0)
-            hmac.update(seed_b);
-    };
-
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret);
-    append_label_seed(hmac);
-
-    constexpr auto digest_size = hmac.digest_size();
-    u8 digest[digest_size];
-    auto digest_0 = Bytes { digest, digest_size };
-
-    digest_0.overwrite(0, hmac.digest().immutable_data(), digest_size);
-
-    size_t index = 0;
-    while (index < output.size()) {
-        hmac.update(digest_0);
-        append_label_seed(hmac);
-        auto digest_1 = hmac.digest();
-
-        auto copy_size = min(digest_size, output.size() - index);
-
-        output.overwrite(index, digest_1.immutable_data(), copy_size);
-        index += copy_size;
-
-        digest_0.overwrite(0, hmac.process(digest_0).immutable_data(), digest_size);
-    }
-}
-
 bool TLSv12::compute_master_secret(size_t length)
 {
     if (m_context.premaster_key.size() == 0 || length < 48) {
@@ -158,6 +115,95 @@ bool TLSv12::compute_master_secret(size_t length)
     }
     expand_key();
     return true;
+}
+
+static bool wildcard_matches(const StringView& host, const StringView& subject)
+{
+    if (host.matches(subject))
+        return true;
+
+    if (subject.starts_with("*."))
+        return wildcard_matches(host, subject.substring_view(2));
+
+    return false;
+}
+
+Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringView& host) const
+{
+    if (m_context.certificates.is_empty() || !m_context.verify_chain())
+        return {};
+
+    if (host.is_empty())
+        return 0;
+
+    for (size_t i = 0; i < m_context.certificates.size(); ++i) {
+        auto& cert = m_context.certificates[i];
+        if (wildcard_matches(host, cert.subject.subject))
+            return i;
+        for (auto& san : cert.SAN) {
+            if (wildcard_matches(host, san))
+                return i;
+        }
+    }
+
+    return {};
+}
+
+void TLSv12::build_random(PacketBuilder& builder)
+{
+    u8 random_bytes[48];
+    size_t bytes = 48;
+
+    fill_with_random(random_bytes, bytes);
+
+    // remove zeros from the random bytes
+    for (size_t i = 0; i < bytes; ++i) {
+        if (!random_bytes[i])
+            random_bytes[i--] = get_random<u8>();
+    }
+
+    if (m_context.is_server) {
+        dbgln("Server mode not supported");
+        return;
+    } else {
+        *(u16*)random_bytes = AK::convert_between_host_and_network_endian((u16)Version::V12);
+    }
+
+    m_context.premaster_key = ByteBuffer::copy(random_bytes, bytes);
+
+    const auto& certificate_option = verify_chain_and_get_matching_certificate(m_context.extensions.SNI); // if the SNI is empty, we'll make a special case and match *a* leaf certificate.
+    if (!certificate_option.has_value()) {
+        dbgln("certificate verification failed :(");
+        alert(AlertLevel::Critical, AlertDescription::BadCertificate);
+        return;
+    }
+
+    auto& certificate = m_context.certificates[certificate_option.value()];
+    if constexpr (TLS_DEBUG) {
+        dbgln("PreMaster secret");
+        print_buffer(m_context.premaster_key);
+    }
+
+    Crypto::PK::RSA_PKCS1_EME rsa(certificate.public_key.modulus(), 0, certificate.public_key.public_exponent());
+
+    Vector<u8, 32> out;
+    out.resize(rsa.output_size());
+    auto outbuf = out.span();
+    rsa.encrypt(m_context.premaster_key, outbuf);
+
+    if constexpr (TLS_DEBUG) {
+        dbgln("Encrypted: ");
+        print_buffer(outbuf);
+    }
+
+    if (!compute_master_secret(bytes)) {
+        dbgln("oh noes we could not derive a master key :(");
+        return;
+    }
+
+    builder.append_u24(outbuf.size() + 2);
+    builder.append((u16)outbuf.size());
+    builder.append(outbuf);
 }
 
 ByteBuffer TLSv12::build_certificate()
@@ -213,22 +259,6 @@ ByteBuffer TLSv12::build_certificate()
     return packet;
 }
 
-ByteBuffer TLSv12::build_change_cipher_spec()
-{
-    PacketBuilder builder { MessageType::ChangeCipher, m_context.options.version, 64 };
-    builder.append((u8)1);
-    auto packet = builder.build();
-    update_packet(packet);
-    m_context.local_sequence_number = 0;
-    return packet;
-}
-
-ByteBuffer TLSv12::build_server_key_exchange()
-{
-    dbgln("FIXME: build_server_key_exchange");
-    return {};
-}
-
 ByteBuffer TLSv12::build_client_key_exchange()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
@@ -242,18 +272,6 @@ ByteBuffer TLSv12::build_client_key_exchange()
     update_packet(packet);
 
     return packet;
-}
-
-ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
-{
-    dbgln("FIXME: parse_server_key_exchange");
-    return 0;
-}
-
-ssize_t TLSv12::handle_verify(ReadonlyBytes)
-{
-    dbgln("FIXME: parse_verify");
-    return 0;
 }
 
 }

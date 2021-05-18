@@ -13,6 +13,28 @@
 
 namespace TLS {
 
+ByteBuffer TLSv12::build_alert(bool critical, u8 code)
+{
+    PacketBuilder builder(MessageType::Alert, (u16)m_context.options.version);
+    builder.append((u8)(critical ? AlertLevel::Critical : AlertLevel::Warning));
+    builder.append(code);
+
+    if (critical)
+        m_context.critical_error = code;
+
+    auto packet = builder.build();
+    update_packet(packet);
+
+    return packet;
+}
+
+void TLSv12::alert(AlertLevel level, AlertDescription code)
+{
+    auto the_alert = build_alert(level == AlertLevel::Critical, (u8)code);
+    write_packet(the_alert);
+    flush();
+}
+
 void TLSv12::write_packet(ByteBuffer& packet)
 {
     m_context.tls_buffer.append(packet.data(), packet.size());
@@ -173,6 +195,38 @@ void TLSv12::update_hash(ReadonlyBytes message, size_t header_size)
 {
     dbgln_if(TLS_DEBUG, "Update hash with message of size {}", message.size());
     m_context.handshake_hash.update(message.slice(header_size));
+}
+
+void TLSv12::ensure_hmac(size_t digest_size, bool local)
+{
+    if (local && m_hmac_local)
+        return;
+
+    if (!local && m_hmac_remote)
+        return;
+
+    auto hash_kind = Crypto::Hash::HashKind::None;
+
+    switch (digest_size) {
+    case Crypto::Hash::SHA1::DigestSize:
+        hash_kind = Crypto::Hash::HashKind::SHA1;
+        break;
+    case Crypto::Hash::SHA256::DigestSize:
+        hash_kind = Crypto::Hash::HashKind::SHA256;
+        break;
+    case Crypto::Hash::SHA512::DigestSize:
+        hash_kind = Crypto::Hash::HashKind::SHA512;
+        break;
+    default:
+        dbgln("Failed to find a suitable hash for size {}", digest_size);
+        break;
+    }
+
+    auto hmac = make<Crypto::Authentication::HMAC<Crypto::Hash::Manager>>(ReadonlyBytes { local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, digest_size }, hash_kind);
+    if (local)
+        m_hmac_local = move(hmac);
+    else
+        m_hmac_remote = move(hmac);
 }
 
 ByteBuffer TLSv12::hmac_message(const ReadonlyBytes& buf, const Optional<ReadonlyBytes> buf2, size_t mac_length, bool local)
@@ -377,7 +431,7 @@ ssize_t TLSv12::handle_message(ReadonlyBytes buffer)
         break;
     case MessageType::Handshake:
         dbgln_if(TLS_DEBUG, "tls handshake message");
-        payload_res = handle_payload(plain);
+        payload_res = handle_handshake_payload(plain);
         break;
     case MessageType::ChangeCipher:
         if (m_context.connection_status != ConnectionStatus::KeyExchange) {
