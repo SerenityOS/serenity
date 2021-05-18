@@ -213,6 +213,9 @@ private:
     }
 };
 
+template<class... Args>
+Tuple(Args... args) -> Tuple<Args...>;
+
 }
 
 using AK::Tuple;
