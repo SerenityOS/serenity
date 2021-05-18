@@ -1120,6 +1120,16 @@ public:
     void set_idle_thread() { m_is_idle_thread = true; }
     bool is_idle_thread() const { return m_is_idle_thread; }
 
+    ALWAYS_INLINE u32 enter_profiler()
+    {
+        return m_nested_profiler_calls.fetch_add(1, AK::MemoryOrder::memory_order_acq_rel);
+    }
+
+    ALWAYS_INLINE u32 leave_profiler()
+    {
+        return m_nested_profiler_calls.fetch_sub(1, AK::MemoryOrder::memory_order_acquire);
+    }
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region> kernel_stack_region);
 
@@ -1257,6 +1267,7 @@ private:
     bool m_in_block { false };
     bool m_is_idle_thread { false };
     Atomic<bool> m_have_any_unmasked_pending_signals { false };
+    Atomic<u32> m_nested_profiler_calls { 0 };
 
     void yield_without_holding_big_lock();
     void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);

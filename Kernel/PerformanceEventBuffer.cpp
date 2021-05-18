@@ -7,6 +7,7 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
+#include <AK/ScopeGuard.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/KBufferBuilder.h>
@@ -61,6 +62,17 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
         return ENOBUFS;
 
     if ((g_profiling_event_mask & type) == 0)
+        return EINVAL;
+
+    auto current_thread = Thread::current();
+    u32 enter_count = 0;
+    if (current_thread)
+        enter_count = current_thread->enter_profiler();
+    ScopeGuard leave_profiler([&] {
+        if (current_thread)
+            current_thread->leave_profiler();
+    });
+    if (enter_count > 0)
         return EINVAL;
 
     PerformanceEvent event;
@@ -121,6 +133,8 @@ KResult PerformanceEventBuffer::append_with_eip_and_ebp(ProcessID pid, ThreadID 
     case PERF_EVENT_KFREE:
         event.data.kfree.size = arg1;
         event.data.kfree.ptr = arg2;
+        break;
+    case PERF_EVENT_PAGE_FAULT:
         break;
     default:
         return EINVAL;
@@ -209,6 +223,9 @@ bool PerformanceEventBuffer::to_json_impl(Serializer& object) const
             event_object.add("type", "kfree");
             event_object.add("ptr", static_cast<u64>(event.data.kfree.ptr));
             event_object.add("size", static_cast<u64>(event.data.kfree.size));
+            break;
+        case PERF_EVENT_PAGE_FAULT:
+            event_object.add("type", "page_fault");
             break;
         }
         event_object.add("pid", event.pid);
