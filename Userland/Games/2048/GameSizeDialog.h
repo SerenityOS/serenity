@@ -23,5 +23,5 @@ private:
     size_t m_board_size;
     size_t m_target_tile_power;
     bool m_evil_ai;
-    bool m_temporary { true };
+    bool m_temporary { false };
 };
