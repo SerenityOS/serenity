@@ -29,12 +29,14 @@ public:
     void reset()
     {
         set_view();
+        correct_aspect();
         calculate();
     }
 
     void resize(Gfx::IntSize const& size)
     {
         m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size);
+        correct_aspect();
         calculate();
     }
 
@@ -45,6 +47,7 @@ public:
             rect.right() * (m_x_end - m_x_start) / m_bitmap->width() + m_x_start,
             rect.top() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start,
             rect.bottom() * (m_y_end - m_y_start) / m_bitmap->height() + m_y_start);
+        correct_aspect();
         calculate();
     }
 
@@ -98,8 +101,7 @@ public:
 
     void calculate(int max_iterations = 100)
     {
-        if (!m_bitmap)
-            return;
+        VERIFY(m_bitmap);
 
         for (int py = 0; py < m_bitmap->height(); py++)
             for (int px = 0; px < m_bitmap->width(); px++)
@@ -118,12 +120,20 @@ private:
     double m_y_end { 0 };
     RefPtr<Gfx::Bitmap> m_bitmap;
 
-    void set_view(double x_start = -2.5, double x_end = 1.0, double y_start = -1.0, double y_end = 1.0)
+    void set_view(double x_start = -2.5, double x_end = 1.0, double y_start = -1.75, double y_end = 1.75)
     {
         m_x_start = x_start;
         m_x_end = x_end;
         m_y_start = y_start;
         m_y_end = y_end;
+    }
+
+    void correct_aspect()
+    {
+        auto y_mid = m_y_start + (m_y_end - m_y_start) / 2;
+        auto aspect_corrected_y_length = (m_x_end - m_x_start) * m_bitmap->height() / m_bitmap->width();
+        m_y_start = y_mid - aspect_corrected_y_length / 2;
+        m_y_end = y_mid + aspect_corrected_y_length / 2;
     }
 };
 
