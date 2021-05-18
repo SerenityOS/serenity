@@ -45,6 +45,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.values, values, 1, attr);
     define_native_function(vm.names.entries, entries, 1, attr);
     define_native_function(vm.names.create, create, 2, attr);
+    define_native_function(vm.names.hasOwn, has_own, 2, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()
@@ -308,6 +309,17 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
             return {};
     }
     return object;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
+{
+    auto* object = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+    auto string_or_symbol = StringOrSymbol::from_value(global_object, vm.argument(1));
+    if (vm.exception())
+        return {};
+    return Value(object->has_own_property(string_or_symbol));
 }
 
 }
