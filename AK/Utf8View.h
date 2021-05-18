@@ -54,6 +54,7 @@ public:
 
     Utf8CodepointIterator begin() const;
     Utf8CodepointIterator end() const;
+    Utf8CodepointIterator iterator_at_byte_offset(size_t) const;
 
     const unsigned char* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }

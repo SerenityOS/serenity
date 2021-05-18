@@ -46,6 +46,17 @@ Utf8CodepointIterator Utf8View::end() const
     return { end_ptr(), 0 };
 }
 
+Utf8CodepointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) const
+{
+    size_t current_offset = 0;
+    for (auto iterator = begin(); !iterator.done(); ++iterator) {
+        if (current_offset >= byte_offset)
+            return iterator;
+        current_offset += iterator.code_point_length_in_bytes();
+    }
+    return end();
+}
+
 size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
 {
     VERIFY(it.m_ptr >= begin_ptr());
