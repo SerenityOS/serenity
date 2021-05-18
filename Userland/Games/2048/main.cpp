@@ -39,8 +39,13 @@ int main(int argc, char** argv)
     auto config = Core::ConfigFile::get_for_app("2048");
 
     size_t board_size = config->read_num_entry("", "board_size", 4);
-    u32 target_tile = config->read_num_entry("", "target_tile", 0);
+    u32 target_tile = config->read_num_entry("", "target_tile", 2048);
     bool evil_ai = config->read_bool_entry("", "evil_ai", false);
+
+    if ((target_tile & (target_tile - 1)) != 0) {
+        // If the target tile is not a power of 2, reset to its default value.
+        target_tile = 2048;
+    }
 
     config->write_num_entry("", "board_size", board_size);
     config->write_num_entry("", "target_tile", target_tile);
@@ -94,7 +99,7 @@ int main(int argc, char** argv)
     Vector<Game> redo_stack;
 
     auto change_settings = [&] {
-        auto size_dialog = GameSizeDialog::construct(window);
+        auto size_dialog = GameSizeDialog::construct(window, board_size, target_tile, evil_ai);
         if (size_dialog->exec() || size_dialog->result() != GUI::Dialog::ExecOK)
             return;
 

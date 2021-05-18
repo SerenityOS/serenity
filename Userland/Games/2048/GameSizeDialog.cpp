@@ -11,9 +11,13 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/SpinBox.h>
+#include <math.h>
 
-GameSizeDialog::GameSizeDialog(GUI::Window* parent)
+GameSizeDialog::GameSizeDialog(GUI::Window* parent, size_t board_size, size_t target, bool evil_ai)
     : GUI::Dialog(parent)
+    , m_board_size(board_size)
+    , m_target_tile_power(log2(target))
+    , m_evil_ai(evil_ai)
 {
     set_rect({ 0, 0, 200, 150 });
     set_title("New Game");
