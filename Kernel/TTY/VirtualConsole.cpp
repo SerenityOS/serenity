@@ -134,10 +134,52 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
 
     // Add the lines, so we also ensure they will be flushed now
     for (size_t row = 0; row < rows(); row++) {
-        m_lines.append({ true });
+        m_lines.append({ true, 0 });
     }
     clear();
     VERIFY(m_cells);
+}
+
+void VirtualConsole::refresh_after_resolution_change()
+{
+    auto old_rows_count = rows();
+    auto old_columns_count = columns();
+    set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
+    m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
+
+    // Note: From now on, columns() and rows() are updated with the new settings.
+
+    auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
+    auto new_cells = MM.allocate_kernel_region(page_round_up(size), "Virtual Console Cells", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+
+    if (rows() < old_rows_count) {
+        m_lines.shrink(rows());
+    } else {
+        for (size_t row = 0; row < (size_t)(rows() - old_rows_count); row++) {
+            m_lines.append({ true, 0 });
+        }
+    }
+
+    // Note: A potential loss of displayed data occur when resolution width shrinks.
+    if (columns() < old_columns_count) {
+        for (size_t row = 0; row < rows(); row++) {
+            auto& line = m_lines[row];
+            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), columns() * sizeof(Cell));
+            line.dirty = true;
+        }
+    } else {
+        // Handle Growth of resolution
+        for (size_t row = 0; row < rows(); row++) {
+            auto& line = m_lines[row];
+            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), old_columns_count * sizeof(Cell));
+            line.dirty = true;
+        }
+    }
+
+    // Update the new cells Region
+    m_cells = move(new_cells);
+    m_console_impl.m_need_full_flush = true;
+    flush_dirty_lines();
 }
 
 UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index)
@@ -409,6 +451,10 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, u32 code_po
         cell.ch = code_point;
     cell.attribute.flags |= VT::Attribute::Flags::Touched;
     line.dirty = true;
+    // FIXME: Maybe we should consider to change length after printing a special char in a column
+    if (code_point <= 20)
+        return;
+    line.length = max<size_t>(line.length, column);
 }
 
 void VirtualConsole::invalidate_cursor(size_t row)
