@@ -84,7 +84,15 @@ static void print_backtrace(const String& coredump_path)
 static void launch_crash_reporter(const String& coredump_path, bool unlink_after_use)
 {
     pid_t child;
-    const char* argv[] = { "CrashReporter", coredump_path.characters(), unlink_after_use ? "--unlink" : nullptr, nullptr, nullptr };
+    const char* argv[4] = { "CrashReporter" };
+    if (unlink_after_use) {
+        argv[1] = "--unlink";
+        argv[2] = coredump_path.characters();
+        argv[3] = nullptr;
+    } else {
+        argv[1] = coredump_path.characters();
+        argv[2] = nullptr;
+    }
     if ((errno = posix_spawn(&child, "/bin/CrashReporter", nullptr, nullptr, const_cast<char**>(argv), environ))) {
         perror("posix_spawn");
     } else {
