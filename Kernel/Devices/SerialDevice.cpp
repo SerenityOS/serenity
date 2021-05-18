@@ -31,6 +31,7 @@ KResultOr<size_t> SerialDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
     if (!size)
         return 0;
 
+    ScopedSpinLock lock(m_serial_lock);
     if (!(get_line_status() & DataReady))
         return 0;
 
@@ -46,13 +47,14 @@ bool SerialDevice::can_write(const FileDescription&, size_t) const
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-KResultOr<size_t> SerialDevice::write(FileDescription&, u64, const UserOrKernelBuffer& buffer, size_t size)
+KResultOr<size_t> SerialDevice::write(FileDescription& description, u64, const UserOrKernelBuffer& buffer, size_t size)
 {
     if (!size)
         return 0;
 
-    if (!(get_line_status() & EmptyTransmitterHoldingRegister))
-        return 0;
+    ScopedSpinLock lock(m_serial_lock);
+    if (!can_write(description, size))
+        return EAGAIN;
 
     return buffer.read_buffered<128>(size, [&](u8 const* data, size_t data_size) {
         for (size_t i = 0; i < data_size; i++)
