@@ -33,6 +33,9 @@ private:
     };
 
 public:
+    using KeyType = K;
+    using ValueType = V;
+
     HashMap() = default;
 
 #ifndef SERENITY_LIBC_BUILD
