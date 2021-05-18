@@ -62,6 +62,7 @@ void Frame::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
+    m_cursor_position.node()->layout_node()->set_needs_display();
 }
 
 bool Frame::is_focused_frame() const
