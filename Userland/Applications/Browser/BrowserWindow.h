@@ -26,11 +26,25 @@ public:
     Tab& active_tab();
     void create_new_tab(URL, bool activate);
 
+    GUI::Action& go_back_action() { return *m_go_back_action; }
+    GUI::Action& go_forward_action() { return *m_go_forward_action; }
+    GUI::Action& go_home_action() { return *m_go_home_action; }
+    GUI::Action& reload_action() { return *m_reload_action; }
+    GUI::Action& view_source_action() { return *m_view_source_action; }
+    GUI::Action& inspect_dom_tree_action() { return *m_inspect_dom_tree_action; }
+
 private:
     explicit BrowserWindow(CookieJar&, URL);
 
     void build_menus();
     void set_window_title_for_tab(Tab const&);
+
+    RefPtr<GUI::Action> m_go_back_action;
+    RefPtr<GUI::Action> m_go_forward_action;
+    RefPtr<GUI::Action> m_go_home_action;
+    RefPtr<GUI::Action> m_reload_action;
+    RefPtr<GUI::Action> m_view_source_action;
+    RefPtr<GUI::Action> m_inspect_dom_tree_action;
 
     CookieJar& m_cookie_jar;
     WindowActions m_window_actions;
