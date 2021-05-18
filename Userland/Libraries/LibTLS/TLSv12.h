@@ -370,7 +370,7 @@ private:
     ByteBuffer build_server_key_exchange();
 
     ByteBuffer build_hello();
-    ByteBuffer build_finished();
+    ByteBuffer build_handshake_finished();
     ByteBuffer build_certificate();
     ByteBuffer build_done();
     ByteBuffer build_alert(bool critical, u8 code);
@@ -384,13 +384,13 @@ private:
 
     bool check_connection_state(bool read);
 
-    ssize_t handle_hello(ReadonlyBytes, WritePacketStage&);
-    ssize_t handle_finished(ReadonlyBytes, WritePacketStage&);
+    ssize_t handle_server_hello(ReadonlyBytes, WritePacketStage&);
+    ssize_t handle_handshake_finished(ReadonlyBytes, WritePacketStage&);
     ssize_t handle_certificate(ReadonlyBytes);
     ssize_t handle_server_key_exchange(ReadonlyBytes);
     ssize_t handle_server_hello_done(ReadonlyBytes);
-    ssize_t handle_verify(ReadonlyBytes);
-    ssize_t handle_payload(ReadonlyBytes);
+    ssize_t handle_certificate_verify(ReadonlyBytes);
+    ssize_t handle_handshake_payload(ReadonlyBytes);
     ssize_t handle_message(ReadonlyBytes);
     ssize_t handle_random(ReadonlyBytes);
 

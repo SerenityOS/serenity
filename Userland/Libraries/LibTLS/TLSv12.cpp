@@ -23,95 +23,6 @@
 
 namespace TLS {
 
-ssize_t TLSv12::handle_certificate(ReadonlyBytes buffer)
-{
-    ssize_t res = 0;
-
-    if (buffer.size() < 3) {
-        dbgln_if(TLS_DEBUG, "not enough certificate header data");
-        return (i8)Error::NeedMoreData;
-    }
-
-    u32 certificate_total_length = buffer[0] * 0x10000 + buffer[1] * 0x100 + buffer[2];
-
-    dbgln_if(TLS_DEBUG, "total length: {}", certificate_total_length);
-
-    if (certificate_total_length <= 4)
-        return 3 * certificate_total_length;
-
-    res += 3;
-
-    if (certificate_total_length > buffer.size() - res) {
-        dbgln_if(TLS_DEBUG, "not enough data for claimed total cert length");
-        return (i8)Error::NeedMoreData;
-    }
-    size_t size = certificate_total_length;
-
-    size_t index = 0;
-    bool valid_certificate = false;
-
-    while (size > 0) {
-        ++index;
-        if (buffer.size() - res < 3) {
-            dbgln_if(TLS_DEBUG, "not enough data for certificate length");
-            return (i8)Error::NeedMoreData;
-        }
-        size_t certificate_size = buffer[res] * 0x10000 + buffer[res + 1] * 0x100 + buffer[res + 2];
-        res += 3;
-
-        if (buffer.size() - res < certificate_size) {
-            dbgln_if(TLS_DEBUG, "not enough data for certificate body");
-            return (i8)Error::NeedMoreData;
-        }
-
-        auto res_cert = res;
-        auto remaining = certificate_size;
-        size_t certificates_in_chain = 0;
-
-        do {
-            if (remaining <= 3) {
-                dbgln("Ran out of data");
-                break;
-            }
-            ++certificates_in_chain;
-            if (buffer.size() < (size_t)res_cert + 3) {
-                dbgln("not enough data to read cert size ({} < {})", buffer.size(), res_cert + 3);
-                break;
-            }
-            size_t certificate_size_specific = buffer[res_cert] * 0x10000 + buffer[res_cert + 1] * 0x100 + buffer[res_cert + 2];
-            res_cert += 3;
-            remaining -= 3;
-
-            if (certificate_size_specific > remaining) {
-                dbgln("invalid certificate size (expected {} but got {})", remaining, certificate_size_specific);
-                break;
-            }
-            remaining -= certificate_size_specific;
-
-            auto certificate = Certificate::parse_asn1(buffer.slice(res_cert, certificate_size_specific), false);
-            if (certificate.has_value()) {
-                if (certificate.value().is_valid()) {
-                    m_context.certificates.append(certificate.value());
-                    valid_certificate = true;
-                }
-            }
-            res_cert += certificate_size_specific;
-        } while (remaining > 0);
-        if (remaining) {
-            dbgln("extraneous {} bytes left over after parsing certificates", remaining);
-        }
-        size -= certificate_size + 3;
-        res += certificate_size;
-    }
-    if (!valid_certificate)
-        return (i8)Error::UnsupportedCertificate;
-
-    if ((size_t)res != buffer.size())
-        dbgln("some data left unread: {} bytes out of {}", res, buffer.size());
-
-    return res;
-}
-
 void TLSv12::consume(ReadonlyBytes record)
 {
     if (m_context.critical_error) {
@@ -179,38 +90,6 @@ void TLSv12::consume(ReadonlyBytes record)
     if (index) {
         m_context.message_buffer = m_context.message_buffer.slice(index, m_context.message_buffer.size() - index);
     }
-}
-
-void TLSv12::ensure_hmac(size_t digest_size, bool local)
-{
-    if (local && m_hmac_local)
-        return;
-
-    if (!local && m_hmac_remote)
-        return;
-
-    auto hash_kind = Crypto::Hash::HashKind::None;
-
-    switch (digest_size) {
-    case Crypto::Hash::SHA1::DigestSize:
-        hash_kind = Crypto::Hash::HashKind::SHA1;
-        break;
-    case Crypto::Hash::SHA256::DigestSize:
-        hash_kind = Crypto::Hash::HashKind::SHA256;
-        break;
-    case Crypto::Hash::SHA512::DigestSize:
-        hash_kind = Crypto::Hash::HashKind::SHA512;
-        break;
-    default:
-        dbgln("Failed to find a suitable hash for size {}", digest_size);
-        break;
-    }
-
-    auto hmac = make<Crypto::Authentication::HMAC<Crypto::Hash::Manager>>(ReadonlyBytes { local ? m_context.crypto.local_mac : m_context.crypto.remote_mac, digest_size }, hash_kind);
-    if (local)
-        m_hmac_local = move(hmac);
-    else
-        m_hmac_remote = move(hmac);
 }
 
 bool Certificate::is_valid() const
@@ -353,36 +232,48 @@ bool Context::verify_chain() const
     return true;
 }
 
-static bool wildcard_matches(const StringView& host, const StringView& subject)
+void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
-    if (host.matches(subject))
-        return true;
-
-    if (subject.starts_with("*."))
-        return wildcard_matches(host, subject.substring_view(2));
-
-    return false;
-}
-
-Optional<size_t> TLSv12::verify_chain_and_get_matching_certificate(const StringView& host) const
-{
-    if (m_context.certificates.is_empty() || !m_context.verify_chain())
-        return {};
-
-    if (host.is_empty())
-        return 0;
-
-    for (size_t i = 0; i < m_context.certificates.size(); ++i) {
-        auto& cert = m_context.certificates[i];
-        if (wildcard_matches(host, cert.subject.subject))
-            return i;
-        for (auto& san : cert.SAN) {
-            if (wildcard_matches(host, san))
-                return i;
-        }
+    if (!secret.size()) {
+        dbgln("null secret");
+        return;
     }
 
-    return {};
+    // RFC 5246: "In this section, we define one PRF, based on HMAC.  This PRF with the
+    //            SHA-256 hash function is used for all cipher suites defined in this
+    //            document and in TLS documents published prior to this document when
+    //            TLS 1.2 is negotiated."
+    // Apparently this PRF _always_ uses SHA256
+
+    auto append_label_seed = [&](auto& hmac) {
+        hmac.update(label, label_length);
+        hmac.update(seed);
+        if (seed_b.size() > 0)
+            hmac.update(seed_b);
+    };
+
+    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret);
+    append_label_seed(hmac);
+
+    constexpr auto digest_size = hmac.digest_size();
+    u8 digest[digest_size];
+    auto digest_0 = Bytes { digest, digest_size };
+
+    digest_0.overwrite(0, hmac.digest().immutable_data(), digest_size);
+
+    size_t index = 0;
+    while (index < output.size()) {
+        hmac.update(digest_0);
+        append_label_seed(hmac);
+        auto digest_1 = hmac.digest();
+
+        auto copy_size = min(digest_size, output.size() - index);
+
+        output.overwrite(index, digest_1.immutable_data(), copy_size);
+        index += copy_size;
+
+        digest_0.overwrite(0, hmac.process(digest_0).immutable_data(), digest_size);
+    }
 }
 
 TLSv12::TLSv12(Core::Object* parent, Options options)
