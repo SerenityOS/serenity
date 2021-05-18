@@ -20,6 +20,7 @@ set(AK_TEST_SOURCES
     TestEndian.cpp
     TestEnumBits.cpp
     TestFind.cpp
+    TestFixedString.cpp
     TestFormat.cpp
     TestGenericLexer.cpp
     TestHashFunctions.cpp

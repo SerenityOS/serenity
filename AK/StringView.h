@@ -24,13 +24,17 @@ public:
         : m_characters(characters)
         , m_length(length)
     {
-        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        if (!is_constant_evaluated()) {
+            VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        }
     }
     ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
-        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        if (!is_constant_evaluated()) {
+            VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        }
     }
     ALWAYS_INLINE constexpr StringView(const char* cstring)
         : m_characters(cstring)
@@ -185,11 +189,23 @@ public:
     {
         if (is_null())
             return other.is_null();
-        if (other.is_null())
-            return false;
+        if (!is_constant_evaluated()) {
+            if (other.is_null())
+                return false;
+        }
         if (length() != other.length())
             return false;
-        return !__builtin_memcmp(m_characters, other.m_characters, m_length);
+
+        if (!is_constant_evaluated()) {
+            return !__builtin_memcmp(m_characters, other.m_characters, m_length);
+        } else {
+            for (auto i = 0u; i < length(); ++i) {
+                if (m_characters[i] != other.m_characters[i]) {
+                    return false;
+                }
+            }
+            return true;
+        }
     }
 
     constexpr bool operator!=(const StringView& other) const

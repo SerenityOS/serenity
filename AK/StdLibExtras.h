@@ -112,6 +112,10 @@ constexpr T exchange(T& slot, U&& value)
 template<typename T>
 using RawPtr = typename Detail::_RawPtr<T>::Type;
 
+constexpr inline bool is_constant_evaluated()
+{
+    return __builtin_is_constant_evaluated();
+}
 }
 
 using AK::array_size;
@@ -120,6 +124,7 @@ using AK::clamp;
 using AK::declval;
 using AK::exchange;
 using AK::forward;
+using AK::is_constant_evaluated;
 using AK::max;
 using AK::min;
 using AK::RawPtr;
