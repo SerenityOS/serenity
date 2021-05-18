@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/ElapsedTimer.h>
+#include <LibGUI/Menu.h>
 #include <LibGUI/Widget.h>
 #include <math.h>
 #include <unistd.h>
@@ -19,11 +20,13 @@ public:
     virtual void paint_event(GUI::PaintEvent& event) override;
     virtual void mousemove_event(GUI::MouseEvent& event) override;
     virtual void mousedown_event(GUI::MouseEvent& event) override;
+    virtual void context_menu_event(GUI::ContextMenuEvent& event) override;
 
     void track_cursor_globally();
     void start_the_timer() { m_timer.start(); }
 
     Function<void()> on_click;
+    Function<void(GUI::ContextMenuEvent&)> on_context_menu_request;
 
     bool roaming() const { return m_roaming; }
     void set_roaming(bool roaming)
@@ -40,6 +43,7 @@ public:
 private:
     Gfx::IntPoint m_temp_pos;
     Core::ElapsedTimer m_timer;
+
     int m_curr_frame = 1;
     int m_moveX, m_moveY = 0;
     bool m_up, m_down, m_left, m_right, m_sleeping = false;
