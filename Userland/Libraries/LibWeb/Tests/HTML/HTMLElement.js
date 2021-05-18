@@ -1,9 +1,12 @@
-loadPage("file:///res/html/misc/welcome.html");
+describe("HTMLElement", () => {
+    loadLocalPage("/res/html/misc/welcome.html");
 
-afterInitialPageLoad(() => {
-    test("contentEditable attribute", () => {
-        expect(document.body.contentEditable).toBe("inherit");
-        expect(document.firstChild.nextSibling.nodeName).toBe("HTML");
-        expect(document.firstChild.nextSibling.contentEditable).toBe("true");
+    afterInitialPageLoad(page => {
+        test("contentEditable attribute", () => {
+            expect(page.document.body.contentEditable).toBe("inherit");
+            expect(page.document.firstChild.nextSibling.nodeName).toBe("HTML");
+            expect(page.document.firstChild.nextSibling.contentEditable).toBe("true");
+        });
     });
+    waitForPageToLoad();
 });

@@ -1,8 +1,11 @@
-loadPage("file:///res/html/misc/blank.html");
+describe("window_frames_self", () => {
+    loadLocalPage("/res/html/misc/blank.html");
 
-afterInitialPageLoad(() => {
-    test("window.{window,frames,self} all return the Window object", () => {
-        expect(window.window).toBe(window.frames);
-        expect(window.window).toBe(window.self);
+    afterInitialPageLoad(page => {
+        test("window.{window,frames,self} all return the Window object", () => {
+            expect(page.window.window).toBe(page.window.frames);
+            expect(page.window.window).toBe(page.window.self);
+        });
     });
+    waitForPageToLoad();
 });
