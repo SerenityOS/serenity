@@ -37,7 +37,7 @@ void CSSLoader::load_from_url(const AK::URL& url)
     m_style_sheet->set_owner_node(&m_owner_element);
 
     auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
 }
 
 void CSSLoader::resource_did_load()
@@ -89,8 +89,7 @@ void CSSLoader::load_next_import_if_needed()
 
         LoadRequest request;
         request.set_url(rule.url());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-
+        set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
     });
 }
 */

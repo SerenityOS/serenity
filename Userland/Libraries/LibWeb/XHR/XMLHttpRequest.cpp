@@ -9,8 +9,10 @@
 
 #include <AK/GenericLexer.h>
 #include <AK/QuickSort.h>
+#include <LibHTTP/Header.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibTextCodec/Decoder.h>
@@ -32,7 +34,6 @@
 #include <LibWeb/XHR/EventNames.h>
 #include <LibWeb/XHR/ProgressEvent.h>
 #include <LibWeb/XHR/XMLHttpRequest.h>
-#include <LibHTTP/Header.h>
 
 namespace Web::XHR {
 

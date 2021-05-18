@@ -12,7 +12,7 @@
 namespace Web::Fetch {
 
 ImageResource::ImageResource(const LoadRequest& request)
-    : Resource(Type::Image, request)
+    : Response(Type::Image, request)
 {
 }
 

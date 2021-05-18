@@ -7,29 +7,29 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibCore/MimeData.h>
-#include <LibWeb/Fetch/Resource.h>
+#include <LibWeb/Fetch/Response.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 
 namespace Web::Fetch {
 
-NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
+NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
 {
     if (type == Type::Image)
         return adopt_ref(*new ImageResource(request));
-    return adopt_ref(*new Resource(type, request));
+    return adopt_ref(*new Response(type, request));
 }
 
-Resource::Resource(Type type, const LoadRequest& request)
+Response::Response(Type type, const LoadRequest& request)
     : m_request(request)
     , m_type(type)
 {
 }
 
-Resource::~Resource()
+Response::~Response()
 {
 }
 
-void Resource::for_each_client(Function<void(ResourceClient&)> callback)
+void Response::for_each_client(Function<void(ResourceClient&)> callback)
 {
     Vector<WeakPtr<ResourceClient>, 16> clients_copy;
     clients_copy.ensure_capacity(m_clients.size());
@@ -65,7 +65,7 @@ static String mime_type_from_content_type(const String& content_type)
     return content_type;
 }
 
-void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
+void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
 {
     VERIFY(!m_loaded);
     // FIXME: Handle OOM failure.
@@ -110,7 +110,7 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     });
 }
 
-void Resource::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code)
+void Response::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code)
 {
     m_error = error;
     m_status_code = move(status_code);
@@ -121,19 +121,19 @@ void Resource::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32
     });
 }
 
-void Resource::register_client(Badge<ResourceClient>, ResourceClient& client)
+void Response::register_client(Badge<ResourceClient>, ResourceClient& client)
 {
     VERIFY(!m_clients.contains(&client));
     m_clients.set(&client);
 }
 
-void Resource::unregister_client(Badge<ResourceClient>, ResourceClient& client)
+void Response::unregister_client(Badge<ResourceClient>, ResourceClient& client)
 {
     VERIFY(m_clients.contains(&client));
     m_clients.remove(&client);
 }
 
-void ResourceClient::set_resource(Resource* resource)
+void ResourceClient::set_resource(Response* resource)
 {
     if (m_resource)
         m_resource->unregister_client({}, *this);

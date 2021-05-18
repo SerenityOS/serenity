@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibWeb/Fetch/Resource.h>
+#include <LibWeb/Fetch/Response.h>
 
 namespace Web::Fetch {
 
-class ImageResource final : public Resource {
-    friend class Resource;
+class ImageResource final : public Response {
+    friend class Response;
 
 public:
     virtual ~ImageResource() override;
@@ -63,7 +63,7 @@ protected:
     const ImageResource* resource() const { return static_cast<const ImageResource*>(ResourceClient::resource()); }
 
 private:
-    virtual Resource::Type client_type() const override { return Resource::Type::Image; }
+    virtual Response::Type client_type() const override { return Response::Type::Image; }
 };
 
 }

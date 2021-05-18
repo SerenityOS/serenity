@@ -14,8 +14,8 @@
 #include <LibProtocol/RequestClient.h>
 #include <LibWeb/Fetch/ContentFilter.h>
 #include <LibWeb/Fetch/LoadRequest.h>
-#include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
+#include <LibWeb/Fetch/Response.h>
 
 namespace Web::Fetch {
 
@@ -69,9 +69,9 @@ void ResourceLoader::preconnect(AK::URL const& url)
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
 }
 
-static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
+static HashMap<LoadRequest, NonnullRefPtr<Response>> s_resource_cache;
 
-RefPtr<Fetch::Resource> ResourceLoader::load_resource(Fetch::Resource::Type type, LoadRequest& request)
+RefPtr<Response> ResourceLoader::load_resource(Response::Type type, const LoadRequest& request)
 {
     if (!request.is_valid())
         return nullptr;
@@ -90,7 +90,7 @@ RefPtr<Fetch::Resource> ResourceLoader::load_resource(Fetch::Resource::Type type
         }
     }
 
-    auto resource = Resource::create({}, type, request);
+    auto resource = Response::create({}, type, request);
 
     if (use_cache)
         s_resource_cache.set(request, resource);
@@ -98,10 +98,10 @@ RefPtr<Fetch::Resource> ResourceLoader::load_resource(Fetch::Resource::Type type
     load(
         request,
         [=](auto data, auto& headers, auto status_code) {
-            const_cast<Resource&>(*resource).did_load({}, data, headers, status_code);
+            const_cast<Response&>(*resource).did_load({}, data, headers, status_code);
         },
         [=](auto& error, auto status_code) {
-            const_cast<Resource&>(*resource).did_fail({}, error, status_code);
+            const_cast<Response&>(*resource).did_fail({}, error, status_code);
         });
 
     return resource;

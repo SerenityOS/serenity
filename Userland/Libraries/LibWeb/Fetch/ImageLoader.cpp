@@ -31,7 +31,7 @@ void ImageLoader::load_without_resetting_redirect_counter(AK::URL const& url)
     m_loading_state = LoadingState::Loading;
 
     auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Image, request));
+    set_resource(ResourceLoader::the().load_resource(Response::Type::Image, request));
 }
 
 void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const

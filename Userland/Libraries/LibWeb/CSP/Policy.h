@@ -28,7 +28,7 @@ public:
 private:
     // FIXME: Each policy has an associated directive set, which is an ordered set of directives that define the policy’s implications when applied.
     Disposition m_disposition { Disposition::Enforce }; // NOTE: The spec doesn't define a default value. This just initialises it to the first enum possible.
-    Source m_source { Source::Header }; // NOTE: The spec doesn't define a default value. This just initialises it to the first enum possible.
+    Source m_source { Source::Header };                 // NOTE: The spec doesn't define a default value. This just initialises it to the first enum possible.
     Origin m_self_origin;
 };
 

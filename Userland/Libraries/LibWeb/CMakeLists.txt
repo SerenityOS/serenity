@@ -110,8 +110,8 @@ set(SOURCES
     Fetch/ImageLoader.cpp
     Fetch/ImageResource.cpp
     Fetch/LoadRequest.cpp
-    Fetch/Resource.cpp
     Fetch/ResourceLoader.cpp
+    Fetch/Response.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp

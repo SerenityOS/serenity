@@ -157,6 +157,8 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
     auto& url = request.url();
 
+    set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
+
     if (type == Type::Navigation || type == Type::Reload) {
         if (auto* page = browsing_context().page())
             page->client().page_did_start_loading(url);
@@ -174,7 +176,7 @@ bool FrameLoader::load(LoadRequest& request, Type type)
     if (!request.headers().contains("Accept"))
         request.set_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
 
     if (type == Type::IFrame)
         return true;

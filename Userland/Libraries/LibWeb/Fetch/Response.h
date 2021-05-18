@@ -22,9 +22,9 @@ namespace Web::Fetch {
 
 class ResourceClient;
 
-class Resource : public RefCounted<Resource> {
-    AK_MAKE_NONCOPYABLE(Resource);
-    AK_MAKE_NONMOVABLE(Resource);
+class Response : public RefCounted<Response> {
+    AK_MAKE_NONCOPYABLE(Response);
+    AK_MAKE_NONMOVABLE(Response);
 
 public:
     enum class Type {
@@ -32,8 +32,8 @@ public:
         Image,
     };
 
-    static NonnullRefPtr<Resource> create(Badge<ResourceLoader>, Type, const LoadRequest&);
-    virtual ~Resource();
+    static NonnullRefPtr<Response> create(Badge<ResourceLoader>, Type, const LoadRequest&);
+    virtual ~Response();
 
     Type type() const { return m_type; }
 
@@ -64,7 +64,7 @@ public:
     void did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code);
 
 protected:
-    explicit Resource(Type, const LoadRequest&);
+    explicit Response(Type, const LoadRequest&);
 
 private:
     LoadRequest m_request;
@@ -89,14 +89,14 @@ public:
     virtual void resource_did_fail() { }
 
 protected:
-    virtual Resource::Type client_type() const { return Resource::Type::Generic; }
+    virtual Response::Type client_type() const { return Response::Type::Generic; }
 
-    Resource* resource() { return m_resource; }
-    const Resource* resource() const { return m_resource; }
-    void set_resource(Resource*);
+    Response* resource() { return m_resource; }
+    const Response* resource() const { return m_resource; }
+    void set_resource(Response*);
 
 private:
-    RefPtr<Resource> m_resource;
+    RefPtr<Response> m_resource;
 };
 
 }

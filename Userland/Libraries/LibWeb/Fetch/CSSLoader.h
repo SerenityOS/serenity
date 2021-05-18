@@ -8,7 +8,7 @@
 
 #include <AK/Function.h>
 #include <LibWeb/CSS/CSSStyleSheet.h>
-#include <LibWeb/Fetch/Resource.h>
+#include <LibWeb/Fetch/Response.h>
 
 namespace Web::Fetch {
 /*

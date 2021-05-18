@@ -9,7 +9,7 @@
 #include <AK/Function.h>
 #include <AK/URL.h>
 #include <LibCore/Object.h>
-#include <LibWeb/Fetch/Resource.h>
+#include <LibWeb/Fetch/Response.h>
 
 namespace Protocol {
 class RequestClient;
@@ -31,7 +31,7 @@ class ResourceLoader : public Core::Object {
 public:
     static ResourceLoader& the();
 
-    RefPtr<Fetch::Resource> load_resource(Fetch::Resource::Type, LoadRequest&);
+    RefPtr<Response> load_resource(Response::Type, const LoadRequest&);
 
     void load(LoadRequest&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);
     void load(const AK::URL&, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback = nullptr);

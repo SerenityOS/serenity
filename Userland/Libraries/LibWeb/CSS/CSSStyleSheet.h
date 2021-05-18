@@ -12,7 +12,7 @@
 #include <LibWeb/CSS/CSSRuleList.h>
 #include <LibWeb/CSS/CSSStyleRule.h>
 #include <LibWeb/CSS/StyleSheet.h>
-#include <LibWeb/Fetch/Resource.h>
+#include <LibWeb/Fetch/Response.h>
 
 namespace Web::CSS {
 
