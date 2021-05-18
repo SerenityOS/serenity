@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/OwnPtr.h>
+#include <AK/Variant.h>
 #include <LibCrypto/Hash/HashFunction.h>
 #include <LibCrypto/Hash/MD5.h>
 #include <LibCrypto/Hash/SHA1.h>
@@ -26,85 +27,53 @@ enum class HashKind {
 };
 
 struct MultiHashDigestVariant {
-
     constexpr static size_t Size = 0;
 
+    MultiHashDigestVariant(MD5::DigestType digest)
+        : m_digest(move(digest))
+    {
+    }
+
     MultiHashDigestVariant(SHA1::DigestType digest)
-        : sha1(digest)
-        , kind(HashKind::SHA1)
+        : m_digest(move(digest))
     {
     }
 
     MultiHashDigestVariant(SHA256::DigestType digest)
-        : sha256(digest)
-        , kind(HashKind::SHA256)
+        : m_digest(move(digest))
     {
     }
 
     MultiHashDigestVariant(SHA384::DigestType digest)
-        : sha384(digest)
-        , kind(HashKind::SHA384)
+        : m_digest(move(digest))
     {
     }
 
     MultiHashDigestVariant(SHA512::DigestType digest)
-        : sha512(digest)
-        , kind(HashKind::SHA512)
-    {
-    }
-
-    MultiHashDigestVariant(MD5::DigestType digest)
-        : md5(digest)
-        , kind(HashKind::MD5)
+        : m_digest(move(digest))
     {
     }
 
     const u8* immutable_data() const
     {
-        switch (kind) {
-        case HashKind::MD5:
-            return md5.value().immutable_data();
-        case HashKind::SHA1:
-            return sha1.value().immutable_data();
-        case HashKind::SHA256:
-            return sha256.value().immutable_data();
-        case HashKind::SHA384:
-            return sha384.value().immutable_data();
-        case HashKind::SHA512:
-            return sha512.value().immutable_data();
-        default:
-        case HashKind::None:
-            VERIFY_NOT_REACHED();
-            break;
-        }
+        const u8* data = nullptr;
+        m_digest.visit(
+            [&](const Empty&) { VERIFY_NOT_REACHED(); },
+            [&](const auto& value) { data = value.immutable_data(); });
+        return data;
     }
 
     size_t data_length()
     {
-        switch (kind) {
-        case HashKind::MD5:
-            return md5.value().data_length();
-        case HashKind::SHA1:
-            return sha1.value().data_length();
-        case HashKind::SHA256:
-            return sha256.value().data_length();
-        case HashKind::SHA384:
-            return sha384.value().data_length();
-        case HashKind::SHA512:
-            return sha512.value().data_length();
-        default:
-        case HashKind::None:
-            VERIFY_NOT_REACHED();
-            break;
-        }
+        size_t length = 0;
+        m_digest.visit(
+            [&](const Empty&) { VERIFY_NOT_REACHED(); },
+            [&](const auto& value) { length = value.data_length(); });
+        return length;
     }
 
-    Optional<SHA1::DigestType> sha1;
-    Optional<SHA256::DigestType> sha256;
-    Optional<SHA384::DigestType> sha384;
-    Optional<SHA512::DigestType> sha512;
-    Optional<MD5::DigestType> md5;
-    HashKind kind { HashKind::None };
+    using DigestVariant = Variant<Empty, MD5::DigestType, SHA1::DigestType, SHA256::DigestType, SHA384::DigestType, SHA512::DigestType>;
+    DigestVariant m_digest { Empty {} };
 };
 
 class Manager final : public HashFunction<0, MultiHashDigestVariant> {
