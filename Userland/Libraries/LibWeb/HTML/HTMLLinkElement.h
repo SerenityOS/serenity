@@ -9,6 +9,7 @@
 #pragma once
 
 #include <LibWeb/DOM/DocumentLoadEventDelayer.h>
+#include <LibWeb/Fetch/CSSLoader.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {

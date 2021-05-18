@@ -7,7 +7,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibWeb/Bindings/NavigatorObject.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 
 namespace Web {
 namespace Bindings {

@@ -5,7 +5,7 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <LibWeb/Loader/ContentFilter.h>
+#include <LibWeb/Fetch/ContentFilter.h>
 
 namespace Web {
 

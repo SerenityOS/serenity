@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Fetch/Resource.h>
 
 namespace Web {
 

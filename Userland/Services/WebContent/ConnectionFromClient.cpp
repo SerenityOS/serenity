@@ -19,12 +19,14 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Dump.h>
+#include <LibWeb/Fetch/ContentFilter.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 #include <LibWeb/HTML/Storage.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Loader/ContentFilter.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/Frame.h>
+#include <WebContent/ClientConnection.h>
 #include <WebContent/ConnectionFromClient.h>
 #include <WebContent/PageHost.h>
 #include <WebContent/WebContentClientEndpoint.h>

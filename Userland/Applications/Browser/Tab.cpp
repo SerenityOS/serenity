@@ -30,8 +30,11 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
+#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/BlockContainer.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
 #include <LibWeb/Loader/ResourceLoader.h>

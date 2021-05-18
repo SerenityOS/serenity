@@ -9,7 +9,7 @@
 #include <AK/Function.h>
 #include <AK/URL.h>
 #include <LibCore/Object.h>
-#include <LibWeb/Loader/Resource.h>
+#include <LibWeb/Fetch/Resource.h>
 
 namespace Protocol {
 class RequestClient;

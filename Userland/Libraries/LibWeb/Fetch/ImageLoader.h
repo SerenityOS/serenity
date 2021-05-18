@@ -8,7 +8,7 @@
 
 #include <AK/Function.h>
 #include <LibCore/Timer.h>
-#include <LibWeb/Loader/ImageResource.h>
+#include <LibWeb/Fetch/ImageResource.h>
 
 namespace Web {
 

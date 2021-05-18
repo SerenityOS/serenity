@@ -36,7 +36,9 @@
 #include <LibWeb/CSS/PreferredColorScheme.h>
 #include <LibWeb/Dump.h>
 #include <LibWeb/Layout/InitialContainingBlock.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
+#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/OutOfProcessWebView.h>
 
 namespace Browser {

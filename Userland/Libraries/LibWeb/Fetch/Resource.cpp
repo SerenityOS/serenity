@@ -7,8 +7,8 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibCore/MimeData.h>
+#include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
-#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 

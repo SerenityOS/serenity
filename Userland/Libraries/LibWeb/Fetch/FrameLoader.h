@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Loader/Resource.h>
 
 namespace Web {
 

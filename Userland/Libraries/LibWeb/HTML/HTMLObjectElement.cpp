@@ -8,9 +8,9 @@
 #include <LibWeb/CSS/StyleComputer.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/HTMLObjectElement.h>
 #include <LibWeb/Layout/ImageBox.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 
 namespace Web::HTML {
 

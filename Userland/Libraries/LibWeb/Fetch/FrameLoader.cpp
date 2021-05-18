@@ -15,12 +15,16 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/ElementFactory.h>
 #include <LibWeb/DOM/Text.h>
+#include <LibWeb/Fetch/FrameLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/HTMLIFrameElement.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/ImageDecoding.h>
-#include <LibWeb/Loader/FrameLoader.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Namespace.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web {

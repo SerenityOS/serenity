@@ -9,8 +9,8 @@
 #include <LibGfx/Bitmap.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
-#include <LibWeb/Loader/ImageLoader.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Fetch/ImageLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 
 namespace Web {
 

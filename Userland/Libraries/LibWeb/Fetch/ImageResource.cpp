@@ -5,8 +5,8 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibWeb/ImageDecoding.h>
-#include <LibWeb/Loader/ImageResource.h>
+#include <LibImageDecoderClient/Client.h>
+#include <LibWeb/Fetch/ImageResource.h>
 
 namespace Web {
 

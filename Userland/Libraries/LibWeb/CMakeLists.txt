@@ -104,6 +104,14 @@ set(SOURCES
     Encoding/TextDecoder.cpp
     Encoding/TextEncoder.cpp
     Fetch/AbstractOperations.cpp
+    Fetch/ContentFilter.cpp
+    Fetch/CSSLoader.cpp
+    Fetch/FrameLoader.cpp
+    Fetch/ImageLoader.cpp
+    Fetch/ImageResource.cpp
+    Fetch/LoadRequest.cpp
+    Fetch/Resource.cpp
+    Fetch/ResourceLoader.cpp
     FontCache.cpp
     Geometry/DOMRectList.cpp
     HTML/AttributeNames.cpp
@@ -260,13 +268,6 @@ set(SOURCES
     Layout/TableRowGroupBox.cpp
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
-    Loader/ContentFilter.cpp
-    Loader/FrameLoader.cpp
-    Loader/ImageLoader.cpp
-    Loader/ImageResource.cpp
-    Loader/LoadRequest.cpp
-    Loader/Resource.cpp
-    Loader/ResourceLoader.cpp
     MimeSniff/MimeType.cpp
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp

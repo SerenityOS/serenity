@@ -32,8 +32,8 @@
 #include <LibWeb/CSS/Resolution.h>
 #include <LibWeb/CSS/Time.h>
 #include <LibWeb/CSS/ValueID.h>
+#include <LibWeb/Fetch/ImageResource.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Loader/ImageResource.h>
 
 namespace Web::CSS {
 

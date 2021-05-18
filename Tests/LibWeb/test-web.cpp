@@ -12,10 +12,11 @@
 #include <LibTest/JavaScriptTestRunner.h>
 #include <LibWeb/Bindings/MainThreadVM.h>
 #include <LibWeb/Bindings/WindowObject.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
+#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/HTML/Scripting/WindowEnvironmentSettingsObject.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Loader/ResourceLoader.h>
 
 using namespace Test::JS;
 

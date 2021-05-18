@@ -21,7 +21,8 @@
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Window.h>
 #include <LibProtocol/RequestClient.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
+#include <math.h>
 
 namespace Browser {
 

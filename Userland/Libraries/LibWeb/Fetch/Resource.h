@@ -15,8 +15,8 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Forward.h>
-#include <LibWeb/Loader/LoadRequest.h>
 
 namespace Web {
 

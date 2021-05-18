@@ -11,9 +11,11 @@
 #include <LibWeb/CSS/Serialize.h>
 #include <LibWeb/CSS/StyleValue.h>
 #include <LibWeb/DOM/Document.h>
+#include <LibWeb/Fetch/LoadRequest.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/BrowsingContext.h>
-#include <LibWeb/Loader/LoadRequest.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/InProcessWebView.h>
+#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
 namespace Web::CSS {
