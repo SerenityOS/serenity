@@ -73,7 +73,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     }
 
-    auto requested_path = LexicalPath::canonicalized_path(request.resource());
+    auto requested_path = LexicalPath::join("/", request.resource()).string();
     dbgln("Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
