@@ -249,7 +249,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
 
         for (auto& focused_card : m_focused_cards) {
             if (stack.bounding_box().intersects(focused_card.rect())) {
-                if (stack.is_allowed_to_push(m_focused_cards.at(0))) {
+                if (stack.is_allowed_to_push(m_focused_cards.at(0), m_focused_cards.size())) {
                     for (auto& to_intersect : m_focused_cards) {
                         mark_intersecting_stacks_dirty(to_intersect);
                         stack.push(to_intersect);

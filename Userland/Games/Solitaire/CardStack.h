@@ -42,7 +42,7 @@ public:
     void move_to_stack(CardStack&);
     void rebound_cards();
 
-    bool is_allowed_to_push(const Card&) const;
+    bool is_allowed_to_push(const Card&, size_t stack_size = 1) const;
     void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed);
     void draw(GUI::Painter&, const Gfx::Color& background_color);
     void clear();
