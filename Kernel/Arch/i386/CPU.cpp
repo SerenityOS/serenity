@@ -920,15 +920,13 @@ UNMAP_AFTER_INIT void write_xcr0(u64 value)
 
 READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
-READONLY_AFTER_INIT static Vector<Processor*>* s_processors;
-static SpinLock s_processor_lock;
+READONLY_AFTER_INIT static ProcessorContainer s_processors {};
 READONLY_AFTER_INIT volatile u32 Processor::g_total_processors;
 static volatile bool s_smp_enabled;
 
-Vector<Processor*>& Processor::processors()
+ProcessorContainer& Processor::processors()
 {
-    VERIFY(s_processors);
-    return *s_processors;
+    return s_processors;
 }
 
 Processor& Processor::by_id(u32 cpu)
@@ -1235,13 +1233,9 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     m_info = new ProcessorInfo(*this);
 
     {
-        ScopedSpinLock lock(s_processor_lock);
         // We need to prevent races between APs starting up at the same time
-        if (!s_processors)
-            s_processors = new Vector<Processor*>();
-        if (cpu >= s_processors->size())
-            s_processors->resize(cpu + 1);
-        (*s_processors)[cpu] = this;
+        VERIFY(cpu < s_processors.size());
+        s_processors[cpu] = this;
     }
 }
 
