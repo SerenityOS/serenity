@@ -153,21 +153,21 @@ void BrowserWindow::build_menus()
         },
         this));
 
-    auto go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
-    auto go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
-    auto go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(g_home_url); }, this);
-    go_home_action->set_status_tip("Go to home page");
-    auto reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
-    reload_action->set_status_tip("Reload current page");
+    m_go_back_action = GUI::CommonActions::make_go_back_action([this](auto&) { active_tab().go_back(); }, this);
+    m_go_forward_action = GUI::CommonActions::make_go_forward_action([this](auto&) { active_tab().go_forward(); }, this);
+    m_go_home_action = GUI::CommonActions::make_go_home_action([this](auto&) { active_tab().load(g_home_url); }, this);
+    m_go_home_action->set_status_tip("Go to home page");
+    m_reload_action = GUI::CommonActions::make_reload_action([this](auto&) { active_tab().reload(); }, this);
+    m_reload_action->set_status_tip("Reload current page");
 
     auto& go_menu = menubar->add_menu("&Go");
-    go_menu.add_action(*go_back_action);
-    go_menu.add_action(*go_forward_action);
-    go_menu.add_action(*go_home_action);
+    go_menu.add_action(*m_go_back_action);
+    go_menu.add_action(*m_go_forward_action);
+    go_menu.add_action(*m_go_home_action);
     go_menu.add_separator();
-    go_menu.add_action(*reload_action);
+    go_menu.add_action(*m_reload_action);
 
-    auto view_source_action = GUI::Action::create(
+    m_view_source_action = GUI::Action::create(
         "View &Source", { Mod_Ctrl, Key_U }, [this](auto&) {
             auto& tab = active_tab();
             if (tab.m_type == Tab::Type::InProcessWebView) {
@@ -180,9 +180,9 @@ void BrowserWindow::build_menus()
             }
         },
         this);
-    view_source_action->set_status_tip("View source code of the current page");
+    m_view_source_action->set_status_tip("View source code of the current page");
 
-    auto inspect_dom_tree_action = GUI::Action::create(
+    m_inspect_dom_tree_action = GUI::Action::create(
         "Inspect &DOM Tree", { Mod_None, Key_F12 }, [this](auto&) {
             auto& tab = active_tab();
             if (tab.m_type == Tab::Type::InProcessWebView) {
@@ -202,11 +202,11 @@ void BrowserWindow::build_menus()
             }
         },
         this);
-    inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
+    m_inspect_dom_tree_action->set_status_tip("Open DOM inspector window for this page");
 
     auto& inspect_menu = menubar->add_menu("&Inspect");
-    inspect_menu.add_action(*view_source_action);
-    inspect_menu.add_action(*inspect_dom_tree_action);
+    inspect_menu.add_action(*m_view_source_action);
+    inspect_menu.add_action(*m_inspect_dom_tree_action);
 
     auto js_console_action = GUI::Action::create(
         "Open &JS Console", { Mod_Ctrl, Key_I }, [this](auto&) {
@@ -440,7 +440,7 @@ void BrowserWindow::set_window_title_for_tab(Tab const& tab)
 void BrowserWindow::create_new_tab(URL url, bool activate)
 {
     auto type = Browser::g_single_process ? Browser::Tab::Type::InProcessWebView : Browser::Tab::Type::OutOfProcessWebView;
-    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab", type);
+    auto& new_tab = m_tab_widget->add_tab<Browser::Tab>("New tab", *this, type);
 
     m_tab_widget->set_bar_visible(!is_fullscreen() && m_tab_widget->children().size() > 1);
 
