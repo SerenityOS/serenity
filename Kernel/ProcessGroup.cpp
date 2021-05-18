@@ -17,10 +17,10 @@ ProcessGroup::~ProcessGroup()
     g_process_groups->remove(this);
 }
 
-NonnullRefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
+RefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
 {
-    auto process_group = adopt_ref(*new ProcessGroup(pgid));
-    {
+    auto process_group = adopt_ref_if_nonnull(new ProcessGroup(pgid));
+    if (process_group) {
         ScopedSpinLock lock(g_process_groups_lock);
         g_process_groups->prepend(process_group);
     }
@@ -28,7 +28,7 @@ NonnullRefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
     return process_group;
 }
 
-NonnullRefPtr<ProcessGroup> ProcessGroup::find_or_create(ProcessGroupID pgid)
+RefPtr<ProcessGroup> ProcessGroup::find_or_create(ProcessGroupID pgid)
 {
     ScopedSpinLock lock(g_process_groups_lock);
 
