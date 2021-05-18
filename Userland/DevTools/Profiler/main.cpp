@@ -209,15 +209,6 @@ int main(int argc, char** argv)
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
 
-    auto scheduler_action = GUI::Action::create_checkable("Show &Context Switches", { Mod_Ctrl, Key_C }, [&](auto& action) {
-        profile->set_show_scheduler(action.is_checked());
-        tree_view.update();
-        disassembly_view.update();
-        timeline_container.update();
-    });
-    scheduler_action->set_checked(true);
-    view_menu.add_action(scheduler_action);
-
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
         Desktop::Launcher::open(URL::create_with_file_protocol("/usr/share/man/man1/Profiler.md"), "/bin/Help");

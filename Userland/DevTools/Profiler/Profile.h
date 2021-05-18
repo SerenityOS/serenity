@@ -197,9 +197,6 @@ public:
     bool show_percentages() const { return m_show_percentages; }
     void set_show_percentages(bool);
 
-    bool show_scheduler() const { return m_show_scheduler; }
-    void set_show_scheduler(bool);
-
     const Vector<Process>& processes() const { return m_processes; }
 
     template<typename Callback>
@@ -244,7 +241,6 @@ private:
     bool m_inverted { false };
     bool m_show_top_functions { false };
     bool m_show_percentages { false };
-    bool m_show_scheduler { true };
 };
 
 }
