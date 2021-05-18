@@ -37,7 +37,7 @@ public:
         this->cipher().encrypt_block(key_block, key_block);
         key_block.bytes().copy_to(m_auth_key);
 
-        m_ghash = make<Authentication::GHash>(m_auth_key);
+        m_ghash = Authentication::GHash(m_auth_key);
     }
 
     virtual String class_name() const override
@@ -126,7 +126,7 @@ private:
     static constexpr auto block_size = T::BlockType::BlockSizeInBits / 8;
     u8 m_auth_key_storage[block_size];
     Bytes m_auth_key { m_auth_key_storage, block_size };
-    OwnPtr<Authentication::GHash> m_ghash;
+    Optional<Authentication::GHash> m_ghash;
 };
 
 }
