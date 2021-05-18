@@ -61,6 +61,7 @@ public:
     virtual void flush_writes() { }
 
     size_t block_size() const { return m_block_size; }
+    size_t fragment_size() const { return m_fragment_size; }
 
     virtual bool is_file_backed() const { return false; }
 
@@ -71,12 +72,14 @@ protected:
     FS();
 
     void set_block_size(size_t);
+    void set_fragment_size(size_t);
 
     mutable Lock m_lock { "FS" };
 
 private:
     unsigned m_fsid { 0 };
     size_t m_block_size { 0 };
+    size_t m_fragment_size { 0 };
     bool m_readonly { false };
 };
 

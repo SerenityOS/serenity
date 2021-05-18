@@ -114,6 +114,7 @@ bool Ext2FS::initialize()
     }
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
+    set_fragment_size(EXT2_FRAG_SIZE(&super_block));
 
     VERIFY(block_size() <= (int)max_block_size);
 
