@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,6 +20,7 @@ public:
 
     virtual ~EditEventHandler() = default;
 
+    virtual void handle_delete_character_after(const DOM::Position&);
     virtual void handle_delete(DOM::Range&);
     virtual void handle_insert(DOM::Position, u32 code_point);
 
