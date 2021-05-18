@@ -322,6 +322,10 @@ class Resource;
 class ResourceLoader;
 }
 
+namespace Web::CSP {
+class Policy;
+}
+
 namespace Web {
 class EditEventHandler;
 class EventHandler;
