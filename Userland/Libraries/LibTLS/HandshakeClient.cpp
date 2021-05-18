@@ -75,14 +75,14 @@ bool TLSv12::expand_key()
         memcpy(m_context.crypto.local_aead_iv, client_iv, iv_size);
         memcpy(m_context.crypto.remote_aead_iv, server_iv, iv_size);
 
-        m_aes_local.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-        m_aes_remote.gcm = make<Crypto::Cipher::AESCipher::GCMMode>(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_cipher_local = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_cipher_remote = Crypto::Cipher::AESCipher::GCMMode(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
     } else {
         memcpy(m_context.crypto.local_iv, client_iv, iv_size);
         memcpy(m_context.crypto.remote_iv, server_iv, iv_size);
 
-        m_aes_local.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
-        m_aes_remote.cbc = make<Crypto::Cipher::AESCipher::CBCMode>(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_cipher_local = Crypto::Cipher::AESCipher::CBCMode(ReadonlyBytes { client_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Encryption, Crypto::Cipher::PaddingMode::RFC5246);
+        m_cipher_remote = Crypto::Cipher::AESCipher::CBCMode(ReadonlyBytes { server_key, key_size }, key_size * 8, Crypto::Cipher::Intent::Decryption, Crypto::Cipher::PaddingMode::RFC5246);
     }
 
     m_context.crypto.created = 1;
