@@ -28,8 +28,8 @@ class ProcessGroup
 public:
     ~ProcessGroup();
 
-    static NonnullRefPtr<ProcessGroup> create(ProcessGroupID);
-    static NonnullRefPtr<ProcessGroup> find_or_create(ProcessGroupID);
+    static RefPtr<ProcessGroup> create(ProcessGroupID);
+    static RefPtr<ProcessGroup> find_or_create(ProcessGroupID);
     static RefPtr<ProcessGroup> from_pgid(ProcessGroupID);
 
     const ProcessGroupID& pgid() const { return m_pgid; }

@@ -116,6 +116,9 @@ KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
     }
     // FIXME: There are more EPERM conditions to check for here..
     process->m_pg = ProcessGroup::find_or_create(new_pgid);
+    if (!process->m_pg) {
+        return ENOMEM;
+    }
     return 0;
 }
 
