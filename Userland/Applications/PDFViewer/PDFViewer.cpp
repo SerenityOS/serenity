@@ -72,6 +72,9 @@ void PDFViewer::paint_event(GUI::PaintEvent& event)
 
 void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
 {
+    if (!m_document)
+        return;
+
     bool scrolled_down = event.wheel_delta() > 0;
 
     if (event.ctrl()) {
