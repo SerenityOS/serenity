@@ -135,6 +135,7 @@ namespace JS {
     P(globalThis)                            \
     P(groups)                                \
     P(has)                                   \
+    P(hasOwn)                                \
     P(hasOwnProperty)                        \
     P(hypot)                                 \
     P(ignoreCase)                            \
