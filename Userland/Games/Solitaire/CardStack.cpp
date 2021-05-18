@@ -131,7 +131,7 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
     }
 }
 
-bool CardStack::is_allowed_to_push(const Card& card) const
+bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size) const
 {
     if (m_type == Stock || m_type == Waste || m_type == Play)
         return false;
@@ -148,6 +148,9 @@ bool CardStack::is_allowed_to_push(const Card& card) const
             return false;
 
         if (m_type == Foundation) {
+            // Prevent player from dragging an entire stack of cards to the foundation stack
+            if (stack_size > 1)
+                return false;
             return top_card.type() == card.type() && m_stack.size() == card.value();
         } else if (m_type == Normal) {
             return top_card.color() != card.color() && top_card.value() == card.value() + 1;
