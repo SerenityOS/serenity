@@ -1,20 +1,40 @@
 /*
- * Copyright (c) 2020, the SerenityOS developers.
+ * Copyright (c) 2020-2021, the SerenityOS developers.
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "EditEventHandler.h"
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Position.h>
 #include <LibWeb/DOM/Range.h>
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LayoutPosition.h>
+#include <LibWeb/Page/EditEventHandler.h>
 #include <LibWeb/Page/Frame.h>
 
 namespace Web {
+
+void EditEventHandler::handle_delete_character_after(const DOM::Position& cursor_position)
+{
+    if (cursor_position.offset_is_at_end_of_node()) {
+        // FIXME: Move to the next node and delete the first character there.
+        return;
+    }
+
+    auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(cursor_position.node()));
+    auto& text = node.data();
+    auto codepoint_length = Utf8View(text).iterator_at_byte_offset(cursor_position.offset()).code_point_length_in_bytes();
+
+    StringBuilder builder;
+    builder.append(text.substring_view(0, cursor_position.offset()));
+    builder.append(text.substring_view(cursor_position.offset() + codepoint_length));
+    node.set_data(builder.to_string());
+
+    m_frame.did_edit({});
+}
 
 // This method is quite convoluted but this is necessary to make editing feel intuitive.
 void EditEventHandler::handle_delete(DOM::Range& range)

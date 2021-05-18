@@ -408,11 +408,7 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
             } else if (!should_ignore_keydown_event(code_point)) {
                 m_edit_event_handler->handle_delete(range);
                 m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-
-                auto new_position = m_frame.cursor_position();
-                new_position.set_offset(new_position.offset() + 1);
-                m_frame.set_cursor_position(move(new_position));
-
+                m_frame.increment_cursor_position_offset();
                 return true;
             }
         }
@@ -420,63 +416,33 @@ bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_poin
 
     if (m_frame.cursor_position().is_valid() && m_frame.cursor_position().node()->is_editable()) {
         if (key == KeyCode::Key_Backspace) {
-            auto position = m_frame.cursor_position();
-
-            if (position.offset() == 0) {
+            if (!m_frame.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node and delete the last character there.
                 return true;
             }
 
-            auto new_position = m_frame.cursor_position();
-            new_position.set_offset(position.offset() - 1);
-            m_frame.set_cursor_position(move(new_position));
-
-            m_edit_event_handler->handle_delete(DOM::Range::create(*position.node(), position.offset() - 1, *position.node(), position.offset()));
-
+            m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
             return true;
         } else if (key == KeyCode::Key_Delete) {
-            auto position = m_frame.cursor_position();
-
-            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length()) {
+            if (m_frame.cursor_position().offset_is_at_end_of_node()) {
                 // FIXME: Move to the next node and delete the first character there.
                 return true;
             }
-
-            m_edit_event_handler->handle_delete(DOM::Range::create(*position.node(), position.offset(), *position.node(), position.offset() + 1));
-
+            m_edit_event_handler->handle_delete_character_after(m_frame.cursor_position());
             return true;
         } else if (key == KeyCode::Key_Right) {
-            auto position = m_frame.cursor_position();
-
-            if (position.offset() >= downcast<DOM::Text>(position.node())->data().length()) {
+            if (!m_frame.increment_cursor_position_offset()) {
                 // FIXME: Move to the next node.
-                return true;
             }
-
-            auto new_position = m_frame.cursor_position();
-            new_position.set_offset(position.offset() + 1);
-            m_frame.set_cursor_position(move(new_position));
-
             return true;
         } else if (key == KeyCode::Key_Left) {
-            auto position = m_frame.cursor_position();
-
-            if (position.offset() == 0) {
+            if (!m_frame.decrement_cursor_position_offset()) {
                 // FIXME: Move to the previous node.
-                return true;
             }
-
-            auto new_position = m_frame.cursor_position();
-            new_position.set_offset(new_position.offset() - 1);
-            m_frame.set_cursor_position(move(new_position));
-
             return true;
         } else if (!should_ignore_keydown_event(code_point)) {
             m_edit_event_handler->handle_insert(m_frame.cursor_position(), code_point);
-
-            auto new_position = m_frame.cursor_position();
-            new_position.set_offset(new_position.offset() + 1);
-            m_frame.set_cursor_position(move(new_position));
+            m_frame.increment_cursor_position_offset();
             return true;
         } else {
             // NOTE: Because modifier keys should be ignored, we need to return true.
