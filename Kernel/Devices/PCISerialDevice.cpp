@@ -12,12 +12,9 @@ static SerialDevice* s_the = nullptr;
 
 void PCISerialDevice::detect()
 {
+    size_t current_device_minor = 68;
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
-            return;
-
-        // HACK: There's currently no way to break out of PCI::enumerate, so we just early return if we already initialized the pci serial device
-        if (is_available())
             return;
 
         for (auto& board_definition : board_definitions) {
@@ -25,10 +22,17 @@ void PCISerialDevice::detect()
                 continue;
 
             auto bar_base = PCI::get_BAR(address, board_definition.pci_bar) & ~1;
-            // FIXME: We should support more than 1 PCI serial port (per card/multiple devices)
-            s_the = new SerialDevice(IOAddress(bar_base + board_definition.first_offset), 68);
-            if (board_definition.baud_rate != SerialDevice::Baud::Baud38400) // non-default baud
-                s_the->set_baud(board_definition.baud_rate);
+            auto port_base = IOAddress(bar_base + board_definition.first_offset);
+            for (size_t i = 0; i < board_definition.port_count; i++) {
+                auto serial_device = new SerialDevice(port_base.offset(board_definition.port_size * i), current_device_minor++);
+                if (board_definition.baud_rate != SerialDevice::Baud::Baud38400) // non-default baud
+                    serial_device->set_baud(board_definition.baud_rate);
+
+                // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
+                if (!is_available())
+                    s_the = serial_device;
+                // NOTE: We intentionally leak the reference to serial_device here, as it is eternal
+            }
 
             dmesgln("PCISerialDevice: Found {} @ {}", board_definition.name, address);
             return;
