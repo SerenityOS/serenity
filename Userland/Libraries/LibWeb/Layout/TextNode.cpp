@@ -86,7 +86,8 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     if (frame().cursor_position().node() != &dom_node())
         return;
 
-    if (!(frame().cursor_position().offset() >= (unsigned)fragment.start() && frame().cursor_position().offset() < (unsigned)(fragment.start() + fragment.length())))
+    // NOTE: This checks if the cursor is before the start or after the end of the fragment. If it is at the end, after all text, it should still be painted.
+    if (frame().cursor_position().offset() < (unsigned)fragment.start() || frame().cursor_position().offset() > (unsigned)(fragment.start() + fragment.length()))
         return;
 
     if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
