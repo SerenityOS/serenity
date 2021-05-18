@@ -623,6 +623,11 @@ struct DeferredCallEntry {
     bool was_allocated;
 };
 
+class Processor;
+// Note: We only support processors at most at the moment,
+// so allocate 8 slots of inline capacity in the container.
+using ProcessorContainer = Array<Processor*, 8>;
+
 class Processor {
     friend class ProcessorInfo;
 
@@ -665,7 +670,7 @@ class Processor {
     void gdt_init();
     void write_raw_gdt_entry(u16 selector, u32 low, u32 high);
     void write_gdt_entry(u16 selector, Descriptor& descriptor);
-    static Vector<Processor*>& processors();
+    static ProcessorContainer& processors();
 
     static void smp_return_to_pool(ProcessorMessage& msg);
     static ProcessorMessage& smp_get_from_pool();
@@ -751,8 +756,10 @@ public:
     {
         auto& procs = processors();
         size_t count = procs.size();
-        for (size_t i = 0; i < count; i++)
-            callback(*procs[i]);
+        for (size_t i = 0; i < count; i++) {
+            if (procs[i] != nullptr)
+                callback(*procs[i]);
+        }
         return IterationDecision::Continue;
     }
 
