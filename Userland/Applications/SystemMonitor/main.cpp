@@ -307,6 +307,8 @@ int main(int argc, char** argv)
     auto process_properties_action = GUI::CommonActions::make_properties_action(
         [&](auto&) {
             auto pid = selected_id(ProcessModel::Column::PID);
+            if (pid == -1)
+                return;
 
             RefPtr<GUI::Window> process_window;
             auto it = process_windows.find(pid);
@@ -341,7 +343,8 @@ int main(int argc, char** argv)
     process_context_menu->add_separator();
     process_context_menu->add_action(process_properties_action);
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
-        process_context_menu->popup(event.screen_position(), process_properties_action);
+        if (index.is_valid())
+            process_context_menu->popup(event.screen_position(), process_properties_action);
     };
 
     auto& frequency_menu = menubar->add_menu("F&requency");
