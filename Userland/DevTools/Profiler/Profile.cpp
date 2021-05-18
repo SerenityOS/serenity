@@ -99,12 +99,6 @@ void Profile::rebuild_tree()
         if (!process_filter_contains(event.pid, event.timestamp))
             continue;
 
-        if (!m_show_scheduler && !event.frames.is_empty()) {
-            const auto& top_frame = event.frames[event.frames.size() - 1];
-            if (top_frame.symbol == "Kernel::Scheduler::yield()"sv)
-                continue;
-        }
-
         m_filtered_event_indices.append(event_index);
 
         if (event.type == "malloc"sv && !live_allocations.contains(event.ptr))
@@ -457,15 +451,6 @@ void Profile::set_show_percentages(bool show_percentages)
     if (m_show_percentages == show_percentages)
         return;
     m_show_percentages = show_percentages;
-}
-
-void Profile::set_show_scheduler(bool show_scheduler)
-{
-    if (m_show_scheduler == show_scheduler)
-        return;
-    m_show_scheduler = show_scheduler;
-    // FIXME: This only works when kernel symbols are available
-    rebuild_tree();
 }
 
 void Profile::set_disassembly_index(const GUI::ModelIndex& index)
