@@ -463,10 +463,12 @@ private:
     OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_local;
     OwnPtr<Crypto::Authentication::HMAC<Crypto::Hash::Manager>> m_hmac_remote;
 
-    struct {
-        OwnPtr<Crypto::Cipher::AESCipher::CBCMode> cbc;
-        OwnPtr<Crypto::Cipher::AESCipher::GCMMode> gcm;
-    } m_aes_local, m_aes_remote;
+    using CipherVariant = Variant<
+        Empty,
+        Crypto::Cipher::AESCipher::CBCMode,
+        Crypto::Cipher::AESCipher::GCMMode>;
+    CipherVariant m_cipher_local { Empty {} };
+    CipherVariant m_cipher_remote { Empty {} };
 
     bool m_has_scheduled_write_flush { false };
     i32 m_max_wait_time_for_handshake_in_seconds { 10 };
