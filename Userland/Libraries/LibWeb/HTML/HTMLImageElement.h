@@ -10,6 +10,7 @@
 #include <AK/OwnPtr.h>
 #include <LibGfx/Forward.h>
 #include <LibWeb/Fetch/ImageLoader.h>
+#include <LibWeb/HTML/FormAssociatedElement.h>
 #include <LibWeb/HTML/HTMLElement.h>
 
 namespace Web::HTML {
@@ -41,7 +42,7 @@ private:
 
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    ImageLoader m_image_loader;
+    Fetch::ImageLoader m_image_loader;
 };
 
 }

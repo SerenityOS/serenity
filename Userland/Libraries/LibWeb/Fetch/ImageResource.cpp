@@ -7,8 +7,9 @@
 #include <LibGfx/Bitmap.h>
 #include <LibImageDecoderClient/Client.h>
 #include <LibWeb/Fetch/ImageResource.h>
+#include <LibWeb/ImageDecoding.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 ImageResource::ImageResource(const LoadRequest& request)
     : Resource(Type::Image, request)

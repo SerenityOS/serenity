@@ -422,6 +422,16 @@ void Tab::update_bookmark_button(const String& url)
 
 void Tab::did_become_active()
 {
+    if (m_type == Type::InProcessWebView) {
+        Web::Fetch::ResourceLoader::the().on_load_counter_change = [this] {
+            if (Web::Fetch::ResourceLoader::the().pending_loads() == 0) {
+                m_statusbar->set_text("");
+                return;
+            }
+            m_statusbar->set_text(String::formatted("Loading ({} pending resources...)", Web::Fetch::ResourceLoader::the().pending_loads()));
+        };
+    }
+
     BookmarksBarWidget::the().on_bookmark_click = [this](auto& url, unsigned modifiers) {
         if (modifiers & Mod_Ctrl)
             on_tab_open_request(url);

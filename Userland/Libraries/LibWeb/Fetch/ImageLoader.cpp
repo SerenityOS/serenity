@@ -12,7 +12,7 @@
 #include <LibWeb/Fetch/ImageLoader.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 ImageLoader::ImageLoader(DOM::Element& owner_element)
     : m_owner_element(owner_element)

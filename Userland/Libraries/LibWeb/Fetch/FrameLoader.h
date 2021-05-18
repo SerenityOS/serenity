@@ -10,7 +10,7 @@
 #include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 constexpr size_t maximum_redirects_allowed = 20;
 

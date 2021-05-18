@@ -303,7 +303,7 @@ void InProcessWebView::load_html(StringView html, const AK::URL& url)
 bool InProcessWebView::load(const AK::URL& url)
 {
     set_override_cursor(Gfx::StandardCursor::None);
-    return page().top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
+    return page().top_level_browsing_context().loader().load(url, Fetch::FrameLoader::Type::Navigation);
 }
 
 const Layout::InitialContainingBlock* InProcessWebView::layout_root() const

@@ -43,7 +43,7 @@ public:
     void set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingContext&);
 
     void load(const AK::URL&);
-    void load(LoadRequest&);
+    void load(Fetch::LoadRequest&);
 
     void load_html(StringView, const AK::URL&);
 

@@ -17,7 +17,7 @@
 #include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 ResourceLoader& ResourceLoader::the()
 {
@@ -71,7 +71,7 @@ void ResourceLoader::preconnect(AK::URL const& url)
 
 static HashMap<LoadRequest, NonnullRefPtr<Resource>> s_resource_cache;
 
-RefPtr<Resource> ResourceLoader::load_resource(Resource::Type type, LoadRequest& request)
+RefPtr<Fetch::Resource> ResourceLoader::load_resource(Fetch::Resource::Type type, LoadRequest& request)
 {
     if (!request.is_valid())
         return nullptr;

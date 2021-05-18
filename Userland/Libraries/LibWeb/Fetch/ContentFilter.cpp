@@ -7,7 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibWeb/Fetch/ContentFilter.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 ContentFilter& ContentFilter::the()
 {

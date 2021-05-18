@@ -10,7 +10,7 @@
 #include <LibCore/Timer.h>
 #include <LibWeb/Fetch/ImageResource.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 class ImageLoader : public ImageResourceClient {
 public:

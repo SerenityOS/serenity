@@ -32,22 +32,22 @@ void HTMLLinkElement::inserted()
     if (m_relationship & Relationship::Stylesheet && !(m_relationship & Relationship::Alternate)) {
         auto url = document().parse_url(href());
         dbgln_if(CSS_LOADER_DEBUG, "HTMLLinkElement: Loading import URL: {}", url);
-        auto request = LoadRequest::create_for_url_on_page(url, document().page());
+        auto request = Fetch::LoadRequest::create_for_url_on_page(url, document().page());
         // NOTE: Mark this element as delaying the document load event *before* calling set_resource()
         //       as it may trigger a synchronous resource_did_load() callback.
         m_document_load_event_delayer.emplace(document());
-        set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+        set_resource(Fetch::ResourceLoader::the().load_resource(Fetch::Resource::Type::Generic, request));
     }
 
     if (m_relationship & Relationship::Preload) {
         // FIXME: Respect the "as" attribute.
-        LoadRequest request;
+        Fetch::LoadRequest request;
         request.set_url(document().parse_url(attribute(HTML::AttributeNames::href)));
-        m_preload_resource = ResourceLoader::the().load_resource(Resource::Type::Generic, request);
+        m_preload_resource = Fetch::ResourceLoader::the().load_resource(Fetch::Resource::Type::Generic, request);
     } else if (m_relationship & Relationship::DNSPrefetch) {
-        ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
+        Fetch::ResourceLoader::the().prefetch_dns(document().parse_url(attribute(HTML::AttributeNames::href)));
     } else if (m_relationship & Relationship::Preconnect) {
-        ResourceLoader::the().preconnect(document().parse_url(attribute(HTML::AttributeNames::href)));
+        Fetch::ResourceLoader::the().preconnect(document().parse_url(attribute(HTML::AttributeNames::href)));
     }
 }
 

@@ -14,8 +14,6 @@
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/HTML/EventNames.h>
-#include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/HTMLScriptElement.h>
 #include <LibWeb/HTML/Scripting/ClassicScript.h>
 
@@ -294,9 +292,10 @@ void HTMLScriptElement::prepare_script()
         if (m_script_type == ScriptType::Classic) {
             // -> "classic"
             //    Fetch a classic script given url, settings object, options, classic script CORS setting, and encoding.
-            auto request = LoadRequest::create_for_url_on_page(url, document().page());
+            auto request = Fetch::LoadRequest::create_for_url_on_page(url, document().page());
+            // m_script_filename = url.to_string();
 
-            ResourceLoader::the().load(
+            Fetch::ResourceLoader::the().load(
                 request,
                 [this, url](auto data, auto&, auto) {
                     if (data.is_null()) {

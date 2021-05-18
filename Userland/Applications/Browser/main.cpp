@@ -47,8 +47,10 @@ static ErrorOr<void> load_content_filters()
     while (TRY(ad_filter_list->can_read_line())) {
         auto length = TRY(ad_filter_list->read_line(buffer));
         StringView line { buffer.data(), length };
-        if (!line.is_empty())
+        if (!line.is_empty()){
             Browser::g_content_filters.append(line);
+            Web::Fetch::ContentFilter::the().add_pattern(line);
+        }
     }
 
     return {};
@@ -73,6 +75,11 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
 
     Config::pledge_domain("Browser");
     Config::monitor_domain("Browser");
+    if (Browser::g_single_process) {
+        // Connect to the RequestServer and the WebSocket service immediately so we don't need to unveil their portals.
+        Web::Fetch::ResourceLoader::the();
+        Web::HTML::WebSocketClientManager::the();
+    }
 
     // Connect to LaunchServer immediately and let it know that we won't ask for anything other than opening
     // the user's downloads directory.
@@ -97,6 +104,10 @@ ErrorOr<int> serenity_main(Main::Arguments arguments)
     Browser::g_content_filters_enabled = Config::read_bool("Browser", "Preferences", "EnableContentFilters");
 
     Browser::g_icon_bag = TRY(Browser::IconBag::try_create());
+
+    auto m_config = Core::ConfigFile::get_for_app("Browser");
+    Browser::g_home_url = m_config->read_entry("Preferences", "Home", "about:blank");
+    Browser::g_search_engine = m_config->read_entry("Preferences", "SearchEngine", {});
 
     TRY(load_content_filters());
 

@@ -10,7 +10,7 @@
 #include <LibWeb/Fetch/Resource.h>
 #include <LibWeb/HTML/HTMLImageElement.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 NonnullRefPtr<Resource> Resource::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
 {

@@ -18,7 +18,7 @@
 #include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Forward.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 class ResourceClient;
 

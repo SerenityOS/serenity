@@ -30,6 +30,7 @@ public:
 private:
     // https://www.w3.org/TR/cssom/#associated-css-style-sheet
     RefPtr<CSS::CSSStyleSheet> m_associated_css_style_sheet;
+    // Fetch::CSSLoader m_css_loader;
 };
 
 }

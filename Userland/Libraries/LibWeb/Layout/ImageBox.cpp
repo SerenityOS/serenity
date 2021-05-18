@@ -14,7 +14,7 @@
 
 namespace Web::Layout {
 
-ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const ImageLoader& image_loader)
+ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr<CSS::StyleProperties> style, const Fetch::ImageLoader& image_loader)
     : ReplacedBox(document, element, move(style))
     , m_image_loader(image_loader)
 {

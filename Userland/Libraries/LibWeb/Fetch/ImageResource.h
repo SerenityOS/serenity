@@ -8,7 +8,7 @@
 
 #include <LibWeb/Fetch/Resource.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 class ImageResource final : public Resource {
     friend class Resource;

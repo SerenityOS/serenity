@@ -9,7 +9,7 @@
 #include <AK/URL.h>
 #include <AK/Vector.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 class ContentFilter {
 public:

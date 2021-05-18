@@ -16,7 +16,7 @@ namespace Web::HTML {
 
 class HTMLLinkElement final
     : public HTMLElement
-    , public ResourceClient {
+    , public Fetch::ResourceClient {
 public:
     using WrapperType = Bindings::HTMLLinkElementWrapper;
 
@@ -46,9 +46,10 @@ private:
         };
     };
 
-    RefPtr<Resource> m_preload_resource;
+    RefPtr<Fetch::Resource> m_preload_resource;
 
     Optional<DOM::DocumentLoadEventDelayer> m_document_load_event_delayer;
+    // Fetch::CSSLoader m_css_loader;
     unsigned m_relationship { 0 };
 };
 

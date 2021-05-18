@@ -16,7 +16,7 @@ class ImageBox
     : public ReplacedBox
     , public HTML::BrowsingContext::ViewportClient {
 public:
-    ImageBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, const ImageLoader&);
+    ImageBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>, const Fetch::ImageLoader&);
     virtual ~ImageBox() override;
 
     virtual void prepare_for_replaced_layout() override;
@@ -33,7 +33,7 @@ private:
     int preferred_width() const;
     int preferred_height() const;
 
-    const ImageLoader& m_image_loader;
+    const Fetch::ImageLoader& m_image_loader;
 };
 
 }

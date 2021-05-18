@@ -1147,7 +1147,7 @@ private:
 
 class ImageStyleValue final
     : public StyleValue
-    , public ImageResourceClient {
+    , public Fetch::ImageResourceClient {
 public:
     static NonnullRefPtr<ImageStyleValue> create(AK::URL const& url) { return adopt_ref(*new ImageStyleValue(url)); }
     virtual ~ImageStyleValue() override { }

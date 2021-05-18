@@ -216,11 +216,11 @@ void ConnectionFromClient::debug_request(const String& request, const String& ar
     }
 
     if (request == "clear-cache") {
-        Web::ResourceLoader::the().clear_cache();
+        Web::Fetch::ResourceLoader::the().clear_cache();
     }
 
     if (request == "spoof-user-agent") {
-        Web::ResourceLoader::the().set_user_agent(argument);
+        Web::Fetch::ResourceLoader::the().set_user_agent(argument);
     }
 
     if (request == "same-origin-policy") {

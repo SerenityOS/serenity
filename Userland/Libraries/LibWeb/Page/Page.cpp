@@ -33,12 +33,12 @@ void Page::set_focused_browsing_context(Badge<EventHandler>, HTML::BrowsingConte
 
 void Page::load(const AK::URL& url)
 {
-    top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
+    top_level_browsing_context().loader().load(url, Fetch::FrameLoader::Type::Navigation);
 }
 
-void Page::load(LoadRequest& request)
+void Page::load(Fetch::LoadRequest& request)
 {
-    top_level_browsing_context().loader().load(request, FrameLoader::Type::Navigation);
+    top_level_browsing_context().loader().load(request, Fetch::FrameLoader::Type::Navigation);
 }
 
 void Page::load_html(StringView html, const AK::URL& url)

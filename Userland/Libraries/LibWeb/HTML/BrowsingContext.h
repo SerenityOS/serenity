@@ -15,8 +15,8 @@
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
 #include <LibWeb/DOM/Position.h>
+#include <LibWeb/Fetch/FrameLoader.h>
 #include <LibWeb/HTML/BrowsingContextContainer.h>
-#include <LibWeb/Loader/FrameLoader.h>
 #include <LibWeb/Page/EventHandler.h>
 #include <LibWeb/TreeNode.h>
 
@@ -58,8 +58,8 @@ public:
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(Gfx::IntRect const&);
 
-    FrameLoader& loader() { return m_loader; }
-    FrameLoader const& loader() const { return m_loader; }
+    Fetch::FrameLoader& loader() { return m_loader; }
+    Fetch::FrameLoader const& loader() const { return m_loader; }
 
     Web::EventHandler& event_handler() { return m_event_handler; }
     Web::EventHandler const& event_handler() const { return m_event_handler; }
@@ -114,7 +114,7 @@ private:
 
     WeakPtr<Page> m_page;
 
-    FrameLoader m_loader;
+    Fetch::FrameLoader m_loader;
     Web::EventHandler m_event_handler;
 
     WeakPtr<HTML::BrowsingContextContainer> m_container;

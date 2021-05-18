@@ -7,15 +7,14 @@
 #include <AK/Debug.h>
 #include <AK/URL.h>
 #include <LibWeb/CSS/CSSImportRule.h>
-#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/StyleSheet.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
 #include <LibWeb/Fetch/CSSLoader.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 
-namespace Web {
-
+namespace Web::Fetch {
+/*
 CSSLoader::CSSLoader(DOM::Element& owner_element)
     : m_owner_element(owner_element)
 {
@@ -32,7 +31,7 @@ void CSSLoader::load_from_text(const String& text)
     load_next_import_if_needed();
 }
 
-void CSSLoader::load_from_url(const URL& url)
+void CSSLoader::load_from_url(const AK::URL& url)
 {
     m_style_sheet = CSS::CSSStyleSheet::create({});
     m_style_sheet->set_owner_node(&m_owner_element);
@@ -83,13 +82,16 @@ void CSSLoader::load_next_import_if_needed()
 {
     // Create load request for the first import which isn't loaded.
     // TODO: We need to somehow handle infinite cycles in imports.
-    m_style_sheet->for_first_not_loaded_import_rule([&](auto& rule) {
+    m_style_sheet->for_each_effective_style_rule([&](auto& rule) {
+        dbgln("CSSLoader: {}", rule);
+
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Loading @import {}", rule.url());
 
         LoadRequest request;
         request.set_url(rule.url());
         set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+
     });
 }
-
+*/
 }

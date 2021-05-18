@@ -8,7 +8,7 @@
 #include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Page/Page.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 LoadRequest LoadRequest::create_for_url_on_page(const AK::URL& url, Page* page)
 {

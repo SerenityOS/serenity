@@ -330,15 +330,25 @@ void BrowserWindow::build_menus()
         active_tab().m_web_content_view->debug_request("collect-garbage");
     }));
     debug_menu.add_action(GUI::Action::create("Clear &Cache", { Mod_Ctrl | Mod_Shift, Key_C }, g_icon_bag.clear_cache, [this](auto&) {
-        active_tab().m_web_content_view->debug_request("clear-cache");
+        auto& tab = active_tab();
+        if (tab.m_type == Tab::Type::InProcessWebView) {
+            Web::Fetch::ResourceLoader::the().clear_cache();
+        } else {
+            tab.m_web_content_view->debug_request("clear-cache");
+        }
     }));
 
     m_user_agent_spoof_actions.set_exclusive(true);
     auto& spoof_user_agent_menu = debug_menu.add_submenu("Spoof &User Agent");
     m_disable_user_agent_spoofing = GUI::Action::create_checkable("Disabled", [this](auto&) {
-        active_tab().m_web_content_view->debug_request("spoof-user-agent", Web::default_user_agent);
+        auto& tab = active_tab();
+        if (tab.m_type == Tab::Type::InProcessWebView) {
+            Web::Fetch::ResourceLoader::the().set_user_agent(Web::Fetch::default_user_agent);
+        } else {
+            tab.m_web_content_view->debug_request("spoof-user-agent", Web::Fetch::default_user_agent);
+        }
     });
-    m_disable_user_agent_spoofing->set_status_tip(Web::default_user_agent);
+    m_disable_user_agent_spoofing->set_status_tip(Web::Fetch::default_user_agent);
     spoof_user_agent_menu.add_action(*m_disable_user_agent_spoofing);
     spoof_user_agent_menu.set_icon(g_icon_bag.spoof);
     m_user_agent_spoof_actions.add_action(*m_disable_user_agent_spoofing);
@@ -346,7 +356,12 @@ void BrowserWindow::build_menus()
 
     auto add_user_agent = [this, &spoof_user_agent_menu](auto& name, auto& user_agent) {
         auto action = GUI::Action::create_checkable(name, [this, user_agent](auto&) {
-            active_tab().m_web_content_view->debug_request("spoof-user-agent", user_agent);
+            auto& tab = active_tab();
+            if (tab.m_type == Tab::Type::InProcessWebView) {
+                Web::Fetch::ResourceLoader::the().set_user_agent(user_agent);
+            } else {
+                tab.m_web_content_view->debug_request("spoof-user-agent", user_agent);
+            }
         });
         action->set_status_tip(user_agent);
         spoof_user_agent_menu.add_action(action);
@@ -365,7 +380,11 @@ void BrowserWindow::build_menus()
             m_disable_user_agent_spoofing->activate();
             return;
         }
-        active_tab().m_web_content_view->debug_request("spoof-user-agent", user_agent);
+        if (tab.m_type == Tab::Type::InProcessWebView) {
+            Web::Fetch::ResourceLoader::the().set_user_agent(user_agent);
+        } else {
+            tab.m_web_content_view->debug_request("spoof-user-agent", user_agent);
+        }
         action.set_status_tip(user_agent);
     });
     spoof_user_agent_menu.add_action(custom_user_agent);

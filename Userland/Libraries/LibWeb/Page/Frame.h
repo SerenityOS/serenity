@@ -55,8 +55,8 @@ public:
     Gfx::IntRect viewport_rect() const { return { m_viewport_scroll_offset, m_size }; }
     void set_viewport_rect(const Gfx::IntRect&);
 
-    FrameLoader& loader() { return m_loader; }
-    const FrameLoader& loader() const { return m_loader; }
+    Fetch::FrameLoader& loader() { return m_loader; }
+    const Fetch::FrameLoader& loader() const { return m_loader; }
 
     EventHandler& event_handler() { return m_event_handler; }
     const EventHandler& event_handler() const { return m_event_handler; }
@@ -83,11 +83,17 @@ public:
 
     void did_edit(Badge<EditEventHandler>);
 
-    void register_frame_nesting(URL const&);
-    bool is_frame_nesting_allowed(URL const&) const;
+    void register_frame_nesting(AK::URL const&);
+    bool is_frame_nesting_allowed(AK::URL const&) const;
 
-    void set_frame_nesting_levels(const HashMap<URL, size_t> frame_nesting_levels) { m_frame_nesting_levels = move(frame_nesting_levels); };
-    HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
+    void set_frame_nesting_levels(const HashMap<AK::URL, size_t> frame_nesting_levels)
+    {
+        m_frame_nesting_levels = move(frame_nesting_levels);
+    };
+    HashMap<AK::URL, size_t> const& frame_nesting_levels() const
+    {
+        return m_frame_nesting_levels;
+    }
 
 private:
     explicit Frame(DOM::Element& host_element, Frame& main_frame);
@@ -100,7 +106,7 @@ private:
     WeakPtr<Page> m_page;
     Frame& m_main_frame;
 
-    FrameLoader m_loader;
+    Fetch::FrameLoader m_loader;
     EventHandler m_event_handler;
 
     WeakPtr<DOM::Element> m_host_element;
@@ -114,7 +120,7 @@ private:
 
     HashTable<ViewportClient*> m_viewport_clients;
 
-    HashMap<URL, size_t> m_frame_nesting_levels;
+    HashMap<AK::URL, size_t> m_frame_nesting_levels;
 };
 
 }

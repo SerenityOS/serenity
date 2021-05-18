@@ -46,7 +46,7 @@ NavigatorObject::~NavigatorObject()
 
 JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::user_agent_getter)
 {
-    return JS::js_string(vm, ResourceLoader::the().user_agent());
+    return JS::js_string(vm, Fetch::ResourceLoader::the().user_agent());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(NavigatorObject::cookie_enabled_getter)

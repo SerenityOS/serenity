@@ -231,7 +231,7 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, AK::URL cons
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
         return;
-    browsing_context->loader().load(new_href, FrameLoader::Type::Navigation);
+    browsing_context->loader().load(new_href, Fetch::FrameLoader::Type::Navigation);
 }
 
 void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
@@ -239,7 +239,7 @@ void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
     auto* browsing_context = associated_document().browsing_context();
     if (!browsing_context)
         return;
-    browsing_context->loader().load(associated_document().url(), FrameLoader::Type::Reload);
+    browsing_context->loader().load(associated_document().url(), Fetch::FrameLoader::Type::Reload);
 }
 
 void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String url)
@@ -248,7 +248,8 @@ void Window::did_call_location_replace(Badge<Bindings::LocationObject>, String u
     if (!browsing_context)
         return;
     auto new_url = associated_document().parse_url(url);
-    browsing_context->loader().load(move(new_url), FrameLoader::Type::Navigation);
+    // FIXME: FrameLoader::Type::Navigation or FrameLoader::Type::Reload
+    browsing_context->loader().load(move(new_url), Fetch::FrameLoader::Type::Reload);
 }
 
 bool Window::dispatch_event(NonnullRefPtr<Event> event)

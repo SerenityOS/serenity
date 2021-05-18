@@ -10,7 +10,7 @@
 #include <LibWeb/CSS/CSSImportRule.h>
 #include <LibWeb/CSS/Parser/Parser.h>
 #include <LibWeb/DOM/Document.h>
-#include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Fetch/ResourceLoader.h>
 
 namespace Web::CSS {
 
@@ -19,13 +19,13 @@ CSSImportRule::CSSImportRule(AK::URL url, DOM::Document& document)
     , m_document(document)
 {
     dbgln_if(CSS_LOADER_DEBUG, "CSSImportRule: Loading import URL: {}", m_url);
-    auto request = LoadRequest::create_for_url_on_page(m_url, document.page());
+    auto request = Fetch::LoadRequest::create_for_url_on_page(m_url, document.page());
 
     // NOTE: Mark this rule as delaying the document load event *before* calling set_resource()
     //       as it may trigger a synchronous resource_did_load() callback.
     m_document_load_event_delayer.emplace(document);
 
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
+    set_resource(Fetch::ResourceLoader::the().load_resource(Fetch::Resource::Type::Generic, request));
 }
 
 CSSImportRule::~CSSImportRule()

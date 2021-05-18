@@ -33,7 +33,7 @@ public:
 private:
     virtual RefPtr<Layout::Node> create_layout_node(NonnullRefPtr<CSS::StyleProperties>) override;
 
-    ImageLoader m_image_loader;
+    Fetch::ImageLoader m_image_loader;
     bool m_should_show_fallback_content { false };
 };
 

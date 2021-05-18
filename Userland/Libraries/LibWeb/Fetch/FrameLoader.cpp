@@ -19,15 +19,13 @@
 #include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/HTML/BrowsingContext.h>
 #include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/HTML/HTMLIFrameElement.h>
-#include <LibWeb/HTML/Parser/HTMLDocumentParser.h>
 #include <LibWeb/HTML/Parser/HTMLParser.h>
 #include <LibWeb/ImageDecoding.h>
 #include <LibWeb/Namespace.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/Page/Page.h>
 
-namespace Web {
+namespace Web::Fetch {
 
 static RefPtr<Gfx::Bitmap> s_default_favicon_bitmap;
 

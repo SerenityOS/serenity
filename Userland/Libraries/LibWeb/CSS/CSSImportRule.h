@@ -16,7 +16,7 @@ namespace Web::CSS {
 
 class CSSImportRule
     : public CSSRule
-    , public ResourceClient {
+    , public Web::Fetch::ResourceClient {
     AK_MAKE_NONCOPYABLE(CSSImportRule);
     AK_MAKE_NONMOVABLE(CSSImportRule);
 

@@ -10,14 +10,14 @@
 #include <LibWeb/CSS/CSSStyleSheet.h>
 #include <LibWeb/Fetch/Resource.h>
 
-namespace Web {
-
+namespace Web::Fetch {
+/*
 class CSSLoader : public ResourceClient {
 public:
     explicit CSSLoader(DOM::Element& owner_element);
 
     void load_from_text(const String&);
-    void load_from_url(const URL&);
+    void load_from_url(const AK::URL&);
 
     void load_next_import_if_needed();
 
@@ -35,5 +35,5 @@ private:
 
     RefPtr<CSS::CSSStyleSheet> m_style_sheet;
 };
-
+*/
 }
