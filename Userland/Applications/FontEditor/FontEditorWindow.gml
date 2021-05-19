@@ -47,6 +47,7 @@
                     @GUI::Button {
                         name: "move_glyph_button"
                         fixed_width: 22
+                        tooltip: "Move Glyph"
                         button_style: "Coolbar"
                     }
                 }
