@@ -138,6 +138,7 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
     }
     clear();
     VERIFY(m_cells);
+    TTY::load_default_settings();
 }
 
 void VirtualConsole::refresh_after_resolution_change()

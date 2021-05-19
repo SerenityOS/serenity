@@ -23,6 +23,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     set_gid(process->gid());
     DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
+    TTY::load_default_settings();
 }
 
 SlavePTY::~SlavePTY()
