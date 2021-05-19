@@ -60,7 +60,6 @@ void BackgroundSettingsWidget::create_frame()
         }
 
         m_monitor_widget->set_wallpaper(path);
-        m_monitor_widget->update();
     };
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("wallpaper_open_button");
@@ -78,7 +77,6 @@ void BackgroundSettingsWidget::create_frame()
     m_mode_combo->set_model(*GUI::ItemListModel<String>::create(m_modes));
     m_mode_combo->on_change = [this](auto&, const GUI::ModelIndex& index) {
         m_monitor_widget->set_wallpaper_mode(m_modes.at(index.row()));
-        m_monitor_widget->update();
     };
 
     m_color_input = *find_descendant_of_type_named<GUI::ColorInput>("color_input");
@@ -86,7 +84,6 @@ void BackgroundSettingsWidget::create_frame()
     m_color_input->set_color_picker_title("Select color for desktop");
     m_color_input->on_change = [this] {
         m_monitor_widget->set_background_color(m_color_input->color());
-        m_monitor_widget->update();
     };
 }
 
@@ -121,8 +118,6 @@ void BackgroundSettingsWidget::load_current_settings()
 
     m_color_input->set_color(palette_desktop_color);
     m_monitor_widget->set_background_color(palette_desktop_color);
-
-    m_monitor_widget->update();
 }
 
 void BackgroundSettingsWidget::apply_settings()

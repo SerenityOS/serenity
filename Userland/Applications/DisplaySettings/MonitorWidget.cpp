@@ -28,8 +28,9 @@ bool MonitorWidget::set_wallpaper(String path)
     auto bitmap_ptr = Gfx::Bitmap::load_from_file(path);
     if (!bitmap_ptr && !path.is_empty())
         return false;
-    m_desktop_wallpaper_path = path;
+    m_desktop_wallpaper_path = move(path);
     m_desktop_wallpaper_bitmap = bitmap_ptr;
+    update();
     return true;
 }
 
@@ -40,7 +41,10 @@ String MonitorWidget::wallpaper()
 
 void MonitorWidget::set_wallpaper_mode(String mode)
 {
-    m_desktop_wallpaper_mode = mode;
+    if (m_desktop_wallpaper_mode == mode)
+        return;
+    m_desktop_wallpaper_mode = move(mode);
+    update();
 }
 
 String MonitorWidget::wallpaper_mode()
@@ -60,7 +64,10 @@ Gfx::IntSize MonitorWidget::desktop_resolution()
 
 void MonitorWidget::set_background_color(Gfx::Color color)
 {
+    if (m_desktop_color == color)
+        return;
     m_desktop_color = color;
+    update();
 }
 
 Gfx::Color MonitorWidget::background_color()
