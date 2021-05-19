@@ -320,8 +320,7 @@ namespace Detail {
 template<typename T, typename Container>
 inline IntrusiveListNode<T, Container>::~IntrusiveListNode()
 {
-    if (m_storage)
-        remove();
+    VERIFY(!is_in_list());
 }
 
 template<typename T, typename Container>
