@@ -8,10 +8,15 @@ files="https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-${version}.tar.bz2 libgc
 auth_type=sha256
 
 pre_configure() {
-    export gcry_cv_gcc_has_f_visibility=no
     export ac_cv_lib_pthread_pthread_create=no
 }
 
 configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" $configopts
+}
+
+install() {
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.so -Wl,-soname,libgcrypt.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.a -Wl,--no-whole-archive -lgpg-error
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libgcrypt.la
 }
