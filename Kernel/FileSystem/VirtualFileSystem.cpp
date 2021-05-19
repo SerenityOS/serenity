@@ -237,19 +237,16 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
 
     RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody, options);
-    if (options & O_CREAT) {
-        if (!parent_custody)
-            return ENOENT;
-        if (custody_or_error.is_error()) {
-            if (custody_or_error.error() != -ENOENT)
-                return custody_or_error.error();
+    if (custody_or_error.is_error()) {
+        // NOTE: ENOENT with a non-null parent custody signals us that the immediate parent
+        //       of the file exists, but the file itself does not.
+        if ((options & O_CREAT) && custody_or_error.error() == -ENOENT && parent_custody)
             return create(path, options, mode, *parent_custody, move(owner));
-        }
-        if (options & O_EXCL)
-            return EEXIST;
-    }
-    if (custody_or_error.is_error())
         return custody_or_error.error();
+    }
+
+    if ((options & O_CREAT) && (options & O_EXCL))
+        return EEXIST;
 
     auto& custody = *custody_or_error.value();
     auto& inode = custody.inode();
