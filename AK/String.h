@@ -262,6 +262,8 @@ public:
     [[nodiscard]] StringView view() const;
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
+    size_t count(const String& needle) const;
+    Vector<size_t> find_all(const String& needle) const;
     [[nodiscard]] String reverse() const;
 
     template<typename T, typename... Rest>
