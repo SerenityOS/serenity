@@ -31,9 +31,7 @@ WorkQueue::WorkQueue(const char* name)
                 have_more = !m_items.is_empty();
             }
             if (item) {
-                item->function(item->data);
-                if (item->free_data)
-                    item->free_data(item->data);
+                item->function();
                 delete item;
 
                 if (have_more)
