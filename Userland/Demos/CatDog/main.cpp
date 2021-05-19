@@ -101,8 +101,9 @@ int main(int argc, char** argv)
             advice_timer->start();
     };
 
-    catdog_widget.on_context_menu_request = [&](GUI::ContextMenuEvent event) {
-        context_menu->popup(event.screen_position());
+    catdog_widget.on_context_menu_request = [&](GUI::ContextMenuEvent& event) {
+        if (catdog_widget.rect().contains(event.position()))
+            context_menu->popup(event.screen_position());
     };
 
     return app->exec();
