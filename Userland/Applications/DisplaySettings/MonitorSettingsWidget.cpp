@@ -1,36 +1,33 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "DisplaySettings.h"
-#include <AK/StringBuilder.h>
+#include "MonitorSettingsWidget.h"
 #include <Applications/DisplaySettings/DisplaySettingsWindowGML.h>
 #include <LibCore/ConfigFile.h>
-#include <LibCore/DirIterator.h>
-#include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/Desktop.h>
-#include <LibGUI/FilePicker.h>
 #include <LibGUI/ItemListModel.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/WindowServerConnection.h>
-#include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
-DisplaySettingsWidget::DisplaySettingsWidget()
+namespace DisplaySettings {
+
+MonitorSettingsWidget::MonitorSettingsWidget()
 {
     create_resolution_list();
     create_frame();
     load_current_settings();
 }
 
-void DisplaySettingsWidget::create_resolution_list()
+void MonitorSettingsWidget::create_resolution_list()
 {
     // TODO: Find a better way to get the default resolution
     m_resolutions.append({ 640, 480 });
@@ -51,7 +48,7 @@ void DisplaySettingsWidget::create_resolution_list()
     m_resolutions.append({ 2560, 1440 });
 }
 
-void DisplaySettingsWidget::create_frame()
+void MonitorSettingsWidget::create_frame()
 {
     load_from_gml(display_settings_window_gml);
 
@@ -81,7 +78,7 @@ void DisplaySettingsWidget::create_frame()
     };
 }
 
-void DisplaySettingsWidget::load_current_settings()
+void MonitorSettingsWidget::load_current_settings()
 {
     auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini");
 
@@ -105,7 +102,7 @@ void DisplaySettingsWidget::load_current_settings()
     m_monitor_widget->update();
 }
 
-void DisplaySettingsWidget::apply_settings()
+void MonitorSettingsWidget::apply_settings()
 {
     // Store the current screen resolution and scale factor in case the user wants to revert to it.
     auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
@@ -145,4 +142,6 @@ void DisplaySettingsWidget::apply_settings()
             }
         }
     }
+}
+
 }

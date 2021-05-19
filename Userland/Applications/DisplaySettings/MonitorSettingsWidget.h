@@ -12,14 +12,16 @@
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
 
-class DisplaySettingsWidget : public GUI::Widget {
-    C_OBJECT(DisplaySettingsWidget);
+namespace DisplaySettings {
+
+class MonitorSettingsWidget : public GUI::Widget {
+    C_OBJECT(MonitorSettingsWidget);
 
 public:
     void apply_settings();
 
 private:
-    DisplaySettingsWidget();
+    MonitorSettingsWidget();
 
     void create_frame();
     void create_resolution_list();
@@ -32,3 +34,5 @@ private:
     RefPtr<GUI::RadioButton> m_display_scale_radio_1x;
     RefPtr<GUI::RadioButton> m_display_scale_radio_2x;
 };
+
+}

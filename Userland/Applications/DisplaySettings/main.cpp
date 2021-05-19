@@ -6,7 +6,7 @@
  */
 
 #include "BackgroundSettingsWidget.h"
-#include "DisplaySettings.h"
+#include "MonitorSettingsWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
     auto& background_settings_widget = tab_widget.add_tab<DisplaySettings::BackgroundSettingsWidget>("Background");
-    auto& monitor_settings_widget = tab_widget.add_tab<DisplaySettingsWidget>("Monitor");
+    auto& monitor_settings_widget = tab_widget.add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor");
 
     auto& button_container = main_widget.add<GUI::Widget>();
     button_container.set_shrink_to_fit(true);

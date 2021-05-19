@@ -1,11 +1,11 @@
-compile_gml(DisplaySettingsWindow.gml DisplaySettingsWindowGML.h display_settings_window_gml)
+compile_gml(MonitorSettings.gml MonitorSettingsGML.h monitor_settings_window_gml)
 compile_gml(BackgroundSettings.gml BackgroundSettingsGML.h background_settings_gml)
 
 set(SOURCES
     BackgroundSettingsGML.h
     BackgroundSettingsWidget.cpp
-    DisplaySettings.cpp
-    DisplaySettingsWindowGML.h
+    MonitorSettingsWidget.cpp
+    MonitorSettingsGML.h
     MonitorWidget.cpp
     main.cpp
 )
