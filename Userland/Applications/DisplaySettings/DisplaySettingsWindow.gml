@@ -2,125 +2,70 @@
     fill_with_background_color: true
 
     layout: @GUI::VerticalBoxLayout {
-        margins: [4, 4, 4, 4]
+        margins: [8, 8, 8, 8]
     }
 
     @DisplaySettings::MonitorWidget {
         name: "monitor_widget"
+        fixed_width: 304
+        fixed_height: 201
     }
 
     @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
-
-        @GUI::Label {
-            text: "Wallpaper:"
-            text_alignment: "CenterLeft"
-            fixed_width: 70
-        }
-
-        @GUI::ComboBox {
-            name: "wallpaper_combo"
-        }
-
-        @GUI::Button {
-            name: "wallpaper_open_button"
-            tooltip: "Select wallpaper from file system."
-            button_style: "Coolbar"
-            fixed_width: 22
-            fixed_height: 22
-        }
+        fixed_height: 20
     }
 
-    @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
-
-        @GUI::Label {
-            text: "Modes:"
-            text_alignment: "CenterLeft"
-            fixed_width: 70
+    @GUI::GroupBox {
+        layout: @GUI::VerticalBoxLayout {
+            margins: [16, 24, 16, 6]
         }
 
-        @GUI::ComboBox {
-            name: "mode_combo"
-        }
-    }
+        title: "Screen settings"
 
-    @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
+        @GUI::Widget {
+            shrink_to_fit: true
 
-        @GUI::Label {
-            text: "Resolution:"
-            text_alignment: "CenterLeft"
-            fixed_width: 70
-        }
+            layout: @GUI::HorizontalBoxLayout {
+            }
 
-        @GUI::ComboBox {
-            name: "resolution_combo"
-            fixed_width: 90
-        }
+            @GUI::Label {
+                text: "Resolution:"
+                text_alignment: "CenterLeft"
+                fixed_width: 95
+            }
 
-        @GUI::Widget
-
-        @GUI::Label {
-            text: "Display scale:"
-            text_alignment: "CenterLeft"
-            fixed_width: 95
+            @GUI::ComboBox {
+                name: "resolution_combo"
+            }
         }
 
-        @GUI::RadioButton {
-            name: "scale_1x"
-            text: "1x"
+        @GUI::Widget {
+            fixed_height: 8
         }
 
-        @GUI::RadioButton {
-            name: "scale_2x"
-            text: "2x"
-        }
-    }
+        @GUI::Widget {
+            shrink_to_fit: true
 
-    @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
+            layout: @GUI::HorizontalBoxLayout {
+            }
 
-        @GUI::Label {
-            text: "Color:"
-            text_alignment: "CenterLeft"
-            fixed_width: 70
-        }
+            @GUI::Label {
+                text: "Display scale:"
+                text_alignment: "CenterLeft"
+                fixed_width: 95
+            }
 
-        @GUI::ColorInput {
-            name: "color_input"
-            fixed_width: 90
-        }
-    }
+            @GUI::RadioButton {
+                name: "scale_1x"
+                text: "1x"
+                fixed_width: 50
+            }
 
-    @GUI::Widget
-
-    @GUI::Widget {
-        shrink_to_fit: true
-        layout: @GUI::HorizontalBoxLayout
-
-        @GUI::Widget
-
-        @GUI::Button {
-            name: "ok_button"
-            text: "OK"
-            fixed_width: 75
-        }
-
-        @GUI::Button {
-            name: "cancel_button"
-            text: "Cancel"
-            fixed_width: 75
-        }
-
-        @GUI::Button {
-            name: "apply_button"
-            text: "Apply"
-            fixed_width: 75
+            @GUI::RadioButton {
+                name: "scale_2x"
+                text: "2x"
+                fixed_width: 50
+            }
         }
     }
 }
