@@ -7,6 +7,7 @@
 #include <LibTest/TestCase.h>
 
 #include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 
 TEST_CASE(construct)

@@ -6,7 +6,7 @@
 
 #include <AK/GenericLexer.h>
 #include <AK/HashTable.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>

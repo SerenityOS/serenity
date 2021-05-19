@@ -9,6 +9,7 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
+#include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <LibDebug/Dwarf/DIE.h>
 #include <LibDebug/Dwarf/DwarfInfo.h>

@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/MappedFile.h>
+#include <AK/OwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
