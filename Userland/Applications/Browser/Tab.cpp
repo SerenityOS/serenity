@@ -37,7 +37,9 @@ namespace Browser {
 URL url_from_user_input(const String& input)
 {
     if (input.starts_with("?") && !g_search_engine.is_null()) {
-        return URL(String::formatted(g_search_engine, urlencode(input.substring(1))));
+        auto url = g_search_engine;
+        url.replace("{}", urlencode(input.substring(1)));
+        return URL(url);
     }
 
     auto url = URL(input);
