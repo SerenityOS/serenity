@@ -39,7 +39,7 @@ String CodeBlock::render_to_html() const
     if (style_language.is_empty())
         builder.append("<code>");
     else
-        builder.appendff("<code class=\"{}\">", style_language);
+        builder.appendff("<code class=\"{}\">", escape_html_entities(style_language));
 
     if (style_language == "js")
         builder.append(JS::MarkupGenerator::html_from_source(m_code));
