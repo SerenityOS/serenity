@@ -38,7 +38,7 @@ static bool parse_name(StringView name, OpenFile& file)
         return true;
     } else {
         file.type = component1;
-        auto component2 = lexer.consume_while([](char c) { return isprint(c) && !isspace(c) && c != '('; });
+        auto component2 = lexer.consume_while([](char c) { return isprint(c) && c != '('; });
         lexer.ignore_while(isspace);
         file.name = component2;
 
