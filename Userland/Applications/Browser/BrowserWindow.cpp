@@ -20,6 +20,7 @@
 #include <LibGUI/InputBox.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/SeparatorWidget.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
@@ -250,12 +251,13 @@ void BrowserWindow::build_menus()
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
 
-    auto add_search_engine = [this, &search_engine_menu](auto& name, auto& url_format) {
+    bool search_engine_set = false;
+    auto add_search_engine = [&](auto& name, auto& url_format) {
         auto action = GUI::Action::create_checkable(
-            name, [url_format](auto&) {
+            name, [&](auto&) {
                 g_search_engine = url_format;
-                auto m_config = Core::ConfigFile::get_for_app("Browser");
-                m_config->write_entry("Preferences", "SearchEngine", g_search_engine);
+                auto config = Core::ConfigFile::get_for_app("Browser");
+                config->write_entry("Preferences", "SearchEngine", g_search_engine);
             },
             this);
         search_engine_menu.add_action(action);
@@ -263,28 +265,55 @@ void BrowserWindow::build_menus()
 
         if (g_search_engine == url_format) {
             action->set_checked(true);
+            search_engine_set = true;
         }
         action->set_status_tip(url_format);
     };
 
-    auto disable_search_engine_action = GUI::Action::create_checkable(
-        "Disable", [](auto&) {
+    m_disable_search_engine_action = GUI::Action::create_checkable(
+        "Disable", [this](auto&) {
             g_search_engine = {};
             auto config = Core::ConfigFile::get_for_app("Browser");
             config->write_entry("Preferences", "SearchEngine", g_search_engine);
         },
         this);
-    search_engine_menu.add_action(disable_search_engine_action);
-    m_search_engine_actions.add_action(disable_search_engine_action);
-    disable_search_engine_action->set_checked(true);
+    search_engine_menu.add_action(*m_disable_search_engine_action);
+    m_search_engine_actions.add_action(*m_disable_search_engine_action);
+    m_disable_search_engine_action->set_checked(true);
 
-    // FIXME: Support adding custom search engines
     add_search_engine("Bing", "https://www.bing.com/search?q={}");
     add_search_engine("DuckDuckGo", "https://duckduckgo.com/?q={}");
     add_search_engine("FrogFind", "http://frogfind.com/?q={}");
     add_search_engine("GitHub", "https://github.com/search?q={}");
     add_search_engine("Google", "https://google.com/search?q={}");
     add_search_engine("Yandex", "https://yandex.com/search/?text={}");
+
+    auto custom_search_engine_action = GUI::Action::create_checkable("Custom", [&](auto& action) {
+        String search_engine;
+        if (GUI::InputBox::show(this, search_engine, "Enter URL template:", "Custom Search Engine") != GUI::InputBox::ExecOK || search_engine.is_empty()) {
+            m_disable_search_engine_action->activate();
+            return;
+        }
+
+        int argument_count = search_engine.replace("{}", "{}", true);
+        if (argument_count != 1) {
+            GUI::MessageBox::show(this, "Invalid format, must contain '{}' once!", "Error", GUI::MessageBox::Type::Error);
+            m_disable_search_engine_action->activate();
+            return;
+        }
+
+        g_search_engine = search_engine;
+        auto config = Core::ConfigFile::get_for_app("Browser");
+        config->write_entry("Preferences", "SearchEngine", g_search_engine);
+        action.set_status_tip(search_engine);
+    });
+    search_engine_menu.add_action(custom_search_engine_action);
+    m_search_engine_actions.add_action(custom_search_engine_action);
+
+    if (!search_engine_set && !g_search_engine.is_empty()) {
+        custom_search_engine_action->set_checked(true);
+        custom_search_engine_action->set_status_tip(g_search_engine);
+    }
 
     auto& debug_menu = menubar->add_menu("&Debug");
     debug_menu.add_action(GUI::Action::create(
