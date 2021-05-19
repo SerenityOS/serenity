@@ -6,7 +6,15 @@
 
 #include <LibTest/TestSuite.h>
 
+#include <AK/RefPtr.h>
 #include <AK/Variant.h>
+
+namespace {
+
+struct Object : public RefCounted<Object> {
+};
+
+}
 
 TEST_CASE(basic)
 {
@@ -116,4 +124,51 @@ TEST_CASE(duplicated_types)
     Variant<int, int, int, int> its_just_an_int { 42 };
     EXPECT(its_just_an_int.has<int>());
     EXPECT_EQ(its_just_an_int.get<int>(), 42);
+}
+
+TEST_CASE(return_values)
+{
+    using MyVariant = Variant<int, String, float>;
+    {
+        MyVariant the_value { 42.0f };
+
+        float value = the_value.visit(
+            [&](const int&) { return 1.0f; },
+            [&](const String&) { return 2.0f; },
+            [&](const float& f) { return f; });
+        EXPECT_EQ(value, 42.0f);
+    }
+    {
+        MyVariant the_value { 42 };
+
+        int value = the_value.visit(
+            [&](int& i) { return i; },
+            [&](String&) { return 2; },
+            [&](float&) { return 3; });
+        EXPECT_EQ(value, 42);
+    }
+    {
+        const MyVariant the_value { "str" };
+
+        String value = the_value.visit(
+            [&](const int&) { return String { "wrong" }; },
+            [&](const String& s) { return s; },
+            [&](const float&) { return String { "wrong" }; });
+        EXPECT_EQ(value, "str");
+    }
+}
+
+TEST_CASE(return_values_by_reference)
+{
+    auto ref = adopt_ref_if_nonnull(new Object());
+    Variant<int, String, float> the_value { 42.0f };
+
+    auto& value = the_value.visit(
+        [&](const int&) -> RefPtr<Object>& { return ref; },
+        [&](const String&) -> RefPtr<Object>& { return ref; },
+        [&](const float&) -> RefPtr<Object>& { return ref; });
+
+    EXPECT_EQ(ref, value);
+    EXPECT_EQ(ref->ref_count(), 1u);
+    EXPECT_EQ(value->ref_count(), 1u);
 }
