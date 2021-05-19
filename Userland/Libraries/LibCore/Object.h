@@ -11,6 +11,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/String.h>
 #include <AK/TypeCasts.h>
 #include <AK/Weakable.h>
