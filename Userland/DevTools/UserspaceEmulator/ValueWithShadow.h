@@ -8,7 +8,7 @@
 
 #include <AK/Format.h>
 #include <AK/Platform.h>
-#include <LibX86/Types.h>
+#include <AK/UFixedBigInt.h>
 #include <string.h>
 
 namespace UserspaceEmulator {

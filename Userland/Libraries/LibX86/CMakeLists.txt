@@ -1,6 +1,5 @@
 set(SOURCES
     Instruction.cpp
-    Types/Formatter.cpp   
 )
 
 serenity_lib(LibX86 x86)

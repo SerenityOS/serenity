@@ -1855,9 +1855,10 @@ void SoftCPU::FLD_RM80(const X86::Instruction& insn)
     // long doubles can be up to 128 bits wide in memory for reasons (alignment) and only uses 80 bits of precision
     // GCC uses 12 bytes in 32 bit and 16 bytes in 64 bit mode
     // so in the 32 bit case we read a bit to much, but that shouldn't be an issue.
-    auto new_f80 = insn.modrm().read128(*this, insn);
     // FIXME: Respect shadow values
-    fpu_push(*(long double*)new_f80.value().bytes());
+    auto new_f80 = insn.modrm().read128(*this, insn).value();
+
+    fpu_push(*(long double*)new_f80.bytes().data());
 }
 
 void SoftCPU::FUCOMI(const X86::Instruction& insn)
@@ -1908,7 +1909,7 @@ void SoftCPU::FSTP_RM80(const X86::Instruction& insn)
         if constexpr (sizeof(long double) == 12)
             f80 = insn.modrm().read128(*this, insn).value();
 
-        *(long double*)f80.bytes() = fpu_pop();
+        *(long double*)f80.bytes().data() = fpu_pop();
 
         insn.modrm().write128(*this, insn, shadow_wrap_as_initialized(f80));
     }
