@@ -125,12 +125,9 @@ void Job::on_socket_connected()
             return;
 
         if (m_state == State::Finished) {
-            // This is probably just a EOF notification, which means we should receive nothing
-            // and then get eof() == true.
-            [[maybe_unused]] auto payload = receive(64);
-            // These assertions are only correct if "Connection: close".
-            VERIFY(payload.is_empty());
-            VERIFY(eof());
+            // We have everything we want, at this point, we can either get an EOF, or a bunch of extra newlines
+            // (unless "Connection: close" isn't specified)
+            // So just ignore everything after this.
             return;
         }
 
