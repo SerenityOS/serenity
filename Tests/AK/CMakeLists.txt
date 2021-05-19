@@ -58,6 +58,7 @@ set(AK_TEST_SOURCES
     TestTuple.cpp
     TestTypeTraits.cpp
     TestTypedTransfer.cpp
+    TestUFixedBigInt.cpp
     TestURL.cpp
     TestUtf8.cpp
     TestVariant.cpp
