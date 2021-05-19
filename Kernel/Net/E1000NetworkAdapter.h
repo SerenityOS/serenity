@@ -84,8 +84,8 @@ private:
     bool m_use_mmio { false };
     EntropySource m_entropy_source;
 
-    static const size_t number_of_rx_descriptors = 32;
-    static const size_t number_of_tx_descriptors = 8;
+    static constexpr size_t number_of_rx_descriptors = 32;
+    static constexpr size_t number_of_tx_descriptors = 8;
 
     WaitQueue m_wait_queue;
 };

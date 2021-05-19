@@ -60,7 +60,7 @@ private:
 
 class KeyboardClient {
 public:
-    virtual ~KeyboardClient();
+    virtual ~KeyboardClient() = default;
     virtual void on_key_pressed(KeyEvent) = 0;
 };
 

@@ -103,9 +103,9 @@ KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
 
 KResultOr<u16> UDPSocket::protocol_allocate_local_port()
 {
-    static const u16 first_ephemeral_port = 32768;
-    static const u16 last_ephemeral_port = 60999;
-    static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
+    constexpr u16 first_ephemeral_port = 32768;
+    constexpr u16 last_ephemeral_port = 60999;
+    constexpr u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
     Locker locker(sockets_by_port().lock());

@@ -13,9 +13,6 @@
 
 namespace Kernel {
 
-static const FlatPtr userspace_range_base = 0x00800000;
-static const FlatPtr userspace_range_ceiling = 0xbe000000;
-
 static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
@@ -53,6 +50,9 @@ UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 {
+    constexpr FlatPtr userspace_range_base = 0x00800000;
+    constexpr FlatPtr userspace_range_ceiling = 0xbe000000;
+
     ScopedSpinLock lock(s_mm_lock);
     if (parent_range_allocator) {
         m_range_allocator.initialize_from_parent(*parent_range_allocator);
