@@ -10,6 +10,7 @@
 #include <AK/GenericLexer.h>
 #include <AK/HashMap.h>
 #include <AK/LexicalPath.h>
+#include <AK/OwnPtr.h>
 #include <AK/SourceGenerator.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/ArgsParser.h>

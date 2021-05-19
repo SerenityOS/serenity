@@ -11,7 +11,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 #include <AK/QuickSort.h>
 #include <AK/Result.h>
 #include <AK/String.h>
