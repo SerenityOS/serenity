@@ -14,14 +14,14 @@
 #include <unistd.h>
 
 // FIXME
-static const char* TEXT_FAIL = "\x1b[01;31m";
-static const char* TEXT_PASS = "\x1b[01;32m";
-static const char* TEXT_RESET = "\x1b[0m";
+static constexpr char TEXT_FAIL[] = "\x1b[01;31m";
+static constexpr char TEXT_PASS[] = "\x1b[01;32m";
+static constexpr char TEXT_RESET[] = "\x1b[0m";
 
-static const char* TMPDIR_PATTERN = "/tmp/overlong_realpath_XXXXXX";
-static const char* PATH_LOREM_250 = "This-is-an-annoyingly-long-name-that-should-take-up-exactly-two-hundred-and-fifty-characters-and-is-surprisingly-difficult-to-fill-with-reasonably-meaningful-text-which-is-necessary-because-that-makes-it-easier-for-my-eyes-to-spot-any-corruption-fast";
+static constexpr char TMPDIR_PATTERN[] = "/tmp/overlong_realpath_XXXXXX";
+static constexpr char PATH_LOREM_250[] = "This-is-an-annoyingly-long-name-that-should-take-up-exactly-two-hundred-and-fifty-characters-and-is-surprisingly-difficult-to-fill-with-reasonably-meaningful-text-which-is-necessary-because-that-makes-it-easier-for-my-eyes-to-spot-any-corruption-fast";
 
-static const size_t ITERATION_DEPTH = 17;
+static constexpr size_t ITERATION_DEPTH = 17;
 
 static bool check_result(const char* what, const String& expected, const char* actual)
 {

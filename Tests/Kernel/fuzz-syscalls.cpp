@@ -87,7 +87,7 @@ static void randomize_from(size_t* buffer, size_t len, const Vector<size_t>& val
 
 // The largest SC_*_params struct is SC_mmap_params with 36 bytes.
 static_assert(sizeof(size_t) == 4, "Cannot handle size_t != 4 bytes");
-static const size_t fake_params_count = 36 / sizeof(size_t);
+static constexpr size_t fake_params_count = 36 / sizeof(size_t);
 
 static void do_weird_call(size_t attempt, int syscall_fn, size_t arg1, size_t arg2, size_t arg3, size_t* fake_params)
 {

@@ -6,15 +6,15 @@
 
 #include <LibTest/TestCase.h>
 
+#include <AK/StringView.h>
 #include <AK/Trie.h>
 
 TEST_CASE(normal_behaviour)
 {
     Trie<char, String> dictionary('/', "");
-    constexpr static const char* data[] { "test", "example", "foo", "foobar" };
-    constexpr static const size_t total_chars = 18; // root (1), 'test' (4), 'example' (7), 'foo' (3), 'foobar' (3, "foo" already stored).
-    for (auto& entry : data) {
-        StringView view { entry };
+    constexpr StringView data[] { "test", "example", "foo", "foobar" };
+    constexpr size_t total_chars = 18; // root (1), 'test' (4), 'example' (7), 'foo' (3), 'foobar' (3, "foo" already stored).
+    for (auto& view : data) {
         auto it = view.begin();
         dictionary.insert(it, view.end(), view, [](auto& parent, auto& it) -> Optional<String> { return String::formatted("{}{}", parent.metadata_value(), *it); });
     }
@@ -24,8 +24,7 @@ TEST_CASE(normal_behaviour)
         ++i;
     EXPECT_EQ(i, total_chars);
 
-    for (auto& entry : data) {
-        StringView view { entry };
+    for (auto& view : data) {
         auto it = view.begin();
         auto& node = dictionary.traverse_until_last_accessible_node(it, view.end());
         EXPECT(it.is_end());
@@ -33,9 +32,8 @@ TEST_CASE(normal_behaviour)
         EXPECT_EQ(view, node.metadata_value());
     }
 
-    constexpr static const char* test_data_with_prefix_in_dict[] { "testx", "exampley", "fooa", "foobarb", "fox", "text" };
-    for (auto& entry : test_data_with_prefix_in_dict) {
-        StringView view { entry };
+    constexpr StringView test_data_with_prefix_in_dict[] { "testx", "exampley", "fooa", "foobarb", "fox", "text" };
+    for (auto& view : test_data_with_prefix_in_dict) {
         auto it = view.begin();
         auto& node = dictionary.traverse_until_last_accessible_node(it, view.end());
         EXPECT(!it.is_end());
