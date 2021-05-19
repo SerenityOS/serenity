@@ -137,7 +137,7 @@ struct [[gnu::packed]] received_packet_header {
 
 UNMAP_AFTER_INIT void NE2000NetworkAdapter::detect()
 {
-    static const auto ne2k_ids = Array<PCI::ID, 11> {
+    constexpr auto ne2k_ids = Array {
         PCI::ID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
 
         // List of clones, taken from Linux's ne2k-pci.c
