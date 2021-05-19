@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
 
@@ -16,17 +18,11 @@ namespace Kernel {
 #define SERIAL_COM3_ADDR 0x3E8
 #define SERIAL_COM4_ADDR 0x2E8
 
-class SerialDevice final : public CharacterDevice {
+class SerialDevice final : public TTY {
     AK_MAKE_ETERNAL
 public:
     SerialDevice(IOAddress base_addr, unsigned minor);
     virtual ~SerialDevice() override;
-
-    // ^CharacterDevice
-    virtual bool can_read(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
-    virtual bool can_write(const FileDescription&, size_t) const override;
-    virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
 
     void put_char(char);
 
@@ -110,14 +106,26 @@ public:
     virtual mode_t required_mode() const override { return 0620; }
     virtual String device_name() const override;
 
+    // ^TTY
+    virtual String const& tty_name() const override { return m_tty_name; }
+
 private:
-    friend class PCISerialDevice;
+    // ^TTY
+    virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
+    virtual void echo(u8) override;
+    virtual int change_baud(speed_t in_baud, speed_t out_baud) override;
+    virtual int change_parity(TTY::ParityMode) override;
+    virtual int change_stop_bits(TTY::StopBits) override;
+    virtual int change_character_size(TTY::CharacterSize) override;
+    virtual int change_receiver_enabled(bool) override;
+    virtual int change_ignore_modem_status(bool) override;
+    virtual void discard_pending_input() override;
+    virtual void discard_pending_output() override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }
 
-    void initialize();
-    void set_interrupts(bool interrupt_enable);
+    void set_interrupts(u8 irq_mask);
     void set_baud(Baud);
     void set_fifo_control(u8 fifo_control);
     void set_line_control(ParitySelect, StopBits, WordLength);
@@ -125,6 +133,7 @@ private:
     void set_modem_control(u8 modem_control);
     u8 get_line_status() const;
 
+    String m_tty_name;
     IOAddress m_base_addr;
     bool m_interrupt_enable { false };
     u8 m_fifo_control { 0 };
@@ -133,8 +142,8 @@ private:
     StopBits m_stop_bits { One };
     WordLength m_word_length { EightBits };
     bool m_break_enable { false };
+    bool m_ignore_modem_status { false };
     u8 m_modem_control { 0 };
-    bool m_last_put_char_was_carriage_return { false };
     SpinLock<u8> m_serial_lock;
 };
 

@@ -321,3 +321,7 @@
 #ifndef WAITQUEUE_DEBUG
 #cmakedefine01 WAITQUEUE_DEBUG
 #endif
+
+#ifndef SERIAL_DEVICE_DEBUG
+#cmakedefine01 SERIAL_DEVICE_DEBUG
+#endif

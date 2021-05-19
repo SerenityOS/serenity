@@ -25,8 +25,8 @@ void PCISerialDevice::detect()
             auto port_base = IOAddress(bar_base + board_definition.first_offset);
             for (size_t i = 0; i < board_definition.port_count; i++) {
                 auto serial_device = new SerialDevice(port_base.offset(board_definition.port_size * i), current_device_minor++);
-                if (board_definition.baud_rate != SerialDevice::Baud::Baud38400) // non-default baud
-                    serial_device->set_baud(board_definition.baud_rate);
+                if (board_definition.baud_rate != SerialDevice::Baud::Baud9600)                                   // differs from termios' default
+                    dmesgln("PCISerialDevice: (TODO) We cannot set the default speed yet. Staying at 9600 baud"); // FIXME: We need to use the termios API!
 
                 // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
                 if (!is_available())
