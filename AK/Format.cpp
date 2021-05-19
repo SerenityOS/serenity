@@ -20,6 +20,7 @@
 #    include <Kernel/Thread.h>
 #else
 #    include <stdio.h>
+#    include <string.h>
 #endif
 
 namespace AK {
@@ -608,7 +609,10 @@ void vout(FILE* file, StringView fmtstr, TypeErasedFormatParams params, bool new
 
     const auto string = builder.string_view();
     const auto retval = ::fwrite(string.characters_without_null_termination(), 1, string.length(), file);
-    VERIFY(static_cast<size_t>(retval) == string.length());
+    if (static_cast<size_t>(retval) != string.length()) {
+        auto error = ferror(file);
+        dbgln("vout() failed ({} written out of {}), error was {} ({})", retval, string.length(), error, strerror(error));
+    }
 }
 #endif
 
