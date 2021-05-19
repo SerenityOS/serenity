@@ -42,17 +42,22 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
         return ENOMEM;
     kernel_stack_region->set_stack(true);
 
-    auto thread = adopt_ref_if_nonnull(new Thread(move(process), kernel_stack_region.release_nonnull()));
+    auto block_timer = adopt_ref_if_nonnull(new Timer());
+    if (!block_timer)
+        return ENOMEM;
+
+    auto thread = adopt_ref_if_nonnull(new Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull()));
     if (!thread)
         return ENOMEM;
 
     return thread.release_nonnull();
 }
 
-Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region)
+Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stack_region, NonnullRefPtr<Timer> block_timer)
     : m_process(move(process))
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(m_process->name())
+    , m_block_timer(block_timer)
 {
     bool is_first_thread = m_process->add_thread(*this);
     if (is_first_thread) {
