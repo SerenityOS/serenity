@@ -10,7 +10,7 @@
 #include "ValueWithShadow.h"
 #include <AK/TypeCasts.h>
 #include <AK/Types.h>
-#include <LibX86/Types.h>
+#include <AK/UFixedBigInt.h>
 
 namespace UserspaceEmulator {
 
