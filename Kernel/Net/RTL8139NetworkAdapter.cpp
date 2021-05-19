@@ -107,7 +107,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
 {
-    static const PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
+    constexpr PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
             return;

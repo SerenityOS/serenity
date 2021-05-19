@@ -576,7 +576,7 @@ private:
 
     OwnPtr<ThreadTracer> m_tracer;
 
-    static const int m_max_open_file_descriptors { FD_SETSIZE };
+    static constexpr int m_max_open_file_descriptors { FD_SETSIZE };
 
     class FileDescriptionAndFlags {
     public:

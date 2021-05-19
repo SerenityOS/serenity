@@ -14,7 +14,6 @@
 
 namespace Kernel {
 
-static const unsigned s_max_pty_pairs = 8;
 static AK::Singleton<PTYMultiplexer> s_the;
 
 PTYMultiplexer& PTYMultiplexer::the()
@@ -25,8 +24,9 @@ PTYMultiplexer& PTYMultiplexer::the()
 UNMAP_AFTER_INIT PTYMultiplexer::PTYMultiplexer()
     : CharacterDevice(5, 2)
 {
-    m_freelist.ensure_capacity(s_max_pty_pairs);
-    for (int i = s_max_pty_pairs; i > 0; --i)
+    constexpr unsigned max_pty_pairs = 8;
+    m_freelist.ensure_capacity(max_pty_pairs);
+    for (int i = max_pty_pairs; i > 0; --i)
         m_freelist.unchecked_append(i - 1);
 }
 

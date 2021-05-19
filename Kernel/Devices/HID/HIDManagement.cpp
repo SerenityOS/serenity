@@ -16,7 +16,7 @@ Atomic<bool> g_caps_lock_remapped_to_ctrl;
 static AK::Singleton<HIDManagement> s_the;
 
 // clang-format off
-static const Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
+static constexpr Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
 {
     .map = {
         0,    '\033',    '1',    '2',    '3',    '4',    '5',    '6',    '7',    '8',    '9',    '0',    '-',    '=',    0x08,
@@ -73,10 +73,6 @@ static const Keyboard::CharacterMapData DEFAULT_CHARACTER_MAP =
     },
 };
 // clang-format on
-
-KeyboardClient::~KeyboardClient()
-{
-}
 
 size_t HIDManagement::generate_minor_device_number_for_mouse()
 {

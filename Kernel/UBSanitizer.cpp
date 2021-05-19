@@ -127,7 +127,7 @@ void __ubsan_handle_out_of_bounds(const OutOfBoundsData& data, ValueHandle)
 void __ubsan_handle_type_mismatch_v1(const TypeMismatchData&, ValueHandle) __attribute__((used));
 void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle ptr)
 {
-    static const char* kinds[] = {
+    constexpr StringView kinds[] = {
         "load of",
         "store to",
         "reference binding to",
@@ -143,7 +143,7 @@ void __ubsan_handle_type_mismatch_v1(const TypeMismatchData& data, ValueHandle p
     };
 
     FlatPtr alignment = (FlatPtr)1 << data.log_alignment;
-    auto* kind = kinds[data.type_check_kind];
+    auto kind = kinds[data.type_check_kind];
 
     if (!ptr) {
         dbgln("KUBSAN: {} null pointer of type {}", kind, data.type.name());
