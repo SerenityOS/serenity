@@ -303,11 +303,8 @@ bool String::equals_ignoring_case(const StringView& other) const
     return StringUtils::equals_ignoring_case(view(), other);
 }
 
-int String::replace(const String& needle, const String& replacement, bool all_occurrences)
+Vector<size_t> String::find_all(const String& needle) const
 {
-    if (is_empty())
-        return 0;
-
     Vector<size_t> positions;
     size_t start = 0, pos;
     for (;;) {
@@ -317,10 +314,25 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
 
         pos = ptr - characters();
         positions.append(pos);
-        if (!all_occurrences)
-            break;
 
         start = pos + 1;
+    }
+    return positions;
+}
+
+int String::replace(const String& needle, const String& replacement, bool all_occurrences)
+{
+    if (is_empty())
+        return 0;
+
+    Vector<size_t> positions;
+    if (all_occurrences) {
+        positions = find_all(needle);
+    } else {
+        auto pos = find(needle);
+        if (!pos.has_value())
+            return 0;
+        positions.append(pos.value());
     }
 
     if (!positions.size())
@@ -336,6 +348,22 @@ int String::replace(const String& needle, const String& replacement, bool all_oc
     b.append(substring_view(lastpos, length() - lastpos));
     m_impl = StringImpl::create(b.build().characters());
     return positions.size();
+}
+
+size_t String::count(const String& needle) const
+{
+    size_t count = 0;
+    size_t start = 0, pos;
+    for (;;) {
+        const char* ptr = strstr(characters() + start, needle.characters());
+        if (!ptr)
+            break;
+
+        pos = ptr - characters();
+        count++;
+        start = pos + 1;
+    }
+    return count;
 }
 
 String String::reverse() const
