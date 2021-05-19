@@ -6,6 +6,7 @@
 
 #include <Kernel/Devices/PCISerialDevice.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/kstdio.h>
 #include <LibC/sys/ttydefaults.h>
 
 namespace Kernel {
@@ -27,7 +28,7 @@ void PCISerialDevice::detect()
             auto maybe_new_baud = SerialDevice::termios_baud_from_serial(board_definition.baud_rate);
             if (!maybe_new_baud.has_value()) {
                 dbgln("FIXME: PCISerialDevice's speed is missing from termios");
-                continue;
+                break;
             }
 
             auto bar_base = PCI::get_BAR(address, board_definition.pci_bar) & ~1;
@@ -41,7 +42,7 @@ void PCISerialDevice::detect()
                 }
 
                 // If this is the first port of the first pci serial device, store it as the debug PCI serial port (TODO: Make this configurable somehow?)
-                if (!is_available())
+                if (!is_available() && get_serial_debug())
                     s_the = serial_device;
                 // NOTE: We intentionally leak the reference to serial_device here, as it is eternal
             }

@@ -8,6 +8,7 @@
 #include <AK/Types.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/PCISerialDevice.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
@@ -35,9 +36,6 @@ int get_serial_debug()
 
 static void serial_putch(char ch)
 {
-    if (PCISerialDevice::is_available())
-        return PCISerialDevice::the().put_char(ch);
-
     static bool serial_ready = false;
     static bool was_cr = false;
 
@@ -56,10 +54,15 @@ static void serial_putch(char ch)
     while ((IO::in8(0x3F8 + 5) & 0x20) == 0)
         ;
 
-    if (ch == '\n' && !was_cr)
+    if (ch == '\n' && !was_cr) {
         IO::out8(0x3F8, '\r');
+        if (PCISerialDevice::is_available())
+            PCISerialDevice::the().put_char('\r');
+    }
 
     IO::out8(0x3F8, ch);
+    if (PCISerialDevice::is_available())
+        PCISerialDevice::the().put_char(ch);
 
     if (ch == '\r')
         was_cr = true;
