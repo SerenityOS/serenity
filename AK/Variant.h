@@ -9,6 +9,7 @@
 #include <AK/Array.h>
 #include <AK/BitCast.h>
 #include <AK/StdLibExtras.h>
+#include <AK/TypeList.h>
 
 namespace AK::Detail {
 
@@ -68,24 +69,6 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
         else
             Variant<IndexType, InitialIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
     }
-
-    template<typename Visitor>
-    static void visit_(IndexType id, void* data, Visitor&& visitor)
-    {
-        if (id == current_index)
-            visitor(*bit_cast<F*>(data));
-        else
-            Variant<IndexType, InitialIndex + 1, Ts...>::visit_(id, data, forward<Visitor>(visitor));
-    }
-
-    template<typename Visitor>
-    static void visit_(IndexType id, const void* data, Visitor&& visitor)
-    {
-        if (id == current_index)
-            visitor(*bit_cast<const F*>(data));
-        else
-            Variant<IndexType, InitialIndex + 1, Ts...>::visit_(id, data, forward<Visitor>(visitor));
-    }
 };
 
 template<typename IndexType, IndexType InitialIndex>
@@ -93,10 +76,23 @@ struct Variant<IndexType, InitialIndex> {
     static void delete_(IndexType, void*) { }
     static void move_(IndexType, void*, void*) { }
     static void copy_(IndexType, const void*, void*) { }
-    template<typename Visitor>
-    static void visit_(IndexType, void*, Visitor&&) { }
-    template<typename Visitor>
-    static void visit_(IndexType, const void*, Visitor&&) { }
+};
+
+template<typename IndexType, typename... Ts>
+struct VisitImpl {
+    template<typename Visitor, IndexType CurrentIndex = 0>
+    static constexpr inline decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    {
+        using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
+
+        if (id == CurrentIndex)
+            return visitor(*bit_cast<T*>(data));
+
+        if constexpr ((CurrentIndex + 1) < sizeof...(Ts))
+            return visit<Visitor, CurrentIndex + 1>(id, data, forward<Visitor>(visitor));
+        else
+            VERIFY_NOT_REACHED();
+    }
 };
 
 struct VariantNoClearTag {
@@ -310,17 +306,17 @@ public:
     }
 
     template<typename... Fs>
-    void visit(Fs&&... functions)
+    decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        Helper::visit_(m_index, m_data, visitor);
+        return VisitHelper::visit(m_index, m_data, move(visitor));
     }
 
     template<typename... Fs>
-    void visit(Fs&&... functions) const
+    decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
-        Helper::visit_(m_index, m_data, visitor);
+        return VisitHelper::visit(m_index, m_data, move(visitor));
     }
 
     template<typename... NewTs>
@@ -357,6 +353,7 @@ private:
     static constexpr auto data_size = integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, sizeof(Ts)...>()).max();
     static constexpr auto data_alignment = integer_sequence_generate_array<size_t>(0, IntegerSequence<size_t, alignof(Ts)...>()).max();
     using Helper = Detail::Variant<IndexType, 0, Ts...>;
+    using VisitHelper = Detail::VisitImpl<IndexType, Ts...>;
 
     explicit Variant(IndexType index, Detail::VariantConstructTag)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
@@ -367,7 +364,7 @@ private:
     template<typename... Fs>
     struct Visitor : Fs... {
         Visitor(Fs&&... args)
-            : Fs(args)...
+            : Fs(forward<Fs>(args))...
         {
         }
 
