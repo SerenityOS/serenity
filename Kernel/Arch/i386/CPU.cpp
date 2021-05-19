@@ -2240,6 +2240,7 @@ UNMAP_AFTER_INIT void Processor::deferred_call_pool_init()
     for (size_t i = 0; i < pool_count; i++) {
         auto& entry = m_deferred_call_pool[i];
         entry.next = i < pool_count - 1 ? &m_deferred_call_pool[i + 1] : nullptr;
+        new (entry.handler_storage) DeferredCallEntry::HandlerFunction;
         entry.was_allocated = false;
     }
     m_pending_deferred_calls = nullptr;
@@ -2250,6 +2251,8 @@ void Processor::deferred_call_return_to_pool(DeferredCallEntry* entry)
 {
     VERIFY(m_in_critical);
     VERIFY(!entry->was_allocated);
+
+    entry->handler_value() = {};
 
     entry->next = m_free_deferred_call_pool_entry;
     m_free_deferred_call_pool_entry = entry;
@@ -2268,6 +2271,7 @@ DeferredCallEntry* Processor::deferred_call_get_free()
     }
 
     auto* entry = new DeferredCallEntry;
+    new (entry->handler_storage) DeferredCallEntry::HandlerFunction;
     entry->was_allocated = true;
     return entry;
 }
@@ -2296,20 +2300,14 @@ void Processor::deferred_call_execute_pending()
     pending_list = reverse_list(pending_list);
 
     do {
-        // Call the appropriate callback handler
-        if (pending_list->have_data) {
-            pending_list->callback_with_data.handler(pending_list->callback_with_data.data);
-            if (pending_list->callback_with_data.free)
-                pending_list->callback_with_data.free(pending_list->callback_with_data.data);
-        } else {
-            pending_list->callback.handler();
-        }
+        pending_list->invoke_handler();
 
         // Return the entry back to the pool, or free it
         auto* next = pending_list->next;
-        if (pending_list->was_allocated)
+        if (pending_list->was_allocated) {
+            pending_list->handler_value().~Function();
             delete pending_list;
-        else
+        } else
             deferred_call_return_to_pool(pending_list);
         pending_list = next;
     } while (pending_list);
@@ -2322,7 +2320,7 @@ void Processor::deferred_call_queue_entry(DeferredCallEntry* entry)
     m_pending_deferred_calls = entry;
 }
 
-void Processor::deferred_call_queue(void (*callback)())
+void Processor::deferred_call_queue(Function<void()> callback)
 {
     // NOTE: If we are called outside of a critical section and outside
     // of an irq handler, the function will be executed before we return!
@@ -2330,24 +2328,7 @@ void Processor::deferred_call_queue(void (*callback)())
     auto& cur_proc = Processor::current();
 
     auto* entry = cur_proc.deferred_call_get_free();
-    entry->have_data = false;
-    entry->callback.handler = callback;
-
-    cur_proc.deferred_call_queue_entry(entry);
-}
-
-void Processor::deferred_call_queue(void (*callback)(void*), void* data, void (*free_data)(void*))
-{
-    // NOTE: If we are called outside of a critical section and outside
-    // of an irq handler, the function will be executed before we return!
-    ScopedCritical critical;
-    auto& cur_proc = Processor::current();
-
-    auto* entry = cur_proc.deferred_call_get_free();
-    entry->have_data = true;
-    entry->callback_with_data.handler = callback;
-    entry->callback_with_data.data = data;
-    entry->callback_with_data.free = free_data;
+    entry->handler_value() = move(callback);
 
     cur_proc.deferred_call_queue_entry(entry);
 }

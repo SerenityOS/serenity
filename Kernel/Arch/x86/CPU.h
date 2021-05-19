@@ -9,6 +9,7 @@
 #include <AK/Atomic.h>
 #include <AK/Badge.h>
 #include <AK/Concepts.h>
+#include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/Vector.h>
 
@@ -608,19 +609,21 @@ struct ProcessorMessageEntry {
 };
 
 struct DeferredCallEntry {
+    using HandlerFunction = Function<void()>;
+
     DeferredCallEntry* next;
-    union {
-        struct {
-            void (*handler)();
-        } callback;
-        struct {
-            void* data;
-            void (*handler)(void*);
-            void (*free)(void*);
-        } callback_with_data;
-    };
-    bool have_data;
+    alignas(HandlerFunction) u8 handler_storage[sizeof(HandlerFunction)];
     bool was_allocated;
+
+    HandlerFunction& handler_value()
+    {
+        return *bit_cast<HandlerFunction*>(&handler_storage);
+    }
+
+    void invoke_handler()
+    {
+        handler_value()();
+    }
 };
 
 class Processor {
@@ -968,21 +971,7 @@ public:
     static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
-    template<typename Callback>
-    static void deferred_call_queue(Callback callback)
-    {
-        auto* data = new Callback(move(callback));
-        deferred_call_queue(
-            [](void* data) {
-                (*reinterpret_cast<Callback*>(data))();
-            },
-            data,
-            [](void* data) {
-                delete reinterpret_cast<Callback*>(data);
-            });
-    }
-    static void deferred_call_queue(void (*callback)());
-    static void deferred_call_queue(void (*callback)(void*), void* data, void (*free_data)(void*));
+    static void deferred_call_queue(Function<void()> callback);
 
     ALWAYS_INLINE bool has_feature(CPUFeature f) const
     {
