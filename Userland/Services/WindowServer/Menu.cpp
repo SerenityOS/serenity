@@ -55,7 +55,7 @@ const Gfx::Font& Menu::font() const
     return Gfx::FontDatabase::default_font();
 }
 
-static const char* s_checked_bitmap_data = {
+static constexpr char s_checked_bitmap_data[] = {
     "         "
     "       # "
     "      ## "
@@ -67,7 +67,7 @@ static const char* s_checked_bitmap_data = {
     "         "
 };
 
-static const char* s_submenu_arrow_bitmap_data = {
+static constexpr char s_submenu_arrow_bitmap_data[] = {
     "         "
     "   #     "
     "   ##    "
@@ -80,12 +80,12 @@ static const char* s_submenu_arrow_bitmap_data = {
 };
 
 static Gfx::CharacterBitmap* s_checked_bitmap;
-static const int s_checked_bitmap_width = 9;
-static const int s_checked_bitmap_height = 9;
-static const int s_submenu_arrow_bitmap_width = 9;
-static const int s_submenu_arrow_bitmap_height = 9;
-static const int s_item_icon_width = 16;
-static const int s_stripe_width = 24;
+static constexpr int s_checked_bitmap_width = 9;
+static constexpr int s_checked_bitmap_height = 9;
+static constexpr int s_submenu_arrow_bitmap_width = 9;
+static constexpr int s_submenu_arrow_bitmap_height = 9;
+static constexpr int s_item_icon_width = 16;
+static constexpr int s_stripe_width = 24;
 
 int Menu::content_width() const
 {

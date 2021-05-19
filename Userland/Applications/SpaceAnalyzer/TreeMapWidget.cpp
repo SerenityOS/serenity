@@ -5,6 +5,7 @@
  */
 
 #include "TreeMapWidget.h"
+#include <AK/Array.h>
 #include <AK/NumberFormat.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -24,7 +25,7 @@ TreeMapWidget::~TreeMapWidget()
 {
 }
 
-static const Color colors[] = {
+static constexpr Array colors = {
     Color(253, 231, 37),
     Color(148, 216, 64),
     Color(60, 188, 117),

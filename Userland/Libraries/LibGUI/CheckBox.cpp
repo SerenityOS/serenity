@@ -15,9 +15,9 @@ REGISTER_WIDGET(GUI, CheckBox)
 
 namespace GUI {
 
-static const int s_box_width = 13;
-static const int s_box_height = 13;
-static const int s_horizontal_padding = 6;
+static constexpr int s_box_width = 13;
+static constexpr int s_box_height = 13;
+static constexpr int s_horizontal_padding = 6;
 
 CheckBox::CheckBox(String text)
     : AbstractButton(move(text))

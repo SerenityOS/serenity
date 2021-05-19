@@ -70,10 +70,9 @@ char* ctime_r(const time_t* t, char* buf)
     return asctime_r(localtime_r(t, &tm_buf), buf);
 }
 
-static const int __seconds_per_day = 60 * 60 * 24;
-
 static void time_to_tm(struct tm* tm, time_t t)
 {
+    constexpr int __seconds_per_day = 60 * 60 * 24;
     int year = 1970;
     for (; t >= days_in_year(year) * __seconds_per_day; ++year)
         t -= days_in_year(year) * __seconds_per_day;

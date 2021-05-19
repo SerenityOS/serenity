@@ -634,7 +634,7 @@ void Compositor::flip_buffers()
 
 void Compositor::run_animations(Gfx::DisjointRectSet& flush_rects)
 {
-    static const int minimize_animation_steps = 10;
+    constexpr int minimize_animation_steps = 10;
     auto& painter = *m_back_painter;
     Gfx::PainterStateSaver saver(painter);
     painter.set_draw_op(Gfx::Painter::DrawOp::Invert);

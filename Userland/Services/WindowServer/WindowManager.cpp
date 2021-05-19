@@ -59,7 +59,7 @@ WindowManager::~WindowManager()
 
 NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
 {
-    static const auto s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
+    constexpr auto s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
     auto path = m_config->read_entry("Cursor", name, s_default_cursor_path);
     auto gb = Gfx::Bitmap::load_from_file(path, compositor_icon_scale());
     if (gb)

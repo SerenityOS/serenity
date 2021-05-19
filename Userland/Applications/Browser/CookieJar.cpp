@@ -7,6 +7,7 @@
 #include "CookieJar.h"
 #include <AK/IPv4Address.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <AK/URL.h>
 #include <AK/Vector.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
@@ -48,9 +49,9 @@ void CookieJar::set_cookie(const URL& url, const Web::Cookie::ParsedCookie& pars
 
 void CookieJar::dump_cookies() const
 {
-    static const char* key_color = "\033[34;1m";
-    static const char* attribute_color = "\033[33m";
-    static const char* no_color = "\033[0m";
+    constexpr StringView key_color = "\033[34;1m";
+    constexpr StringView attribute_color = "\033[33m";
+    constexpr StringView no_color = "\033[0m";
 
     StringBuilder builder;
     builder.appendff("{} cookies stored\n", m_cookies.size());
