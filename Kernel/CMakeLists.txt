@@ -196,6 +196,7 @@ set(KERNEL_SOURCES
     Syscalls/sigaction.cpp
     Syscalls/socket.cpp
     Syscalls/stat.cpp
+    Syscalls/statvfs.cpp
     Syscalls/sync.cpp
     Syscalls/sysconf.cpp
     Syscalls/thread.cpp
