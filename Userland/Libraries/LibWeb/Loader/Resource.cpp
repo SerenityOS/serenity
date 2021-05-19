@@ -82,7 +82,12 @@ void Resource::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         dbgln_if(RESOURCE_DEBUG, "This is a data URL with mime-type _{}_", url().data_mime_type());
         m_mime_type = url().data_mime_type();
     } else {
-        m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
+        auto content_type_options = headers.get("X-Content-Type-Options");
+        if (content_type_options.value_or("").equals_ignoring_case("nosniff")) {
+            m_mime_type = "text/plain";
+        } else {
+            m_mime_type = Core::guess_mime_type_based_on_filename(url().path());
+        }
     }
 
     m_encoding = {};
