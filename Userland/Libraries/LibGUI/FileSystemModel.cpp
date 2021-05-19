@@ -592,7 +592,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
                 m_thumbnail_progress_total = 0;
             }
 
-            did_update();
+            did_update(UpdateFlag::DontInvalidateIndices);
         });
 
     return false;
