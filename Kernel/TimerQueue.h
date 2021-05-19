@@ -24,12 +24,14 @@ class Timer : public RefCounted<Timer>
     friend class InlineLinkedListNode<Timer>;
 
 public:
-    Timer(clockid_t clock_id, Time expires, Function<void()>&& callback)
-        : m_clock_id(clock_id)
-        , m_expires(expires)
-        , m_callback(move(callback))
+    void setup(clockid_t clock_id, Time expires, Function<void()>&& callback)
     {
+        VERIFY(!is_queued());
+        m_clock_id = clock_id;
+        m_expires = expires;
+        m_callback = move(callback);
     }
+
     ~Timer()
     {
         VERIFY(!is_queued());
@@ -72,7 +74,7 @@ public:
     static TimerQueue& the();
 
     TimerId add_timer(NonnullRefPtr<Timer>&&);
-    RefPtr<Timer> add_timer_without_id(clockid_t, const Time&, Function<void()>&&);
+    bool add_timer_without_id(NonnullRefPtr<Timer>, clockid_t, const Time&, Function<void()>&&);
     TimerId add_timer(clockid_t, const Time& timeout, Function<void()>&& callback);
     bool cancel_timer(TimerId id);
     bool cancel_timer(Timer&);
