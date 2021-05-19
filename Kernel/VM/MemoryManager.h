@@ -54,7 +54,7 @@ enum class UsedMemoryRangeType {
     BootModule,
 };
 
-constexpr static const char* UserMemoryRangeTypeNames[] {
+static constexpr StringView UserMemoryRangeTypeNames[] {
     "Low memory",
     "Kernel",
     "Boot module",
