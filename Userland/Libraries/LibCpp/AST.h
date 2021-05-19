@@ -348,7 +348,7 @@ public:
 class NumericLiteral : public Expression {
 public:
     virtual ~NumericLiteral() override = default;
-    virtual const char* class_name() const override { return "NumricLiteral"; }
+    virtual const char* class_name() const override { return "NumericLiteral"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
 
     NumericLiteral(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename, StringView value)
