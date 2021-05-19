@@ -18,7 +18,7 @@
 
 namespace Kernel {
 
-static const u32 mepoch = 476763780;
+static constexpr u32 mepoch = 476763780;
 
 class Inode;
 class FileDescription;
