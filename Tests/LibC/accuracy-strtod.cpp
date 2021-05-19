@@ -14,11 +14,11 @@
 
 typedef char assert_size_t_is_int[sizeof(size_t) == 4 ? 1 : -1];
 
-static const char* TEXT_ERROR = "\x1b[01;35m";
-static const char* TEXT_WRONG = "\x1b[01;31m";
-static const char* TEXT_OFBY1 = "\x1b[01;97m";
-static const char* TEXT_RESET = "\x1b[0m";
-static const long long LENIENCY = 8;
+static constexpr char TEXT_ERROR[] = "\x1b[01;35m";
+static constexpr char TEXT_WRONG[] = "\x1b[01;31m";
+static constexpr char TEXT_OFBY1[] = "\x1b[01;97m";
+static constexpr char TEXT_RESET[] = "\x1b[0m";
+static constexpr long long LENIENCY = 8;
 
 struct Testcase {
     const char* test_name;

@@ -42,10 +42,10 @@ static String show(const ByteBuffer& buf)
     return builder.build();
 }
 
-static const size_t SANDBOX_CANARY_SIZE = 8;
-
 static bool test_single(const Testcase& testcase)
 {
+    constexpr size_t SANDBOX_CANARY_SIZE = 8;
+
     // Preconditions:
     if (testcase.dest_n != testcase.dest_expected_n) {
         warnln("dest length {} != expected dest length {}? Check testcase! (Probably miscounted.)", testcase.dest_n, testcase.dest_expected_n);
