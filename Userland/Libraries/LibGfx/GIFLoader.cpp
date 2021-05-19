@@ -19,10 +19,6 @@
 
 namespace Gfx {
 
-// Row strides and offsets for each interlace pass.
-static const int INTERLACE_ROW_STRIDES[] = { 8, 8, 4, 2 };
-static const int INTERLACE_ROW_OFFSETS[] = { 0, 4, 2, 1 };
-
 struct ImageDescriptor {
     u16 x { 0 };
     u16 y { 0 };
@@ -112,8 +108,8 @@ enum class GIFFormat {
 
 static Optional<GIFFormat> decode_gif_header(InputMemoryStream& stream)
 {
-    static const char valid_header_87[] = "GIF87a";
-    static const char valid_header_89[] = "GIF89a";
+    constexpr char valid_header_87[] = "GIF87a";
+    constexpr char valid_header_89[] = "GIF89a";
 
     Array<u8, 6> header;
     stream >> header;
@@ -378,6 +374,8 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
                 if (pixel_index % image.width == 0) {
                     if (image.interlaced) {
                         if (interlace_pass < 4) {
+                            constexpr Array INTERLACE_ROW_STRIDES = { 8, 8, 4, 2 };
+                            constexpr Array INTERLACE_ROW_OFFSETS = { 0, 4, 2, 1 };
                             if (row + INTERLACE_ROW_STRIDES[interlace_pass] >= image.height) {
                                 ++interlace_pass;
                                 if (interlace_pass < 4)

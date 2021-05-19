@@ -22,8 +22,8 @@ class Game final : public GUI::Widget {
     C_OBJECT(Game);
 
 public:
-    static const int game_width = 560;
-    static const int game_height = 480;
+    static constexpr int game_width = 560;
+    static constexpr int game_height = 480;
 
     virtual ~Game() override;
 
