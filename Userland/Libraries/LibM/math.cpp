@@ -56,11 +56,11 @@ union FloatExtractor;
 // This assumes long double is 80 bits, which is true with GCC on Intel platforms
 template<>
 union FloatExtractor<long double> {
-    static const int mantissa_bits = 64;
-    static const unsigned long long mantissa_max = ~0u;
-    static const int exponent_bias = 16383;
-    static const int exponent_bits = 15;
-    static const unsigned exponent_max = 32767;
+    static constexpr int mantissa_bits = 64;
+    static constexpr unsigned long long mantissa_max = ~0u;
+    static constexpr int exponent_bias = 16383;
+    static constexpr int exponent_bits = 15;
+    static constexpr unsigned exponent_max = 32767;
     struct {
         unsigned long long mantissa;
         unsigned exponent : 15;
@@ -72,11 +72,11 @@ union FloatExtractor<long double> {
 
 template<>
 union FloatExtractor<double> {
-    static const int mantissa_bits = 52;
-    static const unsigned long long mantissa_max = (1ull << 52) - 1;
-    static const int exponent_bias = 1023;
-    static const int exponent_bits = 11;
-    static const unsigned exponent_max = 2047;
+    static constexpr int mantissa_bits = 52;
+    static constexpr unsigned long long mantissa_max = (1ull << 52) - 1;
+    static constexpr int exponent_bias = 1023;
+    static constexpr int exponent_bits = 11;
+    static constexpr unsigned exponent_max = 2047;
     struct {
         unsigned long long mantissa : 52;
         unsigned exponent : 11;
@@ -87,11 +87,11 @@ union FloatExtractor<double> {
 
 template<>
 union FloatExtractor<float> {
-    static const int mantissa_bits = 23;
-    static const unsigned mantissa_max = (1 << 23) - 1;
-    static const int exponent_bias = 127;
-    static const int exponent_bits = 8;
-    static const unsigned exponent_max = 255;
+    static constexpr int mantissa_bits = 23;
+    static constexpr unsigned mantissa_max = (1 << 23) - 1;
+    static constexpr int exponent_bias = 127;
+    static constexpr int exponent_bits = 8;
+    static constexpr unsigned exponent_max = 255;
     struct {
         unsigned long long mantissa : 23;
         unsigned exponent : 8;

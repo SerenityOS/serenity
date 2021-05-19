@@ -5,23 +5,13 @@
  */
 
 #include <AK/Function.h>
+#include <AK/StringView.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/NumberPrototype.h>
 
 namespace JS {
-
-static const u8 max_precision_for_radix[37] = {
-    // clang-format off
-    0,  0,  52, 32, 26, 22, 20, 18, 17, 16,
-    15, 15, 14, 14, 13, 13, 13, 12, 12, 12,
-    12, 11, 11, 11, 11, 11, 11, 10, 10, 10,
-    10, 10, 10, 10, 10, 10, 10,
-    // clang-format on
-};
-
-static char digits[] = "0123456789abcdefghijklmnopqrstuvwxyz";
 
 NumberPrototype::NumberPrototype(GlobalObject& global_object)
     : NumberObject(0, *global_object.object_prototype())
@@ -41,6 +31,8 @@ NumberPrototype::~NumberPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
+    constexpr StringView digits = "0123456789abcdefghijklmnopqrstuvwxyz";
+
     Value number_value;
 
     auto this_value = vm.this_value(global_object);
@@ -107,6 +99,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (decimal_part != 0.0) {
         characters.append('.');
 
+        constexpr u8 max_precision_for_radix[37] = {
+            // clang-format off
+            0,  0,  52, 32, 26, 22, 20, 18, 17, 16,
+            15, 15, 14, 14, 13, 13, 13, 12, 12, 12,
+            12, 11, 11, 11, 11, 11, 11, 10, 10, 10,
+            10, 10, 10, 10, 10, 10, 10,
+            // clang-format on
+        };
         u8 precision = max_precision_for_radix[radix];
 
         for (u8 i = 0; i < precision; ++i) {

@@ -42,9 +42,9 @@ public:
     }
 
 private:
-    static const int m_days_in_week = 5;
-    static const int m_days_in_season = 73;
-    static const int m_st_tibs_day_of_yold = 60;
+    static constexpr int m_days_in_week = 5;
+    static constexpr int m_days_in_season = 73;
+    static constexpr int m_st_tibs_day_of_yold = 60;
     Core::DateTime m_gregorian_date;
     String m_day_of_week;
     String m_season;

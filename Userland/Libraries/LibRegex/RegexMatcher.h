@@ -23,8 +23,8 @@
 
 namespace regex {
 
-static const constexpr size_t c_max_recursion = 5000;
-static const constexpr size_t c_match_preallocation_count = 0;
+static constexpr size_t c_max_recursion = 5000;
+static constexpr size_t c_match_preallocation_count = 0;
 
 struct RegexResult final {
     bool success { false };
