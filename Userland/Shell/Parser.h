@@ -94,10 +94,10 @@ private:
     template<typename A, typename... Args>
     NonnullRefPtr<A> create(Args... args);
 
-    void set_end_condition(Function<bool()> condition) { m_end_condition = move(condition); }
+    void set_end_condition(OwnPtr<Function<bool()>> condition) { m_end_condition = move(condition); }
     bool at_end() const
     {
-        if (m_end_condition && m_end_condition())
+        if (m_end_condition && (*m_end_condition)())
             return true;
         return m_input.length() <= m_offset;
     }
@@ -159,7 +159,7 @@ private:
     Vector<size_t> m_rule_start_offsets;
     Vector<AST::Position::Line> m_rule_start_lines;
 
-    Function<bool()> m_end_condition;
+    OwnPtr<Function<bool()>> m_end_condition;
     Vector<HeredocInitiationRecord> m_heredoc_initiations;
     Vector<char> m_extra_chars_not_allowed_in_barewords;
     bool m_is_in_brace_expansion_spec { false };

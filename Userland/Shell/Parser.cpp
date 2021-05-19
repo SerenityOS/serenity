@@ -2037,7 +2037,7 @@ bool Parser::parse_heredoc_entries()
             // until we find a line that contains the key
             auto end_condition = move(m_end_condition);
             found_key = false;
-            set_end_condition([this, end = record.end, &found_key] {
+            set_end_condition(make<Function<bool()>>([this, end = record.end, &found_key] {
                 if (found_key)
                     return true;
                 auto offset = current_position();
@@ -2060,7 +2060,7 @@ bool Parser::parse_heredoc_entries()
                 }
                 restore_to(offset.offset, offset.line);
                 return false;
-            });
+            }));
 
             auto expr = parse_doublequoted_string_inner();
             set_end_condition(move(end_condition));
