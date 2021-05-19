@@ -354,7 +354,7 @@ void ClassicStylePainter::paint_radio_button(Painter& painter, const IntRect& re
     painter.blit(rect.location(), bitmap, bitmap.rect());
 }
 
-static const char* s_checked_bitmap_data = {
+static constexpr char s_checked_bitmap_data[] = {
     "         "
     "       # "
     "      ## "
@@ -367,8 +367,8 @@ static const char* s_checked_bitmap_data = {
 };
 
 static Gfx::CharacterBitmap* s_checked_bitmap;
-static const int s_checked_bitmap_width = 9;
-static const int s_checked_bitmap_height = 9;
+static constexpr int s_checked_bitmap_width = 9;
+static constexpr int s_checked_bitmap_height = 9;
 
 void ClassicStylePainter::paint_check_box(Painter& painter, const IntRect& rect, const Palette& palette, bool is_enabled, bool is_checked, bool is_being_pressed)
 {

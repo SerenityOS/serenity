@@ -9,6 +9,7 @@
 #include "GlyphMapWidget.h"
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
+#include <AK/StringView.h>
 #include <AK/UnicodeUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibDesktop/Launcher.h>
@@ -37,19 +38,19 @@
 #include <LibGfx/TextDirection.h>
 #include <stdlib.h>
 
-static constexpr int s_pangram_count = 7;
-static const char* pangrams[s_pangram_count] = {
-    "quick fox jumps nightly above wizard",
-    "five quacking zephyrs jolt my wax bed",
-    "pack my box with five dozen liquor jugs",
-    "quick brown fox jumps over the lazy dog",
-    "waxy and quivering jocks fumble the pizza",
-    "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
-    "byxfjärmat föl gick på duvshowen"
-};
-
 static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
 {
+    constexpr int pangram_count = 7;
+    constexpr StringView pangrams[pangram_count] = {
+        "quick fox jumps nightly above wizard",
+        "five quacking zephyrs jolt my wax bed",
+        "pack my box with five dozen liquor jugs",
+        "quick brown fox jumps over the lazy dog",
+        "waxy and quivering jocks fumble the pizza",
+        "~#:[@_1%]*{$2.3}/4^(5'6\")-&|7+8!=<9,0\\>?;",
+        "byxfjärmat föl gick på duvshowen"
+    };
+
     auto window = GUI::Window::construct();
     window->set_window_type(GUI::WindowType::ToolWindow);
     window->set_title("Font preview");
@@ -94,7 +95,7 @@ static RefPtr<GUI::Window> create_font_preview_window(FontEditorWidget& editor)
     reload_button.set_fixed_width(22);
     reload_button.on_click = [&] {
         static int i = 1;
-        if (i >= s_pangram_count)
+        if (i >= pangram_count)
             i = 0;
         preview_textbox.set_text(pangrams[i]);
         i++;

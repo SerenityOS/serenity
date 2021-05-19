@@ -140,7 +140,7 @@ public:
 #endif
     }
 
-    constexpr Color interpolate(const Color& other, float weight) const
+    Color interpolate(const Color& other, float weight) const
     {
         u8 r = red() + roundf(static_cast<float>(other.red() - red()) * weight);
         u8 g = green() + roundf(static_cast<float>(other.green() - green()) * weight);
