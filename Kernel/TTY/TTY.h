@@ -81,6 +81,7 @@ protected:
     virtual int change_ignore_modem_status(bool) { return 0; }
     virtual void discard_pending_input() { }
     virtual void discard_pending_output() { }
+    virtual void wait_until_pending_output_completes() { }
 
     void set_size(unsigned short columns, unsigned short rows);
 

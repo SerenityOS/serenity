@@ -552,6 +552,8 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (!copy_from_user(&termios, user_termios))
             return -EFAULT;
         int rc = set_termios(termios);
+        if (request == TCSETSW || request == TCSETSF)
+            wait_until_pending_output_completes();
         if (request == TCSETSF)
             flush_input();
         return rc;

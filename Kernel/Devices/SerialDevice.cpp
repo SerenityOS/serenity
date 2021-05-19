@@ -132,6 +132,12 @@ void SerialDevice::discard_pending_output()
     set_fifo_control(EnableFIFO | ClearTransmitFIFO | TriggerLevel4);
 }
 
+void SerialDevice::wait_until_pending_output_completes()
+{
+    while ((get_line_status() & EmptyDataHoldingRegisters) == 0)
+        ;
+}
+
 int SerialDevice::change_baud(speed_t in_baud, speed_t out_baud)
 {
     if (in_baud != out_baud) {

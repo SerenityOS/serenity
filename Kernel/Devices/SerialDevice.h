@@ -131,6 +131,7 @@ private:
     virtual int change_ignore_modem_status(bool) override;
     virtual void discard_pending_input() override;
     virtual void discard_pending_output() override;
+    virtual void wait_until_pending_output_completes() override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }
