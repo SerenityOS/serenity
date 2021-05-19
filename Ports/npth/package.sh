@@ -8,3 +8,9 @@ auth_type=sha256
 configure() {
     run ./configure --host="${SERENITY_ARCH}-pc-serenity" --build="$($workdir/build-aux/config.guess)" $configopts
 }
+
+install() {
+    run make DESTDIR=${SERENITY_INSTALL_ROOT} $installopts install
+    ${CC} -shared -pthread -o ${SERENITY_INSTALL_ROOT}/usr/local/lib/libnpth.so -Wl,-soname,libnpth.so -Wl,--whole-archive ${SERENITY_INSTALL_ROOT}/usr/local/lib/libnpth.a -Wl,--no-whole-archive
+    rm -f ${SERENITY_INSTALL_ROOT}/usr/local/lib/libnpth.la
+}
