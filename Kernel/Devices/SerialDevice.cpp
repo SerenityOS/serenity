@@ -144,48 +144,79 @@ int SerialDevice::change_baud(speed_t in_baud, speed_t out_baud)
         dbgln("{}: Input and output speed must be the same", m_tty_name);
         return -ENOTSUP;
     }
-    switch (in_baud) {
-    case B50:
-        set_baud(Baud::Baud50);
-        break;
-    case B110:
-        set_baud(Baud::Baud110);
-        break;
-    case B300:
-        set_baud(Baud::Baud300);
-        break;
-    case B600:
-        set_baud(Baud::Baud600);
-        break;
-    case B1200:
-        set_baud(Baud::Baud1200);
-        break;
-    case B2400:
-        set_baud(Baud::Baud2400);
-        break;
-    case B4800:
-        set_baud(Baud::Baud4800);
-        break;
-    case B9600:
-        set_baud(Baud::Baud9600);
-        break;
-    case B19200:
-        set_baud(Baud::Baud19200);
-        break;
-    case B38400:
-        set_baud(Baud::Baud38400);
-        break;
-    case B57600:
-        set_baud(Baud::Baud57600);
-        break;
-    case B115200:
-        set_baud(Baud::Baud115200);
-        break;
-    default:
+
+    auto maybe_baud = serial_baud_from_termios(in_baud);
+    if (!maybe_baud.has_value()) {
         dbgln("{}: Tried to set unsupported baud speed", m_tty_name);
-        return -EINVAL;
+        return -ENOTSUP;
     }
+
+    set_baud(maybe_baud.value());
     return 0;
+}
+
+Optional<speed_t> SerialDevice::termios_baud_from_serial(Baud baud)
+{
+    switch (baud) {
+    case Baud::Baud50:
+        return B50;
+    case Baud::Baud110:
+        return B110;
+    case Baud::Baud300:
+        return B300;
+    case Baud::Baud600:
+        return B600;
+    case Baud::Baud1200:
+        return B1200;
+    case Baud::Baud2400:
+        return B2400;
+    case Baud::Baud4800:
+        return B4800;
+    case Baud::Baud9600:
+        return B9600;
+    case Baud::Baud19200:
+        return B19200;
+    case Baud::Baud38400:
+        return B38400;
+    case Baud::Baud57600:
+        return B57600;
+    case Baud::Baud115200:
+        return B115200;
+    default:
+        return {};
+    }
+}
+
+Optional<SerialDevice::Baud> SerialDevice::serial_baud_from_termios(speed_t baud)
+{
+    switch (baud) {
+    case B50:
+        return Baud::Baud50;
+    case B110:
+        return Baud::Baud110;
+    case B300:
+        return Baud::Baud300;
+    case B600:
+        return Baud::Baud600;
+    case B1200:
+        return Baud::Baud1200;
+    case B2400:
+        return Baud::Baud2400;
+    case B4800:
+        return Baud::Baud4800;
+    case B9600:
+        return Baud::Baud9600;
+    case B19200:
+        return Baud::Baud19200;
+    case B38400:
+        return Baud::Baud38400;
+    case B57600:
+        return Baud::Baud57600;
+    case B115200:
+        return Baud::Baud115200;
+    default:
+        return {};
+    }
 }
 
 int SerialDevice::change_parity(TTY::ParityMode parity_mode)

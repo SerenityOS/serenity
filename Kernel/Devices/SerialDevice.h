@@ -119,6 +119,9 @@ public:
     // ^TTY
     virtual String const& tty_name() const override { return m_tty_name; }
 
+    static Optional<speed_t> termios_baud_from_serial(Baud);
+    static Optional<Baud> serial_baud_from_termios(speed_t);
+
 private:
     // ^TTY
     virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
