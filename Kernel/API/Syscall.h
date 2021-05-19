@@ -22,6 +22,7 @@ struct timespec;
 struct sockaddr;
 struct siginfo;
 struct stat;
+struct statvfs;
 typedef u32 socklen_t;
 }
 
@@ -177,7 +178,9 @@ namespace Kernel {
     S(anon_create)                \
     S(msyscall)                   \
     S(readv)                      \
-    S(emuctl)
+    S(emuctl)                     \
+    S(statvfs)                    \
+    S(fstatvfs)
 
 namespace Syscall {
 
@@ -456,6 +459,11 @@ struct SC_inode_watcher_add_watch_params {
     int fd;
     StringArgument user_path;
     u32 event_mask;
+};
+
+struct SC_statvfs_params {
+    StringArgument path;
+    struct statvfs* buf;
 };
 
 void initialize();

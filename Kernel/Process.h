@@ -410,6 +410,8 @@ public:
     KResultOr<int> sys$prctl(int option, FlatPtr arg1, FlatPtr arg2);
     KResultOr<int> sys$set_coredump_metadata(Userspace<const Syscall::SC_set_coredump_metadata_params*>);
     KResultOr<int> sys$anon_create(size_t, int options);
+    KResultOr<int> sys$statvfs(Userspace<const Syscall::SC_statvfs_params*> user_params);
+    KResultOr<int> sys$fstatvfs(int fd, statvfs* buf);
 
     template<bool sockname, typename Params>
     int get_sock_or_peer_name(const Params&);
@@ -528,6 +530,8 @@ private:
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
     KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
+
+    KResultOr<int> do_statvfs(String path, statvfs* buf);
 
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& elf_header, int nread, size_t file_size);
 
