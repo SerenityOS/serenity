@@ -74,6 +74,8 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     });
     if ((!result.is_error() && result.value() > 0) || need_evaluate_block_conditions)
         evaluate_block_conditions();
+    if (!result.is_error())
+        dbgln_if(TTY_DEBUG, "Read {} bytes", result.value());
     return result;
 }
 

@@ -9,6 +9,7 @@
 
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/Interrupts/IRQHandler.h>
 #include <Kernel/TTY/TTY.h>
 
 namespace Kernel {
@@ -18,10 +19,16 @@ namespace Kernel {
 #define SERIAL_COM3_ADDR 0x3E8
 #define SERIAL_COM4_ADDR 0x2E8
 
-class SerialDevice final : public TTY {
+#define SERIAL_COM1_IRQ 4
+#define SERIAL_COM2_IRQ 3
+#define SERIAL_COM3_IRQ 4
+#define SERIAL_COM4_IRQ 3
+
+class SerialDevice final : public TTY
+    , public IRQHandler {
     AK_MAKE_ETERNAL
 public:
-    SerialDevice(IOAddress base_addr, unsigned minor);
+    SerialDevice(IOAddress base_addr, unsigned minor, u8 irq);
     virtual ~SerialDevice() override;
 
     void put_char(char);
@@ -102,6 +109,9 @@ public:
         DataReady = 0x01 << 0
     };
 
+    // ^File
+    virtual bool can_write(const FileDescription&, size_t) const override;
+
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
     virtual String device_name() const override;
@@ -124,6 +134,9 @@ private:
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }
+
+    // ^IRQHandler
+    virtual void handle_irq(const RegisterState&) override;
 
     void set_interrupts(u8 irq_mask);
     void set_baud(Baud);

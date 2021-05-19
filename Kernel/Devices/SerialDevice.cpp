@@ -13,16 +13,18 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor)
+UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor, u8 irq)
     : TTY(4, minor)
+    , IRQHandler(irq)
     , m_tty_name(String::formatted("/dev/ttyS{}", minor - 64))
     , m_base_addr(base_addr)
 {
-    set_interrupts(0);
+    set_interrupts(ReceivedDataAvailableInterrupt);
     set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
     // FIXME: TTY currently knows nothing about modem control
     set_modem_control(RequestToSend | DataTerminalReady);
     TTY::load_default_settings();
+    enable_irq();
 }
 
 UNMAP_AFTER_INIT SerialDevice::~SerialDevice()
@@ -108,6 +110,11 @@ ssize_t SerialDevice::on_tty_write(const UserOrKernelBuffer& buffer, ssize_t siz
     if (result.is_error())
         return result.error();
     return (ssize_t)result.value();
+}
+
+bool SerialDevice::can_write(const FileDescription&, size_t) const
+{
+    return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
 void SerialDevice::echo(u8 ch)
@@ -223,9 +230,15 @@ int SerialDevice::change_character_size(TTY::CharacterSize character_size)
     return 0;
 }
 
-int SerialDevice::change_receiver_enabled(bool)
+int SerialDevice::change_receiver_enabled(bool should_enable)
 {
-    // TODO: implement this once we can receive data
+    if (!should_enable) {
+        disable_irq();
+        set_interrupts(0);
+    } else {
+        enable_irq();
+        set_interrupts(ReceivedDataAvailableInterrupt);
+    }
     return 0;
 }
 
@@ -235,4 +248,25 @@ int SerialDevice::change_ignore_modem_status(bool should_enable)
     return 0;
 }
 
+void SerialDevice::handle_irq(const RegisterState&)
+{
+    u8 interrupt_identification = m_base_addr.offset(2).in<u8>();
+    dbgln_if(SERIAL_DEVICE_DEBUG, "{}: interrupt {:02x}", m_tty_name, interrupt_identification);
+    if ((interrupt_identification & 0x01) != 0)
+        return; // This interrupt wasn't for us
+
+    // FIXME: parity/etc. error checking on reads -- probably will implement a read_char() method
+    // FIXME: no locking here -- correctness issues
+    if ((interrupt_identification & 0x0e) == 0x04) {
+        dbgln_if(SERIAL_DEVICE_DEBUG, "{}: received Data Available interrupt", m_tty_name);
+        while (get_line_status() & LineStatus::DataReady)
+            emit(m_base_addr.offset(0).in<u8>(), true);
+    } else if ((interrupt_identification & 0x0e) == 0x0c) {
+        dbgln_if(SERIAL_DEVICE_DEBUG, "{}: Time-out Interrupt Pending interrupt", m_tty_name);
+        while (get_line_status() & LineStatus::DataReady)
+            emit(m_base_addr.offset(0).in<u8>(), true);
+    } else {
+        dbgln("{}: Unknown interrupt with ISR {:02x}. We should have disabled those that we can't handle!", m_tty_name, interrupt_identification);
+    }
+}
 }

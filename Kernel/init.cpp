@@ -159,10 +159,10 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     NullDevice::initialize();
     if (!get_serial_debug())
-        new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
-    new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
-    new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
-    new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
+        new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64, SERIAL_COM1_IRQ);
+    new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65, SERIAL_COM2_IRQ);
+    new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66, SERIAL_COM3_IRQ);
+    new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67, SERIAL_COM4_IRQ);
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
