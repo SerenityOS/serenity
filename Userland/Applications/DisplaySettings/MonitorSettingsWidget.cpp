@@ -6,7 +6,7 @@
  */
 
 #include "MonitorSettingsWidget.h"
-#include <Applications/DisplaySettings/DisplaySettingsWindowGML.h>
+#include <Applications/DisplaySettings/MonitorSettingsGML.h>
 #include <LibCore/ConfigFile.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -50,7 +50,7 @@ void MonitorSettingsWidget::create_resolution_list()
 
 void MonitorSettingsWidget::create_frame()
 {
-    load_from_gml(display_settings_window_gml);
+    load_from_gml(monitor_settings_window_gml);
 
     m_monitor_widget = *find_descendant_of_type_named<DisplaySettings::MonitorWidget>("monitor_widget");
 
