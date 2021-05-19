@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <unistd.h>
