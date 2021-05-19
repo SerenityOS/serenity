@@ -5,6 +5,7 @@
  */
 
 #include "AddEventDialog.h"
+#include <AK/StringView.h>
 #include <LibCore/DateTime.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -19,11 +20,6 @@
 #include <LibGfx/Color.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
-
-static const char* short_month_names[] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
 
 AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     : Dialog(parent_window)
@@ -121,6 +117,11 @@ String AddEventDialog::MonthListModel::column_name(int column) const
 
 GUI::Variant AddEventDialog::MonthListModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
+    constexpr StringView short_month_names[] = {
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    };
+
     auto& month = short_month_names[index.row()];
     if (role == GUI::ModelRole::Display) {
         switch (index.column()) {

@@ -28,9 +28,9 @@ protected:
 
 template<typename T>
 struct TypeTrivia {
-    static const size_t bits = sizeof(T) * 8;
-    static const T sign_bit = 1 << (bits - 1);
-    static const T mask = MakeUnsigned<T>(-1);
+    static constexpr size_t bits = sizeof(T) * 8;
+    static constexpr T sign_bit = 1 << (bits - 1);
+    static constexpr T mask = MakeUnsigned<T>(-1);
 };
 
 template<typename T, typename U>
@@ -159,9 +159,9 @@ enum InstructionFormat {
     OP_NEAR_imm,
 };
 
-static const unsigned CurrentAddressSize = 0xB33FBABE;
-
 struct InstructionDescriptor {
+    static constexpr unsigned CurrentAddressSize = 0xB33FBABE;
+
     InstructionHandler handler { nullptr };
     bool opcode_has_register_index { false };
     const char* mnemonic { nullptr };

@@ -37,7 +37,7 @@
 namespace JS {
 
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
-static const double INVALID { 0 };
+static constexpr double INVALID { 0 };
 
 static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 {
