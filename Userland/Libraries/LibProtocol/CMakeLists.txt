@@ -13,4 +13,4 @@ set(GENERATED_SOURCES
 )
 
 serenity_lib(LibProtocol protocol)
-target_link_libraries(LibProtocol LibIPC)
+target_link_libraries(LibProtocol LibIPC LibHTTP) # FIXME TEMP!!!

@@ -19,6 +19,7 @@ set(SOURCES
     LockFile.cpp
     MappedFile.cpp
     MimeData.cpp
+    MimeType.cpp
     NetworkJob.cpp
     NetworkResponse.cpp
     Notifier.cpp

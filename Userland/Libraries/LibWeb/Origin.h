@@ -8,6 +8,8 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/StringBuilder.h>
+#include <AK/URL.h>
 
 namespace Web {
 
@@ -23,6 +25,19 @@ public:
 
     // https://html.spec.whatwg.org/multipage/origin.html#concept-origin-opaque
     bool is_opaque() const { return m_protocol.is_null() && m_host.is_null() && m_port == 0; }
+
+    // https://url.spec.whatwg.org/#concept-url-origin
+    static Origin create_from_url(const URL& url)
+    {
+        // FIXME: Handle blob and file
+
+        if (url.protocol().is_one_of("ftp", "http", "https", "ws", "wss"))
+            return { url.protocol(), url.host(), url.port() };
+
+        return {};
+    }
+
+    bool is_null() const { return m_protocol.is_null() && m_host.is_null() && !m_port; }
 
     const String& protocol() const { return m_protocol; }
     const String& host() const { return m_host; }
@@ -95,10 +110,31 @@ public:
     bool operator==(Origin const& other) const { return is_same_origin(other); }
     bool operator!=(Origin const& other) const { return !is_same_origin(other); }
 
+    // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
+    String serialize() const
+    {
+        if (is_null())
+            return "null";
+
+        StringBuilder builder;
+        builder.append(m_protocol);
+        builder.append("://");
+        builder.append(m_host);
+
+        // FIXME: Being 0 is not the same as null.
+        if (m_port) {
+            builder.append(':');
+            builder.appendff("{}", m_port);
+        }
+
+        return builder.to_string();
+    }
+
 private:
     String m_protocol;
     String m_host;
-    u16 m_port { 0 };
+    u16 m_port { 0 }; // FIXME: This should be nullable, and null by default
+    // FIXME: A nullable domain
 };
 
 }

@@ -12,16 +12,23 @@
 
 namespace Web::Fetch {
 
-NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type, const LoadRequest& request)
+NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type, const LoadRequest& request /* FIXME: REMOVE */)
 {
     if (type == Type::Image)
         return adopt_ref(*new ImageResource(request));
     return adopt_ref(*new Response(type, request));
 }
 
-Response::Response(Type type, const LoadRequest& request)
-    : m_request(request)
-    , m_type(type)
+NonnullRefPtr<Response> Response::create_network_error(Badge<ResourceLoader>, const LoadRequest& request /* FIXME: REMOVE */)
+{
+    auto response = adopt_ref(*new Response(Type::Generic, request));
+    response->m_new_type = NewType::Error;
+    response->m_status = 0;
+    return response;
+}
+
+Response::Response(Type type, const LoadRequest& /* FIXME: REMOVE */)
+    : m_type(type)
 {
 }
 
@@ -131,6 +138,44 @@ void Response::unregister_client(Badge<ResourceClient>, ResourceClient& client)
 {
     VERIFY(m_clients.contains(&client));
     m_clients.remove(&client);
+}
+
+// https://fetch.spec.whatwg.org/#should-response-to-request-be-blocked-due-to-nosniff? (Note: the '?' on the end is required)
+// false is allowed, true is blocked.
+bool Response::should_be_blocked_due_to_nosniff(const LoadRequest& request) const
+{
+    if (!m_header_list.determine_nosniff())
+        return false;
+
+    auto mime_type = m_header_list.extract_mime_type();
+
+    if (request.destination_is_script_like() && (!mime_type.has_value() || !mime_type.value().is_javascript_mime_type()))
+        return true;
+
+    if (request.destination() == LoadRequest::Destination::Style && (!mime_type.has_value() || mime_type.value().essence() != "text/css"))
+        return true;
+
+    return false;
+}
+
+// https://fetch.spec.whatwg.org/#should-response-to-request-be-blocked-due-to-mime-type? (Note: the '?' on the end is required)
+// false is allowed, true is blocked.
+bool Response::should_be_blocked_due_to_mime_type(const LoadRequest& request) const
+{
+    auto mime_type = m_header_list.extract_mime_type();
+    if (!mime_type.has_value())
+        return false;
+
+    auto essence = mime_type->essence();
+    if (request.destination_is_script_like() && (essence.starts_with("audio/") || essence.starts_with("image/") || essence.starts_with("video/") || essence == "text/csv"))
+        return true;
+
+    return false;
+}
+
+NonnullRefPtr<Response> Response::to_filtered_response() const
+{
+
 }
 
 void ResourceClient::set_resource(Response* resource)

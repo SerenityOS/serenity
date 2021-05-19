@@ -43,6 +43,25 @@ RefPtr<Request> RequestClient::start_request(String const& method, URL const& ur
     return nullptr;
 }
 
+// FIXME: TEMP!!!!
+RefPtr<Request> RequestClient::start_request(const String& method, const String& url, const HTTP::HeaderList& request_headers, ReadonlyBytes request_body)
+{
+    IPC::Dictionary header_dictionary;
+    for (auto& it : request_headers)
+        header_dictionary.add(it.name, it.value);
+
+    auto response = IPCProxy::start_request(method, url, header_dictionary, ByteBuffer::copy(request_body));
+    auto request_id = response.request_id();
+    if (request_id < 0 || !response.response_fd().has_value())
+        return nullptr;
+    auto response_fd = response.response_fd().value().take_fd();
+    auto request = Request::create_from_id({}, *this, request_id);
+    request->set_request_fd({}, response_fd);
+    m_requests.set(request_id, request);
+    return request;
+    return nullptr;
+}
+
 bool RequestClient::stop_request(Badge<Request>, Request& request)
 {
     if (!m_requests.contains(request.id()))

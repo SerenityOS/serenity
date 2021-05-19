@@ -27,6 +27,20 @@ String normalize_method(const String& method)
     return method;
 }
 
+// https://fetch.spec.whatwg.org/#cors-safelisted-method
+bool is_cors_safelisted_method(const String& method)
+{
+    return method.is_one_of("GET", "HEAD", "POST");
+}
+
+// https://datatracker.ietf.org/doc/html/rfc7231#section-4.2.1
+// A "safe" method are essentially read-only methods, such as "GET", "HEAD", etc.
+bool is_safe_method(const String& method)
+{
+    // "Of the request methods defined by this specification, the GET, HEAD, OPTIONS, and TRACE methods are defined to be safe."
+    return method.is_one_of("GET", "HEAD", "OPTIONS", "TRACE");
+}
+
 LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
 {
     LoadRequest request;
@@ -39,6 +53,15 @@ LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
     }
 
     return request;
+}
+
+// https://fetch.spec.whatwg.org/#serializing-a-request-origin
+String LoadRequest::serialize_origin() const
+{
+    if (m_tainted_origin)
+        return "null";
+
+    return m_origin.get<Origin>().serialize();
 }
 
 }

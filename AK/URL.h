@@ -119,6 +119,19 @@ private:
     {
     }
 
+    // https://fetch.spec.whatwg.org/#is-local
+    bool is_local() const
+    {
+        return m_protocol.is_one_of("about", "blob", "data");
+    }
+
+    bool is_http_or_https() const
+    {
+        return m_protocol.is_one_of("http", "https");
+    }
+
+private:
+    bool parse(const StringView&);
     bool compute_validity() const;
     String serialize_data_url() const;
 

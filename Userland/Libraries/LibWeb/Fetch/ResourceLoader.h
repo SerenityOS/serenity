@@ -10,6 +10,7 @@
 #include <AK/URL.h>
 #include <LibCore/Object.h>
 #include <LibWeb/Fetch/Response.h>
+#include <LibWeb/Fetch/FetchParams.h>
 
 namespace Protocol {
 class RequestClient;
@@ -51,11 +52,22 @@ public:
 
     void clear_cache();
 
+    void fetch(LoadRequest&, ProcessRequestBodyType, ProcessRequestEndOfBodyType, ProcessReponseType, ProcessResponseEndOfBodyType, ProcessResponseDoneType, bool use_parallel_queue = false);
+
 private:
     ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client);
     static ErrorOr<NonnullRefPtr<ResourceLoader>> try_create();
 
     static bool is_port_blocked(int port);
+
+    RefPtr<Response> main_fetch(const FetchParams&, bool recursive = false);
+    RefPtr<Response> scheme_fetch(const FetchParams&);
+    RefPtr<Response> http_fetch(const FetchParams&, bool make_cors_preflight = false);
+    RefPtr<Response> http_network_or_cache_fetch(const FetchParams&, bool is_authentication_fetch = false, bool is_new_connection_fetch = false);
+    RefPtr<Response> http_network_fetch(const FetchParams&, bool include_credentials = false, bool force_new_connection = false);
+    RefPtr<Response> http_redirect_fetch(const FetchParams&, RefPtr<Response>);
+    [[nodiscard]] bool cors_check(const LoadRequest&, RefPtr<Response>);
+    [[nodiscard]] bool tao_check(const LoadRequest&, RefPtr<Response>)
 
     int m_pending_loads { 0 };
 

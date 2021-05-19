@@ -10,6 +10,7 @@
 #include <LibIPC/ConnectionToServer.h>
 #include <RequestServer/RequestClientEndpoint.h>
 #include <RequestServer/RequestServerEndpoint.h>
+#include <LibHTTP/HeaderList.h>
 
 namespace Protocol {
 
@@ -25,6 +26,9 @@ public:
     RefPtr<Request> start_request(String const& method, URL const&, HashMap<String, String, RequestHashMapTraits> const& request_headers = {}, ReadonlyBytes request_body = {});
 
     void ensure_connection(URL const&, ::RequestServer::CacheLevel);
+
+    // FIXME: TEMP!!!
+    RefPtr<Request> start_request(const String& method, const String& url, const HTTP::HeaderList& request_headers = {}, ReadonlyBytes request_body = {});
 
     bool stop_request(Badge<Request>, Request&);
     bool set_certificate(Badge<Request>, Request&, String, String);
