@@ -46,6 +46,7 @@ set(LIBC_SOURCES
     sys/socket.cpp
     sys/uio.cpp
     sys/wait.cpp
+    sys/statvfs.cpp
     termcap.cpp
     termios.cpp
     time.cpp
