@@ -63,7 +63,7 @@ private:
         // Load the teapot
         m_mesh = m_mesh_loader->load("/res/gl/teapot.obj");
 
-        dbgln("GLTeapot: teapot mesh has {} triangles.", m_mesh->triangle_count());
+        dbgln("3DFileViewer: teapot mesh has {} triangles.", m_mesh->triangle_count());
     }
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -113,7 +113,7 @@ bool GLContextWidget::load(const String& fname)
 {
     m_mesh = m_mesh_loader->load(fname);
     if (!m_mesh.is_null()) {
-        dbgln("GLTeapot: mesh has {} triangles.", m_mesh->triangle_count());
+        dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
         return true;
     }
 
@@ -146,10 +146,10 @@ int main(int argc, char** argv)
 
     // Construct the main window
     auto window = GUI::Window::construct();
-    auto app_icon = GUI::Icon::default_icon("app-teapot");
+    auto app_icon = GUI::Icon::default_icon("app-3d-file-viewer");
 
     window->set_icon(app_icon.bitmap_for_size(16));
-    window->set_title("GLTeapot");
+    window->set_title("3D File Viewer");
     window->resize(640, 480);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
     }));
 
     auto& help_menu = menubar->add_menu("&Help");
-    help_menu.add_action(GUI::CommonActions::make_about_action("GLTeapot", app_icon, window));
+    help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
 
     window->set_menubar(move(menubar));
     window->show();
