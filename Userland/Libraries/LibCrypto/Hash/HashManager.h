@@ -61,20 +61,16 @@ struct MultiHashDigestVariant {
 
     const u8* immutable_data() const
     {
-        const u8* data = nullptr;
-        m_digest.visit(
-            [&](const Empty&) { VERIFY_NOT_REACHED(); },
-            [&](const auto& value) { data = value.immutable_data(); });
-        return data;
+        return m_digest.visit(
+            [&](const Empty&) -> const u8* { VERIFY_NOT_REACHED(); },
+            [&](const auto& value) { return value.immutable_data(); });
     }
 
     size_t data_length()
     {
-        size_t length = 0;
-        m_digest.visit(
-            [&](const Empty&) { VERIFY_NOT_REACHED(); },
-            [&](const auto& value) { length = value.data_length(); });
-        return length;
+        return m_digest.visit(
+            [&](const Empty&) -> size_t { VERIFY_NOT_REACHED(); },
+            [&](const auto& value) { return value.data_length(); });
     }
 
     using DigestVariant = Variant<Empty, MD5::DigestType, SHA1::DigestType, SHA256::DigestType, SHA384::DigestType, SHA512::DigestType>;
@@ -109,20 +105,16 @@ public:
 
     inline size_t digest_size() const
     {
-        size_t result = 0;
-        m_algorithm.visit(
-            [&](const Empty&) {},
-            [&](const auto& hash) { result = hash.digest_size(); });
-        return result;
+        return m_algorithm.visit(
+            [&](const Empty&) -> size_t { return 0; },
+            [&](const auto& hash) { return hash.digest_size(); });
     }
 
     inline size_t block_size() const
     {
-        size_t result = 0;
-        m_algorithm.visit(
-            [&](const Empty&) {},
-            [&](const auto& hash) { result = hash.block_size(); });
-        return result;
+        return m_algorithm.visit(
+            [&](const Empty&) -> size_t { return 0; },
+            [&](const auto& hash) { return hash.block_size(); });
     }
 
     inline void initialize(HashKind kind)
@@ -172,11 +164,9 @@ public:
 
     virtual DigestType peek() override
     {
-        DigestType result = Empty {};
-        m_algorithm.visit(
-            [&](Empty&) { VERIFY_NOT_REACHED(); },
-            [&](auto& hash) { result = hash.peek(); });
-        return result;
+        return m_algorithm.visit(
+            [&](Empty&) -> DigestType { VERIFY_NOT_REACHED(); },
+            [&](auto& hash) -> DigestType { return hash.peek(); });
     }
 
     virtual DigestType digest() override
@@ -196,11 +186,9 @@ public:
 
     virtual String class_name() const override
     {
-        String result;
-        m_algorithm.visit(
-            [&](const Empty&) { result = "UninitializedHashManager"; },
-            [&](const auto& hash) { result = hash.class_name(); });
-        return result;
+        return m_algorithm.visit(
+            [&](const Empty&) -> String { return "UninitializedHashManager"; },
+            [&](const auto& hash) { return hash.class_name(); });
     }
 
     inline bool is(HashKind kind) const
