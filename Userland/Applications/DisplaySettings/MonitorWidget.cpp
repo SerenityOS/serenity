@@ -1,18 +1,23 @@
 /*
  * Copyright (c) 2020, Hüseyin Aslıtürk <asliturk@hotmail.com>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "MonitorWidget.h"
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
+
+REGISTER_WIDGET(DisplaySettings, MonitorWidget)
 
 namespace DisplaySettings {
 
 MonitorWidget::MonitorWidget()
 {
+    m_desktop_resolution = GUI::Desktop::the().rect().size();
     m_monitor_bitmap = Gfx::Bitmap::load_from_file("/res/graphics/monitor.png");
     m_monitor_rect = { 12, 13, 280, 158 };
     set_fixed_size(304, 201);
@@ -91,6 +96,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
     painter.blit({ 0, 0 }, *m_monitor_bitmap, m_monitor_bitmap->rect());
     painter.draw_scaled_bitmap(m_monitor_rect, *screen_bitmap, screen_bitmap->rect());
 
+#if 0
     if (!m_desktop_resolution.is_null()) {
         auto displayed_resolution_string = Gfx::IntSize { m_desktop_resolution.width(), m_desktop_resolution.height() }.to_string();
 
@@ -110,6 +116,7 @@ void MonitorWidget::paint_event(GUI::PaintEvent& event)
         text_rect.center_within(m_monitor_rect);
         painter.draw_scaled_bitmap(text_rect, *text_bitmap, text_bitmap->rect());
     }
+#endif
 }
 
 }

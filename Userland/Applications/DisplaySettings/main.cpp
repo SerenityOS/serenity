@@ -5,10 +5,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "BackgroundSettingsWidget.h"
 #include "DisplaySettings.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -36,16 +38,45 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
     window->set_title("Display Settings");
-    window->resize(360, 410);
+    window->resize(400, 480);
     window->set_resizable(false);
 
     auto& main_widget = window->set_main_widget<GUI::Widget>();
     main_widget.set_fill_with_background_color(true);
     main_widget.set_layout<GUI::VerticalBoxLayout>();
     main_widget.layout()->set_margins({ 4, 4, 4, 4 });
+    main_widget.layout()->set_spacing(6);
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
-    tab_widget.add_tab<DisplaySettingsWidget>("Display Settings");
+    auto& background_settings_widget = tab_widget.add_tab<DisplaySettings::BackgroundSettingsWidget>("Background");
+    auto& monitor_settings_widget = tab_widget.add_tab<DisplaySettingsWidget>("Monitor");
+
+    auto& button_container = main_widget.add<GUI::Widget>();
+    button_container.set_shrink_to_fit(true);
+    button_container.set_layout<GUI::HorizontalBoxLayout>();
+    button_container.layout()->set_spacing(6);
+    button_container.layout()->add_spacer();
+
+    auto& ok_button = button_container.add<GUI::Button>("OK");
+    ok_button.set_fixed_width(75);
+    ok_button.on_click = [&] {
+        background_settings_widget.apply_settings();
+        monitor_settings_widget.apply_settings();
+        app->quit();
+    };
+
+    auto& cancel_button = button_container.add<GUI::Button>("Cancel");
+    cancel_button.set_fixed_width(75);
+    cancel_button.on_click = [&] {
+        app->quit();
+    };
+
+    auto& apply_button = button_container.add<GUI::Button>("Apply");
+    apply_button.set_fixed_width(75);
+    apply_button.on_click = [&] {
+        background_settings_widget.apply_settings();
+        monitor_settings_widget.apply_settings();
+    };
 
     window->set_icon(app_icon.bitmap_for_size(16));
 
