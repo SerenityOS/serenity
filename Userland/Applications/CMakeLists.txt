@@ -1,3 +1,4 @@
+add_subdirectory(3DFileViewer)
 add_subdirectory(About)
 add_subdirectory(AnalogClock)
 add_subdirectory(Browser)
