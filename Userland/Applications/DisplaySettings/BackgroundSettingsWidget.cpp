@@ -18,8 +18,6 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/IconView.h>
 #include <LibGUI/ItemListModel.h>
-#include <LibGUI/MessageBox.h>
-#include <LibGUI/RadioButton.h>
 #include <LibGUI/WindowServerConnection.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
@@ -94,9 +92,9 @@ void BackgroundSettingsWidget::load_current_settings()
 
     auto selected_wallpaper = wm_config->read_entry("Background", "Wallpaper", "");
     if (!selected_wallpaper.is_empty()) {
-        m_monitor_widget->set_wallpaper(selected_wallpaper);
         auto index = static_cast<GUI::FileSystemModel*>(m_wallpaper_view->model())->index(selected_wallpaper, m_wallpaper_view->model_column());
-        m_wallpaper_view->selection().set(index);
+        m_wallpaper_view->set_cursor(index, GUI::AbstractView::SelectionUpdate::Set);
+        m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
     auto mode = ws_config->read_entry("Background", "Mode", "simple");
@@ -122,7 +120,8 @@ void BackgroundSettingsWidget::load_current_settings()
 
 void BackgroundSettingsWidget::apply_settings()
 {
-    auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini");
+    auto wm_config = Core::ConfigFile::get_for_app("WindowManager");
+    wm_config->write_entry("Background", "Wallpaper", m_monitor_widget->wallpaper());
 
     if (!m_monitor_widget->wallpaper().is_empty()) {
         GUI::Desktop::the().set_wallpaper(m_monitor_widget->wallpaper());
