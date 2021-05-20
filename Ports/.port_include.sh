@@ -50,6 +50,15 @@ host_env() {
     enable_ccache
 }
 
+# Sanity check.
+if [ ! -f "${DESTDIR}/usr/lib/libc.so" ]; then
+    echo "libc.so could not be found. This likely means that SerenityOS:"
+    echo "- has not been built and/or installed yet"
+    echo "- has been installed in an unexpected location"
+    echo "The currently configured build directory is ${SERENITY_BUILD_DIR}. Resolve this issue and try again."
+    exit 1
+fi
+
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
 . "$@"
