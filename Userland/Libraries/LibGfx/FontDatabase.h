@@ -35,9 +35,7 @@ public:
     static FontDatabase& the();
 
     static Font& default_font();
-
     static Font& default_fixed_width_font();
-    static Font& default_bold_fixed_width_font();
 
     RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
     RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);

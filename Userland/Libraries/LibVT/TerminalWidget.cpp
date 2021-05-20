@@ -1063,8 +1063,7 @@ void TerminalWidget::did_change_font()
     GUI::Frame::did_change_font();
     m_line_height = font().glyph_height() + m_line_spacing;
 
-    // TODO: try to find a bold version of the new font (e.g. CsillaThin7x10 -> CsillaBold7x10)
-    const Gfx::Font& bold_font = Gfx::FontDatabase::default_bold_fixed_width_font();
+    const Gfx::Font& bold_font = font().bold_variant();
 
     if (bold_font.glyph_height() == font().glyph_height() && bold_font.glyph_width(' ') == font().glyph_width(' '))
         m_bold_font = &bold_font;

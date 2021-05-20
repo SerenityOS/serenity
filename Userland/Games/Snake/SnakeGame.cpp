@@ -15,7 +15,7 @@
 
 SnakeGame::SnakeGame()
 {
-    set_font(Gfx::FontDatabase::default_bold_fixed_width_font());
+    set_font(Gfx::FontDatabase::default_fixed_width_font().bold_variant());
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/paprika.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/eggplant.png"));
     m_fruit_bitmaps.append(*Gfx::Bitmap::load_from_file("/res/icons/snake/cauliflower.png"));

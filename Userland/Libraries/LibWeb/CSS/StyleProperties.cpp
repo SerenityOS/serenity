@@ -194,7 +194,7 @@ void StyleProperties::load_font() const
 RefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold) const
 {
     if (monospace && bold)
-        return Gfx::FontDatabase::default_bold_fixed_width_font();
+        return Gfx::FontDatabase::default_fixed_width_font().bold_variant();
 
     if (monospace)
         return Gfx::FontDatabase::default_fixed_width_font();
