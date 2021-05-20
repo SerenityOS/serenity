@@ -185,7 +185,7 @@ jobs:
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main"
-        sudo apt-get purge -y clang-10
+        sudo apt-get purge -y clang-10 clang-11
         sudo apt-get update
         sudo apt-get install clang-12 ninja-build
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 60
