@@ -124,23 +124,8 @@ int main(int argc, char** argv)
 {
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio recvfd sendfd rpath", nullptr) < 0) {
+    if (pledge("stdio thread recvfd sendfd rpath", nullptr) < 0) {
         perror("pledge");
-        return 1;
-    }
-
-    if (unveil("/res", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/home", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
         return 1;
     }
 
