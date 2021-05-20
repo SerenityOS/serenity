@@ -169,13 +169,21 @@ function(embed_resource target section file)
 endfunction()
 
 function(generate_state_machine source header)
-    set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
-    add_custom_command(
-        OUTPUT ${header}
-	COMMAND ${write_if_different} ${header} ${CMAKE_BINARY_DIR}/Userland/DevTools/StateMachineGenerator/StateMachineGenerator ${source} > ${header}
-        VERBATIM
-        DEPENDS StateMachineGenerator
-        MAIN_DEPENDENCY ${source}
-    )
-    get_filename_component(output_name ${header} NAME)
+    get_filename_component(header_name ${header} NAME)
+    set(target_name "generate_${header_name}")
+    # Note: This function is called twice with the same header, once in the kernel
+    #       and once in Userland/LibVT, this check makes sure that only one target
+    #       is generated for that header.
+    if(NOT TARGET ${target_name})
+        set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
+        set(output ${CMAKE_CURRENT_SOURCE_DIR}/${header})
+        add_custom_command(
+            OUTPUT ${output}
+            COMMAND ${write_if_different} ${output} ${CMAKE_BINARY_DIR}/Userland/DevTools/StateMachineGenerator/StateMachineGenerator ${source}
+            VERBATIM
+            DEPENDS StateMachineGenerator
+            MAIN_DEPENDENCY ${source}
+        )
+        add_custom_target(${target_name} DEPENDS ${output})
+    endif()
 endfunction()
