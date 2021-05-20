@@ -252,7 +252,14 @@ void FilePicker::on_file_return()
         path = LexicalPath::join(m_model->root_path(), path).string();
     }
 
-    if (Core::File::exists(path) && m_mode == Mode::Save) {
+    bool file_exists = Core::File::exists(path);
+
+    if (!file_exists && (m_mode == Mode::Open || m_mode == Mode::OpenFolder)) {
+        MessageBox::show(this, String::formatted("No such file or directory: {}", m_filename_textbox->text()), "File not found", MessageBox::Type::Error, MessageBox::InputType::OK);
+        return;
+    }
+
+    if (file_exists && m_mode == Mode::Save) {
         auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
