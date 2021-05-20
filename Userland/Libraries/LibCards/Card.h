@@ -30,8 +30,8 @@ public:
     enum Type {
         Clubs,
         Diamonds,
-        Hearts,
         Spades,
+        Hearts,
         __Count
     };
 

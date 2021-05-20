@@ -1,0 +1,4 @@
+[App]
+Name=Hearts
+Executable=/bin/Hearts
+Category=Games
