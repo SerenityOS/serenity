@@ -40,6 +40,8 @@ private:
     {
     }
 
+    static RefPtr<ProcessGroup> from_pgid_nolock(ProcessGroupID);
+
     ProcessGroup* m_prev { nullptr };
     ProcessGroup* m_next { nullptr };
 
