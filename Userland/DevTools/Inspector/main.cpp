@@ -97,6 +97,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (access(String::formatted("/proc/{}", pid).characters(), R_OK) == -1) {
+        GUI::MessageBox::show(window, "Inspector doesn't have permission to access the process.", "Error", GUI::MessageBox::Type::Error);
+        return 1;
+    }
+
     window->set_title("Inspector");
     window->resize(685, 500);
     window->set_icon(app_icon.bitmap_for_size(16));
