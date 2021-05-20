@@ -25,6 +25,7 @@
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 #include <LibJS/Interpreter.h>
+#include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
@@ -69,6 +70,7 @@ void Tab::view_source(const URL& url, const String& source)
     auto& editor = window->set_main_widget<GUI::TextEditor>();
     editor.set_text(source);
     editor.set_mode(GUI::TextEditor::ReadOnly);
+    editor.set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
     editor.set_ruler_visible(true);
     window->resize(640, 480);
     window->set_title(url.to_string());
