@@ -2,5 +2,11 @@
 * text=auto eol=lf
 
 # Denote all files that are truly binary and should not be modified.
-*.png binary
+*.bmp binary
+*.dds binary
+*.gif binary
 *.jpg binary
+*.pbm binary
+*.pgm binary
+*.png binary
+*.ppm binary
