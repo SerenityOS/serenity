@@ -293,7 +293,6 @@ generate_state_machine(../Userland/Libraries/LibVT/StateMachine.txt ../Userland/
 set(VT_SOURCES
     ../Userland/Libraries/LibVT/Terminal.cpp
     ../Userland/Libraries/LibVT/Line.cpp
-    ../Userland/Libraries/LibVT/EscapeSequenceStateMachine.h
     ../Userland/Libraries/LibVT/EscapeSequenceParser.cpp
 )
 
@@ -376,6 +375,8 @@ else()
 endif()
 
 add_executable(Kernel ${SOURCES})
+add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
+
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
     check_ipo_supported()
