@@ -176,7 +176,7 @@ function(generate_state_machine source header)
     #       is generated for that header.
     if(NOT TARGET ${target_name})
         set(source ${CMAKE_CURRENT_SOURCE_DIR}/${source})
-        set(output ${CMAKE_CURRENT_SOURCE_DIR}/${header})
+        set(output ${CMAKE_CURRENT_BINARY_DIR}/${header})
         add_custom_command(
             OUTPUT ${output}
             COMMAND ${write_if_different} ${output} ${CMAKE_BINARY_DIR}/Userland/DevTools/StateMachineGenerator/StateMachineGenerator ${source}
