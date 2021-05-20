@@ -61,7 +61,7 @@ private:
         glEndList();
 
         // Load the teapot
-        m_mesh = m_mesh_loader->load("/res/gl/teapot.obj");
+        m_mesh = m_mesh_loader->load("/home/anon/Documents/3D Models/teapot.obj");
 
         dbgln("3DFileViewer: teapot mesh has {} triangles.", m_mesh->triangle_count());
     }
