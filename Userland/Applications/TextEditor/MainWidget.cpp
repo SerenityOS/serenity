@@ -39,6 +39,7 @@
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
 #include <LibSQL/SyntaxHighlighter.h>
+#include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
 
@@ -547,6 +548,13 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     syntax_actions.add_action(*m_js_highlight);
     syntax_menu.add_action(*m_js_highlight);
 
+    m_html_highlight = GUI::Action::create_checkable("&HTML File", [&](auto&) {
+        m_editor->set_syntax_highlighter(make<Web::HTML::SyntaxHighlighter>());
+        m_editor->update();
+    });
+    syntax_actions.add_action(*m_html_highlight);
+    syntax_menu.add_action(*m_html_highlight);
+
     m_gml_highlight = GUI::Action::create_checkable("&GML", [&](auto&) {
         m_editor->set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
         m_editor->update();
@@ -598,6 +606,8 @@ void MainWidget::set_path(const LexicalPath& lexical_path)
         m_ini_highlight->activate();
     } else if (m_extension == "sql") {
         m_sql_highlight->activate();
+    } else if (m_extension == "html") {
+        m_html_highlight->activate();
     } else {
         m_plain_text_highlight->activate();
     }
