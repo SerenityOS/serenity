@@ -332,7 +332,7 @@ public:
     generator.append(R"~~~(
     }; // end Action
 
-    typedef Function<void(Action, u8)> Handler;
+    using Handler = Function<void(Action, u8)>;
 
     @class_name@(Handler handler)
     : m_handler(move(handler))

@@ -25,7 +25,7 @@
 // An NtpTimestamp is a 64-bit integer that's a 32.32 binary-fixed point number.
 // The integral part in the upper 32 bits represents seconds since 1900-01-01.
 // The fractional part in the lower 32 bits stores fractional bits times 2 ** 32.
-typedef uint64_t NtpTimestamp;
+using NtpTimestamp = uint64_t;
 
 struct [[gnu::packed]] NtpPacket {
     uint8_t li_vn_mode;

@@ -13,7 +13,7 @@
 namespace HackStudio {
 
 // A "GitFileAction" is either the staging or the unstaging of a file.
-typedef Function<void(const LexicalPath& file)> GitFileActionCallback;
+using GitFileActionCallback = Function<void(const LexicalPath& file)>;
 
 class GitFilesView : public GUI::ListView {
     C_OBJECT(GitFilesView)
