@@ -17,6 +17,5 @@ enum class BreakpointChange {
     Removed,
 };
 
-typedef Function<void(const String& file, size_t line, BreakpointChange)> BreakpointChangeCallback;
-
+using BreakpointChangeCallback = Function<void(const String& file, size_t line, BreakpointChange)>;
 }
