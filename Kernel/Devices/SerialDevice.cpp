@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/TTY/ConsoleManagement.h>
@@ -296,12 +297,16 @@ void SerialDevice::handle_irq(const RegisterState&)
     // FIXME: no locking here -- correctness issues
     if ((interrupt_identification & 0x0e) == 0x04) {
         dbgln_if(SERIAL_DEVICE_DEBUG, "{}: received Data Available interrupt", m_tty_name);
-        while (get_line_status() & LineStatus::DataReady)
-            emit(m_base_addr.offset(0).in<u8>(), true);
+        while (get_line_status() & LineStatus::DataReady) {
+            u8 ch = m_base_addr.offset(0).in<u8>();
+            Processor::deferred_call_queue([this, ch] { emit(ch, true); });
+        }
     } else if ((interrupt_identification & 0x0e) == 0x0c) {
         dbgln_if(SERIAL_DEVICE_DEBUG, "{}: Time-out Interrupt Pending interrupt", m_tty_name);
-        while (get_line_status() & LineStatus::DataReady)
-            emit(m_base_addr.offset(0).in<u8>(), true);
+        while (get_line_status() & LineStatus::DataReady) {
+            u8 ch = m_base_addr.offset(0).in<u8>();
+            Processor::deferred_call_queue([this, ch] { emit(ch, true); });
+        }
     } else {
         dbgln("{}: Unknown interrupt with ISR {:02x}. We should have disabled those that we can't handle!", m_tty_name, interrupt_identification);
     }
