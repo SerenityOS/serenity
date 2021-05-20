@@ -48,6 +48,9 @@ private:
     void update_html_preview();
     void update_statusbar();
 
+    Web::OutOfProcessWebView& ensure_web_view();
+    void set_web_view_visible(bool);
+
     virtual void drop_event(GUI::DropEvent&) override;
 
     RefPtr<GUI::TextEditor> m_editor;

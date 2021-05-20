@@ -67,23 +67,6 @@ MainWidget::MainWidget()
         window()->set_modified(modified);
     };
 
-    m_page_view = *find_descendant_of_type_named<Web::OutOfProcessWebView>("webview");
-    m_page_view->on_link_hover = [this](auto& url) {
-        if (url.is_valid())
-            m_statusbar->set_text(url.to_string());
-        else
-            update_statusbar();
-    };
-    m_page_view->on_link_click = [&](auto& url, auto&, unsigned) {
-        if (!Desktop::Launcher::open(url)) {
-            GUI::MessageBox::show(
-                window(),
-                String::formatted("The link to '{}' could not be opened.", url),
-                "Failed to open link",
-                GUI::MessageBox::Type::Error);
-        }
-    };
-
     m_find_replace_widget = *find_descendant_of_type_named<GUI::GroupBox>("find_replace_widget");
     m_find_widget = *find_descendant_of_type_named<GUI::Widget>("find_widget");
     m_replace_widget = *find_descendant_of_type_named<GUI::Widget>("replace_widget");
@@ -345,6 +328,30 @@ MainWidget::MainWidget()
 
 MainWidget::~MainWidget()
 {
+}
+
+Web::OutOfProcessWebView& MainWidget::ensure_web_view()
+{
+    if (!m_page_view) {
+        auto& web_view_container = *find_descendant_of_type_named<GUI::Widget>("web_view_container");
+        m_page_view = web_view_container.add<Web::OutOfProcessWebView>();
+        m_page_view->on_link_hover = [this](auto& url) {
+            if (url.is_valid())
+                m_statusbar->set_text(url.to_string());
+            else
+                update_statusbar();
+        };
+        m_page_view->on_link_click = [&](auto& url, auto&, unsigned) {
+            if (!Desktop::Launcher::open(url)) {
+                GUI::MessageBox::show(
+                    window(),
+                    String::formatted("The link to '{}' could not be opened.", url),
+                    "Failed to open link",
+                    GUI::MessageBox::Type::Error);
+            }
+        };
+    }
+    return *m_page_view;
 }
 
 void MainWidget::initialize_menubar(GUI::Menubar& menubar)
@@ -691,6 +698,15 @@ void MainWidget::drop_event(GUI::DropEvent& event)
     }
 }
 
+void MainWidget::set_web_view_visible(bool visible)
+{
+    if (!visible && !m_page_view)
+        return;
+    ensure_web_view();
+    auto& web_view_container = *find_descendant_of_type_named<GUI::Widget>("web_view_container");
+    web_view_container.set_visible(visible);
+}
+
 void MainWidget::set_preview_mode(PreviewMode mode)
 {
     if (m_preview_mode == mode)
@@ -699,15 +715,15 @@ void MainWidget::set_preview_mode(PreviewMode mode)
 
     if (m_preview_mode == PreviewMode::HTML) {
         m_html_preview_action->set_checked(true);
-        m_page_view->set_visible(true);
+        set_web_view_visible(true);
         update_html_preview();
     } else if (m_preview_mode == PreviewMode::Markdown) {
         m_markdown_preview_action->set_checked(true);
-        m_page_view->set_visible(true);
+        set_web_view_visible(true);
         update_markdown_preview();
     } else {
         m_no_preview_action->set_checked(true);
-        m_page_view->set_visible(false);
+        set_web_view_visible(false);
     }
 }
 
