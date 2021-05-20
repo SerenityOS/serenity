@@ -14,7 +14,7 @@
 
 namespace HackStudio {
 
-typedef Function<void(const String& original_content, const String& diff)> ViewDiffCallback;
+using ViewDiffCallback = Function<void(const String& original_content, const String& diff)>;
 
 class GitWidget final : public GUI::Widget {
     C_OBJECT(GitWidget)
