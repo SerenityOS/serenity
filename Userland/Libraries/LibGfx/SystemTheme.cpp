@@ -14,12 +14,6 @@ static SystemTheme dummy_theme;
 static const SystemTheme* theme_page = &dummy_theme;
 static Core::AnonymousBuffer theme_buffer;
 
-const SystemTheme& current_system_theme()
-{
-    VERIFY(theme_page);
-    return *theme_page;
-}
-
 Core::AnonymousBuffer& current_system_theme_buffer()
 {
     VERIFY(theme_buffer.is_valid());
