@@ -117,6 +117,7 @@ public:
     String source() const { return m_decoded_input; }
 
 private:
+    void skip(size_t count);
     Optional<u32> next_code_point();
     Optional<u32> peek_code_point(size_t offset) const;
     bool consume_next_if_match(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive);
@@ -140,6 +141,9 @@ private:
     void will_reconsume_in(State);
 
     bool consumed_as_part_of_an_attribute() const;
+
+    void restore_to(const Utf8CodepointIterator& new_iterator);
+    auto& nth_last_position(size_t n = 0) { return m_source_positions.at(m_source_positions.size() - 1 - n); }
 
     State m_state { State::Data };
     State m_return_state { State::Data };
@@ -165,6 +169,8 @@ private:
     u32 m_character_reference_code { 0 };
 
     bool m_blocked { false };
+
+    Vector<HTMLToken::Position> m_source_positions;
 };
 
 }

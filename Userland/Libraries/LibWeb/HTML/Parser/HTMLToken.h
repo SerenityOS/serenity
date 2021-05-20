@@ -164,12 +164,30 @@ public:
 
     String to_string() const;
 
+    const auto& start_position() const { return m_start_position; }
+    const auto& end_position() const { return m_end_position; }
+
+    const auto& attributes() const
+    {
+        VERIFY(is_start_tag() || is_end_tag());
+        return m_tag.attributes;
+    }
+
 private:
+    struct Position {
+        size_t line { 0 };
+        size_t column { 0 };
+    };
+
     struct AttributeBuilder {
         StringBuilder prefix_builder;
         StringBuilder local_name_builder;
         StringBuilder namespace_builder;
         StringBuilder value_builder;
+        Position name_start_position;
+        Position value_start_position;
+        Position name_end_position;
+        Position value_end_position;
     };
 
     Type m_type { Type::Invalid };
@@ -201,6 +219,9 @@ private:
     struct {
         StringBuilder data;
     } m_comment_or_character;
+
+    Position m_start_position;
+    Position m_end_position;
 };
 
 }
