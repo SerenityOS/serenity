@@ -188,8 +188,8 @@ jobs:
         sudo apt-get purge -y clang-10 clang-11
         sudo apt-get update
         sudo apt-get install clang-12 ninja-build
-        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 60
-        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 60
+        sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
+        sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
       if: ${{ runner.os == 'Linux' }}
     - name: Install macOS dependencies
       run: brew install ninja
