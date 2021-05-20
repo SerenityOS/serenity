@@ -58,6 +58,7 @@ public:
     virtual void gl_blend_func(GLenum src_factor, GLenum dst_factor) override;
     virtual void gl_shade_model(GLenum mode) override;
     virtual void gl_alpha_func(GLenum func, GLclampf ref) override;
+    virtual void gl_hint(GLenum target, GLenum mode) override;
 
     virtual void present() override;
 
@@ -170,7 +171,8 @@ private:
             decltype(&SoftwareGLContext::gl_call_list),
             decltype(&SoftwareGLContext::gl_blend_func),
             decltype(&SoftwareGLContext::gl_shade_model),
-            decltype(&SoftwareGLContext::gl_alpha_func)>;
+            decltype(&SoftwareGLContext::gl_alpha_func),
+            decltype(&SoftwareGLContext::gl_hint)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
