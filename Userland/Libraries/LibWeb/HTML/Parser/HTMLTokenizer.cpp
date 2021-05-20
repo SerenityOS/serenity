@@ -229,6 +229,11 @@ Optional<u32> HTMLTokenizer::peek_code_point(size_t offset) const
 
 Optional<HTMLToken> HTMLTokenizer::next_token()
 {
+    {
+        auto last_position = m_source_positions.last();
+        m_source_positions.clear();
+        m_source_positions.append(move(last_position));
+    }
 _StartOfFunction:
     if (!m_queued_tokens.is_empty())
         return m_queued_tokens.dequeue();

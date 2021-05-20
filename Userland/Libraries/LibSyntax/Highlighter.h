@@ -15,13 +15,14 @@
 namespace Syntax {
 
 enum class Language {
-    PlainText,
     Cpp,
-    JavaScript,
-    INI,
     GML,
-    Shell,
+    HTML,
+    INI,
+    JavaScript,
+    PlainText,
     SQL,
+    Shell,
 };
 
 struct TextStyle {

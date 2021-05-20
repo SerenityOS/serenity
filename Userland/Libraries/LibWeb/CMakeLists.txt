@@ -153,6 +153,7 @@ set(SOURCES
     HTML/Parser/ListOfActiveFormattingElements.cpp
     HTML/Parser/StackOfOpenElements.cpp
     HTML/SubmitEvent.cpp
+    HTML/SyntaxHighlighter/SyntaxHighlighter.cpp
     HTML/TagNames.cpp
     HTML/WebSocket.cpp
     HighResolutionTime/Performance.cpp

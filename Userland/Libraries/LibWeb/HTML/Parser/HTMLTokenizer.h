@@ -110,6 +110,10 @@ public:
     Optional<HTMLToken> next_token();
 
     void switch_to(Badge<HTMLDocumentParser>, State new_state);
+    void switch_to(State new_state)
+    {
+        m_state = new_state;
+    }
 
     void set_blocked(bool b) { m_blocked = b; }
     bool is_blocked() const { return m_blocked; }
