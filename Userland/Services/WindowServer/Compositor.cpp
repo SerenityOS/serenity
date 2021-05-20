@@ -30,15 +30,13 @@ Compositor& Compositor::the()
 
 static WallpaperMode mode_to_enum(const String& name)
 {
-    if (name == "simple")
-        return WallpaperMode::Simple;
     if (name == "tile")
         return WallpaperMode::Tile;
-    if (name == "center")
-        return WallpaperMode::Center;
     if (name == "stretch")
         return WallpaperMode::Stretch;
-    return WallpaperMode::Simple;
+    if (name == "center")
+        return WallpaperMode::Center;
+    return WallpaperMode::Center;
 }
 
 Compositor::Compositor()
@@ -92,7 +90,7 @@ void Compositor::init_bitmaps()
 void Compositor::did_construct_window_manager(Badge<WindowManager>)
 {
     auto& wm = WindowManager::the();
-    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "simple"));
+    m_wallpaper_mode = mode_to_enum(wm.config()->read_entry("Background", "Mode", "center"));
     m_custom_background_color = Color::from_string(wm.config()->read_entry("Background", "Color", ""));
 
     invalidate_screen();
@@ -226,9 +224,7 @@ void Compositor::compose()
         // FIXME: If the wallpaper is opaque and covers the whole rect, no need to fill with color!
         painter.fill_rect(rect, background_color);
         if (m_wallpaper) {
-            if (m_wallpaper_mode == WallpaperMode::Simple) {
-                painter.blit(rect.location(), *m_wallpaper, rect);
-            } else if (m_wallpaper_mode == WallpaperMode::Center) {
+            if (m_wallpaper_mode == WallpaperMode::Center) {
                 Gfx::IntPoint offset { (ws.width() - m_wallpaper->width()) / 2, (ws.height() - m_wallpaper->height()) / 2 };
                 painter.blit_offset(rect.location(), *m_wallpaper, rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
