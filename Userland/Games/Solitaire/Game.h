@@ -6,9 +6,12 @@
 
 #pragma once
 
-#include "CardStack.h"
+#include <LibCards/CardStack.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
+
+using Cards::Card;
+using Cards::CardStack;
 
 namespace Solitaire {
 
