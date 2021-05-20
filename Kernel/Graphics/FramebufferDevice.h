@@ -59,6 +59,8 @@ private:
     OwnPtr<Region> m_real_framebuffer_region;
     OwnPtr<Region> m_swapped_framebuffer_region;
 
+    bool m_graphical_writes_enabled { true };
+
     RefPtr<AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
     Region* m_userspace_framebuffer_region { nullptr };
 };
