@@ -12,10 +12,10 @@
 #include "Mesh.h"
 #include "MeshLoader.h"
 
-class WavefrontOBJLoader : public MeshLoader {
+class WavefrontOBJLoader final : public MeshLoader {
 public:
     WavefrontOBJLoader() { }
     ~WavefrontOBJLoader() override { }
 
-    RefPtr<Mesh> load(const String& fname) override;
+    RefPtr<Mesh> load(Core::File& file) override;
 };

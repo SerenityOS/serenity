@@ -59,11 +59,6 @@ private:
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         }
         glEndList();
-
-        // Load the teapot
-        m_mesh = m_mesh_loader->load("/home/anon/Documents/3D Models/teapot.obj");
-
-        dbgln("3DFileViewer: teapot mesh has {} triangles.", m_mesh->triangle_count());
     }
 
     virtual void paint_event(GUI::PaintEvent&) override;
@@ -109,15 +104,39 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     update();
 }
 
-bool GLContextWidget::load(const String& fname)
+bool GLContextWidget::load(const String& filename)
 {
-    m_mesh = m_mesh_loader->load(fname);
-    if (!m_mesh.is_null()) {
-        dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
-        return true;
+    auto file = Core::File::construct(filename);
+
+    if (!file->filename().ends_with(".obj")) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: invalid file type", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
     }
 
-    return false;
+    if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: {}", filename, strerror(errno)), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    if (file->is_device()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open device files", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    if (file->is_directory()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    auto new_mesh = m_mesh_loader->load(file);
+    if (new_mesh.is_null()) {
+        GUI::MessageBox::show(window(), String::formatted("Reading \"{}\" failed.", filename), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
+    m_mesh = new_mesh;
+    dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
+    return true;
 }
 
 int main(int argc, char** argv)
@@ -143,36 +162,20 @@ int main(int argc, char** argv)
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
 
+    auto load_model = [&](StringView const& filename) {
+        if (widget.load(filename)) {
+            auto canonical_path = Core::File::real_path_for(filename);
+            window->set_title(String::formatted("{} - 3D File Viewer", canonical_path));
+        }
+    };
+
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window);
 
         if (!open_path.has_value())
             return;
 
-        auto file = Core::File::construct(open_path.value());
-
-        if (!file->filename().ends_with(".obj")) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: invalid file type", open_path.value()), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        if (!file->open(Core::OpenMode::ReadOnly) && file->error() != ENOENT) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: {}", open_path.value(), strerror(errno)), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        if (file->is_device()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open device files", open_path.value()), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        if (file->is_directory()) {
-            GUI::MessageBox::show(window, String::formatted("Opening \"{}\" failed: Can't open directories", open_path.value()), "Error", GUI::MessageBox::Type::Error);
-            return;
-        }
-
-        if (!widget.load(file->filename()))
-            GUI::MessageBox::show(window, String::formatted("Reading \"{}\" failed.", open_path.value()), "Error", GUI::MessageBox::Type::Error);
+        load_model(open_path.value());
     }));
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
@@ -184,6 +187,9 @@ int main(int argc, char** argv)
 
     window->set_menubar(move(menubar));
     window->show();
+
+    auto filename = argc > 1 ? argv[1] : "/home/anon/Documents/3D Models/teapot.obj";
+    load_model(filename);
 
     return app->exec();
 }

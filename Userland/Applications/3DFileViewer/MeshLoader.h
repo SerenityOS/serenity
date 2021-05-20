@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibCore/File.h>
 
 #include "Common.h"
 #include "Mesh.h"
@@ -16,5 +17,5 @@ public:
     MeshLoader() { }
     virtual ~MeshLoader() { }
 
-    virtual RefPtr<Mesh> load(const String& fname) = 0;
+    virtual RefPtr<Mesh> load(Core::File& file) = 0;
 };
