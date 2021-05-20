@@ -247,15 +247,18 @@ void FilePicker::model_did_update(unsigned)
 
 void FilePicker::on_file_return()
 {
-    LexicalPath path(String::formatted("{}/{}", m_model->root_path(), m_filename_textbox->text()));
+    auto path = m_filename_textbox->text();
+    if (!path.starts_with('/')) {
+        path = LexicalPath::join(m_model->root_path(), path).string();
+    }
 
-    if (Core::File::exists(path.string()) && m_mode == Mode::Save) {
+    if (Core::File::exists(path) && m_mode == Mode::Save) {
         auto result = MessageBox::show(this, "File already exists. Overwrite?", "Existing File", MessageBox::Type::Warning, MessageBox::InputType::OKCancel);
         if (result == MessageBox::ExecCancel)
             return;
     }
 
-    m_selected_file = path.string();
+    m_selected_file = path;
     done(ExecOK);
 }
 
