@@ -19,7 +19,6 @@ class ClipboardServerConnection : public IPC::ServerConnection<ClipboardClientEn
 public:
     virtual void handshake() override
     {
-        greet();
     }
 
 private:
