@@ -37,7 +37,7 @@ Optional<String> FilePicker::get_open_filepath(Window* parent_window, const Stri
         picker->set_title(window_title);
 
     if (picker->exec() == Dialog::ExecOK) {
-        String file_path = picker->selected_file().string();
+        String file_path = picker->selected_file();
 
         if (file_path.is_null())
             return {};
@@ -52,7 +52,7 @@ Optional<String> FilePicker::get_save_filepath(Window* parent_window, const Stri
     auto picker = FilePicker::construct(parent_window, Mode::Save, String::formatted("{}.{}", title, extension), path);
 
     if (picker->exec() == Dialog::ExecOK) {
-        String file_path = picker->selected_file().string();
+        String file_path = picker->selected_file();
 
         if (file_path.is_null())
             return {};
@@ -255,7 +255,7 @@ void FilePicker::on_file_return()
             return;
     }
 
-    m_selected_file = path;
+    m_selected_file = path.string();
     done(ExecOK);
 }
 
