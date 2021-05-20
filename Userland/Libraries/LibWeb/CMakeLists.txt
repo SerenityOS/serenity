@@ -1,8 +1,8 @@
 set(SOURCES
     Bindings/CSSStyleDeclarationWrapperCustom.cpp
     Bindings/EventListenerWrapper.cpp
-    Bindings/EventWrapperFactory.cpp
     Bindings/EventTargetWrapperFactory.cpp
+    Bindings/EventWrapperFactory.cpp
     Bindings/HTMLCollectionWrapperCustom.cpp
     Bindings/ImageConstructor.cpp
     Bindings/LocationObject.cpp
@@ -12,7 +12,6 @@ set(SOURCES
     Bindings/ScriptExecutionContext.cpp
     Bindings/WindowObject.cpp
     Bindings/Wrappable.cpp
-    Cookie/ParsedCookie.cpp
     CSS/CSSImportRule.cpp
     CSS/CSSRule.cpp
     CSS/CSSStyleDeclaration.cpp
@@ -39,25 +38,26 @@ set(SOURCES
     CSS/StyleValue.cpp
     CSS/ValueID.cpp
     CSS/ValueID.h
+    Cookie/ParsedCookie.cpp
     DOM/CharacterData.cpp
     DOM/CharacterData.idl
     DOM/Comment.cpp
+    DOM/DOMImplementation.cpp
     DOM/Document.cpp
     DOM/DocumentFragment.cpp
     DOM/DocumentType.cpp
-    DOM/DOMImplementation.cpp
     DOM/Element.cpp
     DOM/ElementFactory.cpp
     DOM/Event.cpp
-    DOM/HTMLCollection.cpp
-    DOM/Range.cpp
     DOM/EventDispatcher.cpp
     DOM/EventListener.cpp
     DOM/EventTarget.cpp
+    DOM/HTMLCollection.cpp
     DOM/Node.cpp
     DOM/ParentNode.cpp
     DOM/Position.cpp
     DOM/ProcessingInstruction.cpp
+    DOM/Range.cpp
     DOM/ShadowRoot.cpp
     DOM/Text.cpp
     DOM/Text.idl
@@ -193,8 +193,8 @@ set(SOURCES
     Layout/TextNode.cpp
     Layout/TreeBuilder.cpp
     LayoutTreeModel.cpp
-    Loader/ContentFilter.cpp
     Loader/CSSLoader.cpp
+    Loader/ContentFilter.cpp
     Loader/FrameLoader.cpp
     Loader/ImageLoader.cpp
     Loader/ImageResource.cpp
@@ -204,8 +204,8 @@ set(SOURCES
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
     OutOfProcessWebView.cpp
-    Page/EventHandler.cpp
     Page/EditEventHandler.cpp
+    Page/EventHandler.cpp
     Page/Frame.cpp
     Page/Page.cpp
     Painting/BorderPainting.cpp
@@ -220,9 +220,9 @@ set(SOURCES
     UIEvents/EventNames.cpp
     UIEvents/MouseEvent.cpp
     URLEncoder.cpp
+    WebContentClient.cpp
     XHR/EventNames.cpp
     XHR/XMLHttpRequest.cpp
-    WebContentClient.cpp
 )
 
 set(GENERATED_SOURCES
