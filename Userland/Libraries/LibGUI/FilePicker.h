@@ -33,7 +33,7 @@ public:
 
     virtual ~FilePicker() override;
 
-    LexicalPath selected_file() const { return m_selected_file; }
+    String const& selected_file() const { return m_selected_file; }
 
 private:
     void on_file_return();
@@ -66,7 +66,7 @@ private:
 
     RefPtr<MultiView> m_view;
     NonnullRefPtr<FileSystemModel> m_model;
-    LexicalPath m_selected_file;
+    String m_selected_file;
 
     RefPtr<TextBox> m_filename_textbox;
     RefPtr<TextBox> m_location_textbox;
