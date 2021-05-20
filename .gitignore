@@ -1,17 +1,3 @@
-*
-!*.*
-!*/
-!Makefile
-!LICENSE
-!Base/**
-!Meta/ShellCompletions/**
-
-*.o
-*.ao
-*.a
-*.so
-*.d
-
 *.swo
 *.swp
 *.config
@@ -25,8 +11,6 @@
 *.autosave
 Meta/Lagom/build
 Build
-build
-CMakeFiles
 Toolchain/Tarballs
 Toolchain/Build
 Toolchain/Local
@@ -37,7 +21,6 @@ compile_commands.json
 .cache
 .clang_complete
 .clangd
-*Endpoint.h
 .idea/
 cmake-build-debug/
 sync-local.sh
