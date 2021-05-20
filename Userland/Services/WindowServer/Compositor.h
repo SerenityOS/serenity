@@ -20,7 +20,6 @@ class Window;
 class WindowManager;
 
 enum class WallpaperMode {
-    Simple,
     Tile,
     Center,
     Stretch,

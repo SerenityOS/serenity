@@ -104,9 +104,7 @@ void MonitorWidget::redraw_desktop_if_needed()
     auto scaled_size = m_wallpaper_bitmap->size().to_type<float>().scaled_by(sw, sh).to_type<int>();
     auto scaled_bitmap = m_wallpaper_bitmap->scaled(sw, sh);
 
-    if (m_desktop_wallpaper_mode == "simple") {
-        painter.blit({}, *scaled_bitmap, scaled_bitmap->rect());
-    } else if (m_desktop_wallpaper_mode == "center") {
+    if (m_desktop_wallpaper_mode == "center") {
         Gfx::IntRect centered_rect { {}, scaled_size };
         centered_rect.center_within(m_desktop_bitmap->rect());
         painter.blit(centered_rect.location(), *scaled_bitmap, scaled_bitmap->rect());
