@@ -19,9 +19,12 @@
             name: "editor"
         }
 
-        @Web::OutOfProcessWebView {
-            name: "webview"
+        @GUI::Widget {
+            name: "web_view_container"
             visible: false
+
+            layout: @GUI::VerticalBoxLayout {
+            }
         }
     }
 
