@@ -35,10 +35,6 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::greet()
-{
-}
-
 void ClientConnection::set_clipboard_data(Core::AnonymousBuffer const& data, String const& mime_type, IPC::Dictionary const& metadata)
 {
     Storage::the().set_data(data, mime_type, metadata.entries());
