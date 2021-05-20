@@ -22,6 +22,7 @@ namespace Kernel {
 
 KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, const Range& range, u64 offset, int prot, bool shared)
 {
+    ScopedSpinLock lock(m_activation_lock);
     REQUIRE_PROMISE(video);
     if (!shared)
         return ENODEV;
@@ -40,9 +41,15 @@ KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, c
     m_real_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_real_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer", Region::Access::Read | Region::Access::Write);
     m_swapped_framebuffer_region = MM.allocate_kernel_region_with_vmobject(*m_swapped_framebuffer_vmobject, page_round_up(framebuffer_size_in_bytes()), "Framebuffer Swap (Blank)", Region::Access::Read | Region::Access::Write);
 
+    RefPtr<VMObject> chosen_vmobject;
+    if (m_graphical_writes_enabled) {
+        chosen_vmobject = m_real_framebuffer_vmobject;
+    } else {
+        chosen_vmobject = m_swapped_framebuffer_vmobject;
+    }
     auto result = process.space().allocate_region_with_vmobject(
         range,
-        vmobject.release_nonnull(),
+        chosen_vmobject.release_nonnull(),
         0,
         "Framebuffer",
         prot,
@@ -62,6 +69,7 @@ void FramebufferDevice::dectivate_writes()
     auto vmobject = m_swapped_framebuffer_vmobject;
     m_userspace_framebuffer_region->set_vmobject(vmobject.release_nonnull());
     m_userspace_framebuffer_region->remap();
+    m_graphical_writes_enabled = false;
 }
 void FramebufferDevice::activate_writes()
 {
@@ -75,6 +83,7 @@ void FramebufferDevice::activate_writes()
     auto vmobject = m_userspace_real_framebuffer_vmobject;
     m_userspace_framebuffer_region->set_vmobject(vmobject.release_nonnull());
     m_userspace_framebuffer_region->remap();
+    m_graphical_writes_enabled = true;
 }
 
 String FramebufferDevice::device_name() const
