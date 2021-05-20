@@ -286,6 +286,8 @@ void VirtualConsole::emit_char(char ch)
 
 void VirtualConsole::flush_dirty_lines()
 {
+    if (!m_active)
+        return;
     VERIFY(GraphicsManagement::is_initialized());
     VERIFY(GraphicsManagement::the().console());
     for (u16 visual_row = 0; visual_row < rows(); ++visual_row) {
