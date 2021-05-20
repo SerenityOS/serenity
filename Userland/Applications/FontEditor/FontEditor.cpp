@@ -9,6 +9,7 @@
 #include "GlyphMapWidget.h"
 #include "NewFontDialog.h"
 #include <AK/StringBuilder.h>
+#include <AK/UnicodeUtils.h>
 #include <Applications/FontEditor/FontEditorWindowGML.h>
 #include <LibDesktop/Launcher.h>
 #include <LibGUI/Action.h>
@@ -33,6 +34,7 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/BitmapFont.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/TextDirection.h>
 #include <stdlib.h>
 
 static constexpr int s_pangram_count = 7;
@@ -130,18 +132,21 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Gfx::BitmapFont>&&
     auto update_statusbar = [&] {
         auto glyph = m_glyph_map_widget->selected_glyph();
         StringBuilder builder;
-        builder.appendff("{:#02x} (", glyph);
-        if (glyph < 128) {
-            if (glyph == 10)
-                builder.append("LF");
-            else
-                builder.append(glyph);
+        builder.appendff("U+{:04X} (", glyph);
+
+        if (AK::UnicodeUtils::is_unicode_control_code_point(glyph)) {
+            builder.append(AK::UnicodeUtils::get_unicode_control_code_point_alias(glyph).value());
+        } else if (Gfx::get_char_bidi_class(glyph) == Gfx::BidirectionalClass::STRONG_RTL) {
+            // FIXME: This is a necessary hack, as RTL text will mess up the painting of the statusbar text.
+            // For now, replace RTL glyphs with U+FFFD, the replacement character.
+            builder.append_code_point(0xFFFD);
         } else {
-            builder.append(128 | 64 | (glyph / 64));
-            builder.append(128 | (glyph % 64));
+            builder.append_code_point(glyph);
         }
-        builder.append(") ");
-        builder.appendff("[{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
+
+        builder.append(")");
+        if (m_edited_font->raw_glyph_width(glyph) > 0)
+            builder.appendff(" [{}x{}]", m_edited_font->raw_glyph_width(glyph), m_edited_font->glyph_height());
         statusbar.set_text(builder.to_string());
     };
 
