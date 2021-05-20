@@ -1034,9 +1034,16 @@ RefPtr<Thread> Thread::from_tid(ThreadID tid)
     RefPtr<Thread> found_thread;
     {
         ScopedSpinLock lock(g_tid_map_lock);
-        auto it = g_tid_map->find(tid);
-        if (it != g_tid_map->end())
-            found_thread = it->value;
+        if (auto it = g_tid_map->find(tid); it != g_tid_map->end()) {
+            // We need to call try_ref() here as there is a window between
+            // dropping the last reference and calling the Thread's destructor!
+            // We shouldn't remove the threads from that list until it is truly
+            // destructed as it may stick around past finalization in order to
+            // be able to wait() on it!
+            if (it->value->try_ref()) {
+                found_thread = adopt_ref(*it->value);
+            }
+        }
     }
     return found_thread;
 }
