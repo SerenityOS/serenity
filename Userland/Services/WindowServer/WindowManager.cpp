@@ -99,7 +99,7 @@ const Gfx::Font& WindowManager::font() const
 
 const Gfx::Font& WindowManager::window_title_font() const
 {
-    return Gfx::FontDatabase::default_bold_font();
+    return Gfx::FontDatabase::default_font().bold_variant();
 }
 
 bool WindowManager::set_resolution(int width, int height, int scale)

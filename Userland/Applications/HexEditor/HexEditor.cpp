@@ -497,7 +497,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
         painter.draw_text(
             side_offset_rect,
             line,
-            is_current_line ? Gfx::FontDatabase::default_bold_font() : font(),
+            is_current_line ? font().bold_variant() : font(),
             Gfx::TextAlignment::TopLeft,
             is_current_line ? palette().ruler_active_text() : palette().ruler_inactive_text());
     }

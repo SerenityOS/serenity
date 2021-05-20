@@ -66,7 +66,8 @@ EditorWrapper::~EditorWrapper()
 
 void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
 {
-    m_filename_label->set_font(focus ? Gfx::FontDatabase::default_bold_font() : Gfx::FontDatabase::default_font());
+    auto& font = Gfx::FontDatabase::default_font();
+    m_filename_label->set_font(focus ? font.bold_variant() : font);
 }
 
 LanguageClient& EditorWrapper::language_client() { return m_editor->language_client(); }

@@ -65,7 +65,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     main_widget.layout()->set_margins({ 3, 3, 3, 1 });
 
     m_start_button = GUI::Button::construct("Serenity");
-    m_start_button->set_font(Gfx::FontDatabase::default_bold_font());
+    m_start_button->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_start_button->set_icon_spacing(0);
     m_start_button->set_fixed_size(80, 21);
     auto app_icon = GUI::Icon::default_icon("ladyball");

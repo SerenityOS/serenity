@@ -88,7 +88,7 @@ Card::Card(Type type, uint8_t value)
     }
 
     Gfx::Painter painter(m_front);
-    auto& font = Gfx::FontDatabase::default_bold_font();
+    auto& font = Gfx::FontDatabase::default_font().bold_variant();
 
     auto label = labels[value];
     m_front->fill(Color::White);

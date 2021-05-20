@@ -200,7 +200,7 @@ RefPtr<Gfx::Font> StyleProperties::font_fallback(bool monospace, bool bold) cons
         return Gfx::FontDatabase::default_fixed_width_font();
 
     if (bold)
-        return Gfx::FontDatabase::default_bold_font();
+        return Gfx::FontDatabase::default_font().bold_variant();
 
     return Gfx::FontDatabase::default_font();
 }

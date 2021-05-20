@@ -94,7 +94,7 @@ int Menu::content_width() const
     for (auto& item : m_items) {
         if (item.type() != MenuItem::Text)
             continue;
-        auto& use_font = item.is_default() ? Gfx::FontDatabase::default_bold_font() : font();
+        auto& use_font = item.is_default() ? font().bold_variant() : font();
         int text_width = use_font.width(Gfx::parse_ampersand_string(item.text()));
         if (!item.shortcut_text().is_empty()) {
             int shortcut_width = use_font.width(item.shortcut_text());
@@ -245,7 +245,7 @@ void Menu::draw()
             }
             auto& previous_font = painter.font();
             if (item.is_default())
-                painter.set_font(Gfx::FontDatabase::default_bold_font());
+                painter.set_font(previous_font.bold_variant());
             painter.draw_ui_text(text_rect, item.text(), painter.font(), Gfx::TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), Gfx::TextAlignment::CenterRight, text_color);

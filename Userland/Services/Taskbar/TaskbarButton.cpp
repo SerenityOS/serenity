@@ -89,7 +89,7 @@ void TaskbarButton::paint_event(GUI::PaintEvent& event)
 {
     VERIFY(icon());
     auto& icon = *this->icon();
-    auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
+    auto& font = is_checked() ? this->font().bold_variant() : this->font();
     auto& window = WindowList::the().ensure_window(m_identifier);
 
     GUI::Painter painter(*this);
