@@ -28,7 +28,6 @@ public:
     void notify_about_clipboard_change();
 
 private:
-    virtual void greet() override;
     virtual Messages::ClipboardServer::GetClipboardDataResponse get_clipboard_data() override;
     virtual void set_clipboard_data(Core::AnonymousBuffer const&, String const&, IPC::Dictionary const&) override;
 };
