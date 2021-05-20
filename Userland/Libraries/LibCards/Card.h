@@ -15,7 +15,7 @@
 #include <LibGfx/Rect.h>
 #include <ctype.h>
 
-namespace Solitaire {
+namespace Cards {
 
 class Card final : public Core::Object {
     C_OBJECT(Card)
@@ -74,28 +74,28 @@ private:
 }
 
 template<>
-struct AK::Formatter<Solitaire::Card> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Solitaire::Card& card)
+struct AK::Formatter<Cards::Card> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, const Cards::Card& card)
     {
         StringView type;
 
         switch (card.type()) {
-        case Solitaire::Card::Type::Clubs:
+        case Cards::Card::Type::Clubs:
             type = "C"sv;
             break;
-        case Solitaire::Card::Type::Diamonds:
+        case Cards::Card::Type::Diamonds:
             type = "D"sv;
             break;
-        case Solitaire::Card::Type::Hearts:
+        case Cards::Card::Type::Hearts:
             type = "H"sv;
             break;
-        case Solitaire::Card::Type::Spades:
+        case Cards::Card::Type::Spades:
             type = "S"sv;
             break;
         default:
             VERIFY_NOT_REACHED();
         }
 
-        Formatter<FormatString>::format(builder, "{:>2}{}", Solitaire::Card::labels[card.value()], type);
+        Formatter<FormatString>::format(builder, "{:>2}{}", Cards::Card::labels[card.value()], type);
     }
 };
