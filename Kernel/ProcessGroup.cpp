@@ -14,7 +14,9 @@ InlineLinkedList<ProcessGroup>* g_process_groups;
 ProcessGroup::~ProcessGroup()
 {
     ScopedSpinLock lock(g_process_groups_lock);
-    g_process_groups->remove(this);
+    if (m_next || m_prev) {
+        g_process_groups->remove(this);
+    }
 }
 
 RefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
