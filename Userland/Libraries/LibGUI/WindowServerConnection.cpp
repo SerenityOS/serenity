@@ -42,9 +42,16 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
 
 void WindowServerConnection::handshake()
 {
-    auto response = greet();
-    set_system_theme_from_anonymous_buffer(response.theme_buffer());
-    Desktop::the().did_receive_screen_rect({}, response.screen_rect());
+    // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.
+    //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
+    auto message = wait_for_specific_message<Messages::WindowClient::FastGreet>();
+    set_system_theme_from_anonymous_buffer(message->theme_buffer());
+    Desktop::the().did_receive_screen_rect({}, message->screen_rect());
+}
+
+void WindowServerConnection::fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&)
+{
+    // NOTE: This message is handled in handshake().
 }
 
 void WindowServerConnection::update_system_theme(Core::AnonymousBuffer const& theme_buffer)

@@ -1,5 +1,7 @@
 endpoint WindowClient
 {
+    fast_greet(Gfx::IntRect screen_rect, Core::AnonymousBuffer theme_buffer) =|
+
     paint(i32 window_id, Gfx::IntSize window_size, Vector<Gfx::IntRect> rects) =|
     mouse_move(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta, bool is_drag, Vector<String> mime_types) =|
     mouse_down(i32 window_id, Gfx::IntPoint mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
