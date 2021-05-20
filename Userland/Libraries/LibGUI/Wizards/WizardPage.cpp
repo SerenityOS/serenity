@@ -28,12 +28,12 @@ WizardPage::WizardPage(const String& title_text, const String& subtitle_text)
     header_widget.set_layout<VerticalBoxLayout>();
     header_widget.layout()->set_margins({ 30, 15, 30, 0 });
     m_title_label = header_widget.add<Label>(title_text);
-    m_title_label->set_font(Gfx::FontDatabase::the().default_bold_font());
-    m_title_label->set_fixed_height(Gfx::FontDatabase::the().default_bold_font().glyph_height() + 2);
+    m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
+    m_title_label->set_fixed_height(m_title_label->font().glyph_height() + 2);
     m_title_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
     m_subtitle_label = header_widget.add<Label>(subtitle_text);
     m_subtitle_label->set_text_alignment(Gfx::TextAlignment::TopLeft);
-    m_title_label->set_fixed_height(Gfx::FontDatabase::the().default_font().glyph_height());
+    m_subtitle_label->set_fixed_height(m_subtitle_label->font().glyph_height());
     header_widget.layout()->add_spacer();
 
     auto& separator = add<SeparatorWidget>(Gfx::Orientation::Horizontal);

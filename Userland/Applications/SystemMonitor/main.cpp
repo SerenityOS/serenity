@@ -456,7 +456,7 @@ NonnullRefPtr<GUI::Window> build_process_window(pid_t pid)
     }
 
     auto& process_name_label = hero_container.add<GUI::Label>();
-    process_name_label.set_font(Gfx::FontDatabase::default_bold_font());
+    process_name_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
     process_name_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     process_name_label.set_text(String::formatted("{} (PID {})",
         process_index.sibling_at_column(ProcessModel::Column::Name).data().to_string(),

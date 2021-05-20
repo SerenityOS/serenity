@@ -63,7 +63,7 @@ AboutDialog::AboutDialog(const StringView& name, const Gfx::Bitmap* icon, Window
         label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
         label.set_fixed_height(14);
         if (bold)
-            label.set_font(Gfx::FontDatabase::default_bold_font());
+            label.set_font(Gfx::FontDatabase::default_font().bold_variant());
     };
     make_label(m_name, true);
     // If we are displaying a dialog for an application, insert 'SerenityOS' below the application name
