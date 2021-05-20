@@ -199,7 +199,7 @@ String Move::to_algebraic() const
     }
 
     if (is_capture) {
-        if (piece.type == Type::Pawn)
+        if (piece.type == Type::Pawn && !is_ambiguous)
             builder.append(from.to_algebraic().substring(0, 1));
         builder.append("x");
     }
