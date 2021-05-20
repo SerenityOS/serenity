@@ -121,8 +121,8 @@ int main(int argc, char** argv)
             timer->stop();
     };
 
-    GUI::ActionGroup draw_settng_actions;
-    draw_settng_actions.set_exclusive(true);
+    GUI::ActionGroup draw_setting_actions;
+    draw_setting_actions.set_exclusive(true);
 
     auto single_card_draw_action = GUI::Action::create_checkable("&Single Card Draw", [&](auto&) {
         update_mode(Solitaire::Mode::SingleCardDraw);
@@ -130,7 +130,7 @@ int main(int argc, char** argv)
     });
     single_card_draw_action->set_checked(mode == Solitaire::Mode::SingleCardDraw);
     single_card_draw_action->set_status_tip("Draw one card at a time");
-    draw_settng_actions.add_action(single_card_draw_action);
+    draw_setting_actions.add_action(single_card_draw_action);
 
     auto three_card_draw_action = GUI::Action::create_checkable("&Three Card Draw", [&](auto&) {
         update_mode(Solitaire::Mode::ThreeCardDraw);
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     });
     three_card_draw_action->set_checked(mode == Solitaire::Mode::ThreeCardDraw);
     three_card_draw_action->set_status_tip("Draw three cards at a time");
-    draw_settng_actions.add_action(three_card_draw_action);
+    draw_setting_actions.add_action(three_card_draw_action);
 
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
