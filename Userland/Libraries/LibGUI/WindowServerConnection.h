@@ -27,6 +27,7 @@ public:
     static WindowServerConnection& the();
 
 private:
+    virtual void fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&) override;
     virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;
     virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, bool, Vector<String> const&) override;
     virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
