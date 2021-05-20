@@ -72,7 +72,7 @@ ShutdownDialog::ShutdownDialog()
     auto& label = right_container.add<GUI::Label>("What would you like to do?");
     label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     label.set_fixed_height(22);
-    label.set_font(Gfx::FontDatabase::default_bold_font());
+    label.set_font(Gfx::FontDatabase::default_font().bold_variant());
 
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
