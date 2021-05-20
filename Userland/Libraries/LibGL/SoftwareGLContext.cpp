@@ -979,6 +979,36 @@ void SoftwareGLContext::gl_alpha_func(GLenum func, GLclampf ref)
     m_rasterizer.set_options(options);
 }
 
+void SoftwareGLContext::gl_hint(GLenum target, GLenum mode)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_hint, target, mode);
+
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (target != GL_PERSPECTIVE_CORRECTION_HINT
+        && target != GL_POINT_SMOOTH_HINT
+        && target != GL_LINE_SMOOTH_HINT
+        && target != GL_POLYGON_SMOOTH_HINT
+        && target != GL_FOG_HINT
+        && target != GL_GENERATE_MIPMAP_HINT
+        && target != GL_TEXTURE_COMPRESSION_HINT) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    if (mode != GL_DONT_CARE
+        && mode != GL_FASTEST
+        && mode != GL_NICEST) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    // According to the spec implementors are free to ignore glHint. So we do.
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

@@ -62,10 +62,15 @@ GLenum glGetError()
 
 void glFlush()
 {
-    return g_gl_context->gl_flush();
+    g_gl_context->gl_flush();
 }
 
 void glFinish()
 {
-    return g_gl_context->gl_finish();
+    g_gl_context->gl_finish();
+}
+
+void glHint(GLenum target, GLenum mode)
+{
+    g_gl_context->gl_hint(target, mode);
 }
