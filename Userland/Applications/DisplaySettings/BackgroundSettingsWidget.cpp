@@ -26,7 +26,6 @@ namespace DisplaySettings {
 
 BackgroundSettingsWidget::BackgroundSettingsWidget()
 {
-    m_modes.append("simple");
     m_modes.append("tile");
     m_modes.append("center");
     m_modes.append("stretch");
@@ -96,10 +95,10 @@ void BackgroundSettingsWidget::load_current_settings()
         m_monitor_widget->set_wallpaper(selected_wallpaper);
     }
 
-    auto mode = ws_config->read_entry("Background", "Mode", "simple");
+    auto mode = ws_config->read_entry("Background", "Mode", "center");
     if (!m_modes.contains_slow(mode)) {
-        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'simple'", mode);
-        mode = "simple";
+        warnln("Invalid background mode '{}' in WindowServer config, falling back to 'center'", mode);
+        mode = "center";
     }
     m_monitor_widget->set_wallpaper_mode(mode);
     m_mode_combo->set_selected_index(m_modes.find_first_index(mode).value_or(0));
