@@ -50,15 +50,6 @@ host_env() {
     enable_ccache
 }
 
-# Sanity check.
-if [ ! -f "${DESTDIR}/usr/lib/libc.so" ]; then
-    echo "libc.so could not be found. This likely means that SerenityOS:"
-    echo "- has not been built and/or installed yet"
-    echo "- has been installed in an unexpected location"
-    echo "The currently configured build directory is ${SERENITY_BUILD_DIR}. Resolve this issue and try again."
-    exit 1
-fi
-
 packagesdb="${DESTDIR}/usr/Ports/packages.db"
 
 . "$@"
@@ -83,13 +74,27 @@ run_nocd() {
     echo "+ $@ (nocd)"
     ("$@")
 }
+
 run() {
     echo "+ $@"
     (cd "$workdir" && "$@")
 }
+
 run_replace_in_file() {
     run perl -p -i -e "$1" $2
 }
+
+ensure_build() {
+    # Sanity check.
+    if [ ! -f "${DESTDIR}/usr/lib/libc.so" ]; then
+        echo "libc.so could not be found. This likely means that SerenityOS:"
+        echo "- has not been built and/or installed yet"
+        echo "- has been installed in an unexpected location"
+        echo "The currently configured build directory is ${SERENITY_BUILD_DIR}. Resolve this issue and try again."
+        exit 1
+    fi
+}
+
 install_launcher() {
     if [ -z "$launcher_name" ] || [ -z "${launcher_category}" ] || [ -z "${launcher_command}" ]; then
         return
@@ -374,6 +379,7 @@ do_patch() {
     patch_internal
 }
 do_configure() {
+    ensure_build
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port!"
         pre_configure
@@ -384,10 +390,12 @@ do_configure() {
     fi
 }
 do_build() {
+    ensure_build
     echo "Building $port!"
     build
 }
 do_install() {
+    ensure_build
     echo "Installing $port!"
     install
     post_install
