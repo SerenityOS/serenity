@@ -1986,9 +1986,8 @@ UNMAP_AFTER_INIT void Processor::smp_enable()
 void Processor::smp_cleanup_message(ProcessorMessage& msg)
 {
     switch (msg.type) {
-    case ProcessorMessage::CallbackWithData:
-        if (msg.callback_with_data.free)
-            msg.callback_with_data.free(msg.callback_with_data.data);
+    case ProcessorMessage::Callback:
+        msg.callback_value().~Function();
         break;
     default:
         break;
@@ -2027,10 +2026,7 @@ bool Processor::smp_process_pending_messages()
 
             switch (msg->type) {
             case ProcessorMessage::Callback:
-                msg->callback.handler();
-                break;
-            case ProcessorMessage::CallbackWithData:
-                msg->callback_with_data.handler(msg->callback_with_data.data);
+                msg->invoke_callback();
                 break;
             case ProcessorMessage::FlushTlb:
                 if (is_user_address(VirtualAddress(msg->flush_tlb.ptr))) {
@@ -2125,25 +2121,12 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
     smp_return_to_pool(msg);
 }
 
-void Processor::smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async)
+void Processor::smp_broadcast(Function<void()> callback, bool async)
 {
     auto& msg = smp_get_from_pool();
     msg.async = async;
-    msg.type = ProcessorMessage::CallbackWithData;
-    msg.callback_with_data.handler = callback;
-    msg.callback_with_data.data = data;
-    msg.callback_with_data.free = free_data;
-    smp_broadcast_message(msg);
-    if (!async)
-        smp_broadcast_wait_sync(msg);
-}
-
-void Processor::smp_broadcast(void (*callback)(), bool async)
-{
-    auto& msg = smp_get_from_pool();
-    msg.async = async;
-    msg.type = ProcessorMessage::CallbackWithData;
-    msg.callback.handler = callback;
+    msg.type = ProcessorMessage::Callback;
+    new (msg.callback_storage) ProcessorMessage::CallbackFunction(move(callback));
     smp_broadcast_message(msg);
     if (!async)
         smp_broadcast_wait_sync(msg);
@@ -2180,21 +2163,11 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     }
 }
 
-void Processor::smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async)
+void Processor::smp_unicast(u32 cpu, Function<void()> callback, bool async)
 {
     auto& msg = smp_get_from_pool();
-    msg.type = ProcessorMessage::CallbackWithData;
-    msg.callback_with_data.handler = callback;
-    msg.callback_with_data.data = data;
-    msg.callback_with_data.free = free_data;
-    smp_unicast_message(cpu, msg, async);
-}
-
-void Processor::smp_unicast(u32 cpu, void (*callback)(), bool async)
-{
-    auto& msg = smp_get_from_pool();
-    msg.type = ProcessorMessage::CallbackWithData;
-    msg.callback.handler = callback;
+    msg.type = ProcessorMessage::Callback;
+    new (msg.callback_storage) ProcessorMessage::CallbackFunction(move(callback));
     smp_unicast_message(cpu, msg, async);
 }
 
