@@ -21,7 +21,6 @@ namespace Kernel {
 class PS2KeyboardDevice final : public IRQHandler
     , public KeyboardDevice
     , public I8042Device {
-    AK_MAKE_ETERNAL
 public:
     static RefPtr<PS2KeyboardDevice> try_to_initialize(const I8042Controller&);
     virtual ~PS2KeyboardDevice() override;
