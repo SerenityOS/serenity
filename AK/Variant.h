@@ -81,7 +81,7 @@ struct Variant<IndexType, InitialIndex> {
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
     template<typename Visitor, IndexType CurrentIndex = 0>
-    static constexpr inline decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    static constexpr decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
