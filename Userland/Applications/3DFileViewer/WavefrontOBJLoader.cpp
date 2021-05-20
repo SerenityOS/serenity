@@ -9,19 +9,15 @@
 #include <LibCore/File.h>
 #include <stdlib.h>
 
-RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
+RefPtr<Mesh> WavefrontOBJLoader::load(Core::File& file)
 {
-    auto obj_file_or_error = Core::File::open(fname, Core::OpenMode::ReadOnly);
     Vector<Vertex> vertices;
     Vector<Triangle> triangles;
 
-    dbgln("Wavefront: Loading {}...", fname);
-
-    if (obj_file_or_error.is_error())
-        return nullptr;
+    dbgln("Wavefront: Loading {}...", file.name());
 
     // Start reading file line by line
-    for (auto line = obj_file_or_error.value()->line_begin(); !line.at_end(); ++line) {
+    for (auto line = file.line_begin(); !line.at_end(); ++line) {
         auto object_line = *line;
 
         // FIXME: Parse texture coordinates and vertex normals
@@ -67,7 +63,7 @@ RefPtr<Mesh> WavefrontOBJLoader::load(const String& fname)
     }
 
     if (vertices.is_empty()) {
-        dbgln("Wavefront: Failed to read any data from 3D file: {}", fname);
+        dbgln("Wavefront: Failed to read any data from 3D file: {}", file.name());
         return nullptr;
     }
 
