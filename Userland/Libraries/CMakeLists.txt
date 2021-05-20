@@ -1,6 +1,7 @@
 add_subdirectory(LibArchive)
 add_subdirectory(LibAudio)
 add_subdirectory(LibC)
+add_subdirectory(LibCards)
 add_subdirectory(LibChess)
 add_subdirectory(LibCompress)
 add_subdirectory(LibCore)

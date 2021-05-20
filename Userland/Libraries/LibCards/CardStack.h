@@ -10,7 +10,7 @@
 #include <AK/Format.h>
 #include <AK/Vector.h>
 
-namespace Solitaire {
+namespace Cards {
 
 class CardStack final {
 public:
@@ -88,25 +88,25 @@ private:
 }
 
 template<>
-struct AK::Formatter<Solitaire::CardStack> : Formatter<FormatString> {
-    void format(FormatBuilder& builder, const Solitaire::CardStack& stack)
+struct AK::Formatter<Cards::CardStack> : Formatter<FormatString> {
+    void format(FormatBuilder& builder, const Cards::CardStack& stack)
     {
         StringView type;
 
         switch (stack.type()) {
-        case Solitaire::CardStack::Type::Stock:
+        case Cards::CardStack::Type::Stock:
             type = "Stock"sv;
             break;
-        case Solitaire::CardStack::Type::Normal:
+        case Cards::CardStack::Type::Normal:
             type = "Normal"sv;
             break;
-        case Solitaire::CardStack::Type::Foundation:
+        case Cards::CardStack::Type::Foundation:
             type = "Foundation"sv;
             break;
-        case Solitaire::CardStack::Type::Waste:
+        case Cards::CardStack::Type::Waste:
             type = "Waste"sv;
             break;
-        case Solitaire::CardStack::Type::Play:
+        case Cards::CardStack::Type::Play:
             type = "Play"sv;
             break;
         default:

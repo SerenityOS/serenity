@@ -9,7 +9,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 
-namespace Solitaire {
+namespace Cards {
 
 static const NonnullRefPtr<Gfx::CharacterBitmap> s_diamond = Gfx::CharacterBitmap::create_from_ascii(
     "    #    "
@@ -75,7 +75,7 @@ Card::Card(Type type, uint8_t value)
         Gfx::Painter bg_painter(*s_background);
 
         s_background->fill(Color::White);
-        auto image = Gfx::Bitmap::load_from_file("/res/icons/solitaire/buggie-deck.png");
+        auto image = Gfx::Bitmap::load_from_file("/res/icons/cards/buggie-deck.png");
         VERIFY(!image.is_null());
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());

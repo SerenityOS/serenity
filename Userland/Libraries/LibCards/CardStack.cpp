@@ -6,7 +6,7 @@
 
 #include "CardStack.h"
 
-namespace Solitaire {
+namespace Cards {
 
 CardStack::CardStack()
     : m_position({ 0, 0 })
