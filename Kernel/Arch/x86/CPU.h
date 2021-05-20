@@ -574,23 +574,17 @@ struct MemoryManagerData;
 struct ProcessorMessageEntry;
 
 struct ProcessorMessage {
+    using CallbackFunction = Function<void()>;
+
     enum Type {
         FlushTlb,
         Callback,
-        CallbackWithData
     };
     Type type;
     volatile u32 refs; // atomic
     union {
         ProcessorMessage* next; // only valid while in the pool
-        struct {
-            void (*handler)();
-        } callback;
-        struct {
-            void* data;
-            void (*handler)(void*);
-            void (*free)(void*);
-        } callback_with_data;
+        alignas(CallbackFunction) u8 callback_storage[sizeof(CallbackFunction)];
         struct {
             const PageDirectory* page_directory;
             u8* ptr;
@@ -601,6 +595,17 @@ struct ProcessorMessage {
     volatile bool async;
 
     ProcessorMessageEntry* per_proc_entries;
+
+    CallbackFunction& callback_value()
+    {
+        return *bit_cast<CallbackFunction*>(&callback_storage);
+    }
+
+    void invoke_callback()
+    {
+        VERIFY(type == Type::Callback);
+        callback_value()();
+    }
 };
 
 struct ProcessorMessageEntry {
@@ -942,39 +947,8 @@ public:
     static void smp_enable();
     bool smp_process_pending_messages();
 
-    template<typename Callback>
-    static void smp_broadcast(Callback callback, bool async)
-    {
-        auto* data = new Callback(move(callback));
-        smp_broadcast(
-            [](void* data) {
-                (*reinterpret_cast<Callback*>(data))();
-            },
-            data,
-            [](void* data) {
-                delete reinterpret_cast<Callback*>(data);
-            },
-            async);
-    }
-    static void smp_broadcast(void (*callback)(), bool async);
-    static void smp_broadcast(void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
-    template<typename Callback>
-    static void smp_unicast(u32 cpu, Callback callback, bool async)
-    {
-        auto* data = new Callback(move(callback));
-        smp_unicast(
-            cpu,
-            [](void* data) {
-                (*reinterpret_cast<Callback*>(data))();
-            },
-            data,
-            [](void* data) {
-                delete reinterpret_cast<Callback*>(data);
-            },
-            async);
-    }
-    static void smp_unicast(u32 cpu, void (*callback)(), bool async);
-    static void smp_unicast(u32 cpu, void (*callback)(void*), void* data, void (*free_data)(void*), bool async);
+    static void smp_broadcast(Function<void()>, bool async);
+    static void smp_unicast(u32 cpu, Function<void()>, bool async);
     static void smp_broadcast_flush_tlb(const PageDirectory*, VirtualAddress, size_t);
     static u32 smp_wake_n_idle_processors(u32 wake_count);
 
