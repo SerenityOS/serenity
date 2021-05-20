@@ -46,7 +46,7 @@ AddEventDialog::AddEventDialog(Core::DateTime date_time, Window* parent_window)
     auto& add_label = top_container.add<GUI::Label>("Add title & date:");
     add_label.set_text_alignment(Gfx::TextAlignment::CenterLeft);
     add_label.set_fixed_height(14);
-    add_label.set_font(Gfx::FontDatabase::default_bold_font());
+    add_label.set_font(Gfx::FontDatabase::default_font().bold_variant());
 
     auto& event_title_textbox = top_container.add<GUI::TextBox>();
     event_title_textbox.set_fixed_height(20);

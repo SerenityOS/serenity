@@ -82,7 +82,7 @@ NotificationWindow::NotificationWindow(i32 client_id, const String& text, const 
     left_container.set_layout<GUI::VerticalBoxLayout>();
 
     m_title_label = &left_container.add<GUI::Label>(title);
-    m_title_label->set_font(Gfx::FontDatabase::default_bold_font());
+    m_title_label->set_font(Gfx::FontDatabase::default_font().bold_variant());
     m_title_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);
     m_text_label = &left_container.add<GUI::Label>(text);
     m_text_label->set_text_alignment(Gfx::TextAlignment::CenterLeft);

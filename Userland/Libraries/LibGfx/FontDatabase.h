@@ -35,7 +35,6 @@ public:
     static FontDatabase& the();
 
     static Font& default_font();
-    static Font& default_bold_font();
 
     static Font& default_fixed_width_font();
     static Font& default_bold_fixed_width_font();

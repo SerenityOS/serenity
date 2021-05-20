@@ -45,7 +45,7 @@ public:
 
         if (role == GUI::ModelRole::Font) {
             if (index.column() == 0) {
-                return Gfx::FontDatabase::default_bold_font();
+                return Gfx::FontDatabase::default_font().bold_variant();
             }
         }
 

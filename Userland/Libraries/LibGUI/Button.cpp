@@ -75,7 +75,7 @@ void Button::paint_event(PaintEvent& event)
             painter.blit_disabled(icon_location, *m_icon, m_icon->rect(), palette());
         }
     }
-    auto& font = is_checked() ? Gfx::FontDatabase::default_bold_font() : this->font();
+    auto& font = is_checked() ? this->font().bold_variant() : this->font();
     if (m_icon && !text().is_empty()) {
         content_rect.translate_by(m_icon->width() + icon_spacing(), 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - icon_spacing());

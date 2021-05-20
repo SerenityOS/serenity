@@ -23,7 +23,7 @@ HeaderView::HeaderView(AbstractTableView& table_view, Gfx::Orientation orientati
     : m_table_view(table_view)
     , m_orientation(orientation)
 {
-    set_font(Gfx::FontDatabase::default_bold_font());
+    set_font(Gfx::FontDatabase::default_font().bold_variant());
 
     if (m_orientation == Gfx::Orientation::Horizontal) {
         set_fixed_height(16);
