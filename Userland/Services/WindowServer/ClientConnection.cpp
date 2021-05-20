@@ -53,6 +53,8 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
     if (!s_connections)
         s_connections = new HashMap<int, NonnullRefPtr<ClientConnection>>;
     s_connections->set(client_id, *this);
+
+    async_fast_greet(Screen::the().rect(), Gfx::current_system_theme_buffer());
 }
 
 ClientConnection::~ClientConnection()
@@ -679,11 +681,6 @@ void ClientConnection::start_window_resize(i32 window_id)
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
     WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
-}
-
-Messages::WindowServer::GreetResponse ClientConnection::greet()
-{
-    return { Screen::the().rect(), Gfx::current_system_theme_buffer() };
 }
 
 Messages::WindowServer::StartDragResponse ClientConnection::start_drag(String const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)

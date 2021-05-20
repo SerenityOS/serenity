@@ -88,7 +88,6 @@ private:
     void set_unresponsive(bool);
     void destroy_window(Window&, Vector<i32>& destroyed_window_ids);
 
-    virtual Messages::WindowServer::GreetResponse greet() override;
     virtual void create_menubar(i32) override;
     virtual void destroy_menubar(i32) override;
     virtual void create_menu(i32, String const&) override;
