@@ -27,8 +27,9 @@
 static constexpr u16 RENDER_WIDTH = 640;
 static constexpr u16 RENDER_HEIGHT = 480;
 
-class GLContextWidget final : public GUI::Widget {
-    C_OBJECT(GLContextWidget)
+class GLContextWidget final : public GUI::Frame {
+    C_OBJECT(GLContextWidget);
+
 public:
     bool load(const String& fname);
 
@@ -74,9 +75,11 @@ private:
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.draw_scaled_bitmap(rect(), *m_bitmap, m_bitmap->rect());
+    painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect());
 }
 
 void GLContextWidget::timer_event(Core::TimerEvent&)
@@ -151,10 +154,9 @@ int main(int argc, char** argv)
     // Construct the main window
     auto window = GUI::Window::construct();
     auto app_icon = GUI::Icon::default_icon("app-3d-file-viewer");
-
     window->set_icon(app_icon.bitmap_for_size(16));
     window->set_title("3D File Viewer");
-    window->resize(640, 480);
+    window->resize(640 + 4, 480 + 4);
     window->set_resizable(false);
     window->set_double_buffering_enabled(true);
     auto& widget = window->set_main_widget<GLContextWidget>();
