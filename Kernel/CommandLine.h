@@ -77,6 +77,9 @@ public:
 private:
     CommandLine(const String&);
 
+    void add_arguments(const Vector<String>& args);
+    void build_commandline(const String& cmdline_from_bootloader);
+
     String m_string;
     HashMap<String, String> m_params;
 };
