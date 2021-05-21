@@ -182,6 +182,7 @@ public:
     }
 
     bool update_theme(String theme_path, String theme_name);
+    void invalidate_after_theme_or_font_change();
 
     bool set_hovered_window(Window*);
     void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);

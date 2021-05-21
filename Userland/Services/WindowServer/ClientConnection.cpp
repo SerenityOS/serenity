@@ -706,6 +706,27 @@ Messages::WindowServer::GetSystemThemeResponse ClientConnection::get_system_them
     return name;
 }
 
+Messages::WindowServer::SetSystemFontsResponse ClientConnection::set_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
+{
+    if (!Gfx::FontDatabase::the().get_by_name(default_font_query)
+        || !Gfx::FontDatabase::the().get_by_name(fixed_width_font_query)) {
+        dbgln("Received unusable font queries: '{}' and '{}'", default_font_query, fixed_width_font_query);
+        return false;
+    }
+
+    dbgln("Updating fonts: '{}' and '{}'", default_font_query, fixed_width_font_query);
+
+    Gfx::FontDatabase::set_default_font_query(default_font_query);
+    Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
+
+    ClientConnection::for_each_client([&](auto& client) {
+        client.async_update_system_fonts(default_font_query, fixed_width_font_query);
+    });
+
+    WindowManager::the().invalidate_after_theme_or_font_change();
+    return true;
+}
+
 void ClientConnection::set_window_base_size_and_size_increment(i32 window_id, Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment)
 {
     auto it = m_windows.find(window_id);
