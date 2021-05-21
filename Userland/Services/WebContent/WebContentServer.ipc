@@ -3,6 +3,7 @@ endpoint WebContentServer
     greet() => ()
 
     update_system_theme(Core::AnonymousBuffer theme_buffer) =|
+    update_system_fonts(String default_font_query, String fixed_width_font_query) =|
     update_screen_rect(Gfx::IntRect rect) =|
 
     load_url(URL url) =|

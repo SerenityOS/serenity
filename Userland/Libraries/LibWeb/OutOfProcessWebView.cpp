@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,6 +15,7 @@
 #include <LibGUI/Painter.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Window.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 
@@ -69,6 +70,7 @@ void OutOfProcessWebView::create_client()
     };
 
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
+    client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
     client().async_update_screen_rect(GUI::Desktop::the().rect());
 }
 

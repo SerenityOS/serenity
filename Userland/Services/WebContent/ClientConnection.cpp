@@ -7,6 +7,7 @@
 #include <AK/Badge.h>
 #include <AK/Debug.h>
 #include <LibGfx/Bitmap.h>
+#include <LibGfx/FontDatabase.h>
 #include <LibGfx/SystemTheme.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/Heap.h>
@@ -67,6 +68,12 @@ void ClientConnection::update_system_theme(const Core::AnonymousBuffer& theme_bu
     Gfx::set_system_theme(theme_buffer);
     auto impl = Gfx::PaletteImpl::create_with_anonymous_buffer(theme_buffer);
     m_page_host->set_palette_impl(*impl);
+}
+
+void ClientConnection::update_system_fonts(String const& default_font_query, String const& fixed_width_font_query)
+{
+    Gfx::FontDatabase::set_default_font_query(default_font_query);
+    Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
 }
 
 void ClientConnection::update_screen_rect(const Gfx::IntRect& rect)

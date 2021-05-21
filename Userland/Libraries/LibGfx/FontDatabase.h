@@ -37,6 +37,11 @@ public:
     static Font& default_font();
     static Font& default_fixed_width_font();
 
+    static String default_font_query();
+    static String fixed_width_font_query();
+    static void set_default_font_query(String);
+    static void set_fixed_width_font_query(String);
+
     RefPtr<Gfx::Font> get(const String& family, unsigned size, unsigned weight);
     RefPtr<Gfx::Font> get(const String& family, const String& variant, unsigned size);
     RefPtr<Gfx::Font> get_by_name(const StringView&);
