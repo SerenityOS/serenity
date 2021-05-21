@@ -19,8 +19,6 @@ class Project {
     AK_MAKE_NONMOVABLE(Project);
 
 public:
-    ~Project();
-
     static OwnPtr<Project> open_with_root_path(const String& root_path);
 
     GUI::FileSystemModel& model() { return *m_model; }
