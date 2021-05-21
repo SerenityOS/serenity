@@ -152,7 +152,18 @@ jobs:
         echo "::group::ninja run # Qemu output"
         ninja run
         echo "::endgroup::"
-      timeout-minutes: 20
+        echo "::group::Verify Output File"
+        mkdir fsmount
+        sudo mount -t ext2 -o loop,rw _disk_image fsmount
+        echo "Results: "
+        sudo cat fsmount/home/anon/test-results.log
+        if ! sudo grep -q "Failed: 0" fsmount/home/anon/test-results.log
+        then
+          echo "::error :^( Tests failed, failing job"
+          exit 1
+        fi
+        echo "::endgroup::"
+      timeout-minutes: 30
 
     - name: Print Target Logs
       # Extremely useful if Serenity hangs trying to run one of the tests
