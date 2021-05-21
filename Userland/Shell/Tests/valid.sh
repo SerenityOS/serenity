@@ -65,8 +65,8 @@ word_count=(() | wc -w)
 if not test "$(echo well hello friends $word_count)" -eq 3  { fail variable containing pipeline }
 
 # Globs
-mkdir sh-test
-pushd sh-test
+mkdir -p /tmp/sh-test
+pushd /tmp/sh-test
     touch (a b c)(d e f)
     if not test "$(echo a*)" = "ad ae af"  { fail '*' glob expansion }
     if not test "$(echo a?)" = "ad ae af"  { fail '?' glob expansion }
@@ -78,7 +78,7 @@ pushd sh-test
     if not test "$(echo x(a*))" = "xad xae xaf"  { fail globs in lists do not resolve to lists }
     if not test "$(echo "foo"a*)" = "fooad fooae fooaf"  { fail globs join to dquoted strings }
 popd
-rm -fr sh-test
+rm -fr /tmp/sh-test
 
 # Setopt
 setopt --inline_exec_keep_empty_segments
