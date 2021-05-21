@@ -61,7 +61,6 @@ void Tab::start_download(const URL& url)
     window->set_resizable(false);
     window->set_main_widget<DownloadWidget>(url);
     window->show();
-    [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
 void Tab::view_source(const URL& url, const String& source)
@@ -76,7 +75,6 @@ void Tab::view_source(const URL& url, const String& source)
     window->set_title(url.to_string());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
     window->show();
-    [[maybe_unused]] auto& unused = window.leak_ref();
 }
 
 Tab::Tab(BrowserWindow& window, Type type)
