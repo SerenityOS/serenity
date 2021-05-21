@@ -100,7 +100,7 @@ static void build(InstructionDescriptor* table, u8 op, const char* mnemonic, Ins
     case OP_AX_moff16:
     case OP_EAX_moff32:
     case OP_NEAR_imm:
-        d.imm1_bytes = InstructionDescriptor::CurrentAddressSize;
+        d.imm1_bytes = CurrentAddressSize;
         break;
     //default:
     case InvalidFormat:

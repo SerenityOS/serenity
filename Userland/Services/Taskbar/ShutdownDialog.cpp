@@ -5,7 +5,7 @@
  */
 
 #include "ShutdownDialog.h"
-#include <AK/StringView.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
@@ -17,7 +17,7 @@
 #include <LibGfx/FontDatabase.h>
 
 struct Option {
-    StringView title;
+    String title;
     Vector<char const*> cmd;
     bool enabled;
     bool default_action;
