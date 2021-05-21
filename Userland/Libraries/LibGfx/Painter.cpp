@@ -427,6 +427,51 @@ void Painter::draw_circle_arc_intersecting(const IntRect& a_rect, const IntPoint
     return draw_circle_arc_intersecting(a_rect, center, radius - 1, color, thickness - 1);
 }
 
+void Painter::draw_circle_arc(const IntPoint& p1, const IntPoint& p2, const IntPoint& center, int radius, Color color, int thickness, RotationDirection orientation)
+{
+    if (thickness <= 0)
+        return;
+
+    if (thickness > radius)
+        thickness = radius;
+
+    auto start = p1;
+    auto end = p2;
+
+    if (orientation == RotationDirection::CounterClockwise)
+        swap(start, end);
+
+    auto start_relative = start - center;
+    auto end_relative = end - center;
+
+    double theta_1 = atan2(start_relative.y(), start_relative.x());
+    double theta_2 = atan2(end_relative.y(), end_relative.x());
+
+    // To always go around clockwise
+    while (theta_2 < theta_1)
+        theta_2 += 2 * M_PI;
+
+    double delta_theta = fabs(theta_2 - theta_1);
+
+    // Each line segment will be ~1 unit long
+    double theta_step = atan(1 / (double)radius);
+
+    IntPoint current_point = start_relative;
+    IntPoint next_point = { 0, 0 };
+
+    for (double theta = theta_step, theta_moved = fabs(theta_step); theta_moved <= delta_theta; theta += theta_step, theta_moved += fabs(theta_step)) {
+        next_point.set_x(cos(theta_1 + theta) * radius);
+        next_point.set_y(sin(theta_1 + theta) * radius);
+
+        // FIXME: For very thick arcs this could be insufficient.
+        draw_line(center + current_point, center + next_point, color, thickness);
+
+        current_point = next_point;
+    }
+
+    draw_line(center + current_point, end, color, thickness);
+}
+
 void Painter::fill_ellipse(const IntRect& a_rect, Color color)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.

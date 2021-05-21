@@ -73,6 +73,12 @@ public:
     void draw_glyph_or_emoji(const IntPoint&, u32 code_point, const Font&, Color);
     void draw_circle_arc_intersecting(const IntRect&, const IntPoint&, int radius, Color, int thickness);
 
+    enum RotationDirection {
+        CounterClockwise,
+        Clockwise
+    };
+    void draw_circle_arc(const IntPoint&, const IntPoint&, const IntPoint& center, int radius, Color, int thickness, RotationDirection direction = RotationDirection::CounterClockwise);
+
     enum class CornerOrientation {
         TopLeft,
         TopRight,
