@@ -17,6 +17,7 @@
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
+#include <Kernel/PCI/Definitions.h>
 #include <Kernel/UserOrKernelBuffer.h>
 
 namespace Kernel {
@@ -73,10 +74,12 @@ public:
 
 protected:
     NetworkAdapter();
-    void set_interface_name(const StringView& basename);
+    void set_interface_name(const PCI::Address&);
     void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
     virtual void send_raw(ReadonlyBytes) = 0;
     void did_receive(ReadonlyBytes);
+
+    void set_loopback_name();
 
 private:
     static Lockable<HashTable<NetworkAdapter*>>& all_adapters();

@@ -166,7 +166,7 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address
     : PCI::Device(address, irq)
     , m_io_base(PCI::get_BAR0(pci_address()) & ~3)
 {
-    set_interface_name("ne2k");
+    set_interface_name(address);
 
     dmesgln("NE2000: Found @ {}", pci_address());
 
