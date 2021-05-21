@@ -24,6 +24,11 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     // FIXME: This should be an accessor property
     define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
     define_native_property(vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
+<<<<<<< HEAD
+=======
+    define_native_property(vm.names.byteLength, byte_length_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.BYTES_PER_ELEMENT, bytes_per_element_getter, nullptr, 0); // FIXME: This should just be a normal property and not a getter.
+>>>>>>> 6be44bc62... LibJS: Expose TypedArray.prototype.byteLength
     define_native_function(vm.names.at, at, 1, attr);
 }
 
@@ -83,6 +88,18 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
     return Value(array_buffer);
+}
+
+// https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+    auto* array_buffer = typed_array->viewed_array_buffer();
+    VERIFY(array_buffer);
+    // FIXME: If array_buffer is detached, return 0.
+    return Value(typed_array->byte_length());
 }
 
 }
