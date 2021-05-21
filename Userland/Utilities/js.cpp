@@ -294,6 +294,8 @@ static void print_array_buffer(const JS::Object& object, HashTable<JS::Object*>&
     print_type("ArrayBuffer");
     out("\n  byteLength: ");
     print_value(JS::Value((double)byte_length), seen_objects);
+    if (!byte_length)
+        return;
     outln();
     for (size_t i = 0; i < byte_length; ++i) {
         out("{:02x}", buffer[i]);
