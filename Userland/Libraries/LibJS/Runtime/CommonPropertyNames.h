@@ -59,6 +59,7 @@ namespace JS {
     P(bind)                                  \
     P(buffer)                                \
     P(byteLength)                            \
+    P(byteOffset)                            \
     P(call)                                  \
     P(callee)                                \
     P(cbrt)                                  \
