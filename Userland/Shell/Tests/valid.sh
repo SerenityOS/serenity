@@ -65,6 +65,7 @@ word_count=(() | wc -w)
 if not test "$(echo well hello friends $word_count)" -eq 3  { fail variable containing pipeline }
 
 # Globs
+rm -fr /tmp/sh-test 2> /dev/null
 mkdir -p /tmp/sh-test
 pushd /tmp/sh-test
     touch (a b c)(d e f)
