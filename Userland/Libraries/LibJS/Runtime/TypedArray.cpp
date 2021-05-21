@@ -194,6 +194,8 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     PrototypeName::PrototypeName(GlobalObject& global_object)                                                                          \
         : Object(*global_object.typed_array_prototype())                                                                               \
     {                                                                                                                                  \
+        auto& vm = this->vm();                                                                                                         \
+        define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                                      \
     }                                                                                                                                  \
     PrototypeName::~PrototypeName() { }                                                                                                \
                                                                                                                                        \
