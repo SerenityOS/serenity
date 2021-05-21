@@ -23,6 +23,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
 
     // FIXME: This should be an accessor property
     define_native_property(vm.names.length, length_getter, nullptr, Attribute::Configurable);
+    define_native_property(vm.names.buffer, buffer_getter, nullptr, Attribute::Configurable);
     define_native_function(vm.names.at, at, 1, attr);
 }
 
@@ -71,6 +72,17 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::at)
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
     return typed_array->get(index.value());
+}
+
+// https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::buffer_getter)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+    auto* array_buffer = typed_array->viewed_array_buffer();
+    VERIFY(array_buffer);
+    return Value(array_buffer);
 }
 
 }

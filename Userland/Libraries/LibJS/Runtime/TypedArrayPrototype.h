@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_GETTER(length_getter);
+    JS_DECLARE_NATIVE_GETTER(buffer_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(at);
 };
