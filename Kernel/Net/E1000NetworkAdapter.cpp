@@ -176,7 +176,7 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
     , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX", Region::Access::Read | Region::Access::Write))
 {
-    set_interface_name("e1k");
+    set_interface_name(address);
 
     dmesgln("E1000: Found @ {}", pci_address());
 

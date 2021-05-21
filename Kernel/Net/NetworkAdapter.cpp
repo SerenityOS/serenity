@@ -218,15 +218,18 @@ void NetworkAdapter::set_ipv4_gateway(const IPv4Address& gateway)
     m_ipv4_gateway = gateway;
 }
 
-void NetworkAdapter::set_interface_name(const StringView& basename)
+void NetworkAdapter::set_interface_name(const PCI::Address& pci_address)
 {
-    for (int i = 0; i < NumericLimits<int>::max(); i++) {
-        auto name = String::formatted("{}{}", basename, i);
-        if (!lookup_by_name(name)) {
-            m_name = name;
-            break;
-        }
-    }
+    // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
+    auto name = String::formatted("ep{}s{}", pci_address.bus(), pci_address.device());
+    VERIFY(!lookup_by_name(name));
+    m_name = move(name);
 }
 
+void NetworkAdapter::set_loopback_name()
+{
+    auto name = String("loop");
+    VERIFY(!lookup_by_name(name));
+    m_name = move(name);
+}
 }
