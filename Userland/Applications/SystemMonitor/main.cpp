@@ -243,7 +243,7 @@ int main(int argc, char** argv)
     };
 
     auto kill_action = GUI::Action::create(
-        "Kill process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"), [&](const GUI::Action&) {
+        "&Kill Process", { Mod_Ctrl, Key_K }, Gfx::Bitmap::load_from_file("/res/icons/16x16/kill.png"), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGKILL);
@@ -251,7 +251,7 @@ int main(int argc, char** argv)
         &process_table_view);
 
     auto stop_action = GUI::Action::create(
-        "Stop process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
+        "&Stop Process", { Mod_Ctrl, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/stop-hand.png"), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGSTOP);
@@ -259,7 +259,7 @@ int main(int argc, char** argv)
         &process_table_view);
 
     auto continue_action = GUI::Action::create(
-        "Continue process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"), [&](const GUI::Action&) {
+        "&Continue Process", { Mod_Ctrl, Key_C }, Gfx::Bitmap::load_from_file("/res/icons/16x16/continue.png"), [&](const GUI::Action&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1)
                 kill(pid, SIGCONT);
@@ -267,7 +267,7 @@ int main(int argc, char** argv)
         &process_table_view);
 
     auto profile_action = GUI::Action::create(
-        "Profile process", { Mod_Ctrl, Key_P },
+        "&Profile Process", { Mod_Ctrl, Key_P },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-profiler.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {
@@ -285,7 +285,7 @@ int main(int argc, char** argv)
         &process_table_view);
 
     auto inspect_action = GUI::Action::create(
-        "Inspect process", { Mod_Ctrl, Key_I },
+        "&Inspect Process", { Mod_Ctrl, Key_I },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
             pid_t pid = selected_id(ProcessModel::Column::PID);
             if (pid != -1) {

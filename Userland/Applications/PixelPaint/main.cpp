@@ -225,7 +225,7 @@ int main(int argc, char** argv)
 
     auto& layer_menu = menubar->add_menu("&Layer");
     layer_menu.add_action(GUI::Action::create(
-        "&New Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
+        "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto layer = PixelPaint::Layer::create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
@@ -320,7 +320,7 @@ int main(int argc, char** argv)
             }
         }
     }));
-    blur_submenu.add_action(GUI::Action::create("&Gaussian Blur (5x5)", [&](auto&) {
+    blur_submenu.add_action(GUI::Action::create("G&aussian Blur (5x5)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
             Gfx::SpatialGaussianBlurFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::SpatialGaussianBlurFilter<5>>::get()) {
@@ -338,7 +338,7 @@ int main(int argc, char** argv)
             }
         }
     }));
-    blur_submenu.add_action(GUI::Action::create("&Box Blur (5x5)", [&](auto&) {
+    blur_submenu.add_action(GUI::Action::create("B&ox Blur (5x5)", [&](auto&) {
         if (auto* layer = image_editor.active_layer()) {
             Gfx::BoxBlurFilter<5> filter;
             if (auto parameters = PixelPaint::FilterParameters<Gfx::BoxBlurFilter<5>>::get()) {

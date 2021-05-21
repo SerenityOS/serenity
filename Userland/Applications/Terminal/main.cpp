@@ -328,7 +328,7 @@ int main(int argc, char** argv)
         });
 
     terminal.context_menu().add_separator();
-    auto pick_font_action = GUI::Action::create("Terminal &Font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
+    auto pick_font_action = GUI::Action::create("&Terminal Font...", Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"),
         [&](auto&) {
             auto picker = GUI::FontPicker::construct(window, &terminal.font(), true);
             if (picker->exec() == GUI::Dialog::ExecOK) {

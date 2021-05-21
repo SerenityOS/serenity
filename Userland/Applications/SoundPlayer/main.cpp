@@ -72,12 +72,12 @@ int main(int argc, char** argv)
         }
     }));
 
-    auto linear_volume_slider = GUI::Action::create_checkable("Nonlinear volume slider", [&](auto& action) {
+    auto linear_volume_slider = GUI::Action::create_checkable("&Nonlinear Volume Slider", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_nonlinear_volume_slider(action.is_checked());
     });
     file_menu.add_action(linear_volume_slider);
 
-    auto playlist_toggle = GUI::Action::create_checkable("Show playlist", [&](auto& action) {
+    auto playlist_toggle = GUI::Action::create_checkable("&Show Playlist", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_playlist_visible(action.is_checked());
     });
     playlist_menu.add_action(playlist_toggle);
@@ -85,7 +85,7 @@ int main(int argc, char** argv)
         playlist_toggle->set_checked(true);
     playlist_menu.add_separator();
 
-    auto playlist_loop_toggle = GUI::Action::create_checkable("Loop playlist", [&](auto& action) {
+    auto playlist_loop_toggle = GUI::Action::create_checkable("&Loop Playlist", [&](auto& action) {
         static_cast<SoundPlayerWidgetAdvancedView*>(player)->set_looping_playlist(action.is_checked());
     });
     playlist_menu.add_action(playlist_loop_toggle);
@@ -97,7 +97,7 @@ int main(int argc, char** argv)
 
     auto& playback_menu = menubar->add_menu("&Playback");
 
-    auto loop = GUI::Action::create_checkable("Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
+    auto loop = GUI::Action::create_checkable("&Loop", { Mod_Ctrl, Key_R }, [&](auto& action) {
         player->set_looping_file(action.is_checked());
     });
 
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     GUI::Action* checked_vis = nullptr;
     auto uncheck_all_but = [&](GUI::Action& one) {for (auto& a : visualization_checkmarks) if (a != &one) a->set_checked(false); };
 
-    auto bars = GUI::Action::create_checkable("Bars", [&](auto& action) {
+    auto bars = GUI::Action::create_checkable("&Bars", [&](auto& action) {
         uncheck_all_but(action);
         if (checked_vis == &action) {
             action.set_checked(true);
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     visualization_menu.add_action(bars);
     visualization_checkmarks.append(bars);
 
-    auto samples = GUI::Action::create_checkable("Samples", [&](auto& action) {
+    auto samples = GUI::Action::create_checkable("&Samples", [&](auto& action) {
         uncheck_all_but(action);
         if (checked_vis == &action) {
             action.set_checked(true);
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
     visualization_menu.add_action(samples);
     visualization_checkmarks.append(samples);
 
-    auto none = GUI::Action::create_checkable("None", [&](auto& action) {
+    auto none = GUI::Action::create_checkable("&None", [&](auto& action) {
         uncheck_all_but(action);
         if (checked_vis == &action) {
             action.set_checked(true);

@@ -131,7 +131,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     });
     m_paste_action->set_swallow_key_event_when_disabled(true);
 
-    m_clear_including_history_action = GUI::Action::create("&Clear Including History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
+    m_clear_including_history_action = GUI::Action::create("Clear Including &History", { Mod_Ctrl | Mod_Shift, Key_K }, [this](auto&) {
         clear_including_history();
     });
 

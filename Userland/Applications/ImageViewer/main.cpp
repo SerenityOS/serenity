@@ -185,7 +185,7 @@ int main(int argc, char** argv)
             GUI::Desktop::the().set_wallpaper(widget.path());
         });
 
-    auto go_first_action = GUI::Action::create("Go to &First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
+    auto go_first_action = GUI::Action::create("&Go to First", { Mod_None, Key_Home }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-first.png"),
         [&](auto&) {
             widget.navigate(ViewWidget::Directions::First);
         });

@@ -114,7 +114,7 @@ MainWidget::MainWidget()
         }
     });
 
-    m_find_previous_action = GUI::Action::create("Find &Previous", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"), [&](auto&) {
+    m_find_previous_action = GUI::Action::create("Find Pr&evious", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-previous.png"), [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty())
             return;
@@ -137,7 +137,7 @@ MainWidget::MainWidget()
         }
     });
 
-    m_replace_action = GUI::Action::create("&Replace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
+    m_replace_action = GUI::Action::create("Rep&lace", { Mod_Ctrl, Key_F1 }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto substitute = m_replace_textbox->text();
         if (needle.is_empty())
@@ -511,7 +511,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
 
     view_menu.add_separator();
 
-    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("Visualize &Trailing Whitespace", [&](auto&) {
+    m_visualize_trailing_whitespace_action = GUI::Action::create_checkable("&Visualize Trailing Whitespace", [&](auto&) {
         m_editor->set_visualize_trailing_whitespace(m_visualize_trailing_whitespace_action->is_checked());
     });
     m_visualize_leading_whitespace_action = GUI::Action::create_checkable("Visualize &Leading Whitespace", [&](auto&) {

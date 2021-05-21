@@ -226,7 +226,7 @@ void IRCAppWindow::setup_actions()
             m_client->handle_kick_user_action(window->channel().name(), nick_value, reason_value.characters());
     });
 
-    m_cycle_channel_action = GUI::Action::create("Cycle Channel", [this](auto&) {
+    m_cycle_channel_action = GUI::Action::create("C&ycle Channel", [this](auto&) {
         auto* window = m_client->current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             return;
