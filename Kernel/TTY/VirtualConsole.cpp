@@ -128,7 +128,7 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
     set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
     m_console_impl.set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
 
-    // Allocate twice of the max row * max column * sizeof(Cell) to ensure we can some sort of history mechanism...
+    // Allocate twice of the max row * max column * sizeof(Cell) to ensure we can have some sort of history mechanism...
     auto size = GraphicsManagement::the().console()->max_column() * GraphicsManagement::the().console()->max_row() * sizeof(Cell) * 2;
     m_cells = MM.allocate_kernel_region(page_round_up(size), "Virtual Console Cells", Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
 
