@@ -113,6 +113,11 @@ public:
         return OutputFileStream { Core::File::standard_output() };
     }
 
+    static OutputFileStream standard_error()
+    {
+        return OutputFileStream { Core::File::standard_error() };
+    }
+
     static Buffered<OutputFileStream> stdout_buffered()
     {
         return Buffered<OutputFileStream> { Core::File::standard_output() };
