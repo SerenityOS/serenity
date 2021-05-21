@@ -78,6 +78,7 @@ constexpr static CellTypeDialog::VerticalAlignment vertical_alignment_from(Gfx::
     case Gfx::TextAlignment::TopLeft:
         return CellTypeDialog::VerticalAlignment::Top;
 
+    case Gfx::TextAlignment::BottomLeft:
     case Gfx::TextAlignment::BottomRight:
         return CellTypeDialog::VerticalAlignment::Bottom;
     }
@@ -91,13 +92,14 @@ constexpr static CellTypeDialog::HorizontalAlignment horizontal_alignment_from(G
     case Gfx::TextAlignment::Center:
         return CellTypeDialog::HorizontalAlignment::Center;
 
-    case Gfx::TextAlignment::CenterRight:
     case Gfx::TextAlignment::TopRight:
+    case Gfx::TextAlignment::CenterRight:
     case Gfx::TextAlignment::BottomRight:
         return CellTypeDialog::HorizontalAlignment::Right;
 
     case Gfx::TextAlignment::TopLeft:
     case Gfx::TextAlignment::CenterLeft:
+    case Gfx::TextAlignment::BottomLeft:
         return CellTypeDialog::HorizontalAlignment::Left;
     }
 
