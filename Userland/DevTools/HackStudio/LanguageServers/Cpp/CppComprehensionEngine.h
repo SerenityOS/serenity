@@ -101,8 +101,8 @@ private:
     Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
 
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
-    Optional<Vector<GUI::AutocompleteProvider::Entry>> autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
+    Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
 };

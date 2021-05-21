@@ -76,17 +76,17 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
     if (!node->parent())
         return {};
 
-    auto results = autocomplete_property(document, *node, containing_token);
+    auto results = try_autocomplete_property(document, *node, containing_token);
     if (results.has_value())
         return results.value();
 
-    results = autocomplete_name(document, *node, containing_token);
+    results = try_autocomplete_name(document, *node, containing_token);
     if (results.has_value())
         return results.value();
     return {};
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::autocomplete_name(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_name(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
 {
     auto partial_text = String::empty();
     if (containing_token.has_value() && containing_token.value().type() != Token::Type::ColonColon) {
@@ -95,7 +95,7 @@ Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::autoc
     return autocomplete_name(document, node, partial_text);
 }
 
-Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::autocomplete_property(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_property(const DocumentData& document, const ASTNode& node, Optional<Token> containing_token) const
 {
     if (!containing_token.has_value())
         return {};
