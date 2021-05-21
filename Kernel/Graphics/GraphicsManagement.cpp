@@ -16,6 +16,7 @@
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/IO.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Panic.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {
@@ -140,6 +141,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         }
         display_adapter->initialize_framebuffer_devices();
     });
+    if (m_graphics_devices.is_empty()) {
+        dbgln("No graphics adapter was initialized.");
+        return false;
+    }
     return true;
 }
 
