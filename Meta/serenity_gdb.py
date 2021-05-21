@@ -159,6 +159,25 @@ class AKHashMapPrettyPrinter:
         return elements
 
 
+class AKInlineLinkedList:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val.type.name
+
+    def children(self):
+        node_type_ptr = self.val.type.template_argument(0).pointer()
+
+        elements = []
+        node = self.val["m_head"]
+        while node != 0:
+            elements.append(node.cast(node_type_ptr))
+            node = node["m_next"]
+
+        return [(f"[{i}]", elements[i].dereference()) for i in range(len(elements))]
+
+
 class VirtualAddress:
     def __init__(self, val):
         self.val = val
@@ -187,6 +206,8 @@ class SerenityPrettyPrinterLocator(gdb.printing.PrettyPrinter):
             return AKAtomic(val)
         elif klass == 'AK::DistinctNumeric':
             return AKDistinctNumeric(val)
+        elif klass == 'AK::InlineLinkedList':
+            return AKInlineLinkedList(val)
         elif klass == 'AK::HashMap':
             return AKHashMapPrettyPrinter(val)
         elif klass == 'AK::RefCounted':
