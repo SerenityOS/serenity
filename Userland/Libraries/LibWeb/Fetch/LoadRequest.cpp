@@ -43,7 +43,7 @@ bool is_safe_method(const String& method)
 
 LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
 {
-    LoadRequest request(url);
+    LoadRequest request(url, page);
 
     if (page) {
         String cookie = page->client().page_did_request_cookie(url, Cookie::Source::Http);

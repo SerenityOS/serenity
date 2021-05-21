@@ -375,7 +375,14 @@ void FrameLoader::resource_did_load()
         }
     }
 
-    document->set_content_type("text/html");
+    auto document = DOM::Document::create();
+    document->set_url(url);
+    document->set_encoding("windows-1252");
+
+    if (mime_type.has_value())
+        document->set_content_type(mime_type.value().essence());
+    else
+        document->set_content_type("text/html");
 
     browsing_context().set_active_document(document);
 

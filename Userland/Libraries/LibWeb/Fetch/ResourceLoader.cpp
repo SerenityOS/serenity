@@ -12,10 +12,15 @@
 #include <LibCore/File.h>
 #include <LibProtocol/Request.h>
 #include <LibProtocol/RequestClient.h>
+#include <LibWeb/Cookie/Cookie.h>
 #include <LibWeb/Fetch/ContentFilter.h>
 #include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/Fetch/Response.h>
+#include <LibWeb/Page/Page.h>
+#include <LibWeb/Cookie/ParsedCookie.h>
+#include <LibWeb/Page/Frame.h>
+#include <LibWeb/DOM/Document.h>
 
 namespace Web::Fetch {
 
@@ -253,7 +258,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
 
 void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
-    LoadRequest request(url);
+    LoadRequest request(url, nullptr);
     load(request, move(success_callback), move(error_callback));
 }
 
@@ -280,7 +285,7 @@ void ResourceLoader::clear_cache()
 }
 
 // https://fetch.spec.whatwg.org/#concept-fetch
-// FIXME: This should contain an instance of the fetch algorithm. This instance can be terminated, suspended and resumed.
+// FIXME: This should create an instance of the fetch algorithm. This instance can be terminated, suspended and resumed.
 void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_request_body, ProcessRequestEndOfBodyType process_request_end_of_body, ProcessReponseType process_response, ProcessResponseEndOfBodyType process_response_end_of_body, ProcessResponseDoneType process_response_done, [[maybe_unused]] bool use_parallel_queue)
 {
     // FIXME: Let taskDestination be null.
@@ -314,6 +319,17 @@ void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_
     request.set_window(LoadRequest::Window::NoWindow);
 
     // FIXME: If request’s origin is "client", then set request’s origin to request’s client’s origin.
+    if (request.origin().has<LoadRequest::OriginEnum>()) {
+        VERIFY(request.client());
+        // FIXME: This is complete guess work until environment settings objects are implemented.
+        if (!request.is_navigation_request()) {
+            VERIFY(request.client()->focused_frame().document());
+            request.set_origin(request.client()->focused_frame().document()->origin());
+        } else {
+            request.set_origin(Origin::create_from_url(request.url()));
+        }
+    }
+
     // FIXME: If request’s policy container is "client", then:
     //          If request’s client is non-null, then set request’s policy container to a clone of request’s client’s policy container. [HTML]
     //          Otherwise, set request’s policy container to a new policy container.
@@ -685,7 +701,13 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
         request.append_header("Accept-Encoding", "gzip, deflate");
 
     if (include_credentials) {
-        // FIXME: Append cookies here instead of create_request_for_page
+        // FIXME: If not configured to block cookies:
+        if (request.client()) {
+            // FIXME: Is this the correct source?
+            auto cookie = request.client()->client().page_did_request_cookie(request.current_url(), Cookie::Source::Http);
+            if (!cookie.is_empty())
+                request.append_header("Cookie", cookie);
+        }
 
         if (!request.headers().contains("Authorization")) {
             // FIXME: Let authorizationValue be null.
@@ -730,6 +752,7 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
             return Response::create_network_error({});
 
         // FIXME: Handle proxy authentication
+        TODO();
     }
 
     // Handle HTTP status 421 - Misdirected Request
@@ -747,7 +770,7 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
 }
 
 // https://fetch.spec.whatwg.org/#concept-http-network-fetch
-RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_params, [[maybe_unused]] bool include_credentials, [[maybe_unused]] bool force_new_connection)
+RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_params, bool include_credentials, [[maybe_unused]] bool force_new_connection)
 {
     auto& request = fetch_params.request;
     RefPtr<Response> response;
@@ -798,6 +821,31 @@ RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_par
     };
 
     loop.exec();
+
+    // FIXME: Use Streams instead of just getting all the data at once.
+
+    // FIXME: Run these steps, but abort when the ongoing fetch is terminated:
+    //          Set response’s body to a new body whose stream is stream.
+    //          If response is not a network error and request’s cache mode is not "no-store", then update response in httpCache for request.
+    if (include_credentials /* FIXME: and not configured to block cookies */) {
+        if (request.client()) {
+            for (auto& header : request.headers()) {
+                if (header.name.equals_ignoring_case("Set-Cookie")) {
+                    auto cookie = Cookie::parse_cookie(header.value);
+                    if (!cookie.has_value())
+                        continue;
+
+                    // FIXME: Is this the correct source?
+                    request.client()->client().page_did_set_cookie(request.current_url(), cookie.value(), Cookie::Source::Http);
+                }
+            }
+        }
+    }
+
+    // FIXME: If aborted, then:
+    //          Let aborted be the termination’s aborted flag.
+    //          If aborted is set, then set response’s aborted flag.
+    //          Return response.
 
     return response;
 }

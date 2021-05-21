@@ -154,8 +154,14 @@ Optional<MimeType> MimeType::parse_from_string(String const& input)
                 continue;
         }
 
+        dbgln("parser param name: {} value: {}", parameter_name, parameter_value);
+
         if (!parameter_name.is_empty() && consists_of_only_http_token_code_points(parameter_name) && consists_of_only_http_quoted_string_token_code_points(parameter_value) && !mime_type.m_parameters.contains(parameter_name))
             mime_type.m_parameters.set(parameter_name, parameter_value);
+
+        for (auto& parameter : mime_type.m_parameters) {
+            dbgln("parameter name: {} value: {}", parameter.key, parameter.value);
+        }
     }
 
     return mime_type;

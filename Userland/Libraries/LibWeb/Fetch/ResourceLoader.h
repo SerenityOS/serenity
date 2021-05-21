@@ -54,6 +54,7 @@ public:
     void clear_cache();
 
     void fetch(LoadRequest&, ProcessRequestBodyType, ProcessRequestEndOfBodyType, ProcessReponseType, ProcessResponseEndOfBodyType, ProcessResponseDoneType, bool use_parallel_queue = false);
+    void fetch_sync(LoadRequest&, ProcessRequestBodyType, ProcessRequestEndOfBodyType, ProcessReponseType, ProcessResponseEndOfBodyType, ProcessResponseDoneType, bool use_parallel_queue = false);
 
 private:
     ResourceLoader(NonnullRefPtr<Protocol::RequestClient> protocol_client);

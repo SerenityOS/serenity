@@ -146,20 +146,33 @@ Optional<Core::MimeType> HeaderList::extract_mime_type() const
 
     auto values = get_decode_and_split("Content-Type");
     dbgln("empty? {}", values.is_empty());
+    for (auto& header : m_list) {
+        dbgln("name: {} value: {}", header.name, header.value);
+    }
+    for (auto& value : values) {
+        dbgln("ct value: {}", value);
+    }
     if (values.is_empty())
         return {};
 
     for (auto& value : values) {
         auto temporary_mime_type = Core::MimeType::parse_from_string(value);
+        dbgln("has mime type? {}", temporary_mime_type.has_value());
         if (!temporary_mime_type.has_value() || temporary_mime_type.value().essence() == "*/*")
             continue;
         mime_type = temporary_mime_type.value();
+        dbgln("essence: {} parameter length: {}", mime_type.essence(), mime_type.parameters().size());
+
+        for (auto& parameter : mime_type.parameters()) {
+            dbgln("parameter name: {} value: {}", parameter.key, parameter.value);
+        }
 
         if (mime_type.essence() != essence) {
             charset = {};
             auto character_parameter_iterator = mime_type.parameters().find("charset");
             if (character_parameter_iterator != mime_type.parameters().end())
                 charset = character_parameter_iterator->value;
+            dbgln("charset? {}", charset);
             essence = mime_type.essence();
         } else {
             if (!charset.is_null()) {
