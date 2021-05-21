@@ -54,7 +54,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
         s_connections = new HashMap<int, NonnullRefPtr<ClientConnection>>;
     s_connections->set(client_id, *this);
 
-    async_fast_greet(Screen::the().rect(), Gfx::current_system_theme_buffer());
+    async_fast_greet(Screen::the().rect(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
 }
 
 ClientConnection::~ClientConnection()

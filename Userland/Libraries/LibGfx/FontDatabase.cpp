@@ -24,24 +24,55 @@ FontDatabase& FontDatabase::the()
     return *s_the;
 }
 
+static RefPtr<Font> s_default_font;
+static String s_default_font_query;
+static RefPtr<Font> s_fixed_width_font;
+static String s_fixed_width_font_query;
+
+void FontDatabase::set_default_font_query(String query)
+{
+    if (s_default_font_query == query)
+        return;
+    s_default_font_query = move(query);
+    s_default_font = nullptr;
+}
+
+String FontDatabase::default_font_query()
+{
+    return s_default_font_query;
+}
+
 Font& FontDatabase::default_font()
 {
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Katica 10 400");
-        VERIFY(font);
+    if (!s_default_font) {
+        VERIFY(!s_default_font_query.is_empty());
+        s_default_font = FontDatabase::the().get_by_name(s_default_font_query);
+        VERIFY(s_default_font);
     }
-    return *font;
+    return *s_default_font;
+}
+
+void FontDatabase::set_fixed_width_font_query(String query)
+{
+    if (s_fixed_width_font_query == query)
+        return;
+    s_fixed_width_font_query = move(query);
+    s_fixed_width_font = nullptr;
+}
+
+String FontDatabase::fixed_width_font_query()
+{
+    return s_fixed_width_font_query;
 }
 
 Font& FontDatabase::default_fixed_width_font()
 {
-    static Font* font;
-    if (!font) {
-        font = FontDatabase::the().get_by_name("Csilla 10 400");
-        VERIFY(font);
+    if (!s_fixed_width_font) {
+        VERIFY(!s_fixed_width_font_query.is_empty());
+        s_fixed_width_font = FontDatabase::the().get_by_name(s_fixed_width_font_query);
+        VERIFY(s_fixed_width_font);
     }
-    return *font;
+    return *s_fixed_width_font;
 }
 
 struct FontDatabase::Private {
