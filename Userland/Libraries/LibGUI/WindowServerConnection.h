@@ -27,7 +27,7 @@ public:
     static WindowServerConnection& the();
 
 private:
-    virtual void fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&) override;
+    virtual void fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&, String const&, String const&) override;
     virtual void paint(i32, Gfx::IntSize const&, Vector<Gfx::IntRect> const&) override;
     virtual void mouse_move(i32, Gfx::IntPoint const&, u32, u32, u32, i32, bool, Vector<String> const&) override;
     virtual void mouse_down(i32, Gfx::IntPoint const&, u32, u32, u32, i32) override;
@@ -54,6 +54,7 @@ private:
     virtual void drag_accepted() override;
     virtual void drag_cancelled() override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
+    virtual void update_system_fonts(String const&, String const&) override;
     virtual void window_state_changed(i32, bool, bool) override;
     virtual void display_link_notification() override;
     virtual void ping() override;

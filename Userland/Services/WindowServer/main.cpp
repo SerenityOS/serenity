@@ -62,6 +62,9 @@ int main(int, char**)
     Gfx::set_system_theme(theme);
     auto palette = Gfx::PaletteImpl::create_with_anonymous_buffer(theme);
 
+    Gfx::FontDatabase::set_default_font_query("Katica 10 400");
+    Gfx::FontDatabase::set_fixed_width_font_query("Csilla 10 400");
+
     WindowServer::EventLoop loop;
 
     if (pledge("stdio video thread sendfd recvfd accept rpath wpath cpath proc", nullptr) < 0) {
