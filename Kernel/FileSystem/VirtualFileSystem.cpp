@@ -941,13 +941,19 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
     if (path.is_empty())
         return EINVAL;
 
-    auto parts = path.split_view('/', true);
+    GenericLexer path_lexer(path);
     auto current_process = Process::current();
     auto& current_root = current_process->root_directory();
 
     NonnullRefPtr<Custody> custody = path[0] == '/' ? current_root : base;
+    bool extra_iteration = path[path.length() - 1] == '/';
 
-    for (size_t i = 0; i < parts.size(); ++i) {
+    while (!path_lexer.is_eof() || extra_iteration) {
+        if (path_lexer.is_eof())
+            extra_iteration = false;
+        auto part = path_lexer.consume_until('/');
+        path_lexer.consume_specific('/');
+
         Custody& parent = custody;
         auto parent_metadata = parent.inode().metadata();
         if (!parent_metadata.is_directory())
@@ -956,8 +962,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
         if (!parent_metadata.may_execute(*current_process))
             return EACCES;
 
-        auto& part = parts[i];
-        bool have_more_parts = i + 1 < parts.size();
+        bool have_more_parts = !path_lexer.is_eof() || extra_iteration;
 
         if (part == "..") {
             // If we encounter a "..", take a step back, but don't go beyond the root.
