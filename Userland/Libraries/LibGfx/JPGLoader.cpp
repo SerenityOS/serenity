@@ -861,20 +861,20 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
 
 static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& macroblocks)
 {
-    const float m0 = 2.0 * cos(1.0 / 16.0 * 2.0 * M_PI);
-    const float m1 = 2.0 * cos(2.0 / 16.0 * 2.0 * M_PI);
-    const float m3 = 2.0 * cos(2.0 / 16.0 * 2.0 * M_PI);
-    const float m5 = 2.0 * cos(3.0 / 16.0 * 2.0 * M_PI);
-    const float m2 = m0 - m5;
-    const float m4 = m0 + m5;
-    const float s0 = cos(0.0 / 16.0 * M_PI) / sqrt(8);
-    const float s1 = cos(1.0 / 16.0 * M_PI) / 2.0;
-    const float s2 = cos(2.0 / 16.0 * M_PI) / 2.0;
-    const float s3 = cos(3.0 / 16.0 * M_PI) / 2.0;
-    const float s4 = cos(4.0 / 16.0 * M_PI) / 2.0;
-    const float s5 = cos(5.0 / 16.0 * M_PI) / 2.0;
-    const float s6 = cos(6.0 / 16.0 * M_PI) / 2.0;
-    const float s7 = cos(7.0 / 16.0 * M_PI) / 2.0;
+    static const float m0 = 2.0 * cos(1.0 / 16.0 * 2.0 * M_PI);
+    static const float m1 = 2.0 * cos(2.0 / 16.0 * 2.0 * M_PI);
+    static const float m3 = 2.0 * cos(2.0 / 16.0 * 2.0 * M_PI);
+    static const float m5 = 2.0 * cos(3.0 / 16.0 * 2.0 * M_PI);
+    static const float m2 = m0 - m5;
+    static const float m4 = m0 + m5;
+    static const float s0 = cos(0.0 / 16.0 * M_PI) / sqrt(8);
+    static const float s1 = cos(1.0 / 16.0 * M_PI) / 2.0;
+    static const float s2 = cos(2.0 / 16.0 * M_PI) / 2.0;
+    static const float s3 = cos(3.0 / 16.0 * M_PI) / 2.0;
+    static const float s4 = cos(4.0 / 16.0 * M_PI) / 2.0;
+    static const float s5 = cos(5.0 / 16.0 * M_PI) / 2.0;
+    static const float s6 = cos(6.0 / 16.0 * M_PI) / 2.0;
+    static const float s7 = cos(7.0 / 16.0 * M_PI) / 2.0;
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {

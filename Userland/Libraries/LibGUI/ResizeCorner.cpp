@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-static constexpr char s_resize_corner_shadows_data[] = {
+static const char* s_resize_corner_shadows_data = {
     "                "
     "             ## "
     "             #  "
@@ -31,7 +31,7 @@ static constexpr char s_resize_corner_shadows_data[] = {
     "                "
 };
 
-static constexpr char s_resize_corner_highlights_data[] = {
+static const char* s_resize_corner_highlights_data = {
     "                "
     "                "
     "              # "
@@ -52,8 +52,8 @@ static constexpr char s_resize_corner_highlights_data[] = {
 
 static Gfx::CharacterBitmap* s_resize_corner_shadows_bitmap;
 static Gfx::CharacterBitmap* s_resize_corner_highlights_bitmap;
-static constexpr int s_resize_corner_bitmap_width = 16;
-static constexpr int s_resize_corner_bitmap_height = 16;
+static const int s_resize_corner_bitmap_width = 16;
+static const int s_resize_corner_bitmap_height = 16;
 
 ResizeCorner::ResizeCorner()
 {

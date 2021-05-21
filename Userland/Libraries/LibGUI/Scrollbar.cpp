@@ -15,7 +15,7 @@ REGISTER_WIDGET(GUI, Scrollbar)
 
 namespace GUI {
 
-static constexpr char s_up_arrow_bitmap_data[] = {
+static const char* s_up_arrow_bitmap_data = {
     "         "
     "    #    "
     "   ###   "
@@ -27,7 +27,7 @@ static constexpr char s_up_arrow_bitmap_data[] = {
     "         "
 };
 
-static constexpr char s_down_arrow_bitmap_data[] = {
+static const char* s_down_arrow_bitmap_data = {
     "         "
     "   ###   "
     "   ###   "
@@ -39,7 +39,7 @@ static constexpr char s_down_arrow_bitmap_data[] = {
     "         "
 };
 
-static constexpr char s_left_arrow_bitmap_data[] = {
+static const char* s_left_arrow_bitmap_data = {
     "         "
     "    #    "
     "   ##    "
@@ -51,7 +51,7 @@ static constexpr char s_left_arrow_bitmap_data[] = {
     "         "
 };
 
-static constexpr char s_right_arrow_bitmap_data[] = {
+static const char* s_right_arrow_bitmap_data = {
     "         "
     "    #    "
     "    ##   "
