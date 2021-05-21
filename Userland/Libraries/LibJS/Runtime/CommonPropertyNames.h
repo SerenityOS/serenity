@@ -57,6 +57,7 @@ namespace JS {
     P(atan2)                                 \
     P(atanh)                                 \
     P(bind)                                  \
+    P(buffer)                                \
     P(byteLength)                            \
     P(call)                                  \
     P(callee)                                \
