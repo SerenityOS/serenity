@@ -4,9 +4,9 @@ source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
 
-rm -rf shell-test 2> /dev/null
-mkdir shell-test
-cd shell-test
+rm -rf /tmp/shell-test 2> /dev/null
+mkdir -p /tmp/shell-test
+pushd /tmp/shell-test
 
     touch a b c
 
@@ -38,7 +38,7 @@ cd shell-test
     if not test "$(cat listing)" = "TRUE!" { fail if cannot be correctly redirected from }
     rm listing
 
-cd ..
-rm -rf shell-test
+popd
+rm -rf /tmp/shell-test
 
 echo PASS

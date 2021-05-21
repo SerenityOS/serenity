@@ -2,9 +2,9 @@
 
 source $(dirname "$0")/test-commons.inc
 
-rm -rf shell-test
-mkdir -p shell-test
-cd shell-test
+rm -rf /tmp/shell-test 2> /dev/null
+mkdir -p /tmp/shell-test
+pushd /tmp/shell-test
 
     time sleep 1 2>timeerr >timeout
     cat timeout
@@ -15,7 +15,7 @@ cd shell-test
     time ls 2> /dev/null | head > timeout
     if not test -n "$(cat timeout)" { fail "'time' stdout not piped correctly" }
 
-cd ..
-rm -rf shell-test # TODO: Remove this file at the end once we have `trap'
+popd
+rm -rf /tmp/shell-test # TODO (#7339): Remove this file at the end once we have `trap'
 
 echo PASS
