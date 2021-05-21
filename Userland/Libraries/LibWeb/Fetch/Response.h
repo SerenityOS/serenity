@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,8 +50,8 @@ public:
         Validated,
     };
 
-    static NonnullRefPtr<Response> create(Badge<ResourceLoader>, Type, const LoadRequest&);
-    static NonnullRefPtr<Response> create_network_error(Badge<ResourceLoader>, const LoadRequest&);
+    static NonnullRefPtr<Response> create(Badge<ResourceLoader>, Type);
+    static NonnullRefPtr<Response> create_network_error(Badge<ResourceLoader>);
     virtual ~Response();
 
     Type type() const { return m_type; }
@@ -59,16 +60,17 @@ public:
     bool is_network_error() const { return m_new_type == NewType::Error; }
     bool is_aborted_network_error() const { return m_new_type == NewType::Error && m_aborted; }
 
-    bool has_encoded_data() const { return !m_encoded_data.is_empty(); }
+    bool has_encoded_data() const { return !m_body.is_null(); }
 
-    const AK::URL& url() const
+    Optional<URL> url() const
     {
-        // FIXME
-//        if (m_url_list.is_empty())
-//            return {}; // FIXME: Returns local temp object!!
+        if (m_url_list.is_empty())
+            return {}; // FIXME: Returns local temp object!!
         return m_url_list.last();
     }
-    const ByteBuffer& encoded_data() const { return m_encoded_data; }
+
+    const ReadonlyBytes& body() const { return m_body; }
+    void set_body(const ReadonlyBytes& body) { m_body = body; }
 
 //    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
@@ -78,7 +80,7 @@ public:
     void unregister_client(Badge<ResourceClient>, ResourceClient&);
 
 //    const String& encoding() const { return m_encoding; }
-//    const String& mime_type() const { return m_mime_type; }
+    Optional<Core::MimeType> mime_type() const { return m_header_list.extract_mime_type(); }
 
     void for_each_client(Function<void(ResourceClient&)>);
 
@@ -86,15 +88,24 @@ public:
     void did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code);
 
     const HTTP::HeaderList& header_list() const { return m_header_list; }
+    void set_header_list(Badge<ResourceLoader>, const HTTP::HeaderList& header_list) { m_header_list = header_list; }
 
+    // https://fetch.spec.whatwg.org/#redirect-status
     bool has_redirect_status() const
     {
         return m_status == 301 || m_status == 302 || m_status == 303 || m_status == 307 || m_status == 308;
     }
 
+    // https://fetch.spec.whatwg.org/#null-body-status
+    bool has_null_body_status() const
+    {
+        return m_status == 101 || m_status == 204 || m_status == 205 || m_status == 304;
+    }
+
     void set_timing_info(Badge<ResourceLoader>, const FetchTimingInfo& timing_info) { m_timing_info = timing_info; }
 
-    NonnullRefPtr<Response> to_filtered_response() const;
+    NonnullRefPtr<Response> to_filtered_response(LoadRequest::ResponseTainting) const;
+    bool is_filtered_response() const { return !!m_internal_response; }
 
     [[nodiscard]] bool should_be_blocked_due_to_mime_type(const LoadRequest&) const;
     [[nodiscard]] bool should_be_blocked_due_to_nosniff(const LoadRequest&) const;
@@ -124,8 +135,29 @@ public:
         m_header_list.append(name, value);
     }
 
+    void set_status(Badge<ResourceLoader>, u32 status) { m_status = status; }
+
+    bool range_requested() const { return m_range_requested; }
+    void set_range_requested(Badge<ResourceLoader>, bool range_requested) { m_range_requested = range_requested; }
+
+    // NOTE: This is an intentional copy, as the spec always makes a copy.
+    void set_url_list(Badge<ResourceLoader>, const Vector<URL>& url_list) { m_url_list = url_list; }
+    void set_url_list(const Vector<URL>& url_list) { m_url_list = url_list; } // FIXME: REMOVE
+
+    u32 status() const { return m_status; }
+
+    Optional<URL> location_url(String const& request_fragment) const;
+
+    NonnullRefPtr<Response> clone() const;
+
+    void set_timing_allow_passed(Badge<ResourceLoader>, bool timing_allow_passed) { m_timing_allow_passed = timing_allow_passed; }
+
+    RefPtr<Response> internal_response() const { return m_internal_response; }
+
+    const String& status_message() const { return m_status_message; }
+
 protected:
-    explicit Response(Type, const LoadRequest&);
+    Response();
 
 private:
     Type m_type { Type::Generic }; // FIXME: Remove
@@ -135,10 +167,10 @@ private:
     u32 m_status { 200 };
     String m_status_message; // FIXME: Should be a byte sequence
     HTTP::HeaderList m_header_list;
-    ByteBuffer m_encoded_data; // FIXME: This should be a body object.
+    ReadonlyBytes m_body; // FIXME: This should be a body object.
     CacheState m_cache_state { CacheState::None };
     Vector<String> m_cors_exposed_header_name_list; // FIXME: These should specifically store header names, and therefore be byte sequences.
-    bool m_range_request { false };
+    bool m_range_requested { false };
     bool m_timing_allow_passed { false };
     FetchTimingInfo m_timing_info; // FIXME: This should be nullable, and null by default.
     HashTable<ResourceClient*> m_clients;

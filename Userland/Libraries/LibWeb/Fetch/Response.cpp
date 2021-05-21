@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,23 +13,22 @@
 
 namespace Web::Fetch {
 
-NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type, const LoadRequest& request /* FIXME: REMOVE */)
+NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type)
 {
     if (type == Type::Image)
-        return adopt_ref(*new ImageResource(request));
-    return adopt_ref(*new Response(type, request));
+        return adopt_ref(*new ImageResource());
+    return adopt_ref(*new Response());
 }
 
-NonnullRefPtr<Response> Response::create_network_error(Badge<ResourceLoader>, const LoadRequest& request /* FIXME: REMOVE */)
+NonnullRefPtr<Response> Response::create_network_error(Badge<ResourceLoader>)
 {
-    auto response = adopt_ref(*new Response(Type::Generic, request));
+    auto response = adopt_ref(*new Response());
     response->m_new_type = NewType::Error;
     response->m_status = 0;
     return response;
 }
 
-Response::Response(Type type, const LoadRequest& /* FIXME: REMOVE */)
-    : m_type(type)
+Response::Response()
 {
 }
 
@@ -46,30 +46,6 @@ void Response::for_each_client(Function<void(ResourceClient&)> callback)
         if (client)
             callback(*client);
     }
-}
-
-static Optional<String> encoding_from_content_type(const String& content_type)
-{
-    auto offset = content_type.find("charset="sv);
-    if (offset.has_value()) {
-        auto encoding = content_type.substring(offset.value() + 8, content_type.length() - offset.value() - 8).to_lowercase();
-        if (encoding.length() >= 2 && encoding.starts_with('"') && encoding.ends_with('"'))
-            return encoding.substring(1, encoding.length() - 2);
-        if (encoding.length() >= 2 && encoding.starts_with('\'') && encoding.ends_with('\''))
-            return encoding.substring(1, encoding.length() - 2);
-        return encoding;
-    }
-
-    return {};
-}
-
-static String mime_type_from_content_type(const String& content_type)
-{
-    auto offset = content_type.find(';');
-    if (offset.has_value())
-        return content_type.substring(0, offset.value()).to_lowercase();
-
-    return content_type;
 }
 
 void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap<String, String, CaseInsensitiveStringTraits>& headers, Optional<u32> status_code)
@@ -111,6 +87,22 @@ void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
             m_encoding = encoding.value();
         }
     }
+    m_body = data;
+    for (auto& header : headers)
+        m_header_list.append(header.key, header.value);
+    if (!status_code.has_value())
+        m_status = 0;
+    else
+        m_status = status_code.value();
+
+//    m_encoding = {};
+//    if (content_type.has_value()) {
+//        auto encoding = encoding_from_content_type(content_type.value());
+//        if (encoding.has_value()) {
+//            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
+//            m_encoding = encoding.value();
+//        }
+//    }
 
     for_each_client([](auto& client) {
         client.resource_did_load();
@@ -119,9 +111,12 @@ void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
 
 void Response::did_fail(Badge<ResourceLoader>, const String& error, Optional<u32> status_code)
 {
-    m_error = error;
-    m_status_code = move(status_code);
-    m_failed = true;
+    m_status_message = error;
+    if (status_code.has_value())
+        m_status = 0;
+    else
+        m_status = status_code.value();
+    m_new_type = NewType::Error;
 
     for_each_client([](auto& client) {
         client.resource_did_fail();
@@ -173,9 +168,89 @@ bool Response::should_be_blocked_due_to_mime_type(const LoadRequest& request) co
     return false;
 }
 
-NonnullRefPtr<Response> Response::to_filtered_response() const
+// https://fetch.spec.whatwg.org/#concept-response-clone
+NonnullRefPtr<Response> Response::clone() const
 {
+    // FIXME: Handle the case where this response is a filtered response.
+    VERIFY(!is_filtered_response());
 
+    auto clone = adopt_ref(*new Response());
+    clone->m_type = m_type; // FIXME: Remove
+    clone->m_new_type = m_new_type;
+    clone->m_aborted = m_aborted;
+    clone->m_url_list = m_url_list;
+    clone->m_status_message = m_status_message.isolated_copy();
+    clone->m_header_list = m_header_list;
+    clone->m_cache_state = m_cache_state;
+    clone->m_cors_exposed_header_name_list = m_cors_exposed_header_name_list;
+    clone->m_range_requested = m_range_requested;
+    clone->m_timing_allow_passed = m_timing_allow_passed;
+    clone->m_timing_info = m_timing_info;
+    clone->m_clients = m_clients; // FIXME: Probably don't need this.
+
+    // FIXME: If body is non-null, clone it. https://fetch.spec.whatwg.org/#concept-body-clone
+    //        (Body is currently not a body object from the Stream standard)
+    clone->m_body = m_body; // FIXME: Not actual copy!!
+
+    return clone;
+}
+
+// https://fetch.spec.whatwg.org/#concept-main-fetch Step 14.2
+NonnullRefPtr<Response> Response::to_filtered_response(LoadRequest::ResponseTainting response_tainting) const
+{
+    auto filtered_response = clone();
+    filtered_response->m_internal_response = this;
+
+    switch (response_tainting) {
+    case LoadRequest::ResponseTainting::Basic:
+        // https://fetch.spec.whatwg.org/#concept-filtered-response-basic
+        filtered_response->m_new_type = NewType::Basic;
+
+        filtered_response->m_header_list.list().remove_all_matching([](auto& header) {
+            return HTTP::is_forbidden_response_header_name(header.name);
+        });
+        break;
+    case LoadRequest::ResponseTainting::Cors:
+        // https://fetch.spec.whatwg.org/#concept-filtered-response-cors
+        filtered_response->m_new_type = NewType::Cors;
+
+        filtered_response->m_header_list.list().remove_all_matching([](auto& header) {
+           return !HTTP::is_cors_safelisted_response_header_name(header.name);
+        });
+        break;
+    case LoadRequest::ResponseTainting::Opaque:
+        // https://fetch.spec.whatwg.org/#concept-filtered-response-opaque
+        filtered_response->m_new_type = NewType::Opaque;
+        filtered_response->m_url_list.clear();
+        filtered_response->m_status = 0;
+        filtered_response->m_status_message = String::empty();
+        filtered_response->m_header_list.clear();
+        // FIXME: Set body to null
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    return filtered_response;
+}
+
+// https://fetch.spec.whatwg.org/#concept-response-location-url
+Optional<URL> Response::location_url(String const& request_fragment) const
+{
+    if (!has_redirect_status())
+        return {};
+
+    // FIXME: Use the "extracting header list values" algorithm
+    auto location_value = m_header_list.get("Location");
+    URL location;
+
+    if (!location_value.is_null())
+        location = url().value().complete_url(location_value);
+
+    if (location.is_valid() && location.fragment().is_null())
+        location.set_fragment(request_fragment);
+
+    return location;
 }
 
 void ResourceClient::set_resource(Response* resource)
@@ -184,16 +259,16 @@ void ResourceClient::set_resource(Response* resource)
         m_resource->unregister_client({}, *this);
     m_resource = resource;
     if (m_resource) {
-        VERIFY(resource->type() == client_type());
+//        VERIFY(resource->type() == client_type());
 
         m_resource->register_client({}, *this);
 
         // Make sure that reused resources also have their load callback fired.
-        if (resource->is_loaded())
+        if (!resource->is_network_error())
             resource_did_load();
 
         // Make sure that reused resources also have their fail callback fired.
-        if (resource->is_failed())
+        else
             resource_did_fail();
     }
 }

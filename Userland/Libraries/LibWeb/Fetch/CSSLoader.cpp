@@ -50,7 +50,7 @@ void CSSLoader::resource_did_load()
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Resource did load, has encoded data. URL: {}", resource()->url());
     }
 
-    auto sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), resource()->encoded_data());
+    auto sheet = parse_css(CSS::ParsingContext(m_owner_element.document()), resource()->body());
     if (!sheet) {
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Failed to parse stylesheet: {}", resource()->url());
         return;
@@ -87,8 +87,7 @@ void CSSLoader::load_next_import_if_needed()
 
         dbgln_if(CSS_LOADER_DEBUG, "CSSLoader: Loading @import {}", rule.url());
 
-        LoadRequest request;
-        request.set_url(rule.url());
+        LoadRequest request(rule.url());
         set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
     });
 }

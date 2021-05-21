@@ -145,6 +145,7 @@ Optional<Core::MimeType> HeaderList::extract_mime_type() const
     Core::MimeType mime_type;
 
     auto values = get_decode_and_split("Content-Type");
+    dbgln("empty? {}", values.is_empty());
     if (values.is_empty())
         return {};
 
@@ -185,6 +186,16 @@ bool HeaderList::determine_nosniff() const
         return true;
 
     return false;
+}
+
+// https://fetch.spec.whatwg.org/#extract-header-list-values
+Vector<String> HeaderList::extract_header_list_values(String const& name) const
+{
+    if (!contains(name))
+        return {};
+
+    // FIXME
+    return {};
 }
 
 }

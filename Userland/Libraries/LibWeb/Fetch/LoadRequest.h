@@ -143,9 +143,9 @@ public:
 
     using AuthenticationEntry = Tuple<String, String, String>; // Tuple of username, password and realm.
 
-    LoadRequest()
+    LoadRequest(const URL& url)
     {
-        m_url_list.ensure_capacity(1);
+        m_url_list.append(url);
     }
 
     static LoadRequest create_for_url_on_page(const AK::URL& url, Page* page);
@@ -237,7 +237,7 @@ public:
     bool local_urls_only() const { return m_local_urls_only; }
 
     ReferrerPolicy::ReferrerPolicy referrer_policy() const { return m_referrer_policy; }
-    void set_referrer_policy(Badge<ResourceLoader>, ReferrerPolicy::ReferrerPolicy referrer_policy) { m_referrer_policy = referrer_policy; }
+    void set_referrer_policy(ReferrerPolicy::ReferrerPolicy referrer_policy) { m_referrer_policy = referrer_policy; }
 
     ResponseTainting response_tainting() const { return m_response_tainting; }
     void set_response_tainting(Badge<ResourceLoader>, ResponseTainting response_tainting) { m_response_tainting = response_tainting; }
@@ -253,7 +253,7 @@ public:
     bool unsafe_request() const { return m_unsafe_request; }
 
     ServiceWorkersMode service_workers_mode() const { return m_service_workers_mode; }
-    void set_service_workers_mode(Badge<ResourceLoader>, ServiceWorkersMode service_workers_mode) { m_service_workers_mode = service_workers_mode; }
+    void set_service_workers_mode(ServiceWorkersMode service_workers_mode) { m_service_workers_mode = service_workers_mode; }
 
     CredentialsMode credentials_mode() const { return m_credentials_mode; }
 
@@ -268,7 +268,7 @@ public:
     Variant<Referrer, URL> referrer() const { return m_referrer; }
 
     CacheMode cache_mode() const { return m_cache_mode; }
-    void set_cache_mode(Badge<ResourceLoader>, CacheMode cache_mode) { m_cache_mode = cache_mode; }
+    void set_cache_mode(CacheMode cache_mode) { m_cache_mode = cache_mode; }
 
     bool prevent_no_cache_cache_control_header_modification() const { return m_prevent_no_cache_cache_control_header_modification; }
 
@@ -276,6 +276,19 @@ public:
     {
         return !m_authentication_entry.get<0>().is_null() && !m_authentication_entry.get<1>().is_null() && !!m_authentication_entry.get<2>().is_null();
     }
+
+    const Vector<URL>& url_list() const { return m_url_list; }
+
+    Window window() const { return m_window; }
+    void set_window(Window window) { m_window = window; }
+
+    u8 redirect_count() const { return m_redirect_count; }
+    void increment_redirect_count(Badge<ResourceLoader>) { ++m_redirect_count; }
+
+    void append_url_to_url_list(Badge<ResourceLoader>, const URL& url) { m_url_list.append(url); }
+
+    bool done() const { return m_done; }
+    void set_done(Badge<ResourceLoader>, bool done) { m_done = done; }
 
 private:
     Core::ElapsedTimer m_load_timer;

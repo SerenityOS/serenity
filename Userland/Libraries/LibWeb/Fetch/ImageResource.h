@@ -42,7 +42,7 @@ public:
     void update_volatility();
 
 private:
-    explicit ImageResource(const LoadRequest&);
+    ImageResource();
 
     void decode_if_needed() const;
 

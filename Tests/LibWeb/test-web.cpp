@@ -142,8 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(TestWebGlobalObject::wait_for_page_to_load)
         TRY(entry(document->interpreter().global_object()));
 
     // Set the load hook
-    Web::Fetch::LoadRequest request;
-    request.set_url(next_page_to_load.value());
+    Web::Fetch::LoadRequest request(next_page_to_load.value());
 
     JS::ThrowCompletionOr<void> result = {};
 

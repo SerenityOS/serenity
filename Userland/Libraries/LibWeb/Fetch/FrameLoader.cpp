@@ -157,7 +157,13 @@ bool FrameLoader::load(LoadRequest& request, Type type)
 
     auto& url = request.url();
 
-    set_resource(ResourceLoader::the().load_resource(Response::Type::Generic, request));
+    // FIXME: HACK
+    auto resource = ResourceLoader::the().load_resource(Response::Type::Generic, request);
+    Vector<URL> urls;
+    urls.append(request.url());
+    resource->set_url_list(urls);
+
+    set_resource(resource);
 
     if (type == Type::Navigation || type == Type::Reload) {
         if (auto* page = browsing_context().page())
@@ -275,6 +281,15 @@ void FrameLoader::store_response_cookies(AK::URL const& url, String const& cooki
     auto* page = browsing_context().page();
     if (!page)
         return;
+    // FIXME: Don't blindly take value.
+    dbgln("url has value? {}", resource()->url().has_value());
+    auto url = resource()->url().value();
+    dbgln("url: {}", url.to_string());
+
+    if (!resource()->has_encoded_data()) {
+        //load_error_page(url, "No data");
+        return;
+    }
 
     auto set_cookie_json_value = MUST(JsonValue::from_string(cookies));
     VERIFY(set_cookie_json_value.type() == JsonValue::Type::Array);
@@ -323,19 +338,58 @@ void FrameLoader::resource_did_load()
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding '{}'", resource()->mime_type(), resource()->encoding().value());
     } else {
         dbgln_if(RESOURCE_DEBUG, "This content has MIME type '{}', encoding unknown", resource()->mime_type());
+    // FIXME: Also check HTTP status code before redirecting
+    auto location = resource()->header_list().get("Location");
+    if (!location.is_null()) {
+        if (m_redirects_count > maximum_redirects_allowed) {
+            m_redirects_count = 0;
+            load_error_page(url, "Too many redirects");
+            return;
+        }
+        m_redirects_count++;
+        load(url.complete_url(location), FrameLoader::Type::Navigation);
+        return;
     }
+    m_redirects_count = 0;
+
+    auto mime_type = resource()->mime_type();
 
     auto document = DOM::Document::create();
     document->set_url(url);
-    document->set_encoding(resource()->encoding());
-    document->set_content_type(resource()->mime_type());
+    document->set_encoding("windows-1252");
+
+    String encoding;
+
+    if (mime_type.has_value()) {
+        document->set_content_type(mime_type.value().essence());
+
+        auto charset_optional = mime_type.value().parameters().get("charset");
+
+        if (charset_optional.has_value())
+            encoding = charset_optional.value();
+
+        if (!encoding.is_null()) {
+            dbgln("This content has MIME type '{}', encoding '{}'", mime_type.value().essence(), encoding);
+        } else {
+            dbgln("This content has MIME type '{}', encoding unknown", mime_type.value().essence());
+        }
+    }
+
+    document->set_content_type("text/html");
 
     browsing_context().set_active_document(document);
 
-    if (!parse_document(*document, resource()->encoded_data())) {
+    dbgln("size {}", resource()->body().size());
+    if (!parse_document(*document, ByteBuffer::copy(resource()->body()))) {
         load_error_page(url, "Failed to parse content.");
         return;
     }
+
+    // FIXME: Support multiple instances of the Set-Cookie response header.
+    // FIXME: Set-Cookie shouldn't be done here, it should be done in HTTP-network fetch.
+    auto set_cookie = resource()->header_list().get("Set-Cookie");
+    if (!set_cookie.is_null())
+        document->set_cookie(set_cookie, Cookie::Source::Http);
 
     if (!url.fragment().is_empty())
         browsing_context().scroll_to_anchor(url.fragment());
@@ -348,7 +402,8 @@ void FrameLoader::resource_did_load()
 
 void FrameLoader::resource_did_fail()
 {
-    load_error_page(resource()->url(), resource()->error());
+    // FIXME: Don't blindly take value.
+    load_error_page(resource()->url().value(), resource()->status_message());
 }
 
 }

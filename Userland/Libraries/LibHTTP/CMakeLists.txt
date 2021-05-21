@@ -1,5 +1,6 @@
 set(SOURCES
     Header.cpp
+    HeaderList.cpp
     HttpJob.cpp
     HttpRequest.cpp
     HttpResponse.cpp

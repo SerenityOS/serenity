@@ -25,4 +25,19 @@ String normalize_header_value(String const& header_value)
     return header_value.trim_whitespace();
 }
 
+// https://fetch.spec.whatwg.org/#forbidden-response-header-name
+bool is_forbidden_response_header_name(String const& header_name)
+{
+    auto lowercase_header_name = header_name.to_lowercase();
+    return lowercase_header_name.is_one_of("set-cookie", "set-cookie2");
+}
+
+// https://fetch.spec.whatwg.org/#cors-safelisted-response-header-name
+bool is_cors_safelisted_response_header_name(String const& header_name)
+{
+    auto lowercase_header_name = header_name.to_lowercase();
+    return lowercase_header_name.is_one_of("cache-control", "content-language", "content-length", "content-type", "expires", "last-modified", "pragma")
+           && !is_forbidden_response_header_name(header_name);
+}
+
 }

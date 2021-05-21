@@ -11,8 +11,8 @@
 
 namespace Web::Fetch {
 
-ImageResource::ImageResource(const LoadRequest& request)
-    : Response(Type::Image, request)
+ImageResource::ImageResource()
+    : Response()
 {
 }
 
@@ -40,7 +40,7 @@ void ImageResource::decode_if_needed() const
         return;
 
     NonnullRefPtr decoder = image_decoder_client();
-    auto image = decoder->decode_image(encoded_data());
+    auto image = decoder->decode_image(ByteBuffer::copy(body()));
 
     if (image.has_value()) {
         m_loop_count = image.value().loop_count;

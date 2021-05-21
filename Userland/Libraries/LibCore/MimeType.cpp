@@ -25,7 +25,8 @@ static bool consists_of_only_http_token_code_points(StringView const& string)
 static bool consists_of_only_http_quoted_string_token_code_points(StringView const& string)
 {
     for (char c : string) {
-        if (c != '\t' && !(c >= ' ' && c <= '~') && !(c >= (char)0x80 && c <= (char)0xFF))
+        // FIXME: Maybe don't cast to u16? Utf8View?
+        if (c != '\t' && !(c >= ' ' && c <= '~') && !((u8)c >= (u8)0x80 && (u16)c <= (u16)0xFF))
             return false;
     }
 

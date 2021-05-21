@@ -25,6 +25,7 @@ public:
 
     size_t size() const { return m_list.size(); }
 
+    // This is here for convenience (so you don't have to do .list())
     using StorageType = Vector<Header>;
     using Iterator = StorageType::Iterator;
     using ConstIterator = StorageType::ConstIterator;
@@ -41,8 +42,15 @@ public:
 
     [[nodiscard]] bool determine_nosniff() const;
 
+    Vector<String> extract_header_list_values(String const& name) const;
+
+    StorageType& list() { return m_list; }
+    const StorageType& list() const { return m_list; }
+
+    void clear() { return m_list.clear(); }
+    bool is_empty() const { return m_list.is_empty(); }
+
 private:
-    // FIXME: This should ideally be a Multimap
     StorageType m_list;
 
     Optional<Header> first_header_with_name(String const& name) const;

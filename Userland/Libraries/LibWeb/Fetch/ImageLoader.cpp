@@ -76,6 +76,14 @@ void ImageLoader::resource_did_load()
             on_fail();
         return;
     }
+    // FIXME
+//    auto resource_mime_type =
+//    if (!resource()->extract_mime_type().starts_with("image/")) {
+//        m_loading_state = LoadingState::Failed;
+//        if (on_fail)
+//            on_fail();
+//        return;
+//    }
 
     m_loading_state = LoadingState::Loaded;
 
@@ -122,7 +130,8 @@ void ImageLoader::animate()
 
 void ImageLoader::resource_did_fail()
 {
-    dbgln("ImageLoader: Resource did fail. URL: {}", resource()->url());
+    // FIXME: Don't blindly take value.
+    dbgln("ImageLoader: Resource did fail. URL: {}", resource()->url().value());
     m_loading_state = LoadingState::Failed;
     if (on_fail)
         on_fail();
