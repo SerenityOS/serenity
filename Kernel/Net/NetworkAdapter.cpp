@@ -220,11 +220,13 @@ void NetworkAdapter::set_ipv4_gateway(const IPv4Address& gateway)
 
 void NetworkAdapter::set_interface_name(const StringView& basename)
 {
-    // FIXME: Find a unique name for this interface, starting with $basename.
-    StringBuilder builder;
-    builder.append(basename);
-    builder.append('0');
-    m_name = builder.to_string();
+    for (int i = 0; i < NumericLimits<int>::max(); i++) {
+        auto name = String::formatted("{}{}", basename, i);
+        if (!lookup_by_name(name)) {
+            m_name = name;
+            break;
+        }
+    }
 }
 
 }
