@@ -34,6 +34,7 @@ private:
 
     virtual void greet() override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
+    virtual void update_system_fonts(String const&, String const&) override;
     virtual void update_screen_rect(Gfx::IntRect const&) override;
     virtual void load_url(URL const&) override;
     virtual void load_html(String const&, URL const&) override;
