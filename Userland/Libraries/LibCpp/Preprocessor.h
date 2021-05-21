@@ -33,6 +33,7 @@ public:
     const Definitions& definitions() const { return m_definitions; }
 
     void set_ignore_unsupported_keywords(bool ignore) { m_options.ignore_unsupported_keywords = ignore; }
+    void set_keep_include_statements(bool keep) { m_options.keep_include_statements = keep; }
 
 private:
     using PreprocessorKeyword = StringView;
@@ -61,6 +62,7 @@ private:
 
     struct Options {
         bool ignore_unsupported_keywords { false };
+        bool keep_include_statements { false };
     } m_options;
 };
 }
