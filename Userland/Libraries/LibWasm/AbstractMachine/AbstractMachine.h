@@ -16,6 +16,7 @@
 namespace Wasm {
 
 class Configuration;
+struct Interpreter;
 
 struct InstantiationError {
     String error { "Unknown error" };
@@ -444,6 +445,9 @@ public:
 
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
+
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&)> pre_interpret_hook;
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)> post_interpret_hook;
 
 private:
     Optional<InstantiationError> allocate_all(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);

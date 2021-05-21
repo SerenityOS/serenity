@@ -113,6 +113,8 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                 entry.expression(),
                 1);
             Configuration config { m_store };
+            config.pre_interpret_hook = &pre_interpret_hook;
+            config.post_interpret_hook = &post_interpret_hook;
             config.set_frame(move(frame));
             auto result = config.execute();
             // What if this traps?
@@ -143,6 +145,8 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                         data.offset,
                         1);
                     Configuration config { m_store };
+                    config.pre_interpret_hook = &pre_interpret_hook;
+                    config.post_interpret_hook = &post_interpret_hook;
                     config.set_frame(move(frame));
                     auto result = config.execute();
                     size_t offset = 0;
@@ -281,7 +285,10 @@ Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module,
 
 Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)
 {
-    return Configuration { m_store }.call(address, move(arguments));
+    Configuration configuration { m_store };
+    configuration.pre_interpret_hook = &pre_interpret_hook;
+    configuration.post_interpret_hook = &post_interpret_hook;
+    return configuration.call(address, move(arguments));
 }
 
 void Linker::link(const ModuleInstance& instance)
