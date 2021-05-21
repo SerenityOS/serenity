@@ -536,7 +536,7 @@ GUI::AutocompleteProvider::DeclarationType CppComprehensionEngine::type_of_decla
 OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_document_data(String&& text, const String& filename)
 {
     auto document_data = make<DocumentData>();
-    document_data->m_filename = move(filename);
+    document_data->m_filename = filename;
     document_data->m_text = move(text);
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
