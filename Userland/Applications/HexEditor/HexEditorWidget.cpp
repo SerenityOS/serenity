@@ -129,7 +129,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    m_goto_decimal_offset_action = GUI::Action::create("Go to Offset (&Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_decimal_offset_action = GUI::Action::create("&Go to Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter decimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = value.to_int();
@@ -138,7 +138,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         }
     });
 
-    m_goto_hex_offset_action = GUI::Action::create("Go to Offset (&Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
+    m_goto_hex_offset_action = GUI::Action::create("Go to &Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter hexadecimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto new_offset = strtol(value.characters(), nullptr, 16);
@@ -147,7 +147,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     });
 
     auto& edit_menu = menubar.add_menu("&Edit");
-    edit_menu.add_action(GUI::Action::create("&Fill Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
+    edit_menu.add_action(GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto fill_byte = strtol(value.characters(), nullptr, 16);
