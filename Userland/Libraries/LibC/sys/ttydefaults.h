@@ -46,25 +46,29 @@
 #    endif
 #    include <sys/cdefs.h>
 
+#    define TTYDEF_CC          \
+        [VINTR] = CINTR,       \
+        [VQUIT] = CQUIT,       \
+        [VERASE] = CERASE,     \
+        [VKILL] = CKILL,       \
+        [VEOF] = CEOF,         \
+        [VTIME] = CTIME,       \
+        [VMIN] = CMIN,         \
+        [VSWTC] = CSWTC,       \
+        [VSTART] = CSTART,     \
+        [VSTOP] = CSTOP,       \
+        [VSUSP] = CSUSP,       \
+        [VEOL] = CEOL,         \
+        [VREPRINT] = CREPRINT, \
+        [VDISCARD]             \
+            = CDISCARD,        \
+        [VWERASE] = CWERASE,   \
+        [VLNEXT] = CLNEXT,     \
+        [VEOL2] = CEOL2
+
 __BEGIN_DECLS
 static const cc_t ttydefchars[NCCS] = {
-    [VINTR] = CINTR,
-    [VQUIT] = CQUIT,
-    [VERASE] = CERASE,
-    [VKILL] = CKILL,
-    [VEOF] = CEOF,
-    [VTIME] = CTIME,
-    [VMIN] = CMIN,
-    [VSWTC] = CSWTC,
-    [VSTART] = CSTART,
-    [VSTOP] = CSTOP,
-    [VSUSP] = CSUSP,
-    [VEOL] = CEOL,
-    [VREPRINT] = CREPRINT,
-    [VDISCARD] = CDISCARD,
-    [VWERASE] = CWERASE,
-    [VLNEXT] = CLNEXT,
-    [VEOL2] = CEOL2
+    TTYDEF_CC
 };
 __END_DECLS
 #endif
