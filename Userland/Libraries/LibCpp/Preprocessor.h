@@ -35,7 +35,9 @@ public:
     void set_ignore_unsupported_keywords(bool ignore) { m_options.ignore_unsupported_keywords = ignore; }
 
 private:
-    void handle_preprocessor_line(const StringView&);
+    using PreprocessorKeyword = StringView;
+    PreprocessorKeyword handle_preprocessor_line(const StringView&);
+    void handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer);
 
     Definitions m_definitions;
     const String m_filename;
