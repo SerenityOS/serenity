@@ -203,9 +203,9 @@ Optional<u32> HTMLTokenizer::next_code_point()
 
 void HTMLTokenizer::skip(size_t count)
 {
-    m_prev_utf8_iterator = m_utf8_iterator;
     m_source_positions.append(m_source_positions.last());
     for (size_t i = 0; i < count; ++i) {
+        m_prev_utf8_iterator = m_utf8_iterator;
         auto code_point = *m_utf8_iterator;
         if (code_point == '\n') {
             m_source_positions.last().column = 0;
@@ -2687,6 +2687,7 @@ void HTMLTokenizer::restore_to(const Utf8CodepointIterator& new_iterator)
             TODO();
         }
     }
+    m_utf8_iterator = new_iterator;
 }
 
 }
