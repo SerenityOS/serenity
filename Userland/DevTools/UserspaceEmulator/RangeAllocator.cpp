@@ -26,10 +26,6 @@ void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
     m_available_ranges.append({ base, size });
 }
 
-RangeAllocator::~RangeAllocator()
-{
-}
-
 void RangeAllocator::dump() const
 {
     dbgln("RangeAllocator({})", this);
