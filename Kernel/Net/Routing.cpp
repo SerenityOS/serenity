@@ -152,7 +152,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     RefPtr<NetworkAdapter> local_adapter = nullptr;
     RefPtr<NetworkAdapter> gateway_adapter = nullptr;
 
-    NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter, &matches](auto& adapter) {
+    NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter, &matches, &through](auto& adapter) {
         auto adapter_addr = adapter.ipv4_address().to_u32();
         auto adapter_mask = adapter.ipv4_netmask().to_u32();
 
@@ -160,6 +160,9 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
             local_adapter = LoopbackAdapter::the();
             return;
         }
+
+        if (!adapter.link_up() || (adapter_addr == 0 && !through))
+            return;
 
         if (source_addr != 0 && source_addr != adapter_addr)
             return;
