@@ -8,36 +8,10 @@
 #include "RemoteObject.h"
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
-#include <InspectorServer/InspectorClientEndpoint.h>
-#include <InspectorServer/InspectorServerEndpoint.h>
-#include <LibIPC/ServerConnection.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 namespace Inspector {
-
-class InspectorServerClient final
-    : public IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>
-    , public InspectorClientEndpoint {
-    C_OBJECT(InspectorServerClient);
-
-public:
-    virtual void handshake() override
-    {
-        greet();
-    }
-
-    virtual ~InspectorServerClient() override { }
-
-private:
-    InspectorServerClient()
-        : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, "/tmp/portal/inspector")
-    {
-        handshake();
-    }
-
-    virtual void dummy() override { }
-};
 
 RemoteProcess* s_the;
 
@@ -52,10 +26,6 @@ RemoteProcess::RemoteProcess(pid_t pid)
 {
     s_the = this;
     m_client = InspectorServerClient::construct();
-}
-
-RemoteProcess::~RemoteProcess()
-{
 }
 
 void RemoteProcess::handle_identify_response(const JsonObject& response)
