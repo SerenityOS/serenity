@@ -376,7 +376,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
-        configuration.stack().push(make<Label>(arity, ip.value()));
+        configuration.stack().push(make<Label>(arity, ip.value() + 1));
         return;
     }
     case Instructions::if_.value(): {
@@ -388,14 +388,16 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto entry = configuration.stack().pop();
         auto value = entry.get<NonnullOwnPtr<Value>>()->to<i32>();
         TRAP_IF_NOT(value.has_value());
-        configuration.stack().push(make<Label>(arity, args.end_ip));
+        auto end_label = make<Label>(arity, args.end_ip.value());
         if (value.value() == 0) {
             if (args.else_ip.has_value()) {
                 configuration.ip() = args.else_ip.value();
+                configuration.stack().push(move(end_label));
             } else {
-                configuration.ip() = args.end_ip;
-                configuration.stack().pop();
+                configuration.ip() = args.end_ip.value() + 1;
             }
+        } else {
+            configuration.stack().push(move(end_label));
         }
         return;
     }
