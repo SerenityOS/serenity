@@ -28,7 +28,7 @@ class SerialDevice final : public TTY
     , public IRQHandler {
     AK_MAKE_ETERNAL
 public:
-    SerialDevice(IOAddress base_addr, unsigned minor, u8 irq);
+    SerialDevice(IOAddress base_addr, unsigned minor, u8 irq, termios initial_termios = TTY::DEFAULT_TERMIOS);
     virtual ~SerialDevice() override;
 
     void put_char(char);

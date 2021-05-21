@@ -14,8 +14,8 @@
 
 namespace Kernel {
 
-UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor, u8 irq)
-    : TTY(4, minor)
+UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor, u8 irq, termios initial_termios)
+    : TTY(4, minor, initial_termios)
     , IRQHandler(irq)
     , m_tty_name(String::formatted("/dev/ttyS{}", minor - 64))
     , m_base_addr(base_addr)
@@ -24,7 +24,7 @@ UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor,
     set_fifo_control(EnableFIFO | ClearReceiveFIFO | ClearTransmitFIFO | TriggerLevel4);
     // FIXME: TTY currently knows nothing about modem control
     set_modem_control(RequestToSend | DataTerminalReady);
-    TTY::load_default_settings();
+    reload_current_termios();
     enable_irq();
 }
 
@@ -141,6 +141,7 @@ void SerialDevice::wait_until_pending_output_completes()
 
 int SerialDevice::change_baud(speed_t in_baud, speed_t out_baud)
 {
+    dbgln_if(SERIAL_DEVICE_DEBUG, "{}: set baud in={:x} out={:x}", m_tty_name, in_baud, out_baud);
     if (in_baud != out_baud) {
         dbgln("{}: Input and output speed must be the same", m_tty_name);
         return -ENOTSUP;
@@ -152,6 +153,7 @@ int SerialDevice::change_baud(speed_t in_baud, speed_t out_baud)
         return -ENOTSUP;
     }
 
+    dbgln_if(SERIAL_DEVICE_DEBUG, "{}: baud rate divisor={}", m_tty_name, (u16)maybe_baud.value());
     set_baud(maybe_baud.value());
     return 0;
 }

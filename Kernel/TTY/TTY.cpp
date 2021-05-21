@@ -13,32 +13,17 @@
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
-#define TTYDEFCHARS
-#include <LibC/sys/ttydefaults.h>
-#undef TTYDEFCHARS
 
 namespace Kernel {
 
-TTY::TTY(unsigned major, unsigned minor)
+TTY::TTY(unsigned major, unsigned minor, termios initial_termios)
     : CharacterDevice(major, minor)
+    , m_termios(initial_termios)
 {
-    set_default_termios();
 }
 
 TTY::~TTY()
 {
-}
-
-void TTY::set_default_termios()
-{
-    memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_iflag = TTYDEF_IFLAG;
-    m_termios.c_oflag = TTYDEF_OFLAG;
-    m_termios.c_cflag = TTYDEF_CFLAG;
-    m_termios.c_lflag = TTYDEF_LFLAG;
-    m_termios.c_ispeed = TTYDEF_SPEED;
-    m_termios.c_ospeed = TTYDEF_SPEED;
-    memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
 KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
@@ -348,11 +333,10 @@ void TTY::flush_output()
     discard_pending_output();
 }
 
-// Subclasses can call this once they're ready to setup the various serial parameters.
-void TTY::load_default_settings()
+// Subclasses can call this to cause the change handler functions for the current termios settings to reload
+void TTY::reload_current_termios()
 {
-    set_default_termios();
-    set_termios(m_termios);
+    set_termios(m_termios, true);
 }
 
 int TTY::set_termios(const termios& new_termios, bool force_set)

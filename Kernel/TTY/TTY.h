@@ -13,6 +13,9 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
+#define TTYDEFCHARS
+#include <LibC/sys/ttydefaults.h>
+#undef TTYDEFCHARS
 
 namespace Kernel {
 
@@ -45,12 +48,21 @@ public:
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
-    void set_default_termios();
     const termios& get_termios() const { return m_termios; }
     void hang_up();
 
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
+
+    static constexpr termios DEFAULT_TERMIOS = {
+        .c_iflag = TTYDEF_IFLAG,
+        .c_oflag = TTYDEF_OFLAG,
+        .c_cflag = TTYDEF_CFLAG,
+        .c_lflag = TTYDEF_LFLAG,
+        .c_cc = { TTYDEF_CC },
+        .c_ispeed = TTYDEF_SPEED,
+        .c_ospeed = TTYDEF_SPEED
+    };
 
 protected:
     enum ParityMode {
@@ -85,7 +97,7 @@ protected:
 
     void set_size(unsigned short columns, unsigned short rows);
 
-    TTY(unsigned major, unsigned minor);
+    TTY(unsigned major, unsigned minor, termios initial_termios = DEFAULT_TERMIOS);
     void emit(u8, bool do_evaluate_block_conditions = true);
 
     bool can_do_backspace() const;
@@ -96,7 +108,7 @@ protected:
     void flush_input();
     void flush_output();
 
-    void load_default_settings();
+    void reload_current_termios();
 
     bool is_eol(u8) const;
     bool is_eof(u8) const;
