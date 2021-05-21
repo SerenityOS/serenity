@@ -159,6 +159,24 @@ class AKHashMapPrettyPrinter:
         return elements
 
 
+class AKSinglyLinkedList:
+    def __init__(self, val):
+        self.val = val
+
+    def to_string(self):
+        return self.val.type.name
+
+    def children(self):
+        elements = []
+
+        node = self.val["m_head"]
+        while node != 0:
+            elements.append(node["value"])
+            node = node["next"]
+
+        return [(f"[{i}]", elements[i]) for i in range(len(elements))]
+
+
 class AKInlineLinkedList:
     def __init__(self, val):
         self.val = val
@@ -218,6 +236,8 @@ class SerenityPrettyPrinterLocator(gdb.printing.PrettyPrinter):
             return AKOwnPtr(val)
         elif klass == 'AK::NonnullRefPtr':
             return AKRefPtr(val)
+        elif klass == 'AK::SinglyLinkedList':
+            return AKSinglyLinkedList(val)
         elif klass == 'AK::String':
             return AKString(val)
         elif klass == 'AK::StringView':
