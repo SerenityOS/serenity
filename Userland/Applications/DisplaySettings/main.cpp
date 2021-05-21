@@ -6,6 +6,7 @@
  */
 
 #include "BackgroundSettingsWidget.h"
+#include "FontSettingsWidget.h"
 #include "MonitorSettingsWidget.h"
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -49,6 +50,7 @@ int main(int argc, char** argv)
 
     auto& tab_widget = main_widget.add<GUI::TabWidget>();
     auto& background_settings_widget = tab_widget.add_tab<DisplaySettings::BackgroundSettingsWidget>("Background");
+    auto& font_settings_widget = tab_widget.add_tab<DisplaySettings::FontSettingsWidget>("Fonts");
     auto& monitor_settings_widget = tab_widget.add_tab<DisplaySettings::MonitorSettingsWidget>("Monitor");
 
     auto& button_container = main_widget.add<GUI::Widget>();
@@ -62,6 +64,7 @@ int main(int argc, char** argv)
     ok_button.on_click = [&] {
         background_settings_widget.apply_settings();
         monitor_settings_widget.apply_settings();
+        font_settings_widget.apply_settings();
         app->quit();
     };
 
@@ -76,6 +79,7 @@ int main(int argc, char** argv)
     apply_button.on_click = [&] {
         background_settings_widget.apply_settings();
         monitor_settings_widget.apply_settings();
+        font_settings_widget.apply_settings();
     };
 
     window->set_icon(app_icon.bitmap_for_size(16));
