@@ -27,7 +27,7 @@ public:
     virtual mode_t required_mode() const override { return 0660; }
     virtual String device_name() const override;
 
-    virtual void dectivate_writes();
+    virtual void deactivate_writes();
     virtual void activate_writes();
     virtual size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
 

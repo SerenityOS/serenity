@@ -143,7 +143,7 @@ void BochsGraphicsAdapter::enable_consoles()
     auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
     registers->bochs_regs.y_offset = 0;
     if (m_framebuffer_device)
-        m_framebuffer_device->dectivate_writes();
+        m_framebuffer_device->deactivate_writes();
     m_framebuffer_console->enable();
 }
 void BochsGraphicsAdapter::disable_consoles()

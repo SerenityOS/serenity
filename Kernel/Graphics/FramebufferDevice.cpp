@@ -60,7 +60,7 @@ KResultOr<Region*> FramebufferDevice::mmap(Process& process, FileDescription&, c
     return result;
 }
 
-void FramebufferDevice::dectivate_writes()
+void FramebufferDevice::deactivate_writes()
 {
     ScopedSpinLock lock(m_activation_lock);
     if (!m_userspace_framebuffer_region)

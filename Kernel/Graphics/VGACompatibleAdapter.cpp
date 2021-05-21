@@ -59,7 +59,7 @@ void VGACompatibleAdapter::enable_consoles()
 {
     VERIFY(m_framebuffer_console);
     if (m_framebuffer_device)
-        m_framebuffer_device->dectivate_writes();
+        m_framebuffer_device->deactivate_writes();
     m_framebuffer_console->enable();
 }
 void VGACompatibleAdapter::disable_consoles()
