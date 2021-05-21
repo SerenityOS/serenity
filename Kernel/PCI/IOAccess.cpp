@@ -67,17 +67,26 @@ void IOAccess::write32_field(Address address, u32 field, u32 value)
 void IOAccess::enumerate_hardware(Function<void(Address, ID)> callback)
 {
     dbgln_if(PCI_DEBUG, "PCI: IO enumerating hardware");
-    // Single PCI host controller.
-    if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
-        enumerate_bus(-1, 0, callback, true);
-        return;
-    }
 
-    // Multiple PCI host controllers.
-    for (int bus = 0; bus < 256; ++bus) {
-        if (read16_field(Address(0, 0, 0, bus), PCI_VENDOR_ID) == PCI_NONE)
-            break;
-        enumerate_bus(-1, bus, callback, false);
+    // First scan bus 0. Find any device on that bus, and if it's a PCI-to-PCI
+    // bridge, recursively scan it too.
+    m_enumerated_buses.set(0, true);
+    enumerate_bus(-1, 0, callback, true);
+
+    // Handle Multiple PCI host bridges on slot 0, device 0.
+    // If we happen to miss some PCI buses because they are not reachable through
+    // recursive PCI-to-PCI bridges starting from bus 0, we might find them here.
+    if ((read8_field(Address(), PCI_HEADER_TYPE) & 0x80) != 0) {
+        for (int bus = 1; bus < 256; ++bus) {
+            if (read16_field(Address(0, 0, 0, bus), PCI_VENDOR_ID) == PCI_NONE)
+                continue;
+            if (read16_field(Address(0, 0, 0, bus), PCI_CLASS) != 0x6)
+                continue;
+            if (m_enumerated_buses.get(bus))
+                continue;
+            enumerate_bus(-1, bus, callback, false);
+            m_enumerated_buses.set(bus, true);
+        }
     }
 }
 

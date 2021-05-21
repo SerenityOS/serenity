@@ -35,6 +35,7 @@ bool Access::is_initialized()
 }
 
 UNMAP_AFTER_INIT Access::Access()
+    : m_enumerated_buses(256, false)
 {
     s_access = this;
 }
@@ -85,10 +86,11 @@ void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Funct
     Address address(0, bus, device, function);
     if (type == -1 || type == early_read_type(address))
         callback(address, { early_read16_field(address, PCI_VENDOR_ID), early_read16_field(address, PCI_DEVICE_ID) });
-    if (early_read_type(address) == PCI_TYPE_BRIDGE && recursive) {
+    if (early_read_type(address) == PCI_TYPE_BRIDGE && recursive && (!m_enumerated_buses.get(early_read8_field(address, PCI_SECONDARY_BUS)))) {
         u8 secondary_bus = early_read8_field(address, PCI_SECONDARY_BUS);
         dbgln_if(PCI_DEBUG, "PCI: Found secondary bus: {}", secondary_bus);
         VERIFY(secondary_bus != bus);
+        m_enumerated_buses.set(secondary_bus, true);
         enumerate_bus(type, secondary_bus, callback, recursive);
     }
 }

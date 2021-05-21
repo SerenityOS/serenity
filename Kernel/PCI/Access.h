@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Bitmap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/PCI/Definitions.h>
@@ -49,6 +50,7 @@ protected:
     virtual ~Access() = default;
 
     Vector<PhysicalID> m_physical_ids;
+    Bitmap m_enumerated_buses;
 };
 
 }
