@@ -542,19 +542,19 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
     document_data->preprocessor().process();
 
-    Preprocessor::Definitions all_definitions;
+    Preprocessor::Definitions preprocessor_definitions;
     for (auto item : document_data->preprocessor().definitions())
-        all_definitions.set(move(item.key), move(item.value));
+        preprocessor_definitions.set(move(item.key), move(item.value));
 
     for (auto include : document_data->preprocessor().included_paths()) {
         auto included_document = get_or_create_document_data(document_path_from_include_path(include));
         if (!included_document)
             continue;
         for (auto item : included_document->parser().preprocessor_definitions())
-            all_definitions.set(move(item.key), move(item.value));
+            preprocessor_definitions.set(move(item.key), move(item.value));
     }
 
-    document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(all_definitions));
+    document_data->m_parser = make<Parser>(document_data->preprocessor().processed_text(), filename, move(preprocessor_definitions));
 
     auto root = document_data->parser().parse();
 
