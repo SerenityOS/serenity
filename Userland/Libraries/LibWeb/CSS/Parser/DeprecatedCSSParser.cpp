@@ -793,7 +793,7 @@ public:
         }
 
         auto property_id = CSS::property_id_from_string(property_name);
-        if (property_id == CSS::PropertyID::Invalid) {
+        if (property_id == CSS::PropertyID::Invalid && !property_name.starts_with('-')) {
             dbgln("CSSParser: Unrecognized property '{}'", property_name);
         }
         auto value = parse_css_value(m_context, property_value, property_id);
