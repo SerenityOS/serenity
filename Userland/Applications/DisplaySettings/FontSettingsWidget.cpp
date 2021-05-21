@@ -35,7 +35,7 @@ FontSettingsWidget::FontSettingsWidget()
     };
 
     fixed_width_font_button.on_click = [this, &fixed_width_font_label] {
-        auto font_picker = GUI::FontPicker::construct(window(), &fixed_width_font_label.font(), false);
+        auto font_picker = GUI::FontPicker::construct(window(), &fixed_width_font_label.font(), true);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             fixed_width_font_label.set_font(font_picker->font());
             fixed_width_font_label.set_text(font_picker->font()->qualified_name());
