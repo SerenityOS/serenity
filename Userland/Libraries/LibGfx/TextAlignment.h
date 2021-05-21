@@ -12,11 +12,12 @@
 namespace Gfx {
 
 #define GFX_ENUMERATE_TEXT_ALIGNMENTS(M) \
-    M(TopLeft)                           \
-    M(CenterLeft)                        \
     M(Center)                            \
+    M(CenterLeft)                        \
     M(CenterRight)                       \
+    M(TopLeft)                           \
     M(TopRight)                          \
+    M(BottomLeft)                        \
     M(BottomRight)
 
 enum class TextAlignment {
