@@ -47,10 +47,6 @@ Profile::Profile(Vector<Process> processes, Vector<Event> events)
     rebuild_tree();
 }
 
-Profile::~Profile()
-{
-}
-
 GUI::Model& Profile::model()
 {
     return *m_model;

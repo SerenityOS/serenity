@@ -6,7 +6,11 @@
 
 #pragma once
 
+#include "DisassemblyModel.h"
 #include "Process.h"
+#include "Profile.h"
+#include "ProfileModel.h"
+#include "SamplesModel.h"
 #include <AK/Bitmap.h>
 #include <AK/FlyString.h>
 #include <AK/JsonArray.h>
@@ -21,11 +25,6 @@
 #include <LibGUI/ModelIndex.h>
 
 namespace Profiler {
-
-class DisassemblyModel;
-class Profile;
-class ProfileModel;
-class SamplesModel;
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
@@ -130,7 +129,6 @@ struct ProcessFilter {
 class Profile {
 public:
     static Result<NonnullOwnPtr<Profile>, String> load_from_perfcore_file(const StringView& path);
-    ~Profile();
 
     GUI::Model& model();
     GUI::Model& samples_model();

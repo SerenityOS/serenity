@@ -6,12 +6,12 @@
 
 #pragma once
 
+#include "InspectorServerClient.h"
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/LocalSocket.h>
 
 namespace Inspector {
 
-class InspectorServerClient;
 class RemoteObjectGraphModel;
 class RemoteObject;
 
@@ -20,7 +20,6 @@ public:
     static RemoteProcess& the();
 
     explicit RemoteProcess(pid_t);
-    ~RemoteProcess();
     void update();
 
     pid_t pid() const { return m_pid; }
