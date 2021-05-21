@@ -1965,6 +1965,13 @@ void Painter::draw_elliptical_arc(const IntPoint& p1, const IntPoint& p2, const 
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
 
+    // Circle fastpath
+    if (radii.x() == radii.y()) {
+        auto direction = theta_delta > 0 ? RotationDirection::Clockwise : RotationDirection::CounterClockwise;
+        draw_circle_arc(p1, p2, center, radii.x(), color, thickness, direction);
+        return;
+    }
+
     for_each_line_segment_on_elliptical_arc(FloatPoint(p1), FloatPoint(p2), FloatPoint(center), radii, x_axis_rotation, theta_1, theta_delta, [&](const FloatPoint& fp1, const FloatPoint& fp2) {
         draw_line(IntPoint(fp1.x(), fp1.y()), IntPoint(fp2.x(), fp2.y()), color, thickness, style);
     });
