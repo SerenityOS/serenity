@@ -18,7 +18,7 @@ LoopbackAdapter& LoopbackAdapter::the()
 
 LoopbackAdapter::LoopbackAdapter()
 {
-    set_interface_name("loop");
+    set_loopback_name();
     set_mtu(65536);
     set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
 }
