@@ -13,6 +13,10 @@ namespace Wasm {
 struct Interpreter {
     void interpret(Configuration&);
     bool did_trap() const { return m_do_trap; }
+    void clear_trap() { m_do_trap = false; }
+
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&)>* pre_interpret_hook { nullptr };
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)>* post_interpret_hook { nullptr };
 
 private:
     void interpret(Configuration&, InstructionPointer&, const Instruction&);

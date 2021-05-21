@@ -53,6 +53,9 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
 Result Configuration::execute()
 {
     Interpreter interpreter;
+    interpreter.pre_interpret_hook = pre_interpret_hook;
+    interpreter.post_interpret_hook = post_interpret_hook;
+
     interpreter.interpret(*this);
     if (interpreter.did_trap())
         return Trap {};

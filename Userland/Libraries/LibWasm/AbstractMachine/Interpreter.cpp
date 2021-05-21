@@ -126,6 +126,8 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
         args.prepend(move(*configuration.stack().pop().get<NonnullOwnPtr<Value>>()));
     }
     Configuration function_configuration { configuration.store() };
+    function_configuration.pre_interpret_hook = pre_interpret_hook;
+    function_configuration.post_interpret_hook = post_interpret_hook;
     function_configuration.depth() = configuration.depth() + 1;
     auto result = function_configuration.call(address, move(args));
     if (result.is_trap()) {
@@ -338,8 +340,25 @@ Vector<NonnullOwnPtr<Value>> Interpreter::pop_values(Configuration& configuratio
 void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
-    if constexpr (WASM_TRACE_DEBUG)
-        configuration.dump_stack();
+
+    if (pre_interpret_hook && *pre_interpret_hook) {
+        auto result = pre_interpret_hook->operator()(configuration, ip, instruction);
+        if (!result) {
+            m_do_trap = true;
+            return;
+        }
+    }
+
+    ScopeGuard guard { [&] {
+        if (post_interpret_hook && *post_interpret_hook) {
+            auto result = post_interpret_hook->operator()(configuration, ip, instruction, *this);
+            if (!result) {
+                m_do_trap = true;
+                return;
+            }
+        }
+    } };
+
     switch (instruction.opcode().value()) {
     case Instructions::unreachable.value():
         m_do_trap = true;

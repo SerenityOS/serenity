@@ -40,6 +40,9 @@ public:
 
     void dump_stack();
 
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&)>* pre_interpret_hook { nullptr };
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)>* post_interpret_hook { nullptr };
+
 private:
     Store& m_store;
     Frame* m_current_frame { nullptr };
