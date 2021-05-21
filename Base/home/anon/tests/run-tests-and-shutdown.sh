@@ -47,6 +47,8 @@ if test $fail_count -gt 0 {
     echo "==== Failing tests: $failed_tests ===="
 }
 
+echo "Failed: $fail_count" > ./test-results.log
+
 if test $DO_SHUTDOWN_AFTER_TESTS {
     shutdown -n
 }
