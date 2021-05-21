@@ -528,6 +528,7 @@ UNMAP_AFTER_INIT static void idt_init()
     for (u8 i = 0x11; i < 0x50; i++)
         register_interrupt_handler(i, unimp_trap);
 
+    dbgln("Initializing unhandled interrupt handlers");
     register_interrupt_handler(0x50, interrupt_80_asm_entry);
     register_interrupt_handler(0x51, interrupt_81_asm_entry);
     register_interrupt_handler(0x52, interrupt_82_asm_entry);
@@ -704,8 +705,6 @@ UNMAP_AFTER_INIT static void idt_init()
     register_interrupt_handler(0xfd, interrupt_253_asm_entry);
     register_interrupt_handler(0xfe, interrupt_254_asm_entry);
     register_interrupt_handler(0xff, interrupt_255_asm_entry);
-
-    dbgln("Installing Unhandled Handlers");
 
     for (u8 i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; ++i) {
         auto* handler = new UnhandledInterruptHandler(i);
