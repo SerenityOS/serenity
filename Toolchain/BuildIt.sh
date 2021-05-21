@@ -31,8 +31,16 @@ SYSTEM_NAME="$(uname -s)"
 # We *most definitely* don't need debug symbols in the linker/compiler.
 # This cuts the uncompressed size from 1.2 GiB per Toolchain down to about 120 MiB.
 # Hence, this might actually cause marginal speedups, although the point is to not waste space as blatantly.
-export CFLAGS="-g0 -O2 -march=native"
-export CXXFLAGS="-g0 -O2 -march=native"
+export CFLAGS="-g0 -O2"
+export CXXFLAGS="-g0 -O2"
+
+if [ "${DISABLE_PROCESSOR_SPECIFIC_INSTRUCTIONS}" = "y" ] ; then
+    export CFLAGS="$CFLAGS -mtune=native"
+    export CXXFLAGS="$CXXFLAGS -mtune=native"
+else
+    export CFLAGS="$CFLAGS -march=native"
+    export CXXFLAGS="$CXXFLAGS -march=native"
+fi
 
 if [ "$SYSTEM_NAME" = "OpenBSD" ]; then
     MAKE=gmake

@@ -78,7 +78,7 @@ jobs:
         # However, we want to avoid false cache hits at all costs.
         key: ${{ runner.os }}-toolchain-i686-${{ steps.stamps.outputs.libc_headers }}
     - name: Restore or regenerate Toolchain
-      run: TRY_USE_LOCAL_TOOLCHAIN=y ${{ github.workspace }}/Toolchain/BuildIt.sh
+      run: TRY_USE_LOCAL_TOOLCHAIN=y DISABLE_PROCESSOR_SPECIFIC_INSTRUCTIONS=y ${{ github.workspace }}/Toolchain/BuildIt.sh
     - name: ccache(1) cache
       # Pull the ccache *after* building the toolchain, in case building the Toolchain somehow interferes.
       uses: actions/cache@v2
