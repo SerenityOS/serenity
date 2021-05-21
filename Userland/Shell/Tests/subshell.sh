@@ -4,9 +4,9 @@ source $(dirname "$0")/test-commons.inc
 
 setopt --verbose
 
-rm -rf shell-test
-mkdir shell-test
-cd shell-test
+rm -rf /tmp/shell-test 2> /dev/null
+mkdir -p /tmp/shell-test
+pushd /tmp/shell-test
 
     # Simple sequence (grouping)
     { echo test > testfile }
@@ -33,7 +33,7 @@ cd shell-test
         fail exits with $exitcode when it should exit with 0
     }
 
-cd ..
-rm -rf shell-test
+popd
+rm -rf /tmp/shell-test
 
 echo PASS
