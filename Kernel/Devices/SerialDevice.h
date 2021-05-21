@@ -30,7 +30,7 @@ public:
 
     void put_char(char);
 
-    enum InterruptEnable {
+    enum InterruptEnable : u8 {
         LowPowerMode = 0x01 << 5,
         SleepMode = 0x01 << 4,
         ModemStatusInterrupt = 0x01 << 3,
@@ -39,7 +39,7 @@ public:
         ReceivedDataAvailableInterrupt = 0x01 << 0
     };
 
-    enum Baud {
+    enum Baud : u16 {
         Baud50 = 2304,
         Baud110 = 1047,
         Baud220 = 524,
@@ -55,7 +55,7 @@ public:
         Baud115200 = 1
     };
 
-    enum ParitySelect {
+    enum ParitySelect : u8 {
         None = 0x00 << 3,
         Odd = 0x01 << 3,
         Even = 0x03 << 3,
@@ -63,19 +63,19 @@ public:
         Space = 0x07 << 3
     };
 
-    enum StopBits {
+    enum StopBits : u8 {
         One = 0x00 << 2,
         Two = 0x01 << 2
     };
 
-    enum WordLength {
+    enum WordLength : u8 {
         FiveBits = 0x00,
         SixBits = 0x01,
         SevenBits = 0x02,
         EightBits = 0x03
     };
 
-    enum FIFOControl {
+    enum FIFOControl : u8 {
         EnableFIFO = 0x01 << 0,
         ClearReceiveFIFO = 0x01 << 1,
         ClearTransmitFIFO = 0x01 << 2,
@@ -86,7 +86,7 @@ public:
         TriggerLevel4 = 0x03 << 6
     };
 
-    enum ModemControl {
+    enum ModemControl : u8 {
         AutoflowControlEnabled = 0x01 << 5,
         LoopbackMode = 0x01 << 4,
         AuxiliaryOutput2 = 0x01 << 3,
@@ -95,7 +95,7 @@ public:
         DataTerminalReady = 0x01 << 0
     };
 
-    enum LineStatus {
+    enum LineStatus : u8 {
         ErrorInReceivedFIFO = 0x01 << 7,
         EmptyDataHoldingRegisters = 0x01 << 6,
         EmptyTransmitterHoldingRegister = 0x01 << 5,

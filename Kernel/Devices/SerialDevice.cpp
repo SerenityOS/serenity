@@ -102,8 +102,8 @@ void SerialDevice::set_baud(Baud baud)
     m_baud = baud;
 
     m_base_addr.offset(3).out<u8>(m_base_addr.offset(3).in<u8>() | 0x80); // turn on DLAB
-    m_base_addr.out<u8>(((u8)(baud)) & 0xff);                             // lower half of divisor
-    m_base_addr.offset(1).out<u8>(((u8)(baud)) >> 2);                     // upper half of divisor
+    m_base_addr.out<u8>(((u16)(baud)) & 0xff);                            // lower half of divisor
+    m_base_addr.offset(1).out<u8>(((u16)(baud)) >> 8);                    // upper half of divisor
     m_base_addr.offset(3).out<u8>(m_base_addr.offset(3).in<u8>() & 0x7f); // turn off DLAB
 }
 
