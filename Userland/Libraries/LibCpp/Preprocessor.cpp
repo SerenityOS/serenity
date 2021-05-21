@@ -34,26 +34,33 @@ const String& Preprocessor::process()
     return m_processed_text;
 }
 
-void Preprocessor::handle_preprocessor_line(const StringView& line)
+static void consume_whitespace(GenericLexer& lexer)
+{
+    lexer.ignore_while([](char ch) { return isspace(ch); });
+    if (lexer.peek() == '/' && lexer.peek(1) == '/')
+        lexer.ignore_until([](char ch) { return ch == '\n'; });
+}
+
+Preprocessor::PreprocessorKeyword Preprocessor::handle_preprocessor_line(const StringView& line)
 {
     GenericLexer lexer(line);
 
-    auto consume_whitespace = [&] {
-        lexer.ignore_while([](char ch) { return isspace(ch); });
-        if (lexer.peek() == '/' && lexer.peek(1) == '/')
-            lexer.ignore_until([](char ch) { return ch == '\n'; });
-    };
-
-    consume_whitespace();
+    consume_whitespace(lexer);
     lexer.consume_specific('#');
-    consume_whitespace();
+    consume_whitespace(lexer);
     auto keyword = lexer.consume_until(' ');
     if (keyword.is_empty() || keyword.is_null() || keyword.is_whitespace())
-        return;
+        return {};
 
+    handle_preprocessor_keyword(keyword, lexer);
+    return keyword;
+}
+
+void Preprocessor::handle_preprocessor_keyword(const StringView& keyword, GenericLexer& line_lexer)
+{
     if (keyword == "include") {
-        consume_whitespace();
-        m_included_paths.append(lexer.consume_all());
+        consume_whitespace(line_lexer);
+        m_included_paths.append(line_lexer.consume_all());
         return;
     }
 
@@ -84,14 +91,14 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
 
     if (keyword == "define") {
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
-            consume_whitespace();
+            auto key = line_lexer.consume_until(' ');
+            consume_whitespace(line_lexer);
 
             DefinedValue value;
             value.filename = m_filename;
             value.line = m_line_index;
 
-            auto string_value = lexer.consume_all();
+            auto string_value = line_lexer.consume_all();
             if (!string_value.is_empty())
                 value.value = string_value;
 
@@ -101,8 +108,8 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     }
     if (keyword == "undef") {
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
-            lexer.consume_all();
+            auto key = line_lexer.consume_until(' ');
+            line_lexer.consume_all();
             m_definitions.remove(key);
         }
         return;
@@ -110,7 +117,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     if (keyword == "ifdef") {
         ++m_current_depth;
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = line_lexer.consume_until(' ');
             if (m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;
@@ -125,7 +132,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
     if (keyword == "ifndef") {
         ++m_current_depth;
         if (m_state == State::Normal) {
-            auto key = lexer.consume_until(' ');
+            auto key = line_lexer.consume_until(' ');
             if (!m_definitions.contains(key)) {
                 m_depths_of_taken_branches.append(m_current_depth - 1);
                 return;
@@ -161,7 +168,7 @@ void Preprocessor::handle_preprocessor_line(const StringView& line)
         return;
     }
     if (keyword == "pragma") {
-        lexer.consume_all();
+        line_lexer.consume_all();
         return;
     }
 
