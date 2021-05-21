@@ -4,5 +4,5 @@ Executable=/bin/Browser
 Category=Internet
 
 [Launcher]
-FileTypes=html,htm,md
+FileTypes=html,htm
 Protocols=gemini,http,https
