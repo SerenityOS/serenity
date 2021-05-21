@@ -379,7 +379,7 @@ void Painter::fill_rounded_corner(const IntRect& a_rect, int radius, Color color
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_in_circle(j, rect.height() - i + clip_offset))
-                dst[j] = color.value();
+                dst[j] = Color::from_rgba(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
@@ -420,7 +420,7 @@ void Painter::draw_circle_arc_intersecting(const IntRect& a_rect, const IntPoint
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
             if (is_on_arc(j, rect.height() - i + clip_offset))
-                dst[j] = color.value();
+                dst[j] = Color::from_rgba(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 
