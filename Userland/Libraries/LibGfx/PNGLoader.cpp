@@ -25,7 +25,7 @@
 
 namespace Gfx {
 
-static constexpr Array png_header = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
+static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
 
 struct PNG_IHDR {
     NetworkOrdered<u32> width;
@@ -512,7 +512,7 @@ static bool decode_png_header(PNGLoadingContext& context)
         return false;
     }
 
-    if (memcmp(context.data, png_header.data(), sizeof(png_header)) != 0) {
+    if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
         dbgln_if(PNG_DEBUG, "Invalid PNG header");
         context.state = PNGLoadingContext::State::Error;
         return false;
@@ -661,14 +661,14 @@ static int adam7_width(PNGLoadingContext& context, int pass)
     }
 }
 
+// Index 0 unused (non-interlaced case)
+static int adam7_starty[8] = { 0, 0, 0, 4, 0, 2, 0, 1 };
+static int adam7_startx[8] = { 0, 0, 4, 0, 2, 0, 1, 0 };
+static int adam7_stepy[8] = { 1, 8, 8, 8, 4, 4, 2, 2 };
+static int adam7_stepx[8] = { 1, 8, 8, 4, 4, 2, 2, 1 };
+
 static bool decode_adam7_pass(PNGLoadingContext& context, Streamer& streamer, int pass)
 {
-    // Index 0 unused (non-interlaced case)
-    constexpr Array adam7_starty = { 0, 0, 0, 4, 0, 2, 0, 1 };
-    constexpr Array adam7_startx = { 0, 0, 4, 0, 2, 0, 1, 0 };
-    constexpr Array adam7_stepy = { 1, 8, 8, 8, 4, 4, 2, 2 };
-    constexpr Array adam7_stepx = { 1, 8, 8, 4, 4, 2, 2, 1 };
-
     PNGLoadingContext subimage_context;
     subimage_context.width = adam7_width(context, pass);
     subimage_context.height = adam7_height(context, pass);

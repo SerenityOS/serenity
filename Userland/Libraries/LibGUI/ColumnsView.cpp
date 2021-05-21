@@ -13,7 +13,7 @@
 
 namespace GUI {
 
-static constexpr char s_arrow_bitmap_data[] = {
+static const char* s_arrow_bitmap_data = {
     "         "
     "   #     "
     "   ##    "
@@ -24,8 +24,8 @@ static constexpr char s_arrow_bitmap_data[] = {
     "   #     "
     "         "
 };
-static constexpr int s_arrow_bitmap_width = 9;
-static constexpr int s_arrow_bitmap_height = 9;
+static const int s_arrow_bitmap_width = 9;
+static const int s_arrow_bitmap_height = 9;
 
 ColumnsView::ColumnsView()
 {

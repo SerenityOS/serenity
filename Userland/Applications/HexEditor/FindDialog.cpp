@@ -5,9 +5,9 @@
  */
 
 #include "FindDialog.h"
-#include <AK/Array.h>
 #include <AK/Hex.h>
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -19,10 +19,15 @@
 #include <LibGfx/FontDatabase.h>
 
 struct Option {
-    StringView title;
+    String title;
     OptionId opt;
     bool enabled;
     bool default_action;
+};
+
+static const Vector<Option> options = {
+    { "ACII String", OPTION_ASCII_STRING, true, true },
+    { "Hex value", OPTION_HEX_VALUE, true, false },
 };
 
 int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer)
@@ -83,11 +88,6 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
 FindDialog::FindDialog()
     : Dialog(nullptr)
 {
-    constexpr Array options = {
-        Option { "ACII String", OPTION_ASCII_STRING, true, true },
-        Option { "Hex value", OPTION_HEX_VALUE, true, false },
-    };
-
     resize(280, 180 + ((static_cast<int>(options.size()) - 3) * 16));
     center_on_screen();
     set_resizable(false);
@@ -113,7 +113,7 @@ FindDialog::FindDialog()
         radio.set_enabled(action.enabled);
         radio.set_text(action.title);
 
-        radio.on_checked = [&](auto) {
+        radio.on_checked = [this, i](auto) {
             m_selected_option = options[i].opt;
         };
 

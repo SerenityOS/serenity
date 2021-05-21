@@ -1476,7 +1476,7 @@ void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, T
         lines.append(line);
     }
 
-    constexpr int line_spacing = 4;
+    static const int line_spacing = 4;
     int line_height = font.glyph_height() + line_spacing;
     IntRect bounding_rect { 0, 0, 0, (static_cast<int>(lines.size()) * line_height) - line_spacing };
 

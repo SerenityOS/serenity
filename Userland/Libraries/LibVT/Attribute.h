@@ -16,8 +16,8 @@ namespace VT {
 struct Attribute {
     Attribute() { reset(); }
 
-    static constexpr u32 default_foreground_color = xterm_colors[7];
-    static constexpr u32 default_background_color = xterm_colors[0];
+    static const u32 default_foreground_color = xterm_colors[7];
+    static const u32 default_background_color = xterm_colors[0];
 
     void reset()
     {
