@@ -16,10 +16,6 @@ Project::Project(const String& root_path)
     m_model = GUI::FileSystemModel::create(root_path, GUI::FileSystemModel::Mode::FilesAndDirectories);
 }
 
-Project::~Project()
-{
-}
-
 OwnPtr<Project> Project::open_with_root_path(const String& root_path)
 {
     if (!Core::File::is_directory(root_path))
