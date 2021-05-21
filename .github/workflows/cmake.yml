@@ -35,10 +35,14 @@ jobs:
     - name: "Install Ubuntu dependencies"
       # These packages are already part of the ubuntu-20.04 image:
       # cmake gcc-10 g++-10 shellcheck libgmp-dev
-      # These aren't:
+      # Packages below aren't.
+      #
+      # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
+      #    yet another cache in github actions
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
+        sudo add-apt-repository ppa:canonical-server/server-backports
         sudo apt-get update
         sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
     - name: Use GCC 10 instead
@@ -52,7 +56,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8 requests
     - name: Check versions
-      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version
+      run: set +e; g++ --version; g++-10 --version; clang-format --version; clang-format-11 --version; prettier --version; python --version; python3 --version; ninja --version; flake8 --version; ccache --version; qemu-system-i386 --version
 
     # === PREPARE FOR BUILDING ===
 
