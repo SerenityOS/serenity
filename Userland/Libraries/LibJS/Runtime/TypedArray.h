@@ -51,7 +51,6 @@ class TypedArray : public TypedArrayBase {
 public:
     virtual bool put_by_index(u32 property_index, Value value) override
     {
-        property_index += m_byte_offset / sizeof(T);
         if (property_index >= m_array_length)
             return Base::put_by_index(property_index, value);
 
@@ -73,7 +72,6 @@ public:
 
     virtual Value get_by_index(u32 property_index) const override
     {
-        property_index += m_byte_offset / sizeof(T);
         if (property_index >= m_array_length)
             return Base::get_by_index(property_index);
 
@@ -98,11 +96,11 @@ public:
 
     Span<const T> data() const
     {
-        return { reinterpret_cast<const T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+        return { reinterpret_cast<const T*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
     Span<T> data()
     {
-        return { reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data()), m_array_length };
+        return { reinterpret_cast<T*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
     }
 
     virtual size_t element_size() const override { return sizeof(T); };
