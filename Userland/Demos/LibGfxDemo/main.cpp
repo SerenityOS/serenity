@@ -141,6 +141,8 @@ void Canvas::draw()
     painter.draw_text({ 520, 260, 240, 80 }, "CenterRight", Gfx::TextAlignment::CenterRight, Color::White);
     painter.draw_text({ 520, 260, 240, 80 }, "TopLeft", Gfx::TextAlignment::TopLeft, Color::White);
     painter.draw_text({ 520, 260, 240, 80 }, "TopRight", Gfx::TextAlignment::TopRight, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "BottomLeft", Gfx::TextAlignment::BottomLeft, Color::White);
+    painter.draw_text({ 520, 260, 240, 80 }, "BottomRight", Gfx::TextAlignment::BottomRight, Color::White);
 
     painter.draw_rect({ 520, 360, 240, 30 }, Color::DarkGray);
     painter.draw_text({ 520, 360, 240, 30 }, "Emojis! 🙂😂🐞🦄", Gfx::TextAlignment::Center, Color::White);

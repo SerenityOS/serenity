@@ -1229,6 +1229,7 @@ void draw_text_line(const IntRect& a_rect, const TextType& text, const Font& fon
     switch (alignment) {
     case TextAlignment::TopLeft:
     case TextAlignment::CenterLeft:
+    case TextAlignment::BottomLeft:
         break;
     case TextAlignment::TopRight:
     case TextAlignment::CenterRight:
@@ -1500,6 +1501,9 @@ void do_draw_text(const IntRect& rect, const TextType& text, const Font& font, T
         break;
     case TextAlignment::Center:
         bounding_rect.center_within(rect);
+        break;
+    case TextAlignment::BottomLeft:
+        bounding_rect.set_location({ rect.x(), (rect.bottom() + 1) - bounding_rect.height() });
         break;
     case TextAlignment::BottomRight:
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), (rect.bottom() + 1) - bounding_rect.height() });
