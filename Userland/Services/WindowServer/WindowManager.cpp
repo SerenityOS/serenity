@@ -1543,13 +1543,8 @@ Gfx::IntRect WindowManager::dnd_rect() const
     return Gfx::IntRect(location, { width, height }).inflated(16, 8);
 }
 
-bool WindowManager::update_theme(String theme_path, String theme_name)
+void WindowManager::invalidate_after_theme_or_font_change()
 {
-    auto new_theme = Gfx::load_system_theme(theme_path);
-    if (!new_theme.is_valid())
-        return false;
-    Gfx::set_system_theme(new_theme);
-    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     Compositor::the().set_background_color(palette().desktop_background().to_string());
     HashTable<ClientConnection*> notified_clients;
     WindowFrame::reload_config();
@@ -1565,11 +1560,21 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     });
     MenuManager::the().did_change_theme();
     AppletManager::the().did_change_theme();
+    Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen();
+}
+
+bool WindowManager::update_theme(String theme_path, String theme_name)
+{
+    auto new_theme = Gfx::load_system_theme(theme_path);
+    if (!new_theme.is_valid())
+        return false;
+    Gfx::set_system_theme(new_theme);
+    m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
     wm_config->sync();
-    Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen();
+    invalidate_after_theme_or_font_change();
     return true;
 }
 
