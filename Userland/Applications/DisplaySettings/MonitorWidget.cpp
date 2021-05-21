@@ -26,13 +26,13 @@ MonitorWidget::MonitorWidget()
 
 bool MonitorWidget::set_wallpaper(String path)
 {
-    if (path.is_empty())
+    if (path == m_desktop_wallpaper_path)
         return false;
+
     auto bitmap = Gfx::Bitmap::load_from_file(path);
-    if (!bitmap)
-        return false;
+    if (bitmap)
+        m_wallpaper_bitmap = move(bitmap);
     m_desktop_wallpaper_path = move(path);
-    m_wallpaper_bitmap = move(bitmap);
     m_desktop_dirty = true;
     update();
     return true;
