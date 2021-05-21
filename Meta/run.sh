@@ -51,7 +51,6 @@ $SERENITY_EXTRA_QEMU_ARGS
 -smp 2
 -device VGA,vgamem_mb=64
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
--device ich9-ahci
 -usb
 -device virtio-serial
 -chardev stdio,id=stdout,mux=on
@@ -60,6 +59,10 @@ $SERENITY_EXTRA_QEMU_ARGS
 -device virtio-rng-pci
 -soundhw pcspk
 -device sb16
+-device pci-bridge,chassis_nr=1,id=bridge1 -device e1000,bus=bridge1
+-device i82801b11-bridge,bus=bridge1,id=bridge2 -device sdhci-pci,bus=bridge2
+-device i82801b11-bridge,id=bridge3 -device sdhci-pci,bus=bridge3
+-device ich9-ahci,bus=bridge3
 "
 
 [ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
