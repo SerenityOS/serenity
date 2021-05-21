@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/StringBuilder.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Panic.h>
 #include <Kernel/StdLib.h>
@@ -11,6 +12,7 @@
 namespace Kernel {
 
 static char s_cmd_line[1024];
+static constexpr StringView s_embedded_cmd_line = "";
 static CommandLine* s_the;
 
 UNMAP_AFTER_INIT void CommandLine::early_initialize(const char* cmd_line)
@@ -37,13 +39,19 @@ UNMAP_AFTER_INIT void CommandLine::initialize()
     dmesgln("Kernel Commandline: {}", kernel_command_line().string());
 }
 
-UNMAP_AFTER_INIT CommandLine::CommandLine(const String& string)
-    : m_string(string)
+UNMAP_AFTER_INIT void CommandLine::build_commandline(const String& cmdline_from_bootloader)
 {
-    s_the = this;
+    StringBuilder builder;
+    builder.append(cmdline_from_bootloader);
+    if (!s_embedded_cmd_line.is_empty()) {
+        builder.append(" ");
+        builder.append(s_embedded_cmd_line);
+    }
+    m_string = builder.to_string();
+}
 
-    const auto& args = m_string.split(' ');
-    m_params.ensure_capacity(args.size());
+UNMAP_AFTER_INIT void CommandLine::add_arguments(const Vector<String>& args)
+{
     for (auto&& str : args) {
         if (str == "") {
             continue;
@@ -57,6 +65,15 @@ UNMAP_AFTER_INIT CommandLine::CommandLine(const String& string)
             m_params.set(move(pair[0]), move(pair[1]));
         }
     }
+}
+
+UNMAP_AFTER_INIT CommandLine::CommandLine(const String& cmdline_from_bootloader)
+{
+    s_the = this;
+    build_commandline(cmdline_from_bootloader);
+    const auto& args = m_string.split(' ');
+    m_params.ensure_capacity(args.size());
+    add_arguments(args);
 }
 
 Optional<String> CommandLine::lookup(const String& key) const
