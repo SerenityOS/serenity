@@ -22,11 +22,20 @@ const String& Preprocessor::process()
 {
     for (; m_line_index < m_lines.size(); ++m_line_index) {
         auto& line = m_lines[m_line_index];
+
+        bool include_in_processed_text = false;
         if (line.starts_with("#")) {
-            handle_preprocessor_line(line);
+            auto keyword = handle_preprocessor_line(line);
+            if (m_options.keep_include_statements && keyword == "include")
+                include_in_processed_text = true;
         } else if (m_state == State::Normal) {
+            include_in_processed_text = true;
+        }
+
+        if (include_in_processed_text) {
             m_builder.append(line);
         }
+
         m_builder.append("\n");
     }
 
