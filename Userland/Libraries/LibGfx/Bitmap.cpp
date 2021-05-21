@@ -427,7 +427,10 @@ RefPtr<Gfx::Bitmap> Bitmap::scaled(float sx, float sy) const
     if (floorf(sx) == sx && floorf(sy) == sy)
         return scaled(static_cast<int>(sx), static_cast<int>(sy));
 
-    auto new_bitmap = Gfx::Bitmap::create(format(), { width() * sx, height() * sy }, scale());
+    int scaled_width = (int)ceilf(sx * (float)width());
+    int scaled_height = (int)ceilf(sy * (float)height());
+
+    auto new_bitmap = Gfx::Bitmap::create(format(), { scaled_width, scaled_height }, scale());
     if (!new_bitmap)
         return nullptr;
 
