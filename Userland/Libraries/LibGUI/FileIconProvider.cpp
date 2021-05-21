@@ -169,10 +169,7 @@ Icon FileIconProvider::icon_for_executable(const String& path)
         int image_size;
     };
 
-    constexpr Array icon_sections = {
-        IconSection { .section_name = "serenity_icon_s", .image_size = 16 },
-        IconSection { .section_name = "serenity_icon_m", .image_size = 32 }
-    };
+    static const IconSection icon_sections[] = { { .section_name = "serenity_icon_s", .image_size = 16 }, { .section_name = "serenity_icon_m", .image_size = 32 } };
 
     bool had_error = false;
     for (const auto& icon_section : icon_sections) {

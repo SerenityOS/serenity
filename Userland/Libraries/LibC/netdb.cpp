@@ -36,7 +36,7 @@ static constexpr i32 lookup_server_endpoint_magic = 9001;
 
 // Get service entry buffers and file information for the getservent() family of functions.
 static FILE* services_file = nullptr;
-static constexpr char services_path[] = "/etc/services";
+static const char* services_path = "/etc/services";
 
 static bool fill_getserv_buffers(const char* line, ssize_t read);
 static servent __getserv_buffer;
@@ -50,7 +50,7 @@ static ssize_t service_file_offset = 0;
 
 // Get protocol entry buffers and file information for the getprotent() family of functions.
 static FILE* protocols_file = nullptr;
-static constexpr char protocols_path[] = "/etc/protocols";
+static const char* protocols_path = "/etc/protocols";
 
 static bool fill_getproto_buffers(const char* line, ssize_t read);
 static protoent __getproto_buffer;

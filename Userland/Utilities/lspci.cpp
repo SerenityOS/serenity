@@ -8,7 +8,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/String.h>
-#include <AK/StringView.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibPCIDB/Database.h>
@@ -17,8 +16,8 @@
 
 static bool flag_show_numerical = false;
 
-static constexpr StringView format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
-static constexpr StringView format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
+static const char* format_numerical = "{:04x}:{:02x}:{:02x}.{} {}: {}:{} (rev {:02x})";
+static const char* format_textual = "{:04x}:{:02x}:{:02x}.{} {}: {} {} (rev {:02x})";
 
 int main(int argc, char** argv)
 {
@@ -44,7 +43,7 @@ int main(int argc, char** argv)
     args_parser.add_option(flag_show_numerical, "Show numerical IDs", "numerical", 'n');
     args_parser.parse(argc, argv);
 
-    const auto format = flag_show_numerical ? format_numerical : format_textual;
+    const char* format = flag_show_numerical ? format_numerical : format_textual;
 
     RefPtr<PCIDB::Database> db;
     if (!flag_show_numerical) {

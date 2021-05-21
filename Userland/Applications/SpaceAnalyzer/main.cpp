@@ -9,7 +9,6 @@
 #include <AK/Queue.h>
 #include <AK/QuickSort.h>
 #include <AK/RefCounted.h>
-#include <AK/StringView.h>
 #include <AK/URL.h>
 #include <Applications/SpaceAnalyzer/SpaceAnalyzerGML.h>
 #include <LibCore/DirIterator.h>
@@ -27,6 +26,8 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+static const char* APP_NAME = "Space Analyzer";
 
 struct TreeNode : public SpaceAnalyzer::TreeMapNode {
     TreeNode(String name)
@@ -252,8 +253,6 @@ static String get_absolute_path_to_selected_node(const SpaceAnalyzer::TreeMapWid
 
 int main(int argc, char* argv[])
 {
-    constexpr StringView APP_NAME = "Space Analyzer";
-
     auto app = GUI::Application::construct(argc, argv);
 
     RefPtr<Tree> tree = adopt_ref(*new Tree(""));
