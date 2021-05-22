@@ -10,6 +10,7 @@
 #include <LibCore/UDPSocket.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,7 +32,7 @@ int main(int argc, char** argv)
     bool verbose = false;
     bool should_close = false;
     bool udp_mode = false;
-    const char* addr = nullptr;
+    const char* target = nullptr;
     int port = 0;
 
     Core::ArgsParser args_parser;
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
     args_parser.add_option(verbose, "Log everything that's happening", "verbose", 'v');
     args_parser.add_option(udp_mode, "UDP mode", "udp", 'u');
     args_parser.add_option(should_close, "Close connection after reading stdin to the end", nullptr, 'N');
-    args_parser.add_positional_argument(addr, "Address to connect to or listen on", "address");
+    args_parser.add_positional_argument(target, "Address to listen on, or the address or hostname to connect to", "target");
     args_parser.add_positional_argument(port, "Port to connect to or listen on", "port");
     args_parser.parse(argc, argv);
 
@@ -55,9 +56,9 @@ int main(int argc, char** argv)
 
         socket->on_connected = [&]() {
             if (verbose)
-                warnln("connected to {}:{}", addr, port);
+                warnln("connected to {}:{}", target, port);
         };
-        socket->connect(addr, port);
+        socket->connect(target, port);
 
         for (;;) {
             char buf[1024];
@@ -81,13 +82,12 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        struct sockaddr_in sa {
-        };
+        sockaddr_in sa {};
         sa.sin_family = AF_INET;
         sa.sin_port = htons(port);
         sa.sin_addr.s_addr = htonl(INADDR_ANY);
-        if (addr) {
-            if (inet_pton(AF_INET, addr, &sa.sin_addr) < 0) {
+        if (target) {
+            if (inet_pton(AF_INET, target, &sa.sin_addr) < 0) {
                 perror("inet_pton");
                 return 1;
             }
@@ -105,7 +105,7 @@ int main(int argc, char** argv)
 
         char addr_str[INET_ADDRSTRLEN];
 
-        struct sockaddr_in sin;
+        sockaddr_in sin;
         socklen_t len;
 
         len = sizeof(sin);
@@ -149,19 +149,21 @@ int main(int argc, char** argv)
             return 1;
         }
 
-        char addr_str[INET_ADDRSTRLEN];
-
-        struct sockaddr_in dst_addr {
-        };
-        dst_addr.sin_family = AF_INET;
-        dst_addr.sin_port = htons(port);
-        if (inet_pton(AF_INET, addr, &dst_addr.sin_addr) < 0) {
-            perror("inet_pton");
+        auto* hostent = gethostbyname(target);
+        if (!hostent) {
+            warnln("Socket::connect: Unable to resolve '{}'", target);
             return 1;
         }
 
-        if (verbose)
+        sockaddr_in dst_addr {};
+        dst_addr.sin_family = AF_INET;
+        dst_addr.sin_port = htons(port);
+        dst_addr.sin_addr.s_addr = *(const in_addr_t*)hostent->h_addr_list[0];
+
+        if (verbose) {
+            char addr_str[INET_ADDRSTRLEN];
             warnln("connecting to {}:{}", inet_ntop(dst_addr.sin_family, &dst_addr.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(dst_addr.sin_port));
+        }
         if (connect(fd, (struct sockaddr*)&dst_addr, sizeof(dst_addr)) < 0) {
             perror("connect");
             return 1;
