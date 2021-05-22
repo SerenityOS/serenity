@@ -44,12 +44,16 @@ private:
     RefPtr<GUI::Action> m_open_action;
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
+    RefPtr<GUI::Action> m_find_action;
     RefPtr<GUI::Action> m_goto_decimal_offset_action;
     RefPtr<GUI::Action> m_goto_hex_offset_action;
+    RefPtr<GUI::Action> m_layout_toolbar_action;
 
     GUI::ActionGroup m_bytes_per_row_actions;
 
     RefPtr<GUI::Statusbar> m_statusbar;
+    RefPtr<GUI::Toolbar> m_toolbar;
+    RefPtr<GUI::ToolbarContainer> m_toolbar_container;
 
     bool m_document_dirty { false };
 };

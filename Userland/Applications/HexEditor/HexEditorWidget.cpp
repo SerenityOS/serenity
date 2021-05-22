@@ -8,6 +8,7 @@
 #include "FindDialog.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <Applications/HexEditor/HexEditorWindowGML.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -21,16 +22,19 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <stdio.h>
 #include <string.h>
 
+REGISTER_WIDGET(HexEditor, HexEditor);
+
 HexEditorWidget::HexEditorWidget()
 {
-    set_fill_with_background_color(true);
-    set_layout<GUI::VerticalBoxLayout>();
-    layout()->set_spacing(2);
-
-    m_editor = add<HexEditor>();
+    load_from_gml(hex_editor_window_gml);
+    m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
+    m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
+    m_editor = *find_descendant_of_type_named<HexEditor>("editor");
+    m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
@@ -46,8 +50,6 @@ HexEditorWidget::HexEditorWidget()
         if (!was_dirty)
             update_title();
     };
-
-    m_statusbar = add<GUI::Statusbar>(5);
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
         if (m_document_dirty) {
@@ -107,6 +109,37 @@ HexEditorWidget::HexEditorWidget()
         set_path(LexicalPath(save_path.value()));
         dbgln("Wrote document to {}", save_path.value());
     });
+
+    m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
+        auto old_buffer = m_search_buffer;
+        if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
+
+            bool same_buffers = false;
+            if (old_buffer.size() == m_search_buffer.size()) {
+                if (memcmp(old_buffer.data(), m_search_buffer.data(), old_buffer.size()) == 0)
+                    same_buffers = true;
+            }
+
+            auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
+
+            if (result == -1) {
+                GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                return;
+            }
+            m_editor->update();
+            m_last_found_index = result;
+        }
+    });
+
+    m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
+        m_toolbar_container->set_visible(action.is_checked());
+    });
+
+    m_toolbar->add_action(*m_new_action);
+    m_toolbar->add_action(*m_open_action);
+    m_toolbar->add_action(*m_save_action);
+    m_toolbar->add_separator();
+    m_toolbar->add_action(*m_find_action);
 
     m_editor->set_focus(true);
 }
@@ -172,27 +205,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     edit_menu.add_separator();
-    edit_menu.add_action(GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
-        auto old_buffer = m_search_buffer;
-        if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
-
-            bool same_buffers = false;
-            if (old_buffer.size() == m_search_buffer.size()) {
-                if (memcmp(old_buffer.data(), m_search_buffer.data(), old_buffer.size()) == 0)
-                    same_buffers = true;
-            }
-
-            auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
-
-            if (result == -1) {
-                GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
-                return;
-            }
-            m_editor->update();
-            m_last_found_index = result;
-        }
-    }));
-
+    edit_menu.add_action(*m_find_action);
     edit_menu.add_action(GUI::Action::create("Find &Next", { Mod_None, Key_F3 }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find-next.png"), [&](const GUI::Action&) {
         if (m_search_text.is_empty() || m_search_buffer.is_empty()) {
             GUI::MessageBox::show(window(), "Nothing to search for", "Not found", GUI::MessageBox::Type::Warning);
@@ -209,6 +222,8 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     }));
 
     auto& view_menu = menubar.add_menu("&View");
+    view_menu.add_action(*m_layout_toolbar_action);
+    m_layout_toolbar_action->set_checked(true);
     m_bytes_per_row_actions.set_exclusive(true);
     auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per &Row");
     for (int i = 8; i <= 32; i += 8) {
