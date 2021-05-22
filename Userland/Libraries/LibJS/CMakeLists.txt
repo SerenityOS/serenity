@@ -82,7 +82,6 @@ set(SOURCES
     Runtime/TypedArray.cpp
     Runtime/TypedArrayConstructor.cpp
     Runtime/TypedArrayPrototype.cpp
-    Runtime/Uint8ClampedArray.cpp
     Runtime/VM.cpp
     Runtime/Value.cpp
     Runtime/WithScope.cpp
