@@ -380,6 +380,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect.inflated(2, 2).intersected(frame_inner_rect()), palette().base_text());
     }
 
+    auto& font = this->font();
+    auto& bold_font = font.bold_variant();
+
     // Pass: Paint foreground (text).
     for (u16 visual_row = 0; visual_row < m_terminal.rows(); ++visual_row) {
         auto row_rect = this->row_rect(visual_row);
@@ -408,7 +411,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
                 code_point,
-                attribute.flags & VT::Attribute::Bold ? bold_font() : font(),
+                attribute.flags & VT::Attribute::Bold ? bold_font : font,
                 text_color);
         }
     }
@@ -1062,14 +1065,6 @@ void TerminalWidget::did_change_font()
 {
     GUI::Frame::did_change_font();
     m_line_height = font().glyph_height() + m_line_spacing;
-
-    const Gfx::Font& bold_font = font().bold_variant();
-
-    if (bold_font.glyph_height() == font().glyph_height() && bold_font.glyph_width(' ') == font().glyph_width(' '))
-        m_bold_font = &bold_font;
-    else
-        m_bold_font = font();
-
     if (!size().is_empty())
         relayout(size());
 }
