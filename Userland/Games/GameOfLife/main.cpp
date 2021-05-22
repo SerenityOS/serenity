@@ -15,6 +15,7 @@
 #include <LibGUI/SpinBox.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/Toolbar.h>
+#include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/Window.h>
 
 const char* click_tip = "Tip: click the board to toggle individual cells, or click+drag to toggle multiple cells";
@@ -101,6 +102,12 @@ int main(int argc, char** argv)
         board_widget.update();
     });
     main_toolbar.add_action(randomize_cells_action);
+
+    auto rotate_pattern_action = GUI::Action::create("&Rotate pattern", { 0, Key_R }, Gfx::Bitmap::load_from_file("/res/icons/16x16/redo.png"), [&](auto&) {
+        if (board_widget.selected_pattern() != nullptr)
+            board_widget.selected_pattern()->rotate_clockwise();
+    });
+    main_toolbar.add_action(rotate_pattern_action);
 
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
