@@ -2649,16 +2649,16 @@ void HTMLTokenizer::switch_to(Badge<HTMLDocumentParser>, State new_state)
 void HTMLTokenizer::will_emit(HTMLToken& token)
 {
     if (token.is_start_tag())
-        m_last_emitted_start_tag = token;
+        m_last_emitted_start_tag_name = token.tag_name();
     token.m_end_position = nth_last_position(0);
 }
 
 bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
 {
     VERIFY(m_current_token.is_end_tag());
-    if (!m_last_emitted_start_tag.is_start_tag())
+    if (!m_last_emitted_start_tag_name.has_value())
         return false;
-    return m_current_token.tag_name() == m_last_emitted_start_tag.tag_name();
+    return m_current_token.tag_name() == m_last_emitted_start_tag_name.value();
 }
 
 bool HTMLTokenizer::consumed_as_part_of_an_attribute() const

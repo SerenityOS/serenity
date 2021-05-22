@@ -164,7 +164,7 @@ private:
 
     HTMLToken m_current_token;
 
-    HTMLToken m_last_emitted_start_tag;
+    Optional<String> m_last_emitted_start_tag_name;
 
     bool m_has_emitted_eof { false };
 
