@@ -78,6 +78,13 @@ class AKDistinctNumeric:
 
     @classmethod
     def prettyprint_type(cls, type):
+        actual_name = type.template_argument(1)
+        parts = actual_name.name.split("::")
+        unqualified_name = re.sub(r'__(\w+)_tag', r'\1', actual_name.name)
+        if unqualified_name != actual_name.name:
+            qualified_name = '::'.join(parts[:-2] + [unqualified_name])
+            return qualified_name
+        # If the tag is malformed, just print DistinctNumeric<T>
         contained_type = type.template_argument(0)
         return f'AK::DistinctNumeric<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
 
