@@ -11,7 +11,6 @@
 #include <LibCards/Card.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/Frame.h>
-#include <LibGUI/Painter.h>
 
 using Cards::Card;
 
