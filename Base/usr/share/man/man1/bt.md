@@ -11,15 +11,15 @@ $ bt <pid>
 ## Description
 
 This program is used to inspect the current executable state of a process.
-It will read the stack of each thread in the process, and symbolize the
+It will read the stack of each thread in the process, and symbolicate the
 addresses for each frame in the stack producing a backtrace.
 
 **NOTE**:
 
 * Kernel addresses will not be available unless you are super user.
 
-* If Kernel addresses are available, they will not be symbolized unless the
-  `SymbolServer` service has access to the `/boot/Kernel` file.
+* If Kernel addresses are available, they will not be symbolicated unless
+  the current user has access to the `/boot/Kernel` file.
 
 ## Examples
 
