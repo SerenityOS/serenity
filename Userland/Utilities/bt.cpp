@@ -9,7 +9,7 @@
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
-#include <LibSymbolClient/Client.h>
+#include <LibSymbolication/Client.h>
 
 int main(int argc, char** argv)
 {
