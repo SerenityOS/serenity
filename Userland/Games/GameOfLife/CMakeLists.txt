@@ -1,10 +1,11 @@
 compile_gml(GameOfLife.gml GameOfLifeGML.h game_of_life_gml)
 
 set(SOURCES
+    main.cpp
     Board.cpp
     BoardWidget.cpp
     GameOfLifeGML.h
-    main.cpp
+    Pattern.cpp
 )
 
 serenity_app(GameOfLife ICON app-gameoflife)
