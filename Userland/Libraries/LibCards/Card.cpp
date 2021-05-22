@@ -96,7 +96,8 @@ Card::Card(Type type, uint8_t value)
     paint_rect.set_height(paint_rect.height() / 2);
     paint_rect.shrink(10, 6);
 
-    painter.draw_text(paint_rect, label, font, Gfx::TextAlignment::TopLeft, color());
+    auto text_rect = Gfx::IntRect { 4, 6, font.width("10"), font.glyph_height() };
+    painter.draw_text(text_rect, label, font, Gfx::TextAlignment::Center, color());
 
     NonnullRefPtr<Gfx::CharacterBitmap> symbol = s_diamond;
     switch (m_type) {
@@ -117,7 +118,7 @@ Card::Card(Type type, uint8_t value)
     }
 
     painter.draw_bitmap(
-        { paint_rect.x() + (font.width(label) - symbol->size().width()) / 2, font.glyph_height() + paint_rect.y() + 3 },
+        { text_rect.x() + (text_rect.width() - symbol->size().width()) / 2, text_rect.bottom() + 5 },
         symbol, color());
 
     for (int y = height / 2; y < height; ++y) {
