@@ -40,6 +40,8 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKStringView
     elif klass == 'AK::StringImpl':
         return AKStringImpl
+    elif klass == 'AK::Variant':
+        return AKVariant
     elif klass == 'AK::Vector':
         return AKVector
     elif klass == 'VirtualAddress':
@@ -184,6 +186,40 @@ class AKRefPtr:
     def prettyprint_type(cls, type):
         contained_type = type.template_argument(0)
         return f'AK::RefPtr<{handler_class_for_type(contained_type).prettyprint_type(contained_type)}>'
+
+
+class AKVariant:
+    def __init__(self, val):
+        self.val = val
+        self.index = int(self.val["m_index"])
+        self.contained_types = self.resolve_types(self.val.type)
+
+    def to_string(self):
+        return AKVariant.prettyprint_type(self.val.type)
+
+    def children(self):
+        data = self.val["m_data"]
+        ty = self.contained_types[self.index]
+        return [(ty.name, data.cast(ty.pointer()).referenced_value())]
+
+    @classmethod
+    def resolve_types(cls, ty):
+        contained_types = []
+        type_resolved = ty.strip_typedefs()
+        index = 0
+        while True:
+            try:
+                arg = type_resolved.template_argument(index)
+                index += 1
+                contained_types.append(arg)
+            except RuntimeError:
+                break
+        return contained_types
+
+    @classmethod
+    def prettyprint_type(cls, ty):
+        names = ", ".join(handler_class_for_type(t).prettyprint_type(t) for t in AKVariant.resolve_types(ty))
+        return f'AK::Variant<{names}>'
 
 
 class AKVector:
