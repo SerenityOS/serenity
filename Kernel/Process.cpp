@@ -480,7 +480,10 @@ bool Process::dump_perfcore()
     if (!json)
         return false;
     auto json_buffer = UserOrKernelBuffer::for_kernel_buffer(json->data());
-    return !description->write(json_buffer, json->size()).is_error();
+    if (description->write(json_buffer, json->size()).is_error())
+        return false;
+    dbgln("Wrote perfcore to {}", description->absolute_path());
+    return true;
 }
 
 void Process::finalize()
