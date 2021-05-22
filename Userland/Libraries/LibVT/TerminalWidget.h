@@ -39,8 +39,6 @@ public:
 
     void apply_size_increments_to_window(GUI::Window&);
 
-    const Gfx::Font& bold_font() const { return *m_bold_font; }
-
     void set_opacity(u8);
     float opacity() { return m_opacity; };
 
@@ -174,8 +172,6 @@ private:
     u8 m_opacity { 255 };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
-
-    RefPtr<Gfx::Font> m_bold_font;
 
     enum class AutoScrollDirection {
         None,
