@@ -21,7 +21,7 @@ public:
     {
     }
 
-    size_t pick_low_points_low_value_card();
+    size_t pick_lead_card(Function<bool(Card&)>, Function<bool(Card&)>);
     Optional<size_t> pick_low_points_high_value_card(Optional<Card::Type> type = {});
     Optional<size_t> pick_lower_value_card(Card& other_card);
     Optional<size_t> pick_slightly_higher_value_card(Card& other_card);

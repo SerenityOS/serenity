@@ -45,6 +45,8 @@ private:
     Player& current_player();
     bool game_ended() const { return m_trick_number == 13; }
     bool is_winner(Player& player);
+    bool other_player_has_lower_value_card(Player& player, Card& card);
+    bool other_player_has_higher_value_card(Player& player, Card& card);
 
     void start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
     void stop_animation();

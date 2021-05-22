@@ -6,28 +6,39 @@
 
 #include "Player.h"
 #include "Helpers.h"
+#include <AK/QuickSort.h>
 
 namespace Hearts {
 
-size_t Player::pick_low_points_low_value_card()
+size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card)
 {
-    int min_points = -1;
-    int min_value = -1;
-    int card_index = -1;
+    struct CardWithIndex {
+        RefPtr<Card> card;
+        size_t index;
+    };
+    Vector<CardWithIndex> sorted_hand;
     for (size_t i = 0; i < hand.size(); i++) {
         auto& card = hand[i];
-        if (card.is_null())
-            continue;
-        auto points = hearts_card_points(*card);
-        auto value = hearts_card_value(*card);
-        if (min_points != -1 && (points > min_points || static_cast<int>(value) > min_value))
-            continue;
-        min_points = points;
-        min_value = static_cast<int>(value);
-        card_index = i;
+        if (card)
+            sorted_hand.empend(card, i);
     }
-    VERIFY(card_index != -1);
-    return card_index;
+    quick_sort(sorted_hand, [](auto& cwi1, auto& cwi2) {
+        if (hearts_card_points(*cwi1.card) >= hearts_card_points(*cwi2.card))
+            return true;
+        if (hearts_card_value(*cwi1.card) >= hearts_card_value(*cwi2.card))
+            return true;
+        return false;
+    });
+
+    size_t last_index = -1;
+    for (auto& cwi : sorted_hand) {
+        if (!valid_play(*cwi.card))
+            continue;
+        if (prefer_card(*cwi.card))
+            return cwi.index;
+        last_index = cwi.index;
+    }
+    return last_index;
 }
 
 Optional<size_t> Player::pick_low_points_high_value_card(Optional<Card::Type> type)

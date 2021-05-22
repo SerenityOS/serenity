@@ -161,6 +161,32 @@ void Game::timer_event(Core::TimerEvent&)
     update();
 }
 
+bool Game::other_player_has_lower_value_card(Player& player, Card& card)
+{
+    for (auto& other_player : m_players) {
+        if (&player != &other_player) {
+            for (auto& other_card : other_player.hand) {
+                if (other_card && card.type() == other_card->type() && hearts_card_value(*other_card) < hearts_card_value(card))
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Game::other_player_has_higher_value_card(Player& player, Card& card)
+{
+    for (auto& other_player : m_players) {
+        if (&player != &other_player) {
+            for (auto& other_card : other_player.hand) {
+                if (other_card && card.type() == other_card->type() && hearts_card_value(*other_card) > hearts_card_value(card))
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 #define RETURN_CARD_IF_VALID(card)     \
     do {                               \
         auto card_index = (card);      \
@@ -177,8 +203,15 @@ size_t Game::pick_card(Player& player)
             auto clubs_2 = player.pick_specific_card(Card::Type::Clubs, CardValue::Number_2);
             VERIFY(clubs_2.has_value());
             return clubs_2.value();
-        } else
-            return player.pick_low_points_low_value_card();
+        } else {
+            auto valid_card = [this, &player](Card& card) {
+                return is_valid_play(player, card);
+            };
+            auto prefer_card = [this, &player](Card& card) {
+                return !other_player_has_lower_value_card(player, card) && other_player_has_higher_value_card(player, card);
+            };
+            return player.pick_lead_card(move(valid_card), move(prefer_card));
+        }
     }
     auto* high_card = &m_trick[0];
     for (auto& card : m_trick)
