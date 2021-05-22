@@ -1,0 +1,9 @@
+{
+    "allow_anonymous_logins": false,
+    "default_home_directory": "/",
+    "users": {
+        "anon": {
+            "home_directory": "/home/anon"
+        }
+    }
+}

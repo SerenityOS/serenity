@@ -1,0 +1,4 @@
+[App]
+Name=FTPServer
+Executable=/bin/FTPServer
+Category=Internet

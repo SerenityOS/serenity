@@ -26,6 +26,8 @@ alias pv=Profiler
 alias ws=WebServer
 alias sl=Solitaire
 alias ue=UserspaceEmulator
+alias ftpserver=FTPServer
+alias ftpclient=FTPClient
 
 alias rgrep="grep -r"
 alias egrep="grep -E"
