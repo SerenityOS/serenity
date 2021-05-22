@@ -107,7 +107,8 @@ void test_send(int fd)
     // bind to an interface that cannot deliver
     char buf[IFNAMSIZ];
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "e1k0", 5);
+    // FIXME: Look up the proper device name instead of hard-coding it
+    memcpy(buf, "ep0s7", 6);
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
         perror("setsockopt(SO_BINDTODEVICE) :: send");
