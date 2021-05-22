@@ -26,7 +26,7 @@ public:
         Yes,
     };
 
-    EventLoop(MakeInspectable = MakeInspectable::Yes);
+    explicit EventLoop(MakeInspectable = MakeInspectable::No);
     ~EventLoop();
 
     int exec();
