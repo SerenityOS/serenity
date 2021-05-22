@@ -45,7 +45,7 @@ void ThreadStackWidget::set_ids(pid_t pid, pid_t tid)
 
 void ThreadStackWidget::refresh()
 {
-    auto symbols = SymbolClient::symbolicate_thread(m_pid, m_tid);
+    auto symbols = Symbolication::symbolicate_thread(m_pid, m_tid);
 
     StringBuilder builder;
 
