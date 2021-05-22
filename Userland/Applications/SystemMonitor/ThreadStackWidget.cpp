@@ -9,7 +9,7 @@
 #include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibSymbolClient/Client.h>
+#include <LibSymbolication/Client.h>
 
 ThreadStackWidget::ThreadStackWidget()
 {

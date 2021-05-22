@@ -7,5 +7,5 @@ set(GENERATED_SOURCES
     ../../Services/SymbolServer/SymbolServerEndpoint.h
 )
 
-serenity_lib(LibSymbolClient symbolclient)
-target_link_libraries(LibSymbolClient LibIPC)
+serenity_lib(LibSymbolication symbolclient)
+target_link_libraries(LibSymbolication LibIPC)
