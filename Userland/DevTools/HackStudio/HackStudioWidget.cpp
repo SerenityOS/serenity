@@ -22,6 +22,7 @@
 #include "Project.h"
 #include "ProjectDeclarations.h"
 #include "TerminalWrapper.h"
+#include "ToDoEntries.h"
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/API/InodeWatcherEvent.h>
@@ -867,6 +868,7 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
     };
 
     m_find_in_files_widget = m_action_tab_widget->add_tab<FindInFilesWidget>("Find in files");
+    m_todo_entries_widget = m_action_tab_widget->add_tab<ToDoEntriesWidget>("TODO");
     m_terminal_wrapper = m_action_tab_widget->add_tab<TerminalWrapper>("Build", false);
     m_debug_info_widget = m_action_tab_widget->add_tab<DebugInfoWidget>("Debug");
     m_disassembly_widget = m_action_tab_widget->add_tab<DisassemblyWidget>("Disassembly");
@@ -875,6 +877,10 @@ void HackStudioWidget::create_action_tab(GUI::Widget& parent)
         m_diff_viewer->set_content(original_content, diff);
         set_edit_mode(EditMode::Diff);
     });
+
+    ToDoEntries::the().on_update = [this]() {
+        m_todo_entries_widget->refresh();
+    };
 }
 
 void HackStudioWidget::create_project_tab(GUI::Widget& parent)

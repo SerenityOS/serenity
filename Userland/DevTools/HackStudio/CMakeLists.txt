@@ -44,6 +44,7 @@ set(SOURCES
     ProjectTemplate.cpp
     TerminalWrapper.cpp
     ToDoEntries.cpp
+    ToDoEntriesWidget.cpp
     main.cpp
 )
 

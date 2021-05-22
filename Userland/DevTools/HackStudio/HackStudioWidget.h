@@ -19,6 +19,7 @@
 #include "Project.h"
 #include "ProjectFile.h"
 #include "TerminalWrapper.h"
+#include "ToDoEntriesWidget.h"
 #include <LibGUI/ActionGroup.h>
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
@@ -143,6 +144,7 @@ private:
     RefPtr<TerminalWrapper> m_terminal_wrapper;
     RefPtr<Locator> m_locator;
     RefPtr<FindInFilesWidget> m_find_in_files_widget;
+    RefPtr<ToDoEntriesWidget> m_todo_entries_widget;
     RefPtr<DebugInfoWidget> m_debug_info_widget;
     RefPtr<DisassemblyWidget> m_disassembly_widget;
     RefPtr<Threading::Thread> m_debugger_thread;
