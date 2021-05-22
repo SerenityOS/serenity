@@ -6,10 +6,9 @@
 
 #include "ThreadStackWidget.h"
 #include <AK/ByteBuffer.h>
-#include <LibCore/File.h>
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibSymbolication/Client.h>
+#include <LibSymbolication/Symbolication.h>
 
 ThreadStackWidget::ThreadStackWidget()
 {
