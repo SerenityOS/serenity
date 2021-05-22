@@ -60,7 +60,7 @@ void test_valid(int fd)
     // bind to an interface that exists
     char buf[IFNAMSIZ];
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "loop0", 6);
+    memcpy(buf, "loop", 5);
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
         perror("setsockopt(SO_BINDTODEVICE) :: valid");
@@ -75,7 +75,7 @@ void test_no_route(int fd)
     // bind to an interface that cannot deliver
     char buf[IFNAMSIZ];
     socklen_t buflen = IFNAMSIZ;
-    memcpy(buf, "loop0", 6);
+    memcpy(buf, "loop", 5);
 
     if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, buf, buflen) < 0) {
         perror("setsockopt(SO_BINDTODEVICE) :: no_route");
