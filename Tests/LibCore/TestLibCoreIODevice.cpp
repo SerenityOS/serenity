@@ -24,15 +24,24 @@ TEST_CASE(file_readline)
         outputfile->write(file->read_line());
         outputfile->write("\n");
     }
-    struct stat src_stat;
-    if (fstat(file->fd(), &src_stat) < 0) {
-        VERIFY_NOT_REACHED();
-    }
-    struct stat dst_stat;
-    if (fstat(outputfile->fd(), &dst_stat) < 0) {
-        VERIFY_NOT_REACHED();
-    }
     file->close();
     outputfile->close();
-    EXPECT_EQ(src_stat.st_size, dst_stat.st_size);
+
+    // Open files again for comparison since otherwise read_all returns empty (even when not closing the file)
+    file = Core::File::construct(path);
+    if (!file->open(Core::OpenMode::ReadOnly))
+        VERIFY_NOT_REACHED();
+    outputfile = Core::File::construct(output_path);
+    if (!outputfile->open(Core::OpenMode::ReadOnly))
+        VERIFY_NOT_REACHED();
+    auto inputData = file->read_all();
+    auto outputData = outputfile->read_all();
+    EXPECT(inputData.size() > 0);
+    EXPECT_EQ(inputData.size(), outputData.size());
+
+    // Compare char by char
+    for (size_t i = 0; i < inputData.size(); i++) {
+        EXPECT_EQ(inputData[i], outputData[i]);
+    }
+
 }
