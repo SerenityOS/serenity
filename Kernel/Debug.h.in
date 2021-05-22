@@ -66,6 +66,10 @@
 #cmakedefine01 EXT2_DEBUG
 #endif
 
+#ifndef FRAMEBUFFER_DEVICE_DEBUG
+#cmakedefine01 FRAMEBUFFER_DEVICE_DEBUG
+#endif
+
 #ifndef EXT2_VERY_DEBUG
 #cmakedefine01 EXT2_VERY_DEBUG
 #endif
