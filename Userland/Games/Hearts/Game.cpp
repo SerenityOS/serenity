@@ -180,6 +180,12 @@ size_t Game::pick_card(Player& player)
         } else
             return player.pick_low_points_low_value_card();
     }
+    auto* high_card = &m_trick[0];
+    for (auto& card : m_trick)
+        if (high_card->type() == card.type() && hearts_card_value(card) > hearts_card_value(*high_card))
+            high_card = &card;
+    if (high_card->type() == Card::Type::Spades && hearts_card_value(*high_card) > CardValue::Queen)
+        RETURN_CARD_IF_VALID(player.pick_specific_card(Card::Type::Spades, CardValue::Queen));
     auto card_has_points = [](Card& card) { return hearts_card_points(card) > 0; };
     auto trick_has_points = m_trick.first_matching(card_has_points).has_value();
     bool is_trailing_player = m_trick.size() == 3;
@@ -190,12 +196,6 @@ size_t Game::pick_card(Player& player)
         else
             return player.pick_max_points_card();
     }
-    auto* high_card = &m_trick[0];
-    for (auto& card : m_trick)
-        if (high_card->type() == card.type() && hearts_card_value(card) > hearts_card_value(*high_card))
-            high_card = &card;
-    if (!is_first_trick && high_card->type() == Card::Type::Spades && hearts_card_value(*high_card) > CardValue::Queen)
-        RETURN_CARD_IF_VALID(player.pick_specific_card(Card::Type::Spades, CardValue::Queen));
     RETURN_CARD_IF_VALID(player.pick_lower_value_card(*high_card));
     if (!is_trailing_player)
         RETURN_CARD_IF_VALID(player.pick_slightly_higher_value_card(*high_card));
