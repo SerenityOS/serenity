@@ -21,7 +21,7 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/Bitmap.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Thread.h>
 
 int main(int argc, char** argv)
 {
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     Optional<String> save_path;
     bool need_to_write_wav = false;
 
-    auto audio_thread = LibThread::Thread::construct([&] {
+    auto audio_thread = Threading::Thread::construct([&] {
         auto audio = Core::File::construct("/dev/audio");
         if (!audio->open(Core::OpenMode::WriteOnly)) {
             dbgln("Can't open audio device: {}", audio->error_string());

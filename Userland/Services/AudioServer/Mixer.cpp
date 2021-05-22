@@ -16,7 +16,7 @@ namespace AudioServer {
 
 Mixer::Mixer()
     : m_device(Core::File::construct("/dev/audio", this))
-    , m_sound_thread(LibThread::Thread::construct(
+    , m_sound_thread(Threading::Thread::construct(
           [this] {
               mix();
               return 0;

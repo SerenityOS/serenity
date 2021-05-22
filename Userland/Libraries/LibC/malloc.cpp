@@ -9,7 +9,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
-#include <LibThread/Lock.h>
+#include <LibThreading/Lock.h>
 #include <assert.h>
 #include <errno.h>
 #include <mallocdefs.h>
@@ -27,10 +27,10 @@
 
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
-static LibThread::Lock& malloc_lock()
+static Threading::Lock& malloc_lock()
 {
-    static u32 lock_storage[sizeof(LibThread::Lock) / sizeof(u32)];
-    return *reinterpret_cast<LibThread::Lock*>(&lock_storage);
+    static u32 lock_storage[sizeof(Threading::Lock) / sizeof(u32)];
+    return *reinterpret_cast<Threading::Lock*>(&lock_storage);
 }
 
 constexpr size_t number_of_chunked_blocks_to_keep_around_per_size_class = 4;
@@ -158,7 +158,7 @@ enum class CallerWillInitializeMemory {
 
 static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_initialize_memory)
 {
-    LibThread::Locker locker(malloc_lock());
+    Threading::Locker locker(malloc_lock());
 
     if (s_log_malloc)
         dbgln("LibC: malloc({})", size);
@@ -279,7 +279,7 @@ static void free_impl(void* ptr)
 
     g_malloc_stats.number_of_free_calls++;
 
-    LibThread::Locker locker(malloc_lock());
+    Threading::Locker locker(malloc_lock());
 
     void* block_base = (void*)((FlatPtr)ptr & ChunkedBlock::ChunkedBlock::block_mask);
     size_t magic = *(size_t*)block_base;
@@ -381,7 +381,7 @@ size_t malloc_size(void* ptr)
 {
     if (!ptr)
         return 0;
-    LibThread::Locker locker(malloc_lock());
+    Threading::Locker locker(malloc_lock());
     void* page_base = (void*)((FlatPtr)ptr & ChunkedBlock::block_mask);
     auto* header = (const CommonHeader*)page_base;
     auto size = header->m_size;
@@ -406,7 +406,7 @@ void* realloc(void* ptr, size_t size)
     if (!size)
         return nullptr;
 
-    LibThread::Locker locker(malloc_lock());
+    Threading::Locker locker(malloc_lock());
     auto existing_allocation_size = malloc_size(ptr);
 
     if (size <= existing_allocation_size) {
@@ -423,7 +423,7 @@ void* realloc(void* ptr, size_t size)
 
 void __malloc_init()
 {
-    new (&malloc_lock()) LibThread::Lock();
+    new (&malloc_lock()) Threading::Lock();
 
     s_in_userspace_emulator = (int)syscall(SC_emuctl, 0) != -ENOSYS;
     if (s_in_userspace_emulator) {

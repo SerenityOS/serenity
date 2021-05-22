@@ -16,7 +16,7 @@
 #include <LibGUI/FileSystemModel.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibThread/BackgroundAction.h>
+#include <LibThreading/BackgroundAction.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -571,7 +571,7 @@ bool FileSystemModel::fetch_thumbnail_for(const Node& node)
 
     auto weak_this = make_weak_ptr();
 
-    LibThread::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
+    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path] {
             return render_thumbnail(path);
         },

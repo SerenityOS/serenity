@@ -18,7 +18,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
-#include <LibThread/BackgroundAction.h>
+#include <LibThreading/BackgroundAction.h>
 
 namespace WindowServer {
 
@@ -609,7 +609,7 @@ bool Compositor::set_wallpaper_mode(const String& mode)
 
 bool Compositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    LibThread::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
+    Threading::BackgroundAction<RefPtr<Gfx::Bitmap>>::create(
         [path] {
             return Gfx::Bitmap::load_from_file(path);
         },

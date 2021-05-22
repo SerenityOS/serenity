@@ -28,5 +28,5 @@ set(SOURCES
 )
 
 serenity_bin(WindowServer)
-target_link_libraries(WindowServer LibCore LibGfx LibThread LibPthread LibIPC)
+target_link_libraries(WindowServer LibCore LibGfx LibThreading LibIPC)
 serenity_install_headers(Services/WindowServer)

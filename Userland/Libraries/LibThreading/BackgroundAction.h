@@ -13,10 +13,10 @@
 #include <LibCore/Event.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/Object.h>
-#include <LibThread/Lock.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Lock.h>
+#include <LibThreading/Thread.h>
 
-namespace LibThread {
+namespace Threading {
 
 template<typename Result>
 class BackgroundAction;

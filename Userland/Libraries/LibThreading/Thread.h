@@ -13,7 +13,7 @@
 #include <LibCore/Object.h>
 #include <pthread.h>
 
-namespace LibThread {
+namespace Threading {
 
 TYPEDEF_DISTINCT_ORDERED_ID(intptr_t, ThreadError);
 
