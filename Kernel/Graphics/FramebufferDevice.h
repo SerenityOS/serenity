@@ -20,6 +20,8 @@ namespace Kernel {
 class FramebufferDevice : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
+    static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
 
@@ -29,15 +31,14 @@ public:
 
     virtual void deactivate_writes();
     virtual void activate_writes();
-    virtual size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height; }
+    size_t framebuffer_size_in_bytes() const;
 
     virtual ~FramebufferDevice() {};
     void initialize();
 
-protected:
-    virtual bool set_resolution(size_t framebuffer_width, size_t framebuffer_height, size_t framebuffer_pitch);
-
-    FramebufferDevice(PhysicalAddress, size_t, size_t, size_t);
+private:
+    // ^File
+    virtual const char* class_name() const { return "FramebufferDevice"; }
 
     virtual bool can_read(const FileDescription&, size_t) const override final { return true; }
     virtual bool can_write(const FileDescription&, size_t) const override final { return true; }
@@ -45,13 +46,13 @@ protected:
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override { return -EINVAL; }
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
 
-protected:
+    FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+
     PhysicalAddress m_framebuffer_address;
     size_t m_framebuffer_pitch { 0 };
     size_t m_framebuffer_width { 0 };
     size_t m_framebuffer_height { 0 };
 
-private:
     SpinLock<u8> m_activation_lock;
 
     RefPtr<AnonymousVMObject> m_real_framebuffer_vmobject;
@@ -63,6 +64,10 @@ private:
 
     RefPtr<AnonymousVMObject> m_userspace_real_framebuffer_vmobject;
     Region* m_userspace_framebuffer_region { nullptr };
+
+    size_t m_y_offset { 0 };
+    size_t m_output_port_index;
+    NonnullRefPtr<GraphicsDevice> m_graphics_adapter;
 };
 
 }

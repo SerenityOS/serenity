@@ -9,7 +9,6 @@
 #include <AK/Singleton.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs.h>
-#include <Kernel/Graphics/BochsFramebufferDevice.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
 #include <Kernel/Graphics/Console/FramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
@@ -63,7 +62,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
 UNMAP_AFTER_INIT void BochsGraphicsAdapter::initialize_framebuffer_devices()
 {
     // FIXME: Find a better way to determine default resolution...
-    m_framebuffer_device = BochsFramebufferDevice::create(*this, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
+    m_framebuffer_device = FramebufferDevice::create(*this, 0, PhysicalAddress(PCI::get_BAR0(pci_address()) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     m_framebuffer_device->initialize();
 }
 
@@ -77,7 +76,8 @@ GraphicsDevice::Type BochsGraphicsAdapter::type() const
 void BochsGraphicsAdapter::set_safe_resolution()
 {
     VERIFY(m_framebuffer_console);
-    set_resolution(1024, 768);
+    auto result = try_to_set_resolution(0, 1024, 768);
+    VERIFY(result);
 }
 
 void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
@@ -97,20 +97,17 @@ void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
     registers->bochs_regs.bank = 0;
 }
 
-bool BochsGraphicsAdapter::try_to_set_resolution(size_t width, size_t height)
+bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_t width, size_t height)
 {
-    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution test - {}x{}", width, height);
-    set_resolution_registers(width, height);
-    return validate_setup_resolution(width, height);
-}
-
-bool BochsGraphicsAdapter::set_resolution(size_t width, size_t height)
-{
+    // Note: There's only one output port for this adapter
+    VERIFY(output_port_index == 0);
     VERIFY(m_framebuffer_console);
     if (Checked<size_t>::multiplication_would_overflow(width, height, sizeof(u32)))
         return false;
 
-    if (!try_to_set_resolution(width, height))
+    set_resolution_registers(width, height);
+    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution test - {}x{}", width, height);
+    if (!validate_setup_resolution(width, height))
         return false;
 
     dbgln("BochsGraphicsAdapter: resolution set to {}x{}", width, height);
@@ -127,12 +124,14 @@ bool BochsGraphicsAdapter::validate_setup_resolution(size_t width, size_t height
     return true;
 }
 
-void BochsGraphicsAdapter::set_y_offset(size_t y_offset)
+bool BochsGraphicsAdapter::set_y_offset(size_t output_port_index, size_t y_offset)
 {
+    VERIFY(output_port_index == 0);
     if (m_console_enabled)
-        return;
+        return false;
     auto registers = map_typed_writable<volatile BochsDisplayMMIORegisters>(m_mmio_registers);
     registers->bochs_regs.y_offset = y_offset;
+    return true;
 }
 
 void BochsGraphicsAdapter::enable_consoles()

@@ -59,12 +59,10 @@ set(KERNEL_SOURCES
     Graphics/Console/FramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
     Graphics/Console/VGAConsole.cpp
-    Graphics/BochsFramebufferDevice.cpp
     Graphics/BochsGraphicsAdapter.cpp
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/IntelNativeGraphicsAdapter.cpp
-    Graphics/RawFramebufferDevice.cpp
     Graphics/VGACompatibleAdapter.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
