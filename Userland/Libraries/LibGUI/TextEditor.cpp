@@ -1286,6 +1286,10 @@ void TextEditor::paste()
         return;
 
     auto paste_text = Clipboard::the().data();
+
+    if (paste_text.is_empty())
+        return;
+
     printf("Paste: \"%s\"\n", String::copy(paste_text).characters());
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
