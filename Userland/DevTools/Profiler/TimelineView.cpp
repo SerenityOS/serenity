@@ -6,6 +6,7 @@
 
 #include "TimelineView.h"
 #include "Profile.h"
+#include "TimelineTrack.h"
 #include <LibGUI/BoxLayout.h>
 
 namespace Profiler {
@@ -60,6 +61,20 @@ void TimelineView::mouseup_event(GUI::MouseEvent& event)
     set_selecting(false);
     if (select_start_time() == select_end_time())
         m_profile.clear_timestamp_filter_range();
+}
+
+void TimelineView::mousewheel_event(GUI::MouseEvent& event)
+{
+    if (event.modifiers() == Mod_Ctrl) {
+        event.accept();
+        m_scale += event.wheel_delta();
+        m_scale = clamp(m_scale, 1.0f, 100.0f);
+        for_each_child_of_type<TimelineTrack>([&](auto& track) {
+            track.set_scale(m_scale);
+            return IterationDecision::Continue;
+        });
+        on_scale_change();
+    }
 }
 
 }
