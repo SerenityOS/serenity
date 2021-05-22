@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Thread.h>
 #include <pthread.h>
 #include <unistd.h>
 
@@ -17,10 +17,10 @@ static void test_once()
     static Vector<int> v;
     v.clear();
     pthread_once_t once = PTHREAD_ONCE_INIT;
-    NonnullRefPtrVector<LibThread::Thread, threads_count> threads;
+    NonnullRefPtrVector<Threading::Thread, threads_count> threads;
 
     for (size_t i = 0; i < threads_count; i++) {
-        threads.append(LibThread::Thread::construct([&] {
+        threads.append(Threading::Thread::construct([&] {
             return pthread_once(&once, [] {
                 v.append(35);
                 sleep(1);

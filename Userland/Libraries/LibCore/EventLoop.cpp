@@ -21,7 +21,7 @@
 #include <LibCore/LocalSocket.h>
 #include <LibCore/Notifier.h>
 #include <LibCore/Object.h>
-#include <LibThread/Lock.h>
+#include <LibThreading/Lock.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>
@@ -54,7 +54,7 @@ struct EventLoopTimer {
 };
 
 struct EventLoop::Private {
-    LibThread::Lock lock;
+    Threading::Lock lock;
 };
 
 static EventLoop* s_main_event_loop;
@@ -372,7 +372,7 @@ void EventLoop::pump(WaitMode mode)
 
     decltype(m_queued_events) events;
     {
-        LibThread::Locker locker(m_private->lock);
+        Threading::Locker locker(m_private->lock);
         events = move(m_queued_events);
     }
 
@@ -401,7 +401,7 @@ void EventLoop::pump(WaitMode mode)
         }
 
         if (m_exit_requested) {
-            LibThread::Locker locker(m_private->lock);
+            Threading::Locker locker(m_private->lock);
             dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop: Exit requested. Rejigging {} events.", events.size() - i);
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
@@ -416,7 +416,7 @@ void EventLoop::pump(WaitMode mode)
 
 void EventLoop::post_event(Object& receiver, NonnullOwnPtr<Event>&& event)
 {
-    LibThread::Locker lock(m_private->lock);
+    Threading::Locker lock(m_private->lock);
     dbgln_if(EVENTLOOP_DEBUG, "Core::EventLoop::post_event: ({}) << receivier={}, event={}", m_queued_events.size(), receiver, event);
     m_queued_events.empend(receiver, move(event));
 }
@@ -600,7 +600,7 @@ retry:
 
     bool queued_events_is_empty;
     {
-        LibThread::Locker locker(m_private->lock);
+        Threading::Locker locker(m_private->lock);
         queued_events_is_empty = m_queued_events.is_empty();
     }
 

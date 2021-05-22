@@ -67,7 +67,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * Mathematical functions (LibM)
 * ELF file handling (LibELF)
 * POSIX threading (LibPthread)
-* Higher-level threading (LibThread)
+* Higher-level threading (LibThreading)
 * Transport Layer Security (LibTLS)
 * HTTP and HTTPS (LibHTTP)
 
