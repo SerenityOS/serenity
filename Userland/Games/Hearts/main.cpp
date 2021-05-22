@@ -74,9 +74,6 @@ int main(int argc, char** argv)
         statusbar.set_override_text({});
     };
 
-    GUI::ActionGroup draw_settng_actions;
-    draw_settng_actions.set_exclusive(true);
-
     auto menubar = GUI::Menubar::construct();
     auto& game_menu = menubar->add_menu("&Game");
 
