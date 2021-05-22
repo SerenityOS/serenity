@@ -103,7 +103,7 @@ int main(int argc, char** argv)
         sched_setparam(0, &param);
     }
 
-    if (pledge("stdio proc recvfd sendfd rpath exec unix", nullptr) < 0) {
+    if (pledge("stdio thread proc recvfd sendfd rpath exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
