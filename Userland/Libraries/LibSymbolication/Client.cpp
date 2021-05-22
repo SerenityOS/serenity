@@ -8,7 +8,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <LibCore/File.h>
-#include <LibSymbolClient/Client.h>
+#include <LibSymbolication/Client.h>
 
 namespace SymbolClient {
 

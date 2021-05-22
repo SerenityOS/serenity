@@ -14,4 +14,4 @@ set(SOURCES
 )
 
 serenity_app(SystemMonitor ICON app-system-monitor)
-target_link_libraries(SystemMonitor LibGUI LibSymbolClient LibPCIDB)
+target_link_libraries(SystemMonitor LibGUI LibSymbolication LibPCIDB)
