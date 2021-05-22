@@ -8,6 +8,8 @@
 #include <AK/Assertions.h>
 #include <AK/HashTable.h>
 #include <AK/OwnPtr.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibCpp/AST.h>
 #include <LibCpp/Lexer.h>
 #include <LibCpp/Parser.h>
@@ -64,6 +66,13 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::get_suggestions
 
     const auto& document = *document_ptr;
     auto containing_token = document.parser().token_at(position);
+
+    if (containing_token.has_value() && containing_token->type() == Token::Type::IncludePath) {
+        auto results = try_autocomplete_include(document, containing_token.value());
+        if (results.has_value())
+            return results.value();
+    }
+
     auto node = document.parser().node_at(position);
     if (!node) {
         dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "no node at position {}:{}", position.line, position.column);
@@ -540,6 +549,7 @@ OwnPtr<CppComprehensionEngine::DocumentData> CppComprehensionEngine::create_docu
     document_data->m_text = move(text);
     document_data->m_preprocessor = make<Preprocessor>(document_data->m_filename, document_data->text());
     document_data->preprocessor().set_ignore_unsupported_keywords(true);
+    document_data->preprocessor().set_keep_include_statements(true);
     document_data->preprocessor().process();
 
     Preprocessor::Definitions preprocessor_definitions;
@@ -588,6 +598,46 @@ String CppComprehensionEngine::scope_of_declaration(const Declaration& decl) con
         return containing_scope;
 
     return String::formatted("{}::{}", parent_scope, containing_scope);
+}
+
+Optional<Vector<GUI::AutocompleteProvider::Entry>> CppComprehensionEngine::try_autocomplete_include(const DocumentData&, Token include_path_token)
+{
+    VERIFY(include_path_token.type() == Token::Type::IncludePath);
+    auto partial_include = include_path_token.text().trim_whitespace();
+
+    String include_root;
+    auto include_type = GUI::AutocompleteProvider::CompletionKind::ProjectInclude;
+    if (partial_include.starts_with("<")) {
+        include_root = "/usr/include/";
+        include_type = GUI::AutocompleteProvider::CompletionKind::SystemInclude;
+    } else if (partial_include.starts_with("\"")) {
+        include_root = filedb().project_root();
+    } else
+        return {};
+
+    auto last_slash = partial_include.find_last_of("/");
+    auto include_dir = String::empty();
+    auto partial_basename = partial_include.substring_view((last_slash.has_value() ? last_slash.value() : 0) + 1);
+    if (last_slash.has_value()) {
+        include_dir = partial_include.substring_view(1, last_slash.value());
+    }
+
+    auto full_dir = String::formatted("{}{}", include_root, include_dir);
+    dbgln_if(CPP_LANGUAGE_SERVER_DEBUG, "searching path: {}, partial_basename: {}", full_dir, partial_basename);
+
+    Core::DirIterator it(full_dir, Core::DirIterator::Flags::SkipDots);
+    Vector<GUI::AutocompleteProvider::Entry> options;
+
+    while (it.has_next()) {
+        auto path = it.next_path();
+        if (!(path.ends_with(".h") || Core::File::is_directory(LexicalPath::join(full_dir, path).string())))
+            continue;
+        if (path.starts_with(partial_basename)) {
+            options.append({ path, partial_basename.length(), include_type, GUI::AutocompleteProvider::Language::Cpp });
+        }
+    }
+
+    return options;
 }
 
 }

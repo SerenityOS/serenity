@@ -23,6 +23,8 @@ public:
     enum class CompletionKind {
         Identifier,
         PreprocessorDefinition,
+        SystemInclude,
+        ProjectInclude,
     };
 
     enum class Language {

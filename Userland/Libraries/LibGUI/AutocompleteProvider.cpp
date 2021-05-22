@@ -176,7 +176,17 @@ void AutocompleteBox::apply_suggestion()
     size_t partial_length = suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::PartialInputLength).to_i64();
 
     VERIFY(suggestion.length() >= partial_length);
-    auto completion = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
+    auto completion_view = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
+    auto completion_kind = (GUI::AutocompleteProvider::CompletionKind)suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Kind).as_uint();
+
+    String completion;
+    if (completion_view.ends_with(".h") && completion_kind == GUI::AutocompleteProvider::CompletionKind::SystemInclude)
+        completion = String::formatted("{}{}", completion_view, ">");
+    else if (completion_view.ends_with(".h") && completion_kind == GUI::AutocompleteProvider::CompletionKind::ProjectInclude)
+        completion = String::formatted("{}{}", completion_view, "\"");
+    else
+        completion = completion_view;
+
     m_editor->insert_at_cursor_or_replace_selection(completion);
 }
 
