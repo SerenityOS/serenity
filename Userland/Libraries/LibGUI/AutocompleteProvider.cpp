@@ -84,7 +84,7 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 {
     m_popup_window = GUI::Window::construct(m_editor->window());
     m_popup_window->set_window_type(GUI::WindowType::Tooltip);
-    m_popup_window->set_rect(0, 0, 200, 100);
+    m_popup_window->set_rect(0, 0, 300, 100);
 
     m_suggestion_view = m_popup_window->set_main_widget<GUI::TableView>();
     m_suggestion_view->set_column_headers_visible(false);
