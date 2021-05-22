@@ -22,12 +22,17 @@ TimelineTrack::TimelineTrack(TimelineView const& view, Profile const& profile, P
     set_fill_with_background_color(true);
     set_background_role(Gfx::ColorRole::Base);
     set_fixed_height(40);
-    set_fixed_width(m_profile.length_in_ms() / 10);
+    set_scale(view.scale());
     set_frame_thickness(1);
 }
 
 TimelineTrack::~TimelineTrack()
 {
+}
+
+void TimelineTrack::set_scale(float scale)
+{
+    set_fixed_width(m_profile.length_in_ms() / scale);
 }
 
 void TimelineTrack::event(Core::Event& event)

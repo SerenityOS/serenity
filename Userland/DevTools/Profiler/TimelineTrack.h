@@ -20,6 +20,8 @@ class TimelineTrack final : public GUI::Frame {
 public:
     virtual ~TimelineTrack() override;
 
+    void set_scale(float);
+
 private:
     virtual void event(Core::Event&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
