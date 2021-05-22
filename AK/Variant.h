@@ -106,24 +106,17 @@ template<typename T, typename Base>
 struct VariantConstructors {
     VariantConstructors(T&& t)
     {
-        internal_cast().template set<T>(forward<T>(t), VariantNoClearTag {});
+        internal_cast().clear_without_destruction();
+        internal_cast().set(move(t), VariantNoClearTag {});
+    }
+
+    VariantConstructors(const T& t)
+    {
+        internal_cast().clear_without_destruction();
+        internal_cast().set(t, VariantNoClearTag {});
     }
 
     VariantConstructors() { }
-
-    Base& operator=(const T& value)
-    {
-        Base variant { value };
-        internal_cast() = move(variant);
-        return internal_cast();
-    }
-
-    Base& operator=(T&& value)
-    {
-        Base variant { move(value) };
-        internal_cast() = move(variant);
-        return internal_cast();
-    }
 
 private:
     [[nodiscard]] Base& internal_cast()
@@ -213,6 +206,7 @@ public:
 
     Variant(const Variant& old)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
+        , m_data {}
         , m_index(old.m_index)
     {
         Helper::copy_(old.m_index, old.m_data, m_data);
@@ -224,6 +218,7 @@ public:
     //       but it will still contain the "moved-from" state of the object it previously contained.
     Variant(Variant&& old)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
+        , m_data {}
         , m_index(old.m_index)
     {
         Helper::move_(old.m_index, old.m_data, m_data);
@@ -250,20 +245,18 @@ public:
 
     using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
-    template<typename T>
-    void set(T&& t) requires(index_of<T>() != invalid_index)
+    template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
+    void set(T&& t) requires(index_of<StrippedT>() != invalid_index)
     {
-        using StrippedT = RemoveCV<RemoveReference<T>>;
         constexpr auto new_index = index_of<StrippedT>();
         Helper::delete_(m_index, m_data);
         new (m_data) StrippedT(forward<T>(t));
         m_index = new_index;
     }
 
-    template<typename T>
-    void set(T&& t, Detail::VariantNoClearTag)
+    template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
+    void set(T&& t, Detail::VariantNoClearTag) requires(index_of<StrippedT>() != invalid_index)
     {
-        using StrippedT = RemoveCV<RemoveReference<T>>;
         constexpr auto new_index = index_of<StrippedT>();
         new (m_data) StrippedT(forward<T>(t));
         m_index = new_index;
@@ -355,10 +348,19 @@ private:
     using Helper = Detail::Variant<IndexType, 0, Ts...>;
     using VisitHelper = Detail::VisitImpl<IndexType, Ts...>;
 
+    template<typename T_, typename U_>
+    friend struct Detail::VariantConstructors;
+
     explicit Variant(IndexType index, Detail::VariantConstructTag)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_index(index)
     {
+    }
+
+    void clear_without_destruction()
+    {
+        __builtin_memset(m_data, 0, data_size);
+        m_index = invalid_index;
     }
 
     template<typename... Fs>
