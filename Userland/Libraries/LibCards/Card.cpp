@@ -139,7 +139,7 @@ void Card::draw(GUI::Painter& painter) const
 
 void Card::clear(GUI::Painter& painter, const Color& background_color) const
 {
-    painter.fill_rect({ old_positon(), { width, height } }, background_color);
+    painter.fill_rect({ old_position(), { width, height } }, background_color);
 }
 
 void Card::save_old_position()
