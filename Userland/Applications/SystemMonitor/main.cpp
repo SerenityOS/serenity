@@ -284,24 +284,6 @@ int main(int argc, char** argv)
         },
         &process_table_view);
 
-    auto inspect_action = GUI::Action::create(
-        "&Inspect Process", { Mod_Ctrl, Key_I },
-        Gfx::Bitmap::load_from_file("/res/icons/16x16/app-inspector.png"), [&](auto&) {
-            pid_t pid = selected_id(ProcessModel::Column::PID);
-            if (pid != -1) {
-                auto pid_string = String::number(pid);
-                pid_t child;
-                const char* argv[] = { "/bin/Inspector", pid_string.characters(), nullptr };
-                if ((errno = posix_spawn(&child, "/bin/Inspector", nullptr, nullptr, const_cast<char**>(argv), environ))) {
-                    perror("posix_spawn");
-                } else {
-                    if (disown(child) < 0)
-                        perror("disown");
-                }
-            }
-        },
-        &process_table_view);
-
     HashMap<pid_t, NonnullRefPtr<GUI::Window>> process_windows;
 
     auto process_properties_action = GUI::CommonActions::make_properties_action(
@@ -339,7 +321,6 @@ int main(int argc, char** argv)
     process_context_menu->add_action(continue_action);
     process_context_menu->add_separator();
     process_context_menu->add_action(profile_action);
-    process_context_menu->add_action(inspect_action);
     process_context_menu->add_separator();
     process_context_menu->add_action(process_properties_action);
     process_table_view.on_context_menu_request = [&]([[maybe_unused]] const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {
