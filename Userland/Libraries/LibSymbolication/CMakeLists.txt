@@ -1,5 +1,5 @@
 set(SOURCES
-    Client.cpp
+    Symbolication.cpp
 )
 
 serenity_lib(LibSymbolication symbolication)

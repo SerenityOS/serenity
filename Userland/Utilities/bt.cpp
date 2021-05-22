@@ -8,8 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
-#include <LibSymbolication/Client.h>
+#include <LibSymbolication/Symbolication.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)

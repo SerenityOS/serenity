@@ -10,7 +10,7 @@
 #include <AK/MappedFile.h>
 #include <LibCore/File.h>
 #include <LibDebug/DebugInfo.h>
-#include <LibSymbolication/Client.h>
+#include <LibSymbolication/Symbolication.h>
 
 namespace Symbolication {
 
