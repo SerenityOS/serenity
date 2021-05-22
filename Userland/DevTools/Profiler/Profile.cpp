@@ -61,13 +61,13 @@ void Profile::rebuild_tree()
 {
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
-    auto find_or_create_root = [&roots](FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid) -> ProfileNode& {
+    auto find_or_create_process_node = [this, &roots](pid_t pid, u64 timestamp) -> ProfileNode& {
+        auto& process = *find_process(pid, timestamp);
         for (auto root : roots) {
-            if (root->symbol() == symbol) {
+            if (&root->process() == &process)
                 return root;
-            }
         }
-        auto new_root = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp, pid);
+        auto new_root = ProfileNode::create_process_node(process);
         roots.append(new_root);
         return new_root;
     };
@@ -119,6 +119,8 @@ void Profile::rebuild_tree()
 
         if (!m_show_top_functions) {
             ProfileNode* node = nullptr;
+            auto& process_node = find_or_create_process_node(event.pid, event.timestamp);
+            process_node.increment_event_count();
             for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
                 auto& object_name = frame.object_name;
                 auto& symbol = frame.symbol;
@@ -130,9 +132,8 @@ void Profile::rebuild_tree()
 
                 // FIXME: More cheating with intentional mixing of TID/PID here:
                 if (!node)
-                    node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp, event.pid);
-                else
-                    node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.pid);
+                    node = &process_node;
+                node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.pid);
 
                 node->increment_event_count();
                 if (is_innermost_frame) {
@@ -142,6 +143,8 @@ void Profile::rebuild_tree()
                 return IterationDecision::Continue;
             });
         } else {
+            auto& process_node = find_or_create_process_node(event.pid, event.timestamp);
+            process_node.increment_event_count();
             for (size_t i = 0; i < event.frames.size(); ++i) {
                 ProfileNode* node = nullptr;
                 ProfileNode* root = nullptr;
@@ -156,7 +159,8 @@ void Profile::rebuild_tree()
 
                     // FIXME: More PID/TID mixing cheats here:
                     if (!node) {
-                        node = &find_or_create_root(object_name, symbol, address, offset, event.timestamp, event.pid);
+                        node = &find_or_create_process_node(event.pid, event.timestamp);
+                        node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.pid);
                         root = node;
                         root->will_track_seen_events(m_events.size());
                     } else {
@@ -248,6 +252,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = event.executable,
+                .basename = LexicalPath(event.executable).basename(),
                 .start_valid = event.timestamp,
             });
 
@@ -265,6 +270,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             auto sampled_process = adopt_own(*new Process {
                 .pid = event.pid,
                 .executable = event.executable,
+                .basename = LexicalPath(event.executable).basename(),
                 .start_valid = event.timestamp });
 
             current_processes.set(sampled_process->pid, sampled_process);
@@ -463,8 +469,15 @@ GUI::Model* Profile::disassembly_model()
     return m_disassembly_model;
 }
 
-ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
-    : m_symbol(move(symbol))
+ProfileNode::ProfileNode(Process const& process)
+    : m_root(true)
+    , m_process(process)
+{
+}
+
+ProfileNode::ProfileNode(Process const& process, const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
+    : m_process(process)
+    , m_symbol(move(symbol))
     , m_pid(pid)
     , m_address(address)
     , m_offset(offset)
@@ -477,11 +490,6 @@ ProfileNode::ProfileNode(const String& object_name, String symbol, u32 address, 
         object = object_name;
     }
     m_object_name = LexicalPath(object).basename();
-}
-
-const Process* ProfileNode::process(Profile& profile, u64 timestamp) const
-{
-    return profile.find_process(m_pid, timestamp);
 }
 
 }

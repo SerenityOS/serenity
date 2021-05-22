@@ -7,6 +7,7 @@
 #include "ProfileModel.h"
 #include "Profile.h"
 #include <AK/StringBuilder.h>
+#include <LibGUI/FileIconProvider.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -101,6 +102,9 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     }
     if (role == GUI::ModelRole::Icon) {
         if (index.column() == Column::StackFrame) {
+            if (node->is_root()) {
+                return GUI::FileIconProvider::icon_for_executable(node->process().executable);
+            }
             if (node->address() >= 0xc0000000)
                 return m_kernel_frame_icon;
             return m_user_frame_icon;
@@ -120,8 +124,12 @@ GUI::Variant ProfileModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
         }
         if (index.column() == Column::ObjectName)
             return node->object_name();
-        if (index.column() == Column::StackFrame)
+        if (index.column() == Column::StackFrame) {
+            if (node->is_root()) {
+                return String::formatted("{} ({})", node->process().basename, node->process().pid);
+            }
             return node->symbol();
+        }
         return {};
     }
     return {};

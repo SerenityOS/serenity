@@ -54,6 +54,7 @@ struct Thread {
 struct Process {
     pid_t pid {};
     String executable;
+    String basename;
     HashMap<int, Vector<Thread>> threads {};
     LibraryMetadata library_metadata {};
     u64 start_valid;
