@@ -43,7 +43,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Write in idiomatic SerenityOS C++20, using the `AK` containers in all code.
 * Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Use `clang-format` (version 11 or later) to automatically format C++ files.
 * Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
-* Split your changes into separate, atomic commits.
+* Split your changes into separate, atomic commits (i.e. A commit per feature or fix, where the build, tests and the system are all functioning).
 * Make sure your commits are rebased on the master branch.
 * Wrap your commit messages at 72 characters.
 * The first line of the commit message is the subject line, and should have the format "Category: Brief description of what's being changed". The "category" can be a subdirectory, but also something like "POSIX compliance" or "ClassName". Whatever seems logical.
