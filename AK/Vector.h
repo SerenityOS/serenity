@@ -681,7 +681,7 @@ public:
         return AK::find(begin(), end(), value);
     }
 
-    Optional<size_t> find_first_index(const T& value)
+    Optional<size_t> find_first_index(const T& value) const
     {
         if (const auto index = AK::find_index(begin(), end(), value);
             index < size()) {
