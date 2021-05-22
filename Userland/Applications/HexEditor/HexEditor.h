@@ -16,15 +16,17 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/TextAlignment.h>
 
-class HexEditor : public GUI::AbstractScrollableWidget {
-    C_OBJECT(HexEditor)
+namespace HexEditor {
+
+class Editor : public GUI::AbstractScrollableWidget {
+    C_OBJECT(Editor)
 public:
     enum EditMode {
         Hex,
         Text
     };
 
-    virtual ~HexEditor() override;
+    virtual ~Editor() override;
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
@@ -49,7 +51,7 @@ public:
     Function<void()> on_change;
 
 protected:
-    HexEditor();
+    Editor();
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void mousedown_event(GUI::MouseEvent&) override;
@@ -85,3 +87,5 @@ private:
     void update_status();
     void did_change();
 };
+
+}

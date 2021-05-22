@@ -21,7 +21,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-HexEditor::HexEditor()
+namespace HexEditor {
+
+Editor::Editor()
 {
     set_should_hide_unnecessary_scrollbars(true);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
@@ -32,18 +34,18 @@ HexEditor::HexEditor()
     vertical_scrollbar().set_step(line_height());
 }
 
-HexEditor::~HexEditor()
+Editor::~Editor()
 {
 }
 
-void HexEditor::set_readonly(bool readonly)
+void Editor::set_readonly(bool readonly)
 {
     if (m_readonly == readonly)
         return;
     m_readonly = readonly;
 }
 
-void HexEditor::set_buffer(const ByteBuffer& buffer)
+void Editor::set_buffer(const ByteBuffer& buffer)
 {
     m_buffer = buffer;
     set_content_length(buffer.size());
@@ -54,7 +56,7 @@ void HexEditor::set_buffer(const ByteBuffer& buffer)
     update_status();
 }
 
-void HexEditor::fill_selection(u8 fill_byte)
+void Editor::fill_selection(u8 fill_byte)
 {
     if (!has_selection())
         return;
@@ -68,7 +70,7 @@ void HexEditor::fill_selection(u8 fill_byte)
     did_change();
 }
 
-void HexEditor::set_position(int position)
+void Editor::set_position(int position)
 {
     if (position > static_cast<int>(m_buffer.size()))
         return;
@@ -79,7 +81,7 @@ void HexEditor::set_position(int position)
     update_status();
 }
 
-bool HexEditor::write_to_file(const String& path)
+bool Editor::write_to_file(const String& path)
 {
     if (m_buffer.is_empty())
         return true;
@@ -112,7 +114,7 @@ bool HexEditor::write_to_file(const String& path)
     return true;
 }
 
-bool HexEditor::copy_selected_hex_to_clipboard()
+bool Editor::copy_selected_hex_to_clipboard()
 {
     if (!has_selection())
         return false;
@@ -125,7 +127,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
     return true;
 }
 
-bool HexEditor::copy_selected_text_to_clipboard()
+bool Editor::copy_selected_text_to_clipboard()
 {
     if (!has_selection())
         return false;
@@ -138,7 +140,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
     return true;
 }
 
-bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
+bool Editor::copy_selected_hex_to_clipboard_as_c_code()
 {
     if (!has_selection())
         return false;
@@ -161,14 +163,14 @@ bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
     return true;
 }
 
-void HexEditor::set_bytes_per_row(int bytes_per_row)
+void Editor::set_bytes_per_row(int bytes_per_row)
 {
     m_bytes_per_row = bytes_per_row;
     set_content_size({ offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 10 + (m_bytes_per_row * character_width()) + 20, total_rows() * line_height() + 10 });
     update();
 }
 
-void HexEditor::set_content_length(int length)
+void Editor::set_content_length(int length)
 {
     if (length == m_content_length)
         return;
@@ -176,7 +178,7 @@ void HexEditor::set_content_length(int length)
     set_content_size({ offset_margin_width() + (m_bytes_per_row * (character_width() * 3)) + 10 + (m_bytes_per_row * character_width()) + 20, total_rows() * line_height() + 10 });
 }
 
-void HexEditor::mousedown_event(GUI::MouseEvent& event)
+void Editor::mousedown_event(GUI::MouseEvent& event)
 {
     if (event.button() != GUI::MouseButton::Left) {
         return;
@@ -236,7 +238,7 @@ void HexEditor::mousedown_event(GUI::MouseEvent& event)
     }
 }
 
-void HexEditor::mousemove_event(GUI::MouseEvent& event)
+void Editor::mousemove_event(GUI::MouseEvent& event)
 {
     auto absolute_x = horizontal_scrollbar().value() + event.x();
     auto absolute_y = vertical_scrollbar().value() + event.y();
@@ -289,7 +291,7 @@ void HexEditor::mousemove_event(GUI::MouseEvent& event)
     }
 }
 
-void HexEditor::mouseup_event(GUI::MouseEvent& event)
+void Editor::mouseup_event(GUI::MouseEvent& event)
 {
     if (event.button() == GUI::MouseButton::Left) {
         if (m_in_drag_select) {
@@ -306,7 +308,7 @@ void HexEditor::mouseup_event(GUI::MouseEvent& event)
     }
 }
 
-void HexEditor::scroll_position_into_view(int position)
+void Editor::scroll_position_into_view(int position)
 {
     int y = position / bytes_per_row();
     int x = position % bytes_per_row();
@@ -319,7 +321,7 @@ void HexEditor::scroll_position_into_view(int position)
     scroll_into_view(rect, true, true);
 }
 
-void HexEditor::keydown_event(GUI::KeyEvent& event)
+void Editor::keydown_event(GUI::KeyEvent& event)
 {
     dbgln_if(HEX_DEBUG, "HexEditor::keydown_event key={}", static_cast<u8>(event.key()));
 
@@ -387,7 +389,7 @@ void HexEditor::keydown_event(GUI::KeyEvent& event)
     }
 }
 
-void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
+void Editor::hex_mode_keydown_event(GUI::KeyEvent& event)
 {
     if ((event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) || (event.key() >= KeyCode::Key_A && event.key() <= KeyCode::Key_F)) {
         if (m_buffer.is_empty())
@@ -417,7 +419,7 @@ void HexEditor::hex_mode_keydown_event(GUI::KeyEvent& event)
     }
 }
 
-void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
+void Editor::text_mode_keydown_event(GUI::KeyEvent& event)
 {
     if (m_buffer.is_empty())
         return;
@@ -438,19 +440,19 @@ void HexEditor::text_mode_keydown_event(GUI::KeyEvent& event)
     did_change();
 }
 
-void HexEditor::update_status()
+void Editor::update_status()
 {
     if (on_status_change)
         on_status_change(m_position, m_edit_mode, m_selection_start, m_selection_end);
 }
 
-void HexEditor::did_change()
+void Editor::did_change()
 {
     if (on_change)
         on_change();
 }
 
-void HexEditor::paint_event(GUI::PaintEvent& event)
+void Editor::paint_event(GUI::PaintEvent& event)
 {
     GUI::Frame::paint_event(event);
 
@@ -558,20 +560,20 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
-void HexEditor::select_all()
+void Editor::select_all()
 {
     highlight(0, m_buffer.size());
     set_position(0);
 }
 
-void HexEditor::highlight(int start, int end)
+void Editor::highlight(int start, int end)
 {
     m_selection_start = start;
     m_selection_end = end;
     set_position(start);
 }
 
-int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
+int Editor::find_and_highlight(ByteBuffer& needle, int start)
 {
     if (m_buffer.is_empty())
         return -1;
@@ -587,4 +589,6 @@ int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
     highlight(relative_offset, end_of_match);
 
     return end_of_match;
+}
+
 }

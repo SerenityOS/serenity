@@ -18,6 +18,8 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 
+namespace HexEditor {
+
 struct Option {
     String title;
     OptionId opt;
@@ -26,7 +28,7 @@ struct Option {
 };
 
 static const Vector<Option> options = {
-    { "ACII String", OPTION_ASCII_STRING, true, true },
+    { "ASCII String", OPTION_ASCII_STRING, true, true },
     { "Hex value", OPTION_HEX_VALUE, true, false },
 };
 
@@ -143,4 +145,6 @@ FindDialog::FindDialog()
 
 FindDialog::~FindDialog()
 {
+}
+
 }

@@ -10,6 +10,8 @@
 #include <AK/Vector.h>
 #include <LibGUI/Dialog.h>
 
+namespace HexEditor {
+
 enum OptionId {
     OPTION_INVALID = -1,
     OPTION_ASCII_STRING,
@@ -36,3 +38,5 @@ private:
     String m_text_value;
     OptionId m_selected_option { OPTION_INVALID };
 };
+
+}

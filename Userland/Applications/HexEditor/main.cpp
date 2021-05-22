@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+using namespace HexEditor;
+
 int main(int argc, char** argv)
 {
     if (pledge("stdio recvfd sendfd rpath unix cpath wpath thread", nullptr) < 0) {
