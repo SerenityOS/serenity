@@ -39,7 +39,7 @@ public:
 
     Gfx::IntRect& rect() { return m_rect; }
     Gfx::IntPoint position() const { return m_rect.location(); }
-    const Gfx::IntPoint& old_positon() const { return m_old_position; }
+    const Gfx::IntPoint& old_position() const { return m_old_position; }
     uint8_t value() const { return m_value; };
     Type type() const { return m_type; }
 
