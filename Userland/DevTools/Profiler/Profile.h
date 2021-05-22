@@ -28,9 +28,14 @@ namespace Profiler {
 
 class ProfileNode : public RefCounted<ProfileNode> {
 public:
-    static NonnullRefPtr<ProfileNode> create(FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
+    static NonnullRefPtr<ProfileNode> create(Process const& process, FlyString object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t pid)
     {
-        return adopt_ref(*new ProfileNode(move(object_name), move(symbol), address, offset, timestamp, pid));
+        return adopt_ref(*new ProfileNode(process, move(object_name), move(symbol), address, offset, timestamp, pid));
+    }
+
+    static NonnullRefPtr<ProfileNode> create_process_node(Process const& process)
+    {
+        return adopt_ref(*new ProfileNode(process));
     }
 
     // These functions are only relevant for root nodes
@@ -71,7 +76,7 @@ public:
                 return child;
             }
         }
-        auto new_child = ProfileNode::create(move(object_name), move(symbol), address, offset, timestamp, pid);
+        auto new_child = ProfileNode::create(m_process, move(object_name), move(symbol), address, offset, timestamp, pid);
         add_child(new_child);
         return new_child;
     };
@@ -96,11 +101,15 @@ public:
 
     pid_t pid() const { return m_pid; }
 
-    const Process* process(Profile&, u64 timestamp) const;
+    Process const& process() const { return m_process; }
+    bool is_root() const { return m_root; }
 
 private:
-    explicit ProfileNode(const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t);
+    explicit ProfileNode(Process const&);
+    explicit ProfileNode(Process const&, const String& object_name, String symbol, u32 address, u32 offset, u64 timestamp, pid_t);
 
+    bool m_root { false };
+    Process const& m_process;
     ProfileNode* m_parent { nullptr };
     FlyString m_object_name;
     String m_symbol;
