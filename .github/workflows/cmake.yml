@@ -245,50 +245,8 @@ jobs:
         UBSAN_OPTIONS: "halt_on_error=1"
       if: ${{ matrix.with-fuzzers == 'NO_FUZZ' }}
 
-  lint_commits:
-    runs-on: ubuntu-20.04
-    if: always() && github.event_name == 'pull_request'
-
-    steps:
-    - name: Get PR Commits
-      id: 'get-pr-commits'
-      uses: tim-actions/get-pr-commits@55b867b9b28954e6f5c1a0fe2f729dc926c306d0
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Check linebreaks
-      if: ${{ success() || failure() }}
-      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
-      with:
-        commits: ${{ steps.get-pr-commits.outputs.commits }}
-        pattern: '^[^\r]*$'
-        error: 'Commit message contains CRLF line breaks (only unix-style LF linebreaks are allowed)'
-
-    - name: Check Line Length
-      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
-      with:
-        commits: ${{ steps.get-pr-commits.outputs.commits }}
-        pattern: '^.{0,72}(\n.{0,72})*$'
-        error: 'Commit message lines are too long (maximum allowed is 72 characters)'
-
-    - name: Check subsystem
-      if: ${{ success() || failure() }}
-      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
-      with:
-        commits: ${{ steps.get-pr-commits.outputs.commits }}
-        pattern: '^\S.*?: .+'
-        error: 'Missing category in commit title (if this is a fix up of a previous commit, it should be squashed)'
-
-    - name: Check title
-      if: ${{ success() || failure() }}
-      uses: tim-actions/commit-message-checker-with-regex@v0.3.1
-      with:
-        commits: ${{ steps.get-pr-commits.outputs.commits }}
-        pattern: '^.+[^.\n](\n.*)*$'
-        error: 'Commit title ends in a period'
-
   notify_irc:
-    needs: [build_and_test_serenity, build_and_test_lagom, lint_commits]
+    needs: [build_and_test_serenity, build_and_test_lagom]
     runs-on: ubuntu-20.04
     if: always() && github.repository == 'SerenityOS/serenity' && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/master'))
 
