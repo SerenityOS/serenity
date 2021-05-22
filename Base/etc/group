@@ -8,5 +8,4 @@ lookup:x:10:anon
 notify:x:12:anon
 window:x:13:anon,notify
 clipboard:x:14:anon,notify
-symbol:x:17:anon
 users:x:100:anon
