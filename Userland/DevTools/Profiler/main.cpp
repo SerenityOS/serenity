@@ -141,11 +141,16 @@ int main(int argc, char** argv)
     tree_view.set_model(profile->model());
 
     auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
+    disassembly_view.set_visible(false);
 
     tree_view.on_selection = [&](auto& index) {
         profile->set_disassembly_index(index);
         disassembly_view.set_model(profile->disassembly_model());
     };
+
+    auto disassembly_action = GUI::Action::create_checkable("Show &Disassembly", { Mod_Ctrl, Key_D }, Gfx::Bitmap::load_from_file("/res/icons/16x16/x86.png"), [&](auto& action) {
+        disassembly_view.set_visible(action.is_checked());
+    });
 
     auto& samples_tab = tab_widget.add_tab<GUI::Widget>("Samples");
     samples_tab.set_layout<GUI::VerticalBoxLayout>();
@@ -208,6 +213,8 @@ int main(int argc, char** argv)
     });
     percent_action->set_checked(false);
     view_menu.add_action(percent_action);
+
+    view_menu.add_action(disassembly_action);
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_help_action([](auto&) {
