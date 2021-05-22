@@ -23,7 +23,7 @@
 #include <LibGUI/Scrollbar.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Widget.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Thread.h>
 
 namespace HackStudio {
 
@@ -144,7 +144,7 @@ private:
     RefPtr<FindInFilesWidget> m_find_in_files_widget;
     RefPtr<DebugInfoWidget> m_debug_info_widget;
     RefPtr<DisassemblyWidget> m_disassembly_widget;
-    RefPtr<LibThread::Thread> m_debugger_thread;
+    RefPtr<Threading::Thread> m_debugger_thread;
     RefPtr<EditorWrapper> m_current_editor_in_execution;
 
     RefPtr<GUI::Action> m_new_file_action;

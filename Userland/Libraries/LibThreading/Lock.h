@@ -16,7 +16,7 @@
 #    include <pthread.h>
 #endif
 
-namespace LibThread {
+namespace Threading {
 
 class Lock {
 public:

@@ -19,8 +19,8 @@
 #include <LibGUI/Notification.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibThread/Lock.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Lock.h>
+#include <LibThreading/Thread.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
 #include <spawn.h>

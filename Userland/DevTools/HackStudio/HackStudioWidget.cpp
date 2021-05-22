@@ -60,8 +60,8 @@
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
-#include <LibThread/Lock.h>
-#include <LibThread/Thread.h>
+#include <LibThreading/Lock.h>
+#include <LibThreading/Thread.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
 #include <spawn.h>
@@ -621,7 +621,7 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_debug_action()
         }
 
         Debugger::the().set_executable_path(get_project_executable_path());
-        m_debugger_thread = LibThread::Thread::construct(Debugger::start_static);
+        m_debugger_thread = Threading::Thread::construct(Debugger::start_static);
         m_debugger_thread->start();
         m_stop_action->set_enabled(true);
     });
