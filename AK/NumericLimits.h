@@ -101,6 +101,7 @@ struct NumericLimits<unsigned long long> {
 #ifndef KERNEL
 template<>
 struct NumericLimits<float> {
+    static constexpr float lowest() { return -__FLT_MAX__; }
     static constexpr float min() { return __FLT_MIN__; }
     static constexpr float max() { return __FLT_MAX__; }
     static constexpr float epsilon() { return __FLT_EPSILON__; }
@@ -109,6 +110,7 @@ struct NumericLimits<float> {
 
 template<>
 struct NumericLimits<double> {
+    static constexpr double lowest() { return -__DBL_MAX__; }
     static constexpr double min() { return __DBL_MIN__; }
     static constexpr double max() { return __DBL_MAX__; }
     static constexpr double epsilon() { return __DBL_EPSILON__; }
@@ -117,6 +119,7 @@ struct NumericLimits<double> {
 
 template<>
 struct NumericLimits<long double> {
+    static constexpr long double lowest() { return -__LDBL_MAX__; }
     static constexpr long double min() { return __LDBL_MIN__; }
     static constexpr long double max() { return __LDBL_MAX__; }
     static constexpr long double epsilon() { return __LDBL_EPSILON__; }
