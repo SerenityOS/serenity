@@ -10,34 +10,14 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibSymbolication/Client.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio rpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
-
-    if (unveil("/proc", "r") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/tmp/portal/symbol", "rw") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil("/usr/src", "b") < 0) {
-        perror("unveil");
-        return 1;
-    }
-
-    if (unveil(nullptr, nullptr) < 0) {
-        perror("unveil");
-        return 1;
-    }
-
     char hostname[256];
     if (gethostname(hostname, sizeof(hostname)) < 0) {
         perror("gethostname");
@@ -48,7 +28,7 @@ int main(int argc, char** argv)
     pid_t pid = 0;
     args_parser.add_positional_argument(pid, "PID", "pid");
     args_parser.parse(argc, argv);
-    Core::EventLoop loop;
+    Core::EventLoop loop(Core::EventLoop::MakeInspectable::No);
 
     Core::DirIterator iterator(String::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
     if (iterator.has_error()) {
@@ -59,7 +39,7 @@ int main(int argc, char** argv)
     while (iterator.has_next()) {
         pid_t tid = iterator.next_path().to_int().value();
         outln("tid: {}", tid);
-        auto symbols = SymbolClient::symbolicate_thread(pid, tid);
+        auto symbols = Symbolication::symbolicate_thread(pid, tid);
         for (auto& symbol : symbols) {
             out("{:p}  ", symbol.address);
             if (!symbol.name.is_empty())

@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include <LibIPC/ServerConnection.h>
-#include <SymbolServer/SymbolClientEndpoint.h>
-#include <SymbolServer/SymbolServerEndpoint.h>
+#include <AK/String.h>
 
-namespace SymbolClient {
+namespace Symbolication {
 
 struct Symbol {
     FlatPtr address { 0 };
@@ -21,21 +19,6 @@ struct Symbol {
 };
 
 Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid);
-
-class Client
-    : public IPC::ServerConnection<SymbolClientEndpoint, SymbolServerEndpoint>
-    , public SymbolClientEndpoint {
-    C_OBJECT(Client);
-
-public:
-    virtual void handshake() override;
-
-    Optional<Symbol> symbolicate(const String& path, FlatPtr address);
-
-private:
-    Client();
-
-    virtual void dummy() override;
-};
+Optional<Symbol> symbolicate(String const& path, FlatPtr address);
 
 }

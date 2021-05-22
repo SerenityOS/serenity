@@ -140,6 +140,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil("/usr/lib", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     if (unveil("/bin/Profiler", "rx") < 0) {
         perror("unveil");
         return 1;
