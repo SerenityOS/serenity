@@ -121,6 +121,8 @@ void Game::setup()
 
 void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
 {
+    stop_animation();
+
     m_animation_end = end;
     m_animation_current_step = 0;
     m_animation_steps = steps;
