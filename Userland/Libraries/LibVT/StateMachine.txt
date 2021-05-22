@@ -20,7 +20,7 @@ Ground {
 
     [0x20..0x7f] => (_, Print)
 
-    [0xa0..0xc1] => (Ground, FailUTF8)
+    [0x80..0xc1] => (Ground, FailUTF8)
     [0xc2..0xdf] => (UTF81ByteNeeded, BeginUTF8)
     [0xe0..0xef] => (UTF82BytesNeeded, BeginUTF8)
     [0xf0..0xf4] => (UTF83BytesNeeded, BeginUTF8)
@@ -211,7 +211,6 @@ OscString {
     0x19         => (_, _)
     [0x1c..0x1f] => (_, _)
 
-    [0x20..0x7f] => (_, OscPut)
-    0x9c         => (Ground, _)
+    [0x20..0xff] => (_, OscPut)
     @exit OscEnd
 }
