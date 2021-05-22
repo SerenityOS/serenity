@@ -41,6 +41,7 @@ static void test_complete_local_args();
 static void test_complete_local_vars();
 static void test_complete_type();
 static void test_find_variable_definition();
+static void test_complete_includes();
 
 int run_tests()
 {
@@ -48,6 +49,7 @@ int run_tests()
     test_complete_local_vars();
     test_complete_type();
     test_find_variable_definition();
+    test_complete_includes();
     return s_some_test_failed ? 1 : 0;
 }
 
@@ -119,4 +121,29 @@ void test_find_variable_definition()
     if (position.value().file == "find_variable_declaration.cpp" && position.value().line == 0 && position.value().column >= 19)
         PASS;
     FAIL("wrong declaration location");
+}
+void test_complete_includes()
+{
+    I_TEST(Complete Type)
+    FileDB filedb;
+    filedb.set_project_root(TESTS_ROOT_DIR);
+    add_file(filedb, "complete_includes.cpp");
+    add_file(filedb, "sample_header.h");
+    CppComprehensionEngine autocomplete(filedb);
+
+    auto suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 0, 23 });
+    if (suggestions.size() != 1)
+        FAIL(project include - bad size);
+
+    if (suggestions[0].completion != "sample_header.h")
+        FAIL("project include - wrong results");
+
+    suggestions = autocomplete.get_suggestions("complete_includes.cpp", { 1, 19 });
+    if (suggestions.size() != 1)
+        FAIL(global include - bad size);
+
+    if (suggestions[0].completion != "cdefs.h")
+        FAIL("global include - wrong results");
+
+    PASS;
 }
