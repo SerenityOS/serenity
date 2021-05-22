@@ -102,8 +102,17 @@ int main(int argc, char** argv)
                     }
                     break;
                 }
+                case Archive::TarFileType::GlobalExtendedHeader: {
+                    dbgln("ignoring global extended header: {}", header.filename());
+                    break;
+                }
+                case Archive::TarFileType::ExtendedHeader: {
+                    dbgln("ignoring extended header: {}", header.filename());
+                    break;
+                }
                 default:
                     // FIXME: Implement other file types
+                    warnln("file type '{}' of {} is not yet supported", (char)header.type_flag(), header.filename());
                     VERIFY_NOT_REACHED();
                 }
             }
