@@ -43,5 +43,4 @@ TEST_CASE(file_readline)
     for (size_t i = 0; i < inputData.size(); i++) {
         EXPECT_EQ(inputData[i], outputData[i]);
     }
-
 }
