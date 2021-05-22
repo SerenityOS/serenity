@@ -20,6 +20,9 @@ public:
     virtual ~TimelineView() override;
 
     Function<void()> on_selection_change;
+    Function<void()> on_scale_change;
+
+    float scale() const { return m_scale; }
 
     bool is_selecting() const { return m_selecting; }
     u64 select_start_time() const { return m_select_start_time; }
@@ -65,6 +68,7 @@ private:
     virtual void mousedown_event(GUI::MouseEvent&) override;
     virtual void mousemove_event(GUI::MouseEvent&) override;
     virtual void mouseup_event(GUI::MouseEvent&) override;
+    virtual void mousewheel_event(GUI::MouseEvent&) override;
 
     explicit TimelineView(Profile&);
 
@@ -75,6 +79,7 @@ private:
     u64 m_select_start_time { 0 };
     u64 m_select_end_time { 0 };
     u64 m_hover_time { 0 };
+    float m_scale { 10 };
 };
 
 }

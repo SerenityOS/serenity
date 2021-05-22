@@ -20,6 +20,11 @@ TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView
     timeline_view.move_to_back();
     update_widget_sizes();
     update_widget_positions();
+
+    m_timeline_view->on_scale_change = [this] {
+        update_widget_positions();
+        update_widget_sizes();
+    };
 }
 
 TimelineContainer::~TimelineContainer()
