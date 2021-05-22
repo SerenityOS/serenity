@@ -33,6 +33,7 @@ public:
     void fill_selection(u8 fill_byte);
     bool write_to_file(const String& path);
 
+    void select_all();
     bool has_selection() const { return !(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty()); }
     bool copy_selected_text_to_clipboard();
     bool copy_selected_hex_to_clipboard();
@@ -42,6 +43,7 @@ public:
     void set_bytes_per_row(int);
 
     void set_position(int position);
+    void highlight(int start, int end);
     int find_and_highlight(ByteBuffer& needle, int start = 0);
     Function<void(int, EditMode, int, int)> on_status_change; // position, edit mode, selection start, selection end
     Function<void()> on_change;

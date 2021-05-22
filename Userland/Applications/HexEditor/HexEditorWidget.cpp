@@ -37,7 +37,7 @@ HexEditorWidget::HexEditorWidget()
         m_statusbar->set_text(1, String::formatted("Edit Mode: {}", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
         m_statusbar->set_text(2, String::formatted("Selection Start: {}", selection_start));
         m_statusbar->set_text(3, String::formatted("Selection End: {}", selection_end));
-        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", abs(selection_end - selection_start) + 1));
+        m_statusbar->set_text(4, String::formatted("Selected Bytes: {}", abs(selection_end - selection_start)));
     };
 
     m_editor->on_change = [this] {
@@ -147,6 +147,10 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     });
 
     auto& edit_menu = menubar.add_menu("&Edit");
+    edit_menu.add_action(GUI::CommonActions::make_select_all_action([this](auto&) {
+        m_editor->select_all();
+        m_editor->update();
+    }));
     edit_menu.add_action(GUI::Action::create("Fill &Selection...", { Mod_Ctrl, Key_B }, [&](const GUI::Action&) {
         String value;
         if (GUI::InputBox::show(window(), value, "Fill byte (hex):", "Fill Selection") == GUI::InputBox::ExecOK && !value.is_empty()) {
@@ -184,6 +188,7 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
                 GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
                 return;
             }
+            m_editor->update();
             m_last_found_index = result;
         }
     }));

@@ -558,6 +558,19 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
     }
 }
 
+void HexEditor::select_all()
+{
+    highlight(0, m_buffer.size());
+    set_position(0);
+}
+
+void HexEditor::highlight(int start, int end)
+{
+    m_selection_start = start;
+    m_selection_end = end;
+    set_position(start);
+}
+
 int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
 {
     if (m_buffer.is_empty())
@@ -571,9 +584,7 @@ int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
     dbgln("find_and_highlight: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
 
     auto end_of_match = relative_offset + needle.size();
-    set_position(relative_offset);
-    m_selection_start = relative_offset;
-    m_selection_end = end_of_match;
+    highlight(relative_offset, end_of_match);
 
     return end_of_match;
 }
