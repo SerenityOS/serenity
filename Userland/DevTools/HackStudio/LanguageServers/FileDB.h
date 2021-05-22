@@ -23,6 +23,7 @@ public:
     bool add(const String& filename, const String& content);
 
     void set_project_root(const String& root_path) { m_project_root = root_path; }
+    const String& project_root() const { return m_project_root; }
 
     void on_file_edit_insert_text(const String& filename, const String& inserted_text, size_t start_line, size_t start_column);
     void on_file_edit_remove_text(const String& filename, size_t start_line, size_t start_column, size_t end_line, size_t end_column);
