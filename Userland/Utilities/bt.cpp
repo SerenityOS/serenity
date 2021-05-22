@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     pid_t pid = 0;
     args_parser.add_positional_argument(pid, "PID", "pid");
     args_parser.parse(argc, argv);
-    Core::EventLoop loop(Core::EventLoop::MakeInspectable::No);
+    Core::EventLoop loop;
 
     Core::DirIterator iterator(String::formatted("/proc/{}/stacks", pid), Core::DirIterator::SkipDots);
     if (iterator.has_error()) {

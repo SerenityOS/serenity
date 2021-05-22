@@ -12,7 +12,7 @@
 
 int main(int, char**)
 {
-    Core::EventLoop event_loop(Core::EventLoop::MakeInspectable::No);
+    Core::EventLoop event_loop;
     auto server = Core::LocalServer::construct();
 
     if (pledge("stdio unix accept", nullptr) < 0) {
