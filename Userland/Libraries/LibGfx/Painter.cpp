@@ -1841,27 +1841,6 @@ void Painter::for_each_line_segment_on_bezier_curve(const FloatPoint& control_po
     for_each_line_segment_on_bezier_curve(control_point, p1, p2, callback);
 }
 
-static bool can_approximate_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta)
-{
-    constexpr static float tolerance = 0.3f;
-
-    auto half_theta_delta = theta_delta / 2.0f;
-
-    auto xc = cosf(x_axis_rotation);
-    auto xs = sinf(x_axis_rotation);
-    auto tc = cosf(theta_1 + half_theta_delta);
-    auto ts = sinf(theta_1 + half_theta_delta);
-
-    auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
-    auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
-
-    auto ellipse_mid_point = FloatPoint { x2, y2 };
-    auto line_mid_point = p1 + (p2 - p1) / 2.0f;
-
-    auto v = ellipse_mid_point.distance_from(line_mid_point);
-    return v < tolerance;
-}
-
 void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const IntPoint& p1, const IntPoint& p2, Color color, int thickness, LineStyle style)
 {
     VERIFY(scale() == 1); // FIXME: Add scaling support.
@@ -1874,40 +1853,51 @@ void Painter::draw_quadratic_bezier_curve(const IntPoint& control_point, const I
 // static
 void Painter::for_each_line_segment_on_elliptical_arc(const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, Function<void(const FloatPoint&, const FloatPoint&)>& callback)
 {
-    struct SegmentDescriptor {
-        FloatPoint p1;
-        FloatPoint p2;
-        float theta;
-        float theta_delta;
-    };
+    if (radii.x() <= 0 || radii.y() <= 0)
+        return;
 
-    static constexpr auto split_elliptical_arc = [](const FloatPoint& p1, const FloatPoint& p2, const FloatPoint& center, const FloatPoint radii, float x_axis_rotation, float theta_1, float theta_delta, auto& segments) {
-        auto half_theta_delta = theta_delta / 2;
-        auto theta_mid = theta_1 + half_theta_delta;
+    auto start = p1;
+    auto end = p2;
 
-        auto xc = cosf(x_axis_rotation);
-        auto xs = sinf(x_axis_rotation);
-        auto tc = cosf(theta_1 + half_theta_delta);
-        auto ts = sinf(theta_1 + half_theta_delta);
-
-        auto x2 = xc * radii.x() * tc - xs * radii.y() * ts + center.x();
-        auto y2 = xs * radii.x() * tc + xc * radii.y() * ts + center.y();
-
-        FloatPoint mid_point = { x2, y2 };
-
-        segments.enqueue({ p1, mid_point, theta_1, half_theta_delta });
-        segments.enqueue({ mid_point, p2, theta_mid, half_theta_delta });
-    };
-
-    Queue<SegmentDescriptor> segments;
-    segments.enqueue({ p1, p2, theta_1, theta_delta });
-    while (!segments.is_empty()) {
-        auto segment = segments.dequeue();
-        if (can_approximate_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta))
-            callback(segment.p1, segment.p2);
-        else
-            split_elliptical_arc(segment.p1, segment.p2, center, radii, x_axis_rotation, segment.theta, segment.theta_delta, segments);
+    if (theta_delta < 0) {
+        swap(start, end);
+        theta_1 = theta_1 + theta_delta;
+        theta_delta = fabs(theta_delta);
     }
+
+    auto relative_start = start - center;
+
+    auto a = radii.x();
+    auto b = radii.y();
+
+    // The segments are at most 1 long
+    auto largest_radius = max(a, b);
+    double theta_step = atan(1 / (double)largest_radius);
+
+    FloatPoint current_point = relative_start;
+    FloatPoint next_point = { 0, 0 };
+
+    auto sin_x_axis = sinf(x_axis_rotation);
+    auto cos_x_axis = cosf(x_axis_rotation);
+    auto rotate_point = [sin_x_axis, cos_x_axis](FloatPoint& p) {
+        auto original_x = p.x();
+        auto original_y = p.y();
+
+        p.set_x(original_x * cos_x_axis - original_y * sin_x_axis);
+        p.set_y(original_x * sin_x_axis + original_y * cos_x_axis);
+    };
+
+    for (double theta = theta_1; theta <= ((double)theta_1 + (double)theta_delta); theta += theta_step) {
+        next_point.set_x(a * cosf(theta));
+        next_point.set_y(b * sinf(theta));
+        rotate_point(next_point);
+
+        callback(current_point + center, next_point + center);
+
+        current_point = next_point;
+    }
+
+    callback(current_point + center, end);
 }
 
 // static
