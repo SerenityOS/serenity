@@ -1,6 +1,0 @@
-endpoint SymbolServer
-{
-    greet() => ()
-
-    symbolicate(String path, u32 address) => (bool success, String name, u32 offset, String filename, u32 line)
-}
