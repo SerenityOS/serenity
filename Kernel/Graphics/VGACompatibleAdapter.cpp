@@ -31,7 +31,7 @@ UNMAP_AFTER_INIT void VGACompatibleAdapter::initialize_framebuffer_devices()
     VERIFY(m_framebuffer_width != 0);
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_pitch != 0);
-    m_framebuffer_device = RawFramebufferDevice::create(*this, m_framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
+    m_framebuffer_device = FramebufferDevice::create(*this, 0, m_framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
     m_framebuffer_device->initialize();
 }
 
@@ -68,6 +68,15 @@ void VGACompatibleAdapter::disable_consoles()
     VERIFY(m_framebuffer_console);
     m_framebuffer_console->disable();
     m_framebuffer_device->activate_writes();
+}
+
+bool VGACompatibleAdapter::try_to_set_resolution(size_t, size_t, size_t)
+{
+    return false;
+}
+bool VGACompatibleAdapter::set_y_offset(size_t, size_t)
+{
+    return false;
 }
 
 }

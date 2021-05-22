@@ -9,8 +9,8 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Graphics/Console/Console.h>
+#include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
-#include <Kernel/Graphics/RawFramebufferDevice.h>
 #include <Kernel/PCI/DeviceController.h>
 #include <Kernel/PhysicalAddress.h>
 
@@ -24,6 +24,12 @@ public:
     static NonnullRefPtr<VGACompatibleAdapter> initialize(PCI::Address);
 
     virtual bool framebuffer_devices_initialized() const override { return !m_framebuffer_device.is_null(); }
+
+    virtual bool modesetting_capable() const override { return false; }
+    virtual bool double_framebuffering_capable() const override { return false; }
+
+    virtual bool try_to_set_resolution(size_t output_port_index, size_t width, size_t height) override;
+    virtual bool set_y_offset(size_t output_port_index, size_t y) override;
 
 protected:
     explicit VGACompatibleAdapter(PCI::Address);
@@ -44,7 +50,7 @@ protected:
     size_t m_framebuffer_height { 0 };
     size_t m_framebuffer_pitch { 0 };
 
-    RefPtr<RawFramebufferDevice> m_framebuffer_device;
+    RefPtr<FramebufferDevice> m_framebuffer_device;
     RefPtr<Graphics::Console> m_framebuffer_console;
 };
 
