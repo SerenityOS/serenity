@@ -126,7 +126,7 @@ private:
             auto ifname = if_object.get("name").to_string();
 
             if (!include_loopback)
-                if (ifname == "loop0")
+                if (ifname == "loop")
                     return;
             if (ip_address != "null")
                 connected_adapters++;
