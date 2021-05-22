@@ -5,7 +5,7 @@
  */
 
 #include <LibGfx/Bitmap.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/HTML/ImageData.h>
 
 namespace Web::HTML {
@@ -26,7 +26,7 @@ RefPtr<ImageData> ImageData::create_with_size(JS::GlobalObject& global_object, i
 
     auto data_handle = JS::make_handle(data);
 
-    auto bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), (u32*)data->data());
+    auto bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::RGBA8888, Gfx::IntSize(width, height), 1, width * sizeof(u32), data->data().data());
     if (!bitmap)
         return nullptr;
     return adopt_ref(*new ImageData(bitmap.release_nonnull(), move(data_handle)));
