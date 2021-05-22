@@ -62,12 +62,16 @@ void Profile::rebuild_tree()
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
     auto find_or_create_process_node = [this, &roots](pid_t pid, u64 timestamp) -> ProfileNode& {
-        auto& process = *find_process(pid, timestamp);
+        auto* process = find_process(pid, timestamp);
+        if (!process) {
+            dbgln("Profile contains event for unknown process with pid={}, timestamp={}", pid, timestamp);
+            VERIFY_NOT_REACHED();
+        }
         for (auto root : roots) {
-            if (&root->process() == &process)
+            if (&root->process() == process)
                 return root;
         }
-        auto new_root = ProfileNode::create_process_node(process);
+        auto new_root = ProfileNode::create_process_node(*process);
         roots.append(new_root);
         return new_root;
     };
