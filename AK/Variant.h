@@ -278,14 +278,14 @@ public:
     }
 
     template<typename T>
-    [[gnu::noinline]] T& get()
+    T& get()
     {
         VERIFY(has<T>());
         return *bit_cast<T*>(&m_data);
     }
 
     template<typename T>
-    [[gnu::noinline]] const T* get_pointer() const
+    const T* get_pointer() const
     {
         if (index_of<T>() == m_index)
             return bit_cast<const T*>(&m_data);
@@ -293,7 +293,7 @@ public:
     }
 
     template<typename T>
-    [[gnu::noinline]] const T& get() const
+    const T& get() const
     {
         VERIFY(has<T>());
         return *bit_cast<const T*>(&m_data);
