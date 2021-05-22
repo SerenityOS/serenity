@@ -172,3 +172,44 @@ TEST_CASE(return_values_by_reference)
     EXPECT_EQ(ref->ref_count(), 1u);
     EXPECT_EQ(value->ref_count(), 1u);
 }
+
+struct HoldsInt {
+    int i;
+};
+struct HoldsFloat {
+    float f;
+};
+
+TEST_CASE(copy_assign)
+{
+    {
+        Variant<int, String, float> the_value { 42.0f };
+
+        VERIFY(the_value.has<float>());
+        EXPECT_EQ(the_value.get<float>(), 42.0f);
+
+        int twelve = 12;
+        the_value = twelve;
+        VERIFY(the_value.has<int>());
+        EXPECT_EQ(the_value.get<int>(), 12);
+
+        the_value = String("Hello, world!");
+        VERIFY(the_value.has<String>());
+        EXPECT_EQ(the_value.get<String>(), "Hello, world!");
+    }
+    {
+        Variant<HoldsInt, String, HoldsFloat> the_value { HoldsFloat { 42.0f } };
+
+        VERIFY(the_value.has<HoldsFloat>());
+        EXPECT_EQ(the_value.get<HoldsFloat>().f, 42.0f);
+
+        HoldsInt twelve { 12 };
+        the_value = twelve;
+        VERIFY(the_value.has<HoldsInt>());
+        EXPECT_EQ(the_value.get<HoldsInt>().i, 12);
+
+        the_value = String("Hello, world!");
+        VERIFY(the_value.has<String>());
+        EXPECT_EQ(the_value.get<String>(), "Hello, world!");
+    }
+}
