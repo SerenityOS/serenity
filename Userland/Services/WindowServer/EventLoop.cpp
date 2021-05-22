@@ -27,8 +27,7 @@
 namespace WindowServer {
 
 EventLoop::EventLoop()
-    : m_event_loop(Core::EventLoop::MakeInspectable::No)
-    , m_window_server(Core::LocalServer::construct())
+    : m_window_server(Core::LocalServer::construct())
     , m_wm_server(Core::LocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard0", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
