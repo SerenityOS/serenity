@@ -1546,17 +1546,13 @@ Gfx::IntRect WindowManager::dnd_rect() const
 void WindowManager::invalidate_after_theme_or_font_change()
 {
     Compositor::the().set_background_color(palette().desktop_background().to_string());
-    HashTable<ClientConnection*> notified_clients;
     WindowFrame::reload_config();
     for_each_window([&](Window& window) {
-        if (window.client()) {
-            if (!notified_clients.contains(window.client())) {
-                window.client()->async_update_system_theme(Gfx::current_system_theme_buffer());
-                notified_clients.set(window.client());
-            }
-        }
         window.frame().theme_changed();
         return IterationDecision::Continue;
+    });
+    ClientConnection::for_each_client([&](ClientConnection& client) {
+        client.async_update_system_theme(Gfx::current_system_theme_buffer());
     });
     MenuManager::the().did_change_theme();
     AppletManager::the().did_change_theme();
