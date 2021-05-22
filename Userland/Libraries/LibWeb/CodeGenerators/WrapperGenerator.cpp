@@ -856,7 +856,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
@@ -1200,7 +1200,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/Uint8ClampedArray.h>
+#include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>
 #include <LibWeb/Bindings/@wrapper_class@.h>
 #include <LibWeb/Bindings/CSSStyleDeclarationWrapper.h>
