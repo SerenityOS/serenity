@@ -128,8 +128,8 @@ private:
     WeakPtr<Process> m_original_process_parent;
     WeakPtr<ProcessGroup> m_pg;
     termios m_termios;
-    unsigned short m_rows { 0 };
-    unsigned short m_columns { 0 };
+    unsigned short m_rows { 25 };
+    unsigned short m_columns { 80 };
 };
 
 }
