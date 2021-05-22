@@ -7,38 +7,63 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/MappedFile.h>
 #include <LibCore/File.h>
+#include <LibDebug/DebugInfo.h>
 #include <LibSymbolication/Client.h>
 
-namespace SymbolClient {
+namespace Symbolication {
 
-Client::Client()
-    : IPC::ServerConnection<SymbolClientEndpoint, SymbolServerEndpoint>(*this, "/tmp/portal/symbol")
-{
-    handshake();
-}
+struct CachedELF {
+    NonnullRefPtr<MappedFile> mapped_file;
+    Debug::DebugInfo debug_info;
+};
 
-void Client::handshake()
-{
-    greet();
-}
+static HashMap<String, OwnPtr<CachedELF>> s_cache;
 
-void Client::dummy()
+Optional<Symbol> symbolicate(String const& path, u32 address)
 {
-}
+    if (!s_cache.contains(path)) {
+        auto mapped_file = MappedFile::map(path);
+        if (mapped_file.is_error()) {
+            dbgln("Failed to map {}: {}", path, mapped_file.error().string());
+            s_cache.set(path, {});
+            return {};
+        }
+        auto elf = make<ELF::Image>(mapped_file.value()->bytes());
+        if (!elf->is_valid()) {
+            dbgln("ELF not valid: {}", path);
+            s_cache.set(path, {});
+            {};
+        }
+        Debug::DebugInfo debug_info(move(elf));
+        auto cached_elf = make<CachedELF>(mapped_file.release_value(), move(debug_info));
+        s_cache.set(path, move(cached_elf));
+    }
 
-Optional<Symbol> Client::symbolicate(const String& path, FlatPtr address)
-{
-    auto response = IPCProxy::symbolicate(path, address);
-    if (!response.success())
+    auto it = s_cache.find(path);
+    VERIFY(it != s_cache.end());
+    auto& cached_elf = it->value;
+
+    if (!cached_elf)
         return {};
+
+    u32 offset = 0;
+    auto symbol = cached_elf->debug_info.elf().symbolicate(address, &offset);
+    auto source_position = cached_elf->debug_info.get_source_position(address);
+    String filename;
+    u32 line_number = 0;
+    if (source_position.has_value()) {
+        filename = source_position.value().file_path;
+        line_number = source_position.value().line_number;
+    }
 
     return Symbol {
         .address = address,
-        .name = response.name(),
-        .offset = response.offset(),
-        .filename = response.filename(),
-        .line_number = response.line()
+        .name = move(symbol),
+        .offset = offset,
+        .filename = move(filename),
+        .line_number = line_number
     };
 }
 
@@ -61,7 +86,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         .is_relative = false });
 
     {
-
         auto stack_path = String::formatted("/proc/{}/stacks/{}", pid, tid);
         auto file_or_error = Core::File::open(stack_path, Core::OpenMode::ReadOnly);
         if (file_or_error.is_error()) {
@@ -121,8 +145,6 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         }
     }
 
-    auto client = SymbolClient::Client::construct();
-
     Vector<Symbol> symbols;
 
     for (auto address : stack) {
@@ -145,7 +167,7 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         else
             adjusted_address = address;
 
-        auto result = client->symbolicate(found_region->path, adjusted_address);
+        auto result = symbolicate(found_region->path, adjusted_address);
         if (!result.has_value()) {
             symbols.append(Symbol {
                 .address = address,
