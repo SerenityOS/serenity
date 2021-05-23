@@ -51,12 +51,12 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
         return ESRCH;
     if (!is_superuser() && process->uid() != euid())
         return EPERM;
+    g_profiling_event_mask = event_mask;
+    process->set_profiling(true);
     if (!process->create_perf_events_buffer_if_needed())
         return ENOMEM;
     if (!TimeManagement::the().enable_profile_timer())
         return ENOTSUP;
-    g_profiling_event_mask = event_mask;
-    process->set_profiling(true);
     return 0;
 }
 
