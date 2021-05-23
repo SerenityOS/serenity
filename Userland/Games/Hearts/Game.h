@@ -24,7 +24,7 @@ public:
 
     virtual ~Game() override;
 
-    void setup();
+    void setup(String player_name);
 
     Function<void(String const&)> on_status_change;
 
