@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -71,7 +72,7 @@ public:
 
     void on_input(u8);
 
-    void set_cursor(unsigned row, unsigned column);
+    void set_cursor(unsigned row, unsigned column, bool skip_debug = false);
 
 #ifndef KERNEL
     void clear();
@@ -93,20 +94,27 @@ public:
     }
     u16 rows() const { return m_rows; }
 
-    u16 cursor_column() const { return m_cursor_column; }
-    u16 cursor_row() const { return m_cursor_row; }
+    u16 cursor_column() const { return m_current_state.cursor.column; }
+    u16 cursor_row() const { return m_current_state.cursor.row; }
 
 #ifndef KERNEL
     size_t line_count() const
     {
-        return m_history.size() + m_lines.size();
+        if (m_use_alternate_screen_buffer)
+            return m_alternate_screen_buffer.size();
+        else
+            return m_history.size() + m_normal_screen_buffer.size();
     }
 
     Line& line(size_t index)
     {
-        if (index < m_history.size())
-            return m_history[(m_history_start + index) % m_history.size()];
-        return m_lines[index - m_history.size()];
+        if (m_use_alternate_screen_buffer) {
+            return m_alternate_screen_buffer[index];
+        } else {
+            if (index < m_history.size())
+                return m_history[(m_history_start + index) % m_history.size()];
+            return m_normal_screen_buffer[index - m_history.size()];
+        }
     }
     const Line& line(size_t index) const
     {
@@ -115,11 +123,12 @@ public:
 
     Line& visible_line(size_t index)
     {
-        return m_lines[index];
+        return active_buffer()[index];
     }
+
     const Line& visible_line(size_t index) const
     {
-        return m_lines[index];
+        return active_buffer()[index];
     }
 
     size_t max_history_size() const { return m_max_history_lines; }
@@ -173,6 +182,22 @@ protected:
     virtual void receive_dcs_char(u8 byte) override;
     virtual void execute_dcs_sequence() override;
 
+    struct CursorPosition {
+        u16 row { 0 };
+        u16 column { 0 };
+
+        void clamp(u16 max_row, u16 max_column)
+        {
+            row = min(row, max_row);
+            column = min(column, max_column);
+        }
+    };
+
+    struct BufferState {
+        Attribute attribute;
+        CursorPosition cursor;
+    };
+
     void carriage_return();
 #ifndef KERNEL
     void scroll_up();
@@ -225,7 +250,13 @@ protected:
     void SCOSC();
 
     // Restore Saved Cursor Position
-    void SCORC(Parameters);
+    void SCORC();
+
+    // Save Cursor (and other attributes)
+    void DECSC();
+
+    // Restore Cursor (and other attributes)
+    void DECRC();
 
     // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     void DECSTBM(Parameters);
@@ -322,8 +353,13 @@ protected:
         m_history_start = (m_history_start + 1) % m_history.size();
     }
 
-    NonnullOwnPtrVector<Line> m_lines;
+    NonnullOwnPtrVector<Line>& active_buffer() { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
+    const NonnullOwnPtrVector<Line>& active_buffer() const { return m_use_alternate_screen_buffer ? m_alternate_screen_buffer : m_normal_screen_buffer; };
+    NonnullOwnPtrVector<Line> m_normal_screen_buffer;
+    NonnullOwnPtrVector<Line> m_alternate_screen_buffer;
 #endif
+
+    bool m_use_alternate_screen_buffer { false };
 
     size_t m_scroll_region_top { 0 };
     size_t m_scroll_region_bottom { 0 };
@@ -331,10 +367,14 @@ protected:
     u16 m_columns { 1 };
     u16 m_rows { 1 };
 
-    u16 m_cursor_row { 0 };
-    u16 m_cursor_column { 0 };
-    u16 m_saved_cursor_row { 0 };
-    u16 m_saved_cursor_column { 0 };
+    BufferState m_current_state;
+    BufferState m_normal_saved_state;
+    BufferState m_alternate_saved_state;
+
+    // Separate from *_saved_state: some escape sequences only save/restore the cursor position,
+    // while others impact the text attributes and other state too.
+    CursorPosition m_saved_cursor_position;
+
     bool m_swallow_current { false };
     bool m_stomp { false };
 
