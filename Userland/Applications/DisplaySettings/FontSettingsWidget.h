@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGUI/Label.h>
 #include <LibGUI/Widget.h>
 
 namespace DisplaySettings {
@@ -20,6 +21,9 @@ public:
 
 private:
     FontSettingsWidget();
+
+    RefPtr<GUI::Label> m_default_font_label;
+    RefPtr<GUI::Label> m_fixed_width_font_label;
 };
 
 }
