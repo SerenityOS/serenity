@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        debug-macros: ['ALL_DEBUG', 'NORMAL_DEBUG']
+        debug-options: ['ALL_DEBUG', 'NORMAL_DEBUG']
         os: [ubuntu-20.04]
         # If ccache is broken and you would like to bust the ccache cache on Github Actions, increment this:
         ccache-mark: [0]
@@ -93,10 +93,10 @@ jobs:
         # This is achieved by using the "prefix-timestamp" format,
         # and permitting the restore-key "prefix-" without specifying a timestamp.
         # For this trick to work, the timestamp *must* come last, and it *must* be missing in 'restore-keys'.
-        key: ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
+        key: ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-time${{ steps.stamps.outputs.time }}
         # IMPORTANT: Keep these two in sync!
         restore-keys: |
-          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-macros }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
+          ${{ runner.os }}-ccache-i686-v${{ matrix.ccache-mark }}-D${{ matrix.debug-options }}-toolchain_${{steps.stamps.outputs.libc_headers}}-
     - name: Show ccache stats before build and configure
       run: |
         # We only have 5 GiB of cache available *in total*. Beyond that, GitHub deletes caches.
@@ -106,15 +106,15 @@ jobs:
         # Building from scratch fills the ccache cache from 0 to about 0.7 GB, so 1.5 GB is plenty.
         ccache -M 1500M
         ccache -s
-    - name: Create build environment with debug macros
+    - name: Create build environment with extra debug options
       working-directory: ${{ github.workspace }}
-      # Build the entire project with debug macros turned on, to prevent code rot.
+      # Build the entire project with all available debug options turned on, to prevent code rot.
       # However, it is unweildy and slow to run tests with them enabled, so we will build twice.
       run: |
         mkdir -p Build
         cd Build
-        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_THE_DEBUG_MACROS=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-      if: ${{ matrix.debug-macros == 'ALL_DEBUG' }}
+        cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_ALL_DEBUG_FACILITIES=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
+      if: ${{ matrix.debug-options == 'ALL_DEBUG' }}
     - name: Create build environment
       working-directory: ${{ github.workspace }}
       # Note that this needs to run *even if* the Toolchain was built,
@@ -123,7 +123,7 @@ jobs:
         mkdir -p Build
         cd Build
         cmake .. -GNinja -DBUILD_LAGOM=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10
-      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG' }}
+      if: ${{ matrix.debug-options == 'NORMAL_DEBUG' }}
 
     # === ACTUALLY BUILD ===
 
@@ -137,12 +137,12 @@ jobs:
       run: ./check-symbols.sh
 
     - name: Create Serenity Rootfs
-      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
+      if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
       run: ninja install && ninja image
 
     - name: Run On-Target Tests
-      if: ${{ matrix.debug-macros == 'NORMAL_DEBUG'}}
+      if: ${{ matrix.debug-options == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
       env:
         SERENITY_QEMU_CPU: "max,vmx=off"
@@ -167,7 +167,7 @@ jobs:
 
     - name: Print Target Logs
       # Extremely useful if Serenity hangs trying to run one of the tests
-      if: ${{ !cancelled() && matrix.debug-macros == 'NORMAL_DEBUG'}}
+      if: ${{ !cancelled() && matrix.debug-options == 'NORMAL_DEBUG'}}
       working-directory: ${{ github.workspace }}/Build
       run: '[ ! -e debug.log ] || cat debug.log'
 
