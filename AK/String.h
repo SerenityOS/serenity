@@ -92,6 +92,7 @@ public:
     String(const FlyString&);
 
     [[nodiscard]] static String repeated(char, size_t count);
+    [[nodiscard]] static String repeated(const StringView&, size_t count);
 
     [[nodiscard]] static String bijective_base_from(size_t value, unsigned base = 26, StringView map = {});
 
