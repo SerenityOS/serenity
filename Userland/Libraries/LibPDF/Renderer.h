@@ -87,6 +87,7 @@ private:
     ENUMERATE_COMMANDS(V)
 #undef V
     void handle_text_next_line_show_string(const Vector<Value>& args);
+    void handle_text_next_line_show_string_set_spacing(const Vector<Value>& args);
 
     // shift is the manual advance given in the TJ command array
     void show_text(const String&, int shift = 0);
