@@ -34,11 +34,11 @@ public:
         : IPC::ServerConnection<LanguageClientEndpoint, LanguageServerEndpoint>(*this, socket)
     {
         m_project_path = project_path;
+        async_greet(m_project_path);
     }
 
     virtual void handshake() override
     {
-        greet(m_project_path);
     }
 
     WeakPtr<LanguageClient> language_client() { return m_current_language_client; }
