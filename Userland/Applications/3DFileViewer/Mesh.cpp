@@ -22,8 +22,9 @@ const Color colors[] {
     Color::White
 };
 
-Mesh::Mesh(Vector<Vertex> vertices, Vector<Triangle> triangles)
+Mesh::Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Triangle> triangles)
     : m_vertex_list(move(vertices))
+    , m_tex_coords(move(tex_coords))
     , m_triangle_list(move(triangles))
 {
 }
@@ -74,17 +75,26 @@ void Mesh::draw()
             m_vertex_list.at(m_triangle_list[i].a).y,
             m_vertex_list.at(m_triangle_list[i].a).z);
 
+        if (is_textured())
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index0).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index0).v);
+
         // Vertex 2
         glVertex3f(
             m_vertex_list.at(m_triangle_list[i].b).x,
             m_vertex_list.at(m_triangle_list[i].b).y,
             m_vertex_list.at(m_triangle_list[i].b).z);
 
+        if (is_textured())
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index1).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index1).v);
+
         // Vertex 3
         glVertex3f(
             m_vertex_list.at(m_triangle_list[i].c).x,
             m_vertex_list.at(m_triangle_list[i].c).y,
             m_vertex_list.at(m_triangle_list[i].c).z);
+
+        if (is_textured())
+            glTexCoord2f(m_tex_coords.at(m_triangle_list[i].tex_coord_index2).u, 1.0f - m_tex_coords.at(m_triangle_list[i].tex_coord_index2).v);
 
         glEnd();
     }
