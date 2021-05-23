@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-class WindowServerConnection
+class WindowServerConnection final
     : public IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
     C_OBJECT(WindowServerConnection)
