@@ -30,7 +30,7 @@ NonnullRefPtr<Object> DictObject::get_object(Document* document, const FlyString
     {                                                                                                      \
         return document->resolve_to<class_name>(get(key).value());                                         \
     }
-ENUMERATE_DIRECT_OBJECT_TYPES(DEFINE_ACCESSORS)
+ENUMERATE_OBJECT_TYPES(DEFINE_ACCESSORS)
 #undef DEFINE_INDEXER
 
 static void append_indent(StringBuilder& builder, int indent)
@@ -130,11 +130,6 @@ String IndirectValue::to_string(int indent) const
     append_indent(builder, indent);
     builder.append("endobj");
     return builder.to_string();
-}
-
-String IndirectValueRef::to_string(int) const
-{
-    return String::formatted("{} {} R", index(), generation_index());
 }
 
 }

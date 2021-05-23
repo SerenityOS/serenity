@@ -101,19 +101,17 @@ Page Document::get_page(u32 index)
 
 Value Document::resolve(const Value& value)
 {
+    if (value.is_ref()) {
+        // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
+        // right? Unsure from the spec, but if they can, these return values would have
+        // to be wrapped with another resolve() call.
+        return get_or_load_value(value.as_ref_index());
+    }
+
     if (!value.is_object())
         return value;
 
     auto obj = value.as_object();
-
-    // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
-    // right? Unsure from the spec, but if they can, these return values would have
-    // to be wrapped with another resolve() call.
-
-    if (obj->is_indirect_value_ref()) {
-        auto object_index = static_cast<NonnullRefPtr<IndirectValueRef>>(obj)->index();
-        return get_or_load_value(object_index);
-    }
 
     if (obj->is_indirect_value())
         return static_cast<NonnullRefPtr<IndirectValue>>(obj)->value();
@@ -137,13 +135,13 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
         // these pages to the overall page tree
 
         for (auto& value : *kids_array) {
-            auto reference = object_cast<IndirectValueRef>(value.as_object());
-            auto byte_offset = m_xref_table.byte_offset_for_object(reference->index());
+            auto reference_index = value.as_ref_index();
+            auto byte_offset = m_xref_table.byte_offset_for_object(reference_index);
             auto maybe_page_tree_node = m_parser.conditionally_parse_page_tree_node_at_offset(byte_offset);
             if (maybe_page_tree_node) {
                 add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull());
             } else {
-                m_page_object_indices.append(reference->index());
+                m_page_object_indices.append(reference_index);
             }
         }
 
@@ -151,10 +149,8 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
     }
 
     // We know all of the kids are leaf nodes
-    for (auto& value : *kids_array) {
-        auto reference = object_cast<IndirectValueRef>(value.as_object());
-        m_page_object_indices.append(reference->index());
-    }
+    for (auto& value : *kids_array)
+        m_page_object_indices.append(value.as_ref_index());
 }
 
 }
