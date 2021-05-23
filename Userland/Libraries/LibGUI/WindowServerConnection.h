@@ -17,7 +17,6 @@ class WindowServerConnection
     , public WindowClientEndpoint {
     C_OBJECT(WindowServerConnection)
 public:
-    virtual void handshake() override { }
     static WindowServerConnection& the();
 
 private:

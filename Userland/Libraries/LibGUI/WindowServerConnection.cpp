@@ -55,7 +55,7 @@ WindowServerConnection::WindowServerConnection()
 
 void WindowServerConnection::fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&, String const&, String const&)
 {
-    // NOTE: This message is handled in handshake().
+    // NOTE: This message is handled in the constructor.
 }
 
 void WindowServerConnection::update_system_theme(Core::AnonymousBuffer const& theme_buffer)

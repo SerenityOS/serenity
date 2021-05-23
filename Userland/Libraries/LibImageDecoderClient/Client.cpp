@@ -20,10 +20,6 @@ void Client::die()
         on_death();
 }
 
-void Client::handshake()
-{
-}
-
 void Client::dummy()
 {
 }

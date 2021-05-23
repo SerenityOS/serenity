@@ -20,7 +20,6 @@ class ClientConnection : public IPC::ServerConnection<AudioClientEndpoint, Audio
 public:
     ClientConnection();
 
-    virtual void handshake() override;
     void enqueue(const Buffer&);
     bool try_enqueue(const Buffer&);
 

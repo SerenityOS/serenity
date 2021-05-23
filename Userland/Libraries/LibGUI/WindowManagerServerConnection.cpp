@@ -19,11 +19,6 @@ WindowManagerServerConnection& WindowManagerServerConnection::the()
     return *s_connection;
 }
 
-void WindowManagerServerConnection::handshake()
-{
-    // :^)
-}
-
 void WindowManagerServerConnection::window_state_changed(i32 wm_id, i32 client_id, i32 window_id,
     i32 parent_client_id, i32 parent_window_id, bool is_active, bool is_minimized, bool is_modal,
     bool is_frameless, i32 window_type, String const& title, Gfx::IntRect const& rect, Optional<i32> const& progress)
