@@ -573,6 +573,12 @@ public:
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::Before;
             } else if (pseudo_name.equals_ignoring_case("after")) {
                 simple_selector.pseudo_element = CSS::Selector::SimpleSelector::PseudoElement::After;
+            } else if (pseudo_name.equals_ignoring_case("disabled")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Disabled;
+            } else if (pseudo_name.equals_ignoring_case("enabled")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Enabled;
+            } else if (pseudo_name.equals_ignoring_case("checked")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Checked;
             } else {
                 dbgln("Unknown pseudo class: '{}'", pseudo_name);
                 return {};
