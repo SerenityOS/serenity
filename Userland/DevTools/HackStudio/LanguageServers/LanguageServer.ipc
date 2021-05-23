@@ -1,6 +1,6 @@
 endpoint LanguageServer
 {
-    greet(String project_root) => ()
+    greet(String project_root) =|
 
     file_opened(String filename, IPC::File file) =|
     file_edit_insert_text(String filename, String text, i32 start_line, i32 start_column) =|
