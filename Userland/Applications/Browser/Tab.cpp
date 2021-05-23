@@ -92,8 +92,36 @@ Tab::Tab(BrowserWindow& window, Type type)
     else
         m_web_content_view = webview_container.add<Web::OutOfProcessWebView>();
 
-    toolbar.add_action(window.go_back_action());
-    toolbar.add_action(window.go_forward_action());
+    auto& go_back_button = toolbar.add_action(window.go_back_action());
+    go_back_button.on_context_menu_request = [this](auto& context_menu_event) {
+        if (!m_history.can_go_back())
+            return;
+        int i = 0;
+        m_go_back_context_menu = GUI::Menu::construct();
+        for (auto& url : m_history.get_back_history()) {
+            i++;
+            m_go_back_context_menu->add_action(GUI::Action::create(url.to_string(),
+                Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"),
+                [this, i](auto&) { go_back(i); }));
+        }
+        m_go_back_context_menu->popup(context_menu_event.screen_position());
+    };
+
+    auto& go_forward_button = toolbar.add_action(window.go_forward_action());
+    go_forward_button.on_context_menu_request = [this](auto& context_menu_event) {
+        if (!m_history.can_go_forward())
+            return;
+        int i = 0;
+        m_go_forward_context_menu = GUI::Menu::construct();
+        for (auto& url : m_history.get_forward_history()) {
+            i++;
+            m_go_forward_context_menu->add_action(GUI::Action::create(url.to_string(),
+                Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"),
+                [this, i](auto&) { go_forward(i); }));
+        }
+        m_go_forward_context_menu->popup(context_menu_event.screen_position());
+    };
+
     toolbar.add_action(window.go_home_action());
     toolbar.add_action(window.reload_action());
 
@@ -315,16 +343,16 @@ void Tab::reload()
     load(url());
 }
 
-void Tab::go_back()
+void Tab::go_back(int steps)
 {
-    m_history.go_back();
+    m_history.go_back(steps);
     update_actions();
     load(m_history.current(), LoadType::HistoryNavigation);
 }
 
-void Tab::go_forward()
+void Tab::go_forward(int steps)
 {
-    m_history.go_forward();
+    m_history.go_forward(steps);
     update_actions();
     load(m_history.current(), LoadType::HistoryNavigation);
 }
