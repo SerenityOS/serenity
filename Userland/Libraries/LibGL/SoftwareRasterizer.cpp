@@ -414,10 +414,13 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 {
 }
 
-void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
+void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Texture& texture)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector2&, const FloatVector4& color) -> FloatVector4 {
-        return color;
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {
+        // TODO: We'd do some kind of multitexturing/blending here
+        // Construct a vector for the texel we want to sample
+        FloatVector4 texel = texture.sample_texel(uv);
+        return texel * color;
     });
 }
 
