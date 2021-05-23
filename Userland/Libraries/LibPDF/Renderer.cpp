@@ -149,14 +149,15 @@ RENDERER_TODO(set_color_rendering_intent);
 RENDERER_TODO(set_flatness_tolerance);
 RENDERER_TODO(set_graphics_state_from_dict);
 
-RENDERER_HANDLER(path_begin)
+RENDERER_HANDLER(path_move)
 {
-    m_path = Gfx::Path();
+    m_current_path.move_to(map(args[0].to_float(), args[1].to_float()));
 }
 
 RENDERER_HANDLER(path_line)
 {
-    m_path.line_to(map(args[0].to_float(), args[1].to_float()));
+    VERIFY(!m_current_path.segments().is_empty());
+    m_current_path.line_to(map(args[0].to_float(), args[1].to_float()));
 }
 
 RENDERER_TODO(path_cubic_bezier_curve);
@@ -165,7 +166,7 @@ RENDERER_TODO(path_cubic_bezier_curve_no_second_control);
 
 RENDERER_HANDLER(path_close)
 {
-    m_path.close();
+    m_current_path.close();
 }
 
 RENDERER_HANDLER(path_append_rect)
@@ -173,27 +174,29 @@ RENDERER_HANDLER(path_append_rect)
     auto pos = map(args[0].to_float(), args[1].to_float());
     auto size = map(Gfx::FloatSize { args[2].to_float(), args[3].to_float() });
 
-    m_path.move_to(pos);
-    m_path.line_to({ pos.x() + size.width(), pos.y() });
-    m_path.line_to({ pos.x() + size.width(), pos.y() + size.height() });
-    m_path.line_to({ pos.x(), pos.y() + size.height() });
-    m_path.close();
+    m_current_path.move_to(pos);
+    m_current_path.line_to({ pos.x() + size.width(), pos.y() });
+    m_current_path.line_to({ pos.x() + size.width(), pos.y() + size.height() });
+    m_current_path.line_to({ pos.x(), pos.y() + size.height() });
+    m_current_path.close();
 }
 
 RENDERER_HANDLER(path_stroke)
 {
-    m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
+    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
+    m_current_path.clear();
 }
 
 RENDERER_HANDLER(path_close_and_stroke)
 {
-    m_path.close();
+    m_current_path.close();
     handle_path_stroke(args);
 }
 
 RENDERER_HANDLER(path_fill_nonzero)
 {
-    m_painter.fill_path(m_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
+    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
+    m_current_path.clear();
 }
 
 RENDERER_HANDLER(path_fill_nonzero_deprecated)
@@ -203,30 +206,31 @@ RENDERER_HANDLER(path_fill_nonzero_deprecated)
 
 RENDERER_HANDLER(path_fill_evenodd)
 {
-    m_painter.fill_path(m_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
+    m_painter.fill_path(m_current_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
+    m_current_path.clear();
 }
 
 RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
-    m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
+    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     handle_path_fill_nonzero(args);
 }
 
 RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
-    m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
+    m_painter.stroke_path(m_current_path, state().stroke_color, state().line_width);
     handle_path_fill_evenodd(args);
 }
 
 RENDERER_HANDLER(path_close_fill_stroke_nonzero)
 {
-    m_path.close();
+    m_current_path.close();
     handle_path_fill_stroke_nonzero(args);
 }
 
 RENDERER_HANDLER(path_close_fill_stroke_evenodd)
 {
-    m_path.close();
+    m_current_path.close();
     handle_path_fill_stroke_evenodd(args);
 }
 
@@ -234,8 +238,19 @@ RENDERER_HANDLER(path_end)
 {
 }
 
-RENDERER_TODO(path_intersect_clip_nonzero);
-RENDERER_TODO(path_intersect_clip_evenodd);
+RENDERER_HANDLER(path_intersect_clip_nonzero)
+{
+    // FIXME: Support arbitrary path clipping in the painter and utilize that here
+    auto bounding_box = map(m_current_path.bounding_box());
+    m_painter.add_clip_rect(bounding_box.to_type<int>());
+}
+
+RENDERER_HANDLER(path_intersect_clip_evenodd)
+{
+    // FIXME: Support arbitrary path clipping in the painter and utilize that here
+    auto bounding_box = map(m_current_path.bounding_box());
+    m_painter.add_clip_rect(bounding_box.to_type<int>());
+}
 
 RENDERER_HANDLER(text_begin)
 {
