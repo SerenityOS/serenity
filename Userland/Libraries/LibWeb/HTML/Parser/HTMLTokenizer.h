@@ -127,6 +127,7 @@ private:
     bool consume_next_if_match(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive);
     void create_new_token(HTMLToken::Type);
     bool current_end_tag_token_is_appropriate() const;
+    String consume_current_builder();
 
     static const char* state_name(State state)
     {
@@ -163,6 +164,7 @@ private:
     Utf8CodePointIterator m_prev_utf8_iterator;
 
     HTMLToken m_current_token;
+    StringBuilder m_current_builder;
 
     Optional<String> m_last_emitted_start_tag_name;
 
