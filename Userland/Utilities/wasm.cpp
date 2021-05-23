@@ -20,6 +20,7 @@ static auto g_stdout = Core::OutputFileStream::standard_error();
 static Wasm::Printer g_printer { g_stdout };
 static bool g_continue { false };
 static void (*old_signal)(int);
+static Wasm::DebuggerBytecodeInterpreter g_interpreter;
 
 static void print_buffer(ReadonlyBytes buffer, int split)
 {
@@ -190,7 +191,11 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             for (auto& param : type.parameters())
                 values.append(Wasm::Value { param, values_to_push.take_last() });
 
-            auto result = config.call(*address, move(values));
+            Wasm::Result result { Wasm::Trap {} };
+            {
+                Wasm::Configuration::CallFrameHandle handle { config };
+                result = config.call(g_interpreter, *address, move(values));
+            }
             if (result.is_trap())
                 warnln("Execution trapped!");
             if (!result.values().is_empty())
@@ -328,8 +333,8 @@ int main(int argc, char* argv[])
         Core::EventLoop main_loop;
         if (debug) {
             g_line_editor = Line::Editor::construct();
-            machine.pre_interpret_hook = pre_interpret_hook;
-            machine.post_interpret_hook = post_interpret_hook;
+            g_interpreter.pre_interpret_hook = pre_interpret_hook;
+            g_interpreter.post_interpret_hook = post_interpret_hook;
         }
         // First, resolve the linked modules
         NonnullOwnPtrVector<Wasm::ModuleInstance> linked_instances;
@@ -433,7 +438,7 @@ int main(int argc, char* argv[])
                 outln();
             }
 
-            auto result = machine.invoke(run_address.value(), move(values));
+            auto result = machine.invoke(g_interpreter, run_address.value(), move(values));
 
             if (debug) {
                 Wasm::Configuration config { machine.store() };

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Interpreter.h"
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/Types.h>
@@ -105,18 +106,18 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
             auxiliary_instance.globals().append(*ptr);
     }
 
+    BytecodeInterpreter interpreter;
+
     module.for_each_section_of_type<GlobalSection>([&](auto& global_section) {
         for (auto& entry : global_section.entries()) {
             Configuration config { m_store };
-            config.pre_interpret_hook = &pre_interpret_hook;
-            config.post_interpret_hook = &post_interpret_hook;
             config.set_frame(Frame {
                 auxiliary_instance,
                 Vector<Value> {},
                 entry.expression(),
                 1,
             });
-            auto result = config.execute();
+            auto result = config.execute(interpreter);
             // What if this traps?
             if (result.is_trap())
                 instantiation_result = InstantiationError { "Global value construction trapped" };
@@ -140,15 +141,13 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
             segment.value().visit(
                 [&](const DataSection::Data::Active& data) {
                     Configuration config { m_store };
-                    config.pre_interpret_hook = &pre_interpret_hook;
-                    config.post_interpret_hook = &post_interpret_hook;
                     config.set_frame(Frame {
                         main_module_instance,
                         Vector<Value> {},
                         data.offset,
                         1,
                     });
-                    auto result = config.execute();
+                    auto result = config.execute(interpreter);
                     size_t offset = 0;
                     result.values().first().value().visit(
                         [&](const auto& value) { offset = value; },
@@ -285,10 +284,14 @@ Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module,
 
 Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)
 {
+    BytecodeInterpreter interpreter;
+    return invoke(interpreter, address, move(arguments));
+}
+
+Result AbstractMachine::invoke(Interpreter& interpreter, FunctionAddress address, Vector<Value> arguments)
+{
     Configuration configuration { m_store };
-    configuration.pre_interpret_hook = &pre_interpret_hook;
-    configuration.post_interpret_hook = &post_interpret_hook;
-    return configuration.call(address, move(arguments));
+    return configuration.call(interpreter, address, move(arguments));
 }
 
 void Linker::link(const ModuleInstance& instance)
