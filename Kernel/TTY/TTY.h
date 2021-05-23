@@ -13,6 +13,8 @@
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
 
+#define TTY_BUFFER_SIZE 1024
+
 namespace Kernel {
 
 class TTY : public CharacterDevice {
@@ -79,7 +81,10 @@ private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
 
-    CircularDeque<u8, 1024> m_input_buffer;
+    CircularDeque<u8, TTY_BUFFER_SIZE> m_input_buffer;
+    // FIXME: use something like AK::Bitmap but which takes a size template parameter
+    u8 m_special_character_bitmask[TTY_BUFFER_SIZE / 8];
+
     WeakPtr<Process> m_original_process_parent;
     WeakPtr<ProcessGroup> m_pg;
     termios m_termios;
