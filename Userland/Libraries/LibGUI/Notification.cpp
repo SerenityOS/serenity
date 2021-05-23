@@ -20,7 +20,6 @@ class NotificationServerConnection : public IPC::ServerConnection<NotificationCl
 public:
     virtual void handshake() override
     {
-        greet();
     }
 
     virtual void die() override

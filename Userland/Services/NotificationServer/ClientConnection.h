@@ -22,7 +22,6 @@ public:
 private:
     explicit ClientConnection(NonnullRefPtr<Core::LocalSocket>, int client_id);
 
-    virtual void greet() override;
     virtual void show_notification(String const&, String const&, Gfx::ShareableBitmap const&) override;
     virtual void close_notification() override;
     virtual Messages::NotificationServer::UpdateNotificationIconResponse update_notification_icon(Gfx::ShareableBitmap const&) override;
