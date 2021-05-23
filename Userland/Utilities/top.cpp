@@ -77,25 +77,24 @@ static Snapshot get_snapshot()
         return {};
 
     Snapshot snapshot;
-    for (auto& it : all_processes.value()) {
-        auto& stats = it.value;
-        for (auto& thread : stats.threads) {
+    for (auto& process : all_processes.value()) {
+        for (auto& thread : process.threads) {
             snapshot.sum_times_scheduled += thread.times_scheduled;
             ThreadData thread_data;
             thread_data.tid = thread.tid;
-            thread_data.pid = stats.pid;
-            thread_data.pgid = stats.pgid;
-            thread_data.pgp = stats.pgp;
-            thread_data.sid = stats.sid;
-            thread_data.uid = stats.uid;
-            thread_data.gid = stats.gid;
-            thread_data.ppid = stats.ppid;
-            thread_data.nfds = stats.nfds;
-            thread_data.name = stats.name;
-            thread_data.tty = stats.tty;
-            thread_data.amount_virtual = stats.amount_virtual;
-            thread_data.amount_resident = stats.amount_resident;
-            thread_data.amount_shared = stats.amount_shared;
+            thread_data.pid = process.pid;
+            thread_data.pgid = process.pgid;
+            thread_data.pgp = process.pgp;
+            thread_data.sid = process.sid;
+            thread_data.uid = process.uid;
+            thread_data.gid = process.gid;
+            thread_data.ppid = process.ppid;
+            thread_data.nfds = process.nfds;
+            thread_data.name = process.name;
+            thread_data.tty = process.tty;
+            thread_data.amount_virtual = process.amount_virtual;
+            thread_data.amount_resident = process.amount_resident;
+            thread_data.amount_shared = process.amount_shared;
             thread_data.syscall_count = thread.syscall_count;
             thread_data.inode_faults = thread.inode_faults;
             thread_data.zero_faults = thread.zero_faults;
@@ -103,9 +102,9 @@ static Snapshot get_snapshot()
             thread_data.times_scheduled = thread.times_scheduled;
             thread_data.priority = thread.priority;
             thread_data.state = thread.state;
-            thread_data.username = stats.username;
+            thread_data.username = process.username;
 
-            snapshot.map.set({ stats.pid, thread.tid }, move(thread_data));
+            snapshot.map.set({ process.pid, thread.tid }, move(thread_data));
         }
     }
 
