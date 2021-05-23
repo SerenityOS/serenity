@@ -26,7 +26,6 @@ public:
     virtual void die() override;
 
 private:
-    virtual void greet() override;
     virtual Messages::ImageDecoderServer::DecodeImageResponse decode_image(Core::AnonymousBuffer const&) override;
 };
 
