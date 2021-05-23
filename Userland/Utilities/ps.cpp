@@ -103,9 +103,8 @@ int main(int argc, char** argv)
     if (!all_processes.has_value())
         return 1;
 
-    for (const auto& it : all_processes.value()) {
-        const auto& proc = it.value;
-        auto tty = proc.tty;
+    for (auto const& process : all_processes.value()) {
+        auto tty = process.tty;
 
         if (!every_process_flag && tty != this_tty)
             continue;
@@ -115,20 +114,20 @@ int main(int argc, char** argv)
         else
             tty = "n/a";
 
-        auto* state = proc.threads.is_empty() ? "Zombie" : proc.threads.first().state.characters();
+        auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
 
         if (uid_column != -1)
-            columns[uid_column].buffer = proc.username;
+            columns[uid_column].buffer = process.username;
         if (pid_column != -1)
-            columns[pid_column].buffer = String::number(proc.pid);
+            columns[pid_column].buffer = String::number(process.pid);
         if (ppid_column != -1)
-            columns[ppid_column].buffer = String::number(proc.ppid);
+            columns[ppid_column].buffer = String::number(process.ppid);
         if (tty_column != -1)
             columns[tty_column].buffer = tty;
         if (state_column != -1)
             columns[state_column].buffer = state;
         if (cmd_column != -1)
-            columns[cmd_column].buffer = proc.name;
+            columns[cmd_column].buffer = process.name;
 
         for (auto& column : columns)
             print_column(column, column.buffer);
