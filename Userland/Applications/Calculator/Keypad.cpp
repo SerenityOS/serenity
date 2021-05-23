@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -144,10 +145,14 @@ String Keypad::to_string() const
         builder.append("-");
     builder.appendff("{}", m_int_value);
 
+    // NOTE: This is so the decimal point appears on screen as soon as you type it.
+    if (m_frac_length > 0 || m_state == State::TypingDecimal)
+        builder.append('.');
+
     if (m_frac_length > 0) {
         // FIXME: This disables the compiletime format string check since we can't parse '}}' here correctly.
         //        remove the 'StringView { }' when that's fixed.
-        builder.appendff(StringView { ".{:0{}}" }, m_frac_value, m_frac_length);
+        builder.appendff(StringView { "{:0{}}" }, m_frac_value, m_frac_length);
     }
 
     return builder.to_string();
