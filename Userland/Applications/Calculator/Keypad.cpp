@@ -7,7 +7,6 @@
 
 #include "Keypad.h"
 #include <AK/StringBuilder.h>
-#include <math.h>
 
 Keypad::Keypad()
 {
