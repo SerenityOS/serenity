@@ -15,17 +15,12 @@ WebContentClient::WebContentClient(OutOfProcessWebView& view)
     : IPC::ServerConnection<WebContentClientEndpoint, WebContentServerEndpoint>(*this, "/tmp/portal/webcontent")
     , m_view(view)
 {
-    handshake();
 }
 
 void WebContentClient::die()
 {
     VERIFY(on_web_content_process_crash);
     on_web_content_process_crash();
-}
-
-void WebContentClient::handshake()
-{
 }
 
 void WebContentClient::did_paint(const Gfx::IntRect&, i32 bitmap_id)

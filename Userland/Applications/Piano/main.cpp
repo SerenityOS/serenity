@@ -33,7 +33,6 @@ int main(int argc, char** argv)
     auto app = GUI::Application::construct(argc, argv);
 
     auto audio_client = Audio::ClientConnection::construct();
-    audio_client->handshake();
 
     TrackManager track_manager;
 

@@ -16,11 +16,6 @@ class ClipboardServerConnection : public IPC::ServerConnection<ClipboardClientEn
     , public ClipboardClientEndpoint {
     C_OBJECT(ClipboardServerConnection);
 
-public:
-    virtual void handshake() override
-    {
-    }
-
 private:
     ClipboardServerConnection()
         : IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>(*this, "/tmp/portal/clipboard")

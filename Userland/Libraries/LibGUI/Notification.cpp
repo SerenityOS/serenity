@@ -18,10 +18,6 @@ class NotificationServerConnection : public IPC::ServerConnection<NotificationCl
     friend class Notification;
 
 public:
-    virtual void handshake() override
-    {
-    }
-
     virtual void die() override
     {
         m_notification->connection_closed();

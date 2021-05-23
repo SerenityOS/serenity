@@ -22,8 +22,6 @@ class WebContentClient final
     C_OBJECT(WebContentClient);
 
 public:
-    virtual void handshake() override;
-
     Function<void()> on_web_content_process_crash;
 
 private:

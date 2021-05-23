@@ -33,8 +33,6 @@ public:
         VERIFY(this->socket().is_connected());
     }
 
-    virtual void handshake() = 0;
-
     virtual void die() override
     {
         // Override this function if you don't want your app to exit if it loses the connection.

@@ -20,10 +20,8 @@ public:
     WindowManagerServerConnection()
         : IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>(*this, "/tmp/portal/wm")
     {
-        handshake();
     }
 
-    virtual void handshake() override;
     static WindowManagerServerConnection& the();
 
 private:

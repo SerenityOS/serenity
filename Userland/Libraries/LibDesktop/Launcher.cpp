@@ -37,11 +37,6 @@ auto Launcher::Details::from_details_str(const String& details_str) -> NonnullRe
 class LaunchServerConnection : public IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>
     , public LaunchClientEndpoint {
     C_OBJECT(LaunchServerConnection)
-public:
-    virtual void handshake() override
-    {
-    }
-
 private:
     LaunchServerConnection()
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
