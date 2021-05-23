@@ -11,6 +11,16 @@
 
 namespace Hearts {
 
+NonnullRefPtrVector<Card> Player::pick_cards_to_pass(PassingDirection)
+{
+    auto sorted_hand = hand_sorted_by_points_and_value();
+    NonnullRefPtrVector<Card> cards;
+    cards.append(*sorted_hand[0].card);
+    cards.append(*sorted_hand[1].card);
+    cards.append(*sorted_hand[2].card);
+    return cards;
+}
+
 Vector<CardWithIndex> Player::hand_sorted_by_points_and_value() const
 {
     Vector<CardWithIndex> sorted_hand;
@@ -147,6 +157,15 @@ bool Player::has_card_of_type(Card::Type type)
         return !other_card.is_null() && other_card->type() == type;
     });
     return matching_card.has_value();
+}
+
+void Player::remove_cards(const NonnullRefPtrVector<Card>& cards)
+{
+    for (auto& card : cards) {
+        hand.remove_first_matching([&card](auto& other_card) {
+            return other_card == card;
+        });
+    }
 }
 
 }

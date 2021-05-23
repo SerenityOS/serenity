@@ -49,7 +49,14 @@ private:
     bool other_player_has_lower_value_card(Player& player, Card& card);
     bool other_player_has_higher_value_card(Player& player, Card& card);
 
-    void reposition_hand(Player& player);
+    void reposition_hand(Player&);
+    bool is_card_highlighted(Card& card);
+    void clear_highlighted_cards();
+    void highlight_card(Card& card);
+    void unhighlight_card(Card& card);
+    void select_cards_for_passing();
+    void pass_cards();
+    PassingDirection passing_direction() const;
 
     void start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps = 30);
     void stop_animation();
@@ -60,6 +67,22 @@ private:
     virtual void timer_event(Core::TimerEvent&) override;
 
     void card_clicked(size_t card_index, Card& card);
+    void card_clicked_during_passing(size_t card_index, Card& card);
+    void card_clicked_during_play(size_t card_index, Card& card);
+
+    RefPtr<GUI::Button> m_passing_button;
+
+    enum class State {
+        PassingSelect,
+        PassingSelectConfirmed,
+        PassingAccept,
+        Play,
+    };
+
+    State m_state { State::PassingSelect };
+    int m_hand_number { 0 };
+
+    HashTable<NonnullRefPtr<Card>> m_cards_highlighted;
 
     Player m_players[4];
     NonnullRefPtrVector<Card> m_trick;

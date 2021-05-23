@@ -9,6 +9,7 @@
 #include "Helpers.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
+#include <LibGUI/Button.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
@@ -23,6 +24,7 @@ Game::Game()
     srand(time(nullptr));
 
     m_delay_timer = Core::Timer::create_single_shot(0, [this] {
+        dbgln_if(HEARTS_DEBUG, "Continuing game after delay...");
         advance_game();
     });
 
@@ -74,6 +76,18 @@ Game::Game()
     m_players[3].name = "Lisa";
     m_players[3].taken_cards_target = { width, height / 2 - Card::height / 2 };
 
+    m_passing_button = add<GUI::Button>("Pass Left");
+    constexpr int button_width = 120;
+    constexpr int button_height = 30;
+    m_passing_button->set_relative_rect(width / 2 - button_width / 2, height - 3 * outer_border_size - Card::height - button_height, button_width, button_height);
+    m_passing_button->on_click = [this](unsigned int) {
+        if (m_state == State::PassingSelect)
+            m_state = State::PassingSelectConfirmed;
+        else
+            m_state = State::Play;
+        advance_game();
+    };
+
     reset();
 };
 
@@ -87,6 +101,31 @@ void Game::reset()
     dbgln_if(HEARTS_DEBUG, "Resetting game");
 
     stop_animation();
+
+    m_hand_number = 0;
+
+    m_passing_button->set_enabled(false);
+    m_passing_button->set_visible(false);
+
+    if (m_hand_number % 4 != 3) {
+        m_state = State::PassingSelect;
+        m_human_can_play = true;
+        switch (passing_direction()) {
+        case PassingDirection::Left:
+            m_passing_button->set_text("Pass Left");
+            break;
+        case PassingDirection::Across:
+            m_passing_button->set_text("Pass Across");
+            break;
+        case PassingDirection::Right:
+            m_passing_button->set_text("Pass Right");
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    } else
+        m_state = State::Play;
+    m_cards_highlighted.clear();
 
     m_trick.clear_with_capacity();
     m_trick_number = 0;
@@ -102,6 +141,11 @@ void Game::setup(String player_name)
     m_players[0].name = move(player_name);
 
     reset();
+
+    if (m_hand_number % 4 != 3) {
+        m_passing_button->set_visible(true);
+        m_passing_button->set_focus(false);
+    }
 
     NonnullRefPtrVector<Card> deck;
 
@@ -125,7 +169,9 @@ void Game::setup(String player_name)
         reposition_hand(player);
     }
 
-    advance_game();
+    update();
+
+    continue_game_after_delay();
 }
 
 void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const& end, Function<void()> did_finish_callback, int initial_delay_ms, int steps)
@@ -296,6 +342,32 @@ void Game::advance_game()
         return;
     }
 
+    if (m_state == State::PassingSelect) {
+        if (!m_players[0].is_human) {
+            select_cards_for_passing();
+            m_state = State::PassingSelectConfirmed;
+            continue_game_after_delay();
+        }
+        return;
+    }
+
+    if (m_state == State::PassingSelectConfirmed) {
+        pass_cards();
+        continue_game_after_delay();
+        return;
+    }
+
+    if (m_state == State::PassingAccept) {
+        if (!m_players[0].is_human) {
+            m_state = State::Play;
+            continue_game_after_delay();
+        }
+        return;
+    }
+
+    clear_highlighted_cards();
+    m_passing_button->set_visible(false);
+
     if (m_trick_number == 0 && m_trick.is_empty()) {
         // Find whoever has 2 of Clubs, they get to play the first card
         for (auto& player : m_players) {
@@ -364,8 +436,10 @@ void Game::keydown_event(GUI::KeyEvent& event)
         m_players[0].is_human = !m_players[0].is_human;
         advance_game();
     } else if (event.key() == KeyCode::Key_F10) {
-        if (m_human_can_play)
+        if (m_human_can_play && m_state == State::Play)
             play_card(m_players[0], pick_card(m_players[0]));
+        else if (m_state == State::PassingSelect)
+            select_cards_for_passing();
     } else if (event.shift() && event.key() == KeyCode::Key_F11)
         dump_state();
 }
@@ -464,7 +538,18 @@ bool Game::are_hearts_broken() const
     return false;
 }
 
-void Game::card_clicked(size_t card_index, Card& card)
+void Game::card_clicked_during_passing(size_t, Card& card)
+{
+    if (!is_card_highlighted(card)) {
+        if (m_cards_highlighted.size() < 3)
+            highlight_card(card);
+    } else
+        unhighlight_card(card);
+
+    m_passing_button->set_enabled(m_cards_highlighted.size() == 3);
+}
+
+void Game::card_clicked_during_play(size_t card_index, Card& card)
 {
     String explanation;
     if (!is_valid_play(m_players[0], card, &explanation)) {
@@ -474,6 +559,14 @@ void Game::card_clicked(size_t card_index, Card& card)
     }
     play_card(m_players[0], card_index);
     update();
+}
+
+void Game::card_clicked(size_t card_index, Card& card)
+{
+    if (m_state == State::PassingSelect)
+        card_clicked_during_passing(card_index, card);
+    else
+        card_clicked_during_play(card_index, card);
 }
 
 void Game::mouseup_event(GUI::MouseEvent& event)
@@ -520,13 +613,113 @@ bool Game::is_winner(Player& player)
     return (max_score.value() != sum_points_of_all_cards && player_score == min_score.value()) || player_score == sum_points_of_all_cards;
 }
 
+static constexpr int card_highlight_offset = -20;
+
+bool Game::is_card_highlighted(Card& card)
+{
+    return m_cards_highlighted.contains(card);
+}
+
+void Game::highlight_card(Card& card)
+{
+    VERIFY(!m_cards_highlighted.contains(card));
+    m_cards_highlighted.set(card);
+    card.set_position(card.position().translated(0, card_highlight_offset));
+    update();
+}
+
+void Game::unhighlight_card(Card& card)
+{
+    VERIFY(m_cards_highlighted.contains(card));
+    m_cards_highlighted.remove(card);
+    card.set_position(card.position().translated(0, -card_highlight_offset));
+    update();
+}
+
+void Game::clear_highlighted_cards()
+{
+    for (auto& card : m_cards_highlighted)
+        card->set_position(card->position().translated(0, -card_highlight_offset));
+    m_cards_highlighted.clear();
+}
+
 void Game::reposition_hand(Player& player)
 {
     auto card_position = player.first_card_position;
     for (auto& card : player.hand) {
-        card->set_position(card_position);
+        card->set_position(is_card_highlighted(*card) ? card_position.translated(0, card_highlight_offset) : card_position);
         card_position.translate_by(player.card_offset);
     }
+}
+
+void Game::select_cards_for_passing()
+{
+    clear_highlighted_cards();
+    auto selected_cards = m_players[0].pick_cards_to_pass(passing_direction());
+    highlight_card(selected_cards[0]);
+    highlight_card(selected_cards[1]);
+    highlight_card(selected_cards[2]);
+    m_passing_button->set_enabled(true);
+}
+
+void Game::pass_cards()
+{
+    NonnullRefPtrVector<Card> first_player_cards;
+    for (auto& card : m_cards_highlighted)
+        first_player_cards.append(*card);
+    clear_highlighted_cards();
+    VERIFY(first_player_cards.size() == 3);
+
+    NonnullRefPtrVector<Card> passed_cards[4];
+    passed_cards[0] = first_player_cards;
+    passed_cards[1] = m_players[1].pick_cards_to_pass(passing_direction());
+    passed_cards[2] = m_players[2].pick_cards_to_pass(passing_direction());
+    passed_cards[3] = m_players[3].pick_cards_to_pass(passing_direction());
+
+    for (size_t i = 0; i < 4; i++) {
+        m_players[i].remove_cards(passed_cards[i]);
+
+        int destination_player_index = i;
+        switch (passing_direction()) {
+        case PassingDirection::Left:
+            destination_player_index += 1;
+            break;
+        case PassingDirection::Across:
+            destination_player_index += 2;
+            break;
+        case PassingDirection::Right:
+            destination_player_index += 3;
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+        destination_player_index %= 4;
+
+        for (auto& card : passed_cards[i]) {
+            m_players[destination_player_index].hand.append(card);
+            if constexpr (!HEARTS_DEBUG)
+                card.set_upside_down(destination_player_index != 0);
+            if (destination_player_index == 0)
+                highlight_card(card);
+        }
+    }
+
+    for (auto& player : m_players) {
+        VERIFY(player.hand.size() == 13);
+        player.sort_hand();
+        reposition_hand(player);
+    }
+
+    m_state = State::PassingAccept;
+    m_passing_button->set_text("OK");
+    m_passing_button->set_enabled(true);
+    update();
+}
+
+PassingDirection Game::passing_direction() const
+{
+    VERIFY(m_hand_number % 4 != 3);
+    return static_cast<PassingDirection>(m_hand_number % 4);
 }
 
 void Game::paint_event(GUI::PaintEvent& event)

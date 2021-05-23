@@ -14,6 +14,12 @@ using Cards::Card;
 
 namespace Hearts {
 
+enum class PassingDirection {
+    Left,
+    Right,
+    Across
+};
+
 struct CardWithIndex {
     NonnullRefPtr<Card> card;
     size_t index;
@@ -27,6 +33,7 @@ public:
     {
     }
 
+    NonnullRefPtrVector<Card> pick_cards_to_pass(PassingDirection);
     size_t pick_lead_card(Function<bool(Card&)>, Function<bool(Card&)>, Function<bool(Card&)>);
     Optional<size_t> pick_low_points_high_value_card(Optional<Card::Type> type = {});
     Optional<size_t> pick_lower_value_card(Card& other_card);
@@ -38,6 +45,7 @@ public:
     Vector<CardWithIndex> hand_sorted_by_points_and_value() const;
 
     void sort_hand() { quick_sort(hand, hearts_card_less); }
+    void remove_cards(NonnullRefPtrVector<Card> const& cards);
 
     Vector<RefPtr<Card>> hand;
     Vector<RefPtr<Card>> cards_taken;
