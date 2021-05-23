@@ -32,7 +32,7 @@ void Configuration::unwind(Badge<CallFrameHandle>, const CallFrameHandle& frame_
     VERIFY(m_stack.size() == frame_handle.stack_size);
 }
 
-Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
+Result Configuration::call(Interpreter& interpreter, FunctionAddress address, Vector<Value> arguments)
 {
     auto* function = m_store.get(address);
     if (!function)
@@ -52,7 +52,7 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
             wasm_function->type().results().size(),
         });
         m_ip = 0;
-        return execute();
+        return execute(interpreter);
     }
 
     // It better be a host function, else something is really wrong.
@@ -60,12 +60,8 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
     return host_function.function()(*this, arguments);
 }
 
-Result Configuration::execute()
+Result Configuration::execute(Interpreter& interpreter)
 {
-    Interpreter interpreter;
-    interpreter.pre_interpret_hook = pre_interpret_hook;
-    interpreter.post_interpret_hook = post_interpret_hook;
-
     interpreter.interpret(*this);
     if (interpreter.did_trap())
         return Trap {};

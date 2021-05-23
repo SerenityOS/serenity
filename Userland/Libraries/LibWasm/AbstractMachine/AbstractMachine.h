@@ -441,12 +441,10 @@ public:
     // Load and instantiate a module, and link it into this interpreter.
     InstantiationResult instantiate(const Module&, Vector<ExternValue>);
     Result invoke(FunctionAddress, Vector<Value>);
+    Result invoke(Interpreter&, FunctionAddress, Vector<Value>);
 
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
-
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&)> pre_interpret_hook;
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)> post_interpret_hook;
 
 private:
     Optional<InstantiationError> allocate_all(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
