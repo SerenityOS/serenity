@@ -17,13 +17,14 @@ public:
 
     void push(const URL&);
     URL current() const;
+    const Vector<URL> get_back_history();
+    const Vector<URL> get_forward_history();
 
-    void go_back();
-    void go_forward();
+    void go_back(int steps = 1);
+    void go_forward(int steps = 1);
 
-    bool can_go_back() { return m_current > 0; }
-    bool can_go_forward() { return m_current + 1 < static_cast<int>(m_items.size()); }
-
+    bool can_go_back(int steps = 1) { return (m_current - steps) >= 0; }
+    bool can_go_forward(int steps = 1) { return (m_current + steps) < static_cast<int>(m_items.size()); }
     void clear();
 
 private:
