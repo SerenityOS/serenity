@@ -12,6 +12,7 @@
 #include <AK/JsonValue.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
+#include <limits.h>
 #include <poll.h>
 #include <sys/socket.h>
 #include <unistd.h>

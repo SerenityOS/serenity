@@ -19,7 +19,7 @@
 #include <LibCore/LocalSocket.h>
 #include <LibCore/UDPSocket.h>
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 namespace LookupServer {
