@@ -53,7 +53,7 @@ String HTMLToken::to_string() const
 
     if (type() == HTMLToken::Type::Comment || type() == HTMLToken::Type::Character) {
         builder.append(" { data: '");
-        builder.append(m_comment_or_character.data.to_string());
+        builder.append(m_comment_or_character.data);
         builder.append("' }");
     }
 

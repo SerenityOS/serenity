@@ -8,7 +8,6 @@
 
 #include <AK/FlyString.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
@@ -34,7 +33,10 @@ public:
     {
         HTMLToken token;
         token.m_type = Type::Character;
-        token.m_comment_or_character.data.append(code_point);
+        StringBuilder builder;
+        // FIXME: This narrows code_point to char, should this be append_code_point() instead?
+        builder.append(code_point);
+        token.m_comment_or_character.data = builder.to_string();
         return token;
     }
 
@@ -56,7 +58,7 @@ public:
     u32 code_point() const
     {
         VERIFY(is_character());
-        Utf8View view(m_comment_or_character.data.string_view());
+        Utf8View view(m_comment_or_character.data);
         VERIFY(view.length() == 1);
         return *view.begin();
     }
@@ -209,7 +211,7 @@ private:
     // Type::Comment
     // Type::Character
     struct {
-        StringBuilder data;
+        String data;
     } m_comment_or_character;
 
     Position m_start_position;

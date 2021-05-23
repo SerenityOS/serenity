@@ -74,17 +74,18 @@ namespace Web::HTML {
         goto new_state;                                                 \
     } while (0)
 
-#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                                           \
-    do {                                                                                             \
-        for (auto code_point : m_temporary_buffer) {                                                 \
-            if (consumed_as_part_of_an_attribute()) {                                                \
-                m_current_builder.append_code_point(code_point);                                     \
-            } else {                                                                                 \
-                create_new_token(HTMLToken::Type::Character);                                        \
-                m_current_token.m_comment_or_character.data.append_code_point(code_point);           \
-                m_queued_tokens.enqueue(m_current_token);                                            \
-            }                                                                                        \
-        }                                                                                            \
+#define FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE                               \
+    do {                                                                                 \
+        for (auto code_point : m_temporary_buffer) {                                     \
+            if (consumed_as_part_of_an_attribute()) {                                    \
+                m_current_builder.append_code_point(code_point);                         \
+            } else {                                                                     \
+                create_new_token(HTMLToken::Type::Character);                            \
+                m_current_builder.append_code_point(code_point);                         \
+                m_current_token.m_comment_or_character.data = consume_current_builder(); \
+                m_queued_tokens.enqueue(m_current_token);                                \
+            }                                                                            \
+        }                                                                                \
     } while (0)
 
 #define DONT_CONSUME_NEXT_INPUT_CHARACTER \
@@ -139,12 +140,13 @@ namespace Web::HTML {
         return m_queued_tokens.dequeue();         \
     } while (0)
 
-#define EMIT_CHARACTER(code_point)                                                 \
-    do {                                                                           \
-        create_new_token(HTMLToken::Type::Character);                              \
-        m_current_token.m_comment_or_character.data.append_code_point(code_point); \
-        m_queued_tokens.enqueue(m_current_token);                                  \
-        return m_queued_tokens.dequeue();                                          \
+#define EMIT_CHARACTER(code_point)                                               \
+    do {                                                                         \
+        create_new_token(HTMLToken::Type::Character);                            \
+        m_current_builder.append_code_point(code_point);                         \
+        m_current_token.m_comment_or_character.data = consume_current_builder(); \
+        m_queued_tokens.enqueue(m_current_token);                                \
+        return m_queued_tokens.dequeue();                                        \
     } while (0)
 
 #define EMIT_CURRENT_CHARACTER \
@@ -411,6 +413,7 @@ _StartOfFunction:
             {
                 ON('>')
                 {
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
@@ -421,12 +424,12 @@ _StartOfFunction:
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1354,11 +1357,12 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO(CommentEnd);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEnd);
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_EOF
@@ -1369,7 +1373,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append('-');
+                    m_current_builder.append('-');
                     RECONSUME_IN(Comment);
                 }
             }
@@ -1379,17 +1383,17 @@ _StartOfFunction:
             {
                 ON('<')
                 {
-                    m_current_token.m_comment_or_character.data.append_code_point(current_input_character.value());
-                    SWITCH_TO(CommentLessThanSign);
+                    m_current_builder.append_code_point(current_input_character.value());
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentLessThanSign);
                 }
                 ON('-')
                 {
-                    SWITCH_TO(CommentEndDash);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEndDash);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_comment_or_character.data.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -1400,7 +1404,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1410,6 +1414,7 @@ _StartOfFunction:
             {
                 ON('>')
                 {
+                    m_current_token.m_comment_or_character.data = consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON('!')
@@ -1418,7 +1423,7 @@ _StartOfFunction:
                 }
                 ON('-')
                 {
-                    m_current_token.m_comment_or_character.data.append('-');
+                    m_current_builder.append('-');
                     continue;
                 }
                 ON_EOF
@@ -1429,7 +1434,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append('-');
+                    m_current_builder.append('-');
                     RECONSUME_IN(Comment);
                 }
             }
@@ -1439,7 +1444,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    m_current_token.m_comment_or_character.data.append("--!");
+                    m_current_builder.append("--!");
                     SWITCH_TO(CommentEndDash);
                 }
                 ON('>')
@@ -1455,7 +1460,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append("--!");
+                    m_current_builder.append("--!");
                     RECONSUME_IN(Comment);
                 }
             }
@@ -1465,7 +1470,7 @@ _StartOfFunction:
             {
                 ON('-')
                 {
-                    SWITCH_TO(CommentEnd);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentEnd);
                 }
                 ON_EOF
                 {
@@ -1475,7 +1480,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_comment_or_character.data.append('-');
+                    m_current_builder.append('-');
                     RECONSUME_IN(Comment);
                 }
             }
@@ -1485,12 +1490,12 @@ _StartOfFunction:
             {
                 ON('!')
                 {
-                    m_current_token.m_comment_or_character.data.append_code_point(current_input_character.value());
-                    SWITCH_TO(CommentLessThanSignBang);
+                    m_current_builder.append_code_point(current_input_character.value());
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(CommentLessThanSignBang);
                 }
                 ON('<')
                 {
-                    m_current_token.m_comment_or_character.data.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
                 ANYTHING_ELSE
