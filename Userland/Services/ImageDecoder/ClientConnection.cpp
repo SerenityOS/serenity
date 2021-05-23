@@ -30,10 +30,6 @@ void ClientConnection::die()
     exit(0);
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image(Core::AnonymousBuffer const& encoded_buffer)
 {
     if (!encoded_buffer.is_valid()) {

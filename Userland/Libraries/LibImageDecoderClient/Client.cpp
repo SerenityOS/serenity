@@ -12,7 +12,6 @@ namespace ImageDecoderClient {
 Client::Client()
     : IPC::ServerConnection<ImageDecoderClientEndpoint, ImageDecoderServerEndpoint>(*this, "/tmp/portal/image")
 {
-    handshake();
 }
 
 void Client::die()
@@ -23,7 +22,6 @@ void Client::die()
 
 void Client::handshake()
 {
-    greet();
 }
 
 void Client::dummy()

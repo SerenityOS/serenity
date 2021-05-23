@@ -1,6 +1,4 @@
 endpoint ImageDecoderServer
 {
-    greet() => ()
-
     decode_image(Core::AnonymousBuffer data) => (bool is_animated, u32 loop_count, Vector<Gfx::ShareableBitmap> bitmaps, Vector<u32> durations)
 }
