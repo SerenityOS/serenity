@@ -53,23 +53,27 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
 
     bool need_evaluate_block_conditions = false;
     auto result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
-        for (size_t i = 0; i < data_size; ++i) {
-            u8 ch = m_input_buffer.dequeue();
-            if (in_canonical_mode()) {
+        size_t bytes_written = 0;
+        for (; bytes_written < data_size; ++bytes_written) {
+            auto bit_index = m_input_buffer.head_index();
+            bool is_special_character = m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
+            if (in_canonical_mode() && is_special_character) {
+                u8 ch = m_input_buffer.dequeue();
                 if (ch == '\0') {
+                    // EOF
                     m_available_lines--;
                     need_evaluate_block_conditions = true;
                     break;
-                } else if (ch == '\n' || is_eol(ch)) {
-                    data[i] = ch;
-                    i++;
+                } else {
+                    // '\n' or EOL
+                    data[bytes_written++] = ch;
                     m_available_lines--;
                     break;
                 }
             }
-            data[i] = ch;
+            data[bytes_written] = m_input_buffer.dequeue();
         }
-        return data_size;
+        return bytes_written;
     });
     if ((!result.is_error() && result.value() > 0) || need_evaluate_block_conditions)
         evaluate_block_conditions();
@@ -203,11 +207,20 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
     else if (ch == '\n' && (m_termios.c_iflag & INLCR))
         ch = '\r';
 
+    auto current_char_head_index = (m_input_buffer.head_index() + m_input_buffer.size()) % TTY_BUFFER_SIZE;
+    m_special_character_bitmask[current_char_head_index / 8] &= ~(1u << (current_char_head_index % 8));
+
+    auto set_special_bit = [&] {
+        m_special_character_bitmask[current_char_head_index / 8] |= (1u << (current_char_head_index % 8));
+    };
+
     if (in_canonical_mode()) {
         if (is_eof(ch)) {
+            // Since EOF might change between when the data came in and when it is read,
+            // we use '\0' along with the bitmask to signal EOF. Any non-zero byte with
+            // the special bit set signals an end-of-line.
+            set_special_bit();
             m_available_lines++;
-            //We use '\0' to delimit the end
-            //of a line.
             m_input_buffer.enqueue('\0');
             return;
         }
@@ -224,16 +237,18 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             return;
         }
 
-        if (is_eol(ch)) {
-            m_available_lines++;
-        }
-
         if (ch == '\n') {
             if (m_termios.c_lflag & ECHO || m_termios.c_lflag & ECHONL)
                 echo('\n');
+            set_special_bit();
             m_input_buffer.enqueue('\n');
             m_available_lines++;
             return;
+        }
+
+        if (is_eol(ch)) {
+            set_special_bit();
+            m_available_lines++;
         }
     }
 
