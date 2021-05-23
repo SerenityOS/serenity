@@ -363,9 +363,9 @@ void Terminal::DECSTBM(Parameters params)
 {
     unsigned top = 1;
     unsigned bottom = m_rows;
-    if (params.size() >= 1)
+    if (params.size() >= 1 && params[0] != 0)
         top = params[0];
-    if (params.size() >= 2)
+    if (params.size() >= 2 && params[1] != 0)
         bottom = params[1];
     if ((bottom - top) < 2 || bottom > m_rows) {
         dbgln("Error: DECSTBM: scrolling region invalid: {}-{}", top, bottom);
@@ -374,6 +374,7 @@ void Terminal::DECSTBM(Parameters params)
     m_scroll_region_top = top - 1;
     m_scroll_region_bottom = bottom - 1;
     set_cursor(0, 0);
+    dbgln_if(TERMINAL_DEBUG, "Set scrolling region: {}-{}", m_scroll_region_top, m_scroll_region_bottom);
 }
 
 void Terminal::CUP(Parameters params)
@@ -381,9 +382,9 @@ void Terminal::CUP(Parameters params)
     // CUP – Cursor Position
     unsigned row = 1;
     unsigned col = 1;
-    if (params.size() >= 1)
+    if (params.size() >= 1 && params[0] != 0)
         row = params[0];
-    if (params.size() >= 2)
+    if (params.size() >= 2 && params[1] != 0)
         col = params[1];
     set_cursor(row - 1, col - 1);
 }
@@ -552,8 +553,8 @@ void Terminal::ED(Parameters params)
 
 void Terminal::SU(Parameters params)
 {
-    int count = 1;
-    if (params.size() >= 1)
+    unsigned count = 1;
+    if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
     for (u16 i = 0; i < count; i++)
@@ -562,8 +563,8 @@ void Terminal::SU(Parameters params)
 
 void Terminal::SD(Parameters params)
 {
-    int count = 1;
-    if (params.size() >= 1)
+    unsigned count = 1;
+    if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
     for (u16 i = 0; i < count; i++)
@@ -743,18 +744,28 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column, bool skip_debug)
 
 void Terminal::NEL()
 {
-    linefeed();
-    carriage_return();
+    if (cursor_row() == m_scroll_region_bottom)
+        scroll_up();
+    else
+        set_cursor(cursor_row() + 1, 0);
 }
 
 void Terminal::IND()
 {
-    CUD({});
+    // Not equivalent to CUD: if we are at the bottom margin, we have to scroll up.
+    if (cursor_row() == m_scroll_region_bottom)
+        scroll_up();
+    else
+        set_cursor(cursor_row() + 1, cursor_column());
 }
 
 void Terminal::RI()
 {
-    CUU({});
+    // Not equivalent to CUU : if we at the top margin , we have to scroll down.
+    if (cursor_row() == m_scroll_region_top)
+        scroll_down();
+    else
+        set_cursor(cursor_row() - 1, cursor_column());
 }
 
 void Terminal::DSR(Parameters params)
@@ -1262,6 +1273,8 @@ void Terminal::set_size(u16 columns, u16 rows)
     m_horizontal_tabs[columns - 1] = 1;
 
     m_client.terminal_did_resize(m_columns, m_rows);
+
+    dbgln_if(TERMINAL_DEBUG, "Set terminal size: {}x{}", m_rows, m_columns);
 }
 #endif
 
