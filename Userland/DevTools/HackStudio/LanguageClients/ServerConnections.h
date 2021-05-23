@@ -14,7 +14,7 @@
 
 #define LANGUAGE_CLIENT(language_name_, socket_name)                                           \
     namespace language_name_ {                                                                 \
-    class ServerConnection : public HackStudio::ServerConnection {                             \
+    class ServerConnection final : public HackStudio::ServerConnection {                       \
         C_OBJECT(ServerConnection)                                                             \
     public:                                                                                    \
         static const char* language_name() { return #language_name_; }                         \

@@ -14,7 +14,8 @@ namespace Audio {
 
 class Buffer;
 
-class ClientConnection : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
+class ClientConnection final
+    : public IPC::ServerConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
     C_OBJECT(ClientConnection)
 public:

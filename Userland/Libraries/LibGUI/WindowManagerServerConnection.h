@@ -12,7 +12,7 @@
 
 namespace GUI {
 
-class WindowManagerServerConnection
+class WindowManagerServerConnection final
     : public IPC::ServerConnection<WindowManagerClientEndpoint, WindowManagerServerEndpoint>
     , public WindowManagerClientEndpoint {
     C_OBJECT(WindowManagerServerConnection)
