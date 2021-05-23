@@ -4,6 +4,7 @@ set(SOURCES
     Game.cpp
     main.cpp
     Player.cpp
+    SettingsDialog.cpp
     HeartsGML.h
 )
 

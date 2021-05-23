@@ -79,8 +79,10 @@ Game::~Game()
 {
 }
 
-void Game::setup()
+void Game::setup(String player_name)
 {
+    m_players[0].name = move(player_name);
+
     NonnullRefPtrVector<Card> deck;
 
     dbgln_if(HEARTS_DEBUG, "=====");
