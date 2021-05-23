@@ -35,13 +35,12 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
         for (auto& type : wasm_function->code().locals())
             locals.empend(type, 0ull);
 
-        auto frame = make<Frame>(
+        set_frame(Frame {
             wasm_function->module(),
             move(locals),
             wasm_function->code().body(),
-            wasm_function->type().results().size());
-
-        set_frame(move(frame));
+            wasm_function->type().results().size(),
+        });
         return execute();
     }
 
@@ -61,8 +60,8 @@ Result Configuration::execute()
         return Trap {};
 
     Vector<Value> results;
-    results.ensure_capacity(m_current_frame->arity());
-    for (size_t i = 0; i < m_current_frame->arity(); ++i)
+    results.ensure_capacity(frame().arity());
+    for (size_t i = 0; i < frame().arity(); ++i)
         results.append(move(stack().pop().get<Value>()));
     auto label = stack().pop();
     // ASSERT: label == current frame
@@ -83,9 +82,9 @@ void Configuration::dump_stack()
                         dbgln("    *{}", v.value());
                 });
             },
-            [](const NonnullOwnPtr<Frame>& f) {
-                dbgln("    frame({})", f->arity());
-                for (auto& local : f->locals()) {
+            [](const Frame& f) {
+                dbgln("    frame({})", f.arity());
+                for (auto& local : f.locals()) {
                     local.value().visit([]<typename T>(const T& v) {
                         if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
                             dbgln("        {}", v);

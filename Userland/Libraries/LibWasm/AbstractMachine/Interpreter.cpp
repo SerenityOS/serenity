@@ -31,7 +31,7 @@ namespace Wasm {
 
 void Interpreter::interpret(Configuration& configuration)
 {
-    auto& instructions = configuration.frame()->expression().instructions();
+    auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
 
@@ -73,7 +73,7 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
 
 ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const Instruction& instruction, size_t size)
 {
-    auto& address = configuration.frame()->module().memories().first();
+    auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
     if (!memory) {
         m_do_trap = true;
@@ -97,7 +97,7 @@ ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const 
 
 void Interpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
 {
-    auto& address = configuration.frame()->module().memories().first();
+    auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
     TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
@@ -366,11 +366,11 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::nop.value():
         return;
     case Instructions::local_get.value():
-        configuration.stack().push(Value(configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()]));
+        configuration.stack().push(Value(configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()]));
         return;
     case Instructions::local_set.value(): {
         auto entry = configuration.stack().pop();
-        configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
+        configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
         return;
     }
     case Instructions::i32_const.value():
@@ -448,7 +448,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     }
     case Instructions::return_.value(): {
         Vector<Stack::EntryType> results;
-        auto& frame = *configuration.frame();
+        auto& frame = configuration.frame();
         results.ensure_capacity(frame.arity());
         for (size_t i = 0; i < frame.arity(); ++i)
             results.prepend(configuration.stack().pop());
@@ -460,7 +460,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
                 last_label = entry.get<Label>();
                 continue;
             }
-            if (entry.has<NonnullOwnPtr<Frame>>()) {
+            if (entry.has<Frame>()) {
                 // Push the frame back
                 configuration.stack().push(move(entry));
                 // Push its label back (if there is one)
@@ -475,7 +475,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
             configuration.stack().push(move(result));
 
         // Jump past the call/indirect instruction
-        configuration.ip() = configuration.frame()->expression().instructions().size() - 1;
+        configuration.ip() = configuration.frame().expression().instructions().size() - 1;
         return;
     }
     case Instructions::br.value():
@@ -489,14 +489,14 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         goto unimplemented;
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
-        auto address = configuration.frame()->module().functions()[index.value()];
+        auto address = configuration.frame().module().functions()[index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "call({})", address.value());
         call_address(configuration, address);
         return;
     }
     case Instructions::call_indirect.value(): {
         auto& args = instruction.arguments().get<Instruction::IndirectCallArgs>();
-        auto table_address = configuration.frame()->module().tables()[args.table.value()];
+        auto table_address = configuration.frame().module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
         auto index = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(index.has_value());
@@ -565,15 +565,15 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::local_tee.value(): {
         auto value = configuration.stack().peek().get<Value>();
         auto local_index = instruction.arguments().get<LocalIndex>();
-        TRAP_IF_NOT(configuration.frame()->locals().size() > local_index.value());
+        TRAP_IF_NOT(configuration.frame().locals().size() > local_index.value());
         dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
-        configuration.frame()->locals()[local_index.value()] = move(value);
+        configuration.frame().locals()[local_index.value()] = move(value);
         return;
     }
     case Instructions::global_get.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
-        TRAP_IF_NOT(configuration.frame()->module().globals().size() > global_index.value());
-        auto address = configuration.frame()->module().globals()[global_index.value()];
+        TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
+        auto address = configuration.frame().module().globals()[global_index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "global({}) -> stack", address.value());
         auto global = configuration.store().get(address);
         configuration.stack().push(Value(global->value()));
@@ -581,8 +581,8 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     }
     case Instructions::global_set.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
-        TRAP_IF_NOT(configuration.frame()->module().globals().size() > global_index.value());
-        auto address = configuration.frame()->module().globals()[global_index.value()];
+        TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
+        auto address = configuration.frame().module().globals()[global_index.value()];
         auto value = configuration.stack().pop().get<Value>();
         dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
         auto global = configuration.store().get(address);
@@ -590,7 +590,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         return;
     }
     case Instructions::memory_size.value(): {
-        auto address = configuration.frame()->module().memories()[0];
+        auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
         dbgln_if(WASM_TRACE_DEBUG, "memory.size -> stack({})", pages);
@@ -598,7 +598,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         return;
     }
     case Instructions::memory_grow.value(): {
-        auto address = configuration.frame()->module().memories()[0];
+        auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
         auto new_pages = configuration.stack().pop().get<Value>().to<i32>();

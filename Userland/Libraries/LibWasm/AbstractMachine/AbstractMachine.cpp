@@ -107,15 +107,15 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
 
     module.for_each_section_of_type<GlobalSection>([&](auto& global_section) {
         for (auto& entry : global_section.entries()) {
-            auto frame = make<Frame>(
-                auxiliary_instance,
-                Vector<Value> {},
-                entry.expression(),
-                1);
             Configuration config { m_store };
             config.pre_interpret_hook = &pre_interpret_hook;
             config.post_interpret_hook = &post_interpret_hook;
-            config.set_frame(move(frame));
+            config.set_frame(Frame {
+                auxiliary_instance,
+                Vector<Value> {},
+                entry.expression(),
+                1,
+            });
             auto result = config.execute();
             // What if this traps?
             if (result.is_trap())
@@ -139,15 +139,15 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         for (auto& segment : data_section.data()) {
             segment.value().visit(
                 [&](const DataSection::Data::Active& data) {
-                    auto frame = make<Frame>(
-                        main_module_instance,
-                        Vector<Value> {},
-                        data.offset,
-                        1);
                     Configuration config { m_store };
                     config.pre_interpret_hook = &pre_interpret_hook;
                     config.post_interpret_hook = &post_interpret_hook;
-                    config.set_frame(move(frame));
+                    config.set_frame(Frame {
+                        main_module_instance,
+                        Vector<Value> {},
+                        data.offset,
+                        1,
+                    });
                     auto result = config.execute();
                     size_t offset = 0;
                     result.values().first().value().visit(

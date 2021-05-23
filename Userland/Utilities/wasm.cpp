@@ -155,10 +155,10 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             Optional<Wasm::FunctionAddress> address;
             auto index = args[1].to_uint<u64>();
             if (index.has_value()) {
-                address = config.frame()->module().functions()[index.value()];
+                address = config.frame().module().functions()[index.value()];
             } else {
                 auto& name = args[1];
-                for (auto& export_ : config.frame()->module().exports()) {
+                for (auto& export_ : config.frame().module().exports()) {
                     if (export_.name() == name) {
                         if (auto addr = export_.value().get_pointer<Wasm::FunctionAddress>()) {
                             address = *addr;
@@ -437,12 +437,12 @@ int main(int argc, char* argv[])
 
             if (debug) {
                 Wasm::Configuration config { machine.store() };
-                auto frame = make<Wasm::Frame>(
+                config.set_frame(Wasm::Frame {
                     *module_instance,
                     Vector<Wasm::Value> {},
                     instance->get<Wasm::WasmFunction>().code().body(),
-                    1);
-                config.set_frame(move(frame));
+                    1,
+                });
                 const Wasm::Instruction instr { Wasm::Instructions::nop };
                 Wasm::InstructionPointer ip { 0 };
                 g_continue = false;
