@@ -9,6 +9,16 @@
 #include <ctype.h>
 #include <math.h>
 
+#define RENDERER_HANDLER(name) \
+    void Renderer::handle_##name([[maybe_unused]] const Vector<Value>& args)
+
+#define RENDERER_TODO(name)                                         \
+    RENDERER_HANDLER(name)                                          \
+    {                                                               \
+        dbgln("[PDF::Renderer] Unsupported draw operation " #name); \
+        TODO();                                                     \
+    }
+
 namespace PDF {
 
 void Renderer::render(Document& document, const Page& page, RefPtr<Gfx::Bitmap> bitmap)
@@ -67,27 +77,32 @@ void Renderer::render()
 void Renderer::handle_command(const Command& command)
 {
     switch (command.command_type()) {
-#define V(name, snake_name, symbol) \
-    case CommandType::name:         \
-        return handle_##snake_name(command.arguments());
+#define V(name, snake_name, symbol)               \
+    case CommandType::name:                       \
+        handle_##snake_name(command.arguments()); \
+        break;
         ENUMERATE_COMMANDS(V)
 #undef V
     case CommandType::TextNextLineShowString:
-        return handle_text_next_line_show_string(command.arguments());
+        handle_text_next_line_show_string(command.arguments());
+        break;
+    case CommandType::TextNextLineShowStringSetSpacing:
+        handle_text_next_line_show_string_set_spacing(command.arguments());
+        break;
     }
 }
 
-void Renderer::handle_save_state(const Vector<Value>&)
+RENDERER_HANDLER(save_state)
 {
     m_graphics_state_stack.append(state());
 }
 
-void Renderer::handle_restore_state(const Vector<Value>&)
+RENDERER_HANDLER(restore_state)
 {
     m_graphics_state_stack.take_last();
 }
 
-void Renderer::handle_concatenate_matrix(const Vector<Value>& args)
+RENDERER_HANDLER(concatenate_matrix)
 {
     Gfx::AffineTransform new_transform(
         args[0].to_float(),
@@ -101,27 +116,27 @@ void Renderer::handle_concatenate_matrix(const Vector<Value>& args)
     m_text_rendering_matrix_is_dirty = true;
 }
 
-void Renderer::handle_set_line_width(const Vector<Value>& args)
+RENDERER_HANDLER(set_line_width)
 {
     state().line_width = args[0].to_float();
 }
 
-void Renderer::handle_set_line_cap(const Vector<Value>& args)
+RENDERER_HANDLER(set_line_cap)
 {
     state().line_cap_style = static_cast<LineCapStyle>(args[0].as_int());
 }
 
-void Renderer::handle_set_line_join(const Vector<Value>& args)
+RENDERER_HANDLER(set_line_join)
 {
     state().line_join_style = static_cast<LineJoinStyle>(args[0].as_int());
 }
 
-void Renderer::handle_set_miter_limit(const Vector<Value>& args)
+RENDERER_HANDLER(set_miter_limit)
 {
     state().miter_limit = args[0].to_float();
 }
 
-void Renderer::handle_set_dash_pattern(const Vector<Value>& args)
+RENDERER_HANDLER(set_dash_pattern)
 {
     auto dash_array = m_document->resolve_to<ArrayObject>(args[0]);
     Vector<int> pattern;
@@ -130,26 +145,30 @@ void Renderer::handle_set_dash_pattern(const Vector<Value>& args)
     state().line_dash_pattern = LineDashPattern { pattern, args[1].as_int() };
 }
 
-void Renderer::handle_path_begin(const Vector<Value>&)
+RENDERER_TODO(set_color_rendering_intent);
+RENDERER_TODO(set_flatness_tolerance);
+RENDERER_TODO(set_graphics_state_from_dict);
+
+RENDERER_HANDLER(path_begin)
 {
     m_path = Gfx::Path();
 }
 
-void Renderer::handle_path_end(const Vector<Value>&)
-{
-}
-
-void Renderer::handle_path_line(const Vector<Value>& args)
+RENDERER_HANDLER(path_line)
 {
     m_path.line_to(map(args[0].to_float(), args[1].to_float()));
 }
 
-void Renderer::handle_path_close(const Vector<Value>&)
+RENDERER_TODO(path_cubic_bezier_curve);
+RENDERER_TODO(path_cubic_bezier_curve_no_first_control);
+RENDERER_TODO(path_cubic_bezier_curve_no_second_control);
+
+RENDERER_HANDLER(path_close)
 {
     m_path.close();
 }
 
-void Renderer::handle_path_append_rect(const Vector<Value>& args)
+RENDERER_HANDLER(path_append_rect)
 {
     auto pos = map(args[0].to_float(), args[1].to_float());
     auto size = map(Gfx::FloatSize { args[2].to_float(), args[3].to_float() });
@@ -161,78 +180,96 @@ void Renderer::handle_path_append_rect(const Vector<Value>& args)
     m_path.close();
 }
 
-void Renderer::handle_path_stroke(const Vector<Value>&)
+RENDERER_HANDLER(path_stroke)
 {
     m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
 }
 
-void Renderer::handle_path_close_and_stroke(const Vector<Value>& args)
+RENDERER_HANDLER(path_close_and_stroke)
 {
     m_path.close();
     handle_path_stroke(args);
 }
 
-void Renderer::handle_path_fill_nonzero(const Vector<Value>&)
+RENDERER_HANDLER(path_fill_nonzero)
 {
     m_painter.fill_path(m_path, state().paint_color, Gfx::Painter::WindingRule::Nonzero);
 }
 
-void Renderer::handle_path_fill_nonzero_deprecated(const Vector<Value>& args)
+RENDERER_HANDLER(path_fill_nonzero_deprecated)
 {
     handle_path_fill_nonzero(args);
 }
 
-void Renderer::handle_path_fill_evenodd(const Vector<Value>&)
+RENDERER_HANDLER(path_fill_evenodd)
 {
     m_painter.fill_path(m_path, state().paint_color, Gfx::Painter::WindingRule::EvenOdd);
 }
 
-void Renderer::handle_path_fill_stroke_nonzero(const Vector<Value>& args)
+RENDERER_HANDLER(path_fill_stroke_nonzero)
 {
     m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
     handle_path_fill_nonzero(args);
 }
 
-void Renderer::handle_path_fill_stroke_evenodd(const Vector<Value>& args)
+RENDERER_HANDLER(path_fill_stroke_evenodd)
 {
     m_painter.stroke_path(m_path, state().stroke_color, state().line_width);
     handle_path_fill_evenodd(args);
 }
 
-void Renderer::handle_path_close_fill_stroke_nonzero(const Vector<Value>& args)
+RENDERER_HANDLER(path_close_fill_stroke_nonzero)
 {
     m_path.close();
     handle_path_fill_stroke_nonzero(args);
 }
 
-void Renderer::handle_path_close_fill_stroke_evenodd(const Vector<Value>& args)
+RENDERER_HANDLER(path_close_fill_stroke_evenodd)
 {
     m_path.close();
     handle_path_fill_stroke_evenodd(args);
 }
 
-void Renderer::handle_text_set_char_space(const Vector<Value>& args)
+RENDERER_HANDLER(path_end)
+{
+}
+
+RENDERER_TODO(path_intersect_clip_nonzero);
+RENDERER_TODO(path_intersect_clip_evenodd);
+
+RENDERER_HANDLER(text_begin)
+{
+    m_text_matrix = Gfx::AffineTransform();
+    m_text_line_matrix = Gfx::AffineTransform();
+}
+
+RENDERER_HANDLER(text_end)
+{
+    // FIXME: Do we need to do anything here?
+}
+
+RENDERER_HANDLER(text_set_char_space)
 {
     text_state().character_spacing = args[0].to_float();
 }
 
-void Renderer::handle_text_set_word_space(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_word_space)
 {
     text_state().word_spacing = args[0].to_float();
 }
 
-void Renderer::handle_text_set_horizontal_scale(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_horizontal_scale)
 {
     m_text_rendering_matrix_is_dirty = true;
     text_state().horizontal_scaling = args[0].to_float() / 100.0f;
 }
 
-void Renderer::handle_text_set_leading(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_leading)
 {
     text_state().leading = args[0].to_float();
 }
 
-void Renderer::handle_text_set_font(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_font)
 {
     auto target_font_name = m_document->resolve_to<NameObject>(args[0])->name();
     auto fonts_dictionary = m_page.resources->get_dict(m_document, "Font");
@@ -268,29 +305,18 @@ void Renderer::handle_text_set_font(const Vector<Value>& args)
     m_text_rendering_matrix_is_dirty = true;
 }
 
-void Renderer::handle_text_set_rendering_mode(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_rendering_mode)
 {
     text_state().rendering_mode = static_cast<TextRenderingMode>(args[0].as_int());
 }
 
-void Renderer::handle_text_set_rise(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_rise)
 {
     m_text_rendering_matrix_is_dirty = true;
     text_state().rise = args[0].to_float();
 }
 
-void Renderer::handle_text_begin(const Vector<Value>&)
-{
-    m_text_matrix = Gfx::AffineTransform();
-    m_text_line_matrix = Gfx::AffineTransform();
-}
-
-void Renderer::handle_text_end(const Vector<Value>&)
-{
-    // FIXME: Do we need to do anything here?
-}
-
-void Renderer::handle_text_next_line_offset(const Vector<Value>& args)
+RENDERER_HANDLER(text_next_line_offset)
 {
     Gfx::AffineTransform transform(1.0f, 0.0f, 0.0f, 1.0f, args[0].to_float(), args[1].to_float());
     transform.multiply(m_text_line_matrix);
@@ -299,13 +325,13 @@ void Renderer::handle_text_next_line_offset(const Vector<Value>& args)
     m_text_rendering_matrix_is_dirty = true;
 }
 
-void Renderer::handle_text_next_line_and_set_leading(const Vector<Value>& args)
+RENDERER_HANDLER(text_next_line_and_set_leading)
 {
     text_state().leading = -args[1].to_float();
     handle_text_next_line_offset(args);
 }
 
-void Renderer::handle_text_set_matrix_and_line_matrix(const Vector<Value>& args)
+RENDERER_HANDLER(text_set_matrix_and_line_matrix)
 {
     Gfx::AffineTransform new_transform(
         args[0].to_float(),
@@ -319,22 +345,51 @@ void Renderer::handle_text_set_matrix_and_line_matrix(const Vector<Value>& args)
     m_text_rendering_matrix_is_dirty = true;
 }
 
-void Renderer::handle_text_next_line(const Vector<Value>&)
+RENDERER_HANDLER(text_next_line)
 {
     handle_text_next_line_offset({ 0.0f, -text_state().leading });
 }
 
-void Renderer::handle_text_show_string(const Vector<Value>& args)
+RENDERER_HANDLER(text_show_string)
 {
     auto text = m_document->resolve_to<StringObject>(args[0])->string();
     show_text(text);
 }
 
-void Renderer::handle_text_next_line_show_string(const Vector<Value>& args)
+RENDERER_HANDLER(text_next_line_show_string)
 {
     handle_text_next_line(args);
     handle_text_show_string(args);
 }
+
+RENDERER_TODO(text_next_line_show_string_set_spacing);
+RENDERER_TODO(text_show_string_array);
+RENDERER_TODO(type3_font_set_glyph_width);
+RENDERER_TODO(type3_font_set_glyph_width_and_bbox);
+RENDERER_TODO(color_set_stroking_space);
+RENDERER_TODO(color_set_painting_space);
+RENDERER_TODO(color_set_stroking);
+RENDERER_TODO(color_set_stroking_extended);
+RENDERER_TODO(color_set_painting);
+RENDERER_TODO(color_set_painting_extended);
+RENDERER_TODO(color_set_stroking_space_to_gray);
+RENDERER_TODO(color_set_painting_space_to_gray);
+RENDERER_TODO(color_set_stroking_space_to_rgb);
+RENDERER_TODO(color_set_painting_space_to_rgb);
+RENDERER_TODO(color_set_stroking_space_to_cmyk);
+RENDERER_TODO(color_set_painting_space_to_cmyk);
+RENDERER_TODO(shade);
+RENDERER_TODO(inline_image_begin);
+RENDERER_TODO(inline_image_begin_data);
+RENDERER_TODO(inline_image_end);
+RENDERER_TODO(paint_xobject);
+RENDERER_TODO(marked_content_point);
+RENDERER_TODO(marked_content_designate);
+RENDERER_TODO(marked_content_begin);
+RENDERER_TODO(marked_content_begin_with_property_list);
+RENDERER_TODO(marked_content_end);
+RENDERER_TODO(compatibility_begin);
+RENDERER_TODO(compatibility_end);
 
 template<typename T>
 Gfx::Point<T> Renderer::map(T x, T y) const
