@@ -36,6 +36,27 @@ inline void MallocTracer::for_each_mallocation(Callback callback) const
     });
 }
 
+void MallocTracer::update_metadata(MmapRegion& mmap_region, size_t chunk_size)
+{
+    mmap_region.set_malloc_metadata({},
+        adopt_own(*new MallocRegionMetadata {
+            .region = mmap_region,
+            .address = mmap_region.base(),
+            .chunk_size = chunk_size,
+            .mallocations = {},
+        }));
+    auto& malloc_data = *mmap_region.malloc_metadata();
+
+    bool is_chunked_block = malloc_data.chunk_size <= size_classes[num_size_classes - 1];
+    if (is_chunked_block)
+        malloc_data.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data.chunk_size);
+    else
+        malloc_data.mallocations.resize(1);
+
+    // Mark the containing mmap region as a malloc block!
+    mmap_region.set_malloc(true);
+}
+
 void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t size)
 {
     if (m_emulator.is_in_loader_code())
@@ -59,27 +80,22 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
 
     if (!mmap_region.is_malloc_block()) {
         auto chunk_size = mmap_region.read32(offsetof(CommonHeader, m_size)).value();
-        mmap_region.set_malloc_metadata({},
-            adopt_own(*new MallocRegionMetadata {
-                .region = mmap_region,
-                .address = mmap_region.base(),
-                .chunk_size = chunk_size,
-                .mallocations = {},
-            }));
-        auto& malloc_data = *mmap_region.malloc_metadata();
-
-        bool is_chunked_block = malloc_data.chunk_size <= size_classes[num_size_classes - 1];
-        if (is_chunked_block)
-            malloc_data.mallocations.resize((ChunkedBlock::block_size - sizeof(ChunkedBlock)) / malloc_data.chunk_size);
-        else
-            malloc_data.mallocations.resize(1);
-
-        // Mark the containing mmap region as a malloc block!
-        mmap_region.set_malloc(true);
+        update_metadata(mmap_region, chunk_size);
     }
     auto* mallocation = mmap_region.malloc_metadata()->mallocation_for_address(address);
     VERIFY(mallocation);
     *mallocation = { address, size, true, false, m_emulator.raw_backtrace(), Vector<FlatPtr>() };
+}
+
+void MallocTracer::target_did_change_chunk_size(Badge<Emulator>, FlatPtr block, size_t chunk_size)
+{
+    if (m_emulator.is_in_loader_code())
+        return;
+    auto* region = m_emulator.mmu().find_region({ 0x23, block });
+    VERIFY(region);
+    VERIFY(is<MmapRegion>(*region));
+    auto& mmap_region = static_cast<MmapRegion&>(*region);
+    update_metadata(mmap_region, chunk_size);
 }
 
 ALWAYS_INLINE Mallocation* MallocRegionMetadata::mallocation_for_address(FlatPtr address) const
