@@ -18,17 +18,12 @@ class InspectorServerClient final
     C_OBJECT(InspectorServerClient);
 
 public:
-    virtual void handshake() override
-    {
-    }
-
     virtual ~InspectorServerClient() override = default;
 
 private:
     InspectorServerClient()
         : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, "/tmp/portal/inspector")
     {
-        handshake();
     }
 
     virtual void dummy() override { }

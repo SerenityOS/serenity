@@ -24,7 +24,6 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
 
     auto audio_client = Audio::ClientConnection::construct();
-    audio_client->handshake();
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error()) {
         fprintf(stderr, "Failed to load audio file: %s\n", loader->error_string());

@@ -178,7 +178,6 @@ void ServerConnectionWrapper::create_connection()
     VERIFY(m_connection.is_null());
     m_connection = m_connection_creator();
     m_connection->set_wrapper(*this);
-    m_connection->handshake();
 }
 
 ServerConnection* ServerConnectionWrapper::connection()

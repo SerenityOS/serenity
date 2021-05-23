@@ -37,10 +37,6 @@ public:
         async_greet(m_project_path);
     }
 
-    virtual void handshake() override
-    {
-    }
-
     WeakPtr<LanguageClient> language_client() { return m_current_language_client; }
     const String& project_path() const { return m_project_path; }
 

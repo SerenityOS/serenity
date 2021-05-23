@@ -27,7 +27,6 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
     auto audio_client = Audio::ClientConnection::construct();
-    audio_client->handshake();
 
     if (pledge("stdio recvfd sendfd rpath thread", nullptr) < 0) {
         perror("pledge");
