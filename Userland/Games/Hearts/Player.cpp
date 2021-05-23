@@ -11,7 +11,8 @@
 
 namespace Hearts {
 
-size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card)
+size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card,
+    Function<bool(Card&)> lower_value_card_in_play)
 {
     struct CardWithIndex {
         RefPtr<Card> card;
@@ -38,17 +39,27 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
         dbgln("----");
     }
 
-    size_t last_index = -1;
+    ssize_t fallback_index = -1;
+    ssize_t last_index = -1;
     for (auto& cwi : sorted_hand) {
         if (!valid_play(*cwi.card))
             continue;
+        if (lower_value_card_in_play(*cwi.card)) {
+            // Allow falling back to this card if no other suitable card is in play.
+            fallback_index = cwi.index;
+            continue;
+        }
         if (prefer_card(*cwi.card)) {
             dbgln_if(HEARTS_DEBUG, "Preferring card {}", *cwi.card);
             return cwi.index;
         }
         last_index = cwi.index;
     }
-    return last_index;
+    if (last_index == -1) {
+        dbgln_if(HEARTS_DEBUG, "Falling back to card {}", *hand[fallback_index]);
+        return fallback_index;
+    } else
+        return last_index;
 }
 
 Optional<size_t> Player::pick_low_points_high_value_card(Optional<Card::Type> type)
