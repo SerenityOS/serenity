@@ -23,8 +23,13 @@ FontSettingsWidget::FontSettingsWidget()
     auto& fixed_width_font_label = *find_descendant_of_type_named<GUI::Label>("fixed_width_font_label");
     auto& fixed_width_font_button = *find_descendant_of_type_named<GUI::Button>("fixed_width_font_button");
 
-    default_font_label.set_font(Gfx::FontDatabase::default_font());
-    fixed_width_font_label.set_font(Gfx::FontDatabase::default_fixed_width_font());
+    auto& default_font = Gfx::FontDatabase::default_font();
+    default_font_label.set_font(default_font);
+    default_font_label.set_text(default_font.qualified_name());
+
+    auto& default_fixed_width_font = Gfx::FontDatabase::default_fixed_width_font();
+    fixed_width_font_label.set_font(default_fixed_width_font);
+    fixed_width_font_label.set_text(default_fixed_width_font.qualified_name());
 
     default_font_button.on_click = [this, &default_font_label] {
         auto font_picker = GUI::FontPicker::construct(window(), &default_font_label.font(), false);
