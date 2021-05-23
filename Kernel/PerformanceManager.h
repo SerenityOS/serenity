@@ -54,18 +54,8 @@ public:
 
     inline static void add_cpu_sample_event(Thread& current_thread, const RegisterState& regs, u32 lost_time)
     {
-        PerformanceEventBuffer* perf_events = nullptr;
-
-        if (g_profiling_all_threads) {
-            VERIFY(g_global_perf_events);
-            perf_events = g_global_perf_events;
-        } else if (current_thread.process().is_profiling()) {
-            VERIFY(current_thread.process().perf_events());
-            perf_events = current_thread.process().perf_events();
-        }
-
-        if (perf_events) {
-            [[maybe_unused]] auto rc = perf_events->append_with_eip_and_ebp(
+        if (auto* event_buffer = current_thread.process().current_perf_events_buffer()) {
+            [[maybe_unused]] auto rc = event_buffer->append_with_eip_and_ebp(
                 current_thread.pid(), current_thread.tid(),
                 regs.eip, regs.ebp, PERF_EVENT_SAMPLE, lost_time, 0, 0, nullptr);
         }

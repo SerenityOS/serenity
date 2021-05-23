@@ -559,7 +559,12 @@ private:
 
     inline PerformanceEventBuffer* current_perf_events_buffer()
     {
-        return g_profiling_all_threads ? g_global_perf_events : m_perf_event_buffer.ptr();
+        if (g_profiling_all_threads)
+            return g_global_perf_events;
+        else if (m_profiling)
+            return m_perf_event_buffer.ptr();
+        else
+            return nullptr;
     }
 
     Process* m_prev { nullptr };
