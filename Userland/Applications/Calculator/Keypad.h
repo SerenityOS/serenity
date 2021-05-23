@@ -30,9 +30,9 @@ public:
 private:
     // Internal representation of the current decimal value.
     bool m_negative { false };
-    long m_int_value { 0 };
-    long m_frac_value { 0 };
-    int m_frac_length { 0 };
+    Checked<u64> m_int_value { 0 };
+    Checked<u64> m_frac_value { 0 };
+    u8 m_frac_length { 0 };
     // E.g. for -35.004200,
     // m_negative = true
     // m_int_value = 35
