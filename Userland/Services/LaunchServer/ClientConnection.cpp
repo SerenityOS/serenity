@@ -28,10 +28,6 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::LaunchServer::OpenUrlResponse ClientConnection::open_url(URL const& url, String const& handler_name)
 {
     if (!m_allowlist.is_empty()) {
