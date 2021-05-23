@@ -75,6 +75,70 @@ public:
         return product;
     }
 
+    constexpr Matrix operator/(T divisor) const
+    {
+        Matrix division;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
+                division.m_elements[i][j] = m_elements[i][j] / divisor;
+            }
+        }
+        return division;
+    }
+
+    constexpr Matrix adjugate() const
+    {
+        if constexpr (N == 1)
+            return Matrix(1);
+
+        Matrix adjugate;
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
+                int sign = (i + j) % 2 == 0 ? 1 : -1;
+                adjugate.m_elements[j][i] = sign * first_minor(i, j);
+            }
+        }
+        return adjugate;
+    }
+
+    constexpr T determinant() const
+    {
+        if constexpr (N == 1) {
+            return m_elements[0][0];
+        } else {
+            T result = {};
+            int sign = 1;
+            for (size_t j = 0; j < N; ++j) {
+                result += sign * m_elements[0][j] * first_minor(0, j);
+                sign *= -1;
+            }
+            return result;
+        }
+    }
+
+    constexpr T first_minor(size_t skip_row, size_t skip_column) const
+    {
+        static_assert(N > 1);
+        VERIFY(skip_row < N);
+        VERIFY(skip_column < N);
+
+        Matrix<N - 1, T> first_minor;
+        constexpr auto new_size = N - 1;
+        size_t k = 0;
+
+        for (size_t i = 0; i < N; ++i) {
+            for (size_t j = 0; j < N; ++j) {
+                if (i == skip_row || j == skip_column)
+                    continue;
+
+                first_minor.elements()[k / new_size][k % new_size] = m_elements[i][j];
+                ++k;
+            }
+        }
+
+        return first_minor.determinant();
+    }
+
     constexpr static Matrix identity()
     {
         Matrix result;
@@ -87,6 +151,13 @@ public:
             }
         }
         return result;
+    }
+
+    constexpr Matrix inverse() const
+    {
+        auto det = determinant();
+        VERIFY(det != 0);
+        return adjugate() / det;
     }
 
     constexpr Matrix transpose() const
