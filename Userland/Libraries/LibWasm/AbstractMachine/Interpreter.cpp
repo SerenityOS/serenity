@@ -29,7 +29,7 @@ namespace Wasm {
         }                                                                                      \
     } while (false)
 
-void Interpreter::interpret(Configuration& configuration)
+void BytecodeInterpreter::interpret(Configuration& configuration)
 {
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
@@ -46,7 +46,7 @@ void Interpreter::interpret(Configuration& configuration)
     }
 }
 
-void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index)
+void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelIndex index)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Branch to label with index {}...", index.value());
     auto label = configuration.nth_label(index.value());
@@ -71,7 +71,7 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
     configuration.ip() = label->continuation();
 }
 
-ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const Instruction& instruction, size_t size)
+ReadonlyBytes BytecodeInterpreter::load_from_memory(Configuration& configuration, const Instruction& instruction, size_t size)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -95,7 +95,7 @@ ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const 
     return memory->data().bytes().slice(instance_address, size);
 }
 
-void Interpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
+void BytecodeInterpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -113,7 +113,7 @@ void Interpreter::store_to_memory(Configuration& configuration, const Instructio
     data.copy_to(memory->data().bytes().slice(instance_address, data.size()));
 }
 
-void Interpreter::call_address(Configuration& configuration, FunctionAddress address)
+void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
     auto instance = configuration.store().get(address);
     TRAP_IF_NOT(instance);
@@ -129,7 +129,7 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     Result result { Trap {} };
     {
         Configuration::CallFrameHandle handle { configuration };
-        result = configuration.call(address, move(args));
+        result = configuration.call(*this, address, move(args));
     }
 
     if (result.is_trap()) {
@@ -215,7 +215,7 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     } while (false)
 
 template<typename T>
-T Interpreter::read_value(ReadonlyBytes data)
+T BytecodeInterpreter::read_value(ReadonlyBytes data)
 {
     T value;
     InputMemoryStream stream { data };
@@ -226,7 +226,7 @@ T Interpreter::read_value(ReadonlyBytes data)
 }
 
 template<>
-float Interpreter::read_value<float>(ReadonlyBytes data)
+float BytecodeInterpreter::read_value<float>(ReadonlyBytes data)
 {
     InputMemoryStream stream { data };
     LittleEndian<u32> raw_value;
@@ -237,7 +237,7 @@ float Interpreter::read_value<float>(ReadonlyBytes data)
 }
 
 template<>
-double Interpreter::read_value<double>(ReadonlyBytes data)
+double BytecodeInterpreter::read_value<double>(ReadonlyBytes data)
 {
     InputMemoryStream stream { data };
     LittleEndian<u64> raw_value;
@@ -282,7 +282,7 @@ struct ConvertToRaw<double> {
 };
 
 template<typename V, typename T>
-MakeSigned<T> Interpreter::checked_signed_truncate(V value)
+MakeSigned<T> BytecodeInterpreter::checked_signed_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
         m_do_trap = true;
@@ -305,7 +305,7 @@ MakeSigned<T> Interpreter::checked_signed_truncate(V value)
 }
 
 template<typename V, typename T>
-MakeUnsigned<T> Interpreter::checked_unsigned_truncate(V value)
+MakeUnsigned<T> BytecodeInterpreter::checked_unsigned_truncate(V value)
 {
     if (isnan(value) || isinf(value)) { // "undefined", let's just trap.
         m_do_trap = true;
@@ -326,7 +326,7 @@ MakeUnsigned<T> Interpreter::checked_unsigned_truncate(V value)
     return true;
 }
 
-Vector<Value> Interpreter::pop_values(Configuration& configuration, size_t count)
+Vector<Value> BytecodeInterpreter::pop_values(Configuration& configuration, size_t count)
 {
     Vector<Value> results;
     for (size_t i = 0; i < count; ++i) {
@@ -339,27 +339,9 @@ Vector<Value> Interpreter::pop_values(Configuration& configuration, size_t count
     return results;
 }
 
-void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
-
-    if (pre_interpret_hook && *pre_interpret_hook) {
-        auto result = pre_interpret_hook->operator()(configuration, ip, instruction);
-        if (!result) {
-            m_do_trap = true;
-            return;
-        }
-    }
-
-    ScopeGuard guard { [&] {
-        if (post_interpret_hook && *post_interpret_hook) {
-            auto result = post_interpret_hook->operator()(configuration, ip, instruction, *this);
-            if (!result) {
-                m_do_trap = true;
-                return;
-            }
-        }
-    } };
 
     switch (instruction.opcode().value()) {
     case Instructions::unreachable.value():
@@ -912,4 +894,28 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         return;
     }
 }
+
+void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+{
+    if (pre_interpret_hook) {
+        auto result = pre_interpret_hook(configuration, ip, instruction);
+        if (!result) {
+            m_do_trap = true;
+            return;
+        }
+    }
+
+    ScopeGuard guard { [&] {
+        if (post_interpret_hook) {
+            auto result = post_interpret_hook(configuration, ip, instruction, *this);
+            if (!result) {
+                m_do_trap = true;
+                return;
+            }
+        }
+    } };
+
+    BytecodeInterpreter::interpret(configuration, ip, instruction);
+}
+
 }

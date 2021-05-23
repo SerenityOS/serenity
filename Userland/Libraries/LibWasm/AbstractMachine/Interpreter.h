@@ -11,15 +11,20 @@
 namespace Wasm {
 
 struct Interpreter {
-    void interpret(Configuration&);
-    bool did_trap() const { return m_do_trap; }
-    void clear_trap() { m_do_trap = false; }
+    virtual ~Interpreter() = default;
+    virtual void interpret(Configuration&) = 0;
+    virtual bool did_trap() const = 0;
+    virtual void clear_trap() = 0;
+};
 
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&)>* pre_interpret_hook { nullptr };
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)>* post_interpret_hook { nullptr };
+struct BytecodeInterpreter : public Interpreter {
+    virtual void interpret(Configuration&) override;
+    virtual ~BytecodeInterpreter() override = default;
+    virtual bool did_trap() const override { return m_do_trap; }
+    virtual void clear_trap() override { m_do_trap = false; }
 
-private:
-    void interpret(Configuration&, InstructionPointer&, const Instruction&);
+protected:
+    virtual void interpret(Configuration&, InstructionPointer&, const Instruction&);
     void branch_to_label(Configuration&, LabelIndex);
     ReadonlyBytes load_from_memory(Configuration&, const Instruction&, size_t);
     void store_to_memory(Configuration&, const Instruction&, ReadonlyBytes data);
@@ -42,6 +47,16 @@ private:
         return m_do_trap;
     }
     bool m_do_trap { false };
+};
+
+struct DebuggerBytecodeInterpreter : public BytecodeInterpreter {
+    virtual ~DebuggerBytecodeInterpreter() override = default;
+
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&)> pre_interpret_hook;
+    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)> post_interpret_hook;
+
+private:
+    virtual void interpret(Configuration&, InstructionPointer&, const Instruction&) override;
 };
 
 }
