@@ -41,6 +41,7 @@ Game::Game()
     };
     m_players[0].name_alignment = Gfx::TextAlignment::BottomRight;
     m_players[0].name = "Gunnar";
+    m_players[0].is_human = true;
     m_players[0].taken_cards_target = { width / 2 - Card::width / 2, height };
 
     m_players[1].first_card_position = { outer_border_size, (height - player_deck_height) / 2 };
@@ -252,7 +253,7 @@ void Game::let_player_play_card()
     else
         on_status_change(String::formatted("Waiting for {} to play a card...", player));
 
-    if (is_human(player)) {
+    if (player.is_human) {
         m_human_can_play = true;
         update();
         return;
@@ -351,13 +352,19 @@ void Game::advance_game()
 
 void Game::keydown_event(GUI::KeyEvent& event)
 {
-    if (event.shift() && event.key() == KeyCode::Key_F11)
+    if (event.shift() && event.key() == KeyCode::Key_F10) {
+        m_players[0].is_human = !m_players[0].is_human;
+        advance_game();
+    } else if (event.key() == KeyCode::Key_F10) {
+        if (m_human_can_play)
+            play_card(m_players[0], pick_card(m_players[0]));
+    } else if (event.shift() && event.key() == KeyCode::Key_F11)
         dump_state();
 }
 
 void Game::play_card(Player& player, size_t card_index)
 {
-    if (is_human(player))
+    if (player.is_human)
         m_human_can_play = false;
     VERIFY(player.hand[card_index]);
     VERIFY(m_trick.size() < 4);

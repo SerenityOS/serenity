@@ -38,6 +38,7 @@ public:
     Gfx::TextAlignment name_alignment;
     Gfx::IntPoint taken_cards_target;
     String name;
+    bool is_human { false };
 };
 
 }
