@@ -375,6 +375,15 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::PseudoClass::OnlyChild:
                 pseudo_class_description = "OnlyChild";
                 break;
+            case CSS::Selector::SimpleSelector::PseudoClass::Disabled:
+                pseudo_class_description = "Disabled";
+                break;
+            case CSS::Selector::SimpleSelector::PseudoClass::Enabled:
+                pseudo_class_description = "Enabled";
+                break;
+            case CSS::Selector::SimpleSelector::PseudoClass::Checked:
+                pseudo_class_description = "Checked";
+                break;
             }
 
             builder.appendff("{}:{}", type_description, simple_selector.value);

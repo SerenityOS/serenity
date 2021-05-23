@@ -38,6 +38,9 @@ public:
             LastOfType,
             NthChild,
             NthLastChild,
+            Disabled,
+            Enabled,
+            Checked,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 

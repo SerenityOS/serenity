@@ -82,6 +82,24 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
                 return false;
         }
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::Disabled:
+        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
+            return false;
+        if (!element.has_attribute("disabled"))
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::PseudoClass::Enabled:
+        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
+            return false;
+        if (element.has_attribute("disabled"))
+            return false;
+        break;
+    case CSS::Selector::SimpleSelector::PseudoClass::Checked:
+        if (!element.tag_name().equals_ignoring_case(HTML::TagNames::input))
+            return false;
+        if (!element.has_attribute("checked"))
+            return false;
+        break;
     case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
     case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
         const auto step_size = component.nth_child_pattern.step_size;
