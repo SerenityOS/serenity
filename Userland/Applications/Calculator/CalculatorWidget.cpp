@@ -7,13 +7,11 @@
  */
 
 #include "CalculatorWidget.h"
-#include <AK/Assertions.h>
 #include <Applications/Calculator/CalculatorGML.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/TextBox.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
 CalculatorWidget::CalculatorWidget()
