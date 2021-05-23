@@ -40,7 +40,6 @@ class LaunchServerConnection : public IPC::ServerConnection<LaunchClientEndpoint
 public:
     virtual void handshake() override
     {
-        greet();
     }
 
 private:
