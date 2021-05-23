@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Queue.h>
+#include <AK/StringBuilder.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
