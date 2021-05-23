@@ -196,7 +196,7 @@ private:
 
         StringBuilder name;
         bool missing_name { true };
-        StringBuilder public_identifier;
+        String public_identifier;
         bool missing_public_identifier { true };
         StringBuilder system_identifier;
         bool missing_system_identifier { true };

@@ -265,7 +265,7 @@ DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_t
     if (doctype_token.m_doctype.name.to_string() != "html")
         return DOM::QuirksMode::Yes;
 
-    auto public_identifier = doctype_token.m_doctype.public_identifier.to_string();
+    auto const& public_identifier = doctype_token.m_doctype.public_identifier;
     auto system_identifier = doctype_token.m_doctype.system_identifier.to_string();
 
     if (public_identifier.equals_ignoring_case("-//W3O//DTD W3 HTML Strict 3.0//EN//"))
@@ -325,7 +325,7 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
     if (token.is_doctype()) {
         auto doctype = adopt_ref(*new DOM::DocumentType(document()));
         doctype->set_name(token.m_doctype.name.to_string());
-        doctype->set_public_id(token.m_doctype.public_identifier.to_string());
+        doctype->set_public_id(token.m_doctype.public_identifier);
         doctype->set_system_id(token.m_doctype.system_identifier.to_string());
         document().append_child(move(doctype));
         document().set_quirks_mode(which_quirks_mode(token));
