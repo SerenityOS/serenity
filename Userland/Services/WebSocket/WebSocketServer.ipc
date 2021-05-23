@@ -1,8 +1,5 @@
 endpoint WebSocketServer
 {
-    // Basic protocol
-    greet() => ()
-
     // Connection API
     connect(URL url, String origin, Vector<String> protocols, Vector<String> extensions, IPC::Dictionary additional_request_headers) => (i32 connection_id)
     ready_state(i32 connection_id) => (u32 ready_state)

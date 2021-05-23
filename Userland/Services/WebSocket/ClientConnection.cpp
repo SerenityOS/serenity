@@ -31,10 +31,6 @@ void ClientConnection::die()
         Core::EventLoop::current().quit(0);
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::WebSocketServer::ConnectResponse ClientConnection::connect(URL const& url, String const& origin,
     Vector<String> const& protocols, Vector<String> const& extensions, IPC::Dictionary const& additional_request_headers)
 {
