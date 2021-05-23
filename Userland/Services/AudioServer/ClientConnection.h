@@ -35,7 +35,6 @@ public:
     static void for_each(Function<void(ClientConnection&)>);
 
 private:
-    virtual void greet() override;
     virtual Messages::AudioServer::GetMainMixVolumeResponse get_main_mix_volume() override;
     virtual void set_main_mix_volume(i32) override;
     virtual Messages::AudioServer::EnqueueBufferResponse enqueue_buffer(Core::AnonymousBuffer const&, i32, int) override;

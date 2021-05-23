@@ -59,10 +59,6 @@ void ClientConnection::did_change_main_mix_volume(Badge<Mixer>, int volume)
     async_main_mix_volume_changed(volume);
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::AudioServer::GetMainMixVolumeResponse ClientConnection::get_main_mix_volume()
 {
     return m_mixer.main_volume();

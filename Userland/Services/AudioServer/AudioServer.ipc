@@ -1,8 +1,5 @@
 endpoint AudioServer
 {
-    // Basic protocol
-    greet() => ()
-
     // Mixer functions
     set_muted(bool muted) => ()
     get_muted() => (bool muted)
