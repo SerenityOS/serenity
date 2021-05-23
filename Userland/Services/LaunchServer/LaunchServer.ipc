@@ -1,6 +1,5 @@
 endpoint LaunchServer
 {
-    greet() => ()
     open_url(URL url, String handler_name) => (bool response)
     get_handlers_for_url(URL url) => (Vector<String> handlers)
     get_handlers_with_details_for_url(URL url) => (Vector<String> handlers_details)
