@@ -17,7 +17,7 @@
 #define CTRL(c) (c & 0x1F)
 #define CINTR CTRL('c')
 #define CQUIT 034
-#define CERASE 0177
+#define CERASE 010
 #define CKILL CTRL('u')
 #define CEOF CTRL('d')
 #define CTIME 0
