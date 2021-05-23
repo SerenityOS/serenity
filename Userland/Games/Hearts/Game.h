@@ -40,7 +40,6 @@ private:
     void continue_game_after_delay(int interval_ms = 750);
     void advance_game();
     size_t pick_card(Player& player);
-    bool is_human(Player& player) const { return &player == &m_players[0]; }
     size_t player_index(Player& player);
     Player& current_player();
     bool game_ended() const { return m_trick_number == 13; }
