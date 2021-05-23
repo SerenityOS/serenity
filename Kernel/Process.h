@@ -152,16 +152,18 @@ public:
     }
 
     template<typename EntryFunction>
+    static void kernel_process_trampoline(void* data)
+    {
+        EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
+        (*func)();
+        delete func;
+    }
+
+    template<typename EntryFunction>
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, EntryFunction entry, u32 affinity = THREAD_AFFINITY_DEFAULT)
     {
         auto* entry_func = new EntryFunction(move(entry));
-        return create_kernel_process(
-            first_thread, move(name), [](void* data) {
-                EntryFunction* func = reinterpret_cast<EntryFunction*>(data);
-                (*func)();
-                delete func;
-            },
-            entry_func, affinity);
+        return create_kernel_process(first_thread, move(name), &Process::kernel_process_trampoline<EntryFunction>, entry_func, affinity);
     }
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
@@ -805,7 +807,6 @@ inline ProcessID Thread::pid() const
             VERIFY_NOT_REACHED();                                    \
         }                                                            \
     } while (0)
-
 }
 
 inline static String copy_string_from_user(const Kernel::Syscall::StringArgument& string)
