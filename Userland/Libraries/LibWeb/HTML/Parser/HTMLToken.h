@@ -142,14 +142,12 @@ public:
         VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (old_name == attribute.local_name_builder.string_view()) {
-                attribute.prefix_builder.clear();
-                attribute.prefix_builder.append(prefix);
+                attribute.prefix = prefix;
 
                 attribute.local_name_builder.clear();
                 attribute.local_name_builder.append(local_name);
 
-                attribute.namespace_builder.clear();
-                attribute.namespace_builder.append(namespace_);
+                attribute.namespace_ = namespace_;
             }
         }
     }
@@ -180,9 +178,9 @@ private:
     };
 
     struct AttributeBuilder {
-        StringBuilder prefix_builder;
+        String prefix;
         StringBuilder local_name_builder;
-        StringBuilder namespace_builder;
+        String namespace_;
         StringBuilder value_builder;
         Position name_start_position;
         Position value_start_position;
