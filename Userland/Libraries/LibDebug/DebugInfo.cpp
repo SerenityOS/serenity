@@ -103,6 +103,8 @@ void DebugInfo::prepare_lines()
         return file_path;
     };
 
+    m_sorted_lines.ensure_capacity(all_lines.size());
+
     for (auto const& line_info : all_lines) {
         auto it = memoized_full_paths.find(line_info.file);
         if (it == memoized_full_paths.end()) {
@@ -111,8 +113,9 @@ void DebugInfo::prepare_lines()
         }
         if (!it->value.has_value())
             continue;
-        m_sorted_lines.append({ line_info.address, it->value.value(), line_info.line });
+        m_sorted_lines.unchecked_append({ line_info.address, it->value.value(), line_info.line });
     }
+
     quick_sort(m_sorted_lines, [](auto& a, auto& b) {
         return a.address < b.address;
     });
