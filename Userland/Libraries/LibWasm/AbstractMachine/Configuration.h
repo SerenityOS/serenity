@@ -22,7 +22,7 @@ public:
     {
         m_current_frame = frame.ptr();
         m_stack.push(move(frame));
-        m_stack.push(make<Label>(m_current_frame->arity(), m_current_frame->expression().instructions().size()));
+        m_stack.push(Label(m_current_frame->arity(), m_current_frame->expression().instructions().size()));
     }
     auto& frame() const { return m_current_frame; }
     auto& frame() { return m_current_frame; }
