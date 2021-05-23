@@ -240,4 +240,21 @@ u32 Utf8CodepointIterator::operator*() const
     return code_point_value_so_far;
 }
 
+Optional<u32> Utf8CodepointIterator::peek(size_t offset) const
+{
+    if (offset == 0) {
+        if (this->done())
+            return {};
+        return this->operator*();
+    }
+
+    auto new_iterator = *this;
+    for (size_t index = 0; index < offset; ++index) {
+        ++new_iterator;
+        if (new_iterator.done())
+            return {};
+    }
+    return *new_iterator;
+}
+
 }
