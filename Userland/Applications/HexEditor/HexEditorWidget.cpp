@@ -6,6 +6,7 @@
 
 #include "HexEditorWidget.h"
 #include "FindDialog.h"
+#include "GoToOffsetDialog.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
@@ -131,6 +132,20 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
+    m_goto_offset_action = GUI::Action::create("&Go to Offset ...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-to.png"), [this](const GUI::Action&) {
+        int new_offset;
+        auto result = GoToOffsetDialog::show(
+            window(),
+            m_goto_history,
+            new_offset,
+            m_editor->selection_start_offset(),
+            m_editor->buffer_size());
+        if (result == GUI::InputBox::ExecOK) {
+            m_editor->highlight(new_offset, new_offset);
+            m_editor->update();
+        }
+    });
+
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
     });
@@ -140,6 +155,7 @@ HexEditorWidget::HexEditorWidget()
     m_toolbar->add_action(*m_save_action);
     m_toolbar->add_separator();
     m_toolbar->add_action(*m_find_action);
+    m_toolbar->add_action(*m_goto_offset_action);
 
     m_editor->set_focus(true);
 }
@@ -162,23 +178,6 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         GUI::Application::the()->quit();
     }));
 
-    m_goto_decimal_offset_action = GUI::Action::create("&Go to Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(window(), value, "Enter decimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_offset = value.to_int();
-            if (new_offset.has_value())
-                m_editor->set_position(new_offset.value());
-        }
-    });
-
-    m_goto_hex_offset_action = GUI::Action::create("Go to &Offset (Hex)...", { Mod_Ctrl, Key_G }, Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GUI::Action&) {
-        String value;
-        if (GUI::InputBox::show(window(), value, "Enter hexadecimal offset:", "Go to Offset") == GUI::InputBox::ExecOK && !value.is_empty()) {
-            auto new_offset = strtol(value.characters(), nullptr, 16);
-            m_editor->set_position(new_offset);
-        }
-    });
-
     auto& edit_menu = menubar.add_menu("&Edit");
     edit_menu.add_action(GUI::CommonActions::make_select_all_action([this](auto&) {
         m_editor->select_all();
@@ -191,9 +190,6 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
             m_editor->fill_selection(fill_byte);
         }
     }));
-    edit_menu.add_separator();
-    edit_menu.add_action(*m_goto_decimal_offset_action);
-    edit_menu.add_action(*m_goto_hex_offset_action);
     edit_menu.add_separator();
     edit_menu.add_action(GUI::Action::create("Copy &Hex", { Mod_Ctrl, Key_C }, [&](const GUI::Action&) {
         m_editor->copy_selected_hex_to_clipboard();
@@ -220,6 +216,8 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         m_editor->update();
         m_last_found_index = result;
     }));
+    edit_menu.add_separator();
+    edit_menu.add_action(*m_goto_offset_action);
 
     auto& view_menu = menubar.add_menu("&View");
     view_menu.add_action(*m_layout_toolbar_action);
