@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +12,7 @@
 
 namespace AK {
 
-static inline bool is_valid_protocol_character(char ch)
+static inline bool is_valid_scheme_character(char ch)
 {
     return ch >= 'a' && ch <= 'z';
 }
@@ -32,7 +33,7 @@ bool URL::parse(const StringView& string)
         return false;
 
     enum class State {
-        InProtocol,
+        InScheme,
         InHostname,
         InPort,
         InPath,
@@ -43,7 +44,7 @@ bool URL::parse(const StringView& string)
     };
 
     Vector<char, 256> buffer;
-    State state { State::InProtocol };
+    State state { State::InScheme };
 
     size_t index = 0;
 
@@ -61,24 +62,24 @@ bool URL::parse(const StringView& string)
 
     while (index < string.length()) {
         switch (state) {
-        case State::InProtocol: {
-            if (is_valid_protocol_character(peek())) {
+        case State::InScheme: {
+            if (is_valid_scheme_character(peek())) {
                 buffer.append(consume());
                 continue;
             }
             if (consume() != ':')
                 return false;
 
-            m_protocol = String::copy(buffer);
+            m_scheme = String::copy(buffer);
 
-            if (m_protocol == "data") {
+            if (m_scheme == "data") {
                 buffer.clear();
                 m_host = "";
                 state = State::InDataMimeType;
                 continue;
             }
 
-            if (m_protocol == "about") {
+            if (m_scheme == "about") {
                 buffer.clear();
                 m_host = "";
                 state = State::InPath;
@@ -101,7 +102,7 @@ bool URL::parse(const StringView& string)
                 continue;
             }
             if (buffer.is_empty()) {
-                if (m_protocol == "file") {
+                if (m_scheme == "file") {
                     m_host = "";
                     state = State::InPath;
                     continue;
@@ -206,7 +207,7 @@ bool URL::parse(const StringView& string)
         m_host = String::copy(buffer);
         m_path = "/";
     }
-    if (state == State::InProtocol)
+    if (state == State::InScheme)
         return false;
     if (state == State::InPath)
         m_path = String::copy(buffer);
@@ -227,8 +228,8 @@ bool URL::parse(const StringView& string)
     if (m_fragment.is_null())
         m_fragment = "";
 
-    if (!m_port && protocol_requires_port(m_protocol))
-        set_port(default_port_for_protocol(m_protocol));
+    if (!m_port && scheme_requires_port(m_scheme))
+        set_port(default_port_for_scheme(m_scheme));
 
     return compute_validity();
 }
@@ -241,15 +242,15 @@ URL::URL(const StringView& string)
 String URL::to_string() const
 {
     StringBuilder builder;
-    builder.append(m_protocol);
+    builder.append(m_scheme);
 
-    if (m_protocol == "about") {
+    if (m_scheme == "about") {
         builder.append(':');
         builder.append(m_path);
         return builder.to_string();
     }
 
-    if (m_protocol == "data") {
+    if (m_scheme == "data") {
         builder.append(':');
         builder.append(m_data_mime_type);
         if (m_data_payload_is_base64)
@@ -261,7 +262,7 @@ String URL::to_string() const
 
     builder.append("://");
     builder.append(m_host);
-    if (default_port_for_protocol(protocol()) != port()) {
+    if (default_port_for_scheme(scheme()) != port()) {
         builder.append(':');
         builder.append(String::number(m_port));
     }
@@ -287,11 +288,11 @@ URL URL::complete_url(const String& string) const
     if (url.is_valid())
         return url;
 
-    if (protocol() == "data")
+    if (scheme() == "data")
         return {};
 
     if (string.starts_with("//")) {
-        URL url(String::formatted("{}:{}", m_protocol, string));
+        URL url(String::formatted("{}:{}", m_scheme, string));
         if (url.is_valid())
             return url;
     }
@@ -337,9 +338,9 @@ URL URL::complete_url(const String& string) const
     return url;
 }
 
-void URL::set_protocol(const String& protocol)
+void URL::set_scheme(const String& scheme)
 {
-    m_protocol = protocol;
+    m_scheme = scheme;
     m_valid = compute_validity();
 }
 
@@ -374,22 +375,22 @@ void URL::set_fragment(const String& fragment)
 bool URL::compute_validity() const
 {
     // FIXME: This is by no means complete.
-    if (m_protocol.is_empty())
+    if (m_scheme.is_empty())
         return false;
 
-    if (m_protocol == "about") {
+    if (m_scheme == "about") {
         if (m_path.is_empty())
             return false;
         return true;
     }
 
-    if (m_protocol == "file") {
+    if (m_scheme == "file") {
         if (m_path.is_empty())
             return false;
         return true;
     }
 
-    if (m_protocol == "data") {
+    if (m_scheme == "data") {
         if (m_data_mime_type.is_empty())
             return false;
         return true;
@@ -398,40 +399,40 @@ bool URL::compute_validity() const
     if (m_host.is_empty())
         return false;
 
-    if (!m_port && protocol_requires_port(m_protocol))
+    if (!m_port && scheme_requires_port(m_scheme))
         return false;
 
     return true;
 }
 
-bool URL::protocol_requires_port(const StringView& protocol)
+bool URL::scheme_requires_port(const StringView& scheme)
 {
-    return (default_port_for_protocol(protocol) != 0);
+    return (default_port_for_scheme(scheme) != 0);
 }
 
-u16 URL::default_port_for_protocol(const StringView& protocol)
+u16 URL::default_port_for_scheme(const StringView& scheme)
 {
-    if (protocol == "http")
+    if (scheme == "http")
         return 80;
-    if (protocol == "https")
+    if (scheme == "https")
         return 443;
-    if (protocol == "gemini")
+    if (scheme == "gemini")
         return 1965;
-    if (protocol == "irc")
+    if (scheme == "irc")
         return 6667;
-    if (protocol == "ircs")
+    if (scheme == "ircs")
         return 6697;
-    if (protocol == "ws")
+    if (scheme == "ws")
         return 80;
-    if (protocol == "wss")
+    if (scheme == "wss")
         return 443;
     return 0;
 }
 
-URL URL::create_with_file_protocol(const String& path, const String& fragment)
+URL URL::create_with_file_scheme(const String& path, const String& fragment)
 {
     URL url;
-    url.set_protocol("file");
+    url.set_scheme("file");
     url.set_path(path);
     url.set_fragment(fragment);
     return url;
@@ -444,13 +445,13 @@ URL URL::create_with_url_or_path(const String& url_or_path)
         return url;
 
     String path = LexicalPath::canonicalized_path(url_or_path);
-    return URL::create_with_file_protocol(path);
+    return URL::create_with_file_scheme(path);
 }
 
 URL URL::create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64)
 {
     URL url;
-    url.set_protocol("data");
+    url.set_scheme("data");
     url.m_valid = true;
     url.m_data_payload = payload;
     url.m_data_mime_type = mime_type;
