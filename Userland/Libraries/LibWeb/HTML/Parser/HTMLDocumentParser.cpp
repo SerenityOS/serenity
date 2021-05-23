@@ -437,7 +437,7 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLTok
 {
     auto element = create_element(document(), token.tag_name(), namespace_);
     for (auto& attribute : token.m_tag.attributes) {
-        element->set_attribute(attribute.local_name, attribute.value_builder.to_string());
+        element->set_attribute(attribute.local_name, attribute.value);
     }
     return element;
 }
@@ -1122,7 +1122,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         for (auto& attribute : token.m_tag.attributes) {
             if (current_node().has_attribute(attribute.local_name))
                 continue;
-            current_node().set_attribute(attribute.local_name, attribute.value_builder.to_string());
+            current_node().set_attribute(attribute.local_name, attribute.value);
         }
         return;
     }
@@ -1149,7 +1149,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         for (auto& attribute : token.m_tag.attributes) {
             if (body_element.has_attribute(attribute.local_name))
                 continue;
-            body_element.set_attribute(attribute.local_name, attribute.value_builder.to_string());
+            body_element.set_attribute(attribute.local_name, attribute.value);
         }
         return;
     }

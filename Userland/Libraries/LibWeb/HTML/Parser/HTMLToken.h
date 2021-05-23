@@ -107,7 +107,7 @@ public:
         VERIFY(is_start_tag() || is_end_tag());
         for (auto& attribute : m_tag.attributes) {
             if (attribute_name == attribute.local_name)
-                return attribute.value_builder.string_view();
+                return attribute.value;
         }
         return {};
     }
@@ -177,7 +177,7 @@ private:
         String prefix;
         String local_name;
         String namespace_;
-        StringBuilder value_builder;
+        String value;
         Position name_start_position;
         Position value_start_position;
         Position name_end_position;
