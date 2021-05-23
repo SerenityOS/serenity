@@ -32,7 +32,6 @@ private:
     Web::Page& page();
     const Web::Page& page() const;
 
-    virtual void greet() override;
     virtual void update_system_theme(Core::AnonymousBuffer const&) override;
     virtual void update_system_fonts(String const&, String const&) override;
     virtual void update_screen_rect(Gfx::IntRect const&) override;
