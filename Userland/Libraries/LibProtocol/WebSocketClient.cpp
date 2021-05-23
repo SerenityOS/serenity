@@ -17,7 +17,6 @@ WebSocketClient::WebSocketClient()
 
 void WebSocketClient::handshake()
 {
-    greet();
 }
 
 RefPtr<WebSocket> WebSocketClient::connect(const URL& url, const String& origin, const Vector<String>& protocols, const Vector<String>& extensions, const HashMap<String, String>& request_headers)
