@@ -25,6 +25,8 @@ public:
     bool operator!=(const Utf8CodepointIterator&) const;
     Utf8CodepointIterator& operator++();
     u32 operator*() const;
+    // NOTE: This returns {} if the peek is at or past EOF.
+    Optional<u32> peek(size_t offset = 0) const;
 
     ssize_t operator-(const Utf8CodepointIterator& other) const
     {

@@ -67,3 +67,39 @@ TEST_CASE(validate_invalid_ut8)
     EXPECT(!utf8_4.validate(valid_bytes));
     EXPECT(valid_bytes == 0);
 }
+
+TEST_CASE(iterate_utf8)
+{
+    Utf8View view("Some weird characters \u00A9\u266A\uA755");
+    Utf8CodepointIterator iterator = view.begin();
+
+    EXPECT(*iterator == 'S');
+    EXPECT(iterator.peek().has_value() && iterator.peek().value() == 'S');
+    EXPECT(iterator.peek(0).has_value() && iterator.peek(0).value() == 'S');
+    EXPECT(iterator.peek(1).has_value() && iterator.peek(1).value() == 'o');
+    EXPECT(iterator.peek(22).has_value() && iterator.peek(22).value() == 0x00A9);
+    EXPECT(iterator.peek(24).has_value() && iterator.peek(24).value() == 0xA755);
+    EXPECT(!iterator.peek(25).has_value());
+
+    ++iterator;
+
+    EXPECT(*iterator == 'o');
+    EXPECT(iterator.peek(23).has_value() && iterator.peek(23).value() == 0xA755);
+
+    for (size_t i = 0; i < 23; ++i)
+        ++iterator;
+
+    EXPECT(!iterator.done());
+    EXPECT(*iterator == 0xA755);
+    EXPECT(iterator.peek().has_value() && iterator.peek().value() == 0xA755);
+    EXPECT(!iterator.peek(1).has_value());
+
+    ++iterator;
+
+    EXPECT(iterator.done());
+    EXPECT(!iterator.peek(0).has_value());
+    EXPECT_CRASH("Dereferencing Utf8CodepointIterator which is already done.", [&iterator] {
+        *iterator;
+        return Test::Crash::Failure::DidNotCrash;
+    });
+}
