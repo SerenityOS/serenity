@@ -646,6 +646,17 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     m_error = GL_NO_ERROR;
 }
 
+// FIXME: We need to add `r` and `q` to our GLVertex?!
+void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat, GLfloat)
+{
+    auto& vertex = vertex_list.last(); // Get the last created vertex
+
+    vertex.u = s;
+    vertex.v = t;
+
+    m_error = GL_NO_ERROR;
+}
+
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_viewport, x, y, width, height);
