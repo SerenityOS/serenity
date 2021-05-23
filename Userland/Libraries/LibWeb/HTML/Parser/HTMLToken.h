@@ -194,7 +194,7 @@ private:
     struct {
         // NOTE: "Missing" is a distinct state from the empty string.
 
-        StringBuilder name;
+        String name;
         bool missing_name { true };
         String public_identifier;
         bool missing_public_identifier { true };

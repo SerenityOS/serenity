@@ -16,7 +16,7 @@ String HTMLToken::to_string() const
     case HTMLToken::Type::DOCTYPE:
         builder.append("DOCTYPE");
         builder.append(" { name: '");
-        builder.append(m_doctype.name.to_string());
+        builder.append(m_doctype.name);
         builder.append("' }");
         break;
     case HTMLToken::Type::StartTag:

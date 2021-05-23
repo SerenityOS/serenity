@@ -464,17 +464,17 @@ _StartOfFunction:
                 ON_ASCII_UPPER_ALPHA
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    m_current_builder.append(tolower(current_input_character.value()));
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
                 ON(0)
                 {
                     log_parse_error();
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
                 ON('>')
                 {
@@ -494,9 +494,9 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
             }
             END_STATE
@@ -505,21 +505,23 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
+                    m_current_token.m_doctype.name = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPEName);
                 }
                 ON('>')
                 {
+                    m_current_token.m_doctype.name = consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    m_current_builder.append(tolower(current_input_character.value()));
                     continue;
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.name.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -531,7 +533,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.name.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }

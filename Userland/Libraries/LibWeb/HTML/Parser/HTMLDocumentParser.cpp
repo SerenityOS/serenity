@@ -262,7 +262,7 @@ DOM::QuirksMode HTMLDocumentParser::which_quirks_mode(const HTMLToken& doctype_t
         return DOM::QuirksMode::Yes;
 
     // NOTE: The tokenizer puts the name into lower case for us.
-    if (doctype_token.m_doctype.name.to_string() != "html")
+    if (doctype_token.m_doctype.name != "html")
         return DOM::QuirksMode::Yes;
 
     auto const& public_identifier = doctype_token.m_doctype.public_identifier;
@@ -324,7 +324,7 @@ void HTMLDocumentParser::handle_initial(HTMLToken& token)
 
     if (token.is_doctype()) {
         auto doctype = adopt_ref(*new DOM::DocumentType(document()));
-        doctype->set_name(token.m_doctype.name.to_string());
+        doctype->set_name(token.m_doctype.name);
         doctype->set_public_id(token.m_doctype.public_identifier);
         doctype->set_system_id(token.m_doctype.system_identifier);
         document().append_child(move(doctype));
