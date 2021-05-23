@@ -34,22 +34,40 @@ URL History::current() const
     return m_items[m_current];
 }
 
-void History::go_back()
+void History::go_back(int steps)
 {
-    VERIFY(can_go_back());
-    m_current--;
+    VERIFY(can_go_back(steps));
+    m_current -= steps;
 }
 
-void History::go_forward()
+void History::go_forward(int steps)
 {
-    VERIFY(can_go_forward());
-    m_current++;
+    VERIFY(can_go_forward(steps));
+    m_current += steps;
 }
 
 void History::clear()
 {
     m_items = {};
     m_current = -1;
+}
+
+const Vector<URL> History::get_back_history()
+{
+    Vector<URL> back_history;
+    for (int i = m_current - 1; i >= 0; i--) {
+        back_history.append(m_items[i]);
+    }
+    return back_history;
+}
+
+const Vector<URL> History::get_forward_history()
+{
+    Vector<URL> forward_history;
+    for (int i = m_current + 1; i < static_cast<int>(m_items.size()); i++) {
+        forward_history.append(m_items[i]);
+    }
+    return forward_history;
 }
 
 }

@@ -46,8 +46,8 @@ public:
 
     void load(const URL&, LoadType = LoadType::Normal);
     void reload();
-    void go_back();
-    void go_forward();
+    void go_back(int steps = 1);
+    void go_forward(int steps = 1);
 
     void did_become_active();
     void context_menu_requested(const Gfx::IntPoint& screen_position);
@@ -104,7 +104,8 @@ private:
 
     RefPtr<GUI::Menu> m_tab_context_menu;
     RefPtr<GUI::Menu> m_page_context_menu;
-
+    RefPtr<GUI::Menu> m_go_back_context_menu;
+    RefPtr<GUI::Menu> m_go_forward_context_menu;
     String m_title;
     RefPtr<const Gfx::Bitmap> m_icon;
 
