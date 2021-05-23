@@ -437,7 +437,7 @@ NonnullRefPtr<DOM::Element> HTMLDocumentParser::create_element_for(const HTMLTok
 {
     auto element = create_element(document(), token.tag_name(), namespace_);
     for (auto& attribute : token.m_tag.attributes) {
-        element->set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
+        element->set_attribute(attribute.local_name, attribute.value);
     }
     return element;
 }
@@ -1120,9 +1120,9 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         if (m_stack_of_open_elements.contains(HTML::TagNames::template_))
             return;
         for (auto& attribute : token.m_tag.attributes) {
-            if (current_node().has_attribute(attribute.local_name_builder.string_view()))
+            if (current_node().has_attribute(attribute.local_name))
                 continue;
-            current_node().set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
+            current_node().set_attribute(attribute.local_name, attribute.value);
         }
         return;
     }
@@ -1147,9 +1147,9 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
         m_frameset_ok = false;
         auto& body_element = m_stack_of_open_elements.elements().at(1);
         for (auto& attribute : token.m_tag.attributes) {
-            if (body_element.has_attribute(attribute.local_name_builder.string_view()))
+            if (body_element.has_attribute(attribute.local_name))
                 continue;
-            body_element.set_attribute(attribute.local_name_builder.to_string(), attribute.value_builder.to_string());
+            body_element.set_attribute(attribute.local_name, attribute.value);
         }
         return;
     }

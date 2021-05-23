@@ -43,9 +43,9 @@ String HTMLToken::to_string() const
         builder.append(m_tag.tag_name.to_string());
         builder.append("', { ");
         for (auto& attribute : m_tag.attributes) {
-            builder.append(attribute.local_name_builder.to_string());
+            builder.append(attribute.local_name);
             builder.append("=\"");
-            builder.append(attribute.value_builder.to_string());
+            builder.append(attribute.value);
             builder.append("\" ");
         }
         builder.append("} }");

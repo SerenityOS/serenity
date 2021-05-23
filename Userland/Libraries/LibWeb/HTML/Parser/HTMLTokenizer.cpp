@@ -78,7 +78,7 @@ namespace Web::HTML {
     do {                                                                                             \
         for (auto code_point : m_temporary_buffer) {                                                 \
             if (consumed_as_part_of_an_attribute()) {                                                \
-                m_current_token.m_tag.attributes.last().value_builder.append_code_point(code_point); \
+                m_current_builder.append_code_point(code_point);                                     \
             } else {                                                                                 \
                 create_new_token(HTMLToken::Type::Character);                                        \
                 m_current_token.m_comment_or_character.data.append_code_point(code_point);           \
@@ -1007,9 +1007,9 @@ _StartOfFunction:
                     log_parse_error();
                     auto new_attribute = HTMLToken::AttributeBuilder();
                     new_attribute.name_start_position = nth_last_position(1);
-                    new_attribute.local_name_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     m_current_token.m_tag.attributes.append(new_attribute);
-                    SWITCH_TO(AttributeName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(AttributeName);
                 }
                 ANYTHING_ELSE
                 {
@@ -1045,34 +1045,39 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('/')
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON_EOF
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('=')
                 {
                     m_current_token.m_tag.attributes.last().name_end_position = nth_last_position(1);
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
+                    m_current_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
                     continue;
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('"')
@@ -1093,7 +1098,7 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                 AnythingElseAttributeName:
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1163,17 +1168,19 @@ _StartOfFunction:
             {
                 ON('"')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     m_return_state = State::AttributeValueDoubleQuoted;
                     SWITCH_TO(CharacterReference);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -1183,7 +1190,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1193,17 +1200,19 @@ _StartOfFunction:
             {
                 ON('\'')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     SWITCH_TO(AfterAttributeValueQuoted);
                 }
                 ON('&')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     m_return_state = State::AttributeValueSingleQuoted;
                     SWITCH_TO(CharacterReference);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -1213,7 +1222,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1223,23 +1232,26 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
+                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(2);
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('&')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     m_return_state = State::AttributeValueUnquoted;
                     SWITCH_TO(CharacterReference);
                 }
                 ON('>')
                 {
+                    m_current_token.m_tag.attributes.last().value = consume_current_builder();
                     m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('"')
@@ -1275,7 +1287,7 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                 AnythingElseAttributeValueUnquoted:
-                    m_current_token.m_tag.attributes.last().value_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -1584,7 +1596,7 @@ _StartOfFunction:
                 ON_ASCII_ALPHANUMERIC
                 {
                     if (consumed_as_part_of_an_attribute()) {
-                        m_current_token.m_tag.attributes.last().value_builder.append_code_point(current_input_character.value());
+                        m_current_builder.append_code_point(current_input_character.value());
                         continue;
                     } else {
                         EMIT_CURRENT_CHARACTER;
