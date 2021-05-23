@@ -6,6 +6,7 @@
 
 #include "Player.h"
 #include "Helpers.h"
+#include <AK/Debug.h>
 #include <AK/QuickSort.h>
 
 namespace Hearts {
@@ -23,19 +24,28 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
             sorted_hand.empend(card, i);
     }
     quick_sort(sorted_hand, [](auto& cwi1, auto& cwi2) {
-        if (hearts_card_points(*cwi1.card) >= hearts_card_points(*cwi2.card))
+        if (hearts_card_points(*cwi2.card) < hearts_card_points(*cwi1.card))
             return true;
-        if (hearts_card_value(*cwi1.card) >= hearts_card_value(*cwi2.card))
+        if (hearts_card_points(*cwi1.card) == hearts_card_points(*cwi2.card) && hearts_card_value(*cwi2.card) < hearts_card_value(*cwi1.card))
             return true;
         return false;
     });
+
+    if constexpr (HEARTS_DEBUG) {
+        dbgln("Sorted hand:");
+        for (auto& cwi : sorted_hand)
+            dbgln("{}", *cwi.card);
+        dbgln("----");
+    }
 
     size_t last_index = -1;
     for (auto& cwi : sorted_hand) {
         if (!valid_play(*cwi.card))
             continue;
-        if (prefer_card(*cwi.card))
+        if (prefer_card(*cwi.card)) {
+            dbgln_if(HEARTS_DEBUG, "Preferring card {}", *cwi.card);
             return cwi.index;
+        }
         last_index = cwi.index;
     }
     return last_index;
