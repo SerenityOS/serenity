@@ -30,7 +30,6 @@ public:
     void did_request_certificates(Badge<Request>, Request&);
 
 private:
-    virtual void greet() override;
     virtual Messages::RequestServer::IsSupportedProtocolResponse is_supported_protocol(String const&) override;
     virtual Messages::RequestServer::StartRequestResponse start_request(String const&, URL const&, IPC::Dictionary const&, ByteBuffer const&) override;
     virtual Messages::RequestServer::StopRequestResponse stop_request(i32) override;

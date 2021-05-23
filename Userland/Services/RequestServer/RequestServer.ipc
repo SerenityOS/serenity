@@ -1,8 +1,5 @@
 endpoint RequestServer
 {
-    // Basic protocol
-    greet() => ()
-
     // Test if a specific protocol is supported, e.g "http"
     is_supported_protocol(String protocol) => (bool supported)
 

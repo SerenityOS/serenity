@@ -99,10 +99,6 @@ void ClientConnection::did_request_certificates(Badge<Request>, Request& request
     async_certificate_requested(request.id());
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::RequestServer::SetCertificateResponse ClientConnection::set_certificate(i32 request_id, String const& certificate, String const& key)
 {
     auto* request = const_cast<Request*>(m_requests.get(request_id).value_or(nullptr));
