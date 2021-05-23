@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibWeb/CSS/Parser/DeprecatedCSSParser.h>
 #include <LibWeb/CSS/SelectorEngine.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Element.h>
@@ -100,6 +101,17 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
         if (!element.has_attribute("checked"))
             return false;
         break;
+    case CSS::Selector::SimpleSelector::PseudoClass::Not: {
+        if (component.not_selector.is_empty())
+            return false;
+        auto not_selector = Web::parse_selector(CSS::ParsingContext(element), component.not_selector);
+        if (!not_selector.has_value())
+            return false;
+        auto not_matches = matches(not_selector.value(), element);
+        if (not_matches)
+            return false;
+        break;
+    }
     case CSS::Selector::SimpleSelector::PseudoClass::NthChild:
     case CSS::Selector::SimpleSelector::PseudoClass::NthLastChild:
         const auto step_size = component.nth_child_pattern.step_size;
