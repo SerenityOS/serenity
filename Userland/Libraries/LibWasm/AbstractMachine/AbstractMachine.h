@@ -392,8 +392,6 @@ private:
 };
 
 class Frame {
-    AK_MAKE_NONCOPYABLE(Frame);
-
 public:
     explicit Frame(const ModuleInstance& module, Vector<Value> locals, const Expression& expression, size_t arity)
         : m_module(module)
@@ -418,7 +416,7 @@ private:
 
 class Stack {
 public:
-    using EntryType = Variant<Value, Label, NonnullOwnPtr<Frame>>;
+    using EntryType = Variant<Value, Label, Frame>;
     Stack() = default;
 
     [[nodiscard]] bool is_empty() const { return m_data.is_empty(); }
@@ -428,9 +426,10 @@ public:
 
     auto size() const { return m_data.size(); }
     auto& entries() const { return m_data; }
+    auto& entries() { return m_data; }
 
 private:
-    Vector<EntryType> m_data;
+    Vector<EntryType, 64> m_data;
 };
 
 using InstantiationResult = AK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
