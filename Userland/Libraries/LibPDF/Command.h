@@ -23,7 +23,7 @@
     V(SetColorRenderingIntent, set_color_rendering_intent, ri)                           \
     V(SetFlatnessTolerance, set_flatness_tolerance, i)                                   \
     V(SetGraphicsStateFromDict, set_graphics_state_from_dict, gs)                        \
-    V(PathBegin, path_begin, m)                                                          \
+    V(PathMove, path_move, m)                                                            \
     V(PathLine, path_line, l)                                                            \
     V(PathCubicBezierCurve, path_cubic_bezier_curve, c)                                  \
     V(PathCubicBezierCurveNoFirstControl, path_cubic_bezier_curve_no_first_control, v)   \

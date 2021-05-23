@@ -110,7 +110,7 @@ private:
     const Page& m_page;
     Gfx::Painter m_painter;
 
-    Gfx::Path m_path;
+    Gfx::Path m_current_path;
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
