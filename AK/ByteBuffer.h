@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/BitCast.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -40,7 +41,7 @@ public:
     {
         if (this != &other) {
             if (!is_inline())
-                kfree(m_outline_buffer);
+                kfree(raw_outline_buffer_description().buffer);
             move_from(move(other));
         }
         return *this;
@@ -111,8 +112,8 @@ public:
     [[nodiscard]] bool is_empty() const { return !m_size; }
     [[nodiscard]] size_t size() const { return m_size; }
 
-    [[nodiscard]] u8* data() { return is_inline() ? m_inline_buffer : m_outline_buffer; }
-    [[nodiscard]] u8 const* data() const { return is_inline() ? m_inline_buffer : m_outline_buffer; }
+    [[nodiscard]] u8* data() { return is_inline() ? raw_inline_buffer() : raw_outline_buffer_description().buffer; }
+    [[nodiscard]] u8 const* data() const { return is_inline() ? raw_inline_buffer() : raw_outline_buffer_description().buffer; }
 
     [[nodiscard]] Bytes bytes() { return { data(), size() }; }
     [[nodiscard]] ReadonlyBytes bytes() const { return { data(), size() }; }
@@ -142,7 +143,7 @@ public:
     void clear()
     {
         if (!is_inline())
-            kfree(m_outline_buffer);
+            kfree(raw_outline_buffer_description().buffer);
         m_size = 0;
     }
 
@@ -157,15 +158,15 @@ public:
         u8* new_buffer;
         auto new_capacity = kmalloc_good_size(new_size);
         if (!is_inline()) {
-            new_buffer = (u8*)krealloc(m_outline_buffer, new_capacity);
+            new_buffer = (u8*)krealloc(raw_outline_buffer_description().buffer, new_capacity);
             VERIFY(new_buffer);
         } else {
             new_buffer = (u8*)kmalloc(new_capacity);
             VERIFY(new_buffer);
             __builtin_memcpy(new_buffer, data(), m_size);
         }
-        m_outline_buffer = new_buffer;
-        m_outline_capacity = new_capacity;
+        raw_outline_buffer_description().buffer = new_buffer;
+        raw_outline_buffer_description().capacity = new_capacity;
         m_size = new_size;
     }
 
@@ -210,10 +211,10 @@ private:
     {
         m_size = other.m_size;
         if (other.m_size > inline_capacity) {
-            m_outline_buffer = other.m_outline_buffer;
-            m_outline_capacity = other.m_outline_capacity;
+            raw_outline_buffer_description().buffer = other.raw_outline_buffer_description().buffer;
+            raw_outline_buffer_description().capacity = other.raw_outline_buffer_description().capacity;
         } else
-            __builtin_memcpy(m_inline_buffer, other.m_inline_buffer, other.m_size);
+            __builtin_memcpy(raw_inline_buffer(), other.raw_inline_buffer(), other.m_size);
         other.m_size = 0;
     }
 
@@ -222,25 +223,44 @@ private:
         VERIFY(size <= m_size);
         if (!is_inline() && size <= inline_capacity) {
             // m_inline_buffer and m_outline_buffer are part of a union, so save the pointer
-            auto outline_buffer = m_outline_buffer;
+            auto outline_buffer = raw_outline_buffer_description().buffer;
             if (!may_discard_existing_data)
-                __builtin_memcpy(m_inline_buffer, outline_buffer, size);
+                __builtin_memcpy(raw_inline_buffer(), outline_buffer, size);
             kfree(outline_buffer);
         }
         m_size = size;
     }
 
     bool is_inline() const { return m_size <= inline_capacity; }
-    size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
+    size_t capacity() const { return is_inline() ? inline_capacity : raw_outline_buffer_description().capacity; }
+
+    struct OutlineBufferDescription {
+        u8* buffer;
+        size_t capacity;
+    };
 
     size_t m_size { 0 };
-    union {
-        u8 m_inline_buffer[inline_capacity];
-        struct {
-            u8* m_outline_buffer;
-            size_t m_outline_capacity;
-        };
-    };
+    alignas(OutlineBufferDescription) u8 m_storage[max(inline_capacity, sizeof(OutlineBufferDescription))];
+
+    u8* raw_inline_buffer()
+    {
+        return m_storage;
+    }
+
+    u8 const* raw_inline_buffer() const
+    {
+        return m_storage;
+    }
+
+    OutlineBufferDescription& raw_outline_buffer_description()
+    {
+        return *bit_cast<OutlineBufferDescription*>(&m_storage);
+    }
+
+    OutlineBufferDescription const& raw_outline_buffer_description() const
+    {
+        return *bit_cast<OutlineBufferDescription const*>(&m_storage);
+    }
 };
 
 }
