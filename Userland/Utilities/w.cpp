@@ -95,9 +95,9 @@ int main()
 
         String what = "n/a";
 
-        for (auto& it : process_statistics.value()) {
-            if (it.value.tty == tty && it.value.pid == it.value.pgid)
-                what = it.value.name;
+        for (auto& process : process_statistics.value()) {
+            if (process.tty == tty && process.pid == process.pgid)
+                what = process.name;
         }
 
         printf("%-10s %-12s %-16s %-6s %s\n",

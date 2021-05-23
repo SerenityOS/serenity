@@ -150,22 +150,22 @@ int main(int argc, char* argv[])
     if (!processes.has_value())
         return 1;
     if (arg_pid == -1) {
-        for (auto process : processes.value()) {
-            if (process.key == 0)
+        for (auto& process : processes.value()) {
+            if (process.pid == 0)
                 continue;
-            auto open_files = get_open_files_by_pid(process.key);
+            auto open_files = get_open_files_by_pid(process.pid);
 
             if (open_files.is_empty())
                 continue;
 
-            for (auto file : open_files) {
+            for (auto& file : open_files) {
                 if ((arg_all_processes)
                     || (arg_fd != -1 && file.fd == arg_fd)
-                    || (arg_uid_int != -1 && (int)process.value.uid == arg_uid_int)
-                    || (arg_uid != nullptr && process.value.username == arg_uid)
-                    || (arg_pgid != -1 && (int)process.value.pgid == arg_pgid)
+                    || (arg_uid_int != -1 && (int)process.uid == arg_uid_int)
+                    || (arg_uid != nullptr && process.username == arg_uid)
+                    || (arg_pgid != -1 && (int)process.pgid == arg_pgid)
                     || (arg_filename != nullptr && file.name == arg_filename))
-                    display_entry(file, process.value);
+                    display_entry(file, process);
             }
         }
     } else {
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
             return 0;
 
         for (auto file : open_files) {
-            display_entry(file, processes.value().get(arg_pid).value());
+            display_entry(file, *processes->find_if([&](auto& entry) { return entry.pid == arg_pid; }));
         }
     }
 

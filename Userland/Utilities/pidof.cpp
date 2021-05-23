@@ -19,14 +19,14 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 {
     bool displayed_at_least_one = false;
 
-    auto processes = Core::ProcessStatisticsReader().get_all();
+    auto processes = Core::ProcessStatisticsReader::get_all();
     if (!processes.has_value())
         return 1;
 
     for (auto& it : processes.value()) {
-        if (it.value.name == process_name) {
-            if (!omit_pid || it.value.pid != pid) {
-                printf(" %d" + (displayed_at_least_one ? 0 : 1), it.value.pid);
+        if (it.name == process_name) {
+            if (!omit_pid || it.pid != pid) {
+                printf(" %d" + (displayed_at_least_one ? 0 : 1), it.pid);
                 displayed_at_least_one = true;
 
                 if (single_shot)

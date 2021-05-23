@@ -130,8 +130,8 @@ private:
             return false;
 
         for (auto& it : all_processes.value()) {
-            for (auto& jt : it.value.threads) {
-                if (it.value.pid == 0)
+            for (auto& jt : it.threads) {
+                if (it.pid == 0)
                     idle += jt.ticks_user + jt.ticks_kernel;
                 else
                     busy += jt.ticks_user + jt.ticks_kernel;

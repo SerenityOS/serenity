@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -17,7 +17,7 @@ namespace Core {
 
 HashMap<uid_t, String> ProcessStatisticsReader::s_usernames;
 
-Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
+Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPtr<Core::File>& proc_all_file)
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
@@ -32,7 +32,7 @@ Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_a
         }
     }
 
-    HashMap<pid_t, Core::ProcessStatistics> map;
+    Vector<Core::ProcessStatistics> processes;
 
     auto file_contents = proc_all_file->read_all();
     auto json = JsonValue::from_string(file_contents);
@@ -93,13 +93,13 @@ Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_a
 
         // and synthetic data last
         process.username = username_from_uid(process.uid);
-        map.set(process.pid, process);
+        processes.append(move(process));
     });
 
-    return map;
+    return processes;
 }
 
-Optional<HashMap<pid_t, Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
+Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all()
 {
     RefPtr<Core::File> proc_all_file;
     return get_all(proc_all_file);

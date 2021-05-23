@@ -1,12 +1,11 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <AK/HashMap.h>
 #include <AK/String.h>
 #include <LibCore/File.h>
 #include <unistd.h>
@@ -67,8 +66,8 @@ struct ProcessStatistics {
 
 class ProcessStatisticsReader {
 public:
-    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all(RefPtr<Core::File>&);
-    static Optional<HashMap<pid_t, Core::ProcessStatistics>> get_all();
+    static Optional<Vector<Core::ProcessStatistics>> get_all(RefPtr<Core::File>&);
+    static Optional<Vector<Core::ProcessStatistics>> get_all();
 
 private:
     static String username_from_uid(uid_t);
