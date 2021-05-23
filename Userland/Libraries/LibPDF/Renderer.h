@@ -19,6 +19,19 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
 
+#define ENUMERATE_COLOR_SPACES(V) \
+    V(DeviceGray)                 \
+    V(DeviceRGB)                  \
+    V(DeviceCMYK)                 \
+    V(CalGray)                    \
+    V(CalRGB)                     \
+    V(Lab)                        \
+    V(ICCBased)                   \
+    V(Indexed)                    \
+    V(Pattern)                    \
+    V(Separation)                 \
+    V(DeviceN)
+
 namespace PDF {
 
 enum class LineCapStyle : u8 {
@@ -60,8 +73,23 @@ struct TextState {
     bool knockout { true };
 };
 
+class ColorSpace {
+public:
+    enum class Type {
+#define ENUM(name) name,
+        ENUMERATE_COLOR_SPACES(ENUM)
+#undef ENUM
+    };
+
+    static Optional<ColorSpace::Type> color_space_from_string(const StringView&);
+    static Color default_color_for_color_space(ColorSpace::Type);
+    static Color color_from_parameters(ColorSpace::Type color_space, const Vector<Value>& args);
+};
+
 struct GraphicsState {
     Gfx::AffineTransform ctm;
+    ColorSpace::Type stroke_color_space { ColorSpace::Type::DeviceGray };
+    ColorSpace::Type paint_color_space { ColorSpace::Type::DeviceGray };
     Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
     Gfx::Color paint_color { Gfx::Color::NamedColor::Black };
     float line_width { 1.0f };
@@ -91,6 +119,7 @@ private:
 
     // shift is the manual advance given in the TJ command array
     void show_text(const String&, int shift = 0);
+    ColorSpace::Type get_color_space(const Value&);
 
     ALWAYS_INLINE const GraphicsState& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
@@ -102,6 +131,9 @@ private:
 
     template<typename T>
     ALWAYS_INLINE Gfx::Size<T> map(Gfx::Size<T>) const;
+
+    template<typename T>
+    ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
     const Gfx::AffineTransform& calculate_text_rendering_matrix();
 
