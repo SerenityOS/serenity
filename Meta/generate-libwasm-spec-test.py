@@ -126,7 +126,7 @@ def genarg(spec):
             return '-NaN'
 
         try:
-            x = float.fromhex(x)
+            x = float(x)
             if math.isnan(x):
                 # FIXME: This is going to mess up the different kinds of nan
                 return '-NaN' if math.copysign(1.0, x) < 0 else 'NaN'
@@ -135,10 +135,19 @@ def genarg(spec):
             return str(x)
         except ValueError:
             try:
-                x = int(x, 0)
+                x = float.fromhex(x)
+                if math.isnan(x):
+                    # FIXME: This is going to mess up the different kinds of nan
+                    return '-NaN' if math.copysign(1.0, x) < 0 else 'NaN'
+                if math.isinf(x):
+                    return 'Infinity' if x > 0 else '-Infinity'
                 return str(x)
             except ValueError:
-                return x
+                try:
+                    x = int(x, 0)
+                    return str(x)
+                except ValueError:
+                    return x
 
     x = gen()
     if x.startswith('nan'):
@@ -173,7 +182,7 @@ def genresult(ident, entry):
 
 
 def gentest(entry, main_name):
-    name = entry["function"]["name"]
+    name = json.dumps(entry["function"]["name"])[1:-1]
     if type(name) != str:
         print("Unsupported test case (call to", name, ")", file=stderr)
         return '\n    '
