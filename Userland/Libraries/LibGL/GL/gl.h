@@ -256,6 +256,7 @@ GLAPI void glHint(GLenum target, GLenum mode);
 GLAPI void glReadBuffer(GLenum mode);
 GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
+GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
 
 #ifdef __cplusplus
 }

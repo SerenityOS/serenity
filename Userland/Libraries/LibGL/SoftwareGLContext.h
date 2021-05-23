@@ -67,6 +67,7 @@ public:
     virtual void gl_read_buffer(GLenum mode) override;
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
+    virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
 
     virtual void present() override;
 

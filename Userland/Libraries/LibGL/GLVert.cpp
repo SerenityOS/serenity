@@ -140,6 +140,11 @@ void glVertex4sv(const GLshort* v)
     g_gl_context->gl_vertex(v[0], v[1], v[2], v[3]);
 }
 
+void glTexCoord2f(GLfloat s, GLfloat t)
+{
+    g_gl_context->gl_tex_coord(s, t, 0.0f, 0.0f);
+}
+
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
     g_gl_context->gl_rotate(angle, x, y, z);
