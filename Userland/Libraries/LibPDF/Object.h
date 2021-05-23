@@ -222,26 +222,6 @@ private:
     Value m_value;
 };
 
-class IndirectValueRef final : public Object {
-public:
-    IndirectValueRef(u32 index, u32 generation_index)
-        : m_index(index)
-    {
-        set_generation_index(generation_index);
-    }
-
-    ~IndirectValueRef() override = default;
-
-    [[nodiscard]] ALWAYS_INLINE u32 index() const { return m_index; }
-
-    ALWAYS_INLINE bool is_indirect_value_ref() const override { return true; }
-    ALWAYS_INLINE const char* type_name() const override { return "indirect_object_ref"; }
-    String to_string(int indent) const override;
-
-private:
-    u32 m_index;
-};
-
 template<IsObject To, IsObject From>
 [[nodiscard]] ALWAYS_INLINE static NonnullRefPtr<To> object_cast(NonnullRefPtr<From> obj
 #ifdef PDF_DEBUG
