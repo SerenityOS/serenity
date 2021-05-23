@@ -57,13 +57,13 @@ namespace Web::HTML {
         goto _StartOfFunction;                   \
     } while (0)
 
-#define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state) \
-    do {                                            \
-        will_switch_to(State::new_state);           \
-        m_state = State::new_state;                 \
-        will_emit(m_current_token);                 \
-        m_queued_tokens.enqueue(m_current_token);   \
-        return m_queued_tokens.dequeue();           \
+#define SWITCH_TO_AND_EMIT_CURRENT_TOKEN(new_state)     \
+    do {                                                \
+        will_switch_to(State::new_state);               \
+        m_state = State::new_state;                     \
+        will_emit(m_current_token);                     \
+        m_queued_tokens.enqueue(move(m_current_token)); \
+        return m_queued_tokens.dequeue();               \
     } while (0)
 
 #define EMIT_CHARACTER_AND_RECONSUME_IN(code_point, new_state)          \
@@ -83,7 +83,7 @@ namespace Web::HTML {
                 create_new_token(HTMLToken::Type::Character);                            \
                 m_current_builder.append_code_point(code_point);                         \
                 m_current_token.m_comment_or_character.data = consume_current_builder(); \
-                m_queued_tokens.enqueue(m_current_token);                                \
+                m_queued_tokens.enqueue(move(m_current_token));                          \
             }                                                                            \
         }                                                                                \
     } while (0)
@@ -122,22 +122,22 @@ namespace Web::HTML {
 
 #define ANYTHING_ELSE if (1)
 
-#define EMIT_EOF                                      \
-    do {                                              \
-        if (m_has_emitted_eof)                        \
-            return {};                                \
-        m_has_emitted_eof = true;                     \
-        create_new_token(HTMLToken::Type::EndOfFile); \
-        will_emit(m_current_token);                   \
-        m_queued_tokens.enqueue(m_current_token);     \
-        return m_queued_tokens.dequeue();             \
+#define EMIT_EOF                                        \
+    do {                                                \
+        if (m_has_emitted_eof)                          \
+            return {};                                  \
+        m_has_emitted_eof = true;                       \
+        create_new_token(HTMLToken::Type::EndOfFile);   \
+        will_emit(m_current_token);                     \
+        m_queued_tokens.enqueue(move(m_current_token)); \
+        return m_queued_tokens.dequeue();               \
     } while (0)
 
-#define EMIT_CURRENT_TOKEN                        \
-    do {                                          \
-        will_emit(m_current_token);               \
-        m_queued_tokens.enqueue(m_current_token); \
-        return m_queued_tokens.dequeue();         \
+#define EMIT_CURRENT_TOKEN                              \
+    do {                                                \
+        will_emit(m_current_token);                     \
+        m_queued_tokens.enqueue(move(m_current_token)); \
+        return m_queued_tokens.dequeue();               \
     } while (0)
 
 #define EMIT_CHARACTER(code_point)                                               \
@@ -145,7 +145,7 @@ namespace Web::HTML {
         create_new_token(HTMLToken::Type::Character);                            \
         m_current_builder.append_code_point(code_point);                         \
         m_current_token.m_comment_or_character.data = consume_current_builder(); \
-        m_queued_tokens.enqueue(m_current_token);                                \
+        m_queued_tokens.enqueue(move(m_current_token));                          \
         return m_queued_tokens.dequeue();                                        \
     } while (0)
 
@@ -418,7 +418,7 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ON(0)
@@ -450,7 +450,7 @@ _StartOfFunction:
                     log_parse_error();
                     create_new_token(HTMLToken::Type::DOCTYPE);
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -494,7 +494,7 @@ _StartOfFunction:
                     log_parse_error();
                     create_new_token(HTMLToken::Type::DOCTYPE);
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -534,7 +534,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -559,7 +559,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -605,7 +605,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -647,7 +647,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -685,7 +685,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -723,7 +723,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -759,7 +759,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -794,7 +794,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -829,7 +829,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -864,7 +864,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -901,7 +901,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -937,7 +937,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -963,7 +963,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     m_current_token.m_doctype.force_quirks = true;
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -987,7 +987,7 @@ _StartOfFunction:
                 }
                 ON_EOF
                 {
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1368,7 +1368,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1399,7 +1399,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1429,7 +1429,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1455,7 +1455,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -1475,7 +1475,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_queued_tokens.enqueue(m_current_token);
+                    m_queued_tokens.enqueue(move(m_current_token));
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
