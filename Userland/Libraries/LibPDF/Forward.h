@@ -14,17 +14,13 @@ class Object;
 // Note: This macro doesn't care about PlainTextStreamObject and EncodedStreamObject because
 //       we never need to work directly with either of them.
 
-#define ENUMERATE_DIRECT_OBJECT_TYPES(V) \
-    V(StringObject, string)              \
-    V(NameObject, name)                  \
-    V(ArrayObject, array)                \
-    V(DictObject, dict)                  \
-    V(StreamObject, stream)              \
+#define ENUMERATE_OBJECT_TYPES(V) \
+    V(StringObject, string)       \
+    V(NameObject, name)           \
+    V(ArrayObject, array)         \
+    V(DictObject, dict)           \
+    V(StreamObject, stream)       \
     V(IndirectValue, indirect_value)
-
-#define ENUMERATE_OBJECT_TYPES(V)    \
-    ENUMERATE_DIRECT_OBJECT_TYPES(V) \
-    V(IndirectValueRef, indirect_value_ref)
 
 #define FORWARD_DECL(class_name, _) class class_name;
 ENUMERATE_OBJECT_TYPES(FORWARD_DECL)

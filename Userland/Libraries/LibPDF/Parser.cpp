@@ -321,7 +321,7 @@ Value Parser::parse_possible_indirect_value_or_ref()
         m_reader.discard();
         consume();
         consume_whitespace();
-        return make_object<IndirectValueRef>(first_number.as_int(), second_number.as_int());
+        return Value(first_number.as_int(), second_number.as_int());
     }
 
     if (m_reader.matches("obj")) {

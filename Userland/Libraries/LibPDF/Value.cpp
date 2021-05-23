@@ -30,6 +30,9 @@ Value& Value::operator=(const Value& other)
     case Type::Float:
         m_as_float = other.m_as_float;
         break;
+    case Type::Ref:
+        m_as_ref = other.m_as_ref;
+        break;
     case Type::Object:
         m_as_object = other.m_as_object;
         if (m_as_object)
@@ -50,6 +53,8 @@ String Value::to_string(int indent) const
         return String::number(as_int());
     case Type::Float:
         return String::number(as_float());
+    case Type::Ref:
+        return String::formatted("{} {} R", as_ref_index(), as_ref_generation_index());
     case Type::Object:
         return as_object()->to_string(indent);
     }
