@@ -36,6 +36,28 @@ public:
     auto& store() const { return m_store; }
     auto& store() { return m_store; }
 
+    struct CallFrameHandle {
+        explicit CallFrameHandle(Configuration& configuration)
+            : frame_index(configuration.m_current_frame_index)
+            , stack_size(configuration.m_stack.size())
+            , ip(configuration.ip())
+            , configuration(configuration)
+        {
+            configuration.depth()++;
+        }
+
+        ~CallFrameHandle()
+        {
+            configuration.unwind({}, *this);
+        }
+
+        size_t frame_index { 0 };
+        size_t stack_size { 0 };
+        InstructionPointer ip { 0 };
+        Configuration& configuration;
+    };
+
+    void unwind(Badge<CallFrameHandle>, const CallFrameHandle&);
     Result call(FunctionAddress, Vector<Value> arguments);
     Result execute();
 
