@@ -7,6 +7,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
 #include <LibPDF/Document.h>
+#include <LibPDF/Filter.h>
 #include <LibPDF/Parser.h>
 #include <ctype.h>
 #include <math.h>
@@ -657,7 +658,15 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     m_reader.move_by(9);
     consume_whitespace();
 
-    return make_object<StreamObject>(dict, bytes);
+    if (dict->contains("Filter")) {
+        auto filter_type = dict->get_name(m_document, "Filter")->name();
+        auto maybe_bytes = Filter::decode(bytes, filter_type);
+        // FIXME: Handle error condition
+        VERIFY(maybe_bytes.has_value());
+        return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
+    }
+
+    return make_object<PlainTextStreamObject>(dict, bytes);
 }
 
 Vector<Command> Parser::parse_graphics_commands()

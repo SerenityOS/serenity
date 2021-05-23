@@ -147,18 +147,17 @@ private:
     HashMap<FlyString, Value> m_map;
 };
 
-class StreamObject final : public Object {
+class StreamObject : public Object {
 public:
-    StreamObject(const NonnullRefPtr<DictObject>& dict, const ReadonlyBytes& bytes)
+    explicit StreamObject(const NonnullRefPtr<DictObject>& dict)
         : m_dict(dict)
-        , m_bytes(bytes)
     {
     }
 
-    ~StreamObject() override = default;
+    virtual ~StreamObject() override = default;
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<DictObject> dict() const { return m_dict; }
-    [[nodiscard]] ALWAYS_INLINE const ReadonlyBytes& bytes() const { return m_bytes; }
+    [[nodiscard]] virtual ReadonlyBytes bytes() const = 0;
 
     ALWAYS_INLINE bool is_stream() const override { return true; }
     ALWAYS_INLINE const char* type_name() const override { return "stream"; }
@@ -166,7 +165,38 @@ public:
 
 private:
     NonnullRefPtr<DictObject> m_dict;
+};
+
+class PlainTextStreamObject final : public StreamObject {
+public:
+    PlainTextStreamObject(const NonnullRefPtr<DictObject>& dict, const ReadonlyBytes& bytes)
+        : StreamObject(dict)
+        , m_bytes(bytes)
+    {
+    }
+
+    virtual ~PlainTextStreamObject() override = default;
+
+    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_bytes; }
+
+private:
     ReadonlyBytes m_bytes;
+};
+
+class EncodedStreamObject final : public StreamObject {
+public:
+    EncodedStreamObject(const NonnullRefPtr<DictObject>& dict, ByteBuffer&& buffer)
+        : StreamObject(dict)
+        , m_buffer(buffer)
+    {
+    }
+
+    virtual ~EncodedStreamObject() override = default;
+
+    [[nodiscard]] ALWAYS_INLINE virtual ReadonlyBytes bytes() const override { return m_buffer.bytes(); }
+
+private:
+    ByteBuffer m_buffer;
 };
 
 class IndirectValue final : public Object {
