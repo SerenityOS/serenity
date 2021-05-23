@@ -42,7 +42,7 @@ public:
     {
         HTMLToken token;
         token.m_type = Type::StartTag;
-        token.m_tag.tag_name.append(tag_name);
+        token.m_tag.tag_name = tag_name;
         return token;
     }
 
@@ -81,7 +81,7 @@ public:
     String tag_name() const
     {
         VERIFY(is_start_tag() || is_end_tag());
-        return m_tag.tag_name.to_string();
+        return m_tag.tag_name;
     }
 
     bool is_self_closing() const
@@ -120,10 +120,8 @@ public:
     void adjust_tag_name(const FlyString& old_name, const FlyString& new_name)
     {
         VERIFY(is_start_tag() || is_end_tag());
-        if (old_name == m_tag.tag_name.string_view()) {
-            m_tag.tag_name.clear();
-            m_tag.tag_name.append(new_name);
-        }
+        if (old_name == m_tag.tag_name)
+            m_tag.tag_name = new_name;
     }
 
     void adjust_attribute_name(const FlyString& old_name, const FlyString& new_name)
@@ -202,7 +200,7 @@ private:
     // Type::StartTag
     // Type::EndTag
     struct {
-        StringBuilder tag_name;
+        String tag_name;
         bool self_closing { false };
         bool self_closing_acknowledged { false };
         Vector<AttributeBuilder> attributes;
