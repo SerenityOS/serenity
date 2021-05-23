@@ -1016,9 +1016,9 @@ _StartOfFunction:
                     log_parse_error();
                     auto new_attribute = HTMLToken::AttributeBuilder();
                     new_attribute.name_start_position = nth_last_position(1);
-                    new_attribute.local_name_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     m_current_token.m_tag.attributes.append(new_attribute);
-                    SWITCH_TO(AttributeName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(AttributeName);
                 }
                 ANYTHING_ELSE
                 {
@@ -1054,33 +1054,38 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('/')
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('>')
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON_EOF
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     RECONSUME_IN(AfterAttributeName);
                 }
                 ON('=')
                 {
+                    m_current_token.m_tag.attributes.last().local_name = consume_current_builder();
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(tolower(current_input_character.value()));
+                    m_current_builder.append_code_point(tolower(current_input_character.value()));
                     continue;
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('"')
@@ -1101,7 +1106,7 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                 AnythingElseAttributeName:
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
