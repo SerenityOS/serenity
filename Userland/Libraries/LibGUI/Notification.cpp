@@ -11,7 +11,8 @@
 
 namespace GUI {
 
-class NotificationServerConnection : public IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>
+class NotificationServerConnection final
+    : public IPC::ServerConnection<NotificationClientEndpoint, NotificationServerEndpoint>
     , public NotificationClientEndpoint {
     C_OBJECT(NotificationServerConnection)
 

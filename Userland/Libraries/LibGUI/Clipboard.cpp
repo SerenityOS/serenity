@@ -12,7 +12,8 @@
 
 namespace GUI {
 
-class ClipboardServerConnection : public IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
+class ClipboardServerConnection final
+    : public IPC::ServerConnection<ClipboardClientEndpoint, ClipboardServerEndpoint>
     , public ClipboardClientEndpoint {
     C_OBJECT(ClipboardServerConnection);
 

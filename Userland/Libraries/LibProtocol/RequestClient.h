@@ -15,7 +15,7 @@ namespace Protocol {
 
 class Request;
 
-class RequestClient
+class RequestClient final
     : public IPC::ServerConnection<RequestClientEndpoint, RequestServerEndpoint>
     , public RequestClientEndpoint {
     C_OBJECT(RequestClient);
