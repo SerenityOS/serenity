@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -28,14 +29,17 @@ public:
     }
 
     bool is_valid() const { return m_valid; }
-    String protocol() const { return m_protocol; }
+
+    String scheme() const { return m_scheme; }
+    String protocol() const { return m_scheme; }
     String host() const { return m_host; }
     String path() const { return m_path; }
     String query() const { return m_query; }
     String fragment() const { return m_fragment; }
     u16 port() const { return m_port; }
 
-    void set_protocol(const String&);
+    void set_scheme(const String&);
+    void set_protocol(const String& protocol) { set_scheme(protocol); }
     void set_host(const String&);
     void set_port(const u16);
     void set_path(const String&);
@@ -57,10 +61,11 @@ public:
     const String& data_payload() const { return m_data_payload; }
 
     static URL create_with_url_or_path(const String&);
-    static URL create_with_file_protocol(const String& path, const String& fragment = {});
+    static URL create_with_file_scheme(const String& path, const String& fragment = {});
+    static URL create_with_file_protocol(const String& path, const String& fragment = {}) { return create_with_file_scheme(path, fragment); }
     static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
-    static bool protocol_requires_port(const StringView&);
-    static u16 default_port_for_protocol(const StringView&);
+    static bool scheme_requires_port(const StringView&);
+    static u16 default_port_for_scheme(const StringView&);
 
     bool operator==(const URL& other) const
     {
@@ -76,7 +81,7 @@ private:
     bool m_valid { false };
     u16 m_port { 0 };
     bool m_data_payload_is_base64 { false };
-    String m_protocol;
+    String m_scheme;
     String m_host;
     String m_path;
     String m_query;
