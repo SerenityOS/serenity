@@ -41,7 +41,8 @@ static void set_system_theme_from_anonymous_buffer(Core::AnonymousBuffer buffer)
     Application::the()->set_system_palette(buffer);
 }
 
-void WindowServerConnection::handshake()
+WindowServerConnection::WindowServerConnection()
+    : IPC::ServerConnection<WindowClientEndpoint, WindowServerEndpoint>(*this, "/tmp/portal/window")
 {
     // NOTE: WindowServer automatically sends a "fast_greet" message to us when we connect.
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
