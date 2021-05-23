@@ -11,43 +11,78 @@
 #include <AK/StringBuilder.h>
 #include <LibPDF/Value.h>
 
-#define ENUMERATE_COMMANDS(V)                                          \
-    V(SaveState, save_state, q)                                        \
-    V(RestoreState, restore_state, Q)                                  \
-    V(ConcatenateMatrix, concatenate_matrix, cm)                       \
-    V(SetLineWidth, set_line_width, w)                                 \
-    V(SetLineCap, set_line_cap, J)                                     \
-    V(SetLineJoin, set_line_join, j)                                   \
-    V(SetMiterLimit, set_miter_limit, M)                               \
-    V(SetDashPattern, set_dash_pattern, d)                             \
-    V(PathBegin, path_begin, m)                                        \
-    V(PathEnd, path_end, n)                                            \
-    V(PathLine, path_line, l)                                          \
-    V(PathClose, path_close, h)                                        \
-    V(PathAppendRect, path_append_rect, re)                            \
-    V(PathStroke, path_stroke, S)                                      \
-    V(PathCloseAndStroke, path_close_and_stroke, s)                    \
-    V(PathFillNonZero, path_fill_nonzero, f)                           \
-    V(PathFillNonZeroDeprecated, path_fill_nonzero_deprecated, F)      \
-    V(PathFillEvenOdd, path_fill_evenodd, f*)                          \
-    V(PathFillStrokeNonZero, path_fill_stroke_nonzero, B)              \
-    V(PathFillStrokeEvenOdd, path_fill_stroke_evenodd, B*)             \
-    V(PathCloseFillStrokeNonZero, path_close_fill_stroke_nonzero, b)   \
-    V(PathCloseFillStrokeEvenOdd, path_close_fill_stroke_evenodd, b*)  \
-    V(TextSetCharSpace, text_set_char_space, Tc)                       \
-    V(TextSetWordSpace, text_set_word_space, Tw)                       \
-    V(TextSetHorizontalScale, text_set_horizontal_scale, Tz)           \
-    V(TextSetLeading, text_set_leading, TL)                            \
-    V(TextSetFont, text_set_font, Tf)                                  \
-    V(TextSetRenderingMode, text_set_rendering_mode, Tr)               \
-    V(TextSetRise, text_set_rise, Ts)                                  \
-    V(TextBegin, text_begin, BT)                                       \
-    V(TextEnd, text_end, ET)                                           \
-    V(TextNextLineOffset, text_next_line_offset, Td)                   \
-    V(TextNextLineAndSetLeading, text_next_line_and_set_leading, TD)   \
-    V(TextSetMatrixAndLineMatrix, text_set_matrix_and_line_matrix, Tm) \
-    V(TextNextLine, text_next_line, T*)                                \
-    V(TextShowString, text_show_string, Tj)
+#define ENUMERATE_COMMANDS(V)                                                            \
+    V(SaveState, save_state, q)                                                          \
+    V(RestoreState, restore_state, Q)                                                    \
+    V(ConcatenateMatrix, concatenate_matrix, cm)                                         \
+    V(SetLineWidth, set_line_width, w)                                                   \
+    V(SetLineCap, set_line_cap, J)                                                       \
+    V(SetLineJoin, set_line_join, j)                                                     \
+    V(SetMiterLimit, set_miter_limit, M)                                                 \
+    V(SetDashPattern, set_dash_pattern, d)                                               \
+    V(SetColorRenderingIntent, set_color_rendering_intent, ri)                           \
+    V(SetFlatnessTolerance, set_flatness_tolerance, i)                                   \
+    V(SetGraphicsStateFromDict, set_graphics_state_from_dict, gs)                        \
+    V(PathBegin, path_begin, m)                                                          \
+    V(PathLine, path_line, l)                                                            \
+    V(PathCubicBezierCurve, path_cubic_bezier_curve, c)                                  \
+    V(PathCubicBezierCurveNoFirstControl, path_cubic_bezier_curve_no_first_control, v)   \
+    V(PathCubicBezierCurveNoSecondControl, path_cubic_bezier_curve_no_second_control, y) \
+    V(PathClose, path_close, h)                                                          \
+    V(PathAppendRect, path_append_rect, re)                                              \
+    V(PathStroke, path_stroke, S)                                                        \
+    V(PathCloseAndStroke, path_close_and_stroke, s)                                      \
+    V(PathFillNonZero, path_fill_nonzero, f)                                             \
+    V(PathFillNonZeroDeprecated, path_fill_nonzero_deprecated, F)                        \
+    V(PathFillEvenOdd, path_fill_evenodd, f*)                                            \
+    V(PathFillStrokeNonZero, path_fill_stroke_nonzero, B)                                \
+    V(PathFillStrokeEvenOdd, path_fill_stroke_evenodd, B*)                               \
+    V(PathCloseFillStrokeNonZero, path_close_fill_stroke_nonzero, b)                     \
+    V(PathCloseFillStrokeEvenOdd, path_close_fill_stroke_evenodd, b*)                    \
+    V(PathEnd, path_end, n)                                                              \
+    V(PathIntersectClipNonZero, path_intersect_clip_nonzero, W)                          \
+    V(PathIntersectClipEvenOdd, path_intersect_clip_evenodd, W*)                         \
+    V(TextBegin, text_begin, BT)                                                         \
+    V(TextEnd, text_end, ET)                                                             \
+    V(TextSetCharSpace, text_set_char_space, Tc)                                         \
+    V(TextSetWordSpace, text_set_word_space, Tw)                                         \
+    V(TextSetHorizontalScale, text_set_horizontal_scale, Tz)                             \
+    V(TextSetLeading, text_set_leading, TL)                                              \
+    V(TextSetFont, text_set_font, Tf)                                                    \
+    V(TextSetRenderingMode, text_set_rendering_mode, Tr)                                 \
+    V(TextSetRise, text_set_rise, Ts)                                                    \
+    V(TextNextLineOffset, text_next_line_offset, Td)                                     \
+    V(TextNextLineAndSetLeading, text_next_line_and_set_leading, TD)                     \
+    V(TextSetMatrixAndLineMatrix, text_set_matrix_and_line_matrix, Tm)                   \
+    V(TextNextLine, text_next_line, T*)                                                  \
+    V(TextShowString, text_show_string, Tj)                                              \
+    V(TextShowStringArray, text_show_string_array, TJ)                                   \
+    V(Type3FontSetGlyphWidth, type3_font_set_glyph_width, d0)                            \
+    V(Type3FontSetGlyphWidthAndBBox, type3_font_set_glyph_width_and_bbox, d1)            \
+    V(ColorSetStrokingSpace, color_set_stroking_space, CS)                               \
+    V(ColorSetPaintingSpace, color_set_painting_space, cs)                               \
+    V(ColorSetStroking, color_set_stroking, SC)                                          \
+    V(ColorSetStrokingExtended, color_set_stroking_extended, SCN)                        \
+    V(ColorSetPainting, color_set_painting, sc)                                          \
+    V(ColorSetPaintingExtended, color_set_painting_extended, scn)                        \
+    V(ColorSetStrokingSpaceToGray, color_set_stroking_space_to_gray, G)                  \
+    V(ColorSetPaintingSpaceToGray, color_set_painting_space_to_gray, g)                  \
+    V(ColorSetStrokingSpaceToRGB, color_set_stroking_space_to_rgb, RG)                   \
+    V(ColorSetPaintingSpaceToRGB, color_set_painting_space_to_rgb, rg)                   \
+    V(ColorSetStrokingSpaceToCMYK, color_set_stroking_space_to_cmyk, K)                  \
+    V(ColorSetPaintingSpaceToCMYK, color_set_painting_space_to_cmyk, k)                  \
+    V(Shade, shade, sh)                                                                  \
+    V(InlineImageBegin, inline_image_begin, BI)                                          \
+    V(InlineImageBeginData, inline_image_begin_data, ID)                                 \
+    V(InlineImageEnd, inline_image_end, EI)                                              \
+    V(PaintXObject, paint_xobject, Do)                                                   \
+    V(MarkedContentPoint, marked_content_point, MP)                                      \
+    V(MarkedContentDesignate, marked_content_designate, DP)                              \
+    V(MarkedContentBegin, marked_content_begin, BMC)                                     \
+    V(MarkedContentBeginWithPropertyList, marked_content_begin_with_property_list, BDC)  \
+    V(MarkedContentEnd, marked_content_end, EMC)                                         \
+    V(CompatibilityBegin, compatibility_begin, BX)                                       \
+    V(CompatibilityEnd, compatibility_end, EX)
 
 namespace PDF {
 
@@ -56,6 +91,7 @@ enum class CommandType {
     ENUMERATE_COMMANDS(V)
 #undef V
         TextNextLineShowString,
+    TextNextLineShowStringSetSpacing,
 };
 
 class Command {
@@ -70,6 +106,8 @@ public:
 
         if (symbol_string == "'")
             return CommandType::TextNextLineShowString;
+        if (symbol_string == "''")
+            return CommandType::TextNextLineShowStringSetSpacing;
 
         dbgln("unsupported graphics symbol {}", symbol_string);
         VERIFY_NOT_REACHED();
@@ -85,6 +123,8 @@ public:
 
         if (command_name == CommandType::TextNextLineShowString)
             return "TextNextLineShowString";
+        if (command_name == CommandType::TextNextLineShowStringSetSpacing)
+            return "TextNextLineShowStringSetSpacing";
 
         VERIFY_NOT_REACHED();
     }
@@ -99,6 +139,8 @@ public:
 
         if (command_name == CommandType::TextNextLineShowString)
             return "'";
+        if (command_name == CommandType::TextNextLineShowStringSetSpacing)
+            return "''";
 
         VERIFY_NOT_REACHED();
     }
@@ -126,10 +168,17 @@ struct Formatter<PDF::Command> : Formatter<StringView> {
     void format(FormatBuilder& format_builder, const PDF::Command& command)
     {
         StringBuilder builder;
-        builder.appendff("{} [ ", PDF::Command::command_name(command.command_type()));
-        for (auto& argument : command.arguments())
-            builder.appendff(" {}", argument);
-        builder.append(" ]");
+        builder.appendff("{} ({})",
+            PDF::Command::command_name(command.command_type()),
+            PDF::Command::command_symbol(command.command_type()));
+
+        if (!command.arguments().is_empty()) {
+            builder.append(" [");
+            for (auto& argument : command.arguments())
+                builder.appendff(" {}", argument);
+            builder.append(" ]");
+        }
+
         Formatter<StringView>::format(format_builder, builder.to_string());
     }
 };
