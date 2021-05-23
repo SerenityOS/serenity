@@ -20,7 +20,6 @@ class InspectorServerClient final
 public:
     virtual void handshake() override
     {
-        greet();
     }
 
     virtual ~InspectorServerClient() override = default;
