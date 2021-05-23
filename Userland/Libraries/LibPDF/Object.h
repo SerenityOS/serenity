@@ -67,7 +67,7 @@ public:
 
     ~NameObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE FlyString name() const { return m_name; }
+    [[nodiscard]] ALWAYS_INLINE const FlyString& name() const { return m_name; }
 
     ALWAYS_INLINE bool is_name() const override { return true; }
     ALWAYS_INLINE const char* type_name() const override { return "name"; }
@@ -86,6 +86,7 @@ public:
 
     ~ArrayObject() override = default;
 
+    [[nodiscard]] ALWAYS_INLINE size_t size() const { return m_elements.size(); }
     [[nodiscard]] ALWAYS_INLINE Vector<Value> elements() const { return m_elements; }
 
     ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
