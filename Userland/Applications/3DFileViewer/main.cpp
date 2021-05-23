@@ -137,8 +137,26 @@ bool GLContextWidget::load(const String& filename)
         return false;
     }
 
+    // Determine whether or not a texture for this model resides within the same directory
+    StringBuilder builder;
+    builder.append(filename.split('.').at(0));
+    builder.append(".bmp");
+
+    // Attempt to open the texture file from disk
+    auto texture_image = Gfx::Bitmap::load_from_file(builder.string_view());
+
+    GLuint tex;
+    glGenTextures(1, &tex);
+    if (texture_image) {
+        // Upload texture data to the GL
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texture_image->width(), texture_image->height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_image->scanline(0));
+    } else {
+        dbgln("3DFileViewer: Couldn't load texture for {}", filename);
+    }
+
     m_mesh = new_mesh;
     dbgln("3DFileViewer: mesh has {} triangles.", m_mesh->triangle_count());
+
     return true;
 }
 
