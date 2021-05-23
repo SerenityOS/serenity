@@ -59,18 +59,18 @@
     V(TextShowStringArray, text_show_string_array, TJ)                                   \
     V(Type3FontSetGlyphWidth, type3_font_set_glyph_width, d0)                            \
     V(Type3FontSetGlyphWidthAndBBox, type3_font_set_glyph_width_and_bbox, d1)            \
-    V(ColorSetStrokingSpace, color_set_stroking_space, CS)                               \
-    V(ColorSetPaintingSpace, color_set_painting_space, cs)                               \
-    V(ColorSetStroking, color_set_stroking, SC)                                          \
-    V(ColorSetStrokingExtended, color_set_stroking_extended, SCN)                        \
-    V(ColorSetPainting, color_set_painting, sc)                                          \
-    V(ColorSetPaintingExtended, color_set_painting_extended, scn)                        \
-    V(ColorSetStrokingSpaceToGray, color_set_stroking_space_to_gray, G)                  \
-    V(ColorSetPaintingSpaceToGray, color_set_painting_space_to_gray, g)                  \
-    V(ColorSetStrokingSpaceToRGB, color_set_stroking_space_to_rgb, RG)                   \
-    V(ColorSetPaintingSpaceToRGB, color_set_painting_space_to_rgb, rg)                   \
-    V(ColorSetStrokingSpaceToCMYK, color_set_stroking_space_to_cmyk, K)                  \
-    V(ColorSetPaintingSpaceToCMYK, color_set_painting_space_to_cmyk, k)                  \
+    V(SetStrokingSpace, set_stroking_space, CS)                                          \
+    V(SetPaintingSpace, set_painting_space, cs)                                          \
+    V(SetStrokingColor, set_stroking_color, SC)                                          \
+    V(SetStrokingColorExtended, set_stroking_color_extended, SCN)                        \
+    V(SetPaintingColor, set_painting_color, sc)                                          \
+    V(SetPaintingColorExtended, set_painting_color_extended, scn)                        \
+    V(SetStrokingColorAndSpaceToGray, set_stroking_color_and_space_to_gray, G)           \
+    V(SetPaintingColorAndSpaceToGray, set_painting_color_and_space_to_gray, g)           \
+    V(SetStrokingColorAndSpaceToRGB, set_stroking_color_and_space_to_rgb, RG)            \
+    V(SetPaintingColorAndSpaceToRGB, set_painting_color_and_space_to_rgb, rg)            \
+    V(SetStrokingColorAndSpaceToCMYK, set_stroking_color_and_space_to_cmyk, K)           \
+    V(SetPaintingColorAndSpaceToCMYK, set_painting_color_and_space_to_cmyk, k)           \
     V(Shade, shade, sh)                                                                  \
     V(InlineImageBegin, inline_image_begin, BI)                                          \
     V(InlineImageBeginData, inline_image_begin_data, ID)                                 \
