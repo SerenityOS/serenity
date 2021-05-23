@@ -234,6 +234,7 @@ bool String::ends_with(char ch) const
         return false;
     return characters()[length() - 1] == ch;
 }
+
 String String::repeated(char ch, size_t count)
 {
     if (!count)
@@ -241,6 +242,17 @@ String String::repeated(char ch, size_t count)
     char* buffer;
     auto impl = StringImpl::create_uninitialized(count, buffer);
     memset(buffer, ch, count);
+    return *impl;
+}
+
+String String::repeated(const StringView& string, size_t count)
+{
+    if (!count || string.is_empty())
+        return empty();
+    char* buffer;
+    auto impl = StringImpl::create_uninitialized(count * string.length(), buffer);
+    for (size_t i = 0; i < count; i++)
+        __builtin_memcpy(buffer + i * string.length(), string.characters_without_null_termination(), string.length());
     return *impl;
 }
 
