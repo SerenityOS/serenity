@@ -37,10 +37,14 @@ int main(int argc, char** argv)
 
     while (iterator.has_next()) {
         pid_t tid = iterator.next_path().to_int().value();
-        outln("tid: {}", tid);
+        outln("thread: {}", tid);
+        outln("frames:");
         auto symbols = Symbolication::symbolicate_thread(pid, tid);
+        auto frame_number = symbols.size() - 1;
         for (auto& symbol : symbols) {
-            out("{:p}  ", symbol.address);
+            // Make kernel stack frames stand out.
+            int color = symbol.address < 0xc0000000 ? 35 : 31;
+            out("{:3}: \033[{};1m{:p}\033[0m | ", frame_number, color, symbol.address);
             if (!symbol.name.is_empty())
                 out("{} ", symbol.name);
             if (!symbol.filename.is_empty()) {
@@ -64,6 +68,7 @@ int main(int argc, char** argv)
                 out(")");
             }
             outln("");
+            frame_number--;
         }
         outln("");
     }
