@@ -125,11 +125,13 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     for (size_t i = 0; i < type->parameters().size(); ++i) {
         args.prepend(move(configuration.stack().pop().get<Value>()));
     }
-    Configuration function_configuration { configuration.store() };
-    function_configuration.pre_interpret_hook = pre_interpret_hook;
-    function_configuration.post_interpret_hook = post_interpret_hook;
-    function_configuration.depth() = configuration.depth() + 1;
-    auto result = function_configuration.call(address, move(args));
+
+    Result result { Trap {} };
+    {
+        Configuration::CallFrameHandle handle { configuration };
+        result = configuration.call(address, move(args));
+    }
+
     if (result.is_trap()) {
         m_do_trap = true;
         return;

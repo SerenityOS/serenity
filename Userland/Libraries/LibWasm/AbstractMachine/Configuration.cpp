@@ -22,6 +22,16 @@ Optional<Label> Configuration::nth_label(size_t i)
     return {};
 }
 
+void Configuration::unwind(Badge<CallFrameHandle>, const CallFrameHandle& frame_handle)
+{
+    VERIFY(m_stack.size() > frame_handle.stack_size);
+    m_stack.entries().remove(frame_handle.stack_size, m_stack.size() - frame_handle.stack_size);
+    m_current_frame_index = frame_handle.frame_index;
+    m_depth--;
+    m_ip = frame_handle.ip;
+    VERIFY(m_stack.size() == frame_handle.stack_size);
+}
+
 Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
 {
     auto* function = m_store.get(address);
@@ -41,6 +51,7 @@ Result Configuration::call(FunctionAddress address, Vector<Value> arguments)
             wasm_function->code().body(),
             wasm_function->type().results().size(),
         });
+        m_ip = 0;
         return execute();
     }
 
