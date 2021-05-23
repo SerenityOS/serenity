@@ -1,4 +1,9 @@
-add_compile_options(-Os)
+if (ENABLE_EXTRA_KERNEL_DEBUG_SYMBOLS)
+    add_compile_options(-Og)
+    add_compile_options(-ggdb3)
+else()
+    add_compile_options(-Os)
+endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "i686")
     set(KERNEL_ARCH i386)
