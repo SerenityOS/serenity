@@ -57,6 +57,7 @@ void Keypad::type_decimal_point()
         m_int_value = 0;
         m_frac_value = 0;
         m_frac_length = 0;
+        m_state = State::TypingDecimal;
         break;
     case State::TypingInteger:
         VERIFY(m_frac_value.value() == 0);
