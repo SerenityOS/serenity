@@ -13,9 +13,9 @@ Optional<Label> Configuration::nth_label(size_t i)
 {
     for (size_t index = m_stack.size(); index > 0; --index) {
         auto& entry = m_stack.entries()[index - 1];
-        if (auto ptr = entry.get_pointer<NonnullOwnPtr<Label>>()) {
+        if (auto ptr = entry.get_pointer<Label>()) {
             if (i == 0)
-                return **ptr;
+                return *ptr;
             --i;
         }
     }
@@ -60,26 +60,23 @@ Result Configuration::execute()
     if (interpreter.did_trap())
         return Trap {};
 
-    Vector<NonnullOwnPtr<Value>> results;
+    Vector<Value> results;
+    results.ensure_capacity(m_current_frame->arity());
     for (size_t i = 0; i < m_current_frame->arity(); ++i)
-        results.append(move(stack().pop().get<NonnullOwnPtr<Value>>()));
+        results.append(move(stack().pop().get<Value>()));
     auto label = stack().pop();
     // ASSERT: label == current frame
-    if (!label.has<NonnullOwnPtr<Label>>())
+    if (!label.has<Label>())
         return Trap {};
-    Vector<Value> results_moved;
-    results_moved.ensure_capacity(results.size());
-    for (auto& entry : results)
-        results_moved.unchecked_append(move(*entry));
-    return Result { move(results_moved) };
+    return Result { move(results) };
 }
 
 void Configuration::dump_stack()
 {
     for (const auto& entry : stack().entries()) {
         entry.visit(
-            [](const NonnullOwnPtr<Value>& v) {
-                v->value().visit([]<typename T>(const T& v) {
+            [](const Value& v) {
+                v.value().visit([]<typename T>(const T& v) {
                     if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
                         dbgln("    {}", v);
                     else
@@ -97,8 +94,8 @@ void Configuration::dump_stack()
                     });
                 }
             },
-            [](const NonnullOwnPtr<Label>& l) {
-                dbgln("    label({}) -> {}", l->arity(), l->continuation());
+            [](const Label& l) {
+                dbgln("    label({}) -> {}", l.arity(), l.continuation());
             });
     }
 }
