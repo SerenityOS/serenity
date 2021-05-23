@@ -59,10 +59,6 @@ const Web::Page& ClientConnection::page() const
     return m_page_host->page();
 }
 
-void ClientConnection::greet()
-{
-}
-
 void ClientConnection::update_system_theme(const Core::AnonymousBuffer& theme_buffer)
 {
     Gfx::set_system_theme(theme_buffer);
