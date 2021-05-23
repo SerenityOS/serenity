@@ -16,7 +16,7 @@ class Mesh : public RefCounted<Mesh> {
 public:
     Mesh() = delete;
 
-    Mesh(Vector<Vertex> vertices, Vector<Triangle> triangles);
+    Mesh(Vector<Vertex> vertices, Vector<TexCoord> tex_coords, Vector<Triangle> triangles);
 
     size_t vertex_count() const { return m_vertex_list.size(); }
 
@@ -24,7 +24,10 @@ public:
 
     void draw();
 
+    bool is_textured() const { return m_tex_coords.size() > 0; }
+
 private:
     Vector<Vertex> m_vertex_list;
+    Vector<TexCoord> m_tex_coords;
     Vector<Triangle> m_triangle_list;
 };
