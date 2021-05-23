@@ -47,7 +47,7 @@ jobs:
 
       - name: Comment on PR
         if: ${{ failure() }}
-        uses: unsplash/comment-on-pr@85a56be792d927ac4bfa2f4326607d38e80e6e60
+        uses: IdanHo/comment-on-pr@5f51df338210754f519f721f8320d8f72525a4d0
         env:
           GITHUB_TOKEN: ${{ secrets.BUGGIEBOT }}
         with:
