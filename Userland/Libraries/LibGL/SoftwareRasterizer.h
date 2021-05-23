@@ -9,6 +9,7 @@
 #include "DepthBuffer.h"
 #include "GL/gl.h"
 #include "GLStruct.h"
+#include "Tex/Texture.h"
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Vector4.h>
@@ -30,7 +31,7 @@ class SoftwareRasterizer final {
 public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
-    void submit_triangle(const GLTriangle& triangle);
+    void submit_triangle(const GLTriangle& triangle, const Texture& texture);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);
     void clear_depth(float);
