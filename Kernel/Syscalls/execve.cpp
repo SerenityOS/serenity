@@ -506,6 +506,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     Locker ptrace_locker(ptrace_lock());
 
     // Disable profiling temporarily in case it's running on this process.
+    auto was_profiling = m_profiling;
     TemporaryChange profiling_disabler(m_profiling, false);
 
     kill_threads_except_self();
@@ -645,7 +646,10 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
 
-    PerformanceManager::add_process_exec_event(*this);
+    {
+        TemporaryChange profiling_disabler(m_profiling, was_profiling);
+        PerformanceManager::add_process_exec_event(*this);
+    }
 
     {
         ScopedSpinLock lock(g_scheduler_lock);
