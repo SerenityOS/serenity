@@ -235,7 +235,7 @@ private:
 
     size_t m_size { 0 };
     union {
-        u8 m_inline_buffer[inline_capacity];
+        u8 m_inline_buffer[inline_capacity] {};
         struct {
             u8* m_outline_buffer;
             size_t m_outline_capacity;
