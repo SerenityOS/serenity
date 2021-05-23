@@ -26,7 +26,6 @@ void WebContentClient::die()
 
 void WebContentClient::handshake()
 {
-    greet();
 }
 
 void WebContentClient::did_paint(const Gfx::IntRect&, i32 bitmap_id)
