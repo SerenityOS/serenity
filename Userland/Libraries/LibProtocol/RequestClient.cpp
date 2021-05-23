@@ -18,7 +18,6 @@ RequestClient::RequestClient()
 
 void RequestClient::handshake()
 {
-    greet();
 }
 
 template<typename RequestHashMapTraits>
