@@ -58,7 +58,7 @@ void Interpreter::branch_to_label(Configuration& configuration, LabelIndex index
 
     for (; !configuration.stack().is_empty();) {
         auto& entry = configuration.stack().peek();
-        if (entry.has<NonnullOwnPtr<Label>>()) {
+        if (entry.has<Label>()) {
             if (--drop_count == 0)
                 break;
         }
@@ -80,7 +80,7 @@ ReadonlyBytes Interpreter::load_from_memory(Configuration& configuration, const 
         return {};
     }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    auto base = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+    auto base = configuration.stack().pop().get<Value>().to<i32>();
     if (!base.has_value()) {
         m_do_trap = true;
         return {};
@@ -101,7 +101,7 @@ void Interpreter::store_to_memory(Configuration& configuration, const Instructio
     auto memory = configuration.store().get(address);
     TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    auto base = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+    auto base = configuration.stack().pop().get<Value>().to<i32>();
     TRAP_IF_NOT(base.has_value());
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
@@ -123,7 +123,7 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
     Vector<Value> args;
     args.ensure_capacity(type->parameters().size());
     for (size_t i = 0; i < type->parameters().size(); ++i) {
-        args.prepend(move(*configuration.stack().pop().get<NonnullOwnPtr<Value>>()));
+        args.prepend(move(configuration.stack().pop().get<Value>()));
     }
     Configuration function_configuration { configuration.store() };
     function_configuration.pre_interpret_hook = pre_interpret_hook;
@@ -135,26 +135,26 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
         return;
     }
     for (auto& entry : result.values())
-        configuration.stack().push(make<Value>(move(entry)));
+        configuration.stack().push(Value(move(entry)));
 }
 
 #define BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                                       \
     do {                                                                                          \
-        auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
-        auto lhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
+        auto rhs = configuration.stack().pop().get<Value>().to<type>();                           \
+        auto lhs = configuration.stack().pop().get<Value>().to<type>();                           \
         TRAP_IF_NOT(lhs.has_value());                                                             \
         TRAP_IF_NOT(rhs.has_value());                                                             \
         __VA_ARGS__;                                                                              \
         auto result = lhs.value() operator rhs.value();                                           \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", lhs.value(), #operator, rhs.value(), result); \
-        configuration.stack().push(make<Value>(cast(result)));                                    \
+        configuration.stack().push(Value(cast(result)));                                          \
         return;                                                                                   \
     } while (false)
 
 #define OVF_CHECKED_BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                            \
     do {                                                                                           \
-        auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();            \
-        auto ulhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();           \
+        auto rhs = configuration.stack().pop().get<Value>().to<type>();                            \
+        auto ulhs = configuration.stack().pop().get<Value>().to<type>();                           \
         TRAP_IF_NOT(ulhs.has_value());                                                             \
         TRAP_IF_NOT(rhs.has_value());                                                              \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = ??", ulhs.value(), #operator, rhs.value());         \
@@ -164,52 +164,52 @@ void Interpreter::call_address(Configuration& configuration, FunctionAddress add
         TRAP_IF_NOT(!lhs.has_overflow());                                                          \
         auto result = lhs.value();                                                                 \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = {}", ulhs.value(), #operator, rhs.value(), result); \
-        configuration.stack().push(make<Value>(cast(result)));                                     \
+        configuration.stack().push(Value(cast(result)));                                           \
         return;                                                                                    \
     } while (false)
 
 #define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, cast, ...)                                 \
     do {                                                                                            \
-        auto rhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();             \
-        auto lhs = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<type>();             \
+        auto rhs = configuration.stack().pop().get<Value>().to<type>();                             \
+        auto lhs = configuration.stack().pop().get<Value>().to<type>();                             \
         TRAP_IF_NOT(lhs.has_value());                                                               \
         TRAP_IF_NOT(rhs.has_value());                                                               \
         auto result = operation(lhs.value(), rhs.value());                                          \
         dbgln_if(WASM_TRACE_DEBUG, "{}({} {}) = {}", #operation, lhs.value(), rhs.value(), result); \
-        configuration.stack().push(make<Value>(cast(result)));                                      \
+        configuration.stack().push(Value(cast(result)));                                            \
         return;                                                                                     \
     } while (false)
 
-#define UNARY_MAP(pop_type, operation, ...)                                                   \
-    do {                                                                                      \
-        auto value = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<pop_type>(); \
-        TRAP_IF_NOT(value.has_value());                                                       \
-        auto result = operation(value.value());                                               \
-        dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", #operation, value.value(), result);     \
-        configuration.stack().push(make<Value>(__VA_ARGS__(result)));                         \
-        return;                                                                               \
+#define UNARY_MAP(pop_type, operation, ...)                                               \
+    do {                                                                                  \
+        auto value = configuration.stack().pop().get<Value>().to<pop_type>();             \
+        TRAP_IF_NOT(value.has_value());                                                   \
+        auto result = operation(value.value());                                           \
+        dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", #operation, value.value(), result); \
+        configuration.stack().push(Value(__VA_ARGS__(result)));                           \
+        return;                                                                           \
     } while (false)
 
 #define UNARY_NUMERIC_OPERATION(type, operation) \
     UNARY_MAP(type, operation, type)
 
-#define LOAD_AND_PUSH(read_type, push_type)                                            \
-    do {                                                                               \
-        auto slice = load_from_memory(configuration, instruction, sizeof(read_type));  \
-        TRAP_IF_NOT(slice.size() == sizeof(read_type));                                \
-        if constexpr (sizeof(read_type) == 1)                                          \
-            configuration.stack().push(make<Value>(static_cast<push_type>(slice[0]))); \
-        else                                                                           \
-            configuration.stack().push(make<Value>(read_value<push_type>(slice)));     \
-        return;                                                                        \
+#define LOAD_AND_PUSH(read_type, push_type)                                           \
+    do {                                                                              \
+        auto slice = load_from_memory(configuration, instruction, sizeof(read_type)); \
+        TRAP_IF_NOT(slice.size() == sizeof(read_type));                               \
+        if constexpr (sizeof(read_type) == 1)                                         \
+            configuration.stack().push(Value(static_cast<push_type>(slice[0])));      \
+        else                                                                          \
+            configuration.stack().push(Value(read_value<push_type>(slice)));          \
+        return;                                                                       \
     } while (false)
 
-#define POP_AND_STORE(pop_type, store_type)                                                                               \
-    do {                                                                                                                  \
-        auto value = ConvertToRaw<pop_type> {}(*configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<pop_type>()); \
-        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));                             \
-        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                                      \
-        return;                                                                                                           \
+#define POP_AND_STORE(pop_type, store_type)                                                               \
+    do {                                                                                                  \
+        auto value = ConvertToRaw<pop_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
+        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));             \
+        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                      \
+        return;                                                                                           \
     } while (false)
 
 template<typename T>
@@ -324,12 +324,12 @@ MakeUnsigned<T> Interpreter::checked_unsigned_truncate(V value)
     return true;
 }
 
-Vector<NonnullOwnPtr<Value>> Interpreter::pop_values(Configuration& configuration, size_t count)
+Vector<Value> Interpreter::pop_values(Configuration& configuration, size_t count)
 {
-    Vector<NonnullOwnPtr<Value>> results;
+    Vector<Value> results;
     for (size_t i = 0; i < count; ++i) {
         auto top_of_stack = configuration.stack().pop();
-        if (auto value = top_of_stack.get_pointer<NonnullOwnPtr<Value>>())
+        if (auto value = top_of_stack.get_pointer<Value>())
             results.prepend(move(*value));
         else
             TRAP_IF_NOT_NORETURN(value);
@@ -366,31 +366,31 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::nop.value():
         return;
     case Instructions::local_get.value():
-        configuration.stack().push(make<Value>(configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()]));
+        configuration.stack().push(Value(configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()]));
         return;
     case Instructions::local_set.value(): {
         auto entry = configuration.stack().pop();
-        configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()] = move(*entry.get<NonnullOwnPtr<Value>>());
+        configuration.frame()->locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
         return;
     }
     case Instructions::i32_const.value():
-        configuration.stack().push(make<Value>(ValueType { ValueType::I32 }, static_cast<i64>(instruction.arguments().get<i32>())));
+        configuration.stack().push(Value(ValueType { ValueType::I32 }, static_cast<i64>(instruction.arguments().get<i32>())));
         return;
     case Instructions::i64_const.value():
-        configuration.stack().push(make<Value>(ValueType { ValueType::I64 }, instruction.arguments().get<i64>()));
+        configuration.stack().push(Value(ValueType { ValueType::I64 }, instruction.arguments().get<i64>()));
         return;
     case Instructions::f32_const.value():
-        configuration.stack().push(make<Value>(ValueType { ValueType::F32 }, static_cast<double>(instruction.arguments().get<float>())));
+        configuration.stack().push(Value(ValueType { ValueType::F32 }, static_cast<double>(instruction.arguments().get<float>())));
         return;
     case Instructions::f64_const.value():
-        configuration.stack().push(make<Value>(ValueType { ValueType::F64 }, instruction.arguments().get<double>()));
+        configuration.stack().push(Value(ValueType { ValueType::F64 }, instruction.arguments().get<double>()));
         return;
     case Instructions::block.value(): {
         size_t arity = 0;
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
-        configuration.stack().push(make<Label>(arity, args.end_ip));
+        configuration.stack().push(Label(arity, args.end_ip));
         return;
     }
     case Instructions::loop.value(): {
@@ -398,7 +398,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto& args = instruction.arguments().get<Instruction::StructuredInstructionArgs>();
         if (args.block_type.kind() != BlockType::Empty)
             arity = 1;
-        configuration.stack().push(make<Label>(arity, ip.value() + 1));
+        configuration.stack().push(Label(arity, ip.value() + 1));
         return;
     }
     case Instructions::if_.value(): {
@@ -408,9 +408,9 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
             arity = 1;
 
         auto entry = configuration.stack().pop();
-        auto value = entry.get<NonnullOwnPtr<Value>>()->to<i32>();
+        auto value = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(value.has_value());
-        auto end_label = make<Label>(arity, args.end_ip.value());
+        auto end_label = Label(arity, args.end_ip.value());
         if (value.value() == 0) {
             if (args.else_ip.has_value()) {
                 configuration.ip() = args.else_ip.value();
@@ -432,7 +432,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         // drop all locals
         for (; !configuration.stack().is_empty();) {
             auto entry = configuration.stack().pop();
-            if (entry.has<NonnullOwnPtr<Label>>())
+            if (entry.has<Label>())
                 break;
         }
 
@@ -453,19 +453,19 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         for (size_t i = 0; i < frame.arity(); ++i)
             results.prepend(configuration.stack().pop());
         // drop all locals
-        OwnPtr<Label> last_label;
+        Optional<Label> last_label;
         for (; !configuration.stack().is_empty();) {
             auto entry = configuration.stack().pop();
-            if (entry.has<NonnullOwnPtr<Label>>()) {
-                last_label = move(entry.get<NonnullOwnPtr<Label>>());
+            if (entry.has<Label>()) {
+                last_label = entry.get<Label>();
                 continue;
             }
             if (entry.has<NonnullOwnPtr<Frame>>()) {
                 // Push the frame back
                 configuration.stack().push(move(entry));
                 // Push its label back (if there is one)
-                if (last_label)
-                    configuration.stack().push(last_label.release_nonnull());
+                if (last_label.has_value())
+                    configuration.stack().push(last_label.release_value());
                 break;
             }
             last_label.clear();
@@ -481,7 +481,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::br.value():
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     case Instructions::br_if.value(): {
-        if (configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>().value_or(0) == 0)
+        if (configuration.stack().pop().get<Value>().to<i32>().value_or(0) == 0)
             return;
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     }
@@ -498,7 +498,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto& args = instruction.arguments().get<Instruction::IndirectCallArgs>();
         auto table_address = configuration.frame()->module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
-        auto index = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+        auto index = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(index.has_value());
         if (index.value() < 0 || static_cast<size_t>(index.value()) >= table_instance->elements().size()) {
             dbgln("LibWasm: Element access out of bounds, expected {0} > 0 and {0} < {1}", index.value(), table_instance->elements().size());
@@ -563,7 +563,7 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::i64_store32.value():
         POP_AND_STORE(i64, i32);
     case Instructions::local_tee.value(): {
-        auto value = *configuration.stack().peek().get<NonnullOwnPtr<Value>>();
+        auto value = configuration.stack().peek().get<Value>();
         auto local_index = instruction.arguments().get<LocalIndex>();
         TRAP_IF_NOT(configuration.frame()->locals().size() > local_index.value());
         dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
@@ -576,14 +576,14 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto address = configuration.frame()->module().globals()[global_index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "global({}) -> stack", address.value());
         auto global = configuration.store().get(address);
-        configuration.stack().push(make<Value>(global->value()));
+        configuration.stack().push(Value(global->value()));
         return;
     }
     case Instructions::global_set.value(): {
         auto global_index = instruction.arguments().get<GlobalIndex>();
         TRAP_IF_NOT(configuration.frame()->module().globals().size() > global_index.value());
         auto address = configuration.frame()->module().globals()[global_index.value()];
-        auto value = *configuration.stack().pop().get<NonnullOwnPtr<Value>>();
+        auto value = configuration.stack().pop().get<Value>();
         dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
         auto global = configuration.store().get(address);
         global->set_value(move(value));
@@ -594,20 +594,20 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
         dbgln_if(WASM_TRACE_DEBUG, "memory.size -> stack({})", pages);
-        configuration.stack().push(make<Value>((i32)pages));
+        configuration.stack().push(Value((i32)pages));
         return;
     }
     case Instructions::memory_grow.value(): {
         auto address = configuration.frame()->module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
-        auto new_pages = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+        auto new_pages = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(new_pages.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "memory.grow({}), previously {} pages...", *new_pages, old_pages);
         if (instance->grow(new_pages.value() * Constants::page_size))
-            configuration.stack().push(make<Value>((i32)old_pages));
+            configuration.stack().push(Value((i32)old_pages));
         else
-            configuration.stack().push(make<Value>((i32)-1));
+            configuration.stack().push(Value((i32)-1));
         return;
     }
     case Instructions::table_get.value():
@@ -622,11 +622,11 @@ void Interpreter::interpret(Configuration& configuration, InstructionPointer& ip
     case Instructions::select.value():
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
-        auto value = configuration.stack().pop().get<NonnullOwnPtr<Value>>()->to<i32>();
+        auto value = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(value.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "select({})", value.value());
-        auto rhs = move(configuration.stack().pop().get<NonnullOwnPtr<Value>>());
-        auto lhs = move(configuration.stack().pop().get<NonnullOwnPtr<Value>>());
+        auto rhs = move(configuration.stack().pop().get<Value>());
+        auto lhs = move(configuration.stack().pop().get<Value>());
         configuration.stack().push(value.value() != 0 ? move(lhs) : move(rhs));
         return;
     }

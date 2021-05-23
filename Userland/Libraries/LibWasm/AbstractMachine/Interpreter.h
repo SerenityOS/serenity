@@ -34,7 +34,7 @@ private:
     template<typename T>
     T read_value(ReadonlyBytes data);
 
-    Vector<NonnullOwnPtr<Value>> pop_values(Configuration& configuration, size_t count);
+    Vector<Value> pop_values(Configuration& configuration, size_t count);
     bool trap_if_not(bool value)
     {
         if (!value)
