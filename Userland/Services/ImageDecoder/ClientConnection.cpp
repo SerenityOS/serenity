@@ -62,7 +62,7 @@ Messages::ImageDecoderServer::DecodeImageResponse ClientConnection::decode_image
         durations.append(frame.duration);
     }
 
-    return { decoder->is_animated(), decoder->loop_count(), bitmaps, durations };
+    return { decoder->is_animated(), static_cast<u32>(decoder->loop_count()), bitmaps, durations };
 }
 
 }
