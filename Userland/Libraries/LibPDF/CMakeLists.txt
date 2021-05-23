@@ -1,6 +1,6 @@
 set(SOURCES
-    Object.cpp
     Document.cpp
+    Filter.cpp
     Object.cpp
     Parser.cpp
     Renderer.cpp
