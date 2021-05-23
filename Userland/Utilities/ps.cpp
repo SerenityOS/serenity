@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
@@ -99,11 +100,13 @@ int main(int argc, char** argv)
         print_column(column, column.title);
     printf("\n");
 
-    auto all_processes = Core::ProcessStatisticsReader::get_all();
-    if (!all_processes.has_value())
+    auto processes = Core::ProcessStatisticsReader::get_all();
+    if (!processes.has_value())
         return 1;
 
-    for (auto const& process : all_processes.value()) {
+    quick_sort(processes.value(), [](auto& a, auto& b) { return a.pid < b.pid; });
+
+    for (auto const& process : processes.value()) {
         auto tty = process.tty;
 
         if (!every_process_flag && tty != this_tty)
