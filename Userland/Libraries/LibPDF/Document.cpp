@@ -9,6 +9,30 @@
 
 namespace PDF {
 
+String OutlineItem::to_string(int indent) const
+{
+    auto indent_str = String::repeated("  ", indent + 1);
+
+    StringBuilder child_builder;
+    child_builder.append('[');
+    for (auto& child : children)
+        child_builder.appendff("{}\n", child.to_string(indent + 1));
+    child_builder.appendff("{}]", indent_str);
+
+    StringBuilder builder;
+    builder.append("OutlineItem {{\n");
+    builder.appendff("{}title={}\n", indent_str, title);
+    builder.appendff("{}count={}\n", indent_str, count);
+    builder.appendff("{}dest={}\n", indent_str, dest);
+    builder.appendff("{}color={}\n", indent_str, color);
+    builder.appendff("{}italic={}\n", indent_str, italic);
+    builder.appendff("{}bold={}\n", indent_str, bold);
+    builder.appendff("{}children={}\n", indent_str, child_builder.to_string());
+    builder.appendff("{}}}", String::repeated("  ", indent));
+
+    return builder.to_string();
+}
+
 Document::Document(const ReadonlyBytes& bytes)
     : m_parser(Parser({}, bytes))
 {
@@ -22,6 +46,7 @@ Document::Document(const ReadonlyBytes& bytes)
 
     m_catalog = m_trailer->get_dict(this, "Root");
     build_page_tree();
+    build_outline();
 }
 
 Value Document::get_or_load_value(u32 index)
@@ -151,6 +176,126 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
     // We know all of the kids are leaf nodes
     for (auto& value : *kids_array)
         m_page_object_indices.append(value.as_ref_index());
+}
+
+void Document::build_outline()
+{
+    if (!m_catalog->contains("Outlines"))
+        return;
+
+    auto outline_dict = m_catalog->get_dict(this, "Outlines");
+    if (!outline_dict->contains("First"))
+        return;
+
+    VERIFY(outline_dict->contains("Last"));
+
+    auto first_ref = outline_dict->get_value("First");
+    auto last_ref = outline_dict->get_value("Last");
+
+    auto children = build_outline_item_chain(first_ref, last_ref);
+
+    m_outline = adopt_ref(*new OutlineDict());
+    m_outline->children = move(children);
+
+    if (outline_dict->contains("Count"))
+        m_outline->count = outline_dict->get_value("Count").as_int();
+}
+
+NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> outline_item_dict)
+{
+    auto outline_item = adopt_ref(*new OutlineItem {});
+
+    if (outline_item_dict->contains("First")) {
+        VERIFY(outline_item_dict->contains("Last"));
+        auto first_ref = outline_item_dict->get_value("First");
+        auto last_ref = outline_item_dict->get_value("Last");
+
+        auto children = build_outline_item_chain(first_ref, last_ref);
+        outline_item->children = move(children);
+    }
+
+    outline_item->title = outline_item_dict->get_string(this, "Title")->string();
+
+    if (outline_item_dict->contains("Count"))
+        outline_item->count = outline_item_dict->get_value("Count").as_int();
+
+    if (outline_item_dict->contains("Dest")) {
+        auto dest_arr = outline_item_dict->get_array(this, "Dest");
+        auto page_ref = dest_arr->at(0);
+        auto type_name = dest_arr->get_name_at(this, 1)->name();
+
+        Vector<float> parameters;
+        for (size_t i = 2; i < dest_arr->size(); i++)
+            parameters.append(dest_arr->at(i).to_float());
+
+        Destination::Type type;
+        if (type_name == "XYZ") {
+            type = Destination::Type::XYZ;
+        } else if (type_name == "Fit") {
+            type = Destination::Type::Fit;
+        } else if (type_name == "FitH") {
+            type = Destination::Type::FitH;
+        } else if (type_name == "FitV") {
+            type = Destination::Type::FitV;
+        } else if (type_name == "FitR") {
+            type = Destination::Type::FitR;
+        } else if (type_name == "FitB") {
+            type = Destination::Type::FitB;
+        } else if (type_name == "FitBH") {
+            type = Destination::Type::FitBH;
+        } else if (type_name == "FitBV") {
+            type = Destination::Type::FitBV;
+        } else {
+            VERIFY_NOT_REACHED();
+        }
+
+        outline_item->dest = Destination { type, page_ref, parameters };
+    }
+
+    if (outline_item_dict->contains("C")) {
+        auto color_array = outline_item_dict->get_array(this, "C");
+        auto r = static_cast<int>(255.0f * color_array->at(0).as_float());
+        auto g = static_cast<int>(255.0f * color_array->at(1).as_float());
+        auto b = static_cast<int>(255.0f * color_array->at(2).as_float());
+        outline_item->color = Color(r, g, b);
+    }
+
+    if (outline_item_dict->contains("F")) {
+        auto bitfield = outline_item_dict->get_value("F").as_int();
+        outline_item->italic = bitfield & 0x1;
+        outline_item->bold = bitfield & 0x2;
+    }
+
+    return outline_item;
+}
+
+NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(const Value& first_ref, const Value& last_ref)
+{
+    VERIFY(first_ref.is_ref());
+    VERIFY(last_ref.is_ref());
+
+    NonnullRefPtrVector<OutlineItem> children;
+
+    auto first_dict = object_cast<DictObject>(get_or_load_value(first_ref.as_ref_index()).as_object());
+    auto first = build_outline_item(first_dict);
+    children.append(first);
+
+    auto current_child_dict = first_dict;
+    u32 current_child_index = first_ref.as_ref_index();
+
+    while (current_child_dict->contains("Next")) {
+        auto next_child_dict_ref = current_child_dict->get_value("Next");
+        current_child_index = next_child_dict_ref.as_ref_index();
+        auto next_child_dict = object_cast<DictObject>(get_or_load_value(current_child_index).as_object());
+        auto next_child = build_outline_item(next_child_dict);
+        children.append(next_child);
+
+        current_child_dict = next_child_dict;
+    }
+
+    VERIFY(last_ref.as_ref_index() == current_child_index);
+
+    return children;
 }
 
 }

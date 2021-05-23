@@ -9,6 +9,7 @@
 #include <AK/Format.h>
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
+#include <LibGfx/Color.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Parser.h>
 #include <LibPDF/XRefTable.h>
@@ -31,13 +32,52 @@ struct Page {
     int rotate;
 };
 
+struct Destination {
+    enum class Type {
+        XYZ,
+        Fit,
+        FitH,
+        FitV,
+        FitR,
+        FitB,
+        FitBH,
+        FitBV,
+    };
+
+    Type type;
+    Value page;
+    Vector<float> parameters;
+};
+
+struct OutlineItem final : public RefCounted<OutlineItem> {
+    RefPtr<OutlineItem> parent;
+    NonnullRefPtrVector<OutlineItem> children;
+    String title;
+    i32 count { 0 };
+    Destination dest;
+    Gfx::Color color { Color::NamedColor::Black }; // 'C' in the PDF spec
+    bool italic { false };                         // bit 0 of 'F' in the PDF spec
+    bool bold { false };                           // bit 0 of 'F' in the PDF spec
+
+    OutlineItem() = default;
+
+    String to_string(int indent) const;
+};
+
+struct OutlineDict final : public RefCounted<OutlineDict> {
+    NonnullRefPtrVector<OutlineItem> children;
+    u32 count { 0 };
+
+    OutlineDict() = default;
+};
+
 class Document final : public RefCounted<Document> {
 public:
     explicit Document(const ReadonlyBytes& bytes);
 
     ALWAYS_INLINE const XRefTable& xref_table() const { return m_xref_table; }
-
     ALWAYS_INLINE const DictObject& trailer() const { return *m_trailer; }
+    ALWAYS_INLINE const RefPtr<OutlineDict>& outline() const { return m_outline; }
 
     [[nodiscard]] Value get_or_load_value(u32 index);
 
@@ -92,6 +132,10 @@ private:
     void build_page_tree();
     void add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree);
 
+    void build_outline();
+    NonnullRefPtr<OutlineItem> build_outline_item(NonnullRefPtr<DictObject> outline_item_dict);
+    NonnullRefPtrVector<OutlineItem> build_outline_item_chain(const Value& first_ref, const Value& last_ref);
+
     Parser m_parser;
     XRefTable m_xref_table;
     RefPtr<DictObject> m_trailer;
@@ -99,6 +143,7 @@ private:
     Vector<u32> m_page_object_indices;
     HashMap<u32, Page> m_pages;
     HashMap<u32, Value> m_values;
+    RefPtr<OutlineDict> m_outline;
 };
 
 }
@@ -131,6 +176,70 @@ struct Formatter<PDF::Page> : Formatter<StringView> {
             page.user_unit,
             page.rotate);
         Formatter<StringView>::format(builder, str);
+    }
+};
+
+template<>
+struct Formatter<PDF::Destination> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const PDF::Destination& destination)
+    {
+        String type_str;
+        switch (destination.type) {
+        case PDF::Destination::Type::XYZ:
+            type_str = "XYZ";
+            break;
+        case PDF::Destination::Type::Fit:
+            type_str = "Fit";
+            break;
+        case PDF::Destination::Type::FitH:
+            type_str = "FitH";
+            break;
+        case PDF::Destination::Type::FitV:
+            type_str = "FitV";
+            break;
+        case PDF::Destination::Type::FitR:
+            type_str = "FitR";
+            break;
+        case PDF::Destination::Type::FitB:
+            type_str = "FitB";
+            break;
+        case PDF::Destination::Type::FitBH:
+            type_str = "FitBH";
+            break;
+        case PDF::Destination::Type::FitBV:
+            type_str = "FitBV";
+            break;
+        }
+
+        StringBuilder param_builder;
+        for (auto& param : destination.parameters)
+            param_builder.appendff("{} ", param);
+
+        auto str = String::formatted("{{ type={} page={} params={} }}", type_str, destination.page, param_builder.to_string());
+        Formatter<StringView>::format(builder, str);
+    }
+};
+
+template<>
+struct Formatter<PDF::OutlineItem> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const PDF::OutlineItem& item)
+    {
+        Formatter<StringView>::format(builder, item.to_string(0));
+    }
+};
+
+template<>
+struct Formatter<PDF::OutlineDict> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const PDF::OutlineDict& dict)
+    {
+        StringBuilder child_builder;
+        child_builder.append('[');
+        for (auto& child : dict.children)
+            child_builder.appendff("{}\n", child.to_string(2));
+        child_builder.append("  ]");
+
+        Formatter<StringView>::format(builder,
+            String::formatted("OutlineDict {{\n  count={}\n  children={}\n}}", dict.count, child_builder.to_string()));
     }
 };
 
