@@ -27,10 +27,6 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::greet()
-{
-}
-
 Messages::InspectorServer::GetAllObjectsResponse ClientConnection::get_all_objects(pid_t pid)
 {
     auto process = InspectableProcess::from_pid(pid);
