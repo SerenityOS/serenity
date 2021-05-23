@@ -20,12 +20,18 @@ namespace Web::HTML {
 #define CONSUME_NEXT_INPUT_CHARACTER \
     current_input_character = next_code_point();
 
-#define SWITCH_TO(new_state)              \
-    do {                                  \
-        will_switch_to(State::new_state); \
-        m_state = State::new_state;       \
-        CONSUME_NEXT_INPUT_CHARACTER;     \
-        goto new_state;                   \
+#define SWITCH_TO(new_state)                       \
+    do {                                           \
+        VERIFY(m_current_builder.is_empty());      \
+        SWITCH_TO_WITH_UNCLEAN_BUILDER(new_state); \
+    } while (0)
+
+#define SWITCH_TO_WITH_UNCLEAN_BUILDER(new_state) \
+    do {                                          \
+        will_switch_to(State::new_state);         \
+        m_state = State::new_state;               \
+        CONSUME_NEXT_INPUT_CHARACTER;             \
+        goto new_state;                           \
     } while (0)
 
 #define RECONSUME_IN(new_state)              \
@@ -449,17 +455,17 @@ _StartOfFunction:
                 ON_ASCII_UPPER_ALPHA
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append(to_ascii_lowercase(current_input_character.value()));
+                    m_current_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
                 ON(0)
                 {
                     log_parse_error();
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
                 ON('>')
                 {
@@ -479,9 +485,9 @@ _StartOfFunction:
                 ANYTHING_ELSE
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     m_current_token.m_doctype.missing_name = false;
-                    SWITCH_TO(DOCTYPEName);
+                    SWITCH_TO_WITH_UNCLEAN_BUILDER(DOCTYPEName);
                 }
             }
             END_STATE
@@ -490,21 +496,23 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
+                    m_current_token.m_doctype.name = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPEName);
                 }
                 ON('>')
                 {
+                    m_current_token.m_doctype.name = consume_current_builder();
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_doctype.name.append(to_ascii_lowercase(current_input_character.value()));
+                    m_current_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
                     continue;
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.name.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON_EOF
@@ -516,7 +524,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.name.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -563,14 +571,12 @@ _StartOfFunction:
                 ON('"')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.public_identifier.clear();
                     m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.public_identifier.clear();
                     m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierSingleQuoted);
                 }
@@ -605,14 +611,14 @@ _StartOfFunction:
                 ON('"')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.system_identifier = {};
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.clear();
+                    m_current_token.m_doctype.system_identifier = {};
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
@@ -646,13 +652,11 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    m_current_token.m_doctype.public_identifier.clear();
                     m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    m_current_token.m_doctype.public_identifier.clear();
                     m_current_token.m_doctype.missing_public_identifier = false;
                     SWITCH_TO(DOCTYPEPublicIdentifierSingleQuoted);
                 }
@@ -686,13 +690,11 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
@@ -722,17 +724,19 @@ _StartOfFunction:
             {
                 ON('"')
                 {
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPEPublicIdentifier);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.public_identifier.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     m_current_token.m_doctype.force_quirks = true;
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -745,7 +749,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.public_identifier.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -755,17 +759,19 @@ _StartOfFunction:
             {
                 ON('\'')
                 {
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPEPublicIdentifier);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.public_identifier.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     m_current_token.m_doctype.force_quirks = true;
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -778,7 +784,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.public_identifier.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -788,17 +794,19 @@ _StartOfFunction:
             {
                 ON('"')
                 {
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPESystemIdentifier);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    m_current_token.m_doctype.public_identifier = consume_current_builder();
                     m_current_token.m_doctype.force_quirks = true;
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -811,7 +819,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.system_identifier.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -821,17 +829,19 @@ _StartOfFunction:
             {
                 ON('\'')
                 {
+                    m_current_token.m_doctype.system_identifier = consume_current_builder();
                     SWITCH_TO(AfterDOCTYPESystemIdentifier);
                 }
                 ON(0)
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.append_code_point(0xFFFD);
+                    m_current_builder.append_code_point(0xFFFD);
                     continue;
                 }
                 ON('>')
                 {
                     log_parse_error();
+                    m_current_token.m_doctype.system_identifier = consume_current_builder();
                     m_current_token.m_doctype.force_quirks = true;
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
@@ -844,7 +854,7 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    m_current_token.m_doctype.system_identifier.append_code_point(current_input_character.value());
+                    m_current_builder.append_code_point(current_input_character.value());
                     continue;
                 }
             }
@@ -863,14 +873,12 @@ _StartOfFunction:
                 ON('"')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
                     log_parse_error();
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
@@ -902,13 +910,11 @@ _StartOfFunction:
                 }
                 ON('"')
                 {
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierDoubleQuoted);
                 }
                 ON('\'')
                 {
-                    m_current_token.m_doctype.system_identifier.clear();
                     m_current_token.m_doctype.missing_system_identifier = false;
                     SWITCH_TO(DOCTYPESystemIdentifierSingleQuoted);
                 }
@@ -2679,6 +2685,13 @@ void HTMLTokenizer::restore_to(const Utf8CodePointIterator& new_iterator)
         }
     }
     m_utf8_iterator = new_iterator;
+}
+
+String HTMLTokenizer::consume_current_builder()
+{
+    auto string = m_current_builder.to_string();
+    m_current_builder.clear();
+    return string;
 }
 
 }
