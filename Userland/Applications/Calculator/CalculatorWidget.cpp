@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2019-2020, Sergey Bugaev <bugaevc@serenityos.org>
  * Copyright (c) 2021, Glenford Williams <gw_dev@outlook.com>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -154,37 +155,32 @@ void CalculatorWidget::keydown_event(GUI::KeyEvent& event)
 
     if (event.key() == KeyCode::Key_Return) {
         m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
-
-    } else if (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) {
-        m_keypad.type_digit(atoi(event.text().characters()));
-
-    } else if (event.key() == KeyCode::Key_Period) {
+    } else if (event.code_point() >= '0' && event.code_point() <= '9') {
+        m_keypad.type_digit(event.code_point() - '0');
+    } else if (event.code_point() == '.') {
         m_keypad.type_decimal_point();
-
     } else if (event.key() == KeyCode::Key_Escape) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
-
     } else if (event.key() == KeyCode::Key_Backspace) {
         m_keypad.type_backspace();
-
     } else {
         Calculator::Operation operation;
 
-        switch (event.key()) {
-        case KeyCode::Key_Plus:
+        switch (event.code_point()) {
+        case '+':
             operation = Calculator::Operation::Add;
             break;
-        case KeyCode::Key_Minus:
+        case '-':
             operation = Calculator::Operation::Subtract;
             break;
-        case KeyCode::Key_Asterisk:
+        case '*':
             operation = Calculator::Operation::Multiply;
             break;
-        case KeyCode::Key_Slash:
+        case '/':
             operation = Calculator::Operation::Divide;
             break;
-        case KeyCode::Key_Percent:
+        case '%':
             operation = Calculator::Operation::Percent;
             break;
         default:
