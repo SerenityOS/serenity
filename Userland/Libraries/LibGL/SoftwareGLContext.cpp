@@ -255,16 +255,22 @@ void SoftwareGLContext::gl_end()
                 vertex.g = vertexa.g;
                 vertex.b = vertexa.b;
                 vertex.a = vertexa.a;
+                vertex.u = vertexa.u;
+                vertex.v = vertexa.v;
             } else if (vec_idx == 1) {
                 vertex.r = vertexb.r;
                 vertex.g = vertexb.g;
                 vertex.b = vertexb.b;
                 vertex.a = vertexb.a;
+                vertex.u = vertexb.u;
+                vertex.v = vertexb.v;
             } else {
                 vertex.r = vertexc.r;
                 vertex.g = vertexc.g;
                 vertex.b = vertexc.b;
                 vertex.a = vertexc.a;
+                vertex.u = vertexc.u;
+                vertex.v = vertexc.v;
             }
 
             vertex.x = (vec.x() + 1.0f) * (scr_width / 2.0f) + 0.0f; // TODO: 0.0f should be something!?
@@ -322,7 +328,8 @@ void SoftwareGLContext::gl_end()
                 continue;
         }
 
-        m_rasterizer.submit_triangle(triangle);
+        // FIXME: Change this when we have texture units/multi-texturing
+        m_rasterizer.submit_triangle(triangle, *m_allocated_textures.find(1)->value);
     }
 
     triangle_list.clear();
