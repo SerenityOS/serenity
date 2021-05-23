@@ -28,10 +28,6 @@ void ClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ClientConnection::greet()
-{
-}
-
 void ClientConnection::show_notification(String const& text, String const& title, Gfx::ShareableBitmap const& icon)
 {
     auto window = NotificationWindow::construct(client_id(), text, title, icon);
