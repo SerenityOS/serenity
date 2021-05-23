@@ -61,6 +61,7 @@ public:
     void target_did_malloc(Badge<Emulator>, FlatPtr address, size_t);
     void target_did_free(Badge<Emulator>, FlatPtr address);
     void target_did_realloc(Badge<Emulator>, FlatPtr address, size_t);
+    void target_did_change_chunk_size(Badge<Emulator>, FlatPtr, size_t);
 
     void audit_read(const Region&, FlatPtr address, size_t);
     void audit_write(const Region&, FlatPtr address, size_t);
@@ -78,6 +79,8 @@ private:
 
     void dump_memory_graph();
     void populate_memory_graph();
+
+    void update_metadata(MmapRegion& mmap_region, size_t chunk_size);
 
     Emulator& m_emulator;
 

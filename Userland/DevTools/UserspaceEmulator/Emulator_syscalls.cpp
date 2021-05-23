@@ -1121,6 +1121,9 @@ int Emulator::virt$emuctl(FlatPtr arg1, FlatPtr arg2, FlatPtr arg3)
     case 3:
         tracer->target_did_realloc({}, arg3, arg2);
         return 0;
+    case 4:
+        tracer->target_did_change_chunk_size({}, arg3, arg2);
+        return 0;
     default:
         return -EINVAL;
     }
