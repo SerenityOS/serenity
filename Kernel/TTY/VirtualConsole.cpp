@@ -47,11 +47,10 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_columns = determined_columns;
     m_rows = determined_rows;
 
-    m_cursor_row = min<size_t>((int)m_cursor_row, rows() - 1);
-    m_cursor_column = min<size_t>((int)m_cursor_column, columns() - 1);
-    m_saved_cursor_row = min<size_t>((int)m_saved_cursor_row, rows() - 1);
-    m_saved_cursor_column = min<size_t>((int)m_saved_cursor_column, columns() - 1);
-
+    m_current_state.cursor.clamp(rows() - 1, columns() - 1);
+    m_normal_saved_state.cursor.clamp(rows() - 1, columns() - 1);
+    m_alternate_saved_state.cursor.clamp(rows() - 1, columns() - 1);
+    m_saved_cursor_position.clamp(rows() - 1, columns() - 1);
     m_horizontal_tabs.resize(determined_columns);
     for (unsigned i = 0; i < determined_columns; ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
@@ -62,7 +61,7 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
 void ConsoleImpl::scroll_up()
 {
     // NOTE: We have to invalidate the cursor first.
-    m_client.invalidate_cursor(m_cursor_row);
+    m_client.invalidate_cursor(cursor_row());
     m_client.scroll_up();
 }
 void ConsoleImpl::scroll_down()
@@ -70,7 +69,7 @@ void ConsoleImpl::scroll_down()
 }
 void ConsoleImpl::linefeed()
 {
-    u16 new_row = m_cursor_row;
+    u16 new_row = cursor_row();
     u16 max_row = rows() - 1;
     if (new_row == max_row) {
         // NOTE: We have to invalidate the cursor first.
@@ -83,7 +82,7 @@ void ConsoleImpl::linefeed()
 }
 void ConsoleImpl::put_character_at(unsigned row, unsigned column, u32 ch)
 {
-    m_client.put_character_at(row, column, ch, m_current_attribute);
+    m_client.put_character_at(row, column, ch, m_current_state.attribute);
     m_last_code_point = ch;
 }
 void ConsoleImpl::set_window_title(const String&)
