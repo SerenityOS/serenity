@@ -198,7 +198,7 @@ private:
         bool missing_name { true };
         String public_identifier;
         bool missing_public_identifier { true };
-        StringBuilder system_identifier;
+        String system_identifier;
         bool missing_system_identifier { true };
         bool force_quirks { false };
     } m_doctype;
