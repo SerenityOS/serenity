@@ -35,6 +35,7 @@ private:
     String m_name;
     String m_extension;
 
+    int m_goto_history { 0 };
     String m_search_text;
     ByteBuffer m_search_buffer;
     int last_found_index() const { return m_last_found_index == -1 ? 0 : m_last_found_index; }
@@ -45,8 +46,7 @@ private:
     RefPtr<GUI::Action> m_save_action;
     RefPtr<GUI::Action> m_save_as_action;
     RefPtr<GUI::Action> m_find_action;
-    RefPtr<GUI::Action> m_goto_decimal_offset_action;
-    RefPtr<GUI::Action> m_goto_hex_offset_action;
+    RefPtr<GUI::Action> m_goto_offset_action;
     RefPtr<GUI::Action> m_layout_toolbar_action;
 
     GUI::ActionGroup m_bytes_per_row_actions;
