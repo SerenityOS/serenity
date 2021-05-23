@@ -579,6 +579,9 @@ public:
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Enabled;
             } else if (pseudo_name.equals_ignoring_case("checked")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Checked;
+            } else if (pseudo_name.starts_with("not", CaseSensitivity::CaseInsensitive)) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Not;
+                simple_selector.not_selector = capture_selector_args(pseudo_name);
             } else {
                 dbgln("Unknown pseudo class: '{}'", pseudo_name);
                 return {};
