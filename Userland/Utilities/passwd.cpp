@@ -110,6 +110,12 @@ int main(int argc, char** argv)
             return 1;
         }
 
+        if (new_password.value().is_empty() && new_password_retype.value().is_empty()) {
+            warnln("No password supplied.");
+            warnln("Password for user {} unchanged.", target_account.username());
+            return 1;
+        }
+
         if (new_password.value() != new_password_retype.value()) {
             warnln("Sorry, passwords don't match.");
             warnln("Password for user {} unchanged.", target_account.username());
