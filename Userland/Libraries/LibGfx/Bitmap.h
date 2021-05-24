@@ -9,6 +9,7 @@
 #include <AK/Forward.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <LibCore/AnonymousBuffer.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Forward.h>
 #include <LibGfx/Rect.h>
@@ -89,17 +90,12 @@ enum RotationDirection {
 
 class Bitmap : public RefCounted<Bitmap> {
 public:
-    enum class ShouldCloseAnonymousFile {
-        No,
-        Yes,
-    };
-
     static RefPtr<Bitmap> create(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_shareable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_purgeable(BitmapFormat, const IntSize&, int intrinsic_scale = 1);
     static RefPtr<Bitmap> create_wrapper(BitmapFormat, const IntSize&, int intrinsic_scale, size_t pitch, void*);
     static RefPtr<Bitmap> load_from_file(String const& path, int scale_factor = 1);
-    static RefPtr<Bitmap> create_with_anon_fd(BitmapFormat, int anon_fd, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile);
+    static RefPtr<Bitmap> create_with_anonymous_buffer(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int intrinsic_scale, const Vector<RGBA32>& palette);
     static RefPtr<Bitmap> create_from_serialized_byte_buffer(ByteBuffer&& buffer);
     static bool is_path_a_supported_image_format(const StringView& path)
     {
@@ -119,7 +115,7 @@ public:
     RefPtr<Gfx::Bitmap> scaled(int sx, int sy) const;
     RefPtr<Gfx::Bitmap> scaled(float sx, float sy) const;
     RefPtr<Gfx::Bitmap> cropped(Gfx::IntRect) const;
-    RefPtr<Bitmap> to_bitmap_backed_by_anon_fd() const;
+    RefPtr<Bitmap> to_bitmap_backed_by_anonymous_buffer() const;
     ByteBuffer serialize_to_byte_buffer() const;
 
     ShareableBitmap to_shareable_bitmap() const;
@@ -234,7 +230,8 @@ public:
     void set_volatile();
     [[nodiscard]] bool set_nonvolatile();
 
-    int anon_fd() const { return m_anon_fd; }
+    Core::AnonymousBuffer& anonymous_buffer() { return m_buffer; }
+    const Core::AnonymousBuffer& anonymous_buffer() const { return m_buffer; }
 
 private:
     enum class Purgeable {
@@ -243,7 +240,7 @@ private:
     };
     Bitmap(BitmapFormat, const IntSize&, int, Purgeable, const BackingStore&);
     Bitmap(BitmapFormat, const IntSize&, int, size_t pitch, void*);
-    Bitmap(BitmapFormat, int anon_fd, const IntSize&, int, void*, const Vector<RGBA32>& palette);
+    Bitmap(BitmapFormat, Core::AnonymousBuffer, const IntSize&, int, const Vector<RGBA32>& palette);
 
     static Optional<BackingStore> allocate_backing_store(BitmapFormat, const IntSize&, int, Purgeable);
 
@@ -258,7 +255,7 @@ private:
     bool m_needs_munmap { false };
     bool m_purgeable { false };
     bool m_volatile { false };
-    int m_anon_fd { -1 };
+    Core::AnonymousBuffer m_buffer;
 };
 
 inline u8* Bitmap::scanline_u8(int y)

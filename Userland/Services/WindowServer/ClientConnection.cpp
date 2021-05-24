@@ -20,7 +20,6 @@
 #include <WindowServer/WindowManager.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <errno.h>
-#include <serenity.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -587,13 +586,17 @@ void ClientConnection::set_window_backing_store(i32 window_id, [[maybe_unused]] 
         window.swap_backing_stores();
     } else {
         // FIXME: Plumb scale factor here eventually.
-        auto backing_store = Gfx::Bitmap::create_with_anon_fd(
+        Core::AnonymousBuffer buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), pitch * size.height());
+        if (!buffer.is_valid()) {
+            did_misbehave("SetWindowBackingStore: Failed to create anonymous buffer for window backing store");
+            return;
+        }
+        auto backing_store = Gfx::Bitmap::create_with_anonymous_buffer(
             has_alpha_channel ? Gfx::BitmapFormat::BGRA8888 : Gfx::BitmapFormat::BGRx8888,
-            anon_file.take_fd(),
+            buffer,
             size,
             1,
-            {},
-            Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
+            {});
         window.set_backing_store(move(backing_store), serial);
     }
 
