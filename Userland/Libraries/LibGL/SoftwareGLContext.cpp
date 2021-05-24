@@ -1009,6 +1009,47 @@ void SoftwareGLContext::gl_hint(GLenum target, GLenum mode)
     // According to the spec implementors are free to ignore glHint. So we do.
 }
 
+void SoftwareGLContext::gl_read_buffer(GLenum mode)
+{
+    APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_read_buffer, mode);
+
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // FIXME: Also allow aux buffers GL_AUX0 through GL_AUX3 here
+    // plus any aux buffer between 0 and GL_AUX_BUFFERS
+    if (mode != GL_FRONT_LEFT
+        && mode != GL_FRONT_RIGHT
+        && mode != GL_BACK_LEFT
+        && mode != GL_BACK_RIGHT
+        && mode != GL_FRONT
+        && mode != GL_BACK
+        && mode != GL_LEFT
+        && mode != GL_RIGHT) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    // FIXME: We do not currently have aux buffers, so make it an invalid
+    // operation to select anything but front or back buffers. Also we do
+    // not allow selecting the stereoscopic RIGHT buffers since we do not
+    // have them configured.
+    if (mode != GL_FRONT_LEFT
+        && mode != GL_FRONT
+        && mode != GL_BACK_LEFT
+        && mode != GL_BACK
+        && mode != GL_FRONT
+        && mode != GL_BACK
+        && mode != GL_LEFT) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    m_current_read_buffer = mode;
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);

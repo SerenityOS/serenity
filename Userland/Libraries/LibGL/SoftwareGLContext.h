@@ -59,6 +59,7 @@ public:
     virtual void gl_shade_model(GLenum mode) override;
     virtual void gl_alpha_func(GLenum func, GLclampf ref) override;
     virtual void gl_hint(GLenum target, GLenum mode) override;
+    virtual void gl_read_buffer(GLenum mode) override;
 
     virtual void present() override;
 
@@ -117,6 +118,8 @@ private:
     GLenum m_alpha_test_func = GL_ALWAYS;
     GLclampf m_alpha_test_ref_value = 0;
 
+    GLenum m_current_read_buffer = GL_BACK;
+
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     Clipper m_clipper;
@@ -172,7 +175,8 @@ private:
             decltype(&SoftwareGLContext::gl_blend_func),
             decltype(&SoftwareGLContext::gl_shade_model),
             decltype(&SoftwareGLContext::gl_alpha_func),
-            decltype(&SoftwareGLContext::gl_hint)>;
+            decltype(&SoftwareGLContext::gl_hint),
+            decltype(&SoftwareGLContext::gl_read_buffer)>;
 
         using ExtraSavedArguments = Variant<
             FloatMatrix4x4>;
