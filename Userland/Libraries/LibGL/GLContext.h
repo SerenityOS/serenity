@@ -54,6 +54,7 @@ public:
     virtual void gl_alpha_func(GLenum func, GLclampf ref) = 0;
     virtual void gl_hint(GLenum target, GLenum mode) = 0;
     virtual void gl_read_buffer(GLenum mode) = 0;
+    virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) = 0;
 
     virtual void present() = 0;
 };

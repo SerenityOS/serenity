@@ -60,6 +60,7 @@ public:
     virtual void gl_alpha_func(GLenum func, GLclampf ref) override;
     virtual void gl_hint(GLenum target, GLenum mode) override;
     virtual void gl_read_buffer(GLenum mode) override;
+    virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
 
     virtual void present() override;
 
