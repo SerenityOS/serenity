@@ -326,6 +326,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -392,6 +393,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         for (size_t column = 0; column < line.length(); ++column) {
             auto attribute = line.attribute_at(column);
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
+                && (m_cursor_style == VT::CursorStyle::SteadyBlock || m_cursor_style == VT::CursorStyle::BlinkingBlock)
                 && m_has_logical_focus
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
@@ -417,11 +419,31 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     }
 
     // Draw cursor.
-    if (!m_has_logical_focus && row_with_cursor < m_terminal.rows()) {
+    if (m_cursor_blink_state && row_with_cursor < m_terminal.rows()) {
         auto& cursor_line = m_terminal.line(first_row_from_history + row_with_cursor);
-        if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
-            auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
-            painter.draw_rect(cell_rect, color_from_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color()));
+        if (m_terminal.cursor_row() >= (m_terminal.rows() - rows_from_history))
+            return;
+
+        if (m_has_logical_focus && (m_cursor_style == VT::CursorStyle::BlinkingBlock || m_cursor_style == VT::CursorStyle::SteadyBlock))
+            return; // This has already been handled by inverting the cell colors
+
+        auto cursor_color = color_from_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
+        auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
+        if (m_cursor_style == VT::CursorStyle::BlinkingUnderline || m_cursor_style == VT::CursorStyle::SteadyUnderline) {
+            auto x1 = cell_rect.bottom_left().x();
+            auto x2 = cell_rect.bottom_right().x();
+            auto y = cell_rect.bottom_left().y();
+            for (auto x = x1; x <= x2; ++x)
+                painter.set_pixel({ x, y }, cursor_color);
+        } else if (m_cursor_style == VT::CursorStyle::BlinkingBar || m_cursor_style == VT::CursorStyle::SteadyBar) {
+            auto x = cell_rect.bottom_left().x();
+            auto y1 = cell_rect.top_left().y();
+            auto y2 = cell_rect.bottom_left().y();
+            for (auto y = y1; y <= y2; ++y)
+                painter.set_pixel({ x, y }, cursor_color);
+        } else {
+            // We fall back to a block if we don't support the selected cursor type.
+            painter.draw_rect(cell_rect, cursor_color);
         }
     }
 }
@@ -986,6 +1008,32 @@ void TerminalWidget::emit(const u8* data, size_t size)
     }
 }
 
+void TerminalWidget::set_cursor_style(CursorStyle style)
+{
+    switch (style) {
+    case None:
+        m_cursor_blink_timer->stop();
+        m_cursor_blink_state = false;
+        break;
+    case SteadyBlock:
+    case SteadyUnderline:
+    case SteadyBar:
+        m_cursor_blink_timer->stop();
+        m_cursor_blink_state = true;
+        break;
+    case BlinkingBlock:
+    case BlinkingUnderline:
+    case BlinkingBar:
+        m_cursor_blink_state = true;
+        m_cursor_blink_timer->restart();
+        break;
+    default:
+        dbgln("Cursor style not implemented");
+    }
+    m_cursor_style = style;
+    invalidate_cursor();
+}
+
 void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 {
     if (m_hovered_href_id.is_null()) {
@@ -1107,5 +1155,4 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
     set_font(font);
     resize(widget_size_for_font(font));
 }
-
 }

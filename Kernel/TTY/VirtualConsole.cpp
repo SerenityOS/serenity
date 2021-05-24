@@ -387,6 +387,11 @@ void VirtualConsole::emit(const u8* data, size_t size)
         TTY::emit(data[i], true);
 }
 
+void VirtualConsole::set_cursor_style(VT::CursorStyle)
+{
+    // Do nothing
+}
+
 String VirtualConsole::device_name() const
 {
     return String::formatted("tty{}", minor());

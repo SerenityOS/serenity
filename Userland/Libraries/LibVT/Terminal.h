@@ -26,6 +26,16 @@ class VirtualConsole;
 
 namespace VT {
 
+enum CursorStyle {
+    None,
+    BlinkingBlock,
+    SteadyBlock,
+    BlinkingUnderline,
+    SteadyUnderline,
+    BlinkingBar,
+    SteadyBar
+};
+
 class TerminalClient {
 public:
     virtual ~TerminalClient() { }
@@ -36,6 +46,7 @@ public:
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed() = 0;
     virtual void emit(const u8*, size_t) = 0;
+    virtual void set_cursor_style(CursorStyle) = 0;
 };
 
 class Terminal : public EscapeSequenceExecutor {
@@ -238,6 +249,9 @@ protected:
     // DSR - Device Status Reports
     void DSR(Parameters);
 
+    // DECSCUSR - Set Cursor Style
+    void DECSCUSR(Parameters);
+
 #ifndef KERNEL
     // ICH - Insert Character
     void ICH(Parameters);
@@ -318,6 +332,9 @@ protected:
     u16 m_saved_cursor_column { 0 };
     bool m_swallow_current { false };
     bool m_stomp { false };
+
+    CursorStyle m_cursor_style { BlinkingBlock };
+    CursorStyle m_saved_cursor_style { BlinkingBlock };
 
     Attribute m_current_attribute;
     Attribute m_saved_attribute;

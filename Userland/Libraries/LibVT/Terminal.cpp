@@ -46,24 +46,64 @@ void Terminal::clear_including_history()
 
 void Terminal::alter_mode(bool should_set, Parameters params, Intermediates intermediates)
 {
+    auto steady_cursor_to_blinking = [](CursorStyle style) {
+        switch (style) {
+        case SteadyBar:
+            return BlinkingBar;
+        case SteadyBlock:
+            return BlinkingBlock;
+        case SteadyUnderline:
+            return BlinkingUnderline;
+        default:
+            return style;
+        }
+    };
+
+    auto blinking_cursor_to_steady = [](CursorStyle style) {
+        switch (style) {
+        case BlinkingBar:
+            return SteadyBar;
+        case BlinkingBlock:
+            return SteadyBlock;
+        case BlinkingUnderline:
+            return SteadyUnderline;
+        default:
+            return style;
+        }
+    };
+
     if (intermediates.size() > 0 && intermediates[0] == '?') {
         for (auto mode : params) {
             switch (mode) {
             case 3: {
                 // 80/132-column mode (DECCOLM)
-                unsigned new_columns = should_set ? 80 : 132;
+                unsigned new_columns = should_set ? 132 : 80;
                 dbgln_if(TERMINAL_DEBUG, "Setting {}-column mode", new_columns);
                 set_size(new_columns, rows());
                 clear();
                 break;
             }
+            case 12:
+                if (should_set) {
+                    // Start blinking cursor
+                    m_cursor_style = steady_cursor_to_blinking(m_cursor_style);
+                } else {
+                    // Stop blinking cursor
+                    m_cursor_style = blinking_cursor_to_steady(m_cursor_style);
+                }
+                m_client.set_cursor_style(m_cursor_style);
+                break;
             case 25:
-                // Hide cursor command, but doesn't need to be run (for now, because
-                // we don't do inverse control codes anyways)
-                if (should_set)
-                    dbgln("Terminal: Hide Cursor escapecode received. Not needed: ignored.");
-                else
-                    dbgln("Terminal: Show Cursor escapecode received. Not needed: ignored.");
+                if (should_set) {
+                    // Show cursor
+                    m_cursor_style = m_saved_cursor_style;
+                    m_client.set_cursor_style(m_cursor_style);
+                } else {
+                    // Hide cursor
+                    m_saved_cursor_style = m_cursor_style;
+                    m_cursor_style = None;
+                    m_client.set_cursor_style(None);
+                }
                 break;
             default:
                 dbgln("Terminal::alter_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
@@ -84,12 +124,12 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
 
 void Terminal::RM(Parameters params, Intermediates intermediates)
 {
-    alter_mode(true, params, intermediates);
+    alter_mode(false, params, intermediates);
 }
 
 void Terminal::SM(Parameters params, Intermediates intermediates)
 {
-    alter_mode(false, params, intermediates);
+    alter_mode(true, params, intermediates);
 }
 
 void Terminal::SGR(Parameters params)
@@ -452,6 +492,35 @@ void Terminal::SD(Parameters params)
 
     for (u16 i = 0; i < count; i++)
         scroll_down();
+}
+
+void Terminal::DECSCUSR(Parameters params)
+{
+    unsigned style = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        style = params[0];
+    switch (style) {
+    case 1:
+        m_client.set_cursor_style(BlinkingBlock);
+        break;
+    case 2:
+        m_client.set_cursor_style(SteadyBlock);
+        break;
+    case 3:
+        m_client.set_cursor_style(BlinkingUnderline);
+        break;
+    case 4:
+        m_client.set_cursor_style(SteadyUnderline);
+        break;
+    case 5:
+        m_client.set_cursor_style(BlinkingBar);
+        break;
+    case 6:
+        m_client.set_cursor_style(SteadyBar);
+        break;
+    default:
+        dbgln("Unknown cursor style {}", style);
+    }
 }
 
 #ifndef KERNEL
@@ -832,6 +901,12 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
         break;
     case 'n':
         DSR(parameters);
+        break;
+    case 'q':
+        if (intermediates.size() >= 1 && intermediates[0] == ' ')
+            DECSCUSR(parameters);
+        else
+            unimplemented_csi_sequence(parameters, intermediates, last_byte);
         break;
     default:
         unimplemented_csi_sequence(parameters, intermediates, last_byte);
