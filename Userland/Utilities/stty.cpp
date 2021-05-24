@@ -318,25 +318,25 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
         return contains_colon;
     };
 
-    auto parse_control_character = [&](size_t idx) -> Result<cc_t, int> {
+    auto parse_control_character = [&](size_t idx) -> Optional<cc_t> {
         VERIFY(!parameters[idx].is_empty());
         if (parameters[idx] == "^-" || parameters[idx] == "undef") {
             // FIXME: disabling characters is a bit wonky right now in TTY.
             // We should add the _POSIX_VDISABLE macro.
-            return (cc_t)0;
+            return 0;
         } else if (parameters[idx][0] == '^' && parameters[idx].length() == 2) {
-            return (cc_t)toupper(parameters[idx][1]) - 0x40;
+            return toupper(parameters[idx][1]) - 0x40;
         } else if (parameters[idx].starts_with("0x")) {
             cc_t value = 0;
             if (parameters[idx].length() == 2) {
                 warnln("Invalid hexadecimal character code {}", parameters[idx]);
-                return (int)1;
+                return {};
             }
             for (size_t i = 2; i < parameters[idx].length(); ++i) {
                 char ch = tolower(parameters[idx][i]);
                 if (!isdigit(ch) && !(ch >= 'a' && ch <= 'f')) {
                     warnln("Invalid hexadecimal character code {}", parameters[idx]);
-                    return (int)1;
+                    return {};
                 }
                 value = 16 * value + (isdigit(ch)) ? (ch - '0') : (ch - 'a');
             }
@@ -347,7 +347,7 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
                 char ch = parameters[idx][i];
                 if (!(ch >= '0' && ch <= '7')) {
                     warnln("Invalid octal character code {}", parameters[idx]);
-                    return (int)1;
+                    return {};
                 }
                 value = 8 * value + (ch - '0');
             }
@@ -356,14 +356,14 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
             auto maybe_value = parameters[idx].to_uint<cc_t>();
             if (!maybe_value.has_value()) {
                 warnln("Invalid decimal character code {}", parameters[idx]);
-                return (int)1;
+                return {};
             }
             return maybe_value.value();
         } else if (parameters[idx].length() == 1) {
             return parameters[idx][0];
         }
         warnln("Invalid control character {}", parameters[idx]);
-        return (int)1;
+        return {};
     };
 
     size_t parameter_idx = 0;
@@ -391,10 +391,10 @@ Result<void, int> apply_modes(size_t parameter_count, char** raw_parameters, ter
                             warnln("No control character specified for {}", cc.name);
                             return 1;
                         }
-                        auto control_character_or_error = parse_control_character(++parameter_idx);
-                        if (control_character_or_error.is_error())
-                            return control_character_or_error.error();
-                        t.c_cc[cc.index] = control_character_or_error.value();
+                        auto maybe_control_character = parse_control_character(++parameter_idx);
+                        if (!maybe_control_character.has_value())
+                            return 1;
+                        t.c_cc[cc.index] = maybe_control_character.value();
                         return {};
                     }
                 }
