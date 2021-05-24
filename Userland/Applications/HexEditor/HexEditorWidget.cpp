@@ -10,6 +10,7 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
+#include <LibCore/ConfigFile.h>
 #include <LibCore/File.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/BoxLayout.h>
@@ -32,6 +33,9 @@ REGISTER_WIDGET(HexEditor, HexEditor);
 HexEditorWidget::HexEditorWidget()
 {
     load_from_gml(hex_editor_window_gml);
+
+    m_config = Core::ConfigFile::get_for_app("HexEditor");
+
     m_toolbar = *find_descendant_of_type_named<GUI::Toolbar>("toolbar");
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     m_editor = *find_descendant_of_type_named<HexEditor>("editor");
@@ -148,6 +152,8 @@ HexEditorWidget::HexEditorWidget()
 
     m_layout_toolbar_action = GUI::Action::create_checkable("&Toolbar", [&](auto& action) {
         m_toolbar_container->set_visible(action.is_checked());
+        m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
+        m_config->sync();
     });
 
     m_toolbar->add_action(*m_new_action);
@@ -220,18 +226,29 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     edit_menu.add_action(*m_goto_offset_action);
 
     auto& view_menu = menubar.add_menu("&View");
+
+    auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
+    m_layout_toolbar_action->set_checked(show_toolbar);
+    m_toolbar_container->set_visible(show_toolbar);
+
     view_menu.add_action(*m_layout_toolbar_action);
-    m_layout_toolbar_action->set_checked(true);
+
+    auto bytes_per_row = m_config->read_num_entry("Layout", "BytesPerRow", 16);
+    m_editor->set_bytes_per_row(bytes_per_row);
+    m_editor->update();
+
     m_bytes_per_row_actions.set_exclusive(true);
     auto& bytes_per_row_menu = view_menu.add_submenu("Bytes per &Row");
     for (int i = 8; i <= 32; i += 8) {
         auto action = GUI::Action::create_checkable(String::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
             m_editor->update();
+            m_config->write_num_entry("Layout", "BytesPerRow", i);
+            m_config->sync();
         });
         m_bytes_per_row_actions.add_action(action);
         bytes_per_row_menu.add_action(action);
-        if (i == 16)
+        if (i == bytes_per_row)
             action->set_checked(true);
     }
 
