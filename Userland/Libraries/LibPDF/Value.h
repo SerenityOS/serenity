@@ -23,6 +23,14 @@ public:
     static constexpr auto max_ref_generation_index = (1 << 15) - 1; // 2 ^ 14 - 1
 
     Value()
+        : m_type(Type::Empty)
+    {
+    }
+
+    struct NullTag {
+    };
+
+    Value(NullTag)
         : m_type(Type::Null)
     {
     }
@@ -70,6 +78,7 @@ public:
 
     Value& operator=(const Value& other);
 
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_type == Type::Empty; }
     [[nodiscard]] ALWAYS_INLINE bool is_null() const { return m_type == Type::Null; }
     [[nodiscard]] ALWAYS_INLINE bool is_bool() const { return m_type == Type::Bool; }
     [[nodiscard]] ALWAYS_INLINE bool is_int() const { return m_type == Type::Int; }
@@ -124,12 +133,13 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<Object> as_object() const { return *m_as_object; }
 
-    [[nodiscard]] ALWAYS_INLINE explicit operator bool() const { return !is_null(); }
+    [[nodiscard]] ALWAYS_INLINE explicit operator bool() const { return !is_empty(); }
 
     [[nodiscard]] String to_string(int indent = 0) const;
 
 private:
     enum class Type {
+        Empty,
         Null,
         Bool,
         Int,
