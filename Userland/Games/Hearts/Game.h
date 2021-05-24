@@ -31,6 +31,8 @@ public:
 private:
     Game();
 
+    void reset();
+
     void dump_state() const;
 
     void play_card(Player& player, size_t card_index);
