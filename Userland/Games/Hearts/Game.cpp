@@ -122,11 +122,7 @@ void Game::setup(String player_name)
             player.hand.append(card);
         }
         player.sort_hand();
-        auto card_position = player.first_card_position;
-        for (auto& card : player.hand) {
-            card->set_position(card_position);
-            card_position.translate_by(player.card_offset);
-        }
+        reposition_hand(player);
     }
 
     advance_game();
@@ -517,6 +513,15 @@ bool Game::is_winner(Player& player)
     }
     constexpr int sum_points_of_all_cards = 26;
     return (max_score.value() != sum_points_of_all_cards && player_score == min_score.value()) || player_score == sum_points_of_all_cards;
+}
+
+void Game::reposition_hand(Player& player)
+{
+    auto card_position = player.first_card_position;
+    for (auto& card : player.hand) {
+        card->set_position(card_position);
+        card_position.translate_by(player.card_offset);
+    }
 }
 
 void Game::paint_event(GUI::PaintEvent& event)
