@@ -9,8 +9,9 @@
 
 namespace Web::CSS {
 
-CSSStyleDeclaration::CSSStyleDeclaration(Vector<StyleProperty>&& properties)
+CSSStyleDeclaration::CSSStyleDeclaration(Vector<StyleProperty>&& properties, HashMap<String, StyleProperty>&& custom_properties)
     : m_properties(move(properties))
+    , m_custom_properties(move(custom_properties))
 {
 }
 
@@ -26,7 +27,7 @@ String CSSStyleDeclaration::item(size_t index) const
 }
 
 ElementInlineCSSStyleDeclaration::ElementInlineCSSStyleDeclaration(DOM::Element& element)
-    : CSSStyleDeclaration({})
+    : CSSStyleDeclaration({}, {})
     , m_element(element.make_weak_ptr<DOM::Element>())
 {
 }

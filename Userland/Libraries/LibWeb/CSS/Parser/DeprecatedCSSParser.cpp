@@ -808,15 +808,23 @@ public:
         auto value = parse_css_value(m_context, property_value, property_id);
         if (!value)
             return {};
-        return CSS::StyleProperty { property_id, value.release_nonnull(), important };
+        if (property_id == CSS::PropertyID::Custom) {
+            return CSS::StyleProperty { property_id, value.release_nonnull(), property_name, important };
+        }
+        return CSS::StyleProperty { property_id, value.release_nonnull(), {}, important };
     }
 
     void parse_declaration()
     {
         for (;;) {
             auto property = parse_property();
-            if (property.has_value())
-                current_rule.properties.append(property.value());
+            if (property.has_value()) {
+                auto property_value = property.value();
+                if (property_value.property_id == CSS::PropertyID::Custom)
+                    current_rule.custom_properties.set(property_value.custom_name, property_value);
+                else
+                    current_rule.properties.append(property_value);
+            }
             consume_whitespace_or_comments();
             if (!peek() || peek() == '}')
                 break;
@@ -836,7 +844,7 @@ public:
             return;
         }
 
-        rules.append(CSS::CSSStyleRule::create(move(current_rule.selectors), CSS::CSSStyleDeclaration::create(move(current_rule.properties))));
+        rules.append(CSS::CSSStyleRule::create(move(current_rule.selectors), CSS::CSSStyleDeclaration::create(move(current_rule.properties), move(current_rule.custom_properties))));
     }
 
     Optional<String> parse_string()
@@ -980,13 +988,18 @@ public:
         consume_whitespace_or_comments();
         for (;;) {
             auto property = parse_property();
-            if (property.has_value())
-                current_rule.properties.append(property.value());
+            if (property.has_value()) {
+                auto property_value = property.value();
+                if (property_value.property_id == CSS::PropertyID::Custom)
+                    current_rule.custom_properties.set(property_value.custom_name, property_value);
+                else
+                    current_rule.properties.append(property_value);
+            }
             consume_whitespace_or_comments();
             if (!peek())
                 break;
         }
-        return CSS::CSSStyleDeclaration::create(move(current_rule.properties));
+        return CSS::CSSStyleDeclaration::create(move(current_rule.properties), move(current_rule.custom_properties));
     }
 
 private:
@@ -997,6 +1010,7 @@ private:
     struct CurrentRule {
         Vector<CSS::Selector> selectors;
         Vector<CSS::StyleProperty> properties;
+        HashMap<String, CSS::StyleProperty> custom_properties;
     };
 
     CurrentRule current_rule;
@@ -1024,7 +1038,7 @@ RefPtr<CSS::CSSStyleSheet> parse_css(const CSS::ParsingContext& context, const S
 RefPtr<CSS::CSSStyleDeclaration> parse_css_declaration(const CSS::ParsingContext& context, const StringView& css)
 {
     if (css.is_empty())
-        return CSS::CSSStyleDeclaration::create({});
+        return CSS::CSSStyleDeclaration::create({}, {});
     CSSParser parser(context, css);
     return parser.parse_standalone_declaration();
 }
