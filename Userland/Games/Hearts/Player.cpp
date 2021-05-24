@@ -11,18 +11,13 @@
 
 namespace Hearts {
 
-size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card,
-    Function<bool(Card&)> lower_value_card_in_play)
+Vector<CardWithIndex> Player::hand_sorted_by_points_and_value() const
 {
-    struct CardWithIndex {
-        RefPtr<Card> card;
-        size_t index;
-    };
     Vector<CardWithIndex> sorted_hand;
     for (size_t i = 0; i < hand.size(); i++) {
         auto& card = hand[i];
         if (card)
-            sorted_hand.empend(card, i);
+            sorted_hand.empend(*card, i);
     }
     quick_sort(sorted_hand, [](auto& cwi1, auto& cwi2) {
         if (hearts_card_points(*cwi2.card) < hearts_card_points(*cwi1.card))
@@ -31,6 +26,13 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
             return true;
         return false;
     });
+    return sorted_hand;
+}
+
+size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card,
+    Function<bool(Card&)> lower_value_card_in_play)
+{
+    auto sorted_hand = hand_sorted_by_points_and_value();
 
     if constexpr (HEARTS_DEBUG) {
         dbgln("Sorted hand:");

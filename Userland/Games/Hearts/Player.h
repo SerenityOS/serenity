@@ -7,11 +7,17 @@
 #pragma once
 
 #include "Helpers.h"
+#include <AK/QuickSort.h>
 #include <LibCards/Card.h>
 
 using Cards::Card;
 
 namespace Hearts {
+
+struct CardWithIndex {
+    NonnullRefPtr<Card> card;
+    size_t index;
+};
 
 struct Player {
     AK_MAKE_NONMOVABLE(Player);
@@ -29,6 +35,7 @@ public:
     Optional<size_t> pick_specific_card(Card::Type type, CardValue value);
     size_t pick_last_card();
     bool has_card_of_type(Card::Type type);
+    Vector<CardWithIndex> hand_sorted_by_points_and_value() const;
 
     void sort_hand() { quick_sort(hand, hearts_card_less); }
 
