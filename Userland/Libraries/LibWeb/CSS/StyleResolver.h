@@ -18,6 +18,7 @@ struct MatchingRule {
     size_t style_sheet_index { 0 };
     size_t rule_index { 0 };
     size_t selector_index { 0 };
+    u32 specificity { 0 };
 };
 
 class StyleResolver {
