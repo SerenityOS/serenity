@@ -60,7 +60,7 @@ void HTMLImageElement::parse_attribute(const FlyString& name, const String& valu
 {
     HTMLElement::parse_attribute(name, value);
 
-    if (name == HTML::AttributeNames::src)
+    if (name == HTML::AttributeNames::src && !value.is_empty())
         m_image_loader.load(document().complete_url(value));
 }
 
