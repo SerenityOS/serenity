@@ -9,6 +9,7 @@
 #include <LibPDF/Document.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Parser.h>
+#include <LibTextCodec/Decoder.h>
 #include <ctype.h>
 #include <math.h>
 
@@ -422,9 +423,27 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 {
     ScopeGuard guard([&] { consume_whitespace(); });
 
-    if (m_reader.matches('('))
-        return make_object<StringObject>(parse_literal_string(), false);
-    return make_object<StringObject>(parse_hex_string(), true);
+    String string;
+    bool is_binary_string;
+
+    if (m_reader.matches('(')) {
+        string = parse_literal_string();
+        is_binary_string = false;
+    } else {
+        string = parse_hex_string();
+        is_binary_string = true;
+    }
+
+    if (string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
+        // The string is encoded in UTF16-BE
+        string = TextCodec::decoder_for("utf-16be")->to_utf8(string.substring(2));
+    } else if (string.bytes().starts_with(Array<u8, 3> { 239, 187, 191 })) {
+        // The string is encoded in UTF-8. This is the default anyways, but if these bytes
+        // are explicitly included, we have to trim them
+        string = string.substring(3);
+    }
+
+    return make_object<StringObject>(string, is_binary_string);
 }
 
 String Parser::parse_literal_string()
