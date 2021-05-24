@@ -53,6 +53,7 @@ public:
     virtual void gl_shade_model(GLenum mode) = 0;
     virtual void gl_alpha_func(GLenum func, GLclampf ref) = 0;
     virtual void gl_hint(GLenum target, GLenum mode) = 0;
+    virtual void gl_read_buffer(GLenum mode) = 0;
 
     virtual void present() = 0;
 };
