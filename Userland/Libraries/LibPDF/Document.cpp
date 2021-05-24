@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Parser.h>
 
@@ -44,7 +45,7 @@ Document::Document(const ReadonlyBytes& bytes)
     m_xref_table = xref_table;
     m_trailer = trailer;
 
-    m_catalog = m_trailer->get_dict(this, "Root");
+    m_catalog = m_trailer->get_dict(this, CommonNames::Root);
     build_page_tree();
     build_outline();
 }
@@ -87,10 +88,10 @@ Page Document::get_page(u32 index)
     auto page_object_index = m_page_object_indices[index];
     auto raw_page_object = resolve_to<DictObject>(get_or_load_value(page_object_index));
 
-    auto resources = raw_page_object->get_dict(this, "Resources");
-    auto contents = raw_page_object->get_object(this, "Contents");
+    auto resources = raw_page_object->get_dict(this, CommonNames::Resources);
+    auto contents = raw_page_object->get_object(this, CommonNames::Contents);
 
-    auto media_box_array = raw_page_object->get_array(this, "MediaBox");
+    auto media_box_array = raw_page_object->get_array(this, CommonNames::MediaBox);
     auto media_box = Rectangle {
         media_box_array->at(0).to_float(),
         media_box_array->at(1).to_float(),
@@ -99,8 +100,8 @@ Page Document::get_page(u32 index)
     };
 
     auto crop_box = media_box;
-    if (raw_page_object->contains("CropBox")) {
-        auto crop_box_array = raw_page_object->get_array(this, "CropBox");
+    if (raw_page_object->contains(CommonNames::CropBox)) {
+        auto crop_box_array = raw_page_object->get_array(this, CommonNames::CropBox);
         crop_box = Rectangle {
             crop_box_array->at(0).to_float(),
             crop_box_array->at(1).to_float(),
@@ -110,12 +111,12 @@ Page Document::get_page(u32 index)
     }
 
     float user_unit = 1.0f;
-    if (raw_page_object->contains("UserUnit"))
-        user_unit = raw_page_object->get_value("UserUnit").to_float();
+    if (raw_page_object->contains(CommonNames::UserUnit))
+        user_unit = raw_page_object->get_value(CommonNames::UserUnit).to_float();
 
     int rotate = 0;
-    if (raw_page_object->contains("Rotate")) {
-        rotate = raw_page_object->get_value("Rotate").as_int();
+    if (raw_page_object->contains(CommonNames::Rotate)) {
+        rotate = raw_page_object->get_value(CommonNames::Rotate).as_int();
         VERIFY(rotate % 90 == 0);
     }
 
@@ -146,14 +147,14 @@ Value Document::resolve(const Value& value)
 
 void Document::build_page_tree()
 {
-    auto page_tree = m_catalog->get_dict(this, "Pages");
+    auto page_tree = m_catalog->get_dict(this, CommonNames::Pages);
     add_page_tree_node_to_page_tree(page_tree);
 }
 
 void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree)
 {
-    auto kids_array = page_tree->get_array(this, "Kids");
-    auto page_count = page_tree->get("Count").value().as_int();
+    auto kids_array = page_tree->get_array(this, CommonNames::Kids);
+    auto page_count = page_tree->get(CommonNames::Count).value().as_int();
 
     if (static_cast<size_t>(page_count) != kids_array->elements().size()) {
         // This page tree contains child page trees, so we recursively add
@@ -180,47 +181,47 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
 
 void Document::build_outline()
 {
-    if (!m_catalog->contains("Outlines"))
+    if (!m_catalog->contains(CommonNames::Outlines))
         return;
 
-    auto outline_dict = m_catalog->get_dict(this, "Outlines");
-    if (!outline_dict->contains("First"))
+    auto outline_dict = m_catalog->get_dict(this, CommonNames::Outlines);
+    if (!outline_dict->contains(CommonNames::First))
         return;
 
-    VERIFY(outline_dict->contains("Last"));
+    VERIFY(outline_dict->contains(CommonNames::Last));
 
-    auto first_ref = outline_dict->get_value("First");
-    auto last_ref = outline_dict->get_value("Last");
+    auto first_ref = outline_dict->get_value(CommonNames::First);
+    auto last_ref = outline_dict->get_value(CommonNames::Last);
 
     auto children = build_outline_item_chain(first_ref, last_ref);
 
     m_outline = adopt_ref(*new OutlineDict());
     m_outline->children = move(children);
 
-    if (outline_dict->contains("Count"))
-        m_outline->count = outline_dict->get_value("Count").as_int();
+    if (outline_dict->contains(CommonNames::Count))
+        m_outline->count = outline_dict->get_value(CommonNames::Count).as_int();
 }
 
 NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> outline_item_dict)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
 
-    if (outline_item_dict->contains("First")) {
-        VERIFY(outline_item_dict->contains("Last"));
-        auto first_ref = outline_item_dict->get_value("First");
-        auto last_ref = outline_item_dict->get_value("Last");
+    if (outline_item_dict->contains(CommonNames::First)) {
+        VERIFY(outline_item_dict->contains(CommonNames::Last));
+        auto first_ref = outline_item_dict->get_value(CommonNames::First);
+        auto last_ref = outline_item_dict->get_value(CommonNames::Last);
 
         auto children = build_outline_item_chain(first_ref, last_ref);
         outline_item->children = move(children);
     }
 
-    outline_item->title = outline_item_dict->get_string(this, "Title")->string();
+    outline_item->title = outline_item_dict->get_string(this, CommonNames::Title)->string();
 
-    if (outline_item_dict->contains("Count"))
-        outline_item->count = outline_item_dict->get_value("Count").as_int();
+    if (outline_item_dict->contains(CommonNames::Count))
+        outline_item->count = outline_item_dict->get_value(CommonNames::Count).as_int();
 
-    if (outline_item_dict->contains("Dest")) {
-        auto dest_arr = outline_item_dict->get_array(this, "Dest");
+    if (outline_item_dict->contains(CommonNames::Dest)) {
+        auto dest_arr = outline_item_dict->get_array(this, CommonNames::Dest);
         auto page_ref = dest_arr->at(0);
         auto type_name = dest_arr->get_name_at(this, 1)->name();
 
@@ -229,21 +230,21 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
             parameters.append(dest_arr->at(i).to_float());
 
         Destination::Type type;
-        if (type_name == "XYZ") {
+        if (type_name == CommonNames::XYZ) {
             type = Destination::Type::XYZ;
-        } else if (type_name == "Fit") {
+        } else if (type_name == CommonNames::Fit) {
             type = Destination::Type::Fit;
-        } else if (type_name == "FitH") {
+        } else if (type_name == CommonNames::FitH) {
             type = Destination::Type::FitH;
-        } else if (type_name == "FitV") {
+        } else if (type_name == CommonNames::FitV) {
             type = Destination::Type::FitV;
-        } else if (type_name == "FitR") {
+        } else if (type_name == CommonNames::FitR) {
             type = Destination::Type::FitR;
-        } else if (type_name == "FitB") {
+        } else if (type_name == CommonNames::FitB) {
             type = Destination::Type::FitB;
-        } else if (type_name == "FitBH") {
+        } else if (type_name == CommonNames::FitBH) {
             type = Destination::Type::FitBH;
-        } else if (type_name == "FitBV") {
+        } else if (type_name == CommonNames::FitBV) {
             type = Destination::Type::FitBV;
         } else {
             VERIFY_NOT_REACHED();
@@ -252,16 +253,16 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
         outline_item->dest = Destination { type, page_ref, parameters };
     }
 
-    if (outline_item_dict->contains("C")) {
-        auto color_array = outline_item_dict->get_array(this, "C");
+    if (outline_item_dict->contains(CommonNames::C)) {
+        auto color_array = outline_item_dict->get_array(this, CommonNames::C);
         auto r = static_cast<int>(255.0f * color_array->at(0).as_float());
         auto g = static_cast<int>(255.0f * color_array->at(1).as_float());
         auto b = static_cast<int>(255.0f * color_array->at(2).as_float());
         outline_item->color = Color(r, g, b);
     }
 
-    if (outline_item_dict->contains("F")) {
-        auto bitfield = outline_item_dict->get_value("F").as_int();
+    if (outline_item_dict->contains(CommonNames::F)) {
+        auto bitfield = outline_item_dict->get_value(CommonNames::F).as_int();
         outline_item->italic = bitfield & 0x1;
         outline_item->bold = bitfield & 0x2;
     }
@@ -283,8 +284,8 @@ NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(const Value&
     auto current_child_dict = first_dict;
     u32 current_child_index = first_ref.as_ref_index();
 
-    while (current_child_dict->contains("Next")) {
-        auto next_child_dict_ref = current_child_dict->get_value("Next");
+    while (current_child_dict->contains(CommonNames::Next)) {
+        auto next_child_dict_ref = current_child_dict->get_value(CommonNames::Next);
         current_child_index = next_child_dict_ref.as_ref_index();
         auto next_child_dict = object_cast<DictObject>(get_or_load_value(current_child_index).as_object());
         auto next_child = build_outline_item(next_child_dict);
