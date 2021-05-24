@@ -207,9 +207,9 @@ protected:
         }
 
         size_t index = 0;
-        uint32_t message_size = 0;
+        u32 message_size = 0;
         for (; index + sizeof(message_size) < bytes.size(); index += message_size) {
-            message_size = *reinterpret_cast<uint32_t*>(bytes.data() + index);
+            memcpy(&message_size, bytes.data() + index, sizeof(message_size));
             if (message_size == 0 || bytes.size() - index - sizeof(uint32_t) < message_size)
                 break;
             index += sizeof(message_size);
