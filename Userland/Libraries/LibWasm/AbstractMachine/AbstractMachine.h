@@ -108,6 +108,13 @@ public:
         return *this;
     }
 
+    Value& operator=(const Value& value)
+    {
+        m_value = value.m_value;
+        m_type = value.m_type;
+        return *this;
+    }
+
     template<typename T>
     Optional<T> to()
     {
