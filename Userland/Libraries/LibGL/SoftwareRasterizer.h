@@ -38,6 +38,8 @@ public:
     void wait_for_all_threads() const;
     void set_options(const RasterizerOptions&);
     RasterizerOptions options() const { return m_options; }
+    Gfx::RGBA32 get_backbuffer_pixel(int x, int y);
+    float get_depthbuffer_value(int x, int y);
 
 private:
     RefPtr<Gfx::Bitmap> m_render_target;
