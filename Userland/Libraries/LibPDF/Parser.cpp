@@ -6,6 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Filter.h>
 #include <LibPDF/Parser.h>
@@ -616,19 +617,19 @@ RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t o
             break;
         auto name = parse_name();
         auto name_string = name->name();
-        if (!name_string.is_one_of("Type", "Parent", "Kids", "Count")) {
+        if (!name_string.is_one_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count)) {
             // This is a page, not a page tree node
             return {};
         }
         auto value = parse_value();
-        if (name_string == "Type") {
+        if (name_string == CommonNames::Type) {
             if (!value.is_object())
                 return {};
             auto type_object = value.as_object();
             if (!type_object->is_name())
                 return {};
             auto type_name = object_cast<NameObject>(type_object);
-            if (type_name->name() != "Pages")
+            if (type_name->name() != CommonNames::Pages)
                 return {};
         }
         map.set(name->name(), value);
@@ -649,7 +650,7 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
 
     ReadonlyBytes bytes;
 
-    auto maybe_length = dict->get("Length");
+    auto maybe_length = dict->get(CommonNames::Length);
     if (maybe_length.has_value()) {
         // The PDF writer has kindly provided us with the direct length of the stream
         m_reader.save();
@@ -677,8 +678,8 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     m_reader.move_by(9);
     consume_whitespace();
 
-    if (dict->contains("Filter")) {
-        auto filter_type = dict->get_name(m_document, "Filter")->name();
+    if (dict->contains(CommonNames::Filter)) {
+        auto filter_type = dict->get_name(m_document, CommonNames::Filter)->name();
         auto maybe_bytes = Filter::decode(bytes, filter_type);
         // FIXME: Handle error condition
         VERIFY(maybe_bytes.has_value());
