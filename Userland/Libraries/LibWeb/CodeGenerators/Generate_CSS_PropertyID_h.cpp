@@ -53,6 +53,7 @@ namespace Web::CSS {
 
 enum class PropertyID {
     Invalid,
+    Custom,
 )~~~");
 
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
