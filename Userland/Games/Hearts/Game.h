@@ -77,6 +77,8 @@ private:
         PassingSelectConfirmed,
         PassingAccept,
         Play,
+        GameEndedWaiting,
+        GameEnded,
     };
 
     State m_state { State::PassingSelect };
