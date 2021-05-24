@@ -1113,9 +1113,238 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
         }
     }
 
+    // Some helper functions for converting float values to integer types
+    auto float_to_i8 = [](float f) -> GLchar {
+        return static_cast<GLchar>((0x7f * min(max(f, 0.0f), 1.0f) - 1) / 2);
+    };
+
+    auto float_to_i16 = [](float f) -> GLshort {
+        return static_cast<GLshort>((0x7fff * min(max(f, 0.0f), 1.0f) - 1) / 2);
+    };
+
+    auto float_to_i32 = [](float f) -> GLint {
+        return static_cast<GLint>((0x7fffffff * min(max(f, 0.0f), 1.0f) - 1) / 2);
+    };
+
+    auto float_to_u8 = [](float f) -> GLubyte {
+        return static_cast<GLubyte>(0xff * min(max(f, 0.0f), 1.0f));
+    };
+
+    auto float_to_u16 = [](float f) -> GLushort {
+        return static_cast<GLushort>(0xffff * min(max(f, 0.0f), 1.0f));
+    };
+
+    auto float_to_u32 = [](float f) -> GLuint {
+        return static_cast<GLuint>(0xffffffff * min(max(f, 0.0f), 1.0f));
+    };
+
     if (format == GL_DEPTH_COMPONENT) {
         // Read from depth buffer
+        for (size_t i = 0; i < height; ++i) {
+            for (size_t j = 0; j < width; ++j) {
+                float depth = m_rasterizer.get_depthbuffer_value(x + j, y + i);
+
+                switch (type) {
+                case GL_BYTE:
+                    reinterpret_cast<GLchar*>(pixels)[i * width + j] = float_to_i8(depth);
+                    break;
+                case GL_SHORT:
+                    reinterpret_cast<GLshort*>(pixels)[i * width + j] = float_to_i16(depth);
+                    break;
+                case GL_INT:
+                    reinterpret_cast<GLint*>(pixels)[i * width + j] = float_to_i32(depth);
+                    break;
+                case GL_UNSIGNED_BYTE:
+                    reinterpret_cast<GLubyte*>(pixels)[i * width + j] = float_to_u8(depth);
+                    break;
+                case GL_UNSIGNED_SHORT:
+                    reinterpret_cast<GLushort*>(pixels)[i * width + j] = float_to_u16(depth);
+                    break;
+                case GL_UNSIGNED_INT:
+                    reinterpret_cast<GLuint*>(pixels)[i * width + j] = float_to_u32(depth);
+                    break;
+                case GL_FLOAT:
+                    reinterpret_cast<GLfloat*>(pixels)[i * width + j] = min(max(depth, 0.0f), 1.0f);
+                    break;
+                }
+            }
+        }
         return;
+    }
+
+    bool write_red = false;
+    bool write_green = false;
+    bool write_blue = false;
+    bool write_alpha = false;
+    size_t component_count = 0;
+    size_t component_size = 0;
+    size_t red_offset = 0;
+    size_t green_offset = 0;
+    size_t blue_offset = 0;
+    size_t alpha_offset = 0;
+    char* red_ptr = nullptr;
+    char* green_ptr = nullptr;
+    char* blue_ptr = nullptr;
+    char* alpha_ptr = nullptr;
+
+    switch (format) {
+    case GL_RGB:
+        write_red = true;
+        write_green = true;
+        write_blue = true;
+        component_count = 3;
+        red_offset = 2;
+        green_offset = 1;
+        blue_offset = 0;
+        break;
+    case GL_RGBA:
+        write_red = true;
+        write_green = true;
+        write_blue = true;
+        write_alpha = true;
+        component_count = 4;
+        red_offset = 3;
+        green_offset = 2;
+        blue_offset = 1;
+        alpha_offset = 0;
+        break;
+    case GL_RED:
+        write_red = true;
+        component_count = 1;
+        red_offset = 0;
+        break;
+    case GL_GREEN:
+        write_green = true;
+        component_count = 1;
+        green_offset = 0;
+        break;
+    case GL_BLUE:
+        write_blue = true;
+        component_count = 1;
+        blue_offset = 0;
+        break;
+    case GL_ALPHA:
+        write_alpha = true;
+        component_count = 1;
+        alpha_offset = 0;
+        break;
+    }
+
+    switch (type) {
+    case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
+        component_size = 1;
+        break;
+    case GL_SHORT:
+    case GL_UNSIGNED_SHORT:
+        component_size = 2;
+        break;
+    case GL_INT:
+    case GL_UNSIGNED_INT:
+    case GL_FLOAT:
+        component_size = 4;
+        break;
+    }
+
+    char* out_ptr = reinterpret_cast<char*>(pixels);
+    for (int i = 0; i < (int)height; ++i) {
+        for (int j = 0; j < (int)width; ++j) {
+            Gfx::RGBA32 color {};
+            if (m_current_read_buffer == GL_FRONT || m_current_read_buffer == GL_LEFT || m_current_read_buffer == GL_FRONT_LEFT) {
+                if (y + i >= m_frontbuffer->width() || x + j >= m_frontbuffer->height())
+                    color = 0;
+                else
+                    color = m_frontbuffer->scanline(y + i)[x + j];
+            } else {
+                color = m_rasterizer.get_backbuffer_pixel(x + j, y + i);
+            }
+
+            float red = ((color >> 24) & 0xff) / 255.0f;
+            float green = ((color >> 16) & 0xff) / 255.0f;
+            float blue = ((color >> 8) & 0xff) / 255.0f;
+            float alpha = (color & 0xff) / 255.0f;
+
+            // FIXME: Set up write pointers based on selected endianness (glPixelStore)
+            red_ptr = out_ptr + (component_size * red_offset);
+            green_ptr = out_ptr + (component_size * green_offset);
+            blue_ptr = out_ptr + (component_size * blue_offset);
+            alpha_ptr = out_ptr + (component_size * alpha_offset);
+
+            switch (type) {
+            case GL_BYTE:
+                if (write_red)
+                    *reinterpret_cast<GLchar*>(red_ptr) = float_to_i8(red);
+                if (write_green)
+                    *reinterpret_cast<GLchar*>(green_ptr) = float_to_i8(green);
+                if (write_blue)
+                    *reinterpret_cast<GLchar*>(blue_ptr) = float_to_i8(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLchar*>(alpha_ptr) = float_to_i8(alpha);
+                break;
+            case GL_UNSIGNED_BYTE:
+                if (write_red)
+                    *reinterpret_cast<GLubyte*>(red_ptr) = float_to_u8(red);
+                if (write_green)
+                    *reinterpret_cast<GLubyte*>(green_ptr) = float_to_u8(green);
+                if (write_blue)
+                    *reinterpret_cast<GLubyte*>(blue_ptr) = float_to_u8(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLubyte*>(alpha_ptr) = float_to_u8(alpha);
+                break;
+            case GL_SHORT:
+                if (write_red)
+                    *reinterpret_cast<GLshort*>(red_ptr) = float_to_i16(red);
+                if (write_green)
+                    *reinterpret_cast<GLshort*>(green_ptr) = float_to_i16(green);
+                if (write_blue)
+                    *reinterpret_cast<GLshort*>(blue_ptr) = float_to_i16(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLshort*>(alpha_ptr) = float_to_i16(alpha);
+                break;
+            case GL_UNSIGNED_SHORT:
+                if (write_red)
+                    *reinterpret_cast<GLushort*>(red_ptr) = float_to_u16(red);
+                if (write_green)
+                    *reinterpret_cast<GLushort*>(green_ptr) = float_to_u16(green);
+                if (write_blue)
+                    *reinterpret_cast<GLushort*>(blue_ptr) = float_to_u16(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLushort*>(alpha_ptr) = float_to_u16(alpha);
+                break;
+            case GL_INT:
+                if (write_red)
+                    *reinterpret_cast<GLint*>(red_ptr) = float_to_i32(red);
+                if (write_green)
+                    *reinterpret_cast<GLint*>(green_ptr) = float_to_i32(green);
+                if (write_blue)
+                    *reinterpret_cast<GLint*>(blue_ptr) = float_to_i32(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLint*>(alpha_ptr) = float_to_i32(alpha);
+                break;
+            case GL_UNSIGNED_INT:
+                if (write_red)
+                    *reinterpret_cast<GLuint*>(red_ptr) = float_to_u32(red);
+                if (write_green)
+                    *reinterpret_cast<GLuint*>(green_ptr) = float_to_u32(green);
+                if (write_blue)
+                    *reinterpret_cast<GLuint*>(blue_ptr) = float_to_u32(blue);
+                if (write_alpha)
+                    *reinterpret_cast<GLuint*>(alpha_ptr) = float_to_u32(alpha);
+                break;
+            case GL_FLOAT:
+                if (write_red)
+                    *reinterpret_cast<GLfloat*>(red_ptr) = min(max(red, 0.0f), 1.0f);
+                if (write_green)
+                    *reinterpret_cast<GLfloat*>(green_ptr) = min(max(green, 0.0f), 1.0f);
+                if (write_blue)
+                    *reinterpret_cast<GLfloat*>(blue_ptr) = min(max(blue, 0.0f), 1.0f);
+                if (write_alpha)
+                    *reinterpret_cast<GLfloat*>(alpha_ptr) = min(max(alpha, 0.0f), 1.0f);
+                break;
+            }
+
+            out_ptr += component_size * component_count;
+        }
     }
 }
 

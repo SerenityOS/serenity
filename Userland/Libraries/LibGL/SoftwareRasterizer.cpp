@@ -470,4 +470,22 @@ void SoftwareRasterizer::set_options(const RasterizerOptions& options)
     // FIXME: Recreate or reinitialize render threads here when multithreading is being implemented
 }
 
+Gfx::RGBA32 SoftwareRasterizer::get_backbuffer_pixel(int x, int y)
+{
+    // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
+    if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
+        return 0;
+
+    return m_render_target->scanline(y)[x];
+}
+
+float SoftwareRasterizer::get_depthbuffer_value(int x, int y)
+{
+    // FIXME: Reading individual pixels is very slow, rewrite this to transfer whole blocks
+    if (x < 0 || y < 0 || x >= m_render_target->width() || y >= m_render_target->height())
+        return 1.0f;
+
+    return m_depth_buffer->scanline(y)[x];
+}
+
 }
