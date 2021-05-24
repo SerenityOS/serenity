@@ -464,6 +464,18 @@ bool Game::are_hearts_broken() const
     return false;
 }
 
+void Game::card_clicked(size_t card_index, Card& card)
+{
+    String explanation;
+    if (!is_valid_play(m_players[0], card, &explanation)) {
+        on_status_change(String::formatted("You can't play this card: {}", explanation));
+        continue_game_after_delay();
+        return;
+    }
+    play_card(m_players[0], card_index);
+    update();
+}
+
 void Game::mouseup_event(GUI::MouseEvent& event)
 {
     GUI::Frame::mouseup_event(event);
@@ -479,14 +491,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
         if (card.is_null())
             continue;
         if (card->rect().contains(event.position())) {
-            String explanation;
-            if (!is_valid_play(m_players[0], *card, &explanation)) {
-                on_status_change(String::formatted("You can't play this card: {}", explanation));
-                continue_game_after_delay();
-                return;
-            }
-            play_card(m_players[0], i);
-            update();
+            card_clicked(i, *card);
             break;
         }
     }

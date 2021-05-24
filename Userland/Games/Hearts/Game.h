@@ -59,6 +59,8 @@ private:
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
 
+    void card_clicked(size_t card_index, Card& card);
+
     Player m_players[4];
     NonnullRefPtrVector<Card> m_trick;
     Player* m_leading_player { nullptr };
