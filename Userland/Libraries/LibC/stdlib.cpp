@@ -1080,9 +1080,9 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
 // TODO: In the future, rand can be made deterministic and this not.
 uint32_t arc4random(void)
 {
-    char buf[4];
-    syscall(SC_getrandom, buf, 4, 0);
-    return *(uint32_t*)buf;
+    uint32_t buf;
+    syscall(SC_getrandom, &buf, sizeof(buf), 0);
+    return buf;
 }
 
 void arc4random_buf(void* buffer, size_t buffer_size)
