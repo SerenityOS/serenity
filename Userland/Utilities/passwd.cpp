@@ -103,6 +103,17 @@ int main(int argc, char** argv)
             return 1;
         }
 
+        auto new_password_retype = Core::get_password("Retype new password: ");
+        if (new_password_retype.is_error()) {
+            warnln("{}", new_password_retype.error());
+            return 1;
+        }
+
+        if (new_password.value() != new_password_retype.value()) {
+            warnln("Sorry, passwords don't match.");
+            return 1;
+        }
+
         target_account.set_password(new_password.value().characters());
     }
 
