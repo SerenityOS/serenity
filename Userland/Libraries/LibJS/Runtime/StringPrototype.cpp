@@ -240,7 +240,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     auto needle = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    return Value((i32)string.index_of(needle).value_or(-1));
+    return Value((i32)string.find(needle).value_or(-1));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
@@ -692,7 +692,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto search_string = search_value.to_string(global_object);
     if (vm.exception())
         return {};
-    Optional<size_t> position = string.index_of(search_string);
+    Optional<size_t> position = string.find(search_string);
     if (!position.has_value())
         return js_string(vm, string);
 

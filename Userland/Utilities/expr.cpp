@@ -371,7 +371,7 @@ private:
         }
 
         if (m_op == StringOperation::Index) {
-            if (auto idx = m_str->string().index_of(m_pos_or_chars->string()); idx.has_value())
+            if (auto idx = m_str->string().find(m_pos_or_chars->string()); idx.has_value())
                 return idx.value() + 1;
             return 0;
         }

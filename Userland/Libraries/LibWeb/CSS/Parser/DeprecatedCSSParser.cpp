@@ -389,7 +389,7 @@ public:
     {
         if (const auto start_pos = pseudo_name.find('('); start_pos.has_value()) {
             const auto start = start_pos.value() + 1;
-            if (const auto end_pos = pseudo_name.index_of(")", start); end_pos.has_value()) {
+            if (const auto end_pos = pseudo_name.find(')', start); end_pos.has_value()) {
                 return pseudo_name.substring_view(start, end_pos.value() - start).trim_whitespace();
             }
         }
