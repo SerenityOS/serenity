@@ -187,8 +187,9 @@ public:
             const u32* addr = (const u32*)&padded_last_bytes;
             m_current_code = (*addr & mask) >> current_bit_offset;
         } else {
-            const u32* addr = (const u32*)&m_lzw_bytes.at(current_byte_index);
-            m_current_code = (*addr & mask) >> current_bit_offset;
+            u32 tmp_word;
+            memcpy(&tmp_word, &m_lzw_bytes.at(current_byte_index), sizeof(u32));
+            m_current_code = (tmp_word & mask) >> current_bit_offset;
         }
 
         if (m_current_code > m_code_table.size()) {
