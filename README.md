@@ -133,6 +133,7 @@ Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 * **Idan Horowitz** - [IdanHo](https://github.com/IdanHo)
 * **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
 * **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
+* **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
