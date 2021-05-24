@@ -105,6 +105,10 @@ void Terminal::alter_mode(bool should_set, Parameters params, Intermediates inte
                     m_client.set_cursor_style(None);
                 }
                 break;
+            case 2004:
+                dbgln_if(TERMINAL_DEBUG, "Setting bracketed mode enabled={}", should_set);
+                m_needs_bracketed_paste = should_set;
+                break;
             default:
                 dbgln("Terminal::alter_mode: Unimplemented private mode {} (should_set={})", mode, should_set);
                 break;
