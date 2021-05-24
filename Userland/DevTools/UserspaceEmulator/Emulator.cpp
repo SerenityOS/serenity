@@ -278,7 +278,7 @@ String Emulator::create_backtrace_line(FlatPtr address)
     const auto* region = find_text_region(address);
     if (!region)
         return minimal;
-    auto separator_index = region->name().index_of(":");
+    auto separator_index = region->name().find(':');
     if (!separator_index.has_value())
         return minimal;
 

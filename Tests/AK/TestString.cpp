@@ -255,3 +255,19 @@ TEST_CASE(sprintf)
     EXPECT_EQ(String(buf1), String("+12"));
     EXPECT_EQ(String(buf2), String("-12"));
 }
+
+TEST_CASE(find)
+{
+    String a = "foobarbar";
+    EXPECT_EQ(a.find("bar"sv), Optional<size_t> { 3 });
+    EXPECT_EQ(a.find("baz"sv), Optional<size_t> {});
+    EXPECT_EQ(a.find("bar"sv, 4), Optional<size_t> { 6 });
+    EXPECT_EQ(a.find("bar"sv, 9), Optional<size_t> {});
+
+    EXPECT_EQ(a.find('f'), Optional<size_t> { 0 });
+    EXPECT_EQ(a.find('x'), Optional<size_t> {});
+    EXPECT_EQ(a.find('f', 1), Optional<size_t> {});
+    EXPECT_EQ(a.find('b'), Optional<size_t> { 3 });
+    EXPECT_EQ(a.find('b', 4), Optional<size_t> { 6 });
+    EXPECT_EQ(a.find('b', 9), Optional<size_t> {});
+}
