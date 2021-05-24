@@ -30,6 +30,8 @@ private:
     void set_path(const LexicalPath& file);
     void update_title();
 
+    RefPtr<Core::ConfigFile> m_config;
+
     RefPtr<HexEditor> m_editor;
     String m_path;
     String m_name;
