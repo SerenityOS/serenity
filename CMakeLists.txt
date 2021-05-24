@@ -110,6 +110,11 @@ include_directories(.)
 include_directories(${CMAKE_BINARY_DIR})
 
 add_subdirectory(Meta/Lagom)
+
+if (ENABLE_UNDEFINED_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
+
 add_subdirectory(Userland/DevTools/IPCCompiler)
 add_subdirectory(Userland/DevTools/StateMachineGenerator)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
@@ -232,6 +237,15 @@ include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Services)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland/Libraries)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/Userland)
+
+# FIXME: vptr sanitizing requires.. intense ABI wrangling of std::type_info
+#     And would be better served by porting ubsan_type_hash_itanium.cpp from compiler-rt
+# We don't set this along with the original fsanitize=undefined because for host tools, we can rely on
+# the host's libubsan to provide the ABI-specific vptr type cache.
+# This is not a problem for the Kernel, because it does not have RTTI enabled :^)
+if (ENABLE_UNDEFINED_SANITIZER)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
+endif()
 
 add_subdirectory(AK)
 add_subdirectory(Kernel)
