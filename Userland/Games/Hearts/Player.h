@@ -30,6 +30,8 @@ public:
     size_t pick_last_card();
     bool has_card_of_type(Card::Type type);
 
+    void sort_hand() { quick_sort(hand, hearts_card_less); }
+
     Vector<RefPtr<Card>> hand;
     Vector<RefPtr<Card>> cards_taken;
     Gfx::IntPoint first_card_position;

@@ -111,7 +111,7 @@ void Game::setup(String player_name)
             }
             player.hand.append(card);
         }
-        quick_sort(player.hand, hearts_card_less);
+        player.sort_hand();
         auto card_position = player.first_card_position;
         for (auto& card : player.hand) {
             card->set_position(card_position);
