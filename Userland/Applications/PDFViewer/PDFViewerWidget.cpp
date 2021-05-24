@@ -12,6 +12,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
@@ -103,11 +104,18 @@ void PDFViewerWidget::open_file(const String& path)
 {
     window()->set_title(String::formatted("{} - PDF Viewer", path));
     auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
-    VERIFY(!file_result.is_error());
+    if (file_result.is_error()) {
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't open file: {}", path));
+        return;
+    }
+
     m_buffer = file_result.value()->read_all();
     auto document = PDF::Document::create(m_buffer);
-    // FIXME: Show error dialog if the Document is invalid
-    VERIFY(document);
+    if (!document) {
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF: {}", path));
+        return;
+    }
+
     m_viewer->set_document(document);
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
     m_total_page_label->set_fixed_width(30);
