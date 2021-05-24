@@ -128,7 +128,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
     Result result { Trap {} };
     {
-        Configuration::CallFrameHandle handle { configuration };
+        CallFrameHandle handle { *this, configuration };
         result = configuration.call(*this, address, move(args));
     }
 
@@ -437,7 +437,10 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         for (size_t i = 0; i < frame.arity(); ++i)
             results.prepend(configuration.stack().pop());
         // drop all locals
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
         Optional<Label> last_label;
+#pragma GCC diagnostic pop
         for (; !configuration.stack().is_empty();) {
             auto entry = configuration.stack().pop();
             if (entry.has<Label>()) {
