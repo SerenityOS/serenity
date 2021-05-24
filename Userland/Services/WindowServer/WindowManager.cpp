@@ -28,7 +28,6 @@
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
-#include <serenity.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
