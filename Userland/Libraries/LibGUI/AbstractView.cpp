@@ -23,6 +23,8 @@ AbstractView::AbstractView()
     : m_sort_order(SortOrder::Ascending)
     , m_selection(*this)
 {
+    REGISTER_BOOL_PROPERTY("activates_on_selection", activates_on_selection, set_activates_on_selection);
+
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
 
