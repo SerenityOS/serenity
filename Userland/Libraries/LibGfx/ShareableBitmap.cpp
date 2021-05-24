@@ -14,7 +14,7 @@
 namespace Gfx {
 
 ShareableBitmap::ShareableBitmap(const Bitmap& bitmap)
-    : m_bitmap(bitmap.to_bitmap_backed_by_anon_fd())
+    : m_bitmap(bitmap.to_bitmap_backed_by_anonymous_buffer())
 {
 }
 
@@ -33,7 +33,7 @@ bool encode(Encoder& encoder, const Gfx::ShareableBitmap& shareable_bitmap)
     if (!shareable_bitmap.is_valid())
         return true;
     auto& bitmap = *shareable_bitmap.bitmap();
-    encoder << IPC::File(bitmap.anon_fd());
+    encoder << IPC::File(bitmap.anonymous_buffer().fd());
     encoder << bitmap.size();
     encoder << bitmap.scale();
     encoder << (u32)bitmap.format();
@@ -73,7 +73,10 @@ bool decode(Decoder& decoder, Gfx::ShareableBitmap& shareable_bitmap)
         if (!decoder.decode(palette))
             return false;
     }
-    auto bitmap = Gfx::Bitmap::create_with_anon_fd(bitmap_format, anon_file.take_fd(), size, scale, palette, Gfx::Bitmap::ShouldCloseAnonymousFile::Yes);
+    auto buffer = Core::AnonymousBuffer::create_from_anon_fd(anon_file.take_fd(), Gfx::Bitmap::size_in_bytes(Gfx::Bitmap::minimum_pitch(size.width(), bitmap_format), size.height()));
+    if (!buffer.is_valid())
+        return false;
+    auto bitmap = Gfx::Bitmap::create_with_anonymous_buffer(bitmap_format, buffer, size, scale, palette);
     if (!bitmap)
         return false;
     shareable_bitmap = Gfx::ShareableBitmap { bitmap.release_nonnull(), Gfx::ShareableBitmap::ConstructWithKnownGoodBitmap };
