@@ -48,9 +48,11 @@ __BEGIN_DECLS
 #ifndef __LP64__
 #    define PRIx64 "llx"
 #    define PRIX64 "llX"
+#    define PRIxPTR "x"
 #else
 #    define PRIx64 "lx"
 #    define PRIX64 "lX"
+#    define PRIxPTR "lx"
 #endif
 
 #define __PRI64_PREFIX "ll"
