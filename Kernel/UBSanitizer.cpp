@@ -5,14 +5,14 @@
  */
 
 #include <AK/Format.h>
+#include <AK/UBSanitizer.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/UBSanitizer.h>
 
 using namespace Kernel;
-using namespace Kernel::UBSanitizer;
+using namespace AK::UBSanitizer;
 
-bool Kernel::UBSanitizer::g_ubsan_is_deadly { true };
+bool AK::UBSanitizer::g_ubsan_is_deadly { true };
 
 extern "C" {
 
