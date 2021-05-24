@@ -1050,6 +1050,75 @@ void SoftwareGLContext::gl_read_buffer(GLenum mode)
     m_current_read_buffer = mode;
 }
 
+void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
+{
+    if (m_in_draw_state) {
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    // Check for negative width/height omitted because GLsizei is unsigned in our implementation
+
+    if (format != GL_COLOR_INDEX
+        && format != GL_STENCIL_INDEX
+        && format != GL_DEPTH_COMPONENT
+        && format != GL_RED
+        && format != GL_GREEN
+        && format != GL_BLUE
+        && format != GL_ALPHA
+        && format != GL_RGB
+        && format != GL_RGBA
+        && format != GL_LUMINANCE
+        && format != GL_LUMINANCE_ALPHA) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    if (type != GL_UNSIGNED_BYTE
+        && type != GL_BYTE
+        && type != GL_BITMAP
+        && type != GL_UNSIGNED_SHORT
+        && type != GL_SHORT
+        && type != GL_BLUE
+        && type != GL_UNSIGNED_INT
+        && type != GL_INT
+        && type != GL_FLOAT) {
+        m_error = GL_INVALID_ENUM;
+        return;
+    }
+
+    if (format == GL_COLOR_INDEX) {
+        // FIXME: We only support RGBA buffers for now.
+        // Once we add support for indexed color modes do the correct check here
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (format == GL_STENCIL_INDEX) {
+        // FIXME: We do not have stencil buffers yet
+        // Once we add support for stencil buffers do the correct check here
+        m_error = GL_INVALID_OPERATION;
+        return;
+    }
+
+    if (format == GL_DEPTH_COMPONENT) {
+        // FIXME: This check needs to be a bit more sophisticated. Currently the buffers
+        // are hardcoded. Once we add proper structures for them we need to correct this check
+        if (m_current_read_buffer == GL_FRONT
+            || m_current_read_buffer == GL_FRONT_LEFT
+            || m_current_read_buffer == GL_FRONT_RIGHT) {
+            // Error because only back buffer has a depth buffer
+            m_error = GL_INVALID_OPERATION;
+            return;
+        }
+    }
+
+    if (format == GL_DEPTH_COMPONENT) {
+        // Read from depth buffer
+        return;
+    }
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
