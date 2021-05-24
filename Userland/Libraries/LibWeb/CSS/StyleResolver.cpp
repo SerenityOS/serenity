@@ -74,7 +74,7 @@ Vector<MatchingRule> StyleResolver::collect_matching_rules(const DOM::Element& e
             size_t selector_index = 0;
             for (auto& selector : rule.selectors()) {
                 if (SelectorEngine::matches(selector, element)) {
-                    matching_rules.append({ rule, style_sheet_index, rule_index, selector_index });
+                    matching_rules.append({ rule, style_sheet_index, rule_index, selector_index, selector.specificity() });
                     break;
                 }
                 ++selector_index;
