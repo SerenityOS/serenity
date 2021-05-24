@@ -105,7 +105,9 @@ void PDFViewerWidget::open_file(const String& path)
     auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
     VERIFY(!file_result.is_error());
     m_buffer = file_result.value()->read_all();
-    auto document = adopt_ref(*new PDF::Document(m_buffer));
+    auto document = PDF::Document::create(m_buffer);
+    // FIXME: Show error dialog if the Document is invalid
+    VERIFY(document);
     m_viewer->set_document(document);
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
     m_total_page_label->set_fixed_width(30);
