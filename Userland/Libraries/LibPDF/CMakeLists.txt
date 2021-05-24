@@ -1,4 +1,5 @@
 set(SOURCES
+    CommonNames.cpp
     Document.cpp
     Filter.cpp
     Object.cpp

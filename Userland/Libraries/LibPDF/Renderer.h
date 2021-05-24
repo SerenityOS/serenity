@@ -81,7 +81,7 @@ public:
 #undef ENUM
     };
 
-    static Optional<ColorSpace::Type> color_space_from_string(const StringView&);
+    static Optional<ColorSpace::Type> color_space_from_string(const FlyString&);
     static Color default_color_for_color_space(ColorSpace::Type);
     static Color color_from_parameters(ColorSpace::Type color_space, const Vector<Value>& args);
 };

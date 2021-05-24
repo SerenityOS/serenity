@@ -5,6 +5,7 @@
  */
 
 #include <AK/Utf8View.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Renderer.h>
 #include <ctype.h>
 #include <math.h>
@@ -21,7 +22,7 @@
 
 namespace PDF {
 
-Optional<ColorSpace::Type> ColorSpace::color_space_from_string(const StringView& str)
+Optional<ColorSpace::Type> ColorSpace::color_space_from_string(const FlyString& str)
 {
 #define ENUM(name)    \
     if (str == #name) \
@@ -339,13 +340,13 @@ RENDERER_HANDLER(text_set_leading)
 RENDERER_HANDLER(text_set_font)
 {
     auto target_font_name = m_document->resolve_to<NameObject>(args[0])->name();
-    auto fonts_dictionary = m_page.resources->get_dict(m_document, "Font");
+    auto fonts_dictionary = m_page.resources->get_dict(m_document, CommonNames::Font);
     auto font_dictionary = fonts_dictionary->get_dict(m_document, target_font_name);
 
     // FIXME: We do not yet have the standard 14 fonts, as some of them are not open fonts,
     // so we just use LiberationSerif for everything
 
-    auto font_name = font_dictionary->get_name(m_document, "BaseFont")->name().to_lowercase();
+    auto font_name = font_dictionary->get_name(m_document, CommonNames::BaseFont)->name().to_lowercase();
     auto font_view = font_name.view();
     bool is_bold = font_view.contains("bold");
     bool is_italic = font_view.contains("italic");
