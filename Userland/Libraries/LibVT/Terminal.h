@@ -339,6 +339,9 @@ protected:
     Attribute m_current_attribute;
     Attribute m_saved_attribute;
 
+    String m_current_window_title;
+    Vector<String> m_title_stack;
+
 #ifndef KERNEL
     u32 m_next_href_id { 0 };
 #endif

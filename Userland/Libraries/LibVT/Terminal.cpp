@@ -267,7 +267,31 @@ void Terminal::XTERM_WM(Parameters params)
 {
     if (params.size() < 1)
         return;
-    dbgln("FIXME: XTERM_WM: Ps: {} (param count: {})", params[0], params.size());
+    switch (params[0]) {
+    case 22: {
+        if (params.size() > 1 && params[1] == 1) {
+            dbgln("FIXME: we don't support icon titles");
+            return;
+        }
+        dbgln_if(TERMINAL_DEBUG, "Title stack push: {}", m_current_window_title);
+        [[maybe_unused]] auto rc = m_title_stack.try_append(move(m_current_window_title));
+        break;
+    }
+    case 23: {
+        if (params.size() > 1 && params[1] == 1)
+            return;
+        if (m_title_stack.is_empty()) {
+            dbgln("Shenanigans: Tried to pop from empty title stack");
+            return;
+        }
+        m_current_window_title = m_title_stack.take_last();
+        dbgln_if(TERMINAL_DEBUG, "Title stack pop: {}", m_current_window_title);
+        m_client.set_window_title(m_current_window_title);
+        break;
+    }
+    default:
+        dbgln("FIXME: XTERM_WM: Ps: {} (param count: {})", params[0], params.size());
+    }
 }
 
 void Terminal::DECSTBM(Parameters params)
@@ -934,12 +958,14 @@ void Terminal::execute_osc_sequence(OscParameters parameters, u8 last_byte)
     case 0:
     case 1:
     case 2:
-        if (parameters.size() < 2)
+        if (parameters.size() < 2) {
             dbgln("Attempted to set window title without any parameters");
-        else
-            m_client.set_window_title(stringview_ify(1));
-        // FIXME: the split breaks titles containing semicolons.
-        // Should we expose the raw OSC string from the parser? Or join by semicolon?
+        } else {
+            // FIXME: the split breaks titles containing semicolons.
+            // Should we expose the raw OSC string from the parser? Or join by semicolon?
+            m_current_window_title = stringview_ify(1).to_string();
+            m_client.set_window_title(m_current_window_title);
+        }
         break;
     case 8:
 #ifndef KERNEL
