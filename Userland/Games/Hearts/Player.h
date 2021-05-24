@@ -49,6 +49,7 @@ public:
 
     Vector<RefPtr<Card>> hand;
     Vector<RefPtr<Card>> cards_taken;
+    Vector<int> scores;
     Gfx::IntPoint first_card_position;
     Gfx::IntPoint card_offset;
     Gfx::IntRect name_position;

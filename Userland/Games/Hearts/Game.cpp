@@ -7,9 +7,12 @@
 
 #include "Game.h"
 #include "Helpers.h"
+#include "ScoreCard.h"
 #include <AK/Debug.h>
 #include <AK/QuickSort.h>
+#include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Dialog.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
@@ -107,6 +110,76 @@ void Game::reset()
     m_passing_button->set_enabled(false);
     m_passing_button->set_visible(false);
 
+    m_cards_highlighted.clear();
+
+    m_trick.clear_with_capacity();
+    m_trick_number = 0;
+
+    for (auto& player : m_players) {
+        player.hand.clear_with_capacity();
+        player.cards_taken.clear_with_capacity();
+    }
+}
+
+void Game::show_score_card(bool game_over)
+{
+    auto score_dialog = GUI::Dialog::construct(window());
+    score_dialog->set_resizable(false);
+    score_dialog->set_icon(window()->icon());
+
+    auto& score_widget = score_dialog->set_main_widget<GUI::Widget>();
+    score_widget.set_fill_with_background_color(true);
+    auto& layout = score_widget.set_layout<GUI::HorizontalBoxLayout>();
+    layout.set_margins({ 10, 10, 10, 10 });
+    layout.set_spacing(15);
+
+    auto& card_container = score_widget.add<GUI::Widget>();
+    auto& score_card = card_container.add<ScoreCard>(m_players, game_over);
+
+    auto& button_container = score_widget.add<GUI::Widget>();
+    button_container.set_shrink_to_fit(true);
+    button_container.set_layout<GUI::VerticalBoxLayout>();
+
+    auto& close_button = button_container.add<GUI::Button>("OK");
+    close_button.on_click = [&score_dialog] {
+        score_dialog->done(GUI::Dialog::ExecOK);
+    };
+    close_button.set_min_width(70);
+    close_button.resize(70, 30);
+
+    // FIXME: Why is this necessary?
+    score_dialog->resize({ 20 + score_card.width() + 15 + close_button.width(), 20 + score_card.height() });
+
+    StringBuilder title_builder;
+    title_builder.append("Score Card");
+    if (game_over)
+        title_builder.append(" - Game Over");
+    score_dialog->set_title(title_builder.to_string());
+
+    RefPtr<Core::Timer> close_timer;
+    if (!m_players[0].is_human) {
+        close_timer = Core::Timer::create_single_shot(2000, [&] {
+            score_dialog->close();
+        });
+        close_timer->start();
+    }
+
+    score_dialog->exec();
+}
+
+void Game::setup(String player_name, int hand_number)
+{
+    m_players[0].name = move(player_name);
+
+    reset();
+
+    m_hand_number = hand_number;
+
+    if (m_hand_number == 0) {
+        for (auto& player : m_players)
+            player.scores.clear_with_capacity();
+    }
+
     if (m_hand_number % 4 != 3) {
         m_state = State::PassingSelect;
         m_human_can_play = true;
@@ -125,22 +198,6 @@ void Game::reset()
         }
     } else
         m_state = State::Play;
-    m_cards_highlighted.clear();
-
-    m_trick.clear_with_capacity();
-    m_trick_number = 0;
-
-    for (auto& player : m_players) {
-        player.hand.clear_with_capacity();
-        player.cards_taken.clear_with_capacity();
-    }
-}
-
-void Game::setup(String player_name)
-{
-    m_players[0].name = move(player_name);
-
-    reset();
 
     if (m_hand_number % 4 != 3) {
         m_passing_button->set_visible(true);
@@ -338,21 +395,29 @@ void Game::continue_game_after_delay(int interval_ms)
 void Game::advance_game()
 {
     if (m_state == State::Play && game_ended()) {
-        m_state = State::GameEndedWaiting;
-        on_status_change("Game ended.");
-        continue_game_after_delay(2000);
-        return;
-    }
-
-    if (m_state == State::GameEndedWaiting) {
         m_state = State::GameEnded;
-        if (!m_players[0].is_human)
-            setup(move(m_players[0].name));
+        on_status_change("Game ended.");
+        advance_game();
         return;
     }
 
-    if (m_state == State::GameEnded)
+    if (m_state == State::GameEnded) {
+        int highest_score = 0;
+        for (auto& player : m_players) {
+            int previous_score = player.scores.is_empty() ? 0 : player.scores[player.scores.size() - 1];
+            auto score = previous_score + calculate_score((player));
+            player.scores.append(score);
+            if (score > highest_score)
+                highest_score = score;
+        }
+        bool game_over = highest_score >= 100;
+        show_score_card(game_over);
+        auto next_hand_number = m_hand_number + 1;
+        if (game_over)
+            next_hand_number = 0;
+        setup(move(m_players[0].name), next_hand_number);
         return;
+    }
 
     if (m_state == State::PassingSelect) {
         if (!m_players[0].is_human) {
@@ -602,7 +667,7 @@ void Game::mouseup_event(GUI::MouseEvent& event)
     }
 }
 
-bool Game::is_winner(Player& player)
+int Game::calculate_score(Player& player)
 {
     Optional<int> min_score;
     Optional<int> max_score;
@@ -622,7 +687,12 @@ bool Game::is_winner(Player& player)
             player_score = score;
     }
     constexpr int sum_points_of_all_cards = 26;
-    return (max_score.value() != sum_points_of_all_cards && player_score == min_score.value()) || player_score == sum_points_of_all_cards;
+    if (player_score == sum_points_of_all_cards)
+        return 0;
+    else if (max_score.value() == sum_points_of_all_cards)
+        return 26;
+    else
+        return player_score;
 }
 
 static constexpr int card_highlight_offset = -20;
@@ -747,8 +817,7 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     for (auto& player : m_players) {
         auto& font = painter.font().bold_variant();
-        auto font_color = game_ended() && is_winner(player) ? Color::Blue : Color::Black;
-        painter.draw_text(player.name_position, player.name, font, player.name_alignment, font_color, Gfx::TextElision::None);
+        painter.draw_text(player.name_position, player.name, font, player.name_alignment, Color::Black, Gfx::TextElision::None);
 
         if (!game_ended()) {
             for (auto& card : player.hand)

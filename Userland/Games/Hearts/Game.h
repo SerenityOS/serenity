@@ -24,7 +24,7 @@ public:
 
     virtual ~Game() override;
 
-    void setup(String player_name);
+    void setup(String player_name, int hand_number = 0);
 
     Function<void(String const&)> on_status_change;
 
@@ -32,6 +32,8 @@ private:
     Game();
 
     void reset();
+
+    void show_score_card(bool game_over);
 
     void dump_state() const;
 
@@ -45,7 +47,7 @@ private:
     size_t player_index(Player& player);
     Player& current_player();
     bool game_ended() const { return m_trick_number == 13; }
-    bool is_winner(Player& player);
+    int calculate_score(Player& player);
     bool other_player_has_lower_value_card(Player& player, Card& card);
     bool other_player_has_higher_value_card(Player& player, Card& card);
 
@@ -77,7 +79,6 @@ private:
         PassingSelectConfirmed,
         PassingAccept,
         Play,
-        GameEndedWaiting,
         GameEnded,
     };
 
