@@ -42,7 +42,14 @@ Configuration Configuration::from_config(const StringView& libname)
     // Read behaviour options.
     auto refresh = config_file->read_entry("behaviour", "refresh", "lazy");
     auto operation = config_file->read_entry("behaviour", "operation_mode");
+    auto bracketed_paste = config_file->read_bool_entry("behaviour", "bracketed_paste", true);
     auto default_text_editor = config_file->read_entry("behaviour", "default_text_editor");
+
+    Configuration::Flags flags { Configuration::Flags::None };
+    if (bracketed_paste)
+        flags = static_cast<Flags>(flags | Configuration::Flags::BracketedPaste);
+
+    configuration.set(flags);
 
     if (refresh.equals_ignoring_case("lazy"))
         configuration.set(Configuration::Lazy);
@@ -650,6 +657,9 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     auto old_lines = m_num_lines;
     get_terminal_size();
 
+    if (m_configuration.enable_bracketed_paste)
+        fprintf(stderr, "\x1b[?2004h");
+
     if (m_num_columns != old_cols || m_num_lines != old_lines)
         m_refresh_needed = true;
 
@@ -844,13 +854,8 @@ void Editor::handle_read_event()
             m_state = InputState::CSIExpectFinal;
             [[fallthrough]];
         case InputState::CSIExpectFinal: {
-            m_state = InputState::Free;
-            if (!(code_point >= 0x40 && code_point <= 0x7f)) {
-                dbgln("LibLine: Invalid CSI: {:02x} ({:c})", code_point, code_point);
-                continue;
-            }
-            csi_final = code_point;
-
+            m_state = m_previous_free_state;
+            auto is_in_paste = m_state == InputState::Paste;
             for (auto& parameter : String::copy(csi_parameter_bytes).split(';')) {
                 if (auto value = parameter.to_uint(); value.has_value())
                     csi_parameters.append(value.value());
@@ -863,6 +868,25 @@ void Editor::handle_read_event()
             if (csi_parameters.size() >= 2)
                 param2 = csi_parameters[1];
             unsigned modifiers = param2 ? param2 - 1 : 0;
+
+            if (is_in_paste && code_point != '~' && param1 != 201) {
+                // The only valid escape to process in paste mode is the stop-paste sequence.
+                // so treat everything else as part of the pasted data.
+                insert('\x1b');
+                insert('[');
+                insert(StringView { csi_parameter_bytes.data(), csi_parameter_bytes.size() });
+                insert(StringView { csi_intermediate_bytes.data(), csi_intermediate_bytes.size() });
+                insert(code_point);
+                continue;
+            }
+            if (!(code_point >= 0x40 && code_point <= 0x7f)) {
+                dbgln("LibLine: Invalid CSI: {:02x} ({:c})", code_point, code_point);
+                continue;
+            }
+            csi_final = code_point;
+            csi_parameters.clear();
+            csi_parameter_bytes.clear();
+            csi_intermediate_bytes.clear();
 
             if (csi_final == 'Z') {
                 // 'reverse tab'
@@ -905,6 +929,18 @@ void Editor::handle_read_event()
                     m_search_offset = 0;
                     continue;
                 }
+                if (m_configuration.enable_bracketed_paste) {
+                    // ^[[200~: start bracketed paste
+                    // ^[[201~: end bracketed paste
+                    if (!is_in_paste && param1 == 200) {
+                        m_state = InputState::Paste;
+                        continue;
+                    }
+                    if (is_in_paste && param1 == 201) {
+                        m_state = InputState::Free;
+                        continue;
+                    }
+                }
                 // ^[[5~: page up
                 // ^[[6~: page down
                 dbgln("LibLine: Unhandled '~': {}", param1);
@@ -920,7 +956,16 @@ void Editor::handle_read_event()
             // Verbatim mode will bypass all mechanisms and just insert the code point.
             insert(code_point);
             continue;
+        case InputState::Paste:
+            if (code_point == 27) {
+                m_previous_free_state = InputState::Paste;
+                m_state = InputState::GotEscape;
+                continue;
+            }
+            insert(code_point);
+            continue;
         case InputState::Free:
+            m_previous_free_state = InputState::Free;
             if (code_point == 27) {
                 m_callback_machine.key_pressed(*this, code_point);
                 // Note that this should also deal with explicitly registered keys
