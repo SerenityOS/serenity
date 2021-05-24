@@ -73,7 +73,7 @@ struct OutlineDict final : public RefCounted<OutlineDict> {
 
 class Document final : public RefCounted<Document> {
 public:
-    explicit Document(const ReadonlyBytes& bytes);
+    static RefPtr<Document> create(const ReadonlyBytes& bytes);
 
     ALWAYS_INLINE const XRefTable& xref_table() const { return m_xref_table; }
     ALWAYS_INLINE const DictObject& trailer() const { return *m_trailer; }
@@ -123,20 +123,22 @@ public:
     }
 
 private:
+    explicit Document(const NonnullRefPtr<Parser>& parser);
+
     // FIXME: Currently, to improve performance, we don't load any pages at Document
     // construction, rather we just load the page structure and populate
     // m_page_object_indices. However, we can be even lazier and defer page tree node
     // parsing, as good PDF writers will layout the page tree in a balanced tree to
     // improve lookup time. This would reduce the initial overhead by not loading
     // every page tree node of, say, a 1000+ page PDF file.
-    void build_page_tree();
-    void add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree);
+    bool build_page_tree();
+    bool add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree);
 
     void build_outline();
     NonnullRefPtr<OutlineItem> build_outline_item(NonnullRefPtr<DictObject> outline_item_dict);
     NonnullRefPtrVector<OutlineItem> build_outline_item_chain(const Value& first_ref, const Value& last_ref);
 
-    Parser m_parser;
+    NonnullRefPtr<Parser> m_parser;
     XRefTable m_xref_table;
     RefPtr<DictObject> m_trailer;
     RefPtr<DictObject> m_catalog;
