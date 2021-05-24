@@ -214,7 +214,19 @@ static CSS::Length parse_length(const CSS::ParsingContext& context, const String
 
 static bool takes_integer_value(CSS::PropertyID property_id)
 {
-    return property_id == CSS::PropertyID::ZIndex || property_id == CSS::PropertyID::FontWeight;
+    return property_id == CSS::PropertyID::ZIndex || property_id == CSS::PropertyID::FontWeight || property_id == CSS::PropertyID::Custom;
+}
+
+static StringView parse_custom_property_name(StringView value)
+{
+    if (!value.starts_with("var(") && !value.ends_with(")"))
+        return {};
+    // FIXME: Allow for fallback
+    auto first_comma_index = value.find_first_of(",");
+    auto length = value.length();
+
+    auto substring_length = first_comma_index.has_value() ? first_comma_index.value() - 4 - 1 : length - 4 - 1;
+    return value.substring_view(4, substring_length);
 }
 
 RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, const StringView& string, CSS::PropertyID property_id)
@@ -239,6 +251,8 @@ RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, cons
         return CSS::InitialStyleValue::create();
     if (string.equals_ignoring_case("auto"))
         return CSS::LengthStyleValue::create(CSS::Length::make_auto());
+    if (string.starts_with("var("))
+        return CSS::CustomStyleValue::create(parse_custom_property_name(string));
 
     auto value_id = CSS::value_id_from_string(string);
     if (value_id != CSS::ValueID::Invalid)
@@ -802,7 +816,11 @@ public:
         }
 
         auto property_id = CSS::property_id_from_string(property_name);
-        if (property_id == CSS::PropertyID::Invalid && !property_name.starts_with('-')) {
+
+        if (property_id == CSS::PropertyID::Invalid && property_name.starts_with("--"))
+            property_id = CSS::PropertyID::Custom;
+
+        if (property_id == CSS::PropertyID::Invalid && !property_name.starts_with("-")) {
             dbgln("CSSParser: Unrecognized property '{}'", property_name);
         }
         auto value = parse_css_value(m_context, property_value, property_id);
