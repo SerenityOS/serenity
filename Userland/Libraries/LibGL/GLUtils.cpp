@@ -74,3 +74,8 @@ void glHint(GLenum target, GLenum mode)
 {
     g_gl_context->gl_hint(target, mode);
 }
+
+void glReadBuffer(GLenum mode)
+{
+    g_gl_context->gl_read_buffer(mode);
+}

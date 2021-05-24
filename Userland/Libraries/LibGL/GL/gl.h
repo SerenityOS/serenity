@@ -73,9 +73,15 @@ extern "C" {
 #define GL_ONE_MINUS_DST_COLOR 0x0307
 #define GL_SRC_ALPHA_SATURATE 0x0308
 
-// Culled face side
+// Sides
+#define GL_FRONT_LEFT 0x0400
+#define GL_FRONT_RIGHT 0x0401
+#define GL_BACK_LEFT 0x0402
+#define GL_BACK_RIGHT 0x0403
 #define GL_FRONT 0x0404
 #define GL_BACK 0x0405
+#define GL_LEFT 0x0406
+#define GL_RIGHT 0x0407
 #define GL_FRONT_AND_BACK 0x0408
 
 // Error codes
@@ -204,6 +210,7 @@ GLAPI void glBlendFunc(GLenum sfactor, GLenum dfactor);
 GLAPI void glShadeModel(GLenum mode);
 GLAPI void glAlphaFunc(GLenum func, GLclampf ref);
 GLAPI void glHint(GLenum target, GLenum mode);
+GLAPI void glReadBuffer(GLenum mode);
 
 #ifdef __cplusplus
 }
