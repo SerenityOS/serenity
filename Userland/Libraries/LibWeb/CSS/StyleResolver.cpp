@@ -765,6 +765,37 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
+StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(const DOM::Element& element, const String& custom_property_name) const
+{
+    auto parent_element = element.parent_element();
+    CustomPropertyResolutionTuple parent_resolved {};
+    if (parent_element)
+        parent_resolved = resolve_custom_property_with_specificity(*parent_element, custom_property_name);
+
+    auto matching_rules = collect_matching_rules(element);
+    sort_matching_rules(matching_rules);
+
+    for (int i = matching_rules.size() - 1; i >= 0; --i) {
+        auto& match = matching_rules[i];
+        if (match.specificity < parent_resolved.specificity)
+            continue;
+
+        auto custom_property_style = match.rule->declaration().custom_property(custom_property_name);
+        if (custom_property_style.has_value()) {
+            return { custom_property_style.value(), match.specificity };
+        }
+    }
+
+    return parent_resolved;
+}
+
+Optional<StyleProperty> StyleResolver::resolve_custom_property(const DOM::Element& element, const String& custom_property_name) const
+{
+    auto resolved_with_specificity = resolve_custom_property_with_specificity(element, custom_property_name);
+
+    return resolved_with_specificity.style;
+}
+
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& element) const
 {
     auto style = StyleProperties::create();
@@ -783,7 +814,16 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& 
 
     for (auto& match : matching_rules) {
         for (auto& property : match.rule->declaration().properties()) {
-            set_property_expanding_shorthands(style, property.property_id, property.value, m_document);
+            auto property_value = property.value;
+            if (property.value->is_custom_property()) {
+                auto prop = reinterpret_cast<const CSS::CustomStyleValue*>(property.value.ptr());
+                auto custom_prop_name = prop->custom_property_name();
+                auto resolved = resolve_custom_property(element, custom_prop_name);
+                if (resolved.has_value()) {
+                    property_value = resolved.value().value;
+                }
+            }
+            set_property_expanding_shorthands(style, property.property_id, property_value, m_document);
         }
     }
 
