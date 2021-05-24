@@ -354,6 +354,26 @@ const char* const sys_errlist[] = {
 
 int sys_nerr = EMAXERRNO;
 
+int strerror_r(int errnum, char* buf, size_t buflen)
+{
+    auto saved_errno = errno;
+    if (errnum >= EMAXERRNO) {
+        auto rc = strlcpy(buf, "unknown error", buflen);
+        if (rc >= buflen)
+            dbgln("strerror_r(): Invalid error number '{}' specified and the output buffer is too small.", errnum);
+        errno = saved_errno;
+        return EINVAL;
+    }
+    auto text = strerror(errnum);
+    auto rc = strlcpy(buf, text, buflen);
+    if (rc >= buflen) {
+        errno = saved_errno;
+        return ERANGE;
+    }
+    errno = saved_errno;
+    return 0;
+}
+
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
