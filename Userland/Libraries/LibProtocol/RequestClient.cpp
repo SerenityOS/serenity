@@ -47,8 +47,10 @@ RefPtr<Request> RequestClient::start_request(String const& method, URL const& ur
 RefPtr<Request> RequestClient::start_request(const String& method, const String& url, const HTTP::HeaderList& request_headers, ReadonlyBytes request_body)
 {
     IPC::Dictionary header_dictionary;
-    for (auto& it : request_headers)
+    for (auto& it : request_headers.list()) {
+        dbgln("Header name: {} value: {}", it.name, it.value);
         header_dictionary.add(it.name, it.value);
+    }
 
     auto response = IPCProxy::start_request(method, url, header_dictionary, ByteBuffer::copy(request_body));
     auto request_id = response.request_id();

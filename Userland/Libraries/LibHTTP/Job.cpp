@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#define JOB_DEBUG 1
+
 #include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <LibCompress/Gzip.h>

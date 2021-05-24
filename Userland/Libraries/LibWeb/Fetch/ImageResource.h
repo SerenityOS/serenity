@@ -41,11 +41,19 @@ public:
 
     void update_volatility();
 
+    ImageResource(RefPtr<Response> response)
+        : Response()
+        , m_response(response)
+    {
+    }
+
+
 private:
     ImageResource();
 
     void decode_if_needed() const;
 
+    RefPtr<Response> m_response;
     mutable bool m_animated { false };
     mutable int m_loop_count { 0 };
     mutable Vector<Frame> m_decoded_frames;

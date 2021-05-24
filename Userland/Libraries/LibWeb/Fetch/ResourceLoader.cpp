@@ -17,7 +17,6 @@
 #include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Fetch/ResourceLoader.h>
 #include <LibWeb/Fetch/Response.h>
-#include <LibWeb/Page/Page.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Page/Frame.h>
 #include <LibWeb/DOM/Document.h>
@@ -241,6 +240,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
             });
         };
         protocol_request->set_should_buffer_all_input(true);
+
         protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
             return {};
         };
@@ -289,6 +289,7 @@ void ResourceLoader::clear_cache()
 void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_request_body, ProcessRequestEndOfBodyType process_request_end_of_body, ProcessReponseType process_response, ProcessResponseEndOfBodyType process_response_end_of_body, ProcessResponseDoneType process_response_done, [[maybe_unused]] bool use_parallel_queue)
 {
     // FIXME: Let taskDestination be null.
+    dbgln("Performing fetch for URL {}", request.url());
 
     bool cross_origin_isolated_capability = false;
 
@@ -319,6 +320,7 @@ void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_
     request.set_window(LoadRequest::Window::NoWindow);
 
     // FIXME: If request’s origin is "client", then set request’s origin to request’s client’s origin.
+    dbgln("Fetch: Is origin 'client'? {}", request.origin().has<LoadRequest::OriginEnum>());
     if (request.origin().has<LoadRequest::OriginEnum>()) {
         VERIFY(request.client());
         // FIXME: This is complete guess work until environment settings objects are implemented.
@@ -328,6 +330,7 @@ void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_
         } else {
             request.set_origin(Origin::create_from_url(request.url()));
         }
+        dbgln("Fetch: The guessed origin is {}", request.origin().get<Origin>().serialize());
     }
 
     // FIXME: If request’s policy container is "client", then:
@@ -353,6 +356,8 @@ void ResourceLoader::fetch(LoadRequest& request, ProcessRequestBodyType process_
             break;
         }
 
+        dbgln("Fetch: Appending 'Accept' header with value: {}", value);
+
         request.append_header("Accept", value);
     }
 
@@ -371,20 +376,26 @@ RefPtr<Response> ResourceLoader::main_fetch(const FetchParams& fetch_params, boo
 {
     auto& request = fetch_params.request;
     RefPtr<Response> response;
+    dbgln("ptr: {}", response.ptr());
 
-    if (request.local_urls_only() && !request.current_url().is_local())
+    if (request.local_urls_only() && !request.current_url().is_local()) {
+        dbgln("Fetch: Local urls only, but URL is not local.");
         response = Response::create_network_error({});
+    }
 
     // FIXME: Run report Content Security Policy violations for request.
     // FIXME: Upgrade request to a potentially trustworthy URL, if appropriate.
 
-    if (is_port_blocked(request.current_url()) /* FIXME: or should fetching request be blocked as mixed content, or should request be blocked by Content Security Policy */)
+    if (is_port_blocked(request.current_url()) /* FIXME: or should fetching request be blocked as mixed content, or should request be blocked by Content Security Policy */) {
+        dbgln("Fetch: Bad port.");
         response = Response::create_network_error({});
+    }
 
     // FIXME: If request’s referrer policy is the empty string and request’s client is non-null, then set request’s referrer policy to request’s client’s referrer policy. [REFERRER]
     if (request.referrer_policy() == ReferrerPolicy::ReferrerPolicy::None) {
         // This is the default referrer policy. https://w3c.github.io/webappsec-referrer-policy/#default-referrer-policy
         request.set_referrer_policy(ReferrerPolicy::ReferrerPolicy::StrictOriginWhenCrossOrigin);
+        dbgln("Fetch: Using default referrer policy 'strict-origin-when-cross-origin'");
     }
 
     // FIXME: If request’s referrer is not "no-referrer", then set request’s referrer to the result of invoking determine request’s referrer. [REFERRER]
@@ -405,17 +416,23 @@ RefPtr<Response> ResourceLoader::main_fetch(const FetchParams& fetch_params, boo
         if ((current_url_origin.is_same(request_origin) && request.response_tainting() == LoadRequest::ResponseTainting::Basic)
             || current_url.protocol() == "data"
             || (request.mode() == LoadRequest::Mode::Navigate || request.mode() == LoadRequest::Mode::WebSocket)) {
+            dbgln("Fetch: Doing same origin scheme fetch.");
             request.set_response_tainting({}, LoadRequest::ResponseTainting::Basic);
             return scheme_fetch(fetch_params);
         }
 
-        if (request.mode() == LoadRequest::Mode::SameOrigin)
+        if (request.mode() == LoadRequest::Mode::SameOrigin) {
+            dbgln("Fetch: Mode is same origin but did not meet same origin requirements.");
             return Response::create_network_error({});
+        }
 
         if (request.mode() == LoadRequest::Mode::NoCors) {
-            if (request.redirect_mode() != LoadRequest::RedirectMode::Follow)
+            if (request.redirect_mode() != LoadRequest::RedirectMode::Follow) {
+                dbgln("Fetch: Must follow redirects in no cors mode.");
                 return Response::create_network_error({});
+            }
 
+            dbgln("Fetch: Doing no cors scheme fetch.");
             request.set_response_tainting({}, LoadRequest::ResponseTainting::Opaque);
 
             // FIXME: This should be done out of process to prevent side channel attacks!
@@ -425,21 +442,29 @@ RefPtr<Response> ResourceLoader::main_fetch(const FetchParams& fetch_params, boo
             return Response::create_network_error({});
         }
 
-        if (!current_url.is_http_or_https())
+        if (!current_url.is_http_or_https()) {
+            dbgln("Fetch: Not http or https.");
             return Response::create_network_error({});
+        }
 
 //      FIXME  if (request.use_cors_preflight()
 //            || (request.unsafe_request() && (is_cors_safelisted_method(request.method()) || )))
 
+        dbgln("Fetch: Doing cors HTTP fetch.");
         request.set_response_tainting({}, LoadRequest::ResponseTainting::Cors);
         return http_fetch(fetch_params);
     };
 
     if (!recursive) {
+        dbgln("Fetch: Doing non-recursive fetch.");
         // FIXME: This should be in parallel.
-        deferred_invoke([&](auto&) {
-            if (!response)
+        //deferred_invoke([&](auto&) {
+            if (!response) {
+                dbgln("Fetch: No response, let's do this!");
                 response = do_fetch();
+            } else {
+                dbgln("Fetch: Not fetching, we already have a response!");
+            }
 
             VERIFY(response);
 
@@ -487,11 +512,12 @@ RefPtr<Response> ResourceLoader::main_fetch(const FetchParams& fetch_params, boo
             //          Do a bunch of stuff
 
             fetch_finale(fetch_params, response.release_nonnull());
-        });
+       // });
 
         // Fetch does not return response on this path. The return value is only used for recursive calls.
         return {};
     } else {
+        dbgln("Fetch: Doing recursive fetch.");
         if (!response)
             response = do_fetch();
         VERIFY(response);
@@ -499,6 +525,7 @@ RefPtr<Response> ResourceLoader::main_fetch(const FetchParams& fetch_params, boo
     }
 }
 
+// https://fetch.spec.whatwg.org/#concept-scheme-fetch
 RefPtr<Response> ResourceLoader::scheme_fetch(const FetchParams& fetch_params)
 {
     auto& request = fetch_params.request;
@@ -528,8 +555,9 @@ RefPtr<Response> ResourceLoader::scheme_fetch(const FetchParams& fetch_params)
         else
             data = url.data_payload().to_byte_buffer();
 
-        // FIXME
-        return Response::create_network_error({});
+        auto response = Response::create({}, Response::Type::Generic);
+        response->set_body(data);
+        return response;
     }
 
     if (url.protocol() == "file") {
@@ -542,9 +570,9 @@ RefPtr<Response> ResourceLoader::scheme_fetch(const FetchParams& fetch_params)
         }
 
         auto data = f->read_all();
-        //Response::create()
-        // FIXME.
-        return Response::create_network_error({});
+        auto response = Response::create({}, Response::Type::Generic);
+        response->set_body(data);
+        return response;
     }
 
     // FIXME: Handle gemini.
@@ -570,7 +598,12 @@ RefPtr<Response> ResourceLoader::http_fetch(const FetchParams& fetch_params, [[m
         if (request.redirect_mode() == LoadRequest::RedirectMode::Follow)
             request.set_service_workers_mode(LoadRequest::ServiceWorkersMode::None);
 
-        response = actual_response = http_network_or_cache_fetch(fetch_params);
+        dbgln("Going into network or cache fetch...");
+        auto fetched_response = http_network_or_cache_fetch(fetch_params);
+        dbgln("That fetch returned :^)");
+        VERIFY(fetched_response);
+        response = fetched_response;
+        actual_response = fetched_response;
 
         if (request.response_tainting() == LoadRequest::ResponseTainting::Cors && !cors_check(request, response))
             return Response::create_network_error({});
@@ -684,7 +717,7 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
     // FIXME: Append the Fetch metadata headers for httpRequest.
 
     if (!request.headers().contains("User-Agent"))
-        request.append_header("User-Agent", default_user_agent);
+        request.append_header("User-Agent", m_user_agent);
 
     if (request.cache_mode() == LoadRequest::CacheMode::Default && (request.headers().contains("If-Modified-Since") || request.headers().contains("If-None-Match") || request.headers().contains("If-Unmodified-Since") || request.headers().contains("If-Match") || request.headers().contains("If-Range")))
         request.set_cache_mode(LoadRequest::CacheMode::NoStore);
@@ -705,6 +738,7 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
         if (request.client()) {
             // FIXME: Is this the correct source?
             auto cookie = request.client()->client().page_did_request_cookie(request.current_url(), Cookie::Source::Http);
+            dbgln("do we have cookie for {}? {}", request.current_url().to_string(), !cookie.is_empty());
             if (!cookie.is_empty())
                 request.append_header("Cookie", cookie);
         }
@@ -733,11 +767,21 @@ RefPtr<Response> ResourceLoader::http_network_or_cache_fetch(const FetchParams& 
         if (request.cache_mode() == LoadRequest::CacheMode::OnlyIfCached)
             return Response::create_network_error({});
 
+        dbgln("Going into network fetch...");
         auto forward_response = http_network_fetch(fetch_params /* FIXME: httpFetchParams */, include_credentials, is_new_connection_fetch);
+        dbgln("Network fetch returned :^)");
+        VERIFY(forward_response);
 
         // FIXME: If httpRequest’s method is unsafe and forwardResponse’s status is in the range 200 to 399, inclusive, invalidate appropriate stored responses in httpCache, as per the "Invalidation" chapter of HTTP Caching, and set storedResponse to null. [HTTP-CACHING]
         // FIXME: More cache stuff.....
+
+        if (!response) {
+            response = forward_response;
+            // FIXME: Store httpRequest and forwardResponse in httpCache, as per the "Storing Responses in Caches" chapter of HTTP Caching.
+        }
     }
+
+    VERIFY(response);
 
     response->set_url_list({}, request.url_list());
 
@@ -790,25 +834,57 @@ RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_par
     //          If connection is not an HTTP/2 connection, request’s body is non-null, and request’s body’s source is null, then append `Transfer-Encoding`/`chunked` to request’s header list.
     //          Set timingInfo’s final network-request start time to the coarsened shared current time given fetchParams’s cross-origin isolated capability.
 
+    VERIFY(!request.headers().is_empty());
 
-    // FIXME: Temporary!!!!
+    for (auto& it : request.headers().list()) {
+        dbgln("Fetch: Header name: {} value: {}", it.name, it.value);
+    }
+
     Core::EventLoop loop;
 
+    dbgln("Fetch: Creating {} request for {}", request.method(), request.current_url().to_string_encoded());
     auto protocol_request = protocol_client().start_request(request.method(), request.current_url().to_string_encoded(), request.headers(), request.body());
     if (!protocol_request) {
+        dbgln("Fetch: Failed to create request.");
         return Response::create_network_error({});
     }
-    protocol_request->on_buffered_request_finish = [&](bool success, auto, HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, auto status_code, ReadonlyBytes payload) {
+//    protocol_request->on_headers_received = ([&](const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code) {
+//        response = Response::create({}, Response::Type::Generic);
+//        for (auto& header : response_headers)
+//            response->append_header({}, header.key, header.value);
+//        response->set_status({}, response_code.value());
+//        loop.quit(0);
+//    });
+//    dbgln("Wowe");
+//    protocol_request->on_headers_received = [&](auto& headers, auto response_code) {
+//        dbgln("Fetch: Headers received, let's continue.");
+//        VERIFY(response_code.has_value());
+//        for (auto& header : headers)
+//            response->append_header({}, header.key, header.value);
+//        response->set_status({}, response_code.value());
+//        loop.quit(0);
+//    };
+//    protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
+//        return {};
+//    };
+//    protocol_request->stream_into(response->output_memory_stream({}));
+//    protocol_request->on_finish = [response = move(response), this, &fetch_params](bool success, auto) {
+//        RefPtr<Response> res = response;
+//        VERIFY(success); // FIXME: Handle non-success
+//        //res->set_body(res->output_memory_stream({}).bytes()); // FIXME: Not exactly optimal...
+//        finalize_response(fetch_params, res);
+//    };
+
+    protocol_request->on_buffered_request_finish = [&](bool success, auto, auto& response_headers, auto status_code, ReadonlyBytes payload) {
         if (!success) {
             response = Response::create_network_error({});
-            loop.quit(0);
             return;
         }
         deferred_invoke([protocol_request](auto&) {
             // Clear circular reference of `protocol_request` captured by copy
             const_cast<Protocol::Request&>(*protocol_request).on_buffered_request_finish = nullptr;
         });
-        response = Response::create({}, Response::Type::Generic);
+        response = Response::create({}, Response::Type::Generic); // FIXME: definitely not always an image
         for (auto& header : response_headers)
             response->append_header({}, header.key, header.value);
         response->set_status({}, status_code.value());
@@ -816,11 +892,16 @@ RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_par
         loop.quit(0);
     };
     protocol_request->set_should_buffer_all_input(true);
+
     protocol_request->on_certificate_requested = []() -> Protocol::Request::CertificateAndKey {
         return {};
     };
 
+    // Fetch mandates that we have to wait for the headers to come in before continuing.
+    dbgln("Fetch: Waiting to receive headers...");
     loop.exec();
+
+    dbgln("We there yet?");
 
     // FIXME: Use Streams instead of just getting all the data at once.
 
@@ -829,7 +910,7 @@ RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_par
     //          If response is not a network error and request’s cache mode is not "no-store", then update response in httpCache for request.
     if (include_credentials /* FIXME: and not configured to block cookies */) {
         if (request.client()) {
-            for (auto& header : request.headers()) {
+            for (auto& header : request.headers().list()) {
                 if (header.name.equals_ignoring_case("Set-Cookie")) {
                     auto cookie = Cookie::parse_cookie(header.value);
                     if (!cookie.has_value())
@@ -846,6 +927,8 @@ RefPtr<Response> ResourceLoader::http_network_fetch(const FetchParams& fetch_par
     //          Let aborted be the termination’s aborted flag.
     //          If aborted is set, then set response’s aborted flag.
     //          Return response.
+
+    VERIFY(response);
 
     return response;
 }
@@ -920,8 +1003,7 @@ void ResourceLoader::fetch_finale(const FetchParams& fetch_params, NonnullRefPtr
         // FIXME
     }
 
-    // FIXME: This should not be done here, it should be done in HTTP-network fetch.
-    //        It is done here because we loaded in all the data already when it should really still be streaming in at this point.
+    // FIXME: not done here!!
     finalize_response(fetch_params, response);
 }
 

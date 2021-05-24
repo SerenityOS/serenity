@@ -15,6 +15,11 @@ Request::Request(RequestClient& client, i32 request_id)
 {
 }
 
+Request::~Request()
+{
+    dbgln("Request destroyed");
+}
+
 bool Request::stop()
 {
     return m_client->stop_request({}, *this);
@@ -39,6 +44,24 @@ void Request::stream_into_impl(T& stream)
     m_internal_stream_data->on_finish = [this, user_on_finish = move(user_on_finish)] {
         if (!m_internal_stream_data->user_finish_called && m_internal_stream_data->read_stream->is_eof()) {
             m_internal_stream_data->user_finish_called = true;
+//        if (on_finish_with_data) {
+//            auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
+//
+//            on_finish_with_data(m_internal_stream_data->success, m_internal_stream_data->total_size, )
+//        }
+    };
+
+    notifier->on_ready_to_read = [this, &stream, user_on_finish = move(user_on_finish)] {
+        constexpr size_t buffer_size = 4096;
+        static char buf[buffer_size];
+        auto nread = m_internal_stream_data->read_stream.read({ buf, buffer_size });
+        if (auto error = stream.write_or_error({ buf, nread }); !error) {
+            // FIXME: What do we do here?
+            TODO();
+        }
+
+        if (m_internal_stream_data->read_stream.eof() && m_internal_stream_data->request_done) {
+            m_internal_stream_data->read_notifier->close();
             user_on_finish(m_internal_stream_data->success, m_internal_stream_data->total_size);
         }
     };
@@ -80,6 +103,7 @@ void Request::stream_into(OutputStream& stream)
 
 void Request::set_should_buffer_all_input(bool value)
 {
+    dbgln("set_should_buffer_all_input");
     if (m_should_buffer_all_input == value)
         return;
 
@@ -101,14 +125,23 @@ void Request::set_should_buffer_all_input(bool value)
     };
 
     on_finish = [this](auto success, u32 total_size) {
+        dbgln("on finish");
         auto output_buffer = m_internal_buffered_data->payload_stream.copy_into_contiguous_buffer();
+        if (on_buffered_request_finish) {
+            dbgln("has obrf?");
+            dbgln("{:p}", this);
+        }
         on_buffered_request_finish(
             success,
             total_size,
             m_internal_buffered_data->response_headers,
             m_internal_buffered_data->response_code,
             output_buffer);
+        dbgln("did call obrf?");
+        dbgln("{:p}", this);
     };
+
+    dbgln("set on finish");
 
     stream_into(m_internal_buffered_data->payload_stream);
 }
@@ -129,8 +162,11 @@ void Request::did_progress(Badge<RequestClient>, Optional<u32> total_size, u32 d
 
 void Request::did_receive_headers(Badge<RequestClient>, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)
 {
-    if (on_headers_received)
+    dbgln("did_receive_headers {}", !!on_headers_received);
+    if (on_headers_received) {
+        dbgln("Calling OHR");
         on_headers_received(response_headers, response_code);
+    }
 }
 
 void Request::did_request_certificates(Badge<RequestClient>)

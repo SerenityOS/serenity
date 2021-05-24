@@ -15,9 +15,13 @@ namespace Web::Fetch {
 
 NonnullRefPtr<Response> Response::create(Badge<ResourceLoader>, Type type)
 {
+    RefPtr<Response> response;
     if (type == Type::Image)
-        return adopt_ref(*new ImageResource());
-    return adopt_ref(*new Response());
+        response = adopt_ref(*new ImageResource());
+    else
+        response = adopt_ref(*new Response());
+    response->m_type = type;
+    return response.release_nonnull();
 }
 
 NonnullRefPtr<Response> Response::create_network_error(Badge<ResourceLoader>)
@@ -34,6 +38,7 @@ Response::Response()
 
 Response::~Response()
 {
+    dbgln("Response destroyed");
 }
 
 void Response::for_each_client(Function<void(ResourceClient&)> callback)
@@ -79,14 +84,6 @@ void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
         }
     }
 
-    m_encoding = {};
-    if (content_type.has_value()) {
-        auto encoding = encoding_from_content_type(content_type.value());
-        if (encoding.has_value()) {
-            dbgln_if(RESOURCE_DEBUG, "Set encoding '{}' from Content-Type", encoding.has_value());
-            m_encoding = encoding.value();
-        }
-    }
     m_body = data;
     for (auto& header : headers)
         m_header_list.append(header.key, header.value);
@@ -95,6 +92,7 @@ void Response::did_load(Badge<ResourceLoader>, ReadonlyBytes data, const HashMap
     else
         m_status = status_code.value();
 
+// FIXME: where does this go, before m_body is set, or after.
 //    m_encoding = {};
 //    if (content_type.has_value()) {
 //        auto encoding = encoding_from_content_type(content_type.value());

@@ -24,6 +24,8 @@ class RequestClient;
 
 class Request : public RefCounted<Request> {
 public:
+    ~Request();
+
     struct CertificateAndKey {
         String certificate;
         String key;
@@ -48,6 +50,7 @@ public:
     /// Note: Must be set before `set_should_buffer_all_input(true)`.
     Function<void(bool success, u32 total_size, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code, ReadonlyBytes payload)> on_buffered_request_finish;
     Function<void(bool success, u32 total_size)> on_finish;
+    Function<void(bool success, u32 total_size, ReadonlyBytes payload)> on_finish_with_data;
     Function<void(Optional<u32> total_size, u32 downloaded_size)> on_progress;
     Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> on_headers_received;
     Function<CertificateAndKey()> on_certificate_requested;
@@ -91,6 +94,8 @@ private:
         Function<void()> on_finish {};
         bool user_finish_called { false };
     };
+
+    Function<void(const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> response_code)> m_user_on_headers_received;
 
     OwnPtr<InternalBufferedData> m_internal_buffered_data;
     OwnPtr<InternalStreamData> m_internal_stream_data;

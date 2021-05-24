@@ -30,7 +30,7 @@ int ImageResource::frame_duration(size_t frame_index) const
 
 void ImageResource::decode_if_needed() const
 {
-    if (!has_encoded_data())
+    if (!m_response && !has_encoded_data())
         return;
 
     if (m_has_attempted_decode)
@@ -40,9 +40,11 @@ void ImageResource::decode_if_needed() const
         return;
 
     NonnullRefPtr decoder = image_decoder_client();
-    auto image = decoder->decode_image(ByteBuffer::copy(body()));
+    dbgln("ImageResource: resource ptr {:p}", m_response.ptr());
+    auto image = decoder->decode_image(!m_response ? ByteBuffer::copy(body()) : ByteBuffer::copy(m_response->unsafe_response().body()));
 
     if (image.has_value()) {
+        dbgln("Image has value...");
         m_loop_count = image.value().loop_count;
         m_animated = image.value().is_animated;
         m_decoded_frames.resize(image.value().frames.size());

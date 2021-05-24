@@ -30,8 +30,19 @@ void ImageLoader::load_without_resetting_redirect_counter(AK::URL const& url)
 {
     m_loading_state = LoadingState::Loading;
 
-    auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
-    set_resource(ResourceLoader::the().load_resource(Response::Type::Image, request));
+//    auto request = LoadRequest::create_for_url_on_page(url, m_owner_element.document().page());
+//    set_resource(ResourceLoader::the().load_resource(Response::Type::Image, request));
+
+    // Some of this is from https://html.spec.whatwg.org/multipage/images.html#update-the-image-data
+    auto request = LoadRequest::create_a_potential_cors_request(url, m_owner_element.document().page(), LoadRequest::Destination::Image /* FIXME: and the crossorigin attribute of the img element */);
+    ResourceLoader::the().fetch(request, {}, {}, {}, {}, [this](auto& response) {
+        set_resource(new ImageResource(response));
+        dbgln("done?");
+//        if (!response.is_network_error())
+//            resource_did_load();
+//        else
+//            resource_did_fail();
+    });
 }
 
 void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const
@@ -50,6 +61,7 @@ void ImageLoader::set_visible_in_viewport(bool visible_in_viewport) const
 void ImageLoader::resource_did_load()
 {
     VERIFY(resource());
+    dbgln("resource ptr: {:p}", resource());
 
     // For 3xx (Redirection) responses, the Location value refers to the preferred target resource for automatically redirecting the request.
     auto status_code = resource()->status_code();
@@ -87,15 +99,16 @@ void ImageLoader::resource_did_load()
 
     m_loading_state = LoadingState::Loaded;
 
-    if constexpr (IMAGE_LOADER_DEBUG) {
+    //if constexpr (IMAGE_LOADER_DEBUG) {
         if (!resource()->has_encoded_data()) {
-            dbgln("ImageLoader: Resource did load, no encoded data. URL: {}", resource()->url());
+            dbgln("ImageLoader: Resource did load, no encoded data. ");
         } else {
-            dbgln("ImageLoader: Resource did load, has encoded data. URL: {}", resource()->url());
+            dbgln("ImageLoader: Resource did load, has encoded data. ");
         }
-    }
+    //}
 
     if (resource()->is_animated() && resource()->frame_count() > 1) {
+        dbgln("resource ptr: {:p} frame_count={} url={}", resource(), resource()->frame_count(), resource()->url().value());
         m_timer->set_interval(resource()->frame_duration(0));
         m_timer->on_timeout = [this] { animate(); };
         m_timer->start();

@@ -20,6 +20,7 @@
 #include <LibWeb/HTML/PolicyContainer.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/ReferrerPolicy/ReferrerPolicy.h>
+#include <LibWeb/Page/Page.h>
 
 namespace Web::Fetch {
 
@@ -149,6 +150,8 @@ public:
         m_url_list.append(url);
         m_client = page;
     }
+
+    static LoadRequest create_a_potential_cors_request(const URL& url, Page* page, Destination destination /* FIXME: and corsAttributeState and an optional same-origin fallback flag */);
 
     static LoadRequest create_for_url_on_page(const AK::URL& url, Page* page);
 
@@ -311,14 +314,14 @@ private:
     Initiator m_initiator { Initiator::None };
     Destination m_destination { Destination::None };
     // FIXME: A request has an associated priority (null or a user-agent-defined object). Unless otherwise stated it is null.
-    Variant<OriginEnum, Origin> m_origin;
+    Variant<OriginEnum, Origin> m_origin { OriginEnum::Client };
     HTML::PolicyContainer m_policy_container;
     Variant<Referrer, URL> m_referrer { Referrer::Client };
     ReferrerPolicy::ReferrerPolicy m_referrer_policy { ReferrerPolicy::ReferrerPolicy::None };
     Mode m_mode { Mode::NoCors };
     bool m_use_cors_preflight { false };
     CredentialsMode m_credentials_mode { CredentialsMode::SameOrigin };
-    bool m_uses_url_credentials { false };
+    bool m_use_url_credentials { false };
     CacheMode m_cache_mode { CacheMode::Default };
     RedirectMode m_redirect_mode { RedirectMode::Follow };
     String m_integrity_metadata;

@@ -22,6 +22,8 @@ void Client::die()
 
 Optional<DecodedImage> Client::decode_image(ReadonlyBytes encoded_data)
 {
+    dbgln("encoding_data length={}", encoded_data.size());
+
     if (encoded_data.is_empty())
         return {};
 

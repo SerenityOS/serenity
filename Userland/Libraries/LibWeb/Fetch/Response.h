@@ -10,14 +10,15 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
+#include <AK/MemoryStream.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefCounted.h>
 #include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGfx/Forward.h>
-#include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Fetch/FetchParams.h>
+#include <LibWeb/Fetch/LoadRequest.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::Fetch {
@@ -60,7 +61,7 @@ public:
     bool is_network_error() const { return m_new_type == NewType::Error; }
     bool is_aborted_network_error() const { return m_new_type == NewType::Error && m_aborted; }
 
-    bool has_encoded_data() const { return !m_body.is_null(); }
+    bool has_encoded_data() const { return m_body.size() > 0; }
 
     Optional<URL> url() const
     {
@@ -69,8 +70,8 @@ public:
         return m_url_list.last();
     }
 
-    const ReadonlyBytes& body() const { return m_body; }
-    void set_body(const ReadonlyBytes& body) { m_body = body; }
+    const ByteBuffer& body() const { return m_body; }
+    void set_body(ReadonlyBytes body) { m_body = ByteBuffer::copy(body); }
 
 //    const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers() const { return m_response_headers; }
 
@@ -167,7 +168,7 @@ private:
     u32 m_status { 200 };
     String m_status_message; // FIXME: Should be a byte sequence
     HTTP::HeaderList m_header_list;
-    ReadonlyBytes m_body; // FIXME: This should be a body object.
+    ByteBuffer m_body; // FIXME: This should be a body object.
     CacheState m_cache_state { CacheState::None };
     Vector<String> m_cors_exposed_header_name_list; // FIXME: These should specifically store header names, and therefore be byte sequences.
     bool m_range_requested { false };

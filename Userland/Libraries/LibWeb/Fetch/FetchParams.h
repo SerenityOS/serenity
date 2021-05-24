@@ -48,9 +48,9 @@ struct FetchTimingInfo {
 
 using ProcessRequestBodyType = Function<void(size_t)>;
 using ProcessRequestEndOfBodyType = Function<void()>;
-using ProcessReponseType = Function<void(const Response&)>;
+using ProcessReponseType = Function<void(Response&)>;
 using ProcessResponseEndOfBodyType = Function<void(Result<Variant<Response, ByteBuffer>, bool>)>;
-using ProcessResponseDoneType = Function<void(const Response&)>;
+using ProcessResponseDoneType = Function<void(Response&)>;
 
 // https://fetch.spec.whatwg.org/#fetch-params
 struct FetchParams {
