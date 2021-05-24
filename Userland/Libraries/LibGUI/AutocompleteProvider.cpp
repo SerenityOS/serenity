@@ -168,7 +168,7 @@ void AutocompleteBox::apply_suggestion()
         return;
 
     auto selected_index = m_suggestion_view->selection().first();
-    if (!selected_index.is_valid())
+    if (!selected_index.is_valid() || !m_suggestion_view->model()->is_valid(selected_index))
         return;
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutocompleteSuggestionModel::Column::Name);
