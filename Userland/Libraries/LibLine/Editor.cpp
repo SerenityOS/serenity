@@ -141,10 +141,6 @@ void Editor::set_default_keybinds()
 {
     register_key_input_callback(ctrl('N'), EDITOR_INTERNAL_FUNCTION(search_forwards));
     register_key_input_callback(ctrl('P'), EDITOR_INTERNAL_FUNCTION(search_backwards));
-    // Normally ^W. `stty werase \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-    register_key_input_callback(m_termios.c_cc[VWERASE], EDITOR_INTERNAL_FUNCTION(erase_word_backwards));
-    // Normally ^U. `stty kill \^n` can change it to ^N (or something else), but Serenity doesn't have `stty` yet.
-    register_key_input_callback(m_termios.c_cc[VKILL], EDITOR_INTERNAL_FUNCTION(kill_line));
     register_key_input_callback(ctrl('A'), EDITOR_INTERNAL_FUNCTION(go_home));
     register_key_input_callback(ctrl('B'), EDITOR_INTERNAL_FUNCTION(cursor_left_character));
     register_key_input_callback(ctrl('D'), EDITOR_INTERNAL_FUNCTION(erase_character_forwards));
@@ -154,7 +150,6 @@ void Editor::set_default_keybinds()
     register_key_input_callback(ctrl('H'), EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     // DEL - Some terminals send this instead of ^H.
     register_key_input_callback((char)127, EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
-    register_key_input_callback(m_termios.c_cc[VERASE], EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
     register_key_input_callback(ctrl('K'), EDITOR_INTERNAL_FUNCTION(erase_to_end));
     register_key_input_callback(ctrl('L'), EDITOR_INTERNAL_FUNCTION(clear_screen));
     register_key_input_callback(ctrl('R'), EDITOR_INTERNAL_FUNCTION(enter_search));
@@ -175,6 +170,13 @@ void Editor::set_default_keybinds()
     register_key_input_callback(Key { 'l', Key::Alt }, EDITOR_INTERNAL_FUNCTION(lowercase_word));
     register_key_input_callback(Key { 'u', Key::Alt }, EDITOR_INTERNAL_FUNCTION(uppercase_word));
     register_key_input_callback(Key { 't', Key::Alt }, EDITOR_INTERNAL_FUNCTION(transpose_words));
+
+    // Register these last to all the user to override the previous key bindings
+    // Normally ^W. `stty werase \^n` can change it to ^N (or something else).
+    register_key_input_callback(m_termios.c_cc[VWERASE], EDITOR_INTERNAL_FUNCTION(erase_word_backwards));
+    // Normally ^U. `stty kill \^n` can change it to ^N (or something else).
+    register_key_input_callback(m_termios.c_cc[VKILL], EDITOR_INTERNAL_FUNCTION(kill_line));
+    register_key_input_callback(m_termios.c_cc[VERASE], EDITOR_INTERNAL_FUNCTION(erase_character_backwards));
 }
 
 Editor::Editor(Configuration configuration)
@@ -550,6 +552,16 @@ void Editor::initialize()
     }
 
     m_initialized = true;
+}
+
+void Editor::refetch_default_termios()
+{
+    struct termios termios;
+    tcgetattr(0, &termios);
+    m_default_termios = termios;
+    if (m_configuration.operation_mode == Configuration::Full)
+        termios.c_lflag &= ~(ECHO | ICANON);
+    m_termios = termios;
 }
 
 void Editor::interrupted()
