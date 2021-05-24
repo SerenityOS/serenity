@@ -148,6 +148,8 @@ public:
 
     void initialize();
 
+    void refetch_default_termios();
+
     void add_to_history(const String& line);
     bool load_history(const String& path);
     bool save_history(const String& path);

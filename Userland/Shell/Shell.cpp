@@ -342,7 +342,7 @@ Shell::LocalFrame* Shell::find_frame_containing_local_variable(const String& nam
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
+RefPtr<AST::Value> Shell::lookup_local_variable(const String& name) const
 {
     if (auto* frame = find_frame_containing_local_variable(name))
         return frame->local_variables.get(name).value();
@@ -353,7 +353,7 @@ RefPtr<AST::Value> Shell::lookup_local_variable(const String& name)
     return nullptr;
 }
 
-RefPtr<AST::Value> Shell::get_argument(size_t index)
+RefPtr<AST::Value> Shell::get_argument(size_t index) const
 {
     if (index == 0)
         return adopt_ref(*new AST::StringValue(current_script));
@@ -377,7 +377,7 @@ RefPtr<AST::Value> Shell::get_argument(size_t index)
     return nullptr;
 }
 
-String Shell::local_variable_or(const String& name, const String& replacement)
+String Shell::local_variable_or(const String& name, const String& replacement) const
 {
     auto value = lookup_local_variable(name);
     if (value) {
@@ -846,6 +846,12 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
         last_return_code = job->exit_code();
         job->disown();
 
+        if (m_editor && job->exit_code() == 0 && is_allowed_to_modify_termios(job->command())) {
+            m_editor->refetch_default_termios();
+            default_termios = m_editor->default_termios();
+            termios = m_editor->termios();
+        }
+
         run_tail(job);
     };
 
@@ -1025,6 +1031,19 @@ bool Shell::run_file(const String& filename, bool explicitly_invoked)
     auto data = file->read_all();
     return run_command(data) == 0;
 }
+
+bool Shell::is_allowed_to_modify_termios(const AST::Command& command) const
+{
+    if (command.argv.is_empty())
+        return false;
+
+    auto value = lookup_local_variable("PROGRAMS_ALLOWED_TO_MODIFY_DEFAULT_TERMIOS"sv);
+    if (!value)
+        return false;
+
+    return value->resolve_as_list(*this).contains_slow(command.argv[0]);
+}
+
 void Shell::restore_ios()
 {
     if (m_is_subshell)
