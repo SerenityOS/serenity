@@ -61,6 +61,11 @@ struct Configuration {
         NoSignalHandlers,
     };
 
+    enum Flags : u32 {
+        None = 0,
+        BracketedPaste = 1,
+    };
+
     struct DefaultTextEditor {
         String command;
     };
@@ -81,6 +86,10 @@ struct Configuration {
     void set(SignalHandler mode) { m_signal_mode = mode; }
     void set(const KeyBinding& binding) { keybindings.append(binding); }
     void set(DefaultTextEditor editor) { m_default_text_editor = move(editor.command); }
+    void set(Flags flags)
+    {
+        enable_bracketed_paste = flags & Flags::BracketedPaste;
+    }
 
     static Configuration from_config(const StringView& libname = "line");
 
@@ -89,6 +98,7 @@ struct Configuration {
     OperationMode operation_mode { OperationMode::Unset };
     Vector<KeyBinding> keybindings;
     String m_default_text_editor {};
+    bool enable_bracketed_paste { false };
 };
 
 #define ENUMERATE_EDITOR_INTERNAL_FUNCTIONS(M) \
@@ -450,12 +460,14 @@ private:
     enum class InputState {
         Free,
         Verbatim,
+        Paste,
         GotEscape,
         CSIExpectParameter,
         CSIExpectIntermediate,
         CSIExpectFinal,
     };
     InputState m_state { InputState::Free };
+    InputState m_previous_free_state { InputState::Free };
 
     struct Spans {
         HashMap<u32, HashMap<u32, Style>> m_spans_starting;
