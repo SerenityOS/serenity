@@ -337,10 +337,22 @@ void Game::continue_game_after_delay(int interval_ms)
 
 void Game::advance_game()
 {
-    if (game_ended()) {
+    if (m_state == State::Play && game_ended()) {
+        m_state = State::GameEndedWaiting;
         on_status_change("Game ended.");
+        continue_game_after_delay(2000);
         return;
     }
+
+    if (m_state == State::GameEndedWaiting) {
+        m_state = State::GameEnded;
+        if (!m_players[0].is_human)
+            setup(move(m_players[0].name));
+        return;
+    }
+
+    if (m_state == State::GameEnded)
+        return;
 
     if (m_state == State::PassingSelect) {
         if (!m_players[0].is_human) {
