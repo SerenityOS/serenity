@@ -43,6 +43,7 @@ char* strncat(char* dest, const char* src, size_t);
 
 size_t strspn(const char*, const char* accept);
 size_t strcspn(const char*, const char* reject);
+int strerror_r(int, char*, size_t);
 char* strerror(int errnum);
 char* strsignal(int signum);
 char* strpbrk(const char*, const char* accept);
