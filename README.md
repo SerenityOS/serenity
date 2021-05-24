@@ -134,6 +134,7 @@ Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 * **Gunnar Beutner** - [gunnarbeutner](https://github.com/gunnarbeutner)
 * **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
 * **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
+* **Stephan Unverwerth** - [sunverwerth](https://github.com/sunverwerth)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
