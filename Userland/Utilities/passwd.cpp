@@ -93,6 +93,7 @@ int main(int argc, char** argv)
 
             if (!target_account.authenticate(current_password.value().characters())) {
                 warnln("Incorrect or disabled password.");
+                warnln("Password for user {} unchanged.", target_account.username());
                 return 1;
             }
         }
@@ -111,6 +112,7 @@ int main(int argc, char** argv)
 
         if (new_password.value() != new_password_retype.value()) {
             warnln("Sorry, passwords don't match.");
+            warnln("Password for user {} unchanged.", target_account.username());
             return 1;
         }
 
@@ -124,6 +126,8 @@ int main(int argc, char** argv)
 
     if (!target_account.sync()) {
         perror("Core::Account::Sync");
+    } else {
+        outln("Password for user {} successfully updated.", target_account.username());
     }
 
     return 0;
