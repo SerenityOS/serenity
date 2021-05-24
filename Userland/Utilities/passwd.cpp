@@ -84,6 +84,19 @@ int main(int argc, char** argv)
     } else if (unlock) {
         target_account.set_password_enabled(true);
     } else {
+        if (current_uid != 0) {
+            auto current_password = Core::get_password("Current password: ");
+            if (current_password.is_error()) {
+                warnln("{}", current_password.error());
+                return 1;
+            }
+
+            if (!target_account.authenticate(current_password.value().characters())) {
+                warnln("Incorrect or disabled password.");
+                return 1;
+            }
+        }
+
         auto new_password = Core::get_password("New password: ");
         if (new_password.is_error()) {
             warnln("{}", new_password.error());
