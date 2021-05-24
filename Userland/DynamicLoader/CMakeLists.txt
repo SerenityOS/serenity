@@ -18,6 +18,10 @@ endif()
 
 file(GLOB LIBSYSTEM_SOURCES "../Libraries/LibSystem/*.cpp")
 
+if (ENABLE_UNDEFINED_SANITIZER)
+    set(LOADER_SOURCES ${LOADER_SOURCES} ../Libraries/LibSanitizer/UBSanitizer.cpp)
+endif()
+
 add_definitions(-D_DYNAMIC_LOADER)
 
 set(SOURCES ${LOADER_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${LIBC_SOURCES1} ${LIBC_SOURCES2} ${LIBC_SOURCES3} ${LIBSYSTEM_SOURCES})
