@@ -124,9 +124,8 @@ TEST_CASE(deflate_round_trip_store)
 
 TEST_CASE(deflate_round_trip_compress)
 {
-    auto original = ByteBuffer::create_uninitialized(2048);
-    fill_with_random(original.data(), 1024);
-    memset(original.offset_pointer(1024), 0, 1024); // we fill the second half with 0s to make sure we test back references as well
+    auto original = ByteBuffer::create_zeroed(2048);
+    fill_with_random(original.data(), 1024); // we pre-filled the second half with 0s to make sure we test back references as well
     // Since the different levels just change how much time is spent looking for better matches, just use fast here to reduce test time
     auto compressed = Compress::DeflateCompressor::compress_all(original, Compress::DeflateCompressor::CompressionLevel::FAST);
     EXPECT(compressed.has_value());
