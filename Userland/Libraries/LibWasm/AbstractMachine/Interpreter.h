@@ -23,6 +23,19 @@ struct BytecodeInterpreter : public Interpreter {
     virtual bool did_trap() const override { return m_do_trap; }
     virtual void clear_trap() override { m_do_trap = false; }
 
+    struct CallFrameHandle {
+        explicit CallFrameHandle(BytecodeInterpreter& interpreter, Configuration& configuration)
+            : m_configuration_handle(configuration)
+            , m_interpreter(interpreter)
+        {
+        }
+
+        ~CallFrameHandle() = default;
+
+        Configuration::CallFrameHandle m_configuration_handle;
+        BytecodeInterpreter& m_interpreter;
+    };
+
 protected:
     virtual void interpret(Configuration&, InstructionPointer&, const Instruction&);
     void branch_to_label(Configuration&, LabelIndex);
