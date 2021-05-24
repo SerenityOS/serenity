@@ -114,6 +114,7 @@ private:
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed() override;
     virtual void emit(const u8*, size_t) override;
+    virtual void set_cursor_style(CursorStyle) override;
 
     void set_logical_focus(bool);
 
@@ -172,6 +173,8 @@ private:
     u8 m_opacity { 255 };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
+
+    VT::CursorStyle m_cursor_style { BlinkingBlock };
 
     enum class AutoScrollDirection {
         None,
