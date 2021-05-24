@@ -82,7 +82,7 @@ HunkLocation parse_hunk_location(const String& location_line)
         size_t length { 0 };
     };
     auto parse_start_and_length_pair = [](const String& raw) {
-        auto index_of_separator = raw.index_of(",").value();
+        auto index_of_separator = raw.find(',').value();
         auto start = raw.substring(0, index_of_separator);
         auto length = raw.substring(index_of_separator + 1, raw.length() - index_of_separator - 1);
         auto res = StartAndLength { start.to_uint().value() - 1, length.to_uint().value() - 1 };

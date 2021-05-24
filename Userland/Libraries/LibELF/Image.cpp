@@ -297,7 +297,7 @@ Optional<Image::Symbol> Image::find_demangled_function(const String& name) const
         if (symbol.is_undefined())
             return IterationDecision::Continue;
         auto demangled = demangle(symbol.name());
-        auto index_of_paren = demangled.index_of("(");
+        auto index_of_paren = demangled.find('(');
         if (index_of_paren.has_value()) {
             demangled = demangled.substring(0, index_of_paren.value());
         }

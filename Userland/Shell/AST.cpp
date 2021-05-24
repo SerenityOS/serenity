@@ -611,7 +611,7 @@ void BarewordLiteral::highlight_in_editor(Line::Editor& editor, Shell& shell, Hi
             return;
 
         if (m_text.starts_with("--")) {
-            auto index = m_text.index_of("=").value_or(m_text.length() - 1) + 1;
+            auto index = m_text.find('=').value_or(m_text.length() - 1) + 1;
             editor.stylize({ m_position.start_offset, m_position.start_offset + index }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });
         } else {
             editor.stylize({ m_position.start_offset, m_position.end_offset }, { Line::Style::Foreground(Line::Style::XtermColor::Cyan) });

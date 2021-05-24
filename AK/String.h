@@ -127,13 +127,12 @@ public:
     [[nodiscard]] bool equals_ignoring_case(const StringView&) const;
 
     [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
-    [[nodiscard]] Optional<size_t> index_of(const String&, size_t start = 0) const;
 
     [[nodiscard]] Vector<String> split_limit(char separator, size_t limit, bool keep_empty = false) const;
     [[nodiscard]] Vector<String> split(char separator, bool keep_empty = false) const;
 
-    [[nodiscard]] Optional<size_t> find(char) const;
-    [[nodiscard]] Optional<size_t> find(const StringView&) const;
+    [[nodiscard]] Optional<size_t> find(char, size_t start = 0) const;
+    [[nodiscard]] Optional<size_t> find(StringView const&, size_t start = 0) const;
 
     [[nodiscard]] String substring(size_t start) const;
     [[nodiscard]] String substring(size_t start, size_t length) const;

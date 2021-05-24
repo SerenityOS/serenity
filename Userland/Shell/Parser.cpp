@@ -1772,7 +1772,7 @@ RefPtr<AST::Node> Parser::parse_bareword()
         String username;
         RefPtr<AST::Node> tilde, text;
 
-        auto first_slash_index = string.index_of("/");
+        auto first_slash_index = string.find('/');
         if (first_slash_index.has_value()) {
             username = string.substring_view(1, first_slash_index.value() - 1);
             string = string.substring_view(first_slash_index.value(), string.length() - first_slash_index.value());
