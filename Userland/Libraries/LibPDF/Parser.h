@@ -16,7 +16,7 @@ namespace PDF {
 
 class Document;
 
-class Parser {
+class Parser final : public RefCounted<Parser> {
 public:
     static Vector<Command> parse_graphics_commands(const ReadonlyBytes&);
 
@@ -30,18 +30,18 @@ public:
         XRefTable xref_table;
         NonnullRefPtr<DictObject> trailer;
     };
-    XRefTableAndTrailer parse_last_xref_table_and_trailer();
+    Optional<XRefTableAndTrailer> parse_last_xref_table_and_trailer();
 
-    NonnullRefPtr<IndirectValue> parse_indirect_value_at_offset(size_t offset);
+    RefPtr<IndirectValue> parse_indirect_value_at_offset(size_t offset);
 
-    RefPtr<DictObject> conditionally_parse_page_tree_node_at_offset(size_t offset);
+    RefPtr<DictObject> conditionally_parse_page_tree_node_at_offset(size_t offset, bool& ok);
 
 private:
     explicit Parser(const ReadonlyBytes&);
 
     bool parse_header();
-    XRefTable parse_xref_table();
-    NonnullRefPtr<DictObject> parse_file_trailer();
+    Optional<XRefTable> parse_xref_table();
+    RefPtr<DictObject> parse_file_trailer();
 
     bool navigate_to_before_eof_marker();
     bool navigate_to_after_startxref();
@@ -58,16 +58,16 @@ private:
 
     Value parse_value();
     Value parse_possible_indirect_value_or_ref();
-    NonnullRefPtr<IndirectValue> parse_indirect_value(int index, int generation);
-    NonnullRefPtr<IndirectValue> parse_indirect_value();
+    RefPtr<IndirectValue> parse_indirect_value(int index, int generation);
+    RefPtr<IndirectValue> parse_indirect_value();
     Value parse_number();
-    NonnullRefPtr<NameObject> parse_name();
-    NonnullRefPtr<StringObject> parse_string();
+    RefPtr<NameObject> parse_name();
+    RefPtr<StringObject> parse_string();
     String parse_literal_string();
     String parse_hex_string();
-    NonnullRefPtr<ArrayObject> parse_array();
-    NonnullRefPtr<DictObject> parse_dict();
-    NonnullRefPtr<StreamObject> parse_stream(NonnullRefPtr<DictObject> dict);
+    RefPtr<ArrayObject> parse_array();
+    RefPtr<DictObject> parse_dict();
+    RefPtr<StreamObject> parse_stream(NonnullRefPtr<DictObject> dict);
 
     Vector<Command> parse_graphics_commands();
 
@@ -77,10 +77,11 @@ private:
     bool matches_delimiter() const;
     bool matches_regular_character() const;
 
-    void consume_eol();
+    bool consume_eol();
     bool consume_whitespace();
     char consume();
-    void consume(char);
+    void consume(int amount);
+    bool consume(char);
 
     Reader m_reader;
     RefPtr<Document> m_document;

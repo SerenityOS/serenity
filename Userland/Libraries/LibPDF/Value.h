@@ -62,6 +62,16 @@ public:
     }
 
     template<IsObject T>
+    Value(RefPtr<T> obj)
+        : m_type(obj ? Type::Object : Type::Empty)
+    {
+        if (obj) {
+            obj->ref();
+            m_as_object = obj;
+        }
+    }
+
+    template<IsObject T>
     Value(NonnullRefPtr<T> obj)
         : m_type(Type::Object)
     {
