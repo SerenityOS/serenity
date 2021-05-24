@@ -39,7 +39,8 @@ struct BytecodeInterpreter : public Interpreter {
 protected:
     virtual void interpret(Configuration&, InstructionPointer&, const Instruction&);
     void branch_to_label(Configuration&, LabelIndex);
-    ReadonlyBytes load_from_memory(Configuration&, const Instruction&, size_t);
+    template<typename ReadT, typename PushT>
+    void load_and_push(Configuration&, const Instruction&);
     void store_to_memory(Configuration&, const Instruction&, ReadonlyBytes data);
     void call_address(Configuration&, FunctionAddress);
 

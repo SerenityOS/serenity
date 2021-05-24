@@ -39,6 +39,12 @@ TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, Mem
 //        fancy than just a dumb interpreter.
 class Value {
 public:
+    Value()
+        : m_value(0)
+        , m_type(ValueType::I32)
+    {
+    }
+
     using AnyValueType = Variant<i32, i64, float, double, FunctionAddress, ExternAddress>;
     explicit Value(AnyValueType value)
         : m_value(move(value))
@@ -426,17 +432,18 @@ public:
     using EntryType = Variant<Value, Label, Frame>;
     Stack() = default;
 
-    [[nodiscard]] bool is_empty() const { return m_data.is_empty(); }
-    void push(EntryType entry) { m_data.append(move(entry)); }
-    auto pop() { return m_data.take_last(); }
-    auto& peek() const { return m_data.last(); }
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_data.is_empty(); }
+    FLATTEN void push(EntryType entry) { m_data.append(move(entry)); }
+    FLATTEN auto pop() { return m_data.take_last(); }
+    FLATTEN auto& peek() const { return m_data.last(); }
+    FLATTEN auto& peek() { return m_data.last(); }
 
-    auto size() const { return m_data.size(); }
-    auto& entries() const { return m_data; }
-    auto& entries() { return m_data; }
+    ALWAYS_INLINE auto size() const { return m_data.size(); }
+    ALWAYS_INLINE auto& entries() const { return m_data; }
+    ALWAYS_INLINE auto& entries() { return m_data; }
 
 private:
-    Vector<EntryType, 64> m_data;
+    Vector<EntryType, 1024> m_data;
 };
 
 using InstantiationResult = AK::Result<NonnullOwnPtr<ModuleInstance>, InstantiationError>;
