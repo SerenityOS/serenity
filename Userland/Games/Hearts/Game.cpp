@@ -73,18 +73,16 @@ Game::Game()
     m_players[3].name_alignment = Gfx::TextAlignment::TopRight;
     m_players[3].name = "Lisa";
     m_players[3].taken_cards_target = { width, height / 2 - Card::height / 2 };
+
+    reset();
 };
 
 Game::~Game()
 {
 }
 
-void Game::setup(String player_name)
+void Game::reset()
 {
-    m_players[0].name = move(player_name);
-
-    NonnullRefPtrVector<Card> deck;
-
     dbgln_if(HEARTS_DEBUG, "=====");
     dbgln_if(HEARTS_DEBUG, "Resetting game");
 
@@ -92,6 +90,20 @@ void Game::setup(String player_name)
 
     m_trick.clear_with_capacity();
     m_trick_number = 0;
+
+    for (auto& player : m_players) {
+        player.hand.clear_with_capacity();
+        player.cards_taken.clear_with_capacity();
+    }
+}
+
+void Game::setup(String player_name)
+{
+    m_players[0].name = move(player_name);
+
+    reset();
+
+    NonnullRefPtrVector<Card> deck;
 
     for (int i = 0; i < Card::card_count; ++i) {
         deck.append(Card::construct(Card::Type::Clubs, i));
@@ -101,8 +113,6 @@ void Game::setup(String player_name)
     }
 
     for (auto& player : m_players) {
-        player.hand.clear_with_capacity();
-        player.cards_taken.clear_with_capacity();
         for (uint8_t i = 0; i < Card::card_count; ++i) {
             auto card = deck.take(rand() % deck.size());
             if constexpr (!HEARTS_DEBUG) {
