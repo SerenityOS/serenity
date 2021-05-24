@@ -6,31 +6,32 @@
 
 #include <AK/Hex.h>
 #include <LibCompress/Deflate.h>
+#include <LibPDF/CommonNames.h>
 #include <LibPDF/Filter.h>
 
 namespace PDF {
 
 Optional<ByteBuffer> Filter::decode(const ReadonlyBytes& bytes, const FlyString& encoding_type)
 {
-    if (encoding_type == "ASCIIHexDecode")
+    if (encoding_type == CommonNames::ASCIIHexDecode)
         return decode_ascii_hex(bytes);
-    if (encoding_type == "ASCII85Decode")
+    if (encoding_type == CommonNames::ASCII85Decode)
         return decode_ascii85(bytes);
-    if (encoding_type == "LZWDecode")
+    if (encoding_type == CommonNames::LZWDecode)
         return decode_lzw(bytes);
-    if (encoding_type == "FlateDecode")
+    if (encoding_type == CommonNames::FlateDecode)
         return decode_flate(bytes);
-    if (encoding_type == "RunLengthDecode")
+    if (encoding_type == CommonNames::RunLengthDecode)
         return decode_run_length(bytes);
-    if (encoding_type == "CCITTFaxDecode")
+    if (encoding_type == CommonNames::CCITTFaxDecode)
         return decode_ccitt(bytes);
-    if (encoding_type == "JBIG2Decode")
+    if (encoding_type == CommonNames::JBIG2Decode)
         return decode_jbig2(bytes);
-    if (encoding_type == "DCTDecode")
+    if (encoding_type == CommonNames::DCTDecode)
         return decode_dct(bytes);
-    if (encoding_type == "JPXDecode")
+    if (encoding_type == CommonNames::JPXDecode)
         return decode_jpx(bytes);
-    if (encoding_type == "Crypt")
+    if (encoding_type == CommonNames::Crypt)
         return decode_crypt(bytes);
 
     return {};
