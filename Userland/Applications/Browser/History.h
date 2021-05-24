@@ -13,12 +13,18 @@ namespace Browser {
 
 class History {
 public:
+    struct URLTitlePair {
+        URL url;
+        String title;
+    };
     void dump() const;
 
-    void push(const URL&);
-    URL current() const;
-    const Vector<URL> get_back_history();
-    const Vector<URL> get_forward_history();
+    void push(const URL& url, String title);
+    void update_title(const URL& url, const String& title);
+    URLTitlePair current() const;
+
+    const Vector<StringView> get_back_title_history();
+    const Vector<StringView> get_forward_title_history();
 
     void go_back(int steps = 1);
     void go_forward(int steps = 1);
@@ -28,7 +34,7 @@ public:
     void clear();
 
 private:
-    Vector<URL> m_items;
+    Vector<URLTitlePair> m_items;
     int m_current { -1 };
 };
 
