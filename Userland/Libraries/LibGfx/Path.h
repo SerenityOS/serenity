@@ -176,6 +176,12 @@ public:
         return m_split_lines.value();
     }
 
+    void clear()
+    {
+        m_segments.clear();
+        m_split_lines.clear();
+    }
+
     const Gfx::FloatRect& bounding_box()
     {
         if (!m_bounding_box.has_value()) {
