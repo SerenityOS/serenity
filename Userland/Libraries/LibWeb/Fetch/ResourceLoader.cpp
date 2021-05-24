@@ -73,7 +73,7 @@ void ResourceLoader::preconnect(AK::URL const& url)
     m_protocol_client->ensure_connection(url, RequestServer::CacheLevel::CreateConnection);
 }
 
-static HashMap<LoadRequest, NonnullRefPtr<Response>> s_resource_cache;
+static HashMap<NonnullRefPtr<LoadRequest>, NonnullRefPtr<Response>> s_resource_cache;
 
 RefPtr<Response> ResourceLoader::load_resource(Response::Type type, const LoadRequest& request)
 {
@@ -258,7 +258,7 @@ void ResourceLoader::load(LoadRequest& request, Function<void(ReadonlyBytes, con
 
 void ResourceLoader::load(const AK::URL& url, Function<void(ReadonlyBytes, const HashMap<String, String, CaseInsensitiveStringTraits>& response_headers, Optional<u32> status_code)> success_callback, Function<void(const String&, Optional<u32> status_code)> error_callback)
 {
-    LoadRequest request(url, nullptr);
+    auto request = LoadRequest::create_for_url_on_page(url, nullptr);
     load(request, move(success_callback), move(error_callback));
 }
 

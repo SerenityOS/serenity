@@ -11,6 +11,12 @@
 
 namespace Web::Fetch {
 
+LoadRequest::LoadRequest(const URL& url, Page* page)
+{
+    m_url_list.append(url);
+    m_client = page;
+}
+
 // https://fetch.spec.whatwg.org/#forbidden-method
 bool is_forbidden_method(const String& method)
 {
@@ -41,14 +47,14 @@ bool is_safe_method(const String& method)
     return method.is_one_of("GET", "HEAD", "OPTIONS", "TRACE");
 }
 
-LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
+NonnullRefPtr<LoadRequest> LoadRequest::create_for_url_on_page(const URL& url, Page* page)
 {
-    LoadRequest request(url, page);
+    auto request = adopt_ref(*new LoadRequest(url, page));
 
     if (page) {
         String cookie = page->client().page_did_request_cookie(url, Cookie::Source::Http);
         if (!cookie.is_empty())
-            request.set_header("Cookie", cookie);
+            request->set_header("Cookie", cookie);
     }
 
     return request;
@@ -56,15 +62,15 @@ LoadRequest LoadRequest::create_for_url_on_page(const URL& url, Page* page)
 
 // https://html.spec.whatwg.org/#create-a-potential-cors-request
 // FIXME: Make it sure you don't have to pass in page.
-LoadRequest LoadRequest::create_a_potential_cors_request(const URL& url, Page* page, Destination destination)
+NonnullRefPtr<LoadRequest> LoadRequest::create_a_potential_cors_request(const URL& url, Page* page, Destination destination)
 {
-    LoadRequest request(url, page);
+    auto request = adopt_ref(*new LoadRequest(url, page));
     // FIXME: Let mode be "no-cors" if corsAttributeState is No CORS, and "cors" otherwise.
     // FIXME: If same-origin fallback flag is set and mode is "no-cors", set mode to "same-origin".
-    request.m_credentials_mode = CredentialsMode::Include;
-    request.m_destination = destination;
+    request->m_credentials_mode = CredentialsMode::Include;
+    request->m_destination = destination;
     // FIXME: Set request's mode to mode.
-    request.m_use_url_credentials = true;
+    request->m_use_url_credentials = true;
     return request;
 }
 

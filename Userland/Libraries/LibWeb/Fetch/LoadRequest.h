@@ -30,7 +30,7 @@ bool is_cors_safelisted_method(const String& method);
 bool is_safe_method(const String& method);
 
 // https://fetch.spec.whatwg.org/#concept-request
-class LoadRequest {
+class LoadRequest : public RefCounted<LoadRequest> {
 public:
     // https://fetch.spec.whatwg.org/#concept-request-window
     enum class Window {
@@ -145,15 +145,9 @@ public:
 
     using AuthenticationEntry = Tuple<String, String, String>; // Tuple of username, password and realm.
 
-    LoadRequest(const URL& url, Page* page)
-    {
-        m_url_list.append(url);
-        m_client = page;
-    }
+    static NonnullRefPtr<LoadRequest> create_a_potential_cors_request(const URL& url, Page* page, Destination destination /* FIXME: and corsAttributeState and an optional same-origin fallback flag */);
 
-    static LoadRequest create_a_potential_cors_request(const URL& url, Page* page, Destination destination /* FIXME: and corsAttributeState and an optional same-origin fallback flag */);
-
-    static LoadRequest create_for_url_on_page(const AK::URL& url, Page* page);
+    static NonnullRefPtr<LoadRequest> create_for_url_on_page(const AK::URL& url, Page* page);
 
     bool is_valid() const { return url().is_valid(); }
 
@@ -299,6 +293,8 @@ public:
     WeakPtr<Page> client() const { return m_client; }
 
 private:
+    LoadRequest(const URL& url, Page* page);
+
     Core::ElapsedTimer m_load_timer;
     String m_method { "GET" }; // FIXME: This should be a byte sequence.
     bool m_local_urls_only { false };

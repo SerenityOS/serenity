@@ -116,13 +116,14 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
         url.set_query(url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
     }
 
-    Fetch::LoadRequest request(url, document().page());
+    auto request = Fetch::LoadRequest::create_for_url_on_page(url, document().page());
 
     if (effective_method == "post") {
         auto body = url_encode(parameters, AK::URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
-        request.set_method("POST");
-        request.set_header("Content-Type", "application/x-www-form-urlencoded");
-        request.set_body(body);
+        request->set_method("POST");
+        request->set_header("Content-Type", "application/x-www-form-urlencoded");
+        request->set_header("Content-Length", String::number(body.size()));
+        request->set_body(body);
     }
 
     if (auto* page = document().page())

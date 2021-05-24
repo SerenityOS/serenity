@@ -472,12 +472,14 @@ DOM::ExceptionOr<void> XMLHttpRequest::send(String body)
         return {};
     }
 
-    auto request = Fetch::LoadRequest::create_for_url_on_page(request_url, m_window->page());
-    request.set_method(m_method);
+    auto request = Fetch::LoadRequest::create_for_url_on_page(request_url, m_window->document().page());
+    request->set_method(m_method);
+
     if (!body.is_null())
         request.set_body(body.to_byte_buffer());
+
     for (auto& it : m_request_headers)
-        request.set_header(it.key, it.value);
+        request->set_header(it.key, it.value);
 
     m_upload_complete = false;
     m_timed_out = false;
