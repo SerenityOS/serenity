@@ -1,4 +1,5 @@
 set(SOURCES
+    NumericInput.cpp
     OutlineModel.cpp
     PDFViewer.cpp
     PDFViewerWidget.cpp
