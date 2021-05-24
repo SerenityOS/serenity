@@ -748,17 +748,14 @@ void TerminalWidget::paste()
 {
     if (m_ptm_fd == -1)
         return;
+
     auto mime_type = GUI::Clipboard::the().mime_type();
     if (!mime_type.starts_with("text/"))
         return;
     auto text = GUI::Clipboard::the().data();
     if (text.is_empty())
         return;
-    int nwritten = write(m_ptm_fd, text.data(), text.size());
-    if (nwritten < 0) {
-        perror("write");
-        VERIFY_NOT_REACHED();
-    }
+    send_non_user_input(text);
 }
 
 void TerminalWidget::copy()
@@ -1091,20 +1088,21 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
     if (event.mime_data().has_text()) {
         event.accept();
         auto text = event.mime_data().text();
-        write(m_ptm_fd, text.characters(), text.length());
+        send_non_user_input(text.bytes());
     } else if (event.mime_data().has_urls()) {
         event.accept();
         auto urls = event.mime_data().urls();
         bool first = true;
         for (auto& url : event.mime_data().urls()) {
-            if (!first) {
-                write(m_ptm_fd, " ", 1);
-                first = false;
-            }
+            if (!first)
+                send_non_user_input(" "sv.bytes());
+
             if (url.protocol() == "file")
-                write(m_ptm_fd, url.path().characters(), url.path().length());
+                send_non_user_input(url.path().bytes());
             else
-                write(m_ptm_fd, url.to_string().characters(), url.to_string().length());
+                send_non_user_input(url.to_string().bytes());
+
+            first = false;
         }
     }
 }
@@ -1155,4 +1153,34 @@ void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
     set_font(font);
     resize(widget_size_for_font(font));
 }
+
+// Used for sending data that was not directly typed by the user.
+// This basically wraps the code that handles sending the escape sequence in bracketed paste mode.
+void TerminalWidget::send_non_user_input(const ReadonlyBytes& bytes)
+{
+    constexpr StringView leading_control_sequence = "\e[200~";
+    constexpr StringView trailing_control_sequence = "\e[201~";
+
+    int nwritten;
+    if (m_terminal.needs_bracketed_paste()) {
+        // We do not call write() separately for the control sequences and the data,
+        // because that would present a race condition where another process could inject data
+        // to prematurely terminate the escape. Could probably be solved by file locking.
+        Vector<u8> output;
+        output.ensure_capacity(leading_control_sequence.bytes().size() + bytes.size() + trailing_control_sequence.bytes().size());
+
+        // HACK: We don't have a `Vector<T>::unchecked_append(Span<T> const&)` yet :^(
+        output.append(leading_control_sequence.bytes().data(), leading_control_sequence.bytes().size());
+        output.append(bytes.data(), bytes.size());
+        output.append(trailing_control_sequence.bytes().data(), trailing_control_sequence.bytes().size());
+        nwritten = write(m_ptm_fd, output.data(), output.size());
+    } else {
+        nwritten = write(m_ptm_fd, bytes.data(), bytes.size());
+    }
+    if (nwritten < 0) {
+        perror("write");
+        VERIFY_NOT_REACHED();
+    }
+}
+
 }

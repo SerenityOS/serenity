@@ -118,6 +118,8 @@ private:
 
     void set_logical_focus(bool);
 
+    void send_non_user_input(const ReadonlyBytes&);
+
     Gfx::IntRect glyph_rect(u16 row, u16 column);
     Gfx::IntRect row_rect(u16 row);
 
