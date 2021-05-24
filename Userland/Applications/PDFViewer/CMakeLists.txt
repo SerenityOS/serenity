@@ -1,6 +1,8 @@
 set(SOURCES
+    OutlineModel.cpp
     PDFViewer.cpp
     PDFViewerWidget.cpp
+    SidebarWidget.cpp
     main.cpp
     )
 
