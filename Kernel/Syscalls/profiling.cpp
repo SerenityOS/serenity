@@ -53,10 +53,14 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
         return EPERM;
     g_profiling_event_mask = event_mask;
     process->set_profiling(true);
-    if (!process->create_perf_events_buffer_if_needed())
+    if (!process->create_perf_events_buffer_if_needed()) {
+        process->set_profiling(false);
         return ENOMEM;
-    if (!TimeManagement::the().enable_profile_timer())
+    }
+    if (!TimeManagement::the().enable_profile_timer()) {
+        process->set_profiling(false);
         return ENOTSUP;
+    }
     return 0;
 }
 
