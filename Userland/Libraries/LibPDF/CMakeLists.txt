@@ -8,4 +8,4 @@ set(SOURCES
     )
 
 serenity_lib(LibPDF pdf)
-target_link_libraries(LibPDF LibC LibCore LibIPC LibGfx)
+target_link_libraries(LibPDF LibC LibCore LibIPC LibGfx LibTextCodec)
