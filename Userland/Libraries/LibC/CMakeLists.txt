@@ -95,15 +95,16 @@ set(SOURCES ${LIBC_SOURCES} ${AK_SOURCES} ${ELF_SOURCES} ${ASM_SOURCES})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libstdc++")
 add_library(LibCStaticWithoutDeps STATIC ${SOURCES})
 target_link_libraries(LibCStaticWithoutDeps ssp)
-add_dependencies(LibCStaticWithoutDeps LibM LibSystem)
+add_dependencies(LibCStaticWithoutDeps LibM LibSystem LibUBSanitizer)
 
 add_custom_target(LibCStatic
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibCStaticWithoutDeps>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:ssp>
         COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibSystemStatic>
+        COMMAND ${CMAKE_AR} -x $<TARGET_FILE:LibUBSanitizerStatic>
         COMMAND ${CMAKE_AR} -qcs ${CMAKE_CURRENT_BINARY_DIR}/libc.a *.o
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        DEPENDS LibCStaticWithoutDeps ssp LibSystemStatic
+        DEPENDS LibCStaticWithoutDeps ssp LibSystemStatic LibUBSanitizerStatic
         )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/libc.a DESTINATION ${CMAKE_INSTALL_PREFIX}/usr/lib/)
