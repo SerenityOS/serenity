@@ -26,10 +26,6 @@
 #include <stdio.h>
 #include <sys/mman.h>
 
-#ifdef __serenity__
-#    include <serenity.h>
-#endif
-
 namespace Gfx {
 
 struct BackingStore {
@@ -85,7 +81,6 @@ RefPtr<Bitmap> Bitmap::create_purgeable(BitmapFormat format, const IntSize& size
     return adopt_ref(*new Bitmap(format, size, scale_factor, Purgeable::Yes, backing_store.value()));
 }
 
-#ifdef __serenity__
 RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size, int scale_factor)
 {
     if (size_would_overflow(format, size, scale_factor))
@@ -94,12 +89,11 @@ RefPtr<Bitmap> Bitmap::create_shareable(BitmapFormat format, const IntSize& size
     const auto pitch = minimum_pitch(size.width() * scale_factor, format);
     const auto data_size = size_in_bytes(pitch, size.height() * scale_factor);
 
-    auto anon_fd = anon_create(round_up_to_power_of_two(data_size, PAGE_SIZE), O_CLOEXEC);
-    if (anon_fd < 0)
+    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(data_size, PAGE_SIZE));
+    if (!buffer.is_valid())
         return nullptr;
-    return Bitmap::create_with_anon_fd(format, anon_fd, size, scale_factor, {}, ShouldCloseAnonymousFile::No);
+    return Bitmap::create_with_anonymous_buffer(format, buffer, size, scale_factor, {});
 }
-#endif
 
 Bitmap::Bitmap(BitmapFormat format, const IntSize& size, int scale_factor, Purgeable purgeable, const BackingStore& backing_store)
     : m_size(size)
@@ -194,33 +188,12 @@ static bool check_size(const IntSize& size, int scale_factor, BitmapFormat forma
     return true;
 }
 
-RefPtr<Bitmap> Bitmap::create_with_anon_fd(BitmapFormat format, int anon_fd, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette, ShouldCloseAnonymousFile should_close_anon_fd)
+RefPtr<Bitmap> Bitmap::create_with_anonymous_buffer(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
 {
-    void* data = nullptr;
-    {
-        // If ShouldCloseAnonymousFile::Yes, it's our responsibility to close 'anon_fd' no matter what.
-        ScopeGuard close_guard = [&] {
-            if (should_close_anon_fd == ShouldCloseAnonymousFile::Yes) {
-                int rc = close(anon_fd);
-                VERIFY(rc == 0);
-                anon_fd = -1;
-            }
-        };
+    if (size_would_overflow(format, size, scale_factor))
+        return nullptr;
 
-        if (size_would_overflow(format, size, scale_factor))
-            return nullptr;
-
-        const auto pitch = minimum_pitch(size.width() * scale_factor, format);
-        const auto data_size_in_bytes = size_in_bytes(pitch, size.height() * scale_factor);
-
-        data = mmap(nullptr, round_up_to_power_of_two(data_size_in_bytes, PAGE_SIZE), PROT_READ | PROT_WRITE, MAP_FILE | MAP_SHARED, anon_fd, 0);
-        if (data == MAP_FAILED) {
-            perror("mmap");
-            return nullptr;
-        }
-    }
-
-    return adopt_ref(*new Bitmap(format, anon_fd, size, scale_factor, data, palette));
+    return adopt_ref(*new Bitmap(format, buffer, size, scale_factor, palette));
 }
 
 /// Read a bitmap as described by:
@@ -310,15 +283,14 @@ ByteBuffer Bitmap::serialize_to_byte_buffer() const
     return buffer;
 }
 
-Bitmap::Bitmap(BitmapFormat format, int anon_fd, const IntSize& size, int scale_factor, void* data, const Vector<RGBA32>& palette)
+Bitmap::Bitmap(BitmapFormat format, Core::AnonymousBuffer buffer, const IntSize& size, int scale_factor, const Vector<RGBA32>& palette)
     : m_size(size)
     , m_scale(scale_factor)
-    , m_data(data)
+    , m_data(buffer.data<void>())
     , m_pitch(minimum_pitch(size.width() * scale_factor, format))
     , m_format(format)
-    , m_needs_munmap(true)
     , m_purgeable(true)
-    , m_anon_fd(anon_fd)
+    , m_buffer(buffer)
 {
     VERIFY(!is_indexed() || !palette.is_empty());
     VERIFY(!size_would_overflow(format, size, scale_factor));
@@ -522,30 +494,24 @@ RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
     return new_bitmap;
 }
 
-#ifdef __serenity__
-RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anon_fd() const
+RefPtr<Bitmap> Bitmap::to_bitmap_backed_by_anonymous_buffer() const
 {
-    if (m_anon_fd != -1)
+    if (m_buffer.is_valid())
         return *this;
-    auto anon_fd = anon_create(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE), O_CLOEXEC);
-    if (anon_fd < 0)
+    auto buffer = Core::AnonymousBuffer::create_with_size(round_up_to_power_of_two(size_in_bytes(), PAGE_SIZE));
+    if (!buffer.is_valid())
         return nullptr;
-    auto bitmap = Bitmap::create_with_anon_fd(m_format, anon_fd, size(), scale(), palette_to_vector(), ShouldCloseAnonymousFile::No);
+    auto bitmap = Bitmap::create_with_anonymous_buffer(m_format, buffer, size(), scale(), palette_to_vector());
     if (!bitmap)
         return nullptr;
     memcpy(bitmap->scanline(0), scanline(0), size_in_bytes());
     return bitmap;
 }
-#endif
 
 Bitmap::~Bitmap()
 {
     if (m_needs_munmap) {
         int rc = munmap(m_data, size_in_bytes());
-        VERIFY(rc == 0);
-    }
-    if (m_anon_fd != -1) {
-        int rc = close(m_anon_fd);
         VERIFY(rc == 0);
     }
     m_data = nullptr;
@@ -602,15 +568,13 @@ void Bitmap::set_volatile()
     return rc == 0;
 }
 
-#ifdef __serenity__
 ShareableBitmap Bitmap::to_shareable_bitmap() const
 {
-    auto bitmap = to_bitmap_backed_by_anon_fd();
+    auto bitmap = to_bitmap_backed_by_anonymous_buffer();
     if (!bitmap)
         return {};
     return ShareableBitmap(*bitmap);
 }
-#endif
 
 Optional<BackingStore> Bitmap::allocate_backing_store(BitmapFormat format, const IntSize& size, int scale_factor, [[maybe_unused]] Purgeable purgeable)
 {
