@@ -8,7 +8,7 @@
 
 #include <AK/Types.h>
 
-namespace Kernel::UBSanitizer {
+namespace AK::UBSanitizer {
 
 extern bool g_ubsan_is_deadly;
 

@@ -9,6 +9,7 @@
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/ScopeGuard.h>
+#include <AK/UBSanitizer.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
@@ -38,7 +39,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
-#include <Kernel/UBSanitizer.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
@@ -978,9 +978,9 @@ bool ProcFS::initialize()
             g_dump_kmalloc_stacks = kmalloc_stack_helper->resource();
         });
         ubsan_deadly_helper = new Lockable<bool>();
-        ubsan_deadly_helper->resource() = UBSanitizer::g_ubsan_is_deadly;
+        ubsan_deadly_helper->resource() = AK::UBSanitizer::g_ubsan_is_deadly;
         ProcFS::add_sys_bool("ubsan_is_deadly", *ubsan_deadly_helper, [] {
-            UBSanitizer::g_ubsan_is_deadly = ubsan_deadly_helper->resource();
+            AK::UBSanitizer::g_ubsan_is_deadly = ubsan_deadly_helper->resource();
         });
         caps_lock_to_ctrl_helper = new Lockable<bool>();
         ProcFS::add_sys_bool("caps_lock_to_ctrl", *caps_lock_to_ctrl_helper, [] {
