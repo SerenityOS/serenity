@@ -268,7 +268,7 @@ Value Parser::parse_value()
     if (m_reader.matches("null")) {
         m_reader.move_by(4);
         consume_whitespace();
-        return Value();
+        return Value(Value::NullTag {});
     }
 
     if (m_reader.matches("true")) {
