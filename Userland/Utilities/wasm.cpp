@@ -193,7 +193,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
 
             Wasm::Result result { Wasm::Trap {} };
             {
-                Wasm::Configuration::CallFrameHandle handle { config };
+                Wasm::BytecodeInterpreter::CallFrameHandle handle { g_interpreter, config };
                 result = config.call(g_interpreter, *address, move(values));
             }
             if (result.is_trap())
