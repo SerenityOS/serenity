@@ -608,7 +608,7 @@ void Terminal::IL(Parameters params)
         count = params[0];
     invalidate_cursor();
     for (; count > 0; --count) {
-        active_buffer().insert(cursor_row() + m_scroll_region_top, make<Line>(m_columns));
+        active_buffer().insert(cursor_row(), make<Line>(m_columns));
         if (m_scroll_region_bottom + 1 < active_buffer().size())
             active_buffer().remove(m_scroll_region_bottom + 1);
         else
@@ -640,7 +640,7 @@ void Terminal::DL(Parameters params)
     count = min(count, max_count);
 
     for (int c = count; c > 0; --c) {
-        active_buffer().remove(cursor_row() + m_scroll_region_top);
+        active_buffer().remove(cursor_row());
         if (m_scroll_region_bottom < active_buffer().size())
             active_buffer().insert(m_scroll_region_bottom, make<Line>(m_columns));
         else
