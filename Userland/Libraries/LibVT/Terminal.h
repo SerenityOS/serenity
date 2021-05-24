@@ -157,6 +157,11 @@ public:
     Attribute attribute_at(const Position&) const;
 #endif
 
+    bool needs_bracketed_paste() const
+    {
+        return m_needs_bracketed_paste;
+    };
+
 protected:
     // ^EscapeSequenceExecutor
     virtual void emit_code_point(u32) override;
@@ -335,6 +340,8 @@ protected:
 
     CursorStyle m_cursor_style { BlinkingBlock };
     CursorStyle m_saved_cursor_style { BlinkingBlock };
+
+    bool m_needs_bracketed_paste { false };
 
     Attribute m_current_attribute;
     Attribute m_saved_attribute;
