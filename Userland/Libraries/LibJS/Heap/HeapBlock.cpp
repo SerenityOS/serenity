@@ -47,11 +47,11 @@ void HeapBlock::deallocate(Cell* cell)
 {
     VERIFY(is_valid_cell_pointer(cell));
     VERIFY(!m_freelist || is_valid_cell_pointer(m_freelist));
-    VERIFY(cell->is_live());
+    VERIFY(cell->state() == Cell::State::Live);
     VERIFY(!cell->is_marked());
     cell->~Cell();
     auto* freelist_entry = new (cell) FreelistEntry();
-    freelist_entry->set_live(false);
+    freelist_entry->set_state(Cell::State::Dead);
     freelist_entry->next = m_freelist;
     m_freelist = freelist_entry;
 }

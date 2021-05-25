@@ -140,7 +140,7 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
         auto* possible_heap_block = HeapBlock::from_cell(reinterpret_cast<const Cell*>(possible_pointer));
         if (all_live_heap_blocks.contains(possible_heap_block)) {
             if (auto* cell = possible_heap_block->cell_from_possible_pointer(possible_pointer)) {
-                if (cell->is_live()) {
+                if (cell->state() == Cell::State::Live) {
                     dbgln_if(HEAP_DEBUG, "  ?-> {}", (const void*)cell);
                     roots.set(cell);
                 } else {
@@ -187,19 +187,17 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     for_each_block([&](auto& block) {
         bool block_has_live_cells = false;
         bool block_was_full = block.is_full();
-        block.for_each_cell([&](Cell* cell) {
-            if (cell->is_live()) {
-                if (!cell->is_marked()) {
-                    dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
-                    block.deallocate(cell);
-                    ++collected_cells;
-                    collected_cell_bytes += block.cell_size();
-                } else {
-                    cell->set_marked(false);
-                    block_has_live_cells = true;
-                    ++live_cells;
-                    live_cell_bytes += block.cell_size();
-                }
+        block.template for_each_cell_in_state<Cell::State::Live>([&](Cell* cell) {
+            if (!cell->is_marked()) {
+                dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
+                block.deallocate(cell);
+                ++collected_cells;
+                collected_cell_bytes += block.cell_size();
+            } else {
+                cell->set_marked(false);
+                block_has_live_cells = true;
+                ++live_cells;
+                live_cell_bytes += block.cell_size();
             }
         });
         if (!block_has_live_cells)
