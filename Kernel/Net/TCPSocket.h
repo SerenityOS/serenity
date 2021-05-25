@@ -136,7 +136,7 @@ public:
     u32 duplicate_acks() const { return m_duplicate_acks; }
 
     KResult send_ack(bool allow_duplicate = false);
-    KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0);
+    KResult send_tcp_packet(u16 flags, const UserOrKernelBuffer* = nullptr, size_t = 0, RoutingDecision* = nullptr);
     void receive_tcp_packet(const TCPPacket&, u16 size);
 
     bool should_delay_next_ack() const;
