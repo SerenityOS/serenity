@@ -17,6 +17,18 @@ namespace AK {
 
 class URL {
 public:
+    enum class PercentEncodeSet {
+        C0Control,
+        Fragment,
+        Query,
+        SpecialQuery,
+        Path,
+        Userinfo,
+        Component,
+        ApplicationXWWWFormUrlencoded,
+        EncodeURI
+    };
+
     URL() = default;
     URL(const StringView&);
     URL(const char* string)
@@ -67,6 +79,9 @@ public:
     static bool scheme_requires_port(const StringView&);
     static u16 default_port_for_scheme(const StringView&);
 
+    static String percent_encode(const StringView& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static String percent_decode(const StringView& input);
+
     bool operator==(const URL& other) const
     {
         if (this == &other)
@@ -77,6 +92,9 @@ public:
 private:
     bool parse(const StringView&);
     bool compute_validity() const;
+
+    static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static void append_percent_encoded(StringBuilder&, u32 code_point);
 
     bool m_valid { false };
     u16 m_port { 0 };
