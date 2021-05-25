@@ -75,5 +75,5 @@ void AccountHolder::add_account_with_name_and_mailboxes(String name, Vector<IMAP
 
 void AccountHolder::rebuild_tree()
 {
-    m_mailbox_tree_model->update();
+    m_mailbox_tree_model->invalidate();
 }

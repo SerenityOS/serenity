@@ -19,7 +19,6 @@ public:
     virtual int row_count(const GUI::ModelIndex&) const override;
     virtual int column_count(const GUI::ModelIndex&) const override;
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override;
-    virtual void update() override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 

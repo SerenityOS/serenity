@@ -258,7 +258,7 @@ void SoundPlayerWidgetAdvancedView::read_playlist(StringView path)
     for (auto& item : *items)
         m_playlist_model->items().append(item);
     set_playlist_visible(true);
-    m_playlist_model->update();
+    m_playlist_model->invalidate();
 
     open_file(items->at(0).path);
 

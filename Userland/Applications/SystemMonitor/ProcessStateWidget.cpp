@@ -57,11 +57,6 @@ public:
         return {};
     }
 
-    virtual void update() override
-    {
-        did_update(GUI::Model::DontInvalidateIndices);
-    }
-
     virtual void model_did_update([[maybe_unused]] unsigned flags) override
     {
         refresh();
@@ -77,7 +72,7 @@ public:
                 break;
             }
         }
-        update();
+        invalidate();
     }
 
 private:

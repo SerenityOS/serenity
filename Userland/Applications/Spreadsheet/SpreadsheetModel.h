@@ -23,10 +23,11 @@ public:
     virtual RefPtr<Core::MimeData> mime_data(const GUI::ModelSelection&) const override;
     virtual bool is_editable(const GUI::ModelIndex&) const override;
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
-    virtual void update() override;
     virtual bool is_column_sortable(int) const override { return false; }
     virtual StringView drag_data_type() const override { return "text/x-spreadsheet-data"; }
     Sheet& sheet() { return *m_sheet; }
+
+    void update();
 
 private:
     explicit SheetModel(Sheet& sheet)

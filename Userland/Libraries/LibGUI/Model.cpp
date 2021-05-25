@@ -29,6 +29,11 @@ void Model::unregister_view(Badge<AbstractView>, AbstractView& view)
     m_clients.remove(&view);
 }
 
+void Model::invalidate()
+{
+    did_update();
+}
+
 void Model::for_each_view(Function<void(AbstractView&)> callback)
 {
     for (auto* view : m_views)

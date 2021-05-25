@@ -27,7 +27,6 @@ public:
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_keys.size(); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 1; }
-    virtual void update() override { }
 
     virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role = GUI::ModelRole::Display) const override
     {
@@ -46,7 +45,7 @@ public:
         object.for_each_member([this](auto& name, auto&) {
             m_keys.append(name);
         });
-        did_update();
+        invalidate();
     }
 
 private:

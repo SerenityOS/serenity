@@ -131,9 +131,4 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
-void DOMTreeModel::update()
-{
-    did_update();
-}
-
 }

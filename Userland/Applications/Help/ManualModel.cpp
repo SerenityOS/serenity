@@ -172,8 +172,3 @@ TriState ManualModel::data_matches(const GUI::ModelIndex& index, const GUI::Vari
 
     return view_result.value().contains(term.as_string()) ? TriState::True : TriState::False;
 }
-
-void ManualModel::update()
-{
-    did_update();
-}

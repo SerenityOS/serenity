@@ -113,8 +113,3 @@ GUI::Variant MailboxTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole
 
     return {};
 }
-
-void MailboxTreeModel::update()
-{
-    did_update();
-}
