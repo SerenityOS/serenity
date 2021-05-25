@@ -110,6 +110,7 @@ void Game::setup(Mode mode)
 
     m_new_deck.clear();
     m_new_game_animation_pile = 0;
+    m_passes_left_before_punishment = recycle_rules().passes_allowed_before_punishment;
     m_score = 0;
     update_score(0);
 
@@ -182,7 +183,11 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                         stock.push(card);
                     }
 
-                    update_score(-100);
+                    if (m_passes_left_before_punishment == 0)
+                        update_score(recycle_rules().punishment);
+                    else
+                        --m_passes_left_before_punishment;
+
                     update(stock.bounding_box());
                 } else {
                     auto play_bounding_box = play.bounding_box();
