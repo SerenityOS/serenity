@@ -342,6 +342,10 @@ bool Scheduler::donate_to(RefPtr<Thread>& beneficiary, const char* reason)
 
 bool Scheduler::context_switch(Thread* thread)
 {
+    if (s_mm_lock.own_lock()) {
+        PANIC("In context switch while holding s_mm_lock");
+    }
+
     thread->did_schedule();
 
     auto from_thread = Thread::current();
