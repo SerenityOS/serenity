@@ -38,43 +38,47 @@ Parser::Parser(const ReadonlyBytes& bytes)
 {
 }
 
-bool Parser::perform_validation()
+bool Parser::initialize()
 {
-    return !sloppy_is_linearized() && parse_header();
-}
+    if (!parse_header())
+        return {};
 
-Optional<Parser::XRefTableAndTrailer> Parser::parse_last_xref_table_and_trailer()
-{
     m_reader.move_to(m_reader.bytes().size() - 1);
     if (!navigate_to_before_eof_marker())
-        return {};
+        return false;
     if (!navigate_to_after_startxref())
-        return {};
+        return false;
     if (m_reader.done())
-        return {};
+        return false;
 
     m_reader.set_reading_forwards();
     auto xref_offset_value = parse_number();
     if (!xref_offset_value.is_int())
-        return {};
+        return false;
     auto xref_offset = xref_offset_value.as_int();
 
     m_reader.move_to(xref_offset);
     auto xref_table = parse_xref_table();
     if (!xref_table.has_value())
-        return {};
+        return false;
     auto trailer = parse_file_trailer();
     if (!trailer)
-        return {};
+        return false;
 
-    return XRefTableAndTrailer { xref_table.value(), trailer.release_nonnull() };
+    m_xref_table = xref_table.value();
+    m_trailer = trailer;
+    return true;
 }
 
-RefPtr<IndirectValue> Parser::parse_indirect_value_at_offset(size_t offset)
+Value Parser::parse_object_with_index(u32 index)
 {
-    m_reader.set_reading_forwards();
-    m_reader.move_to(offset);
-    return parse_indirect_value();
+    VERIFY(m_xref_table.has_object(index));
+    auto byte_offset = m_xref_table.byte_offset_for_object(index);
+    m_reader.move_to(byte_offset);
+    auto indirect_value = parse_indirect_value();
+    VERIFY(indirect_value);
+    VERIFY(indirect_value->index() == index);
+    return indirect_value->value();
 }
 
 bool Parser::parse_header()
@@ -647,11 +651,14 @@ RefPtr<DictObject> Parser::parse_dict()
     return make_object<DictObject>(map);
 }
 
-RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t offset, bool& ok)
+RefPtr<DictObject> Parser::conditionally_parse_page_tree_node(u32 object_index, bool& ok)
 {
     ok = true;
 
-    m_reader.move_to(offset);
+    VERIFY(m_xref_table.has_object(object_index));
+    auto byte_offset = m_xref_table.byte_offset_for_object(object_index);
+
+    m_reader.move_to(byte_offset);
     parse_number();
     parse_number();
     if (!m_reader.matches("obj")) {
