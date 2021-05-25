@@ -222,10 +222,10 @@ public:
         return *m_value.as_symbol;
     }
 
-    Cell* as_cell()
+    Cell& as_cell()
     {
         VERIFY(is_cell());
-        return m_value.as_cell;
+        return *m_value.as_cell;
     }
 
     Accessor& as_accessor()
@@ -330,7 +330,7 @@ inline Value js_negative_infinity()
 inline void Cell::Visitor::visit(Value value)
 {
     if (value.is_cell())
-        visit_impl(*value.as_cell());
+        visit_impl(value.as_cell());
 }
 
 Value greater_than(GlobalObject&, Value lhs, Value rhs);
