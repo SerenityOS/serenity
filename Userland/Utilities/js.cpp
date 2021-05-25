@@ -60,6 +60,18 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(save_to_file);
 };
 
+class ScriptObject final : public JS::GlobalObject {
+    JS_OBJECT(ScriptObject, JS::GlobalObject);
+
+public:
+    ScriptObject();
+    virtual void initialize_global_object() override;
+    virtual ~ScriptObject() override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(load_file);
+};
+
 static bool s_dump_ast = false;
 static bool s_print_last_result = false;
 static RefPtr<Line::Editor> s_editor;
@@ -607,6 +619,46 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     return JS::Value(true);
 }
 
+ScriptObject::ScriptObject()
+{
+}
+
+void ScriptObject::initialize_global_object()
+{
+    Base::initialize_global_object();
+    define_property("global", this, JS::Attribute::Enumerable);
+    define_native_function("load", load_file, 1);
+}
+
+ScriptObject::~ScriptObject()
+{
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
+{
+    if (!vm.argument_count())
+        return JS::Value(false);
+
+    for (auto& file : vm.call_frame().arguments) {
+        String filename = file.as_string().string();
+        auto js_file = Core::File::construct(filename);
+        if (!js_file->open(Core::OpenMode::ReadOnly)) {
+            warnln("Failed to open {}: {}", filename, js_file->error_string());
+            continue;
+        }
+        auto file_contents = js_file->read_all();
+
+        StringView source;
+        if (file_has_shebang(file_contents)) {
+            source = strip_shebang(file_contents);
+        } else {
+            source = file_contents;
+        }
+        parse_and_run(vm.interpreter(), source);
+    }
+    return JS::Value(true);
+}
+
 static void repl(JS::Interpreter& interpreter)
 {
     while (!s_fail_repl) {
@@ -962,7 +1014,7 @@ int main(int argc, char** argv)
         repl(*interpreter);
         s_editor->save_history(s_history_path);
     } else {
-        interpreter = JS::Interpreter::create<JS::GlobalObject>(*vm);
+        interpreter = JS::Interpreter::create<ScriptObject>(*vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
         interpreter->global_object().console().set_client(console_client);
         interpreter->heap().set_should_collect_on_every_allocation(gc_on_every_allocation);
