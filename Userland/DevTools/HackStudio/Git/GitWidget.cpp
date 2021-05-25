@@ -44,7 +44,8 @@ GitWidget::GitWidget(const LexicalPath& repo_root)
     m_unstaged_files = unstaged.add<GitFilesView>(
         [this](const auto& file) { stage_file(file); },
         Gfx::Bitmap::load_from_file("/res/icons/16x16/plus.png").release_nonnull());
-    m_unstaged_files->on_selection = [this](const GUI::ModelIndex& index) {
+    m_unstaged_files->on_selection_change = [this] {
+        const auto& index = m_unstaged_files->selection().first();
         const auto& selected = index.data().as_string();
         show_diff(LexicalPath(selected));
     };

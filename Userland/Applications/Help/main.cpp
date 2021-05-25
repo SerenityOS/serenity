@@ -179,24 +179,25 @@ int main(int argc, char* argv[])
                 GUI::MessageBox::Type::Error);
         }
     };
-    search_list_view.on_selection = [&](auto index) {
+    search_list_view.on_selection_change = [&] {
+        const auto& index = search_list_view.selection().first();
         if (!index.is_valid())
             return;
 
-        if (auto model = search_list_view.model()) {
-            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-            index = search_model.map(index);
-        } else {
+        auto view_model = search_list_view.model();
+        if (!view_model) {
             page_view.load_empty_document();
             return;
         }
-        String path = model->page_path(index);
+        auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
+        const auto& mapped_index = search_model.map(index);
+        String path = model->page_path(mapped_index);
         if (path.is_null()) {
             page_view.load_empty_document();
             return;
         }
         tree_view.selection().clear();
-        tree_view.selection().add(index);
+        tree_view.selection().add(mapped_index);
         history.push(path);
         update_actions();
         open_page(path);
