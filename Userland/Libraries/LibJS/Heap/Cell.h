@@ -33,7 +33,11 @@ public:
 
     class Visitor {
     public:
-        void visit(Cell*);
+        void visit(Cell* cell)
+        {
+            if (cell)
+                visit_impl(cell);
+        }
         void visit(Value);
 
     protected:

@@ -327,6 +327,12 @@ inline Value js_negative_infinity()
     return Value(-INFINITY);
 }
 
+inline void Cell::Visitor::visit(Value value)
+{
+    if (value.is_cell())
+        visit_impl(value.as_cell());
+}
+
 Value greater_than(GlobalObject&, Value lhs, Value rhs);
 Value greater_than_equals(GlobalObject&, Value lhs, Value rhs);
 Value less_than(GlobalObject&, Value lhs, Value rhs);
