@@ -12,6 +12,7 @@
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
 #include <LibGUI/Action.h>
 #include <LibGUI/Application.h>
@@ -39,7 +40,7 @@ URL url_from_user_input(const String& input)
 {
     if (input.starts_with("?") && !g_search_engine.is_null()) {
         auto url = g_search_engine;
-        url.replace("{}", urlencode(input.substring(1)));
+        url.replace("{}", URL::percent_encode(input.substring_view(1)));
         return URL(url);
     }
 
