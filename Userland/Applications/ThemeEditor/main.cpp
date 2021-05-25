@@ -26,7 +26,6 @@ public:
             return Gfx::to_string(m_color_roles[(size_t)index.row()]);
         return {};
     }
-    virtual void update() { did_update(); }
 
     explicit ColorRoleModel(const Vector<Gfx::ColorRole>& color_roles)
         : m_color_roles(color_roles)

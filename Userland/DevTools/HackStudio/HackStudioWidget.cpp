@@ -268,7 +268,7 @@ bool HackStudioWidget::open_file(const String& full_filename)
             }
         }
 
-        m_open_files_view->model()->update();
+        m_open_files_view->model()->invalidate();
     }
 
     current_editor().set_document(const_cast<GUI::TextDocument&>(new_project_file->document()));
@@ -1115,7 +1115,7 @@ void HackStudioWidget::handle_external_file_deletion(const String& filepath)
         }
     }
 
-    m_open_files_view->model()->update();
+    m_open_files_view->model()->invalidate();
 }
 
 HackStudioWidget::~HackStudioWidget()

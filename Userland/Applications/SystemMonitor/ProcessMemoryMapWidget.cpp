@@ -122,5 +122,5 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
 void ProcessMemoryMapWidget::refresh()
 {
     if (m_pid != -1)
-        m_json_model->update();
+        m_json_model->invalidate();
 }

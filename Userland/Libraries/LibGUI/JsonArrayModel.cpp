@@ -10,7 +10,7 @@
 
 namespace GUI {
 
-void JsonArrayModel::update()
+void JsonArrayModel::invalidate()
 {
     auto file = Core::File::construct(m_json_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
@@ -131,7 +131,7 @@ void JsonArrayModel::set_json_path(const String& json_path)
         return;
 
     m_json_path = json_path;
-    update();
+    invalidate();
 }
 
 }

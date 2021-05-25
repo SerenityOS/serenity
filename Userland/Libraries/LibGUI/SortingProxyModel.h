@@ -21,7 +21,7 @@ public:
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String column_name(int) const override;
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
-    virtual void update() override;
+    virtual void invalidate() override;
     virtual StringView drag_data_type() const override;
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column, const ModelIndex& parent) const override;
@@ -63,7 +63,7 @@ private:
     Model& source() { return *m_source; }
     const Model& source() const { return *m_source; }
 
-    void invalidate(unsigned flags = Model::UpdateFlag::DontInvalidateIndices);
+    void update_sort(unsigned = UpdateFlag::DontInvalidateIndices);
     InternalMapIterator build_mapping(const ModelIndex& proxy_index);
 
     NonnullRefPtr<Model> m_source;
