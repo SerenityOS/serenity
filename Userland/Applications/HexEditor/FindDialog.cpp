@@ -8,6 +8,7 @@
 #include <AK/Hex.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Applications/HexEditor/FindDialogGML.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
 #include <LibGUI/Label.h>
@@ -15,8 +16,6 @@
 #include <LibGUI/RadioButton.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
-#include <LibGfx/Font.h>
-#include <LibGfx/FontDatabase.h>
 
 struct Option {
     String title;
@@ -88,28 +87,23 @@ Result<ByteBuffer, String> FindDialog::process_input(String text_value, OptionId
 FindDialog::FindDialog()
     : Dialog(nullptr)
 {
-    resize(280, 180 + ((static_cast<int>(options.size()) - 3) * 16));
+    resize(280, 146);
     center_on_screen();
     set_resizable(false);
     set_title("Find");
 
-    auto& main = set_main_widget<GUI::Widget>();
-    main.set_layout<GUI::VerticalBoxLayout>();
-    main.layout()->set_margins({ 8, 8, 8, 8 });
-    main.layout()->set_spacing(8);
-    main.set_fill_with_background_color(true);
+    auto& main_widget = set_main_widget<GUI::Widget>();
+    if (!main_widget.load_from_gml(find_dialog_gml))
+        VERIFY_NOT_REACHED();
 
-    auto& find_prompt_container = main.add<GUI::Widget>();
-    find_prompt_container.set_layout<GUI::HorizontalBoxLayout>();
+    m_text_editor = *main_widget.find_descendant_of_type_named<GUI::TextBox>("text_editor");
+    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
 
-    find_prompt_container.add<GUI::Label>("Value to find");
-
-    m_text_editor = find_prompt_container.add<GUI::TextBox>();
-    m_text_editor->set_fixed_height(19);
-
+    auto& radio_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("radio_container");
     for (size_t i = 0; i < options.size(); i++) {
         auto action = options[i];
-        auto& radio = main.add<GUI::RadioButton>();
+        auto& radio = radio_container.add<GUI::RadioButton>();
         radio.set_enabled(action.enabled);
         radio.set_text(action.title);
 
@@ -123,22 +117,18 @@ FindDialog::FindDialog()
         }
     }
 
-    auto& button_box = main.add<GUI::Widget>();
-    button_box.set_layout<GUI::HorizontalBoxLayout>();
-    button_box.layout()->set_spacing(8);
+    m_text_editor->on_return_pressed = [this] {
+        m_ok_button->click();
+    };
 
-    auto& ok_button = button_box.add<GUI::Button>();
-    ok_button.on_click = [this](auto) {
+    m_ok_button->on_click = [this](auto) {
         m_text_value = m_text_editor->text();
         done(ExecResult::ExecOK);
     };
-    ok_button.set_text("OK");
 
-    auto& cancel_button = button_box.add<GUI::Button>();
-    cancel_button.on_click = [this](auto) {
+    m_cancel_button->on_click = [this](auto) {
         done(ExecResult::ExecCancel);
     };
-    cancel_button.set_text("Cancel");
 }
 
 FindDialog::~FindDialog()
