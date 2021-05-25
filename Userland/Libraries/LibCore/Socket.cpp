@@ -158,12 +158,15 @@ ByteBuffer Socket::receive(int max_size)
 
 bool Socket::send(ReadonlyBytes data)
 {
-    ssize_t nsent = ::send(fd(), data.data(), data.size(), 0);
-    if (nsent < 0) {
-        set_error(errno);
-        return false;
+    auto remaining_bytes = data.size();
+    while (remaining_bytes > 0) {
+        ssize_t nsent = ::send(fd(), data.data() + (data.size() - remaining_bytes), remaining_bytes, 0);
+        if (nsent < 0) {
+            set_error(errno);
+            return false;
+        }
+        remaining_bytes -= nsent;
     }
-    VERIFY(static_cast<size_t>(nsent) == data.size());
     return true;
 }
 
