@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Array.h>
 #include <LibCards/CardStack.h>
 #include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
@@ -97,6 +98,11 @@ private:
         bool m_dirty { false };
     };
 
+    struct WasteRecycleRules {
+        uint8_t passes_allowed_before_punishment { 0 };
+        int8_t punishment { 0 };
+    };
+
     enum StackLocation {
         Stock,
         Waste,
@@ -115,6 +121,23 @@ private:
         __Count
     };
     static constexpr Array piles = { Pile1, Pile2, Pile3, Pile4, Pile5, Pile6, Pile7 };
+
+    ALWAYS_INLINE const WasteRecycleRules& recycle_rules()
+    {
+        static constexpr Array<WasteRecycleRules, 2> rules { {
+            { 0, -100 },
+            { 2, -20 },
+        } };
+
+        switch (m_mode) {
+        case Mode::SingleCardDraw:
+            return rules[0];
+        case Mode::ThreeCardDraw:
+            return rules[1];
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
 
     void mark_intersecting_stacks_dirty(Card& intersecting_card);
     void update_score(int to_add);
@@ -156,6 +179,7 @@ private:
     uint8_t m_new_game_animation_delay { 0 };
 
     uint32_t m_score { 0 };
+    uint8_t m_passes_left_before_punishment { 0 };
 };
 
 }
