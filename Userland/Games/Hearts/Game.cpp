@@ -269,6 +269,7 @@ void Game::timer_event(Core::TimerEvent&)
         }
         if (m_animation_current_step >= m_animation_steps) {
             stop_timer();
+            m_animation_playing = false;
             if (m_animation_did_finish)
                 (*m_animation_did_finish)();
         }
@@ -398,6 +399,9 @@ void Game::continue_game_after_delay(int interval_ms)
 
 void Game::advance_game()
 {
+    if (m_animation_playing)
+        return;
+
     if (m_state == State::Play && game_ended()) {
         m_state = State::GameEnded;
         on_status_change("Game ended.");
