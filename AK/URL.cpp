@@ -519,6 +519,128 @@ bool URL::is_special_scheme(const StringView& scheme)
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
 
+String URL::serialize_data_url() const
+{
+    VERIFY(m_scheme == "data");
+    VERIFY(!m_data_mime_type.is_null());
+    VERIFY(!m_data_payload.is_null());
+    StringBuilder builder;
+    builder.append(m_scheme);
+    builder.append(':');
+    builder.append(m_data_mime_type);
+    if (m_data_payload_is_base64)
+        builder.append(";base64");
+    builder.append(',');
+    // NOTE: The specification does not say anything about encoding this, but we should encode at least control and non-ASCII
+    //       characters (since this is also a valid representation of the same data URL).
+    builder.append(URL::percent_encode(m_data_payload, PercentEncodeSet::C0Control));
+    return builder.to_string();
+}
+
+// https://url.spec.whatwg.org/#concept-url-serializer
+String URL::serialize(ExcludeFragment exclude_fragment) const
+{
+    if (m_scheme == "data")
+        return serialize_data_url();
+    StringBuilder builder;
+    builder.append(m_scheme);
+    builder.append(':');
+
+    if (!m_host.is_null()) {
+        builder.append("//");
+
+        if (includes_credentials()) {
+            builder.append(percent_encode(m_username, PercentEncodeSet::Userinfo));
+            if (!m_password.is_empty()) {
+                builder.append(':');
+                builder.append(percent_encode(m_password, PercentEncodeSet::Userinfo));
+            }
+            builder.append('@');
+        }
+
+        builder.append(m_host);
+        if (m_port != 0)
+            builder.appendff(":{}", m_port);
+    }
+
+    if (cannot_be_a_base_url()) {
+        builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
+    } else {
+        // FIXME: Temporary m_path hack
+        if (!m_path.is_null()) {
+            builder.append(path());
+        } else {
+            if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
+                builder.append("/.");
+            for (auto& segment : m_paths) {
+                builder.append('/');
+                builder.append(percent_encode(segment, PercentEncodeSet::Path));
+            }
+        }
+    }
+
+    if (!m_query.is_null()) {
+        builder.append('?');
+        builder.append(percent_encode(m_query, is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query));
+    }
+
+    if (exclude_fragment == ExcludeFragment::No && !m_fragment.is_null()) {
+        builder.append('#');
+        builder.append(percent_encode(m_fragment, PercentEncodeSet::Fragment));
+    }
+
+    return builder.to_string();
+}
+
+// https://url.spec.whatwg.org/#url-rendering
+// NOTE: This does e.g. not display credentials.
+// FIXME: Parts of the URL other than the host should have their sequences of percent-encoded bytes replaced with code points
+//        resulting from percent-decoding those sequences converted to bytes, unless that renders those sequences invisible.
+String URL::serialize_for_display() const
+{
+    VERIFY(m_valid);
+    if (m_scheme == "data")
+        return serialize_data_url();
+    StringBuilder builder;
+    builder.append(m_scheme);
+    builder.append(':');
+
+    if (!m_host.is_null()) {
+        builder.append("//");
+        builder.append(m_host);
+        if (m_port != 0)
+            builder.appendff(":{}", m_port);
+    }
+
+    if (cannot_be_a_base_url()) {
+        builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
+    } else {
+        // FIXME: Temporary m_path hack
+        if (!m_path.is_null()) {
+            builder.append(path());
+        } else {
+            if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
+                builder.append("/.");
+            for (auto& segment : m_paths) {
+                builder.append('/');
+                builder.append(percent_encode(segment, PercentEncodeSet::Path));
+            }
+        }
+    }
+
+    if (!m_query.is_null()) {
+        builder.append('?');
+        builder.append(percent_encode(m_query, is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query));
+    }
+
+    if (!m_fragment.is_null()) {
+        builder.append('#');
+        builder.append(percent_encode(m_fragment, PercentEncodeSet::Fragment));
+    }
+
+    return builder.to_string();
+}
+
 String URL::basename() const
 {
     if (!m_valid)
