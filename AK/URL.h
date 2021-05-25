@@ -30,6 +30,11 @@ public:
         EncodeURI
     };
 
+    enum class ExcludeFragment {
+        No,
+        Yes
+    };
+
     URL() = default;
     URL(const StringView&);
     URL(const char* string)
@@ -78,6 +83,9 @@ public:
         return percent_encode(to_string(), PercentEncodeSet::EncodeURI);
     }
 
+    String serialize(ExcludeFragment = ExcludeFragment::No) const;
+    String serialize_for_display() const;
+
     URL complete_url(const String&) const;
 
     bool data_payload_is_base64() const { return m_data_payload_is_base64; }
@@ -115,6 +123,7 @@ private:
 
     bool parse(const StringView&);
     bool compute_validity() const;
+    String serialize_data_url() const;
 
     static void append_percent_encoded_if_necessary(StringBuilder&, u32 code_point, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static void append_percent_encoded(StringBuilder&, u32 code_point);
