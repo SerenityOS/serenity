@@ -56,7 +56,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
     });
     quick_sort(m_families);
 
-    m_family_list_view->on_selection = [this](auto& index) {
+    m_family_list_view->on_selection_change = [this] {
+        const auto& index = m_family_list_view->selection().first();
         m_family = index.data().to_string();
         m_weights.clear();
         Gfx::FontDatabase::the().for_each_typeface([&](auto& typeface) {
@@ -76,7 +77,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         update_font();
     };
 
-    m_weight_list_view->on_selection = [this](auto& index) {
+    m_weight_list_view->on_selection_change = [this] {
+        const auto& index = m_weight_list_view->selection().first();
         bool font_is_fixed_size = false;
         m_weight = index.data(ModelRole::Custom).to_i32();
         m_sizes.clear();
@@ -130,7 +132,8 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         update_font();
     };
 
-    m_size_list_view->on_selection = [this](auto& index) {
+    m_size_list_view->on_selection_change = [this] {
+        const auto& index = m_size_list_view->selection().first();
         m_size = index.data().to_i32();
         m_size_spin_box->set_value(m_size.value());
         update_font();

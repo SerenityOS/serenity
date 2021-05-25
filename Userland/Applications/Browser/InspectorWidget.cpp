@@ -41,13 +41,15 @@ InspectorWidget::InspectorWidget()
     auto& top_tab_widget = splitter.add<GUI::TabWidget>();
 
     m_dom_tree_view = top_tab_widget.add_tab<GUI::TreeView>("DOM");
-    m_dom_tree_view->on_selection = [this](auto& index) {
+    m_dom_tree_view->on_selection_change = [this] {
+        const auto& index = m_dom_tree_view->selection().first();
         auto* node = static_cast<Web::DOM::Node*>(index.internal_data());
         set_inspected_node(node);
     };
 
     m_layout_tree_view = top_tab_widget.add_tab<GUI::TreeView>("Layout");
-    m_layout_tree_view->on_selection = [this](auto& index) {
+    m_layout_tree_view->on_selection_change = [this] {
+        const auto& index = m_layout_tree_view->selection().first();
         auto* node = static_cast<Web::Layout::Node*>(index.internal_data());
         set_inspected_node(node->dom_node());
     };
