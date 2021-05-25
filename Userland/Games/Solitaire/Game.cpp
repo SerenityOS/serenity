@@ -80,7 +80,7 @@ void Game::start_game_over_animation()
     start_timer(s_timer_interval_ms);
 
     if (on_game_end)
-        on_game_end();
+        on_game_end(GameOverReason::Victory, m_score);
 }
 
 void Game::stop_game_over_animation()
@@ -103,7 +103,7 @@ void Game::setup(Mode mode)
     m_mode = mode;
 
     if (on_game_end)
-        on_game_end();
+        on_game_end(GameOverReason::NewGame, m_score);
 
     for (auto& stack : m_stacks)
         stack.clear();
