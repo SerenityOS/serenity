@@ -159,7 +159,7 @@ public:
     {
         if (cell.is_marked())
             return;
-        dbgln_if(HEAP_DEBUG, "  ! {}", cell);
+        dbgln_if(HEAP_DEBUG, "  ! {}", &cell);
         cell.set_marked(true);
         cell.visit_edges(*this);
     }
