@@ -330,7 +330,7 @@ inline Value js_negative_infinity()
 inline void Cell::Visitor::visit(Value value)
 {
     if (value.is_cell())
-        visit_impl(value.as_cell());
+        visit_impl(*value.as_cell());
 }
 
 Value greater_than(GlobalObject&, Value lhs, Value rhs);

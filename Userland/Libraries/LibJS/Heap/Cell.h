@@ -41,12 +41,12 @@ public:
         void visit(Cell* cell)
         {
             if (cell)
-                visit_impl(cell);
+                visit_impl(*cell);
         }
         void visit(Value);
 
     protected:
-        virtual void visit_impl(Cell*) = 0;
+        virtual void visit_impl(Cell&) = 0;
         virtual ~Visitor() = default;
     };
 
