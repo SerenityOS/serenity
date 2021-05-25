@@ -12,6 +12,7 @@ namespace Profiler {
 
 TimelineContainer::TimelineContainer(GUI::Widget& header_container, TimelineView& timeline_view)
 {
+    set_should_hide_unnecessary_scrollbars(true);
     m_header_container = header_container;
     m_timeline_view = timeline_view;
     add_child(header_container);
