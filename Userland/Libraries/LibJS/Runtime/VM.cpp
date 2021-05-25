@@ -146,7 +146,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
         }
     }
 
-    global_object.put(move(name), move(value));
+    global_object.put(name, value);
 }
 
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
@@ -324,7 +324,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.this_value = function.bound_this().value_or(this_value);
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.append(move(arguments.release_value().values()));
+        call_frame.arguments.append(arguments.value().values());
     auto* environment = function.create_environment();
     call_frame.scope = environment;
 
