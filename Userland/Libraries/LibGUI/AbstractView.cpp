@@ -110,8 +110,8 @@ void AbstractView::did_update_selection()
 {
     if (!model() || selection().first() != m_edit_index)
         stop_editing();
-    if (model() && on_selection && selection().first().is_valid())
-        on_selection(selection().first());
+    if (model() && on_selection_change)
+        on_selection_change();
 }
 
 void AbstractView::did_scroll()
@@ -194,8 +194,6 @@ void AbstractView::activate_selected()
 void AbstractView::notify_selection_changed(Badge<ModelSelection>)
 {
     did_update_selection();
-    if (on_selection_change)
-        on_selection_change();
     if (!m_suppress_update_on_selection_change)
         update();
 }

@@ -65,7 +65,8 @@ DebugInfoWidget::DebugInfoWidget()
     variables_tab_widget.add_widget("Variables", build_variables_tab());
     variables_tab_widget.add_widget("Registers", build_registers_tab());
 
-    m_backtrace_view->on_selection = [this](auto& index) {
+    m_backtrace_view->on_selection_change = [this] {
+        const auto& index = m_backtrace_view->selection().first();
         auto& model = static_cast<BacktraceModel&>(*m_backtrace_view->model());
 
         // Note: The reconstruction of the register set here is obviously incomplete.

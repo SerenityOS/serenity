@@ -143,7 +143,8 @@ int main(int argc, char** argv)
     auto& disassembly_view = bottom_splitter.add<GUI::TableView>();
     disassembly_view.set_visible(false);
 
-    tree_view.on_selection = [&](auto& index) {
+    tree_view.on_selection_change = [&] {
+        const auto& index = tree_view.selection().first();
         profile->set_disassembly_index(index);
         disassembly_view.set_model(profile->disassembly_model());
     };
@@ -161,7 +162,8 @@ int main(int argc, char** argv)
     samples_table_view.set_model(profile->samples_model());
 
     auto& individual_sample_view = samples_splitter.add<GUI::TableView>();
-    samples_table_view.on_selection = [&](const GUI::ModelIndex& index) {
+    samples_table_view.on_selection_change = [&] {
+        const auto& index = samples_table_view.selection().first();
         auto model = IndividualSampleModel::create(*profile, index.data(GUI::ModelRole::Custom).to_integer<size_t>());
         individual_sample_view.set_model(move(model));
     };

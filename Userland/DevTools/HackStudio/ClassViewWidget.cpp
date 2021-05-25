@@ -19,7 +19,8 @@ ClassViewWidget::ClassViewWidget()
     set_layout<GUI::VerticalBoxLayout>();
     m_class_tree = add<GUI::TreeView>();
 
-    m_class_tree->on_selection = [this](auto& index) {
+    m_class_tree->on_selection_change = [this] {
+        const auto& index = m_class_tree->selection().first();
         if (!index.is_valid())
             return;
 

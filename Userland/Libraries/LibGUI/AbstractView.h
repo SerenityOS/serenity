@@ -98,7 +98,6 @@ public:
 
     Function<void()> on_selection_change;
     Function<void(const ModelIndex&)> on_activation;
-    Function<void(const ModelIndex&)> on_selection;
     Function<void(const ModelIndex&, const ContextMenuEvent&)> on_context_menu_request;
     Function<void(const ModelIndex&, const DropEvent&)> on_drop;
 
