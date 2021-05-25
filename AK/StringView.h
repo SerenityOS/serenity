@@ -79,6 +79,7 @@ public:
     [[nodiscard]] bool contains(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;
     [[nodiscard]] bool equals_ignoring_case(const StringView& other) const;
 
+    [[nodiscard]] StringView trim(const StringView& characters, TrimMode mode = TrimMode::Both) const { return StringUtils::trim(*this, characters, mode); }
     [[nodiscard]] StringView trim_whitespace(TrimMode mode = TrimMode::Both) const { return StringUtils::trim_whitespace(*this, mode); }
 
     Optional<size_t> find_first_of(char) const;
