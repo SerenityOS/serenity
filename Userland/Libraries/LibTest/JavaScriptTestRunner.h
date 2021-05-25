@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Matthew Olsson <mattco@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -26,6 +27,7 @@
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibTest/Results.h>
+#include <fcntl.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -201,12 +203,16 @@ inline void iterate_directory_recursively(const String& directory_path, Callback
     Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
 
     while (directory_iterator.has_next()) {
-        auto file_path = directory_iterator.next_full_path();
-        auto is_directory = Core::File::is_directory(file_path);
-        if (is_directory && !file_path.contains("/Fixtures")) {
-            iterate_directory_recursively(file_path, callback);
+        auto name = directory_iterator.next_path();
+        struct stat st = {};
+        if (fstatat(directory_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0)
+            continue;
+        bool is_directory = S_ISDIR(st.st_mode);
+        auto full_path = String::formatted("{}/{}", directory_path, name);
+        if (is_directory && name != "/Fixtures"sv) {
+            iterate_directory_recursively(full_path, callback);
         } else if (!is_directory) {
-            callback(move(file_path));
+            callback(full_path);
         }
     }
 }
