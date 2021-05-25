@@ -398,8 +398,8 @@ static int do_file_system_object_long(const char* path)
     quick_sort(files, [](auto& a, auto& b) {
         if (flag_sort_by_timestamp) {
             if (flag_reverse_sort)
-                return a.stat.st_mtime > b.stat.st_mtime;
-            return a.stat.st_mtime < b.stat.st_mtime;
+                return a.stat.st_mtime < b.stat.st_mtime;
+            return a.stat.st_mtime > b.stat.st_mtime;
         }
         // Fine, sort by name then!
         if (flag_reverse_sort)
