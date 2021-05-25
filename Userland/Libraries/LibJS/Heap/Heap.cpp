@@ -114,12 +114,12 @@ __attribute__((no_sanitize("address"))) void Heap::gather_conservative_roots(Has
 
     HashTable<FlatPtr> possible_pointers;
 
-    const FlatPtr* raw_jmp_buf = reinterpret_cast<const FlatPtr*>(buf);
+    auto* raw_jmp_buf = reinterpret_cast<FlatPtr const*>(buf);
 
     for (size_t i = 0; i < ((size_t)sizeof(buf)) / sizeof(FlatPtr); i += sizeof(FlatPtr))
         possible_pointers.set(raw_jmp_buf[i]);
 
-    FlatPtr stack_reference = reinterpret_cast<FlatPtr>(&dummy);
+    auto stack_reference = bit_cast<FlatPtr>(&dummy);
     auto& stack_info = m_vm.stack_info();
 
     for (FlatPtr stack_address = stack_reference; stack_address < stack_info.top(); stack_address += sizeof(FlatPtr)) {
