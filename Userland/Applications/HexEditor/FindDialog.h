@@ -32,6 +32,8 @@ private:
     virtual ~FindDialog() override;
 
     RefPtr<GUI::TextEditor> m_text_editor;
+    RefPtr<GUI::Button> m_ok_button;
+    RefPtr<GUI::Button> m_cancel_button;
 
     String m_text_value;
     OptionId m_selected_option { OPTION_INVALID };
