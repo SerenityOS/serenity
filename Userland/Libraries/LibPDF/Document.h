@@ -75,8 +75,6 @@ class Document final : public RefCounted<Document> {
 public:
     static RefPtr<Document> create(const ReadonlyBytes& bytes);
 
-    ALWAYS_INLINE const XRefTable& xref_table() const { return m_xref_table; }
-    ALWAYS_INLINE const DictObject& trailer() const { return *m_trailer; }
     ALWAYS_INLINE const RefPtr<OutlineDict>& outline() const { return m_outline; }
 
     [[nodiscard]] Value get_or_load_value(u32 index);
@@ -90,12 +88,6 @@ public:
     ALWAYS_INLINE Value get_value(u32 index) const
     {
         return m_values.get(index).value_or({});
-    }
-
-    ALWAYS_INLINE void set_value(u32 index, const Value& value)
-    {
-        m_values.ensure_capacity(index);
-        m_values.set(index, value);
     }
 
     // Strips away the layer of indirection by turning indirect value
@@ -139,8 +131,6 @@ private:
     NonnullRefPtrVector<OutlineItem> build_outline_item_chain(const Value& first_ref, const Value& last_ref);
 
     NonnullRefPtr<Parser> m_parser;
-    XRefTable m_xref_table;
-    RefPtr<DictObject> m_trailer;
     RefPtr<DictObject> m_catalog;
     Vector<u32> m_page_object_indices;
     HashMap<u32, Page> m_pages;

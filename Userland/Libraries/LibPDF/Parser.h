@@ -22,19 +22,19 @@ public:
 
     Parser(Badge<Document>, const ReadonlyBytes&);
 
-    void set_document(RefPtr<Document> document) { m_document = document; }
+    [[nodiscard]] ALWAYS_INLINE const RefPtr<DictObject>& trailer() const { return m_trailer; }
+    void set_document(const RefPtr<Document>& document) { m_document = document; }
 
-    bool perform_validation();
+    // Parses the header and initializes the xref table and trailer
+    bool initialize();
 
-    struct XRefTableAndTrailer {
-        XRefTable xref_table;
-        NonnullRefPtr<DictObject> trailer;
-    };
-    Optional<XRefTableAndTrailer> parse_last_xref_table_and_trailer();
+    Value parse_object_with_index(u32 index);
 
-    RefPtr<IndirectValue> parse_indirect_value_at_offset(size_t offset);
-
-    RefPtr<DictObject> conditionally_parse_page_tree_node_at_offset(size_t offset, bool& ok);
+    // Specialized version of parse_dict which aborts early if the dict being parsed
+    // is not a page object. A null RefPtr return indicates that the dict at this index
+    // is not a page tree node, whereas ok == false indicates a malformed PDF file and
+    // should cause an abort of the current operation.
+    RefPtr<DictObject> conditionally_parse_page_tree_node(u32 object_index, bool& ok);
 
 private:
     explicit Parser(const ReadonlyBytes&);
@@ -85,6 +85,8 @@ private:
 
     Reader m_reader;
     RefPtr<Document> m_document;
+    XRefTable m_xref_table;
+    RefPtr<DictObject> m_trailer;
 };
 
 }

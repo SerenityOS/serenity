@@ -39,17 +39,10 @@ RefPtr<Document> Document::create(const ReadonlyBytes& bytes)
     auto parser = adopt_ref(*new Parser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
 
-    VERIFY(parser->perform_validation());
-    auto xref_table_and_trailer_opt = parser->parse_last_xref_table_and_trailer();
-    if (!xref_table_and_trailer_opt.has_value())
+    if (!parser->initialize())
         return {};
 
-    auto [xref_table, trailer] = xref_table_and_trailer_opt.value();
-
-    document->m_xref_table = xref_table;
-    document->m_trailer = trailer;
-
-    document->m_catalog = document->m_trailer->get_dict(document, CommonNames::Root);
+    document->m_catalog = parser->trailer()->get_dict(document, CommonNames::Root);
     document->build_page_tree();
     document->build_outline();
 
@@ -68,13 +61,9 @@ Value Document::get_or_load_value(u32 index)
     if (value)
         return value;
 
-    VERIFY(m_xref_table.has_object(index));
-    auto byte_offset = m_xref_table.byte_offset_for_object(index);
-    auto indirect_value = m_parser->parse_indirect_value_at_offset(byte_offset);
-    VERIFY(indirect_value->index() == index);
-    value = indirect_value->value();
-    m_values.set(index, value);
-    return value;
+    auto object = m_parser->parse_object_with_index(index);
+    m_values.set(index, object);
+    return object;
 }
 
 u32 Document::get_first_page_index() const
@@ -179,9 +168,8 @@ bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
 
         for (auto& value : *kids_array) {
             auto reference_index = value.as_ref_index();
-            auto byte_offset = m_xref_table.byte_offset_for_object(reference_index);
             bool ok;
-            auto maybe_page_tree_node = m_parser->conditionally_parse_page_tree_node_at_offset(byte_offset, ok);
+            auto maybe_page_tree_node = m_parser->conditionally_parse_page_tree_node(reference_index, ok);
             if (!ok)
                 return false;
             if (maybe_page_tree_node) {
