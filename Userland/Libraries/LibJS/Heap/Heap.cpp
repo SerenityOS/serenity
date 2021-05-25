@@ -155,13 +155,13 @@ class MarkingVisitor final : public Cell::Visitor {
 public:
     MarkingVisitor() { }
 
-    virtual void visit_impl(Cell* cell)
+    virtual void visit_impl(Cell& cell)
     {
-        if (cell->is_marked())
+        if (cell.is_marked())
             return;
         dbgln_if(HEAP_DEBUG, "  ! {}", cell);
-        cell->set_marked(true);
-        cell->visit_edges(*this);
+        cell.set_marked(true);
+        cell.visit_edges(*this);
     }
 };
 
