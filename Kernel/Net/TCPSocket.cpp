@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
@@ -167,7 +168,12 @@ KResultOr<size_t> TCPSocket::protocol_receive(ReadonlyBytes raw_ipv4_packet, Use
 
 KResultOr<size_t> TCPSocket::protocol_send(const UserOrKernelBuffer& data, size_t data_length)
 {
-    int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length);
+    RoutingDecision routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    if (routing_decision.is_zero())
+        return EHOSTUNREACH;
+    size_t mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
+    data_length = min(data_length, mss);
+    int err = send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, &data, data_length, &routing_decision);
     if (err < 0)
         return KResult((ErrnoCode)-err);
     return data_length;
@@ -180,7 +186,7 @@ KResult TCPSocket::send_ack(bool allow_duplicate)
     return send_tcp_packet(TCPFlags::ACK);
 }
 
-KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size)
+KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
     const bool has_mss_option = flags == TCPFlags::SYN;
     const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
@@ -211,7 +217,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         m_sequence_number += payload_size;
     }
 
-    auto routing_decision = route_to(peer_address(), local_address(), bound_interface());
+    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
     if (routing_decision.is_zero())
         return EHOSTUNREACH;
 
