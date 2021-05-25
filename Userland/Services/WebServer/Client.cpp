@@ -11,7 +11,7 @@
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
 #include <AK/StringBuilder.h>
-#include <AK/URLParser.h>
+#include <AK/URL.h>
 #include <LibCore/DateTime.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
@@ -223,7 +223,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
         builder.append("<tr>");
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
         builder.append("<td><a href=\"");
-        builder.append(urlencode(name));
+        builder.append(URL::percent_encode(name));
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
