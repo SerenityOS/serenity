@@ -513,6 +513,12 @@ URL URL::create_with_data(const StringView& mime_type, const StringView& payload
     return url;
 }
 
+// https://url.spec.whatwg.org/#special-scheme
+bool URL::is_special_scheme(const StringView& scheme)
+{
+    return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
+}
+
 String URL::basename() const
 {
     if (!m_valid)
