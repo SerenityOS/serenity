@@ -64,6 +64,17 @@ bool TCPServer::listen(const IPv4Address& address, u16 port)
     return true;
 }
 
+void TCPServer::set_blocking(bool blocking)
+{
+    int flags = fcntl(m_fd, F_GETFL, 0);
+    VERIFY(flags >= 0);
+    if (blocking)
+        flags = fcntl(m_fd, F_SETFL, flags & ~O_NONBLOCK);
+    else
+        flags = fcntl(m_fd, F_SETFL, flags | O_NONBLOCK);
+    VERIFY(flags == 0);
+}
+
 RefPtr<TCPSocket> TCPServer::accept()
 {
     VERIFY(m_listening);
