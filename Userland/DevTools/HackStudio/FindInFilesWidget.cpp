@@ -76,7 +76,6 @@ public:
         return {};
     }
 
-    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override
     {
         if (row < 0 || row >= (int)m_matches.size())

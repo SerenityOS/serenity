@@ -146,7 +146,7 @@ BookmarksBarWidget::BookmarksBarWidget(const String& bookmarks_file, bool enable
     fields.empend("title", "Title", Gfx::TextAlignment::CenterLeft);
     fields.empend("url", "Url", Gfx::TextAlignment::CenterRight);
     set_model(GUI::JsonArrayModel::create(bookmarks_file, move(fields)));
-    model()->update();
+    model()->invalidate();
 }
 
 BookmarksBarWidget::~BookmarksBarWidget()

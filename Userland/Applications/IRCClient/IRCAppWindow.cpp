@@ -62,7 +62,7 @@ void IRCAppWindow::setup_client()
         return static_cast<IRCWindow*>(m_container->active_widget());
     };
     m_client->aid_update_window_list = [this] {
-        m_window_list->model()->update();
+        m_window_list->model()->invalidate();
     };
     m_client->on_nickname_changed = [this](const String&) {
         update_title();

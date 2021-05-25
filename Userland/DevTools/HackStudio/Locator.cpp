@@ -74,7 +74,6 @@ public:
         }
         return {};
     }
-    virtual void update() override {};
 
     const Vector<Suggestion>& suggestions() const { return m_suggestions; }
 

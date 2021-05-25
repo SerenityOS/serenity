@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ToDoEntriesWidget.h"
 #include "HackStudio.h"
 #include "ToDoEntries.h"
+#include "ToDoEntriesWidget.h"
 #include <LibGUI/BoxLayout.h>
 #include <LibGfx/FontDatabase.h>
 
@@ -71,7 +71,6 @@ public:
         return {};
     }
 
-    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column = 0, const GUI::ModelIndex& = GUI::ModelIndex()) const override
     {
         if (row < 0 || row >= (int)m_matches.size())

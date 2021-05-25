@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "MailboxTreeModel.h"
 #include "AccountHolder.h"
+#include "MailboxTreeModel.h"
 
 MailboxTreeModel::MailboxTreeModel(AccountHolder const& account_holder)
     : m_account_holder(account_holder)
@@ -112,9 +112,4 @@ GUI::Variant MailboxTreeModel::data(GUI::ModelIndex const& index, GUI::ModelRole
     }
 
     return {};
-}
-
-void MailboxTreeModel::update()
-{
-    did_update();
 }

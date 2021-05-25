@@ -39,11 +39,6 @@ public:
         return {};
     }
 
-    virtual void update() override
-    {
-        did_update();
-    }
-
 private:
     explicit CharacterMapFileListModel(Vector<String>& filenames)
         : m_filenames(filenames)

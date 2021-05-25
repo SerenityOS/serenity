@@ -315,7 +315,6 @@ GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
 
 void ProcessModel::update()
 {
-    auto previous_tid_count = m_tids.size();
     auto all_processes = Core::ProcessStatisticsReader::get_all(m_proc_all);
 
     HashTable<int> live_tids;
@@ -384,16 +383,21 @@ void ProcessModel::update()
         }
     }
 
-    m_tids.clear();
     for (auto& c : m_cpus) {
         c.total_cpu_percent = 0.0;
         c.total_cpu_percent_kernel = 0.0;
     }
 
-    Vector<int, 16> tids_to_remove;
+    HashTable<int> tids_to_remove;
+    HashTable<int> previous_tids;
+    Vector<int, 16> tids_to_insert;
+
+    for (auto tid : m_tids)
+        previous_tids.set(tid);
+
     for (auto& it : m_threads) {
         if (!live_tids.contains(it.key)) {
-            tids_to_remove.append(it.key);
+            tids_to_remove.set(it.key);
             continue;
         }
         auto& thread = *it.value;
@@ -406,12 +410,54 @@ void ProcessModel::update()
             auto& cpu_info = m_cpus[thread.current_state.cpu];
             cpu_info.total_cpu_percent += thread.current_state.cpu_percent;
             cpu_info.total_cpu_percent_kernel += thread.current_state.cpu_percent_kernel;
-            m_tids.append(it.key);
+
+            if (!previous_tids.contains(it.key))
+                tids_to_insert.append(it.key);
         }
+    }
+
+    Vector<int> new_tids;
+    new_tids.ensure_capacity(m_tids.size() - tids_to_remove.size() + tids_to_insert.size());
+    dbgln("ProcessModel::update Have {} TIDs, will remove {}, will insert {}", m_tids.size(), tids_to_remove.size(), tids_to_insert.size());
+
+    int streak = 0;
+    int stack = 0;
+    for (size_t i = 0; i < m_tids.size(); i++) {
+        int tid = m_tids[i];
+        if (tids_to_remove.contains(tid)) {
+            streak++;
+        } else {
+            if (streak) {
+                // We stack the changes so they happen in reverse after the tid
+                // list has been updated.
+                begin_delete_rows({}, i - streak + 1, i);
+                stack++;
+                streak = 0;
+            }
+
+            new_tids.append(tid);
+        }
+    }
+
+    // Catch any items that were at the end of the TID list that must be removed.
+    int tids_last = m_tids.size() - 1;
+    if (streak) {
+        begin_delete_rows({}, tids_last - streak + 1, tids_last);
+        stack++;
     }
 
     for (auto tid : tids_to_remove)
         m_threads.remove(tid);
+    m_tids = move(new_tids);
+
+    while (stack-- > 0)
+        end_delete_rows();
+
+    if (tids_to_insert.size() > 0) {
+        begin_insert_rows({}, m_tids.size(), m_tids.size() + tids_to_insert.size() - 1);
+        m_tids.extend(move(tids_to_insert));
+        end_insert_rows();
+    }
 
     if (on_cpu_info_change)
         on_cpu_info_change(m_cpus);
@@ -419,7 +465,5 @@ void ProcessModel::update()
     if (on_state_update)
         on_state_update(all_processes.has_value() ? all_processes->processes.size() : 0, m_threads.size());
 
-    // FIXME: This is a rather hackish way of invalidating indices.
-    //        It would be good if GUI::Model had a way to orchestrate removal/insertion while preserving indices.
-    did_update(previous_tid_count == m_tids.size() ? GUI::Model::UpdateFlag::DontInvalidateIndices : GUI::Model::UpdateFlag::InvalidateAllIndices);
+    did_update(GUI::Model::UpdateFlag::DontInvalidateIndices);
 }

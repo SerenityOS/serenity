@@ -64,8 +64,3 @@ GUI::Variant IRCWindowListModel::data(const GUI::ModelIndex& index, GUI::ModelRo
     }
     return {};
 }
-
-void IRCWindowListModel::update()
-{
-    did_update();
-}

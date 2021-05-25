@@ -34,7 +34,6 @@ public:
     virtual String column_name(int) const override;
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
     virtual void set_data(const GUI::ModelIndex&, const GUI::Variant&) override;
-    virtual void update() override;
     virtual bool is_editable(const GUI::ModelIndex& index) const override { return index.column() == Column::Value; }
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex& parent = GUI::ModelIndex()) const override;
     virtual GUI::ModelIndex parent_index(const GUI::ModelIndex&) const override;

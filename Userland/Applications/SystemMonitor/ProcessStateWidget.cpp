@@ -4,12 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ProcessStateWidget.h"
 #include "ProcessModel.h"
+#include "ProcessStateWidget.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/PersistentModelIndex.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/FontDatabase.h>
@@ -57,11 +58,6 @@ public:
         return {};
     }
 
-    virtual void update() override
-    {
-        did_update(GUI::Model::DontInvalidateIndices);
-    }
-
     virtual void model_did_update([[maybe_unused]] unsigned flags) override
     {
         refresh();
@@ -69,20 +65,20 @@ public:
 
     void refresh()
     {
-        m_target_index = {};
-        for (int row = 0; row < m_target.row_count({}); ++row) {
-            auto index = m_target.index(row, ProcessModel::Column::PID);
-            if (index.data().to_i32() == m_pid) {
-                m_target_index = index;
-                break;
+        if (!m_target_index.is_valid()) {
+            for (int row = 0; row < m_target.row_count({}); ++row) {
+                auto index = m_target.index(row, ProcessModel::Column::PID);
+                if (index.data().to_i32() == m_pid) {
+                    m_target_index = GUI::PersistentModelIndex(index);
+                    break;
+                }
             }
         }
-        update();
     }
 
 private:
     ProcessModel& m_target;
-    GUI::ModelIndex m_target_index;
+    GUI::PersistentModelIndex m_target_index;
     pid_t m_pid { -1 };
 };
 
