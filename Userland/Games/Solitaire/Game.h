@@ -21,6 +21,11 @@ enum class Mode : u8 {
     __Count
 };
 
+enum class GameOverReason {
+    Victory,
+    NewGame,
+};
+
 class Game final : public GUI::Frame {
     C_OBJECT(Game)
 public:
@@ -34,7 +39,7 @@ public:
 
     Function<void(uint32_t)> on_score_update;
     Function<void()> on_game_start;
-    Function<void()> on_game_end;
+    Function<void(GameOverReason, uint32_t)> on_game_end;
 
 private:
     Game();

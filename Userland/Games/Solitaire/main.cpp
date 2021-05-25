@@ -93,11 +93,6 @@ int main(int argc, char** argv)
 
     game.on_score_update = [&](uint32_t score) {
         statusbar.set_text(0, String::formatted("Score: {}", score));
-
-        if (score > high_score) {
-            update_high_score(score);
-            statusbar.set_text(1, String::formatted("High Score: {}", high_score));
-        }
     };
 
     uint64_t seconds_elapsed = 0;
@@ -116,9 +111,14 @@ int main(int argc, char** argv)
         seconds_elapsed = 0;
         timer->start();
     };
-    game.on_game_end = [&]() {
+    game.on_game_end = [&](Solitaire::GameOverReason reason, uint32_t score) {
         if (timer->is_active())
             timer->stop();
+
+        if ((reason == Solitaire::GameOverReason::Victory) && (score > high_score)) {
+            update_high_score(score);
+            statusbar.set_text(1, String::formatted("High Score: {}", high_score));
+        }
     };
 
     GUI::ActionGroup draw_setting_actions;
