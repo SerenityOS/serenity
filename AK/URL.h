@@ -52,6 +52,9 @@ public:
     u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
     bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
 
+    bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
+    bool is_special() const { return is_special_scheme(m_scheme); }
+
     void set_scheme(const String&);
     void set_protocol(const String& protocol) { set_scheme(protocol); }
     void set_username(const String&);
@@ -83,8 +86,10 @@ public:
     static URL create_with_file_scheme(const String& path, const String& fragment = {});
     static URL create_with_file_protocol(const String& path, const String& fragment = {}) { return create_with_file_scheme(path, fragment); }
     static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
+
     static bool scheme_requires_port(const StringView&);
     static u16 default_port_for_scheme(const StringView&);
+    static bool is_special_scheme(const StringView&);
 
     static String percent_encode(const StringView& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static String percent_decode(const StringView& input);
@@ -97,6 +102,15 @@ public:
     }
 
 private:
+    URL(String&& data_mime_type, String&& data_payload, bool payload_is_base64)
+        : m_valid(true)
+        , m_scheme("data")
+        , m_data_payload_is_base64(payload_is_base64)
+        , m_data_mime_type(move(data_mime_type))
+        , m_data_payload(move(data_payload))
+    {
+    }
+
     bool parse(const StringView&);
     bool compute_validity() const;
 
