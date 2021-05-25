@@ -69,10 +69,6 @@ public:
 
         return {};
     }
-    virtual void update() override
-    {
-        did_update();
-    };
 
     void set_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions) { m_suggestions = move(suggestions); }
 
@@ -110,7 +106,7 @@ void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& s
             m_suggestion_view->set_cursor(m_suggestion_view->model()->index(0), GUI::AbstractView::SelectionUpdate::Set);
     }
 
-    m_suggestion_view->model()->update();
+    m_suggestion_view->model()->invalidate();
     m_suggestion_view->update();
     if (!has_suggestions)
         close();

@@ -136,9 +136,4 @@ GUI::Variant RegistersModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     return {};
 }
 
-void RegistersModel::update()
-{
-    did_update();
-}
-
 }

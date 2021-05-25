@@ -207,9 +207,4 @@ GUI::Variant DisassemblyModel::data(const GUI::ModelIndex& index, GUI::ModelRole
     return {};
 }
 
-void DisassemblyModel::update()
-{
-    did_update();
-}
-
 }

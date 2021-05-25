@@ -14,7 +14,7 @@ SortingProxyModel::SortingProxyModel(NonnullRefPtr<Model> source)
     : m_source(move(source))
 {
     m_source->register_client(*this);
-    invalidate();
+    update_sort();
 }
 
 SortingProxyModel::~SortingProxyModel()
@@ -22,7 +22,13 @@ SortingProxyModel::~SortingProxyModel()
     m_source->unregister_client(*this);
 }
 
-void SortingProxyModel::invalidate(unsigned int flags)
+void SortingProxyModel::invalidate()
+{
+    source().invalidate();
+    Model::invalidate();
+}
+
+void SortingProxyModel::update_sort(unsigned flags)
 {
     if (flags == UpdateFlag::DontInvalidateIndices) {
         sort(m_last_key_column, m_last_sort_order);
@@ -40,7 +46,7 @@ void SortingProxyModel::invalidate(unsigned int flags)
 
 void SortingProxyModel::model_did_update(unsigned flags)
 {
-    invalidate(flags);
+    update_sort(flags);
 }
 
 bool SortingProxyModel::accepts_drag(const ModelIndex& proxy_index, const Vector<String>& mime_types) const
@@ -108,11 +114,6 @@ String SortingProxyModel::column_name(int column) const
 Variant SortingProxyModel::data(const ModelIndex& proxy_index, ModelRole role) const
 {
     return source().data(map_to_source(proxy_index), role);
-}
-
-void SortingProxyModel::update()
-{
-    source().update();
 }
 
 StringView SortingProxyModel::drag_data_type() const

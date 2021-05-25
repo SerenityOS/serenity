@@ -286,7 +286,7 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
         did_update();
     };
 
-    update();
+    invalidate();
 }
 
 FileSystemModel::~FileSystemModel()
@@ -364,7 +364,7 @@ void FileSystemModel::set_root_path(String root_path)
         m_root_path = {};
     else
         m_root_path = LexicalPath::canonicalized_path(move(root_path));
-    update();
+    invalidate();
 
     if (m_root->has_error()) {
         if (on_directory_change_error)
@@ -374,7 +374,7 @@ void FileSystemModel::set_root_path(String root_path)
     }
 }
 
-void FileSystemModel::update()
+void FileSystemModel::invalidate()
 {
     m_root = adopt_own(*new Node(*this));
 
@@ -383,7 +383,7 @@ void FileSystemModel::update()
 
     m_root->reify_if_needed();
 
-    did_update();
+    Model::invalidate();
 }
 
 int FileSystemModel::row_count(const ModelIndex& index) const
@@ -665,7 +665,9 @@ void FileSystemModel::set_should_show_dotfiles(bool show)
     if (m_should_show_dotfiles == show)
         return;
     m_should_show_dotfiles = show;
-    update();
+
+    // FIXME: add a way to granularly update in this case.
+    invalidate();
 }
 
 bool FileSystemModel::is_editable(const ModelIndex& index) const

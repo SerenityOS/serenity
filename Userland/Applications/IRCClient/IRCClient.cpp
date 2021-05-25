@@ -817,7 +817,7 @@ void IRCClient::register_subwindow(IRCWindow& subwindow)
         subwindow.set_log_buffer(*m_log);
     }
     m_windows.append(&subwindow);
-    m_client_window_list_model->update();
+    m_client_window_list_model->invalidate();
 }
 
 void IRCClient::unregister_subwindow(IRCWindow& subwindow)
@@ -831,7 +831,7 @@ void IRCClient::unregister_subwindow(IRCWindow& subwindow)
             break;
         }
     }
-    m_client_window_list_model->update();
+    m_client_window_list_model->invalidate();
 }
 
 void IRCClient::handle_user_command(const String& input)
@@ -1079,7 +1079,7 @@ void IRCClient::handle_kick_user_action(const String& channel, const String& nic
 void IRCClient::handle_close_query_action(const String& nick)
 {
     m_queries.remove(nick);
-    m_client_window_list_model->update();
+    m_client_window_list_model->invalidate();
 }
 
 void IRCClient::handle_join_action(const String& channel)

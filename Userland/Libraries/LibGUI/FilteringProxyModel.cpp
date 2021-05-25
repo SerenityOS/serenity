@@ -44,9 +44,9 @@ Variant FilteringProxyModel::data(const ModelIndex& index, ModelRole role) const
     return m_matching_indices[index.row()].data(role);
 }
 
-void FilteringProxyModel::update()
+void FilteringProxyModel::invalidate()
 {
-    m_model.update();
+    m_model.invalidate();
     filter();
     did_update();
 }
@@ -84,7 +84,7 @@ void FilteringProxyModel::set_filter_term(const StringView& term)
     if (m_filter_term == term)
         return;
     m_filter_term = term;
-    update();
+    invalidate();
 }
 
 ModelIndex FilteringProxyModel::map(const ModelIndex& index) const

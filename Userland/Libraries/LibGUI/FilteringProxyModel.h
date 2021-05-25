@@ -26,7 +26,7 @@ public:
     virtual int row_count(const ModelIndex& = ModelIndex()) const override;
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
-    virtual void update() override;
+    virtual void invalidate() override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual bool is_searchable() const override;
     virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;

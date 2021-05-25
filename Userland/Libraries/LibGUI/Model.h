@@ -56,7 +56,7 @@ public:
     virtual String column_name(int) const { return {}; }
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const = 0;
     virtual TriState data_matches(const ModelIndex&, const Variant&) const { return TriState::Unknown; }
-    virtual void update() = 0;
+    virtual void invalidate();
     virtual ModelIndex parent_index(const ModelIndex&) const { return {}; }
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const;
     virtual bool is_editable(const ModelIndex&) const { return false; }

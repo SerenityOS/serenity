@@ -290,7 +290,7 @@ GalleryWidget::GalleryWidget()
 
     m_cursors_tableview->set_model(sorting_proxy_model);
     m_cursors_tableview->set_key_column_and_sort_order(MouseCursorModel::Column::Name, GUI::SortOrder::Ascending);
-    m_cursors_tableview->model()->update();
+    m_cursors_tableview->model()->invalidate();
     m_cursors_tableview->set_column_width(0, 25);
 
     m_cursors_tableview->on_activation = [&](const GUI::ModelIndex& index) {
@@ -363,7 +363,7 @@ GalleryWidget::GalleryWidget()
 
     m_icons_tableview->set_model(sorting_proxy_icons_model);
     m_icons_tableview->set_key_column_and_sort_order(FileIconsModel::Column::Name, GUI::SortOrder::Ascending);
-    m_icons_tableview->model()->update();
+    m_icons_tableview->model()->invalidate();
     m_icons_tableview->set_column_width(0, 36);
     m_icons_tableview->set_column_width(1, 20);
 }

@@ -71,7 +71,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
         if (m_weight.has_value())
             index_of_old_weight_in_new_list = m_weights.find_first_index(m_weight.value());
 
-        m_weight_list_view->model()->update();
+        m_weight_list_view->model()->invalidate();
         m_weight_list_view->set_cursor(m_weight_list_view->model()->index(index_of_old_weight_in_new_list.value_or(0)), GUI::AbstractView::SelectionUpdate::Set);
         update_font();
     };
@@ -110,7 +110,7 @@ FontPicker::FontPicker(Window* parent_window, const Gfx::Font* current_font, boo
             }
         });
         quick_sort(m_sizes);
-        m_size_list_view->model()->update();
+        m_size_list_view->model()->invalidate();
         m_size_list_view->set_selection_mode(GUI::AbstractView::SelectionMode::SingleSelection);
 
         if (m_size.has_value()) {
@@ -188,8 +188,8 @@ void FontPicker::set_font(const Gfx::Font* font)
         m_size = {};
         m_weights.clear();
         m_sizes.clear();
-        m_weight_list_view->model()->update();
-        m_size_list_view->model()->update();
+        m_weight_list_view->model()->invalidate();
+        m_size_list_view->model()->invalidate();
         return;
     }
 

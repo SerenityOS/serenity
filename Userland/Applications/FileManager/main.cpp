@@ -500,7 +500,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     };
 
     auto refresh_tree_view = [&] {
-        directories_model->update();
+        directories_model->invalidate();
 
         auto current_path = directory_view.path();
 

@@ -43,8 +43,3 @@ GUI::Variant InboxModel::data(GUI::ModelIndex const& index, GUI::ModelRole role)
     }
     return {};
 }
-
-void InboxModel::update()
-{
-    did_update();
-}

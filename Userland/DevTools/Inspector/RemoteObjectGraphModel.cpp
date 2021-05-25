@@ -95,9 +95,4 @@ GUI::Variant RemoteObjectGraphModel::data(const GUI::ModelIndex& index, GUI::Mod
     return {};
 }
 
-void RemoteObjectGraphModel::update()
-{
-    did_update();
-}
-
 }

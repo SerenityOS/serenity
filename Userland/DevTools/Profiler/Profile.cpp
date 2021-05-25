@@ -187,7 +187,7 @@ void Profile::rebuild_tree()
     sort_profile_nodes(roots);
 
     m_roots = move(roots);
-    m_model->update();
+    m_model->invalidate();
 }
 
 Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const StringView& path)
@@ -378,7 +378,7 @@ void Profile::set_timestamp_filter_range(u64 start, u64 end)
     m_timestamp_filter_range_end = max(start, end);
 
     rebuild_tree();
-    m_samples_model->update();
+    m_samples_model->invalidate();
 }
 
 void Profile::clear_timestamp_filter_range()
@@ -387,7 +387,7 @@ void Profile::clear_timestamp_filter_range()
         return;
     m_has_timestamp_filter_range = false;
     rebuild_tree();
-    m_samples_model->update();
+    m_samples_model->invalidate();
 }
 
 void Profile::add_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
@@ -399,8 +399,8 @@ void Profile::add_process_filter(pid_t pid, EventSerialNumber start_valid, Event
 
     rebuild_tree();
     if (m_disassembly_model)
-        m_disassembly_model->update();
-    m_samples_model->update();
+        m_disassembly_model->invalidate();
+    m_samples_model->invalidate();
 }
 
 void Profile::remove_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
@@ -414,8 +414,8 @@ void Profile::remove_process_filter(pid_t pid, EventSerialNumber start_valid, Ev
 
     rebuild_tree();
     if (m_disassembly_model)
-        m_disassembly_model->update();
-    m_samples_model->update();
+        m_disassembly_model->invalidate();
+    m_samples_model->invalidate();
 }
 
 void Profile::clear_process_filter()
@@ -425,8 +425,8 @@ void Profile::clear_process_filter()
     m_process_filters.clear();
     rebuild_tree();
     if (m_disassembly_model)
-        m_disassembly_model->update();
-    m_samples_model->update();
+        m_disassembly_model->invalidate();
+    m_samples_model->invalidate();
 }
 
 bool Profile::process_filter_contains(pid_t pid, EventSerialNumber serial)

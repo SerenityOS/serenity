@@ -25,7 +25,6 @@ public:
     virtual GUI::Variant data(GUI::ModelIndex const&, GUI::ModelRole) const override;
     virtual GUI::ModelIndex index(int row, int column, GUI::ModelIndex const& parent = GUI::ModelIndex()) const override;
     virtual GUI::ModelIndex parent_index(GUI::ModelIndex const&) const override;
-    virtual void update() override;
 
 private:
     explicit MailboxTreeModel(AccountHolder const&);

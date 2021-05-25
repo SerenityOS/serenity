@@ -122,7 +122,6 @@ public:
     virtual int column_count(const ModelIndex& = ModelIndex()) const override;
     virtual String column_name(int column) const override;
     virtual Variant data(const ModelIndex&, ModelRole = ModelRole::Display) const override;
-    virtual void update() override;
     virtual ModelIndex parent_index(const ModelIndex&) const override;
     virtual ModelIndex index(int row, int column = 0, const ModelIndex& parent = ModelIndex()) const override;
     virtual StringView drag_data_type() const override { return "text/uri-list"; }
@@ -132,6 +131,7 @@ public:
     virtual bool is_searchable() const override { return true; }
     virtual void set_data(const ModelIndex&, const Variant&) override;
     virtual Vector<ModelIndex, 1> matches(const StringView&, unsigned = MatchesFlag::AllMatching, const ModelIndex& = ModelIndex()) override;
+    virtual void invalidate() override;
 
     static String timestamp_string(time_t timestamp)
     {

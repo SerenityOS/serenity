@@ -158,11 +158,6 @@ GUI::Variant VariablesModel::data(const GUI::ModelIndex& index, GUI::ModelRole r
     }
 }
 
-void VariablesModel::update()
-{
-    did_update();
-}
-
 RefPtr<VariablesModel> VariablesModel::create(const PtraceRegisters& regs)
 {
     auto lib = Debugger::the().session()->library_at(regs.ip());

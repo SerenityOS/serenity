@@ -27,7 +27,6 @@ public:
 
     virtual GUI::Variant data(const GUI::ModelIndex&, GUI::ModelRole) const override;
 
-    virtual void update() override { }
     virtual GUI::ModelIndex index(int row, int column, const GUI::ModelIndex&) const override;
 
 private:

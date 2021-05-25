@@ -44,5 +44,5 @@ InterruptsWidget::~InterruptsWidget()
 
 void InterruptsWidget::update_model()
 {
-    m_interrupt_table_view->model()->update();
+    m_interrupt_model->invalidate();
 }

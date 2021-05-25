@@ -173,7 +173,6 @@ protected:
 
     bool m_editable { false };
     bool m_searchable { true };
-    ModelIndex m_edit_index;
     RefPtr<Widget> m_edit_widget;
     Gfx::IntRect m_edit_widget_content_rect;
     OwnPtr<ModelEditingDelegate> m_editing_delegate;
@@ -181,20 +180,22 @@ protected:
     Gfx::IntPoint m_left_mousedown_position;
     bool m_might_drag { false };
 
-    ModelIndex m_hovered_index;
-    ModelIndex m_highlighted_search_index;
-
     int m_key_column { -1 };
     SortOrder m_sort_order;
 
+    ModelIndex m_edit_index;
+    ModelIndex m_hovered_index;
+    ModelIndex m_highlighted_search_index;
+
 private:
-    RefPtr<Model> m_model;
-    ModelSelection m_selection;
     ModelIndex m_selection_start_index;
-    String m_searching;
-    RefPtr<Core::Timer> m_searching_timer;
     ModelIndex m_cursor_index;
     ModelIndex m_drop_candidate_index;
+
+    RefPtr<Model> m_model;
+    ModelSelection m_selection;
+    String m_searching;
+    RefPtr<Core::Timer> m_searching_timer;
     SelectionBehavior m_selection_behavior { SelectionBehavior::SelectItems };
     SelectionMode m_selection_mode { SelectionMode::SingleSelection };
     unsigned m_edit_triggers { EditTrigger::DoubleClicked | EditTrigger::EditKeyPressed };

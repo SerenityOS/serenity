@@ -67,9 +67,4 @@ GUI::Variant IndividualSampleModel::data(const GUI::ModelIndex& index, GUI::Mode
     return {};
 }
 
-void IndividualSampleModel::update()
-{
-    did_update(Model::InvalidateAllIndices);
-}
-
 }

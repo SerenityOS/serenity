@@ -360,7 +360,7 @@ void DirectoryView::open(String const& path)
     auto real_path = Core::File::real_path_for(path);
 
     if (model().root_path() == real_path) {
-        model().update();
+        model().invalidate();
         return;
     }
 
@@ -382,7 +382,7 @@ void DirectoryView::open_parent_directory()
 
 void DirectoryView::refresh()
 {
-    model().update();
+    model().invalidate();
 }
 
 void DirectoryView::open_previous_directory()

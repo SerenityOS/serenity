@@ -67,11 +67,6 @@ GUI::Variant RemoteObjectPropertyModel::data(const GUI::ModelIndex& index, GUI::
     return {};
 }
 
-void RemoteObjectPropertyModel::update()
-{
-    did_update();
-}
-
 void RemoteObjectPropertyModel::set_data(const GUI::ModelIndex& index, const GUI::Variant& new_value)
 {
     if (!index.is_valid())

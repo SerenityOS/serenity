@@ -24,7 +24,7 @@ ProjectTemplatesModel::ProjectTemplatesModel()
     if (!watcher_or_error.is_error()) {
         m_file_watcher = watcher_or_error.release_value();
         m_file_watcher->on_change = [&](auto) {
-            update();
+            invalidate();
         };
 
         auto watch_result = m_file_watcher->add_watch(

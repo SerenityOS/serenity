@@ -59,8 +59,6 @@ public:
         return {};
     }
 
-    virtual void update() override { }
-
 private:
     NonnullRefPtrVector<Desktop::AppFile> m_apps;
 };
