@@ -12,8 +12,8 @@
 
 namespace AK {
 
-// FIXME: URL needs query string parsing.
-
+// NOTE: The member variables cannot contain any percent encoded sequences.
+//       The URL parser automatically decodes those sequences and the the serialize() method will re-encode them as necessary.
 class URL {
 public:
     enum class PercentEncodeSet {
@@ -43,20 +43,29 @@ public:
 
     String scheme() const { return m_scheme; }
     String protocol() const { return m_scheme; }
+    String username() const { return m_username; }
+    String password() const { return m_password; }
     String host() const { return m_host; }
-    String path() const { return m_path; }
+    const Vector<String>& paths() const { return m_paths; }
     String query() const { return m_query; }
     String fragment() const { return m_fragment; }
-    u16 port() const { return m_port; }
+    u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
+    bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
 
     void set_scheme(const String&);
     void set_protocol(const String& protocol) { set_scheme(protocol); }
+    void set_username(const String&);
+    void set_password(const String&);
     void set_host(const String&);
     void set_port(const u16);
     void set_path(const String&);
+    void set_paths(const Vector<String>&);
     void set_query(const String&);
     void set_fragment(const String&);
+    void set_cannot_be_a_base_url(const bool value) { m_cannot_be_a_base_url = value; }
+    void append_path(const String& path) { m_paths.append(path); }
 
+    String path() const;
     String basename() const;
     String to_string() const;
     String to_string_encoded() const
@@ -95,13 +104,21 @@ private:
     static void append_percent_encoded(StringBuilder&, u32 code_point);
 
     bool m_valid { false };
-    u16 m_port { 0 };
-    bool m_data_payload_is_base64 { false };
+
     String m_scheme;
+    String m_username;
+    String m_password;
     String m_host;
+    // NOTE: If the port is the default port for the scheme, m_port should be 0.
+    u16 m_port { 0 };
     String m_path;
+    Vector<String> m_paths;
     String m_query;
     String m_fragment;
+
+    bool m_cannot_be_a_base_url { false };
+
+    bool m_data_payload_is_base64 { false };
     String m_data_mime_type;
     String m_data_payload;
 };

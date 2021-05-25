@@ -259,6 +259,20 @@ URL::URL(const StringView& string)
     m_valid = parse(string);
 }
 
+String URL::path() const
+{
+    if (cannot_be_a_base_url())
+        return paths()[0];
+    if (!m_path.is_null())
+        return m_path;
+    StringBuilder builder;
+    for (auto& path : m_paths) {
+        builder.append('/');
+        builder.append(path);
+    }
+    return builder.to_string();
+}
+
 String URL::to_string() const
 {
     StringBuilder builder;
@@ -287,7 +301,7 @@ String URL::to_string() const
         builder.append(String::number(m_port));
     }
 
-    builder.append(m_path);
+    builder.append(path());
     if (!m_query.is_empty()) {
         builder.append('?');
         builder.append(m_query);
@@ -364,6 +378,18 @@ void URL::set_scheme(const String& scheme)
     m_valid = compute_validity();
 }
 
+void URL::set_username(const String& username)
+{
+    m_username = username;
+    m_valid = compute_validity();
+}
+
+void URL::set_password(const String& password)
+{
+    m_password = password;
+    m_valid = compute_validity();
+}
+
 void URL::set_host(const String& host)
 {
     m_host = host;
@@ -372,6 +398,10 @@ void URL::set_host(const String& host)
 
 void URL::set_port(const u16 port)
 {
+    if (port == default_port_for_scheme(m_scheme)) {
+        m_port = 0;
+        return;
+    }
     m_port = port;
     m_valid = compute_validity();
 }
@@ -379,6 +409,12 @@ void URL::set_port(const u16 port)
 void URL::set_path(const String& path)
 {
     m_path = path;
+    m_valid = compute_validity();
+}
+
+void URL::set_paths(const Vector<String>& paths)
+{
+    m_paths = paths;
     m_valid = compute_validity();
 }
 
@@ -399,13 +435,13 @@ bool URL::compute_validity() const
         return false;
 
     if (m_scheme == "about") {
-        if (m_path.is_empty())
+        if (path().is_empty())
             return false;
         return true;
     }
 
     if (m_scheme == "file") {
-        if (m_path.is_empty())
+        if (path().is_empty())
             return false;
         return true;
     }
@@ -417,9 +453,6 @@ bool URL::compute_validity() const
     }
 
     if (m_host.is_empty())
-        return false;
-
-    if (!m_port && scheme_requires_port(m_scheme))
         return false;
 
     return true;
@@ -484,7 +517,12 @@ String URL::basename() const
 {
     if (!m_valid)
         return {};
-    return LexicalPath(m_path).basename();
+    // FIXME: Temporary m_path hack
+    if (!m_path.is_null())
+        return LexicalPath(m_path).basename();
+    if (m_paths.is_empty())
+        return {};
+    return m_paths.last();
 }
 
 void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
