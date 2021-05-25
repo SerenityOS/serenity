@@ -50,11 +50,6 @@ GUI::Variant IRCChannelMemberListModel::data(const GUI::ModelIndex& index, GUI::
     return {};
 }
 
-void IRCChannelMemberListModel::update()
-{
-    did_update();
-}
-
 String IRCChannelMemberListModel::nick_at(const GUI::ModelIndex& index) const
 {
     return data(index, GUI::ModelRole::Display).to_string();

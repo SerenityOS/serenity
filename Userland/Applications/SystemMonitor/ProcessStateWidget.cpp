@@ -10,6 +10,7 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Painter.h>
+#include <LibGUI/PersistentModelIndex.h>
 #include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/FontDatabase.h>
@@ -23,9 +24,13 @@ public:
         : m_target(target)
         , m_pid(pid)
     {
+        m_target.register_client(*this);
         refresh();
     }
-    virtual ~ProcessStateModel() override { }
+    virtual ~ProcessStateModel() override
+    {
+        m_target.unregister_client(*this);
+    }
 
     virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_target.column_count({}); }
     virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return 2; }
@@ -52,11 +57,6 @@ public:
         return {};
     }
 
-    virtual void update() override
-    {
-        did_update(GUI::Model::DontInvalidateIndices);
-    }
-
     virtual void model_did_update([[maybe_unused]] unsigned flags) override
     {
         refresh();
@@ -64,20 +64,20 @@ public:
 
     void refresh()
     {
-        m_target_index = {};
-        for (int row = 0; row < m_target.row_count({}); ++row) {
-            auto index = m_target.index(row, ProcessModel::Column::PID);
-            if (index.data().to_i32() == m_pid) {
-                m_target_index = index;
-                break;
+        if (!m_target_index.is_valid()) {
+            for (int row = 0; row < m_target.row_count({}); ++row) {
+                auto index = m_target.index(row, ProcessModel::Column::PID);
+                if (index.data().to_i32() == m_pid) {
+                    m_target_index = GUI::PersistentModelIndex(index);
+                    break;
+                }
             }
         }
-        update();
     }
 
 private:
     ProcessModel& m_target;
-    GUI::ModelIndex m_target_index;
+    GUI::PersistentModelIndex m_target_index;
     pid_t m_pid { -1 };
 };
 

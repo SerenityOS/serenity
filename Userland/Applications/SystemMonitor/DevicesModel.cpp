@@ -119,8 +119,9 @@ GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     return {};
 }
 
-void DevicesModel::update()
+void DevicesModel::invalidate()
 {
+    // FIXME: granularly update this.
     auto proc_devices = Core::File::construct("/proc/devices");
     if (!proc_devices->open(Core::OpenMode::ReadOnly))
         VERIFY_NOT_REACHED();
@@ -173,5 +174,5 @@ void DevicesModel::update()
     fill_in_paths_from_dir("/dev");
     fill_in_paths_from_dir("/dev/pts");
 
-    did_update();
+    Model::invalidate();
 }

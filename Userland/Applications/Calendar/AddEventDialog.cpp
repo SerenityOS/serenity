@@ -100,10 +100,6 @@ AddEventDialog::MonthListModel::~MonthListModel()
 {
 }
 
-void AddEventDialog::MonthListModel::update()
-{
-}
-
 int AddEventDialog::MonthListModel::row_count(const GUI::ModelIndex&) const
 {
     return 12;

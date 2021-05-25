@@ -53,9 +53,4 @@ GUI::Variant StylePropertiesModel::data(const GUI::ModelIndex& index, GUI::Model
     return {};
 }
 
-void StylePropertiesModel::update()
-{
-    did_update();
-}
-
 }

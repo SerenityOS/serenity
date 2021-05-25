@@ -75,8 +75,6 @@ public:
         return {};
     }
 
-    virtual void update() override { }
-
 private:
     Vector<Match> m_matches;
 };

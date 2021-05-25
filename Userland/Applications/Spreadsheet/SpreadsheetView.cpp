@@ -144,7 +144,7 @@ void InfinitelyScrollableTableView::mouseup_event(GUI::MouseEvent& event)
 
 void SpreadsheetView::update_with_model()
 {
-    m_table_view->model()->update();
+    m_table_view->model()->invalidate();
     m_table_view->update();
 }
 

@@ -131,7 +131,7 @@ void JsonArrayModel::set_json_path(const String& json_path)
         return;
 
     m_json_path = json_path;
-    update();
+    invalidate();
 }
 
 }

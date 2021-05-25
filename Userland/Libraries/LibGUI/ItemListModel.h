@@ -77,11 +77,6 @@ public:
         return {};
     }
 
-    virtual void update() override
-    {
-        did_update();
-    }
-
 protected:
     explicit ItemListModel(const Container& data, Optional<size_t> row_count = {}) requires(!IsTwoDimensional)
         : m_data(data)

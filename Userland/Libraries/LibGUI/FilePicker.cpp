@@ -131,7 +131,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
                 if (rc < 0) {
                     MessageBox::show(this, String::formatted("mkdir(\"{}\") failed: {}", new_dir_path, strerror(errno)), "Error", MessageBox::Type::Error);
                 } else {
-                    m_model->update();
+                    m_model->invalidate();
                 }
             }
         },
@@ -173,7 +173,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     m_context_menu = GUI::Menu::construct();
     m_context_menu->add_action(GUI::Action::create_checkable("Show dotfiles", [&](auto& action) {
         m_model->set_should_show_dotfiles(action.is_checked());
-        m_model->update();
+        m_model->invalidate();
     }));
 
     m_view->on_context_menu_request = [&](const GUI::ModelIndex& index, const GUI::ContextMenuEvent& event) {

@@ -16,7 +16,7 @@ RemoteObject::RemoteObject()
 
 RemoteObjectPropertyModel& RemoteObject::property_model()
 {
-    m_property_model->update();
+    m_property_model->invalidate();
     return *m_property_model;
 }
 

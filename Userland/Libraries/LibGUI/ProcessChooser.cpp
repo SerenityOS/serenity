@@ -65,7 +65,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
         done(ExecCancel);
     };
 
-    m_table_view->model()->update();
+    m_table_view->model()->invalidate();
 
     m_refresh_timer = add<Core::Timer>();
 
@@ -77,7 +77,7 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
             previous_selected_pid = pid_as_variant.as_i32();
         }
 
-        m_table_view->model()->update();
+        m_table_view->model()->invalidate();
 
         if (previous_selected_pid == -1) {
             return;

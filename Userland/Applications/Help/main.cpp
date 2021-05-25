@@ -109,11 +109,11 @@ int main(int argc, char* argv[])
         if (auto model = search_list_view.model()) {
             auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
             search_model.set_filter_term(search_box.text());
-            search_model.update();
+            search_model.invalidate();
         }
     };
     search_list_view.set_model(GUI::FilteringProxyModel::construct(model));
-    search_list_view.model()->update();
+    search_list_view.model()->invalidate();
 
     tree_view.set_model(model);
     left_tab_bar.set_fixed_width(200);
