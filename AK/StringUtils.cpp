@@ -292,7 +292,7 @@ bool is_whitespace(const StringView& str)
     return true;
 }
 
-StringView trim_whitespace(const StringView& str, TrimMode mode)
+StringView trim(const StringView& str, const StringView& characters, TrimMode mode)
 {
     size_t substring_start = 0;
     size_t substring_length = str.length();
@@ -301,7 +301,7 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
         for (size_t i = 0; i < str.length(); ++i) {
             if (substring_length == 0)
                 return "";
-            if (!isspace(str[i]))
+            if (!characters.contains(str[i]))
                 break;
             ++substring_start;
             --substring_length;
@@ -312,13 +312,18 @@ StringView trim_whitespace(const StringView& str, TrimMode mode)
         for (size_t i = str.length() - 1; i > 0; --i) {
             if (substring_length == 0)
                 return "";
-            if (!isspace(str[i]))
+            if (!characters.contains(str[i]))
                 break;
             --substring_length;
         }
     }
 
     return str.substring_view(substring_start, substring_length);
+}
+
+StringView trim_whitespace(const StringView& str, TrimMode mode)
+{
+    return trim(str, " \n\t\v\f\r", mode);
 }
 
 Optional<size_t> find(const StringView& haystack, const StringView& needle)

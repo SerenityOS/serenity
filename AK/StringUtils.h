@@ -50,7 +50,8 @@ bool ends_with(const StringView& a, const StringView& b, CaseSensitivity);
 bool starts_with(const StringView&, const StringView&, CaseSensitivity);
 bool contains(const StringView&, const StringView&, CaseSensitivity);
 bool is_whitespace(const StringView&);
-StringView trim_whitespace(const StringView&, TrimMode mode);
+StringView trim(const StringView& string, const StringView& characters, TrimMode mode);
+StringView trim_whitespace(const StringView& string, TrimMode mode);
 Optional<size_t> find(const StringView& haystack, const StringView& needle);
 String to_snakecase(const StringView&);
 
