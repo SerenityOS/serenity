@@ -7,7 +7,6 @@
 #include "RunWindow.h"
 #include <AK/LexicalPath.h>
 #include <AK/URL.h>
-#include <AK/URLParser.h>
 #include <Applications/Run/RunGML.h>
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>

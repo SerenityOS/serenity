@@ -7,7 +7,6 @@
 #include "OutOfProcessWebView.h"
 #include "WebContentClient.h"
 #include <AK/String.h>
-#include <AK/URLParser.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
 #include <LibGUI/InputBox.h>
