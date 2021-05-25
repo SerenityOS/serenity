@@ -68,6 +68,12 @@ int main(int argc, char** argv)
             magnifier.set_scale_factor(4);
         });
 
+    auto show_window_frame_action = GUI::Action::create_checkable(
+        "Show Window &Frame", [&](auto& action) {
+            magnifier.set_show_window_frame(action.is_checked());
+        });
+    show_window_frame_action->set_checked(magnifier.show_window_frame());
+
     size_action_group->add_action(two_x_action);
     size_action_group->add_action(four_x_action);
     size_action_group->set_exclusive(true);
@@ -79,6 +85,15 @@ int main(int argc, char** argv)
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("Magnifier", app_icon, window));
+
+    auto context_menu = GUI::Menu::construct();
+    context_menu->add_action(two_x_action);
+    context_menu->add_action(four_x_action);
+    context_menu->add_separator();
+    context_menu->add_action(show_window_frame_action);
+    magnifier.on_context_menu_request = [&](auto& event) {
+        context_menu->popup(event.screen_position());
+    };
 
     window->set_menubar(move(menubar));
     window->show();

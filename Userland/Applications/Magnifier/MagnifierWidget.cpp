@@ -51,3 +51,20 @@ void MagnifierWidget::paint_event(GUI::PaintEvent&)
     auto map = GUI::WindowServerConnection::the().get_screen_bitmap(region);
     painter.draw_scaled_bitmap(rect(), *map.bitmap(), map.bitmap()->rect());
 }
+
+void MagnifierWidget::context_menu_event(GUI::ContextMenuEvent& event)
+{
+    if (on_context_menu_request)
+        on_context_menu_request(event);
+}
+
+void MagnifierWidget::set_show_window_frame(bool show)
+{
+    if (show == m_show_window_frame)
+        return;
+    m_show_window_frame = show;
+    auto& w = *window();
+    w.set_frameless(!m_show_window_frame);
+    w.set_has_alpha_channel(!m_show_window_frame);
+    w.set_alpha_hit_threshold(m_show_window_frame ? 0 : 1);
+}
