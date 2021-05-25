@@ -1251,8 +1251,8 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
 
     if (format == GL_DEPTH_COMPONENT) {
         // Read from depth buffer
-        for (size_t i = 0; i < height; ++i) {
-            for (size_t j = 0; j < width; ++j) {
+        for (GLsizei i = 0; i < height; ++i) {
+            for (GLsizei j = 0; j < width; ++j) {
                 float depth = m_rasterizer.get_depthbuffer_value(x + j, y + i);
 
                 switch (type) {
