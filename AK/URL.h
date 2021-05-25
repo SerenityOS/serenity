@@ -15,6 +15,8 @@ namespace AK {
 // NOTE: The member variables cannot contain any percent encoded sequences.
 //       The URL parser automatically decodes those sequences and the the serialize() method will re-encode them as necessary.
 class URL {
+    friend class URLParser;
+
 public:
     enum class PercentEncodeSet {
         C0Control,
