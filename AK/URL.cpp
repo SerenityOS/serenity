@@ -9,8 +9,29 @@
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <AK/URLParser.h>
+#include <AK/Utf8View.h>
 
 namespace AK {
+
+constexpr bool is_ascii_alpha(u32 code_point)
+{
+    return ('a' <= code_point && code_point <= 'z') || ('A' <= code_point && code_point <= 'Z');
+}
+
+constexpr bool is_ascii_digit(u32 code_point)
+{
+    return '0' <= code_point && code_point <= '9';
+}
+
+constexpr bool is_ascii_alphanumeric(u32 code_point)
+{
+    return is_ascii_alpha(code_point) || is_ascii_digit(code_point);
+}
+
+constexpr bool is_ascii_hex_digit(u32 code_point)
+{
+    return is_ascii_digit(code_point) || (code_point >= 'a' && code_point <= 'f') || (code_point >= 'A' && code_point <= 'F');
+}
 
 static inline bool is_valid_scheme_character(char ch)
 {
@@ -465,6 +486,99 @@ String URL::basename() const
     if (!m_valid)
         return {};
     return LexicalPath(m_path).basename();
+}
+
+void URL::append_percent_encoded(StringBuilder& builder, u32 code_point)
+{
+    if (code_point <= 0x7f)
+        builder.appendff("%{:02X}", code_point);
+    else if (code_point <= 0x07ff)
+        builder.appendff("%{:02X}%{:02X}", ((code_point >> 6) & 0x1f) | 0xc0, (code_point & 0x3f) | 0x80);
+    else if (code_point <= 0xffff)
+        builder.appendff("%{:02X}%{:02X}%{:02X}", ((code_point >> 12) & 0x0f) | 0xe0, ((code_point >> 6) & 0x3f) | 0x80, (code_point & 0x3f) | 0x80);
+    else if (code_point <= 0x10ffff)
+        builder.appendff("%{:02X}%{:02X}%{:02X}%{:02X}", ((code_point >> 18) & 0x07) | 0xf0, ((code_point >> 12) & 0x3f) | 0x80, ((code_point >> 6) & 0x3f) | 0x80, (code_point & 0x3f) | 0x80);
+    else
+        VERIFY_NOT_REACHED();
+}
+
+// https://url.spec.whatwg.org/#c0-control-percent-encode-set
+constexpr bool code_point_is_in_percent_encode_set(u32 code_point, URL::PercentEncodeSet set)
+{
+    switch (set) {
+    case URL::PercentEncodeSet::C0Control:
+        return code_point < 0x20 || code_point > 0x7E;
+    case URL::PercentEncodeSet::Fragment:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"<>`"sv.contains(code_point);
+    case URL::PercentEncodeSet::Query:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::C0Control) || " \"#<>"sv.contains(code_point);
+    case URL::PercentEncodeSet::SpecialQuery:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || code_point == '\'';
+    case URL::PercentEncodeSet::Path:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Query) || "?`{}"sv.contains(code_point);
+    case URL::PercentEncodeSet::Userinfo:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Path) || "/:;=@[\\]^|"sv.contains(code_point);
+    case URL::PercentEncodeSet::Component:
+        return code_point_is_in_percent_encode_set(code_point, URL::PercentEncodeSet::Userinfo) || "$%&+,"sv.contains(code_point);
+    case URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded:
+        return code_point >= 0x7E || !(is_ascii_alphanumeric(code_point) || "!'()~"sv.contains(code_point));
+    case URL::PercentEncodeSet::EncodeURI:
+        // NOTE: This is the same percent encode set that JS encodeURI() uses.
+        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
+        return code_point >= 0x7E || (!is_ascii_alphanumeric(code_point) && !";,/?:@&=+$-_.!~*'()#"sv.contains(code_point));
+    default:
+        VERIFY_NOT_REACHED();
+    }
+}
+
+void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_point, URL::PercentEncodeSet set)
+{
+    if (code_point_is_in_percent_encode_set(code_point, set))
+        append_percent_encoded(builder, code_point);
+    else
+        builder.append_code_point(code_point);
+}
+
+String URL::percent_encode(const StringView& input, URL::PercentEncodeSet set)
+{
+    StringBuilder builder;
+    for (auto code_point : Utf8View(input)) {
+        append_percent_encoded_if_necessary(builder, code_point, set);
+    }
+    return builder.to_string();
+}
+
+constexpr u8 parse_hex_digit(u8 digit)
+{
+    if (digit >= '0' && digit <= '9')
+        return digit - '0';
+    if (digit >= 'a' && digit <= 'f')
+        return digit - 'a' + 10;
+    if (digit >= 'A' && digit <= 'F')
+        return digit - 'A' + 10;
+    VERIFY_NOT_REACHED();
+}
+
+String URL::percent_decode(const StringView& input)
+{
+    if (!input.contains('%'))
+        return input;
+    StringBuilder builder;
+    Utf8View utf8_view(input);
+    for (auto it = utf8_view.begin(); !it.done(); ++it) {
+        if (*it != '%') {
+            builder.append_code_point(*it);
+        } else if (!is_ascii_hex_digit(it.peek(1).value_or(0)) || !is_ascii_hex_digit(it.peek(2).value_or(0))) {
+            builder.append_code_point(*it);
+        } else {
+            ++it;
+            u8 byte = parse_hex_digit(*it) << 4;
+            ++it;
+            byte += parse_hex_digit(*it);
+            builder.append(byte);
+        }
+    }
+    return builder.to_string();
 }
 
 }
