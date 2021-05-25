@@ -128,6 +128,11 @@ public:
         VERIFY(start <= size());
         return { this->m_values + start, size() - start };
     }
+    [[nodiscard]] ALWAYS_INLINE constexpr Span slice_from_end(size_t count) const
+    {
+        VERIFY(count <= size());
+        return { this->m_values + size() - count, count };
+    }
 
     [[nodiscard]] ALWAYS_INLINE constexpr Span trim(size_t length) const
     {
