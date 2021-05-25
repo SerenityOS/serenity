@@ -321,7 +321,6 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
     GUI::Frame::doubleclick_event(event);
 
     if (m_game_over_animation) {
-        start_game_over_animation();
         setup(mode());
         return;
     }
