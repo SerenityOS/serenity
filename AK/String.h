@@ -119,9 +119,14 @@ public:
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
 #ifndef KERNEL
+    [[nodiscard]] String trim(const StringView& characters, TrimMode mode = TrimMode::Both) const
+    {
+        return StringUtils::trim(view(), characters, mode);
+    }
+
     [[nodiscard]] String trim_whitespace(TrimMode mode = TrimMode::Both) const
     {
-        return StringUtils::trim_whitespace(StringView { characters(), length() }, mode);
+        return StringUtils::trim_whitespace(view(), mode);
     }
 #endif
 
