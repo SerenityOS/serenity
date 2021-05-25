@@ -8,6 +8,7 @@
 #include <LibCore/File.h>
 #include <LibGL/GL/gl.h>
 #include <LibGL/GLContext.h>
+#include <LibGUI/ActionGroup.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/FilePicker.h>
 #include <LibGUI/Icon.h>
@@ -32,6 +33,10 @@ class GLContextWidget final : public GUI::Frame {
 
 public:
     bool load(const String& fname);
+    void toggle_rotate_x() { m_rotate_x = !m_rotate_x; }
+    void toggle_rotate_y() { m_rotate_y = !m_rotate_y; }
+    void toggle_rotate_z() { m_rotate_z = !m_rotate_z; }
+    void set_rotation_speed(float speed) { m_rotation_speed = speed; }
 
 private:
     GLContextWidget()
@@ -71,6 +76,10 @@ private:
     OwnPtr<GL::GLContext> m_context;
     NonnullOwnPtr<WavefrontOBJLoader> m_mesh_loader;
     GLuint m_init_list { 0 };
+    bool m_rotate_x = true;
+    bool m_rotate_y = false;
+    bool m_rotate_z = true;
+    float m_rotation_speed = 1.f;
 };
 
 void GLContextWidget::paint_event(GUI::PaintEvent& event)
@@ -88,17 +97,12 @@ void GLContextWidget::timer_event(Core::TimerEvent&)
     glCallList(m_init_list);
 
     angle -= 0.01f;
-    auto matrix = Gfx::translation_matrix(FloatVector3(0, 0, -8.5))
-        * Gfx::rotation_matrix(FloatVector3(1, 0, 0), angle)
-        * Gfx::rotation_matrix(FloatVector3(0, 1, 0), 0.0f)
-        * Gfx::rotation_matrix(FloatVector3(0, 0, 1), angle);
-
-    // We need to transpose here because OpenGL expects matrices in column major order
-    // but our matrix class stores elements in row major order.
-    matrix = matrix.transpose();
-
     glMatrixMode(GL_MODELVIEW);
-    glLoadMatrixf((float*)matrix.elements());
+    glLoadIdentity();
+    glTranslatef(0, 0, -8.5);
+    glRotatef(m_rotate_x ? angle * m_rotation_speed : 0.f, 1, 0, 0);
+    glRotatef(m_rotate_y ? angle * m_rotation_speed : 0.f, 0, 1, 0);
+    glRotatef(m_rotate_z ? angle * m_rotation_speed : 0.f, 0, 0, 1);
 
     if (!m_mesh.is_null())
         m_mesh->draw();
@@ -198,9 +202,61 @@ int main(int argc, char** argv)
         load_model(open_path.value());
     }));
 
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&] {
         app->quit();
     }));
+
+    auto& view_menu = menubar->add_menu("&View");
+    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&] {
+        window->set_fullscreen(!window->is_fullscreen());
+    }));
+
+    auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis");
+    auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget] {
+        widget.toggle_rotate_x();
+    });
+    auto rotation_y_action = GUI::Action::create_checkable("&Y", [&widget] {
+        widget.toggle_rotate_y();
+    });
+    auto rotation_z_action = GUI::Action::create_checkable("&Z", [&widget] {
+        widget.toggle_rotate_z();
+    });
+
+    rotation_axis_menu.add_action(*rotation_x_action);
+    rotation_axis_menu.add_action(*rotation_y_action);
+    rotation_axis_menu.add_action(*rotation_z_action);
+
+    rotation_x_action->set_checked(true);
+    rotation_z_action->set_checked(true);
+
+    auto& rotation_speed_menu = view_menu.add_submenu("Rotation &Speed");
+    GUI::ActionGroup rotation_speed_actions;
+    rotation_speed_actions.set_exclusive(true);
+
+    auto no_rotation_action = GUI::Action::create_checkable("N&o Rotation", [&widget] {
+        widget.set_rotation_speed(0.f);
+    });
+    auto slow_rotation_action = GUI::Action::create_checkable("&Slow", [&widget] {
+        widget.set_rotation_speed(0.5f);
+    });
+    auto normal_rotation_action = GUI::Action::create_checkable("&Normal", [&widget] {
+        widget.set_rotation_speed(1.f);
+    });
+    auto fast_rotation_action = GUI::Action::create_checkable("&Fast", [&widget] {
+        widget.set_rotation_speed(1.5f);
+    });
+
+    rotation_speed_actions.add_action(*no_rotation_action);
+    rotation_speed_actions.add_action(*slow_rotation_action);
+    rotation_speed_actions.add_action(*normal_rotation_action);
+    rotation_speed_actions.add_action(*fast_rotation_action);
+
+    rotation_speed_menu.add_action(*no_rotation_action);
+    rotation_speed_menu.add_action(*slow_rotation_action);
+    rotation_speed_menu.add_action(*normal_rotation_action);
+    rotation_speed_menu.add_action(*fast_rotation_action);
+
+    normal_rotation_action->set_checked(true);
 
     auto& help_menu = menubar->add_menu("&Help");
     help_menu.add_action(GUI::CommonActions::make_about_action("3D File Viewer", app_icon, window));
