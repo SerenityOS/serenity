@@ -48,6 +48,15 @@ public:
             callback(cell(i));
     }
 
+    template<Cell::State state, typename Callback>
+    void for_each_cell_in_state(Callback callback)
+    {
+        for_each_cell([&](auto* cell) {
+            if (cell->state() == state)
+                callback(cell);
+        });
+    }
+
     Heap& heap() { return m_heap; }
 
     static HeapBlock* from_cell(const Cell* cell)
