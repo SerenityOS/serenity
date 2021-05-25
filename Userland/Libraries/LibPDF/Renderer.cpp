@@ -540,6 +540,7 @@ void Renderer::show_text(const String& string, int shift)
 
         auto text_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
         text_position.set_y(static_cast<float>(m_bitmap->height()) - text_position.y());
+        text_position.set_y(text_position.y() - static_cast<float>(font->baseline()));
 
         // FIXME: For some reason, the space character in LiberationSerif is drawn as an exclamation point
         if (code_point != 0x20)
