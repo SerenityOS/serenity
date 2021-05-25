@@ -115,9 +115,17 @@ int main(int argc, char** argv)
         if (timer->is_active())
             timer->stop();
 
-        if ((reason == Solitaire::GameOverReason::Victory) && (score > high_score)) {
-            update_high_score(score);
-            statusbar.set_text(1, String::formatted("High Score: {}", high_score));
+        if (reason == Solitaire::GameOverReason::Victory) {
+            if (seconds_elapsed >= 30) {
+                uint32_t bonus = (20'000 / seconds_elapsed) * 35;
+                statusbar.set_text(0, String::formatted("Score: {} (Bonus: {})", score, bonus));
+                score += bonus;
+            }
+
+            if (score > high_score) {
+                update_high_score(score);
+                statusbar.set_text(1, String::formatted("High Score: {}", high_score));
+            }
         }
     };
 
