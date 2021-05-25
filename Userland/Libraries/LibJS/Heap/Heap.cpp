@@ -92,7 +92,7 @@ void Heap::gather_roots(HashTable<Cell*>& roots)
     for (auto* list : m_marked_value_lists) {
         for (auto& value : list->values()) {
             if (value.is_cell())
-                roots.set(value.as_cell());
+                roots.set(&value.as_cell());
         }
     }
 
