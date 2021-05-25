@@ -251,7 +251,11 @@ void Game::start_animation(NonnullRefPtrVector<Card> cards, Gfx::IntPoint const&
 
 void Game::stop_animation()
 {
-    m_animation_playing = false;
+    if (m_animation_playing) {
+        for (auto& animation : m_animation_cards)
+            animation.card->set_position(m_animation_end);
+        m_animation_playing = false;
+    }
     if (m_animation_delay_timer)
         m_animation_delay_timer->stop();
     stop_timer();
