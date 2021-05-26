@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
@@ -19,9 +19,7 @@ struct SocketPair {
     NonnullRefPtr<FileDescription> description2;
 };
 
-class LocalSocket final : public Socket
-    , public InlineLinkedListNode<LocalSocket> {
-    friend class InlineLinkedListNode<LocalSocket>;
+class LocalSocket final : public Socket {
 
 public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type);
@@ -57,7 +55,6 @@ private:
     virtual const char* class_name() const override { return "LocalSocket"; }
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
-    static Lockable<InlineLinkedList<LocalSocket>>& all_sockets();
     DoubleBuffer* receive_buffer_for(FileDescription&);
     DoubleBuffer* send_buffer_for(FileDescription&);
     NonnullRefPtrVector<FileDescription>& sendfd_queue_for(const FileDescription&);
@@ -102,9 +99,10 @@ private:
     NonnullRefPtrVector<FileDescription> m_fds_for_client;
     NonnullRefPtrVector<FileDescription> m_fds_for_server;
 
-    // for InlineLinkedList
-    LocalSocket* m_prev { nullptr };
-    LocalSocket* m_next { nullptr };
+    IntrusiveListNode<LocalSocket> m_list_node;
+
+public:
+    using List = IntrusiveList<LocalSocket, RawPtr<LocalSocket>, &LocalSocket::m_list_node>;
 };
 
 }

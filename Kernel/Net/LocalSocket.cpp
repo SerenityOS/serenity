@@ -17,9 +17,9 @@
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<InlineLinkedList<LocalSocket>>> s_list;
+static AK::Singleton<Lockable<LocalSocket::List>> s_list;
 
-Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
+static Lockable<LocalSocket::List>& all_sockets()
 {
     return *s_list;
 }
@@ -69,8 +69,10 @@ KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
-    Locker locker(all_sockets().lock());
-    all_sockets().resource().append(this);
+    {
+        Locker locker(all_sockets().lock());
+        all_sockets().resource().append(*this);
+    }
 
     auto current_process = Process::current();
     m_prebind_uid = current_process->euid();
@@ -90,7 +92,7 @@ LocalSocket::LocalSocket(int type)
 LocalSocket::~LocalSocket()
 {
     Locker locker(all_sockets().lock());
-    all_sockets().resource().remove(this);
+    all_sockets().resource().remove(*this);
 }
 
 void LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
