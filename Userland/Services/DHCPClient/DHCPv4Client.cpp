@@ -112,9 +112,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     }
 }
 
-DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames_for_immediate_discover, Vector<InterfaceDescriptor> ifnames_for_later)
-    : m_ifnames_for_immediate_discover(move(ifnames_for_immediate_discover))
-    , m_ifnames_for_later(move(ifnames_for_later))
+DHCPv4Client::DHCPv4Client()
 {
     m_server = Core::UDPServer::construct(this);
     m_server->on_ready_to_receive = [this] {
@@ -133,36 +131,37 @@ DHCPv4Client::DHCPv4Client(Vector<InterfaceDescriptor> ifnames_for_immediate_dis
         VERIFY_NOT_REACHED();
     }
 
-    for (auto& iface : m_ifnames_for_immediate_discover)
-        dhcp_discover(iface);
+    m_check_timer = Core::Timer::create_repeating(
+        1000, [this] { try_discover_ifs(); }, this);
 
-    m_fail_check_timer = Core::Timer::create_repeating(
-        1000, [this] { try_discover_deferred_ifs(); }, this);
+    m_check_timer->start();
 
-    m_fail_check_timer->start();
+    try_discover_ifs();
 }
 
-void DHCPv4Client::try_discover_deferred_ifs()
+void DHCPv4Client::try_discover_ifs()
 {
-    auto current_interval = m_fail_check_timer->interval();
-    if (current_interval < m_max_timer_backoff_interval)
-        current_interval *= 1.9f;
-    m_fail_check_timer->set_interval(current_interval);
-
-    if (m_ifnames_for_later.is_empty())
-        return;
-
-    // See if any of them are now up.
     auto ifs_result = get_discoverable_interfaces();
     if (ifs_result.is_error())
         return;
 
+    bool sent_discover_request = false;
     Interfaces& ifs = ifs_result.value();
     for (auto& iface : ifs.ready) {
-        if (!m_ifnames_for_later.remove_first_matching([&](auto& if_) { return if_.m_ifname == iface.m_ifname; }))
+        if (iface.m_current_ip_address != IPv4Address { 0, 0, 0, 0 })
             continue;
 
-        deferred_invoke([this, iface](auto&) { dhcp_discover(iface); });
+        dhcp_discover(iface);
+        sent_discover_request = true;
+    }
+
+    if (sent_discover_request) {
+        auto current_interval = m_check_timer->interval();
+        if (current_interval < m_max_timer_backoff_interval)
+            current_interval *= 1.9f;
+        m_check_timer->set_interval(current_interval);
+    } else {
+        m_check_timer->set_interval(1000);
     }
 }
 
@@ -192,12 +191,14 @@ Result<DHCPv4Client::Interfaces, String> DHCPv4Client::get_discoverable_interfac
         auto name = if_object.get("name").to_string();
         auto mac = if_object.get("mac_address").to_string();
         auto is_up = if_object.get("link_up").to_bool();
+        auto ipv4_addr_maybe = IPv4Address::from_string(if_object.get("ipv4_address").to_string());
+        auto ipv4_addr = ipv4_addr_maybe.has_value() ? ipv4_addr_maybe.value() : IPv4Address { 0, 0, 0, 0 };
         if (is_up) {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, and it was up!", name, mac);
-            ifnames_to_immediately_discover.empend(name, mac_from_string(mac));
+            ifnames_to_immediately_discover.empend(name, mac_from_string(mac), ipv4_addr);
         } else {
             dbgln_if(DHCPV4_DEBUG, "Found adapter '{}' with mac {}, but it was down", name, mac);
-            ifnames_to_attempt_later.empend(name, mac_from_string(mac));
+            ifnames_to_attempt_later.empend(name, mac_from_string(mac), ipv4_addr);
         }
     });
 
@@ -344,10 +345,8 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
     auto& dhcp_packet = builder.build();
 
     // broadcast the discover request
-    if (!send(iface, dhcp_packet, this)) {
-        m_ifnames_for_later.append(iface);
+    if (!send(iface, dhcp_packet, this))
         return;
-    }
     m_ongoing_transactions.set(transaction_id, make<DHCPv4Transaction>(iface));
 }
 
@@ -373,9 +372,7 @@ void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Pack
     auto& dhcp_packet = builder.build();
 
     // broadcast the "request" request
-    if (!send(iface, dhcp_packet, this)) {
-        m_ifnames_for_later.append(iface);
+    if (!send(iface, dhcp_packet, this))
         return;
-    }
     transaction.accepted_offer = true;
 }
