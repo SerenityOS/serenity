@@ -544,6 +544,32 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     return true;
 }
 
+static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
+{
+    auto filename = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto file = Core::File::construct(filename);
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        vm.throw_exception<JS::Error>(global_object, String::formatted("Failed to open '{}': {}", filename, file->error_string()));
+        return {};
+    }
+    auto file_contents = file->read_all();
+    auto source = file_has_shebang(file_contents)
+        ? strip_shebang(file_contents)
+        : StringView { file_contents };
+    auto parser = JS::Parser(JS::Lexer(source));
+    auto program = parser.parse_program();
+    if (parser.has_errors()) {
+        auto& error = parser.errors()[0];
+        vm.throw_exception<JS::SyntaxError>(global_object, error.to_string());
+        return {};
+    }
+    // FIXME: Use eval()-like semantics and execute in current scope?
+    vm.interpreter().run(global_object, *program);
+    return JS::js_undefined();
+}
+
 void ReplObject::initialize_global_object()
 {
     Base::initialize_global_object();
@@ -581,34 +607,14 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::repl_help)
     outln("REPL commands:");
     outln("    exit(code): exit the REPL with specified code. Defaults to 0.");
     outln("    help(): display this menu");
-    outln("    load(files): accepts filenames as params to load into running session. For example load(\"js/1.js\", \"js/2.js\", \"js/3.js\")");
-    outln("    save(file): accepts a filename, writes REPL input history to a file. For example: save(\"foo.txt\")");
+    outln("    load(file): load given JS file into running session. For example: load(\"foo.js\")");
+    outln("    save(file): write REPL input history to the given file. For example: save(\"foo.txt\")");
     return JS::js_undefined();
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
 {
-    if (!vm.argument_count())
-        return JS::Value(false);
-
-    for (auto& file : vm.call_frame().arguments) {
-        String filename = file.as_string().string();
-        auto js_file = Core::File::construct(filename);
-        if (!js_file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", filename, js_file->error_string());
-            continue;
-        }
-        auto file_contents = js_file->read_all();
-
-        StringView source;
-        if (file_has_shebang(file_contents)) {
-            source = strip_shebang(file_contents);
-        } else {
-            source = file_contents;
-        }
-        parse_and_run(vm.interpreter(), source);
-    }
-    return JS::Value(true);
+    return load_file_impl(vm, global_object);
 }
 
 void ScriptObject::initialize_global_object()
@@ -620,27 +626,7 @@ void ScriptObject::initialize_global_object()
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
 {
-    if (!vm.argument_count())
-        return JS::Value(false);
-
-    for (auto& file : vm.call_frame().arguments) {
-        String filename = file.as_string().string();
-        auto js_file = Core::File::construct(filename);
-        if (!js_file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", filename, js_file->error_string());
-            continue;
-        }
-        auto file_contents = js_file->read_all();
-
-        StringView source;
-        if (file_has_shebang(file_contents)) {
-            source = strip_shebang(file_contents);
-        } else {
-            source = file_contents;
-        }
-        parse_and_run(vm.interpreter(), source);
-    }
-    return JS::Value(true);
+    return load_file_impl(vm, global_object);
 }
 
 static void repl(JS::Interpreter& interpreter)
