@@ -46,11 +46,13 @@ public:
     bool is_old_position_valid() const { return m_old_position_valid; }
     bool is_moving() const { return m_moving; }
     bool is_upside_down() const { return m_upside_down; }
+    bool is_inverted() const { return m_inverted; }
     Gfx::Color color() const { return (m_type == Diamonds || m_type == Hearts) ? Color::Red : Color::Black; }
 
     void set_position(const Gfx::IntPoint p) { m_rect.set_location(p); }
     void set_moving(bool moving) { m_moving = moving; }
     void set_upside_down(bool upside_down) { m_upside_down = upside_down; }
+    void set_inverted(bool inverted) { m_inverted = inverted; }
 
     void save_old_position();
 
@@ -61,14 +63,18 @@ public:
 private:
     Card(Type type, uint8_t value);
 
+    static NonnullRefPtr<Gfx::Bitmap> invert_bitmap(Gfx::Bitmap&);
+
     Gfx::IntRect m_rect;
     NonnullRefPtr<Gfx::Bitmap> m_front;
+    RefPtr<Gfx::Bitmap> m_front_inverted;
     Gfx::IntPoint m_old_position;
     Type m_type;
     uint8_t m_value;
     bool m_old_position_valid { false };
     bool m_moving { false };
     bool m_upside_down { false };
+    bool m_inverted { false };
 };
 
 }

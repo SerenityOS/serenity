@@ -106,6 +106,8 @@ private:
     int m_animation_current_step { 0 };
     int m_animation_steps { 0 };
     OwnPtr<Function<void()>> m_animation_did_finish;
+
+    RefPtr<Card> m_inverted_card;
 };
 
 }
