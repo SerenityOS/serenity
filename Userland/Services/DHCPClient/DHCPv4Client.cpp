@@ -39,7 +39,7 @@ static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
         return false;
     }
 
-    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.m_ifname.characters(), IFNAMSIZ) < 0) {
+    if (setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, iface.ifname.characters(), IFNAMSIZ) < 0) {
         dbgln("ERROR: setsockopt(SO_BINDTODEVICE) :: {}", strerror(errno));
         return false;
     }
@@ -51,7 +51,7 @@ static bool send(const InterfaceDescriptor& iface, const DHCPv4Packet& packet, C
     dst.sin_addr.s_addr = IPv4Address { 255, 255, 255, 255 }.to_u32();
     memset(&dst.sin_zero, 0, sizeof(dst.sin_zero));
 
-    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({} bound to {}, ..., {} at {}) = ...?", fd, iface.m_ifname, dst.sin_addr.s_addr, dst.sin_port);
+    dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({} bound to {}, ..., {} at {}) = ...?", fd, iface.ifname, dst.sin_addr.s_addr, dst.sin_port);
     auto rc = sendto(fd, &packet, sizeof(packet), 0, (sockaddr*)&dst, sizeof(dst));
     dbgln_if(DHCPV4CLIENT_DEBUG, "sendto({}) = {}", fd, rc);
     if (rc < 0) {
@@ -73,7 +73,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     struct ifreq ifr;
     memset(&ifr, 0, sizeof(ifr));
 
-    bool fits = iface.m_ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
+    bool fits = iface.ifname.copy_characters_to_buffer(ifr.ifr_name, IFNAMSIZ);
     if (!fits) {
         dbgln("Interface name doesn't fit into IFNAMSIZ!");
         return;
@@ -98,7 +98,7 @@ static void set_params(const InterfaceDescriptor& iface, const IPv4Address& ipv4
     struct rtentry rt;
     memset(&rt, 0, sizeof(rt));
 
-    rt.rt_dev = const_cast<char*>(iface.m_ifname.characters());
+    rt.rt_dev = const_cast<char*>(iface.ifname.characters());
     rt.rt_gateway.sa_family = AF_INET;
     ((sockaddr_in&)rt.rt_gateway).sin_addr.s_addr = gateway.to_in_addr_t();
     rt.rt_flags = RTF_UP | RTF_GATEWAY;
@@ -144,7 +144,7 @@ void DHCPv4Client::try_discover_ifs()
     bool sent_discover_request = false;
     Interfaces& ifs = ifs_result.value();
     for (auto& iface : ifs.ready) {
-        if (iface.m_current_ip_address != IPv4Address { 0, 0, 0, 0 })
+        if (iface.current_ip_address != IPv4Address { 0, 0, 0, 0 })
             continue;
 
         dhcp_discover(iface);
@@ -243,7 +243,7 @@ void DHCPv4Client::handle_ack(const DHCPv4Packet& packet, const ParsedDHCPv4Opti
     transaction->has_ip = true;
     auto& interface = transaction->interface;
     auto new_ip = packet.yiaddr();
-    interface.m_current_ip_address = new_ip;
+    interface.current_ip_address = new_ip;
     auto lease_time = AK::convert_between_host_and_network_endian(options.get<u32>(DHCPOption::IPAddressLeaseTime).value_or(transaction->offered_lease_time));
     // set a timer for the duration of the lease, we shall renew if needed
     Core::Timer::create_single_shot(
@@ -319,9 +319,9 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
     auto transaction_id = get_random<u32>();
 
     if constexpr (DHCPV4CLIENT_DEBUG) {
-        dbgln("Trying to lease an IP for {} with ID {}", iface.m_ifname, transaction_id);
-        if (!iface.m_current_ip_address.is_zero())
-            dbgln("going to request the server to hand us {}", iface.m_current_ip_address.to_string());
+        dbgln("Trying to lease an IP for {} with ID {}", iface.ifname, transaction_id);
+        if (!iface.current_ip_address.is_zero())
+            dbgln("going to request the server to hand us {}", iface.current_ip_address.to_string());
     }
 
     DHCPv4PacketBuilder builder;
@@ -332,8 +332,8 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
     packet.set_hlen(sizeof(MACAddress));
     packet.set_xid(transaction_id);
     packet.set_flags(DHCPv4Flags::Broadcast);
-    packet.ciaddr() = iface.m_current_ip_address;
-    packet.set_chaddr(iface.m_mac_address);
+    packet.ciaddr() = iface.current_ip_address;
+    packet.set_chaddr(iface.mac_address);
     packet.set_secs(65535); // we lie
 
     // set packet options
@@ -349,17 +349,17 @@ void DHCPv4Client::dhcp_discover(const InterfaceDescriptor& iface)
 void DHCPv4Client::dhcp_request(DHCPv4Transaction& transaction, const DHCPv4Packet& offer)
 {
     auto& iface = transaction.interface;
-    dbgln("Leasing the IP {} for adapter {}", offer.yiaddr().to_string(), iface.m_ifname);
+    dbgln("Leasing the IP {} for adapter {}", offer.yiaddr().to_string(), iface.ifname);
     DHCPv4PacketBuilder builder;
 
     DHCPv4Packet& packet = builder.peek();
     packet.set_op(DHCPv4Op::BootRequest);
-    packet.ciaddr() = iface.m_current_ip_address;
+    packet.ciaddr() = iface.current_ip_address;
     packet.set_htype(1); // 10mb ethernet
     packet.set_hlen(sizeof(MACAddress));
     packet.set_xid(offer.xid());
     packet.set_flags(DHCPv4Flags::Broadcast);
-    packet.set_chaddr(iface.m_mac_address);
+    packet.set_chaddr(iface.mac_address);
     packet.set_secs(65535); // we lie
 
     // set packet options

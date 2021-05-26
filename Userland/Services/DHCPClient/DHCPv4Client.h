@@ -19,9 +19,9 @@
 #include <sys/socket.h>
 
 struct InterfaceDescriptor {
-    String m_ifname;
-    MACAddress m_mac_address;
-    IPv4Address m_current_ip_address;
+    String ifname;
+    MACAddress mac_address;
+    IPv4Address current_ip_address;
 };
 
 struct DHCPv4Transaction {
