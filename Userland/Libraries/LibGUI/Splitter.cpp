@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,13 +35,27 @@ void Splitter::paint_event(PaintEvent& event)
 {
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(m_grabbable_rect, palette().hover_highlight());
+
+    auto palette = this->palette();
+    if (m_hovered_index.has_value())
+        painter.fill_rect(m_grabbables[m_hovered_index.value()].paint_rect, palette.hover_highlight());
 }
 
 void Splitter::resize_event(ResizeEvent& event)
 {
     Widget::resize_event(event);
-    m_grabbable_rect = {};
+    set_hovered_grabbable(nullptr);
+}
+
+void Splitter::set_hovered_grabbable(Grabbable* grabbable)
+{
+    if (m_hovered_index.has_value() && grabbable && grabbable->index == m_hovered_index.value())
+        return;
+    if (grabbable)
+        m_hovered_index = grabbable->index;
+    else
+        m_hovered_index = {};
+    update();
 }
 
 void Splitter::override_cursor(bool do_override)
@@ -63,87 +77,91 @@ void Splitter::leave_event(Core::Event&)
 {
     if (!m_resizing)
         override_cursor(false);
-    if (!m_grabbable_rect.is_empty()) {
-        m_grabbable_rect = {};
-        update();
-    }
+    set_hovered_grabbable(nullptr);
 }
 
-bool Splitter::get_resize_candidates_at(const Gfx::IntPoint& position, Widget*& first, Widget*& second)
+Splitter::Grabbable* Splitter::grabbable_at(Gfx::IntPoint const& position)
 {
-    int x_or_y = position.primary_offset_for_orientation(m_orientation);
-    Widget* previous_widget = nullptr;
-    bool found_candidates = false;
-    for_each_child_widget([&](auto& child_widget) {
-        if (!child_widget.is_visible()) {
-            // We need to skip over widgets that are not visible as they
-            // are not necessarily in the correct location (anymore)
-            return IterationDecision::Continue;
-        }
-        if (!previous_widget) {
-            previous_widget = &child_widget;
-            return IterationDecision::Continue;
-        }
-
-        if (x_or_y > previous_widget->content_rect().last_edge_for_orientation(m_orientation)
-            && x_or_y <= child_widget.content_rect().first_edge_for_orientation(m_orientation)) {
-            first = previous_widget;
-            second = &child_widget;
-            found_candidates = true;
-            return IterationDecision::Break;
-        }
-
-        previous_widget = &child_widget;
-        return IterationDecision::Continue;
-    });
-    return found_candidates;
+    for (auto& grabbable : m_grabbables) {
+        if (grabbable.grabbable_rect.contains(position))
+            return &grabbable;
+    }
+    return nullptr;
 }
 
 void Splitter::mousedown_event(MouseEvent& event)
 {
     if (event.button() != MouseButton::Left)
         return;
-    m_resizing = true;
 
-    Widget* first { nullptr };
-    Widget* second { nullptr };
-    if (!get_resize_candidates_at(event.position(), first, second))
+    auto* grabbable = grabbable_at(event.position());
+    if (!grabbable)
         return;
 
-    m_first_resizee = *first;
-    m_second_resizee = *second;
-    m_first_resizee_start_size = first->size();
-    m_second_resizee_start_size = second->size();
+    m_resizing = true;
+
+    m_first_resizee = *grabbable->first_widget;
+    m_second_resizee = *grabbable->second_widget;
+    m_first_resizee_start_size = m_first_resizee->size();
+    m_second_resizee_start_size = m_second_resizee->size();
     m_resize_origin = event.position();
 }
 
-void Splitter::recompute_grabbable_rect(const Widget& first, const Widget& second)
+Gfx::IntRect Splitter::rect_between_widgets(GUI::Widget const& first_widget, GUI::Widget const& second_widget, bool honor_content_margins) const
 {
-    auto first_edge = first.content_rect().primary_offset_for_orientation(m_orientation) + first.content_rect().primary_size_for_orientation(m_orientation);
-    auto second_edge = second.content_rect().primary_offset_for_orientation(m_orientation);
+    auto first_widget_rect = honor_content_margins ? first_widget.content_rect() : first_widget.relative_rect();
+    auto second_widget_rect = honor_content_margins ? second_widget.content_rect() : second_widget.relative_rect();
+
+    auto first_edge = first_widget_rect.last_edge_for_orientation(m_orientation);
+    auto second_edge = second_widget_rect.first_edge_for_orientation(m_orientation);
     Gfx::IntRect rect;
     rect.set_primary_offset_for_orientation(m_orientation, first_edge);
     rect.set_primary_size_for_orientation(m_orientation, second_edge - first_edge);
-    rect.set_secondary_offset_for_orientation(m_orientation, first.content_rect().secondary_offset_for_orientation(m_orientation));
-    rect.set_secondary_size_for_orientation(m_orientation, first.content_rect().secondary_size_for_orientation(m_orientation));
+    rect.set_secondary_offset_for_orientation(m_orientation, 0);
+    rect.set_secondary_size_for_orientation(m_orientation, relative_rect().secondary_size_for_orientation(m_orientation));
+    return rect;
+}
 
-    if (m_grabbable_rect != rect) {
-        m_grabbable_rect = rect;
-        update();
+void Splitter::recompute_grabbables()
+{
+    auto old_grabbables_count = m_grabbables.size();
+    m_grabbables.clear();
+    auto old_hovered_index = m_hovered_index;
+    m_hovered_index = {};
+
+    auto child_widgets = this->child_widgets();
+    child_widgets.remove_all_matching([&](auto& widget) { return !widget->is_visible(); });
+
+    if (child_widgets.size() < 2)
+        return;
+
+    size_t start_index = 0;
+    size_t end_index = 1;
+
+    while (end_index < child_widgets.size()) {
+        auto const& first_widget = *child_widgets[start_index];
+        auto const& second_widget = *child_widgets[end_index];
+        m_grabbables.append(Grabbable {
+            .index = m_grabbables.size(),
+            .grabbable_rect = rect_between_widgets(first_widget, second_widget, true),
+            .paint_rect = rect_between_widgets(first_widget, second_widget, false),
+            .first_widget = first_widget,
+            .second_widget = second_widget,
+        });
+        ++start_index;
+        ++end_index;
     }
+
+    if (old_hovered_index.has_value() && old_grabbables_count == m_grabbables.size())
+        set_hovered_grabbable(&m_grabbables[old_hovered_index.value()]);
 }
 
 void Splitter::mousemove_event(MouseEvent& event)
 {
+    auto* grabbable = grabbable_at(event.position());
+    set_hovered_grabbable(grabbable);
     if (!m_resizing) {
-        Widget* first { nullptr };
-        Widget* second { nullptr };
-        if (!get_resize_candidates_at(event.position(), first, second)) {
-            override_cursor(false);
-            return;
-        }
-        recompute_grabbable_rect(*first, *second);
-        override_cursor(m_grabbable_rect.contains(event.position()));
+        override_cursor(grabbable != nullptr);
         return;
     }
     auto delta = event.position() - m_resize_origin;
@@ -182,8 +200,7 @@ void Splitter::mousemove_event(MouseEvent& event)
 
 void Splitter::did_layout()
 {
-    if (m_first_resizee && m_second_resizee)
-        recompute_grabbable_rect(*m_first_resizee, *m_second_resizee);
+    recompute_grabbables();
 }
 
 void Splitter::mouseup_event(MouseEvent& event)
