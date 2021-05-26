@@ -239,7 +239,7 @@ private:
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
 
-    InlineLinkedList<VMObject> m_vmobjects;
+    VMObject::List m_vmobjects;
 };
 
 template<typename Callback>

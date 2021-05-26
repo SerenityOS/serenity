@@ -842,13 +842,13 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
 void MemoryManager::register_vmobject(VMObject& vmobject)
 {
     ScopedSpinLock lock(s_mm_lock);
-    m_vmobjects.append(&vmobject);
+    m_vmobjects.append(vmobject);
 }
 
 void MemoryManager::unregister_vmobject(VMObject& vmobject)
 {
     ScopedSpinLock lock(s_mm_lock);
-    m_vmobjects.remove(&vmobject);
+    m_vmobjects.remove(vmobject);
 }
 
 void MemoryManager::register_region(Region& region)
