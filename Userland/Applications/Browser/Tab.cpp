@@ -98,7 +98,7 @@ Tab::Tab(BrowserWindow& window, Type type)
             return;
         int i = 0;
         m_go_back_context_menu = GUI::Menu::construct();
-        for (auto& url : m_history.get_back_history()) {
+        for (auto& url : m_history.get_back_title_history()) {
             i++;
             m_go_back_context_menu->add_action(GUI::Action::create(url.to_string(),
                 Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"),
@@ -113,7 +113,7 @@ Tab::Tab(BrowserWindow& window, Type type)
             return;
         int i = 0;
         m_go_forward_context_menu = GUI::Menu::construct();
-        for (auto& url : m_history.get_forward_history()) {
+        for (auto& url : m_history.get_forward_title_history()) {
             i++;
             m_go_forward_context_menu->add_action(GUI::Action::create(url.to_string(),
                 Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-html.png"),
@@ -161,7 +161,7 @@ Tab::Tab(BrowserWindow& window, Type type)
 
         // don't add to history if back or forward is pressed
         if (!m_is_history_navigation)
-            m_history.push(url);
+            m_history.push(url, title());
         m_is_history_navigation = false;
 
         update_actions();
@@ -231,8 +231,10 @@ Tab::Tab(BrowserWindow& window, Type type)
 
     hooks().on_title_change = [this](auto& title) {
         if (title.is_null()) {
+            m_history.update_title(url().to_string());
             m_title = url().to_string();
         } else {
+            m_history.update_title(title);
             m_title = title;
         }
         if (on_title_change)
@@ -347,14 +349,14 @@ void Tab::go_back(int steps)
 {
     m_history.go_back(steps);
     update_actions();
-    load(m_history.current(), LoadType::HistoryNavigation);
+    load(m_history.current().url, LoadType::HistoryNavigation);
 }
 
 void Tab::go_forward(int steps)
 {
     m_history.go_forward(steps);
     update_actions();
-    load(m_history.current(), LoadType::HistoryNavigation);
+    load(m_history.current().url, LoadType::HistoryNavigation);
 }
 
 void Tab::update_actions()
