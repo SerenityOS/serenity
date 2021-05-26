@@ -1217,6 +1217,29 @@ String TextEditor::selected_text() const
     return document().text_in_range(m_selection);
 }
 
+size_t TextEditor::number_of_selected_words() const
+{
+    if (!has_selection())
+        return 0;
+
+    size_t word_count = 0;
+    bool in_word = false;
+    auto selected_text = this->selected_text();
+    for (char c : selected_text) {
+        if (in_word && isspace(c)) {
+            in_word = false;
+            word_count++;
+            continue;
+        }
+        if (!in_word && !isspace(c))
+            in_word = true;
+    }
+    if (in_word)
+        word_count++;
+
+    return word_count;
+}
+
 void TextEditor::delete_selection()
 {
     auto selection = normalized_selection();
