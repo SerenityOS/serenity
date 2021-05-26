@@ -188,18 +188,30 @@ KResult TCPSocket::send_ack(bool allow_duplicate)
 
 KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload, size_t payload_size, RoutingDecision* user_routing_decision)
 {
+    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
+    if (routing_decision.is_zero())
+        return EHOSTUNREACH;
+
+    auto ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
+
     const bool has_mss_option = flags == TCPFlags::SYN;
     const size_t options_size = has_mss_option ? sizeof(TCPOptionMSS) : 0;
-    const size_t header_size = sizeof(TCPPacket) + options_size;
-    const size_t buffer_size = header_size + payload_size;
-    auto buffer = NetworkByteBuffer::create_zeroed(buffer_size);
-    auto& tcp_packet = *(TCPPacket*)(buffer.data());
+    const size_t tcp_header_size = sizeof(TCPPacket) + options_size;
+    const size_t buffer_size = ipv4_payload_offset + tcp_header_size + payload_size;
+    auto packet = routing_decision.adapter->acquire_packet_buffer(buffer_size);
+    if (!packet)
+        return ENOMEM;
+    routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(),
+        routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
+        buffer_size - ipv4_payload_offset, ttl());
+    memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(TCPPacket));
+    auto& tcp_packet = *(TCPPacket*)(packet->buffer.data() + ipv4_payload_offset);
     VERIFY(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
     tcp_packet.set_window_size(NumericLimits<u16>::max());
     tcp_packet.set_sequence_number(m_sequence_number);
-    tcp_packet.set_data_offset(header_size / sizeof(u32));
+    tcp_packet.set_data_offset(tcp_header_size / sizeof(u32));
     tcp_packet.set_flags(flags);
 
     if (flags & TCPFlags::ACK) {
@@ -217,31 +229,22 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         m_sequence_number += payload_size;
     }
 
-    RoutingDecision routing_decision = user_routing_decision ? *user_routing_decision : route_to(peer_address(), local_address(), bound_interface());
-    if (routing_decision.is_zero())
-        return EHOSTUNREACH;
-
     if (has_mss_option) {
         u16 mss = routing_decision.adapter->mtu() - sizeof(IPv4Packet) - sizeof(TCPPacket);
         TCPOptionMSS mss_option { mss };
-        VERIFY(buffer.size() >= sizeof(TCPPacket) + sizeof(mss_option));
-        memcpy(buffer.data() + sizeof(TCPPacket), &mss_option, sizeof(mss_option));
+        VERIFY(packet->buffer.size() >= ipv4_payload_offset + sizeof(TCPPacket) + sizeof(mss_option));
+        memcpy(packet->buffer.data() + ipv4_payload_offset + sizeof(TCPPacket), &mss_option, sizeof(mss_option));
     }
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
-    auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(buffer.data());
-    auto result = routing_decision.adapter->send_ipv4(
-        local_address(), routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-        packet_buffer, buffer_size, ttl());
-    if (result.is_error())
-        return result;
+    routing_decision.adapter->send_raw({ packet->buffer.data(), packet->buffer.size() });
 
     m_packets_out++;
     m_bytes_out += buffer_size;
     if (tcp_packet.has_syn() || payload_size > 0) {
         Locker locker(m_not_acked_lock);
-        m_not_acked.append({ m_sequence_number, move(buffer) });
+        m_not_acked.append({ m_sequence_number, move(packet), ipv4_payload_offset, *routing_decision.adapter });
         enqueue_for_retransmit();
     }
 
@@ -263,6 +266,9 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             dbgln_if(TCP_SOCKET_DEBUG, "TCPSocket: iterate: {}", packet.ack_number);
 
             if (packet.ack_number <= ack_number) {
+                auto old_adapter = packet.adapter.strong_ref();
+                if (old_adapter)
+                    old_adapter->release_packet_buffer(*packet.buffer);
                 m_not_acked.take_first();
                 removed++;
             } else {
@@ -531,7 +537,7 @@ void TCPSocket::retransmit_packets()
         packet.tx_counter++;
 
         if constexpr (TCP_SOCKET_DEBUG) {
-            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
+            auto& tcp_packet = *(const TCPPacket*)(packet.buffer->buffer.data() + packet.ipv4_payload_offset);
             dbgln("Sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
                 local_address(), local_port(),
                 peer_address(), peer_port(),
@@ -544,29 +550,19 @@ void TCPSocket::retransmit_packets()
                 packet.tx_counter);
         }
 
-        auto packet_buffer = UserOrKernelBuffer::for_kernel_buffer(packet.buffer.data());
-        int err = routing_decision.adapter->send_ipv4(
-            local_address(), routing_decision.next_hop, peer_address(),
-            IPv4Protocol::TCP, packet_buffer, packet.buffer.size(), ttl());
-        if (err < 0) {
-            auto& tcp_packet = *(const TCPPacket*)(packet.buffer.data());
-            dmesgln("Error ({}) sending TCP packet from {}:{} to {}:{} with ({}{}{}{}) seq_no={}, ack_no={}, tx_counter={}",
-                err,
-                local_address(),
-                local_port(),
-                peer_address(),
-                peer_port(),
-                (tcp_packet.has_syn() ? "SYN " : ""),
-                (tcp_packet.has_ack() ? "ACK " : ""),
-                (tcp_packet.has_fin() ? "FIN " : ""),
-                (tcp_packet.has_rst() ? "RST " : ""),
-                tcp_packet.sequence_number(),
-                tcp_packet.ack_number(),
-                packet.tx_counter);
-        } else {
-            m_packets_out++;
-            m_bytes_out += packet.buffer.size();
+        size_t ipv4_payload_offset = routing_decision.adapter->ipv4_payload_offset();
+        if (ipv4_payload_offset != packet.ipv4_payload_offset) {
+            // FIXME: Add support for this. This can happen if after a route change
+            // we ended up on another adapter which doesn't have the same layer 2 type
+            // like the previous adapter.
+            VERIFY_NOT_REACHED();
         }
+        routing_decision.adapter->fill_in_ipv4_header(*packet.buffer,
+            local_address(), routing_decision.next_hop, peer_address(),
+            IPv4Protocol::TCP, packet.buffer->buffer.size() - ipv4_payload_offset, ttl());
+        routing_decision.adapter->send_raw({ packet.buffer->buffer.data(), packet.buffer->buffer.size() });
+        m_packets_out++;
+        m_bytes_out += packet.buffer->buffer.size();
     }
 }
 

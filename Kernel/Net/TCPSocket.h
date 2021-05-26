@@ -194,7 +194,9 @@ private:
 
     struct OutgoingPacket {
         u32 ack_number { 0 };
-        NetworkByteBuffer buffer;
+        RefPtr<PacketWithTimestamp> buffer;
+        size_t ipv4_payload_offset;
+        WeakPtr<NetworkAdapter> adapter;
         int tx_counter { 0 };
     };
 

@@ -246,8 +246,14 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
             dbgln("handle_icmp: EchoRequest packet is too small, ignoring.");
             return;
         }
-        auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
-        auto& response = *(ICMPEchoPacket*)buffer.data();
+        auto ipv4_payload_offset = adapter->ipv4_payload_offset();
+        auto packet = adapter->acquire_packet_buffer(ipv4_payload_offset + icmp_packet_size);
+        if (!packet) {
+            dbgln("Could not allocate packet buffer while sending ICMP packet");
+            return;
+        }
+        adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 64);
+        auto& response = *(ICMPEchoPacket*)(packet->buffer.data() + ipv4_payload_offset);
         response.header.set_type(ICMPType::EchoReply);
         response.header.set_code(0);
         response.identifier = request.identifier;
@@ -256,9 +262,8 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
         // FIXME: What is the right TTL value here? Is 64 ok? Should we use the same TTL as the echo request?
-        auto response_buffer = UserOrKernelBuffer::for_kernel_buffer((u8*)&response);
-        [[maybe_unused]] auto result = adapter->send_ipv4(adapter->ipv4_address(), eth.source(),
-            ipv4_packet.source(), IPv4Protocol::ICMP, response_buffer, buffer.size(), 64);
+        adapter->send_raw({ packet->buffer.data(), packet->buffer.size() });
+        adapter->release_packet_buffer(*packet);
     }
 }
 
