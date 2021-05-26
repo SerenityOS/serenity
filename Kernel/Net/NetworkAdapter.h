@@ -26,6 +26,18 @@ class NetworkAdapter;
 
 using NetworkByteBuffer = AK::Detail::ByteBuffer<1500>;
 
+struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
+    PacketWithTimestamp(KBuffer buffer, Time timestamp)
+        : buffer(move(buffer))
+        , timestamp(timestamp)
+    {
+    }
+
+    KBuffer buffer;
+    Time timestamp;
+    IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
+};
+
 class NetworkAdapter : public RefCounted<NetworkAdapter> {
 public:
     template<typename Callback>
@@ -70,6 +82,9 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
+    RefPtr<PacketWithTimestamp> acquire_packet_buffer(size_t);
+    void release_packet_buffer(PacketWithTimestamp&);
+
     Function<void()> on_receive;
 
 protected:
@@ -88,18 +103,6 @@ private:
     IPv4Address m_ipv4_address;
     IPv4Address m_ipv4_netmask;
     IPv4Address m_ipv4_gateway;
-
-    struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
-        PacketWithTimestamp(KBuffer buffer, Time timestamp)
-            : buffer(move(buffer))
-            , timestamp(timestamp)
-        {
-        }
-
-        KBuffer buffer;
-        Time timestamp;
-        IntrusiveListNode<PacketWithTimestamp, RefPtr<PacketWithTimestamp>> packet_node;
-    };
 
     // FIXME: Make this configurable
     static constexpr size_t max_packet_buffers = 1024;
