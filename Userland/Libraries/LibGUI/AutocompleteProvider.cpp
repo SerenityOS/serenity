@@ -177,7 +177,7 @@ void AutocompleteBox::apply_suggestion()
 
     VERIFY(suggestion.length() >= partial_length);
     auto completion_view = suggestion.substring_view(partial_length, suggestion.length() - partial_length);
-    auto completion_kind = (GUI::AutocompleteProvider::CompletionKind)suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Kind).as_uint();
+    auto completion_kind = (GUI::AutocompleteProvider::CompletionKind)suggestion_index.data((GUI::ModelRole)AutocompleteSuggestionModel::InternalRole::Kind).as_u32();
 
     String completion;
     if (completion_view.ends_with(".h") && completion_kind == GUI::AutocompleteProvider::CompletionKind::SystemInclude)

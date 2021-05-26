@@ -22,8 +22,10 @@ const char* to_string(Variant::Type type)
         return "Int32";
     case Variant::Type::Int64:
         return "Int64";
-    case Variant::Type::UnsignedInt:
-        return "UnsignedInt";
+    case Variant::Type::UnsignedInt32:
+        return "UnsignedInt32";
+    case Variant::Type::UnsignedInt64:
+        return "UnsignedInt64";
     case Variant::Type::Float:
         return "Float";
     case Variant::Type::String:
@@ -95,10 +97,16 @@ Variant::Variant(i64 value)
     m_value.as_i64 = value;
 }
 
-Variant::Variant(unsigned value)
-    : m_type(Type::UnsignedInt)
+Variant::Variant(u32 value)
+    : m_type(Type::UnsignedInt32)
 {
-    m_value.as_uint = value;
+    m_value.as_u32 = value;
+}
+
+Variant::Variant(u64 value)
+    : m_type(Type::UnsignedInt64)
+{
+    m_value.as_u64 = value;
 }
 
 Variant::Variant(float value)
@@ -149,8 +157,8 @@ Variant::Variant(const JsonValue& value)
     }
 
     if (value.is_u32()) {
-        m_type = Type::UnsignedInt;
-        m_value.as_uint = value.as_u32();
+        m_type = Type::UnsignedInt32;
+        m_value.as_u32 = value.as_u32();
         return;
     }
 
@@ -161,9 +169,8 @@ Variant::Variant(const JsonValue& value)
     }
 
     if (value.is_u64()) {
-        // FIXME: Variant should have a 64-bit internal type.
-        m_type = Type::UnsignedInt;
-        m_value.as_uint = value.to_u32();
+        m_type = Type::UnsignedInt64;
+        m_value.as_u64 = value.to_u64();
         return;
     }
 
@@ -273,8 +280,11 @@ void Variant::copy_from(const Variant& other)
     case Type::Int64:
         m_value.as_i64 = other.m_value.as_i64;
         break;
-    case Type::UnsignedInt:
-        m_value.as_uint = other.m_value.as_uint;
+    case Type::UnsignedInt32:
+        m_value.as_u32 = other.m_value.as_u32;
+        break;
+    case Type::UnsignedInt64:
+        m_value.as_u64 = other.m_value.as_u64;
         break;
     case Type::Float:
         m_value.as_float = other.m_value.as_float;
@@ -326,8 +336,10 @@ bool Variant::operator==(const Variant& other) const
         return as_i32() == other.as_i32();
     case Type::Int64:
         return as_i64() == other.as_i64();
-    case Type::UnsignedInt:
-        return as_uint() == other.as_uint();
+    case Type::UnsignedInt32:
+        return as_u32() == other.as_u32();
+    case Type::UnsignedInt64:
+        return as_u64() == other.as_u64();
     case Type::Float:
         return as_float() == other.as_float();
     case Type::String:
@@ -365,8 +377,10 @@ bool Variant::operator<(const Variant& other) const
         return as_i32() < other.as_i32();
     case Type::Int64:
         return as_i64() < other.as_i64();
-    case Type::UnsignedInt:
-        return as_uint() < other.as_uint();
+    case Type::UnsignedInt32:
+        return as_u32() < other.as_u32();
+    case Type::UnsignedInt64:
+        return as_u64() < other.as_u64();
     case Type::Float:
         return as_float() < other.as_float();
     case Type::String:
@@ -401,8 +415,10 @@ String Variant::to_string() const
         return String::number(as_i32());
     case Type::Int64:
         return String::number(as_i64());
-    case Type::UnsignedInt:
-        return String::number(as_uint());
+    case Type::UnsignedInt32:
+        return String::number(as_u32());
+    case Type::UnsignedInt64:
+        return String::number(as_u64());
     case Type::Float:
         return String::formatted("{:.2}", as_float());
     case Type::String:
