@@ -97,7 +97,7 @@ int main(int argc, char** argv)
     auto& splitter = window->set_main_widget<GUI::HorizontalSplitter>();
 
     auto& editor = splitter.add<GUI::TextEditor>();
-    auto& preview = splitter.add<GUI::Widget>();
+    auto& preview = splitter.add<GUI::Frame>();
 
     editor.set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
     editor.set_autocomplete_provider(make<GMLAutocompleteProvider>());
@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     };
 
     if (String(path).is_empty()) {
-        editor.set_text(R"~~~(@GUI::Widget {
+        editor.set_text(R"~~~(@GUI::Frame {
     layout: @GUI::VerticalBoxLayout {
     }
 
