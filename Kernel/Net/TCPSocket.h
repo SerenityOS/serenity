@@ -157,6 +157,8 @@ public:
 
     virtual KResult close() override;
 
+    virtual bool can_write(const FileDescription&, size_t) const override;
+
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
 
@@ -200,8 +202,9 @@ private:
         int tx_counter { 0 };
     };
 
-    Lock m_not_acked_lock { "TCPSocket unacked packets" };
+    mutable Lock m_not_acked_lock { "TCPSocket unacked packets" };
     SinglyLinkedList<OutgoingPacket> m_not_acked;
+    size_t m_not_acked_size { 0 };
 
     u32 m_duplicate_acks { 0 };
 
@@ -212,6 +215,9 @@ private:
     static constexpr u32 maximum_retransmits = 5;
     Time m_last_retransmit_time;
     u32 m_retransmit_attempts { 0 };
+
+    // FIXME: Parse window size TCP option from the peer
+    u32 m_send_window_size { 64 * KiB };
 };
 
 }
