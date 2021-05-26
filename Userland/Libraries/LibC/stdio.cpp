@@ -50,6 +50,7 @@ public:
 
     int error() const { return m_error; }
     void clear_err() { m_error = 0; }
+    void set_err() { m_error = 1; }
 
     size_t read(u8*, size_t);
     size_t write(const u8*, size_t);
@@ -1331,5 +1332,11 @@ void __fpurge(FILE* stream)
 {
     ScopedFileLock lock(stream);
     stream->purge();
+}
+
+void __fseterr(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    stream->set_err();
 }
 }
