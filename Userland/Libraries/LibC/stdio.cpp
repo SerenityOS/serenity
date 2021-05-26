@@ -1369,6 +1369,12 @@ void __freadptrinc(FILE* stream, size_t increment)
 
     stream->readptr_increase(increment);
 }
+
+void __fseterr(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    stream->set_err();
+}
 }
 
 template bool FILE::gets<u8>(u8*, size_t);
