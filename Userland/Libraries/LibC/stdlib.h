@@ -31,6 +31,8 @@ int putenv(char*);
 int unsetenv(const char*);
 int clearenv(void);
 int setenv(const char* name, const char* value, int overwrite);
+const char* getprogname();
+void setprogname(const char*);
 int atoi(const char*);
 long atol(const char*);
 long long atoll(const char*);
