@@ -158,27 +158,13 @@ void NetworkAdapter::did_receive(ReadonlyBytes payload)
         return;
     }
 
-    RefPtr<PacketWithTimestamp> packet;
-
-    if (m_unused_packets.is_empty()) {
-        auto buffer = KBuffer::copy(payload.data(), payload.size());
-        packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
-    } else {
-        packet = m_unused_packets.take_first();
-        if (payload.size() <= packet->buffer.capacity()) {
-            memcpy(packet->buffer.data(), payload.data(), payload.size());
-            packet->buffer.set_size(payload.size());
-            packet->timestamp = kgettimeofday();
-        } else {
-            auto buffer = KBuffer::copy(payload.data(), payload.size());
-            packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
-        }
-    }
-
+    auto packet = acquire_packet_buffer(payload.size());
     if (!packet) {
         dbgln("Discarding packet because we're out of memory");
         return;
     }
+
+    memcpy(packet->buffer.data(), payload.data(), payload.size());
 
     m_packet_queue.append(*packet);
     m_packet_queue_size++;
@@ -199,8 +185,37 @@ size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size, Time& pack
     size_t packet_size = packet_buffer.size();
     VERIFY(packet_size <= buffer_size);
     memcpy(buffer, packet_buffer.data(), packet_size);
-    m_unused_packets.append(*packet_with_timestamp);
+    release_packet_buffer(*packet_with_timestamp);
     return packet_size;
+}
+
+RefPtr<PacketWithTimestamp> NetworkAdapter::acquire_packet_buffer(size_t size)
+{
+    InterruptDisabler disabler;
+    if (m_unused_packets.is_empty()) {
+        auto buffer = KBuffer::create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
+        auto packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
+        packet->buffer.set_size(size);
+        return packet;
+    }
+
+    auto packet = m_unused_packets.take_first();
+    if (packet->buffer.capacity() >= size) {
+        packet->timestamp = kgettimeofday();
+        packet->buffer.set_size(size);
+        return packet;
+    }
+
+    auto buffer = KBuffer::create_with_size(size, Region::Access::Read | Region::Access::Write, "Packet Buffer", AllocationStrategy::AllocateNow);
+    packet = adopt_ref_if_nonnull(new PacketWithTimestamp { move(buffer), kgettimeofday() });
+    packet->buffer.set_size(size);
+    return packet;
+}
+
+void NetworkAdapter::release_packet_buffer(PacketWithTimestamp& packet)
+{
+    InterruptDisabler disabler;
+    m_unused_packets.append(packet);
 }
 
 void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
