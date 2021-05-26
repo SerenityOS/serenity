@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.0)
 project (Lagom)
 
+include(../CMake/wasm_spec_tests.cmake)
+
 if (NOT ENABLE_OSS_FUZZ)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option -Wno-literal-suffix -O2 -Wall -Wextra -Werror -std=c++2a -fPIC -g -Wno-deprecated-copy")
 else()
@@ -168,7 +170,8 @@ if (BUILD_LAGOM)
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
         set_tests_properties(WasmParser PROPERTIES
-            ENVIRONMENT SERENITY_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../..)
+            ENVIRONMENT SERENITY_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/../..
+            SKIP_RETURN_CODE 1)
 
         add_executable(disasm_lagom ../../Userland/Utilities/disasm.cpp)
         set_target_properties(disasm_lagom PROPERTIES OUTPUT_NAME disasm)

@@ -13,4 +13,9 @@ MODULE_OUTPUT_PATH="$4"
 mkdir -p "$OUTPUT_PATH"
 mkdir -p "$MODULE_OUTPUT_PATH"
 
-python3 "$(dirname "$0")/generate-libwasm-spec-test.py" "$INPUT_FILE" "$NAME" "$MODULE_OUTPUT_PATH" | prettier --stdin-filepath "test-$NAME.js" > "$OUTPUT_PATH/$NAME.js"
+python3 "$(dirname "$0")/generate-libwasm-spec-test.py" "$INPUT_FILE" "$NAME" "$MODULE_OUTPUT_PATH" |\
+    if $SKIP_PRETTIER; then
+        cat
+    else
+        prettier --stdin-filepath "test-$NAME.js"
+    fi > "$OUTPUT_PATH/$NAME.js"
