@@ -34,14 +34,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto ifs_result = DHCPv4Client::get_discoverable_interfaces();
-    if (ifs_result.is_error()) {
-        warnln("Error: {}", ifs_result.error());
-        return 1;
-    }
-
-    auto ifs = ifs_result.release_value();
-    auto client = DHCPv4Client::construct(move(ifs.ready), move(ifs.not_ready));
+    auto client = DHCPv4Client::construct();
 
     if (pledge("stdio inet cpath rpath", nullptr) < 0) {
         perror("pledge");
