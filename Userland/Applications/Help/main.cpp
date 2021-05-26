@@ -88,6 +88,7 @@ int main(int argc, char* argv[])
     auto& toolbar = toolbar_container.add<GUI::Toolbar>();
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
+    splitter.layout()->set_spacing(5);
 
     auto model = ManualModel::create();
 
