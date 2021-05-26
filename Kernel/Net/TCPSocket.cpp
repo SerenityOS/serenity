@@ -245,6 +245,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
     if (tcp_packet.has_syn() || payload_size > 0) {
         Locker locker(m_not_acked_lock);
         m_not_acked.append({ m_sequence_number, move(packet), ipv4_payload_offset, *routing_decision.adapter });
+        m_not_acked_size += payload_size;
         enqueue_for_retransmit();
     }
 
@@ -269,6 +270,10 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
                 auto old_adapter = packet.adapter.strong_ref();
                 if (old_adapter)
                     old_adapter->release_packet_buffer(*packet.buffer);
+                TCPPacket& tcp_packet = *(TCPPacket*)(packet.buffer->buffer.data() + packet.ipv4_payload_offset);
+                auto payload_size = packet.buffer->buffer.data() + packet.buffer->buffer.size() - (u8*)tcp_packet.payload();
+                m_not_acked_size -= payload_size;
+                evaluate_block_conditions();
                 m_not_acked.take_first();
                 removed++;
             } else {
@@ -564,6 +569,18 @@ void TCPSocket::retransmit_packets()
         m_packets_out++;
         m_bytes_out += packet.buffer->buffer.size();
     }
+}
+
+bool TCPSocket::can_write(const FileDescription& file_description, size_t size) const
+{
+    if (!IPv4Socket::can_write(file_description, size))
+        return false;
+
+    if (!file_description.is_blocking())
+        return true;
+
+    Locker lock(m_not_acked_lock);
+    return m_not_acked_size + size <= m_send_window_size;
 }
 
 }
