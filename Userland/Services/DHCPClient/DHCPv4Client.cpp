@@ -5,16 +5,12 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/ByteBuffer.h>
 #include <AK/Debug.h>
-#include <AK/Endian.h>
-#include <AK/Function.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/Random.h>
 #include <LibCore/File.h>
-#include <LibCore/SocketAddress.h>
 #include <LibCore/Timer.h>
 #include <stdio.h>
 

@@ -5,17 +5,11 @@
  */
 
 #include "DHCPv4Client.h"
-#include <AK/Debug.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
-#include <AK/StringUtils.h>
-#include <AK/Types.h>
 #include <LibCore/EventLoop.h>
-#include <LibCore/File.h>
 #include <LibCore/LocalServer.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
