@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/EnumBits.h>
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
@@ -29,8 +29,7 @@ enum class ShouldFlushTLB {
 };
 
 class Region final
-    : public InlineLinkedListNode<Region>
-    , public Weakable<Region>
+    : public Weakable<Region>
     , public PurgeablePageRanges {
     friend class MemoryManager;
 
@@ -211,10 +210,6 @@ public:
 
     void remap();
 
-    // For InlineLinkedListNode
-    Region* m_next { nullptr };
-    Region* m_prev { nullptr };
-
     bool remap_vmobject_page_range(size_t page_index, size_t page_count);
 
     bool is_volatile(VirtualAddress vaddr, size_t size) const;
@@ -267,6 +262,10 @@ private:
     bool m_mmap : 1 { false };
     bool m_syscall_region : 1 { false };
     WeakPtr<Process> m_owner;
+    IntrusiveListNode<Region> m_list_node;
+
+public:
+    using List = IntrusiveList<Region, RawPtr<Region>, &Region::m_list_node>;
 };
 
 AK_ENUM_BITWISE_OPERATORS(Region::Access)

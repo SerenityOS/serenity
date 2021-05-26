@@ -233,8 +233,8 @@ private:
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
 
-    InlineLinkedList<Region> m_user_regions;
-    InlineLinkedList<Region> m_kernel_regions;
+    Region::List m_user_regions;
+    Region::List m_kernel_regions;
     Vector<UsedMemoryRange> m_used_memory_ranges;
     Vector<PhysicalMemoryRange> m_physical_memory_ranges;
     Vector<ContiguousReservedMemoryRange> m_reserved_memory_ranges;
