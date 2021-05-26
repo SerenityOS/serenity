@@ -37,8 +37,33 @@ void Splitter::paint_event(PaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     auto palette = this->palette();
+
+    auto paint_knurl = [&](int x, int y) {
+        painter.set_pixel(x, y, palette.threed_shadow1());
+        painter.set_pixel(x + 1, y, palette.threed_shadow1());
+        painter.set_pixel(x, y + 1, palette.threed_shadow1());
+        painter.set_pixel(x + 1, y + 1, palette.threed_highlight());
+    };
+
+    constexpr size_t knurl_width = 2;
+    constexpr size_t knurl_spacing = 1;
+    constexpr size_t knurl_count = 10;
+    constexpr size_t total_knurling_width = knurl_count * (knurl_width + knurl_spacing);
+
     if (m_hovered_index.has_value())
         painter.fill_rect(m_grabbables[m_hovered_index.value()].paint_rect, palette.hover_highlight());
+
+    for (auto& grabbable : m_grabbables) {
+        for (size_t i = 0; i < knurl_count; ++i) {
+            auto& rect = grabbable.paint_rect;
+            int primary = rect.center().primary_offset_for_orientation(m_orientation) - 1;
+            int secondary = rect.center().secondary_offset_for_orientation(m_orientation) - (total_knurling_width / 2) + (i * (knurl_width + knurl_spacing));
+            if (m_orientation == Gfx::Orientation::Vertical)
+                paint_knurl(secondary, primary);
+            else
+                paint_knurl(primary, secondary);
+        }
+    }
 }
 
 void Splitter::resize_event(ResizeEvent& event)
