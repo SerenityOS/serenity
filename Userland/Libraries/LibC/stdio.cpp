@@ -40,6 +40,7 @@ public:
     void setbuf(u8* data, int mode, size_t size) { m_buffer.setbuf(data, mode, size); }
 
     bool flush();
+    void purge();
     bool close();
 
     int fileno() const { return m_fd; }
@@ -190,6 +191,11 @@ bool FILE::flush()
     }
 
     return true;
+}
+
+void FILE::purge()
+{
+    m_buffer.drop();
 }
 
 ssize_t FILE::do_read(u8* data, size_t size)
@@ -1322,5 +1328,11 @@ int __fwriting(FILE* stream)
     }
 
     return (stream->flags() & FILE::Flags::LastWrite);
+}
+
+void __fpurge(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    stream->purge();
 }
 }
