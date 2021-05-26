@@ -44,6 +44,7 @@ public:
 
     int error() const { return m_error; }
     void clear_err() { m_error = 0; }
+    void set_err() { m_error = 1; }
 
     size_t read(u8*, size_t);
     size_t write(u8 const*, size_t);
