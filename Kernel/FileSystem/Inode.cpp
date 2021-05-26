@@ -21,14 +21,9 @@
 namespace Kernel {
 
 static SpinLock s_all_inodes_lock;
-static AK::Singleton<InlineLinkedList<Inode>> s_list;
+static AK::Singleton<Inode::List> s_list;
 
-SpinLock<u32>& Inode::all_inodes_lock()
-{
-    return s_all_inodes_lock;
-}
-
-InlineLinkedList<Inode>& Inode::all_with_lock()
+static Inode::List& all_with_lock()
 {
     VERIFY(s_all_inodes_lock.is_locked());
 
@@ -103,13 +98,13 @@ Inode::Inode(FS& fs, InodeIndex index)
     , m_index(index)
 {
     ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_with_lock().append(this);
+    all_with_lock().append(*this);
 }
 
 Inode::~Inode()
 {
     ScopedSpinLock all_inodes_lock(s_all_inodes_lock);
-    all_with_lock().remove(this);
+    all_with_lock().remove(*this);
 
     for (auto& watcher : m_watchers) {
         watcher->unregister_by_inode({}, identifier());

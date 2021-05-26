@@ -9,7 +9,7 @@
 
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
@@ -24,8 +24,7 @@
 namespace Kernel {
 
 class Inode : public RefCounted<Inode>
-    , public Weakable<Inode>
-    , public InlineLinkedListNode<Inode> {
+    , public Weakable<Inode> {
     friend class VFS;
     friend class FS;
 
@@ -91,7 +90,6 @@ public:
     RefPtr<SharedInodeVMObject> shared_vmobject() const;
     bool is_shared_vmobject(const SharedInodeVMObject&) const;
 
-    static InlineLinkedList<Inode>& all_with_lock();
     static void sync();
 
     bool has_watchers() const { return !m_watchers.is_empty(); }
@@ -100,12 +98,6 @@ public:
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 
     NonnullRefPtr<FIFO> fifo();
-
-    // For InlineLinkedListNode.
-    Inode* m_next { nullptr };
-    Inode* m_prev { nullptr };
-
-    static SpinLock<u32>& all_inodes_lock();
 
 protected:
     Inode(FS& fs, InodeIndex);
@@ -127,6 +119,10 @@ private:
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
     RefPtr<FIFO> m_fifo;
+    IntrusiveListNode<Inode> m_inode_list_node;
+
+public:
+    using List = IntrusiveList<Inode, RawPtr<Inode>, &Inode::m_inode_list_node>;
 };
 
 }
