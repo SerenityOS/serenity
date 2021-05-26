@@ -12,5 +12,6 @@ __BEGIN_DECLS
 
 int __freading(FILE*);
 int __fwriting(FILE*);
+void __fpurge(FILE*);
 
 __END_DECLS
