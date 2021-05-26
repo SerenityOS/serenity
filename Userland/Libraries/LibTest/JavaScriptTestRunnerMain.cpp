@@ -32,7 +32,17 @@ static StringView g_program_name { "test-js"sv };
 static void handle_sigabrt(int)
 {
     dbgln("{}: SIGABRT received, cleaning up.", g_program_name);
-    cleanup_and_exit();
+    cleanup();
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = SIG_DFL;
+    int rc = sigaction(SIGABRT, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        exit(1);
+    }
+    abort();
 }
 
 int main(int argc, char** argv)

@@ -181,11 +181,16 @@ inline void TestRunnerGlobalObject::initialize_global_object()
     }
 }
 
-inline void cleanup_and_exit()
+inline void cleanup()
 {
     // Clear the taskbar progress.
     if (TestRunner::the() && TestRunner::the()->is_printing_progress())
         warn("\033]9;-1;\033\\");
+}
+
+inline void cleanup_and_exit()
+{
+    cleanup();
     exit(1);
 }
 
