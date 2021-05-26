@@ -402,6 +402,11 @@ void Game::advance_game()
     if (m_animation_playing)
         return;
 
+    if (m_inverted_card) {
+        m_inverted_card->set_inverted(false);
+        m_inverted_card.clear();
+    }
+
     if (m_state == State::Play && game_ended()) {
         m_state = State::GameEnded;
         on_status_change("Game ended.");
@@ -638,6 +643,11 @@ void Game::card_clicked_during_play(size_t card_index, Card& card)
 {
     String explanation;
     if (!is_valid_play(m_players[0], card, &explanation)) {
+        if (m_inverted_card)
+            m_inverted_card->set_inverted(false);
+        card.set_inverted(true);
+        m_inverted_card = card;
+        update();
         on_status_change(String::formatted("You can't play this card: {}", explanation));
         continue_game_after_delay();
         return;

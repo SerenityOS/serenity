@@ -60,6 +60,7 @@ static const NonnullRefPtr<Gfx::CharacterBitmap> s_club = Gfx::CharacterBitmap::
     11, 9);
 
 static RefPtr<Gfx::Bitmap> s_background;
+static RefPtr<Gfx::Bitmap> s_background_inverted;
 
 Card::Card(Type type, uint8_t value)
     : m_rect(Gfx::IntRect({}, { width, height }))
@@ -85,6 +86,8 @@ Card::Card(Type type, uint8_t value)
             { { (width - target_size.width()) / 2, (height - target_size.height()) / 2 }, target_size },
             *image, image->rect());
         bg_painter.draw_rect(paint_rect, Color::Black);
+
+        s_background_inverted = invert_bitmap(*s_background);
     }
 
     Gfx::Painter painter(m_front);
@@ -126,6 +129,8 @@ Card::Card(Type type, uint8_t value)
             m_front->set_pixel(x, y, m_front->get_pixel(width - x - 1, height - y - 1));
         }
     }
+
+    m_front_inverted = invert_bitmap(*m_front);
 }
 
 Card::~Card()
@@ -135,7 +140,10 @@ Card::~Card()
 void Card::draw(GUI::Painter& painter) const
 {
     VERIFY(!s_background.is_null());
-    painter.blit(position(), m_upside_down ? *s_background : *m_front, m_front->rect());
+    if (m_inverted)
+        painter.blit(position(), m_upside_down ? *s_background_inverted : *m_front_inverted, m_front_inverted->rect());
+    else
+        painter.blit(position(), m_upside_down ? *s_background : *m_front, m_front->rect());
 }
 
 void Card::clear(GUI::Painter& painter, const Color& background_color) const
@@ -156,6 +164,18 @@ void Card::clear_and_draw(GUI::Painter& painter, const Color& background_color)
 
     draw(painter);
     save_old_position();
+}
+
+NonnullRefPtr<Gfx::Bitmap> Card::invert_bitmap(Gfx::Bitmap& bitmap)
+{
+    auto inverted_bitmap = bitmap.clone();
+    VERIFY(inverted_bitmap);
+    for (int y = 0; y < inverted_bitmap->height(); y++) {
+        for (int x = 0; x < inverted_bitmap->width(); x++) {
+            inverted_bitmap->set_pixel(x, y, inverted_bitmap->get_pixel(x, y).inverted());
+        }
+    }
+    return *inverted_bitmap;
 }
 
 }
