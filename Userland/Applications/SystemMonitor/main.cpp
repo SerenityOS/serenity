@@ -487,42 +487,42 @@ NonnullRefPtr<GUI::Widget> build_file_systems_tab()
             [](const JsonObject& object) {
                 StringBuilder size_builder;
                 size_builder.append(" ");
-                size_builder.append(human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32()));
+                size_builder.append(human_readable_size(object.get("total_block_count").to_u64() * object.get("block_size").to_u64()));
                 size_builder.append(" ");
                 return size_builder.to_string();
             },
             [](const JsonObject& object) {
-                return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
+                return object.get("total_block_count").to_u64() * object.get("block_size").to_u64();
             },
             [](const JsonObject& object) {
-                auto total_blocks = object.get("total_block_count").to_u32();
+                auto total_blocks = object.get("total_block_count").to_u64();
                 if (total_blocks == 0)
                     return 0;
-                auto free_blocks = object.get("free_block_count").to_u32();
+                auto free_blocks = object.get("free_block_count").to_u64();
                 auto used_blocks = total_blocks - free_blocks;
-                int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
+                int percentage = (static_cast<double>(used_blocks) / static_cast<double>(total_blocks) * 100.0);
                 return percentage;
             });
         df_fields.empend(
             "Used", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count").to_u32();
-            auto free_blocks = object.get("free_block_count").to_u32();
+            auto total_blocks = object.get("total_block_count").to_u64();
+            auto free_blocks = object.get("free_block_count").to_u64();
             auto used_blocks = total_blocks - free_blocks;
-            return human_readable_size(used_blocks * object.get("block_size").to_u32()); },
+            return human_readable_size(used_blocks * object.get("block_size").to_u64()); },
             [](const JsonObject& object) {
-                auto total_blocks = object.get("total_block_count").to_u32();
-                auto free_blocks = object.get("free_block_count").to_u32();
+                auto total_blocks = object.get("total_block_count").to_u64();
+                auto free_blocks = object.get("free_block_count").to_u64();
                 auto used_blocks = total_blocks - free_blocks;
-                return used_blocks * object.get("block_size").to_u32();
+                return used_blocks * object.get("block_size").to_u64();
             });
         df_fields.empend(
             "Available", Gfx::TextAlignment::CenterRight,
             [](const JsonObject& object) {
-                return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
+                return human_readable_size(object.get("free_block_count").to_u64() * object.get("block_size").to_u64());
             },
             [](const JsonObject& object) {
-                return object.get("free_block_count").to_u32() * object.get("block_size").to_u32();
+                return object.get("free_block_count").to_u64() * object.get("block_size").to_u64();
             });
         df_fields.empend("Access", Gfx::TextAlignment::CenterLeft, [](const JsonObject& object) {
             bool readonly = object.get("readonly").to_bool();
