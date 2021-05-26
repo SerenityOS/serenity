@@ -765,20 +765,8 @@ void MainWidget::update_statusbar()
     builder.appendff("Line: {}, Column: {}", m_editor->cursor().line() + 1, m_editor->cursor().column());
 
     if (m_editor->has_selection()) {
-        int word_count = 0;
-        bool in_word = false;
         String selected_text = m_editor->selected_text();
-        for (char c : selected_text) {
-            if (in_word && isspace(c)) {
-                in_word = false;
-                word_count++;
-                continue;
-            }
-            if (!in_word && !isspace(c))
-                in_word = true;
-        }
-        if (in_word)
-            word_count++;
+        auto word_count = m_editor->number_of_selected_words();
         builder.appendff("        Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
     }
     m_statusbar->set_text(builder.to_string());
