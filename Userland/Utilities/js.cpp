@@ -49,9 +49,9 @@ class ReplObject final : public JS::GlobalObject {
     JS_OBJECT(ReplObject, JS::GlobalObject);
 
 public:
-    ReplObject();
+    ReplObject() = default;
     virtual void initialize_global_object() override;
-    virtual ~ReplObject() override;
+    virtual ~ReplObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(exit_interpreter);
@@ -64,9 +64,9 @@ class ScriptObject final : public JS::GlobalObject {
     JS_OBJECT(ScriptObject, JS::GlobalObject);
 
 public:
-    ScriptObject();
+    ScriptObject() = default;
     virtual void initialize_global_object() override;
-    virtual ~ScriptObject() override;
+    virtual ~ScriptObject() override = default;
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(load_file);
@@ -544,10 +544,6 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     return true;
 }
 
-ReplObject::ReplObject()
-{
-}
-
 void ReplObject::initialize_global_object()
 {
     Base::initialize_global_object();
@@ -556,10 +552,6 @@ void ReplObject::initialize_global_object()
     define_native_function("help", repl_help);
     define_native_function("load", load_file, 1);
     define_native_function("save", save_to_file, 1);
-}
-
-ReplObject::~ReplObject()
-{
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReplObject::save_to_file)
@@ -619,19 +611,11 @@ JS_DEFINE_NATIVE_FUNCTION(ReplObject::load_file)
     return JS::Value(true);
 }
 
-ScriptObject::ScriptObject()
-{
-}
-
 void ScriptObject::initialize_global_object()
 {
     Base::initialize_global_object();
     define_property("global", this, JS::Attribute::Enumerable);
     define_native_function("load", load_file, 1);
-}
-
-ScriptObject::~ScriptObject()
-{
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ScriptObject::load_file)
