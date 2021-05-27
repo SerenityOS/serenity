@@ -6,6 +6,8 @@
 
 #include <AK/Badge.h>
 #include <LibJS/Heap/Allocator.h>
+#include <LibJS/Heap/BlockAllocator.h>
+#include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 
 namespace JS {
@@ -36,8 +38,11 @@ Cell* Allocator::allocate_cell(Heap& heap)
 
 void Allocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
 {
+    auto& heap = block.heap();
     block.m_list_node.remove();
-    delete &block;
+    // NOTE: HeapBlocks are managed by the BlockAllocator, so we don't want to `delete` the block here.
+    block.~HeapBlock();
+    heap.block_allocator().deallocate_block(&block);
 }
 
 void Allocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)
