@@ -161,6 +161,11 @@ public:
         ensure_capacity_slowpath(new_capacity);
     }
 
+    void append(ReadonlyBytes const& bytes)
+    {
+        append(bytes.data(), bytes.size());
+    }
+
     void append(void const* data, size_t data_size)
     {
         if (data_size == 0)
