@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
 #include <LibPDF/CommonNames.h>
@@ -215,6 +217,71 @@ bool Parser::initialize_linearized_xref_table()
     return m_xref_table->merge(move(*main_xref_table));
 }
 
+bool Parser::initialize_hint_tables()
+{
+    auto linearization_dict = m_linearization_dictionary.value();
+    auto primary_offset = linearization_dict.primary_hint_stream_offset;
+    auto overflow_offset = linearization_dict.overflow_hint_stream_offset;
+
+    auto parse_hint_table = [&](size_t offset) -> RefPtr<StreamObject> {
+        m_reader.move_to(offset);
+        auto stream_indirect_value = parse_indirect_value();
+        if (!stream_indirect_value)
+            return {};
+
+        auto stream_value = stream_indirect_value->value();
+        if (!stream_value.is_object())
+            return {};
+
+        auto stream_object = stream_value.as_object();
+        if (!stream_object->is_stream())
+            return {};
+
+        return object_cast<StreamObject>(stream_object);
+    };
+
+    auto primary_hint_stream = parse_hint_table(primary_offset);
+    if (!primary_hint_stream)
+        return false;
+
+    RefPtr<StreamObject> overflow_hint_stream;
+    if (overflow_offset != NumericLimits<u32>::max())
+        overflow_hint_stream = parse_hint_table(overflow_offset);
+
+    ByteBuffer possible_merged_stream_buffer;
+    ReadonlyBytes hint_stream_bytes;
+
+    if (overflow_hint_stream) {
+        auto primary_size = primary_hint_stream->bytes().size();
+        auto overflow_size = overflow_hint_stream->bytes().size();
+        auto total_size = primary_size + overflow_size;
+
+        possible_merged_stream_buffer = ByteBuffer::create_uninitialized(total_size);
+        possible_merged_stream_buffer.append(primary_hint_stream->bytes());
+        possible_merged_stream_buffer.append(overflow_hint_stream->bytes());
+        hint_stream_bytes = possible_merged_stream_buffer.bytes();
+    } else {
+        hint_stream_bytes = primary_hint_stream->bytes();
+    }
+
+    auto hint_table = parse_page_offset_hint_table(hint_stream_bytes);
+    if (!hint_table.has_value())
+        return false;
+
+    dbgln("hint table: {}", hint_table.value());
+
+    auto hint_table_entries = parse_all_page_offset_hint_table_entries(hint_table.value(), hint_stream_bytes);
+    if (!hint_table_entries.has_value())
+        return false;
+
+    auto entries = hint_table_entries.value();
+    dbgln("hint table entries size: {}", entries.size());
+    for (auto& entry : entries)
+        dbgln("{}", entry);
+
+    return true;
+}
+
 bool Parser::initialize_non_linearized_xref_table()
 {
     m_reader.move_to(m_reader.bytes().size() - 1);
@@ -321,6 +388,113 @@ RefPtr<DictObject> Parser::parse_file_trailer()
     m_reader.move_by(5);
     consume_whitespace();
     return dict;
+}
+
+Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(const ReadonlyBytes& hint_stream_bytes)
+{
+    if (hint_stream_bytes.size() < sizeof(PageOffsetHintTable))
+        return {};
+
+    size_t offset = 0;
+
+    auto read_u32 = [&] {
+        u32 data = reinterpret_cast<const u32*>(hint_stream_bytes.data() + offset)[0];
+        offset += 4;
+        return AK::convert_between_host_and_big_endian(data);
+    };
+
+    auto read_u16 = [&] {
+        u16 data = reinterpret_cast<const u16*>(hint_stream_bytes.data() + offset)[0];
+        offset += 2;
+        return AK::convert_between_host_and_big_endian(data);
+    };
+
+    PageOffsetHintTable hint_table {
+        read_u32(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+    };
+
+    // Verify that all of the bits_required_for_xyz fields are <= 32, since all of the numeric
+    // fields in PageOffsetHintTableEntry are u32
+    VERIFY(hint_table.bits_required_for_object_number <= 32);
+    VERIFY(hint_table.bits_required_for_page_length <= 32);
+    VERIFY(hint_table.bits_required_for_content_stream_offsets <= 32);
+    VERIFY(hint_table.bits_required_for_content_stream_length <= 32);
+    VERIFY(hint_table.bits_required_for_number_of_shared_obj_refs <= 32);
+    VERIFY(hint_table.bits_required_for_greatest_shared_obj_identifier <= 32);
+    VERIFY(hint_table.bits_required_for_fraction_numerator <= 32);
+
+    return hint_table;
+}
+
+Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(const PageOffsetHintTable& hint_table, const ReadonlyBytes& hint_stream_bytes)
+{
+    InputMemoryStream input_stream(hint_stream_bytes);
+    input_stream.seek(sizeof(PageOffsetHintTable));
+    if (input_stream.has_any_error())
+        return {};
+
+    InputBitStream bit_stream(input_stream);
+
+    auto number_of_pages = m_linearization_dictionary.value().number_of_pages;
+    Vector<PageOffsetHintTableEntry> entries;
+    for (size_t i = 0; i < number_of_pages; i++)
+        entries.append(PageOffsetHintTableEntry {});
+
+    auto bits_required_for_object_number = hint_table.bits_required_for_object_number;
+    auto bits_required_for_page_length = hint_table.bits_required_for_page_length;
+    auto bits_required_for_content_stream_offsets = hint_table.bits_required_for_content_stream_offsets;
+    auto bits_required_for_content_stream_length = hint_table.bits_required_for_content_stream_length;
+    auto bits_required_for_number_of_shared_obj_refs = hint_table.bits_required_for_number_of_shared_obj_refs;
+    auto bits_required_for_greatest_shared_obj_identifier = hint_table.bits_required_for_greatest_shared_obj_identifier;
+    auto bits_required_for_fraction_numerator = hint_table.bits_required_for_fraction_numerator;
+
+    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::*field, u32 bit_size) {
+        if (bit_size <= 0)
+            return;
+
+        for (int i = 0; i < number_of_pages; i++) {
+            auto& entry = entries[i];
+            entry.*field = bit_stream.read_bits(bit_size);
+        }
+    };
+
+    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::*field, u32 bit_size) {
+        if (bit_size <= 0)
+            return;
+
+        for (int page = 1; page < number_of_pages; page++) {
+            auto number_of_shared_objects = entries[page].number_of_shared_objects;
+            Vector<u32> items;
+            items.ensure_capacity(number_of_shared_objects);
+
+            for (size_t i = 0; i < number_of_shared_objects; i++)
+                items.unchecked_append(bit_stream.read_bits(bit_size));
+
+            entries[page].*field = move(items);
+        }
+    };
+
+    parse_int_entry(&PageOffsetHintTableEntry::objects_in_page_number, bits_required_for_object_number);
+    parse_int_entry(&PageOffsetHintTableEntry::page_length_number, bits_required_for_page_length);
+    parse_int_entry(&PageOffsetHintTableEntry::number_of_shared_objects, bits_required_for_number_of_shared_obj_refs);
+    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_identifiers, bits_required_for_greatest_shared_obj_identifier);
+    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_location_numerators, bits_required_for_fraction_numerator);
+    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_offset_number, bits_required_for_content_stream_offsets);
+    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_length_number, bits_required_for_content_stream_length);
+
+    return entries;
 }
 
 bool Parser::navigate_to_before_eof_marker()
@@ -1007,6 +1181,54 @@ struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
         builder.appendff("  number_of_pages={}\n", dict.number_of_pages);
         builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
         builder.appendff("  first_page={}\n", dict.first_page);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
+
+template<>
+struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, const PDF::Parser::PageOffsetHintTable& table)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  least_number_of_objects_in_a_page={}\n", table.least_number_of_objects_in_a_page);
+        builder.appendff("  location_of_first_page_object={}\n", table.location_of_first_page_object);
+        builder.appendff("  bits_required_for_object_number={}\n", table.bits_required_for_object_number);
+        builder.appendff("  least_length_of_a_page={}\n", table.least_length_of_a_page);
+        builder.appendff("  bits_required_for_page_length={}\n", table.bits_required_for_page_length);
+        builder.appendff("  least_offset_of_any_content_stream={}\n", table.least_offset_of_any_content_stream);
+        builder.appendff("  bits_required_for_content_stream_offsets={}\n", table.bits_required_for_content_stream_offsets);
+        builder.appendff("  least_content_stream_length={}\n", table.least_content_stream_length);
+        builder.appendff("  bits_required_for_content_stream_length={}\n", table.bits_required_for_content_stream_length);
+        builder.appendff("  bits_required_for_number_of_shared_obj_refs={}\n", table.bits_required_for_number_of_shared_obj_refs);
+        builder.appendff("  bits_required_for_greatest_shared_obj_identifier={}\n", table.bits_required_for_greatest_shared_obj_identifier);
+        builder.appendff("  bits_required_for_fraction_numerator={}\n", table.bits_required_for_fraction_numerator);
+        builder.appendff("  shared_object_reference_fraction_denominator={}\n", table.shared_object_reference_fraction_denominator);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
+
+template<>
+struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, const PDF::Parser::PageOffsetHintTableEntry& entry)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  objects_in_page_number={}\n", entry.objects_in_page_number);
+        builder.appendff("  page_length_number={}\n", entry.page_length_number);
+        builder.appendff("  number_of_shared_objects={}\n", entry.number_of_shared_objects);
+        builder.append("  shared_object_identifiers=[");
+        for (auto& identifier : entry.shared_object_identifiers)
+            builder.appendff(" {}", identifier);
+        builder.append(" ]\n");
+        builder.append("  shared_object_location_numerators=[");
+        for (auto& numerator : entry.shared_object_location_numerators)
+            builder.appendff(" {}", numerator);
+        builder.append(" ]\n");
+        builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
+        builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
         builder.append('}');
         Formatter<StringView>::format(format_builder, builder.to_string());
     }
