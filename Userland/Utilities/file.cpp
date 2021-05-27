@@ -120,12 +120,17 @@ int main(int argc, char** argv)
             all_ok = false;
             continue;
         }
-        // Read accounts for longest possible offset + signature we currently match against.
-        auto bytes = file->read(0x9006);
-        auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
-        auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes()).value_or(file_name_guess);
-        auto human_readable_description = get_description_from_mime_type(mime_type, String(path)).value_or(mime_type);
-        outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
+
+        if (file->is_directory()) {
+            outln("{}: directory", path);
+        } else {
+            // Read accounts for longest possible offset + signature we currently match against.
+            auto bytes = file->read(0x9006);
+            auto file_name_guess = Core::guess_mime_type_based_on_filename(path);
+            auto mime_type = Core::guess_mime_type_based_on_sniffed_bytes(bytes.bytes()).value_or(file_name_guess);
+            auto human_readable_description = get_description_from_mime_type(mime_type, String(path)).value_or(mime_type);
+            outln("{}: {}", path, flag_mime_only ? mime_type : human_readable_description);
+        }
     }
 
     return all_ok ? 0 : 1;
