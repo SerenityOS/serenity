@@ -132,7 +132,7 @@ int main(int argc, char** argv)
     int input_fd = 0;
     int input_flags = O_RDONLY;
     int output_fd = 1;
-    int output_flags = O_CREAT | O_WRONLY;
+    int output_flags = O_CREAT | O_WRONLY | O_TRUNC;
     size_t block_size = 512;
     size_t count = 0;
     size_t skip = 0;
