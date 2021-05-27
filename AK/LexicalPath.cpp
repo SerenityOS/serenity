@@ -68,6 +68,10 @@ void LexicalPath::canonicalize()
     }
     m_dirname = dirname_builder.to_string();
 
+    if (m_dirname.is_empty()) {
+        m_dirname = m_is_absolute ? "/" : ".";
+    }
+
     m_basename = canonical_parts.last();
 
     Optional<size_t> last_dot = StringView(m_basename).find_last_of('.');
