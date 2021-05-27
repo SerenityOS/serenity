@@ -121,11 +121,12 @@ chown -R 100:100 mnt/home/anon
 chown -R 200:200 mnt/home/nona
 echo "done"
 
-printf "adding some desktop icons..."
+printf "adding some desktop icons... "
 ln -sf /bin/Browser mnt/home/anon/Desktop/
 ln -sf /bin/TextEditor mnt/home/anon/Desktop/Text\ Editor
 ln -sf /bin/Help mnt/home/anon/Desktop/
 ln -sf /home/anon mnt/home/anon/Desktop/Home
+chown -R 100:100 mnt/home/anon/Desktop
 echo "done"
 
 printf "installing shortcuts... "
