@@ -78,3 +78,11 @@ TEST_CASE(relative_path)
     EXPECT_EQ(LexicalPath::relative_path("/tmp/foo.txt", "tmp"), String {});
     EXPECT_EQ(LexicalPath::relative_path("tmp/foo.txt", "/tmp"), String {});
 }
+
+TEST_CASE(dirname)
+{
+    EXPECT_EQ(LexicalPath(".").dirname(), ".");
+    EXPECT_EQ(LexicalPath("/").dirname(), "/");
+    EXPECT_EQ(LexicalPath("abc.txt").dirname(), ".");
+    EXPECT_EQ(LexicalPath("/abc.txt").dirname(), "/");
+}
