@@ -146,7 +146,15 @@ RENDERER_HANDLER(set_dash_pattern)
 
 RENDERER_TODO(set_color_rendering_intent);
 RENDERER_TODO(set_flatness_tolerance);
-RENDERER_TODO(set_graphics_state_from_dict);
+
+RENDERER_HANDLER(set_graphics_state_from_dict)
+{
+    VERIFY(m_page.resources->contains(CommonNames::ExtGState));
+    auto dict_name = m_document->resolve_to<NameObject>(args[0])->name();
+    auto ext_gstate_dict = m_page.resources->get_dict(m_document, CommonNames::ExtGState);
+    auto target_dict = ext_gstate_dict->get_dict(m_document, dict_name);
+    set_graphics_state_from_dict(target_dict);
+}
 
 RENDERER_HANDLER(path_move)
 {
@@ -473,6 +481,27 @@ template<typename T>
 Gfx::Rect<T> Renderer::map(Gfx::Rect<T> rect) const
 {
     return state().ctm.map(rect);
+}
+
+void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
+{
+    if (dict->contains(CommonNames::LW))
+        handle_set_line_width({ dict->get_value(CommonNames::LW) });
+
+    if (dict->contains(CommonNames::LC))
+        handle_set_line_cap({ dict->get_value(CommonNames::LC) });
+
+    if (dict->contains(CommonNames::LJ))
+        handle_set_line_join({ dict->get_value(CommonNames::LJ) });
+
+    if (dict->contains(CommonNames::ML))
+        handle_set_miter_limit({ dict->get_value(CommonNames::ML) });
+
+    if (dict->contains(CommonNames::D))
+        handle_set_dash_pattern(dict->get_array(m_document, CommonNames::D)->elements());
+
+    if (dict->contains(CommonNames::FL))
+        handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) });
 }
 
 void Renderer::show_text(const String& string, int shift)
