@@ -20,10 +20,14 @@ BlockAllocator::BlockAllocator()
 BlockAllocator::~BlockAllocator()
 {
     for (auto* block : m_blocks) {
+#ifdef __serenity__
         if (munmap(block, HeapBlock::block_size) < 0) {
             perror("munmap");
             VERIFY_NOT_REACHED();
         }
+#else
+        free(block);
+#endif
     }
 }
 
@@ -45,10 +49,14 @@ void BlockAllocator::deallocate_block(void* block)
 {
     VERIFY(block);
     if (m_blocks.size() >= max_cached_blocks) {
+#ifdef __serenity__
         if (munmap(block, HeapBlock::block_size) < 0) {
             perror("munmap");
             VERIFY_NOT_REACHED();
         }
+#else
+        free(block);
+#endif
         return;
     }
 
