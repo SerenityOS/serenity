@@ -385,7 +385,25 @@ RENDERER_HANDLER(text_next_line_show_string)
 }
 
 RENDERER_TODO(text_next_line_show_string_set_spacing);
-RENDERER_TODO(text_show_string_array);
+
+RENDERER_HANDLER(text_show_string_array)
+{
+    auto elements = m_document->resolve_to<ArrayObject>(args[0])->elements();
+    float next_shift = 0.0f;
+
+    for (auto& element : elements) {
+        if (element.is_number()) {
+            next_shift = element.to_float();
+        } else {
+            VERIFY(element.is_object());
+            auto obj = element.as_object();
+            VERIFY(obj->is_string());
+            auto str = object_cast<StringObject>(obj)->string();
+            show_text(str, next_shift);
+        }
+    }
+}
+
 RENDERER_TODO(type3_font_set_glyph_width);
 RENDERER_TODO(type3_font_set_glyph_width_and_bbox);
 
@@ -504,7 +522,7 @@ void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
         handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) });
 }
 
-void Renderer::show_text(const String& string, int shift)
+void Renderer::show_text(const String& string, float shift)
 {
     auto utf = Utf8View(string);
     auto& font = text_state().font;
@@ -522,7 +540,7 @@ void Renderer::show_text(const String& string, int shift)
             m_painter.draw_glyph(text_position.to_type<int>(), code_point, *text_state().font, state().paint_color);
 
         auto glyph_width = static_cast<float>(font->glyph_width(code_point));
-        auto tx = (glyph_width - static_cast<float>(shift) / 1000.0f);
+        auto tx = (glyph_width - shift / 1000.0f);
         tx += text_state().character_spacing;
 
         if (code_point == ' ')
