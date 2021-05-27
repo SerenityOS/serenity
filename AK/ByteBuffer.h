@@ -146,7 +146,7 @@ public:
         m_size = 0;
     }
 
-    void grow(size_t new_size)
+    ALWAYS_INLINE void grow(size_t new_size)
     {
         if (new_size <= m_size)
             return;
@@ -154,19 +154,7 @@ public:
             m_size = new_size;
             return;
         }
-        u8* new_buffer;
-        auto new_capacity = kmalloc_good_size(new_size);
-        if (!is_inline()) {
-            new_buffer = (u8*)krealloc(m_outline_buffer, new_capacity);
-            VERIFY(new_buffer);
-        } else {
-            new_buffer = (u8*)kmalloc(new_capacity);
-            VERIFY(new_buffer);
-            __builtin_memcpy(new_buffer, data(), m_size);
-        }
-        m_outline_buffer = new_buffer;
-        m_outline_capacity = new_capacity;
-        m_size = new_size;
+        grow_slowpath(new_size);
     }
 
     void append(void const* data, size_t data_size)
@@ -230,12 +218,29 @@ private:
         m_size = size;
     }
 
-    bool is_inline() const { return m_size <= inline_capacity; }
-    size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
+    NEVER_INLINE void grow_slowpath(size_t new_size)
+    {
+        u8* new_buffer;
+        auto new_capacity = kmalloc_good_size(new_size);
+        if (!is_inline()) {
+            new_buffer = (u8*)krealloc(m_outline_buffer, new_capacity);
+            VERIFY(new_buffer);
+        } else {
+            new_buffer = (u8*)kmalloc(new_capacity);
+            VERIFY(new_buffer);
+            __builtin_memcpy(new_buffer, data(), m_size);
+        }
+        m_outline_buffer = new_buffer;
+        m_outline_capacity = new_capacity;
+        m_size = new_size;
+    }
+
+    ALWAYS_INLINE bool is_inline() const { return m_size <= inline_capacity; }
+    ALWAYS_INLINE size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
 
     size_t m_size { 0 };
     union {
-        u8 m_inline_buffer[inline_capacity] {};
+        u8 m_inline_buffer[inline_capacity];
         struct {
             u8* m_outline_buffer;
             size_t m_outline_capacity;
