@@ -4,12 +4,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Platform.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/HeapBlock.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+
+#ifdef HAS_ADDRESS_SANITIZER
+#    include <sanitizer/asan_interface.h>
+#endif
 
 namespace JS {
 
@@ -20,6 +25,7 @@ BlockAllocator::BlockAllocator()
 BlockAllocator::~BlockAllocator()
 {
     for (auto* block : m_blocks) {
+        ASAN_UNPOISON_MEMORY_REGION(block, HeapBlock::block_size);
 #ifdef __serenity__
         if (munmap(block, HeapBlock::block_size) < 0) {
             perror("munmap");
@@ -35,6 +41,7 @@ void* BlockAllocator::allocate_block([[maybe_unused]] char const* name)
 {
     if (!m_blocks.is_empty()) {
         auto* block = m_blocks.take_last();
+        ASAN_UNPOISON_MEMORY_REGION(block, HeapBlock::block_size);
 #ifdef __serenity__
         if (set_mmap_name(block, HeapBlock::block_size, name) < 0) {
             perror("set_mmap_name");
@@ -69,6 +76,7 @@ void BlockAllocator::deallocate_block(void* block)
         return;
     }
 
+    ASAN_POISON_MEMORY_REGION(block, HeapBlock::block_size);
     m_blocks.append(block);
 }
 
