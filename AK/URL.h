@@ -121,7 +121,6 @@ private:
     {
     }
 
-    bool parse(const StringView&);
     bool compute_validity() const;
     String serialize_data_url() const;
 
