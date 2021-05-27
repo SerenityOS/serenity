@@ -41,6 +41,7 @@ public:
 
     bool flush();
     void purge();
+    int pending();
     bool close();
 
     int fileno() const { return m_fd; }
@@ -197,6 +198,16 @@ bool FILE::flush()
 void FILE::purge()
 {
     m_buffer.drop();
+}
+
+int FILE::pending()
+{
+    if (m_mode & O_RDONLY) {
+        return 0;
+    }
+
+    // TODO: Check if our buffer is a write buffer
+    return m_buffer.buffered_size();
 }
 
 ssize_t FILE::do_read(u8* data, size_t size)
@@ -1304,6 +1315,12 @@ FILE* tmpfile()
     // FIXME: instead of using this hack, implement with O_TMPFILE or similar
     unlink(tmp_path);
     return fdopen(fd, "rw");
+}
+
+size_t __fpending(FILE* stream)
+{
+    ScopedFileLock lock(stream);
+    return stream->pending();
 }
 
 int __freading(FILE* stream)
