@@ -1,2 +1,2 @@
 # Hearth OS
-Check out the [https://hearth-os.github.io/](documentation).
+Check out the [documentation](https://hearth-os.github.io/).
