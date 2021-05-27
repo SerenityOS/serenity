@@ -6,7 +6,7 @@ configopts="--target=${SERENITY_ARCH}-pc-serenity --with-sysroot=/ --with-build-
 files="https://ftpmirror.gnu.org/gnu/gcc/gcc-${version}/gcc-${version}.tar.xz gcc-${version}.tar.xz 4c4a6fb8a8396059241c2e674b85b351c26a5d678274007f076957afa1cc9ddf"
 makeopts="all-gcc all-target-libgcc all-target-libstdc++-v3 -j $(nproc)"
 installopts="DESTDIR=${SERENITY_INSTALL_ROOT} install-gcc install-target-libgcc install-target-libstdc++-v3"
-depends="binutils"
+depends="binutils libiconv"
 auth_type="sha256"
 
 post_fetch() {
