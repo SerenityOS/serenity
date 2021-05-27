@@ -37,10 +37,28 @@ public:
     RefPtr<DictObject> conditionally_parse_page_tree_node(u32 object_index, bool& ok);
 
 private:
+    struct LinearizationDictionary {
+        u32 length_of_file { 0 };
+        u32 primary_hint_stream_offset { 0 };
+        u32 primary_hint_stream_length { 0 };
+        u32 overflow_hint_stream_offset { 0 };
+        u32 overflow_hint_stream_length { 0 };
+        u32 first_page_object_number { 0 };
+        u32 offset_of_first_page_end { 0 };
+        u16 number_of_pages { 0 };
+        u32 offset_of_main_xref_table { 0 };
+        u32 first_page { 0 }; // The page to initially open (I think, the spec isn't all that clear here)
+    };
+
+    friend struct AK::Formatter<LinearizationDictionary>;
+
     explicit Parser(const ReadonlyBytes&);
 
     bool parse_header();
-    Optional<XRefTable> parse_xref_table();
+    bool initialize_linearization_dict();
+    bool initialize_linearized_xref_table();
+    bool initialize_non_linearized_xref_table();
+    RefPtr<XRefTable> parse_xref_table();
     RefPtr<DictObject> parse_file_trailer();
 
     bool navigate_to_before_eof_marker();
@@ -85,8 +103,9 @@ private:
 
     Reader m_reader;
     RefPtr<Document> m_document;
-    XRefTable m_xref_table;
+    RefPtr<XRefTable> m_xref_table;
     RefPtr<DictObject> m_trailer;
+    Optional<LinearizationDictionary> m_linearization_dictionary;
 };
 
-}
+};

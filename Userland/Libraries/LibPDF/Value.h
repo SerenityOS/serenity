@@ -109,6 +109,22 @@ public:
         return m_as_int;
     }
 
+    template<typename T>
+    [[nodiscard]] ALWAYS_INLINE bool is_int_type() const
+    {
+        if (!is_int())
+            return false;
+        auto as_int = static_cast<T>(m_as_int);
+        return as_int >= NumericLimits<T>::min() && as_int <= NumericLimits<T>::max();
+    }
+
+    template<typename T>
+    [[nodiscard]] ALWAYS_INLINE T as_int_type() const
+    {
+        VERIFY(is_int_type<T>());
+        return static_cast<T>(m_as_int);
+    }
+
     [[nodiscard]] ALWAYS_INLINE int to_int() const
     {
         if (is_int())

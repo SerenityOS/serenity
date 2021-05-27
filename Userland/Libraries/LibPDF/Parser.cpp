@@ -43,37 +43,33 @@ bool Parser::initialize()
     if (!parse_header())
         return {};
 
-    m_reader.move_to(m_reader.bytes().size() - 1);
-    if (!navigate_to_before_eof_marker())
-        return false;
-    if (!navigate_to_after_startxref())
-        return false;
-    if (m_reader.done())
-        return false;
+    if (!initialize_linearization_dict())
+        return {};
 
-    m_reader.set_reading_forwards();
-    auto xref_offset_value = parse_number();
-    if (!xref_offset_value.is_int())
-        return false;
-    auto xref_offset = xref_offset_value.as_int();
+    bool is_linearized = m_linearization_dictionary.has_value();
+    if (is_linearized) {
+        // The file may have been linearized at one point, but could have been updated afterwards,
+        // which means it is no longer a linearized PDF file.
+        is_linearized = is_linearized && m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
 
-    m_reader.move_to(xref_offset);
-    auto xref_table = parse_xref_table();
-    if (!xref_table.has_value())
-        return false;
-    auto trailer = parse_file_trailer();
-    if (!trailer)
-        return false;
+        if (!is_linearized) {
+            // FIXME: The file shouldn't be treated as linearized, yet the xref tables are still
+            // split. This might take some tweaking to ensure correct behavior, which can be
+            // implemented later.
+            TODO();
+        }
+    }
 
-    m_xref_table = xref_table.value();
-    m_trailer = trailer;
-    return true;
+    if (is_linearized)
+        return initialize_linearized_xref_table();
+
+    return initialize_non_linearized_xref_table();
 }
 
 Value Parser::parse_object_with_index(u32 index)
 {
-    VERIFY(m_xref_table.has_object(index));
-    auto byte_offset = m_xref_table.byte_offset_for_object(index);
+    VERIFY(m_xref_table->has_object(index));
+    auto byte_offset = m_xref_table->byte_offset_for_object(index);
     m_reader.move_to(byte_offset);
     auto indirect_value = parse_indirect_value();
     VERIFY(indirect_value);
@@ -115,7 +111,135 @@ bool Parser::parse_header()
     return true;
 }
 
-Optional<XRefTable> Parser::parse_xref_table()
+bool Parser::initialize_linearization_dict()
+{
+    // parse_header() is called immediately before this, so we are at the right location
+    auto dict_value = m_document->resolve(parse_indirect_value());
+    if (!dict_value || !dict_value.is_object())
+        return false;
+
+    auto dict_object = dict_value.as_object();
+    if (!dict_object->is_dict())
+        return false;
+
+    auto dict = object_cast<DictObject>(dict_object);
+
+    if (!dict->contains(CommonNames::L, CommonNames::H, CommonNames::O, CommonNames::E, CommonNames::N, CommonNames::T))
+        return true;
+
+    auto length_of_file = dict->get_value(CommonNames::L);
+    auto hint_table = dict->get_value(CommonNames::H);
+    auto first_page_object_number = dict->get_value(CommonNames::O);
+    auto offset_of_first_page_end = dict->get_value(CommonNames::E);
+    auto number_of_pages = dict->get_value(CommonNames::N);
+    auto offset_of_main_xref_table = dict->get_value(CommonNames::T);
+    auto first_page = dict->get(CommonNames::P).value_or({});
+
+    // Validation
+    if (!length_of_file.is_int_type<u32>()
+        || !hint_table.is_object()
+        || !first_page_object_number.is_int_type<u32>()
+        || !number_of_pages.is_int_type<u16>()
+        || !offset_of_main_xref_table.is_int_type<u32>()
+        || (first_page && !first_page.is_int_type<u32>())) {
+        return true;
+    }
+
+    auto hint_table_object = hint_table.as_object();
+    if (!hint_table_object->is_array())
+        return true;
+
+    auto hint_table_array = object_cast<ArrayObject>(hint_table_object);
+    auto hint_table_size = hint_table_array->size();
+    if (hint_table_size != 2 && hint_table_size != 4)
+        return true;
+
+    auto primary_hint_stream_offset = hint_table_array->at(0);
+    auto primary_hint_stream_length = hint_table_array->at(1);
+    Value overflow_hint_stream_offset;
+    Value overflow_hint_stream_length;
+
+    if (hint_table_size == 4) {
+        overflow_hint_stream_offset = hint_table_array->at(2);
+        overflow_hint_stream_length = hint_table_array->at(3);
+    }
+
+    if (!primary_hint_stream_offset.is_int_type<u32>()
+        || !primary_hint_stream_length.is_int_type<u32>()
+        || (overflow_hint_stream_offset && !overflow_hint_stream_offset.is_int_type<u32>())
+        || (overflow_hint_stream_length && !overflow_hint_stream_length.is_int_type<u32>())) {
+        return true;
+    }
+
+    m_linearization_dictionary = LinearizationDictionary {
+        length_of_file.as_int_type<u32>(),
+        primary_hint_stream_offset.as_int_type<u32>(),
+        primary_hint_stream_length.as_int_type<u32>(),
+        overflow_hint_stream_offset ? overflow_hint_stream_offset.as_int_type<u32>() : NumericLimits<u32>::max(),
+        overflow_hint_stream_length ? overflow_hint_stream_length.as_int_type<u32>() : NumericLimits<u32>::max(),
+        first_page_object_number.as_int_type<u32>(),
+        offset_of_first_page_end.as_int_type<u32>(),
+        number_of_pages.as_int_type<u16>(),
+        offset_of_main_xref_table.as_int_type<u32>(),
+        first_page ? first_page.as_int_type<u32>() : NumericLimits<u32>::max(),
+    };
+
+    return true;
+}
+
+bool Parser::initialize_linearized_xref_table()
+{
+    // The linearization parameter dictionary has just been parsed, and the xref table
+    // comes immediately after it. We are in the correct spot.
+    if (!m_reader.matches("xref"))
+        return false;
+
+    m_xref_table = parse_xref_table();
+    if (!m_xref_table)
+        return false;
+
+    m_trailer = parse_file_trailer();
+    if (!m_trailer)
+        return false;
+
+    // Also parse the main xref table and merge into the first-page xref table. Note
+    // that we don't use the main xref table offset from the linearization dict because
+    // for some reason, it specified the offset of the whitespace after the object
+    // index start and length? So it's much easier to do it this way.
+    auto main_xref_table_offset = m_trailer->get_value(CommonNames::Prev).to_int();
+    m_reader.move_to(main_xref_table_offset);
+    auto main_xref_table = parse_xref_table();
+    if (!main_xref_table)
+        return false;
+
+    return m_xref_table->merge(move(*main_xref_table));
+}
+
+bool Parser::initialize_non_linearized_xref_table()
+{
+    m_reader.move_to(m_reader.bytes().size() - 1);
+    if (!navigate_to_before_eof_marker())
+        return false;
+    if (!navigate_to_after_startxref())
+        return false;
+    if (m_reader.done())
+        return false;
+
+    m_reader.set_reading_forwards();
+    auto xref_offset_value = parse_number();
+    if (!xref_offset_value.is_int())
+        return false;
+    auto xref_offset = xref_offset_value.as_int();
+
+    m_reader.move_to(xref_offset);
+    m_xref_table = parse_xref_table();
+    if (!m_xref_table)
+        return false;
+    m_trailer = parse_file_trailer();
+    return m_trailer;
+}
+
+RefPtr<XRefTable> Parser::parse_xref_table()
 {
     if (!m_reader.matches("xref"))
         return {};
@@ -123,11 +247,11 @@ Optional<XRefTable> Parser::parse_xref_table()
     if (!consume_eol())
         return {};
 
-    XRefTable table;
+    auto table = adopt_ref(*new XRefTable());
 
     while (true) {
         if (m_reader.matches("trailer"))
-            break;
+            return table;
 
         Vector<XRefEntry> entries;
 
@@ -170,10 +294,8 @@ Optional<XRefTable> Parser::parse_xref_table()
             entries.append({ offset, static_cast<u16>(generation), letter == 'n' });
         }
 
-        table.add_section({ starting_index, object_count, entries });
+        table->add_section({ starting_index, object_count, entries });
     }
-
-    return table;
 }
 
 RefPtr<DictObject> Parser::parse_file_trailer()
@@ -195,9 +317,9 @@ RefPtr<DictObject> Parser::parse_file_trailer()
     VERIFY(consume_eol());
     if (!m_reader.matches("%%EOF"))
         return {};
+
     m_reader.move_by(5);
     consume_whitespace();
-
     return dict;
 }
 
@@ -658,8 +780,8 @@ RefPtr<DictObject> Parser::conditionally_parse_page_tree_node(u32 object_index, 
 {
     ok = true;
 
-    VERIFY(m_xref_table.has_object(object_index));
-    auto byte_offset = m_xref_table.byte_offset_for_object(object_index);
+    VERIFY(m_xref_table->has_object(object_index));
+    auto byte_offset = m_xref_table->byte_offset_for_object(object_index);
 
     m_reader.move_to(byte_offset);
     parse_number();
@@ -864,5 +986,30 @@ bool Parser::consume(char ch)
 {
     return consume() == ch;
 }
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, const PDF::Parser::LinearizationDictionary& dict)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  length_of_file={}\n", dict.length_of_file);
+        builder.appendff("  primary_hint_stream_offset={}\n", dict.primary_hint_stream_offset);
+        builder.appendff("  primary_hint_stream_length={}\n", dict.primary_hint_stream_length);
+        builder.appendff("  overflow_hint_stream_offset={}\n", dict.overflow_hint_stream_offset);
+        builder.appendff("  overflow_hint_stream_length={}\n", dict.overflow_hint_stream_length);
+        builder.appendff("  first_page_object_number={}\n", dict.first_page_object_number);
+        builder.appendff("  offset_of_first_page_end={}\n", dict.offset_of_first_page_end);
+        builder.appendff("  number_of_pages={}\n", dict.number_of_pages);
+        builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
+        builder.appendff("  first_page={}\n", dict.first_page);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
 
 }
