@@ -50,8 +50,6 @@ String URL::path() const
 {
     if (cannot_be_a_base_url())
         return paths()[0];
-    if (!m_path.is_null())
-        return m_path;
     StringBuilder builder;
     for (auto& path : m_paths) {
         builder.append('/');
@@ -99,12 +97,6 @@ void URL::set_port(const u16 port)
         return;
     }
     m_port = port;
-    m_valid = compute_validity();
-}
-
-void URL::set_path(const String& path)
-{
-    m_path = path;
     m_valid = compute_validity();
 }
 
@@ -180,9 +172,16 @@ u16 URL::default_port_for_scheme(const StringView& scheme)
 
 URL URL::create_with_file_scheme(const String& path, const String& fragment)
 {
+    LexicalPath lexical_path(path);
+    if (!lexical_path.is_valid() || !lexical_path.is_absolute())
+        return {};
     URL url;
     url.set_scheme("file");
-    url.set_path(path);
+    url.set_host(String::empty());
+    url.set_paths(lexical_path.parts());
+    // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
+    if (path.ends_with('/'))
+        url.append_path("");
     url.set_fragment(fragment);
     return url;
 }
@@ -262,16 +261,11 @@ String URL::serialize(ExcludeFragment exclude_fragment) const
     if (cannot_be_a_base_url()) {
         builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
     } else {
-        // FIXME: Temporary m_path hack
-        if (!m_path.is_null()) {
-            builder.append(path());
-        } else {
-            if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-                builder.append("/.");
-            for (auto& segment : m_paths) {
-                builder.append('/');
-                builder.append(percent_encode(segment, PercentEncodeSet::Path));
-            }
+        if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
+            builder.append("/.");
+        for (auto& segment : m_paths) {
+            builder.append('/');
+            builder.append(percent_encode(segment, PercentEncodeSet::Path));
         }
     }
 
@@ -311,16 +305,11 @@ String URL::serialize_for_display() const
     if (cannot_be_a_base_url()) {
         builder.append(percent_encode(m_paths[0], PercentEncodeSet::Path));
     } else {
-        // FIXME: Temporary m_path hack
-        if (!m_path.is_null()) {
-            builder.append(path());
-        } else {
-            if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
-                builder.append("/.");
-            for (auto& segment : m_paths) {
-                builder.append('/');
-                builder.append(percent_encode(segment, PercentEncodeSet::Path));
-            }
+        if (m_host.is_null() && m_paths.size() > 1 && m_paths[0].is_empty())
+            builder.append("/.");
+        for (auto& segment : m_paths) {
+            builder.append('/');
+            builder.append(percent_encode(segment, PercentEncodeSet::Path));
         }
     }
 
@@ -348,9 +337,6 @@ String URL::basename() const
 {
     if (!m_valid)
         return {};
-    // FIXME: Temporary m_path hack
-    if (!m_path.is_null())
-        return LexicalPath(m_path).basename();
     if (m_paths.is_empty())
         return {};
     return m_paths.last();

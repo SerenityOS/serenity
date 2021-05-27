@@ -68,7 +68,6 @@ public:
     void set_password(const String&);
     void set_host(const String&);
     void set_port(const u16);
-    void set_path(const String&);
     void set_paths(const Vector<String>&);
     void set_query(const String&);
     void set_fragment(const String&);
