@@ -153,4 +153,10 @@ long long wcstoll(const wchar_t*, wchar_t**, int)
     dbgln("FIXME: Implement wcstoll()");
     TODO();
 }
+
+wint_t btowc(int)
+{
+    dbgln("FIXME: Implement btowc()");
+    TODO();
+}
 }

@@ -32,8 +32,6 @@ typedef char* caddr_t;
 
 typedef int id_t;
 
-typedef __WINT_TYPE__ wint_t;
-
 typedef uint32_t ino_t;
 typedef int64_t off_t;
 

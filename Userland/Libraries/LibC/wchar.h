@@ -15,6 +15,8 @@ __BEGIN_DECLS
 #    define WEOF (0xffffffffu)
 #endif
 
+typedef __WINT_TYPE__ wint_t;
+
 size_t wcslen(const wchar_t*);
 wchar_t* wcscpy(wchar_t*, const wchar_t*);
 wchar_t* wcsncpy(wchar_t*, const wchar_t*, size_t);
@@ -27,5 +29,6 @@ wchar_t* wcsncat(wchar_t*, const wchar_t*, size_t);
 wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
 long wcstol(const wchar_t*, wchar_t**, int);
 long long wcstoll(const wchar_t*, wchar_t**, int);
+wint_t btowc(int c);
 
 __END_DECLS
