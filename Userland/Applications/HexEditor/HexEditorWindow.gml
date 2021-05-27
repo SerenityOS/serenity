@@ -14,8 +14,22 @@
         }
     }
 
-    @HexEditor::HexEditor {
-        name: "editor"
+    @GUI::HorizontalSplitter {
+        @HexEditor::HexEditor {
+            name: "editor"
+        }
+
+        @GUI::Widget {
+            name: "search_results_container"
+            visible: false
+
+            layout: @GUI::VerticalBoxLayout {
+            }
+
+            @GUI::TableView {
+                name: "search_results"
+            }
+        }
     }
 
     @GUI::Statusbar {

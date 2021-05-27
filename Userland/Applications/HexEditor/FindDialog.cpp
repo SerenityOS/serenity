@@ -29,7 +29,7 @@ static const Vector<Option> options = {
     { "Hex value", OPTION_HEX_VALUE, true, false },
 };
 
-int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer)
+int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& out_buffer, bool& find_all)
 {
     auto dialog = FindDialog::construct();
 
@@ -39,12 +39,16 @@ int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& o
     if (!out_text.is_empty() && !out_text.is_null())
         dialog->m_text_editor->set_text(out_text);
 
+    dialog->m_find_button->set_enabled(!dialog->m_text_editor->text().is_empty());
+    dialog->m_find_all_button->set_enabled(!dialog->m_text_editor->text().is_empty());
+
     auto result = dialog->exec();
 
     if (result != GUI::Dialog::ExecOK)
         return result;
 
-    auto processed = dialog->process_input(dialog->text_value(), dialog->selected_option());
+    auto selected_option = dialog->selected_option();
+    auto processed = dialog->process_input(dialog->text_value(), selected_option);
 
     out_text = dialog->text_value();
 
@@ -55,7 +59,9 @@ int FindDialog::show(GUI::Window* parent_window, String& out_text, ByteBuffer& o
         out_buffer = move(processed.value());
     }
 
-    dbgln("Find: value={} option={}", dialog->text_value().characters(), (int)dialog->selected_option());
+    find_all = dialog->find_all();
+
+    dbgln("Find: value={} option={} find_all={}", out_text.characters(), (int)selected_option, find_all);
     return result;
 }
 
@@ -97,7 +103,8 @@ FindDialog::FindDialog()
         VERIFY_NOT_REACHED();
 
     m_text_editor = *main_widget.find_descendant_of_type_named<GUI::TextBox>("text_editor");
-    m_ok_button = *main_widget.find_descendant_of_type_named<GUI::Button>("ok_button");
+    m_find_button = *main_widget.find_descendant_of_type_named<GUI::Button>("find_button");
+    m_find_all_button = *main_widget.find_descendant_of_type_named<GUI::Button>("find_all_button");
     m_cancel_button = *main_widget.find_descendant_of_type_named<GUI::Button>("cancel_button");
 
     auto& radio_container = *main_widget.find_descendant_of_type_named<GUI::Widget>("radio_container");
@@ -117,13 +124,26 @@ FindDialog::FindDialog()
         }
     }
 
-    m_text_editor->on_return_pressed = [this] {
-        m_ok_button->click();
+    m_text_editor->on_change = [this]() {
+        m_find_button->set_enabled(!m_text_editor->text().is_empty());
+        m_find_all_button->set_enabled(!m_text_editor->text().is_empty());
     };
 
-    m_ok_button->on_click = [this](auto) {
-        m_text_value = m_text_editor->text();
-        done(ExecResult::ExecOK);
+    m_text_editor->on_return_pressed = [this] {
+        m_find_button->click();
+    };
+
+    m_find_button->on_click = [this](auto) {
+        auto text = m_text_editor->text();
+        if (!text.is_empty()) {
+            m_text_value = text;
+            done(ExecResult::ExecOK);
+        }
+    };
+
+    m_find_all_button->on_click = [this](auto) {
+        m_find_all = true;
+        m_find_button->click();
     };
 
     m_cancel_button->on_click = [this](auto) {
