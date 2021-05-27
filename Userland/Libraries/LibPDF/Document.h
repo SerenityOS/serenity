@@ -12,7 +12,6 @@
 #include <LibGfx/Color.h>
 #include <LibPDF/Object.h>
 #include <LibPDF/Parser.h>
-#include <LibPDF/XRefTable.h>
 
 namespace PDF {
 
