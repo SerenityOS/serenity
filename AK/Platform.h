@@ -45,6 +45,20 @@
 #endif
 #define NO_SANITIZE_ADDRESS [[gnu::no_sanitize_address]]
 
+// GCC doesn't have __has_feature but clang does
+#ifndef __has_feature
+#    define __has_feature(...) 0
+#endif
+
+#if __has_feature(address_sanitizer) || defined(__SANITIZE_ADDRESS__)
+#    define HAS_ADDRESS_SANITIZER
+#    define ASAN_POISON_MEMORY_REGION(addr, size) __asan_poison_memory_region(addr, size)
+#    define ASAN_UNPOISON_MEMORY_REGION(addr, size) __asan_unpoison_memory_region(addr, size)
+#else
+#    define ASAN_POISON_MEMORY_REGION(addr, size)
+#    define ASAN_UNPOISON_MEMORY_REGION(addr, size)
+#endif
+
 #ifndef __serenity__
 #    include <unistd.h>
 #    undef PAGE_SIZE
