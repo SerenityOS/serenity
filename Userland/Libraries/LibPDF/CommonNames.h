@@ -20,6 +20,7 @@
     V(Crypt)                      \
     V(DCTDecode)                  \
     V(Dest)                       \
+    V(E)                          \
     V(F)                          \
     V(Filter)                     \
     V(First)                      \
@@ -32,21 +33,29 @@
     V(FitV)                       \
     V(FlateDecode)                \
     V(Font)                       \
+    V(H)                          \
     V(JBIG2Decode)                \
     V(JPXDecode)                  \
     V(Kids)                       \
+    V(L)                          \
     V(LZWDecode)                  \
     V(Last)                       \
     V(Length)                     \
+    V(Linearized)                 \
     V(MediaBox)                   \
+    V(N)                          \
     V(Next)                       \
+    V(O)                          \
     V(Outlines)                   \
+    V(P)                          \
     V(Pages)                      \
     V(Parent)                     \
+    V(Prev)                       \
     V(Resources)                  \
     V(Root)                       \
     V(Rotate)                     \
     V(RunLengthDecode)            \
+    V(T)                          \
     V(Title)                      \
     V(Type)                       \
     V(UserUnit)                   \
