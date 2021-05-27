@@ -10,6 +10,7 @@
 
 __BEGIN_DECLS
 
+size_t __fpending(FILE*);
 int __freading(FILE*);
 int __fwriting(FILE*);
 void __fpurge(FILE*);

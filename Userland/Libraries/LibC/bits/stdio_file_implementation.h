@@ -31,6 +31,7 @@ public:
 
     bool flush();
     void purge();
+    size_t pending();
     bool close();
 
     void lock();
