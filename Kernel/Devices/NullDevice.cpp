@@ -43,7 +43,7 @@ KResultOr<size_t> NullDevice::read(FileDescription&, u64, UserOrKernelBuffer&, s
 
 KResultOr<size_t> NullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t buffer_size)
 {
-    return min(static_cast<size_t>(PAGE_SIZE), buffer_size);
+    return buffer_size;
 }
 
 }

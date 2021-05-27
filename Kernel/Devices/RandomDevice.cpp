@@ -34,7 +34,7 @@ KResultOr<size_t> RandomDevice::read(FileDescription&, u64, UserOrKernelBuffer& 
 KResultOr<size_t> RandomDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
-    return min(static_cast<size_t>(PAGE_SIZE), size);
+    return size;
 }
 
 }
