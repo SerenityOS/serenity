@@ -48,11 +48,12 @@ public:
         }
     }
 
-    char read()
+    template<typename T = char>
+    T read()
     {
-        auto value = m_bytes.at(m_offset);
-        move_by(1);
-        return static_cast<char>(value);
+        T value = reinterpret_cast<const T*>(m_bytes.offset(m_offset))[0];
+        move_by(sizeof(T));
+        return value;
     }
 
     char peek(size_t shift = 0) const

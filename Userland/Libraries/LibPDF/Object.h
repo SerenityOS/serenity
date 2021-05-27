@@ -124,11 +124,17 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE const HashMap<FlyString, Value>& map() const { return m_map; }
 
-    ALWAYS_INLINE bool contains(const FlyString& key) const { return m_map.contains(key); }
+    template<typename... Args>
+    bool contains(Args&&... keys) const { return (m_map.contains(keys) && ...); }
 
     ALWAYS_INLINE Optional<Value> get(const FlyString& key) const { return m_map.get(key); }
 
-    Value get_value(const FlyString& key) const { return get(key).value(); }
+    Value get_value(const FlyString& key) const
+    {
+        auto value = get(key);
+        VERIFY(value.has_value());
+        return value.value();
+    }
 
     NonnullRefPtr<Object> get_object(Document*, const FlyString& key) const;
 
