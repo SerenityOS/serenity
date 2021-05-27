@@ -465,7 +465,10 @@ void Profile::set_disassembly_index(const GUI::ModelIndex& index)
         return;
     m_disassembly_index = index;
     auto* node = static_cast<ProfileNode*>(index.internal_data());
-    m_disassembly_model = DisassemblyModel::create(*this, *node);
+    if (!node)
+        m_disassembly_model = nullptr;
+    else
+        m_disassembly_model = DisassemblyModel::create(*this, *node);
 }
 
 GUI::Model* Profile::disassembly_model()
