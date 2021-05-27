@@ -22,7 +22,7 @@ public:
 private:
     static constexpr size_t max_cached_blocks = 64;
 
-    Vector<void*> m_blocks;
+    Vector<void*, max_cached_blocks> m_blocks;
 };
 
 }
