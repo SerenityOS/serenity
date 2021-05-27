@@ -77,14 +77,14 @@ public:
 
     String path() const;
     String basename() const;
-    String to_string() const;
-    String to_string_encoded() const
-    {
-        return percent_encode(to_string(), PercentEncodeSet::EncodeURI);
-    }
 
     String serialize(ExcludeFragment = ExcludeFragment::No) const;
     String serialize_for_display() const;
+
+    String to_string() const { return serialize(); }
+    String to_string_encoded() const { return serialize(); }
+
+    bool equals(const URL& other, ExcludeFragment = ExcludeFragment::No) const;
 
     URL complete_url(const String&) const;
 
@@ -108,7 +108,7 @@ public:
     {
         if (this == &other)
             return true;
-        return to_string() == other.to_string();
+        return equals(other, ExcludeFragment::No);
     }
 
 private:
@@ -151,7 +151,7 @@ template<>
 struct Formatter<URL> : Formatter<StringView> {
     void format(FormatBuilder& builder, const URL& value)
     {
-        Formatter<StringView>::format(builder, value.to_string());
+        Formatter<StringView>::format(builder, value.serialize());
     }
 };
 

@@ -60,46 +60,6 @@ String URL::path() const
     return builder.to_string();
 }
 
-String URL::to_string() const
-{
-    StringBuilder builder;
-    builder.append(m_scheme);
-
-    if (m_scheme == "about") {
-        builder.append(':');
-        builder.append(m_path);
-        return builder.to_string();
-    }
-
-    if (m_scheme == "data") {
-        builder.append(':');
-        builder.append(m_data_mime_type);
-        if (m_data_payload_is_base64)
-            builder.append(";base64");
-        builder.append(',');
-        builder.append(m_data_payload);
-        return builder.to_string();
-    }
-
-    builder.append("://");
-    builder.append(m_host);
-    if (default_port_for_scheme(scheme()) != port()) {
-        builder.append(':');
-        builder.append(String::number(m_port));
-    }
-
-    builder.append(path());
-    if (!m_query.is_empty()) {
-        builder.append('?');
-        builder.append(m_query);
-    }
-    if (!m_fragment.is_empty()) {
-        builder.append('#');
-        builder.append(m_fragment);
-    }
-    return builder.to_string();
-}
-
 URL URL::complete_url(const String& string) const
 {
     if (!is_valid())
@@ -375,6 +335,13 @@ String URL::serialize_for_display() const
     }
 
     return builder.to_string();
+}
+
+bool URL::equals(const URL& other, ExcludeFragment exclude_fragments) const
+{
+    if (!m_valid || !other.m_valid)
+        return false;
+    return serialize(exclude_fragments) == other.serialize(exclude_fragments);
 }
 
 String URL::basename() const
