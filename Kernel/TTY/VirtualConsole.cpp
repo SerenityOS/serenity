@@ -17,6 +17,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
+#include <LibVT/Color.h>
 
 namespace Kernel {
 
@@ -205,73 +206,55 @@ UNMAP_AFTER_INIT VirtualConsole::~VirtualConsole()
     VERIFY_NOT_REACHED();
 }
 
-enum class ANSIColor : u8 {
-    Black = 0,
-    Red,
-    Green,
-    Brown,
-    Blue,
-    Magenta,
-    Cyan,
-    LightGray,
-    DarkGray,
-    BrightRed,
-    BrightGreen,
-    Yellow,
-    BrightBlue,
-    BrightMagenta,
-    BrightCyan,
-    White,
-    __Count,
-};
-
-static inline Graphics::Console::Color ansi_color_to_standard_vga_color(ANSIColor color)
+static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Color::ANSIColor color)
 {
     switch (color) {
-    case ANSIColor::Black:
+    case VT::Color::ANSIColor::DefaultBackground:
+    case VT::Color::ANSIColor::Black:
         return Graphics::Console::Color::Black;
-    case ANSIColor::Red:
+    case VT::Color::ANSIColor::Red:
         return Graphics::Console::Color::Red;
-    case ANSIColor::Brown:
+    case VT::Color::ANSIColor::Green:
+        return Graphics::Console::Green;
+    case VT::Color::ANSIColor::Yellow:
+        // VGA only has bright yellow, and treats normal yellow as a brownish orange color.
         return Graphics::Console::Color::Brown;
-    case ANSIColor::Blue:
+    case VT::Color::ANSIColor::Blue:
         return Graphics::Console::Color::Blue;
-    case ANSIColor::Magenta:
+    case VT::Color::ANSIColor::Magenta:
         return Graphics::Console::Color::Magenta;
-    case ANSIColor::Green:
-        return Graphics::Console::Color::Green;
-    case ANSIColor::Cyan:
+    case VT::Color::ANSIColor::Cyan:
         return Graphics::Console::Color::Cyan;
-    case ANSIColor::LightGray:
-        return Graphics::Console::Color::LightGray;
-    case ANSIColor::DarkGray:
-        return Graphics::Console::Color::DarkGray;
-    case ANSIColor::BrightRed:
-        return Graphics::Console::Color::BrightRed;
-    case ANSIColor::BrightGreen:
-        return Graphics::Console::Color::BrightGreen;
-    case ANSIColor::Yellow:
-        return Graphics::Console::Color::Yellow;
-    case ANSIColor::BrightBlue:
-        return Graphics::Console::Color::BrightBlue;
-    case ANSIColor::BrightMagenta:
-        return Graphics::Console::Color::BrightMagenta;
-    case ANSIColor::BrightCyan:
-        return Graphics::Console::Color::BrightCyan;
-    case ANSIColor::White:
+    case VT::Color::ANSIColor::DefaultForeground:
+    case VT::Color::ANSIColor::White:
         return Graphics::Console::Color::White;
+    case VT::Color::ANSIColor::BrightBlack:
+        return Graphics::Console::Color::LightGray;
+    case VT::Color::ANSIColor::BrightRed:
+        return Graphics::Console::Color::BrightRed;
+    case VT::Color::ANSIColor::BrightGreen:
+        return Graphics::Console::Color::BrightGreen;
+    case VT::Color::ANSIColor::BrightYellow:
+        return Graphics::Console::Color::Yellow;
+    case VT::Color::ANSIColor::BrightBlue:
+        return Graphics::Console::Color::BrightBlue;
+    case VT::Color::ANSIColor::BrightMagenta:
+        return Graphics::Console::Color::BrightMagenta;
+    case VT::Color::ANSIColor::BrightCyan:
+        return Graphics::Console::Color::BrightCyan;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-static inline Graphics::Console::Color xterm_to_standard_color(u32 color)
+static inline Graphics::Console::Color terminal_to_standard_color(VT::Color color)
 {
-    for (u8 i = 0; i < (u8)ANSIColor::__Count; i++) {
-        if (xterm_colors[i] == color)
-            return (Graphics::Console::Color)ansi_color_to_standard_vga_color((ANSIColor)i);
+    switch (color.kind()) {
+    case VT::Color::Kind::Named:
+        return ansi_color_to_standard_vga_color(color.as_named());
+    default:
+        return Graphics::Console::Color::LightGray;
     }
-    return Graphics::Console::Color::LightGray;
 }
 
 void VirtualConsole::on_key_pressed(KeyEvent event)
@@ -338,13 +321,13 @@ void VirtualConsole::flush_dirty_lines()
         for (size_t column = 0; column < columns(); ++column) {
             auto& cell = cell_at(column, visual_row);
 
-            auto foreground_color = xterm_to_standard_color(cell.attribute.effective_foreground_color());
+            auto foreground_color = terminal_to_standard_color(cell.attribute.effective_foreground_color());
             if (cell.attribute.flags & VT::Attribute::Flags::Bold)
                 foreground_color = (Graphics::Console::Color)((u8)foreground_color | 0x08);
             GraphicsManagement::the().console()->write(column,
                 visual_row,
                 ((u8)cell.ch < 128 ? cell.ch : '?'),
-                xterm_to_standard_color(cell.attribute.effective_background_color()),
+                terminal_to_standard_color(cell.attribute.effective_background_color()),
                 foreground_color);
         }
         line.dirty = false;

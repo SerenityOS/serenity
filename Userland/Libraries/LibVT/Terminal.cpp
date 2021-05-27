@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <LibVT/Color.h>
 #include <LibVT/Terminal.h>
 #ifdef KERNEL
 #    include <Kernel/TTY/VirtualConsole.h>
@@ -182,29 +183,33 @@ void Terminal::SGR(Parameters params)
         m_current_state.attribute.reset();
         return;
     }
-    auto parse_color = [&]() -> Optional<u32> {
+    auto parse_color = [&]() -> Optional<Color> {
         if (params.size() < 2) {
             dbgln("Color code has no type");
             return {};
         }
-        u32 color = 0;
+        u32 rgb = 0;
         switch (params[1]) {
         case 5: // 8-bit
             if (params.size() < 3) {
                 dbgln("8-bit color code has too few parameters");
                 return {};
             }
-            return xterm_colors[params[2]];
+            if (params[2] > 255) {
+                dbgln("8-bit color code has out-of-bounds value");
+                return {};
+            }
+            return Color::indexed(params[2]);
         case 2: // 24-bit
             if (params.size() < 5) {
                 dbgln("24-bit color code has too few parameters");
                 return {};
             }
             for (size_t i = 0; i < 3; ++i) {
-                color <<= 8;
-                color |= params[i + 2];
+                rgb <<= 8;
+                rgb |= params[i + 2];
             }
-            return color;
+            return Color::rgb(rgb);
         default:
             dbgln("Unknown color type {}", params[1]);
             return {};
@@ -264,7 +269,7 @@ void Terminal::SGR(Parameters params)
                 // Foreground color
                 if (m_current_state.attribute.flags & Attribute::Bold)
                     param += 8;
-                m_current_state.attribute.foreground_color = xterm_colors[param - 30];
+                m_current_state.attribute.foreground_color = Color::named((Color::ANSIColor)(param - 30));
                 break;
             case 39:
                 // reset foreground
@@ -281,7 +286,7 @@ void Terminal::SGR(Parameters params)
                 // Background color
                 if (m_current_state.attribute.flags & Attribute::Bold)
                     param += 8;
-                m_current_state.attribute.background_color = xterm_colors[param - 40];
+                m_current_state.attribute.background_color = Color::named((Color::ANSIColor)(param - 40));
                 break;
             case 49:
                 // reset background

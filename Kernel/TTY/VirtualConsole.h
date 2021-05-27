@@ -17,6 +17,7 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/TTY/TTY.h>
 #include <LibVT/Attribute.h>
+#include <LibVT/Color.h>
 #include <LibVT/Position.h>
 #include <LibVT/Terminal.h>
 

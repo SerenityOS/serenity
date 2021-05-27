@@ -14,6 +14,7 @@
 #include <LibGUI/Frame.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Rect.h>
+#include <LibVT/Color.h>
 #include <LibVT/Range.h>
 #include <LibVT/Terminal.h>
 
@@ -85,6 +86,8 @@ public:
     Function<void()> on_command_exit;
 
     GUI::Menu& context_menu() { return *m_context_menu; }
+
+    Gfx::Color terminal_color_to_rgb(VT::Color);
 
     void set_font_and_resize_to_fit(const Gfx::Font&);
 
