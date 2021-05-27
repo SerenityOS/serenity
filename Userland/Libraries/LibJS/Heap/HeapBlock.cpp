@@ -22,16 +22,6 @@ NonnullOwnPtr<HeapBlock> HeapBlock::create_with_cell_size(Heap& heap, size_t cel
     return NonnullOwnPtr<HeapBlock>(NonnullOwnPtr<HeapBlock>::Adopt, *block);
 }
 
-void HeapBlock::operator delete(void* ptr)
-{
-#ifdef __serenity__
-    int rc = munmap(ptr, block_size);
-    VERIFY(rc == 0);
-#else
-    free(ptr);
-#endif
-}
-
 HeapBlock::HeapBlock(Heap& heap, size_t cell_size)
     : m_heap(heap)
     , m_cell_size(cell_size)
