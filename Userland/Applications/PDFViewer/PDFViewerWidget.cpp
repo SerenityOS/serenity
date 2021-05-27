@@ -110,8 +110,8 @@ void PDFViewerWidget::open_file(const String& path)
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
     m_total_page_label->set_fixed_width(30);
 
-    m_page_text_box->set_text(String::number(m_viewer->current_page() + 1));
     m_page_text_box->set_enabled(true);
+    m_page_text_box->set_current_number(1, false);
     m_page_text_box->set_max_number(document->get_page_count());
     m_go_to_prev_page_action->set_enabled(false);
     m_go_to_next_page_action->set_enabled(document->get_page_count() > 1);
