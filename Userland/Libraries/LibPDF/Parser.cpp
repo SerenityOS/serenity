@@ -316,7 +316,7 @@ Value Parser::parse_value()
         auto dict = parse_dict();
         if (!dict)
             return {};
-        if (m_reader.matches("stream\n"))
+        if (m_reader.matches("stream"))
             return parse_stream(dict.release_nonnull());
         return dict;
     }
@@ -370,6 +370,9 @@ RefPtr<IndirectValue> Parser::parse_indirect_value(int index, int generation)
     auto value = parse_value();
     if (!m_reader.matches("endobj"))
         return {};
+
+    consume(6);
+    consume_whitespace();
 
     return make_object<IndirectValue>(index, generation, value);
 }
