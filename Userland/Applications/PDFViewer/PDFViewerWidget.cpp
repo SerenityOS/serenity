@@ -93,7 +93,7 @@ void PDFViewerWidget::create_toolbar()
 
 void PDFViewerWidget::open_file(const String& path)
 {
-    window()->set_title(String::formatted("{} - PDFViewer", path));
+    window()->set_title(String::formatted("{} - PDF Viewer", path));
     auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
     VERIFY(!file_result.is_error());
     m_buffer = file_result.value()->read_all();
