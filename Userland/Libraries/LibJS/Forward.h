@@ -101,7 +101,7 @@
 namespace JS {
 
 class ASTNode;
-class Allocator;
+class CellAllocator;
 class BigInt;
 class BoundFunction;
 class Cell;

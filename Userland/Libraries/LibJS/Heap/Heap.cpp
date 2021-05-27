@@ -10,7 +10,7 @@
 #include <AK/StackInfo.h>
 #include <AK/TemporaryChange.h>
 #include <LibCore/ElapsedTimer.h>
-#include <LibJS/Heap/Allocator.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
@@ -23,14 +23,14 @@ namespace JS {
 Heap::Heap(VM& vm)
     : m_vm(vm)
 {
-    m_allocators.append(make<Allocator>(16));
-    m_allocators.append(make<Allocator>(32));
-    m_allocators.append(make<Allocator>(64));
-    m_allocators.append(make<Allocator>(128));
-    m_allocators.append(make<Allocator>(256));
-    m_allocators.append(make<Allocator>(512));
-    m_allocators.append(make<Allocator>(1024));
-    m_allocators.append(make<Allocator>(3072));
+    m_allocators.append(make<CellAllocator>(16));
+    m_allocators.append(make<CellAllocator>(32));
+    m_allocators.append(make<CellAllocator>(64));
+    m_allocators.append(make<CellAllocator>(128));
+    m_allocators.append(make<CellAllocator>(256));
+    m_allocators.append(make<CellAllocator>(512));
+    m_allocators.append(make<CellAllocator>(1024));
+    m_allocators.append(make<CellAllocator>(3072));
 }
 
 Heap::~Heap()
@@ -38,7 +38,7 @@ Heap::~Heap()
     collect_garbage(CollectionType::CollectEverything);
 }
 
-ALWAYS_INLINE Allocator& Heap::allocator_for_size(size_t cell_size)
+ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
 {
     for (auto& allocator : m_allocators) {
         if (allocator->cell_size() >= cell_size)

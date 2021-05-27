@@ -5,23 +5,23 @@
  */
 
 #include <AK/Badge.h>
-#include <LibJS/Heap/Allocator.h>
 #include <LibJS/Heap/BlockAllocator.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Heap/HeapBlock.h>
 
 namespace JS {
 
-Allocator::Allocator(size_t cell_size)
+CellAllocator::CellAllocator(size_t cell_size)
     : m_cell_size(cell_size)
 {
 }
 
-Allocator::~Allocator()
+CellAllocator::~CellAllocator()
 {
 }
 
-Cell* Allocator::allocate_cell(Heap& heap)
+Cell* CellAllocator::allocate_cell(Heap& heap)
 {
     if (m_usable_blocks.is_empty()) {
         auto block = HeapBlock::create_with_cell_size(heap, m_cell_size);
@@ -36,7 +36,7 @@ Cell* Allocator::allocate_cell(Heap& heap)
     return cell;
 }
 
-void Allocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
+void CellAllocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
 {
     auto& heap = block.heap();
     block.m_list_node.remove();
@@ -45,7 +45,7 @@ void Allocator::block_did_become_empty(Badge<Heap>, HeapBlock& block)
     heap.block_allocator().deallocate_block(&block);
 }
 
-void Allocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)
+void CellAllocator::block_did_become_usable(Badge<Heap>, HeapBlock& block)
 {
     VERIFY(!block.is_full());
     m_usable_blocks.append(block);
