@@ -38,10 +38,11 @@ void* BlockAllocator::allocate_block([[maybe_unused]] char const* name)
 
 #ifdef __serenity__
     auto* block = (HeapBlock*)serenity_mmap(nullptr, HeapBlock::block_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_RANDOMIZED | MAP_PRIVATE, 0, 0, HeapBlock::block_size, name);
+    VERIFY(block != MAP_FAILED);
 #else
     auto* block = (HeapBlock*)aligned_alloc(HeapBlock::block_size, HeapBlock::block_size);
+    VERIFY(block);
 #endif
-    VERIFY(block != MAP_FAILED);
     return block;
 }
 
