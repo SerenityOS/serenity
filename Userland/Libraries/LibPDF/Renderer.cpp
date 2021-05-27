@@ -517,6 +517,25 @@ RefPtr<ColorSpace> Renderer::get_color_space(const Value& value)
         return DeviceRGBColorSpace::the();
     if (name == CommonNames::DeviceCMYK)
         return DeviceCMYKColorSpace::the();
+    if (name == CommonNames::Pattern)
+        TODO();
+
+    // The color space is a complex color space with parameters that resides in
+    // the resource dictionary
+    auto color_space_resource_dict = m_page.resources->get_dict(m_document, CommonNames::ColorSpace);
+    if (!color_space_resource_dict->contains(name))
+        TODO();
+
+    auto color_space_array = color_space_resource_dict->get_array(m_document, name);
+    name = color_space_array->get_name_at(m_document, 0)->name();
+
+    Vector<Value> parameters;
+    parameters.ensure_capacity(color_space_array->size() - 1);
+    for (size_t i = 1; i < color_space_array->size(); i++)
+        parameters.unchecked_append(color_space_array->at(i));
+
+    if (name == CommonNames::CalRGB)
+        return CalRGBColorSpace::create(m_document, move(parameters));
 
     TODO();
 }

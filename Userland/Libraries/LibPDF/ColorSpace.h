@@ -69,4 +69,20 @@ private:
     DeviceCMYKColorSpace() = default;
 };
 
+class CalRGBColorSpace final : public ColorSpace {
+public:
+    static RefPtr<CalRGBColorSpace> create(RefPtr<Document>, Vector<Value>&& parameters);
+    virtual ~CalRGBColorSpace() override = default;
+
+    virtual Color color(const Vector<Value>& arguments) const override;
+
+private:
+    CalRGBColorSpace() = default;
+
+    Array<float, 3> m_whitepoint { 0, 0, 0 };
+    Array<float, 3> m_blackpoint { 0, 0, 0 };
+    Array<float, 3> m_gamma { 1, 1, 1 };
+    Array<float, 9> m_matrix { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+};
+
 }
