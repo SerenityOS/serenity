@@ -14,10 +14,10 @@
 
 namespace JS {
 
-class Allocator {
+class CellAllocator {
 public:
-    Allocator(size_t cell_size);
-    ~Allocator();
+    explicit CellAllocator(size_t cell_size);
+    ~CellAllocator();
 
     size_t cell_size() const { return m_cell_size; }
 

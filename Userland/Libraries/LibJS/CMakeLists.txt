@@ -1,7 +1,7 @@
 set(SOURCES
     AST.cpp
     Console.cpp
-    Heap/Allocator.cpp
+        Heap/CellAllocator.cpp
         Heap/BlockAllocator.cpp
         Heap/Handle.cpp
     Heap/HeapBlock.cpp

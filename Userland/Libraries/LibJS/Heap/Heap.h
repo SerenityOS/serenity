@@ -13,9 +13,9 @@
 #include <AK/Vector.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Forward.h>
-#include <LibJS/Heap/Allocator.h>
 #include <LibJS/Heap/BlockAllocator.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/CellAllocator.h>
 #include <LibJS/Heap/Handle.h>
 #include <LibJS/Runtime/Object.h>
 
@@ -83,7 +83,7 @@ private:
     void mark_live_cells(const HashTable<Cell*>& live_cells);
     void sweep_dead_cells(bool print_report, const Core::ElapsedTimer&);
 
-    Allocator& allocator_for_size(size_t);
+    CellAllocator& allocator_for_size(size_t);
 
     template<typename Callback>
     void for_each_block(Callback callback)
@@ -101,7 +101,7 @@ private:
 
     VM& m_vm;
 
-    Vector<NonnullOwnPtr<Allocator>> m_allocators;
+    Vector<NonnullOwnPtr<CellAllocator>> m_allocators;
     HashTable<HandleImpl*> m_handles;
 
     HashTable<MarkedValueList*> m_marked_value_lists;
