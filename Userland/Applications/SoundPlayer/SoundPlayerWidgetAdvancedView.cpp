@@ -189,7 +189,7 @@ void SoundPlayerWidgetAdvancedView::open_file(StringView path)
             "Filetype error", GUI::MessageBox::Type::Error);
         return;
     }
-    m_window.set_title(String::formatted("{} - SoundPlayer", loader->file()->filename()));
+    m_window.set_title(String::formatted("{} - Sound Player", loader->file()->filename()));
     m_playback_progress_slider->set_max(loader->total_samples());
     m_playback_progress_slider->set_enabled(true);
     m_play_button->set_enabled(true);
