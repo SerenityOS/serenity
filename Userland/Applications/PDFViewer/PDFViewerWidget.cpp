@@ -67,14 +67,14 @@ void PDFViewerWidget::create_toolbar()
     toolbar.add_separator();
 
     m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](auto&) {
-        if (m_viewer->current_page() > 0)
-            m_page_text_box->set_current_number(m_viewer->current_page());
+        VERIFY(m_viewer->current_page() > 0);
+        m_page_text_box->set_current_number(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
     m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
-        if (m_viewer->current_page() < m_viewer->document()->get_page_count() - 1)
-            m_page_text_box->set_current_number(m_viewer->current_page() + 2);
+        VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
+        m_page_text_box->set_current_number(m_viewer->current_page() + 2);
     });
     m_go_to_next_page_action->set_enabled(false);
 
@@ -87,9 +87,13 @@ void PDFViewerWidget::create_toolbar()
     m_page_text_box->set_min_number(1);
 
     m_page_text_box->on_number_changed = [&](i32 number) {
-        VERIFY(number >= 1 && static_cast<u32>(number) <= m_viewer->document()->get_page_count());
-        m_viewer->set_current_page(static_cast<u32>(number) - 1);
+        auto page_count = m_viewer->document()->get_page_count();
+        auto new_page_number = static_cast<u32>(number);
+        VERIFY(new_page_number >= 1 && new_page_number <= page_count);
+        m_viewer->set_current_page(new_page_number - 1);
         m_viewer->update();
+        m_go_to_prev_page_action->set_enabled(new_page_number > 1);
+        m_go_to_next_page_action->set_enabled(new_page_number < page_count);
     };
 
     m_total_page_label = toolbar.add<GUI::Label>();
@@ -109,8 +113,8 @@ void PDFViewerWidget::open_file(const String& path)
     m_page_text_box->set_text(String::number(m_viewer->current_page() + 1));
     m_page_text_box->set_enabled(true);
     m_page_text_box->set_max_number(document->get_page_count());
-    m_go_to_prev_page_action->set_enabled(true);
-    m_go_to_next_page_action->set_enabled(true);
+    m_go_to_prev_page_action->set_enabled(false);
+    m_go_to_next_page_action->set_enabled(document->get_page_count() > 1);
     m_toggle_sidebar_action->set_enabled(true);
 
     if (document->outline()) {
