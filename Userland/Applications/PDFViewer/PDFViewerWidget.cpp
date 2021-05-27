@@ -39,6 +39,7 @@ void PDFViewerWidget::initialize_menubar(GUI::Menubar& menubar)
         if (open_path.has_value())
             open_file(open_path.value());
     }));
+    file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
