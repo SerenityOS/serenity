@@ -201,7 +201,7 @@ int main(int argc, char** argv)
 
         load_model(open_path.value());
     }));
-
+    file_menu.add_separator();
     file_menu.add_action(GUI::CommonActions::make_quit_action([&] {
         app->quit();
     }));
