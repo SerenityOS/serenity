@@ -94,7 +94,7 @@ private:
 
     void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
-    void show_text(const String&, int shift = 0);
+    void show_text(const String&, float shift = 0.0f);
     RefPtr<ColorSpace> get_color_space(const Value&);
 
     ALWAYS_INLINE const GraphicsState& state() const { return m_graphics_state_stack.last(); }
