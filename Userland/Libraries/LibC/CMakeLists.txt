@@ -12,6 +12,7 @@ set(LIBC_SOURCES
     ifaddrs.cpp
     getopt.cpp
     getsubopt.cpp
+    glob.cpp
     grp.cpp
     inttypes.cpp
     ioctl.cpp
