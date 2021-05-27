@@ -50,7 +50,35 @@ private:
         u32 first_page { 0 }; // The page to initially open (I think, the spec isn't all that clear here)
     };
 
+    struct PageOffsetHintTable {
+        u32 least_number_of_objects_in_a_page { 0 };
+        u32 location_of_first_page_object { 0 };
+        u16 bits_required_for_object_number { 0 };
+        u32 least_length_of_a_page { 0 };
+        u16 bits_required_for_page_length { 0 };
+        u32 least_offset_of_any_content_stream { 0 };
+        u16 bits_required_for_content_stream_offsets { 0 };
+        u32 least_content_stream_length { 0 };
+        u16 bits_required_for_content_stream_length { 0 };
+        u16 bits_required_for_number_of_shared_obj_refs { 0 };
+        u16 bits_required_for_greatest_shared_obj_identifier { 0 };
+        u16 bits_required_for_fraction_numerator { 0 };
+        u16 shared_object_reference_fraction_denominator { 0 };
+    };
+
+    struct PageOffsetHintTableEntry {
+        u32 objects_in_page_number { 0 };
+        u32 page_length_number { 0 };
+        u32 number_of_shared_objects { 0 };
+        Vector<u32> shared_object_identifiers {};
+        Vector<u32> shared_object_location_numerators {};
+        u32 page_content_stream_offset_number { 0 };
+        u32 page_content_stream_length_number { 0 };
+    };
+
     friend struct AK::Formatter<LinearizationDictionary>;
+    friend struct AK::Formatter<PageOffsetHintTable>;
+    friend struct AK::Formatter<PageOffsetHintTableEntry>;
 
     explicit Parser(const ReadonlyBytes&);
 
@@ -58,6 +86,9 @@ private:
     bool initialize_linearization_dict();
     bool initialize_linearized_xref_table();
     bool initialize_non_linearized_xref_table();
+    bool initialize_hint_tables();
+    Optional<PageOffsetHintTable> parse_page_offset_hint_table(const ReadonlyBytes& hint_stream_bytes);
+    Optional<Vector<PageOffsetHintTableEntry>> parse_all_page_offset_hint_table_entries(const PageOffsetHintTable&, const ReadonlyBytes& hint_stream_bytes);
     RefPtr<XRefTable> parse_xref_table();
     RefPtr<DictObject> parse_file_trailer();
 
