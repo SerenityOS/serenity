@@ -29,6 +29,7 @@ private:
     HexEditorWidget();
     void set_path(const LexicalPath& file);
     void update_title();
+    void set_search_results_visible(bool visible);
 
     RefPtr<Core::ConfigFile> m_config;
 
@@ -50,12 +51,15 @@ private:
     RefPtr<GUI::Action> m_find_action;
     RefPtr<GUI::Action> m_goto_offset_action;
     RefPtr<GUI::Action> m_layout_toolbar_action;
+    RefPtr<GUI::Action> m_layout_search_results_action;
 
     GUI::ActionGroup m_bytes_per_row_actions;
 
     RefPtr<GUI::Statusbar> m_statusbar;
     RefPtr<GUI::Toolbar> m_toolbar;
     RefPtr<GUI::ToolbarContainer> m_toolbar_container;
+    RefPtr<GUI::TableView> m_search_results;
+    RefPtr<GUI::Widget> m_search_results_container;
 
     bool m_document_dirty { false };
 };

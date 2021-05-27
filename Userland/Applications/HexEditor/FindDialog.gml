@@ -34,8 +34,13 @@
         layout: @GUI::HorizontalBoxLayout
 
         @GUI::Button {
-            name: "ok_button"
-            text: "OK"
+            name: "find_button"
+            text: "Find"
+        }
+
+        @GUI::Button {
+            name: "find_all_button"
+            text: "Find All"
         }
 
         @GUI::Button {

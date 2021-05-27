@@ -7,6 +7,7 @@
 #include "HexEditorWidget.h"
 #include "FindDialog.h"
 #include "GoToOffsetDialog.h"
+#include "SearchResultsModel.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <Applications/HexEditor/HexEditorWindowGML.h>
@@ -20,7 +21,9 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
+#include <LibGUI/Model.h>
 #include <LibGUI/Statusbar.h>
+#include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
 #include <LibGUI/Toolbar.h>
@@ -40,6 +43,8 @@ HexEditorWidget::HexEditorWidget()
     m_toolbar_container = *find_descendant_of_type_named<GUI::ToolbarContainer>("toolbar_container");
     m_editor = *find_descendant_of_type_named<HexEditor>("editor");
     m_statusbar = *find_descendant_of_type_named<GUI::Statusbar>("statusbar");
+    m_search_results = *find_descendant_of_type_named<GUI::TableView>("search_results");
+    m_search_results_container = *find_descendant_of_type_named<GUI::Widget>("search_results_container");
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
         m_statusbar->set_text(0, String::formatted("Offset: {:#08X}", position));
@@ -54,6 +59,16 @@ HexEditorWidget::HexEditorWidget()
         m_document_dirty = true;
         if (!was_dirty)
             update_title();
+    };
+
+    m_search_results->set_activates_on_selection(true);
+    m_search_results->on_activation = [this](const GUI::ModelIndex& index) {
+        if (!index.is_valid())
+            return;
+        auto offset = index.data(GUI::ModelRole::Custom).to_i32();
+        m_last_found_index = offset;
+        m_editor->set_position(offset);
+        m_editor->update();
     };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
@@ -117,22 +132,38 @@ HexEditorWidget::HexEditorWidget()
 
     m_find_action = GUI::Action::create("&Find", { Mod_Ctrl, Key_F }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
         auto old_buffer = m_search_buffer;
-        if (FindDialog::show(window(), m_search_text, m_search_buffer) == GUI::InputBox::ExecOK) {
+        bool find_all = false;
+        if (FindDialog::show(window(), m_search_text, m_search_buffer, find_all) == GUI::InputBox::ExecOK) {
+            if (find_all) {
+                auto matches = m_editor->find_all(m_search_buffer, 0);
+                m_search_results->set_model(*new SearchResultsModel(move(matches)));
+                m_search_results->update();
 
-            bool same_buffers = false;
-            if (old_buffer.size() == m_search_buffer.size()) {
-                if (memcmp(old_buffer.data(), m_search_buffer.data(), old_buffer.size()) == 0)
-                    same_buffers = true;
+                if (matches.is_empty()) {
+                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                    return;
+                }
+
+                GUI::MessageBox::show(window(), String::formatted("Found {} matches for \"{}\" in this file", matches.size(), m_search_text), String::formatted("{} matches", matches.size()), GUI::MessageBox::Type::Warning);
+                set_search_results_visible(true);
+            } else {
+                bool same_buffers = false;
+                if (old_buffer.size() == m_search_buffer.size()) {
+                    if (memcmp(old_buffer.data(), m_search_buffer.data(), old_buffer.size()) == 0)
+                        same_buffers = true;
+                }
+
+                auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
+
+                if (result == -1) {
+                    GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
+                    return;
+                }
+
+                m_last_found_index = result;
             }
 
-            auto result = m_editor->find_and_highlight(m_search_buffer, same_buffers ? last_found_index() : 0);
-
-            if (result == -1) {
-                GUI::MessageBox::show(window(), String::formatted("Pattern \"{}\" not found in this file", m_search_text), "Not found", GUI::MessageBox::Type::Warning);
-                return;
-            }
             m_editor->update();
-            m_last_found_index = result;
         }
     });
 
@@ -154,6 +185,10 @@ HexEditorWidget::HexEditorWidget()
         m_toolbar_container->set_visible(action.is_checked());
         m_config->write_bool_entry("Layout", "ShowToolbar", action.is_checked());
         m_config->sync();
+    });
+
+    m_layout_search_results_action = GUI::Action::create_checkable("&Search Results", [&](auto& action) {
+        set_search_results_visible(action.is_checked());
     });
 
     m_toolbar->add_action(*m_new_action);
@@ -230,8 +265,9 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
     auto show_toolbar = m_config->read_bool_entry("Layout", "ShowToolbar", true);
     m_layout_toolbar_action->set_checked(show_toolbar);
     m_toolbar_container->set_visible(show_toolbar);
-
     view_menu.add_action(*m_layout_toolbar_action);
+    view_menu.add_action(*m_layout_search_results_action);
+    view_menu.add_separator();
 
     auto bytes_per_row = m_config->read_num_entry("Layout", "BytesPerRow", 16);
     m_editor->set_bytes_per_row(bytes_per_row);
@@ -293,4 +329,10 @@ bool HexEditorWidget::request_close()
         return true;
     auto result = GUI::MessageBox::show(window(), "The file has been modified. Quit without saving?", "Quit without saving?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
     return result == GUI::MessageBox::ExecOK;
+}
+
+void HexEditorWidget::set_search_results_visible(bool visible)
+{
+    m_layout_search_results_action->set_checked(visible);
+    m_search_results_container->set_visible(visible);
 }

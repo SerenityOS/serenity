@@ -5,6 +5,7 @@
  */
 
 #include "HexEditor.h"
+#include "SearchResultsModel.h"
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Action.h>
@@ -573,6 +574,13 @@ void HexEditor::highlight(int start, int end)
 
 int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
 {
+    auto end_of_match = find(needle, start);
+    highlight(end_of_match - needle.size(), end_of_match);
+    return end_of_match;
+}
+
+int HexEditor::find(ByteBuffer& needle, int start)
+{
     if (m_buffer.is_empty())
         return -1;
 
@@ -581,10 +589,37 @@ int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
         return -1;
 
     int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
-    dbgln("find_and_highlight: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
+    dbgln("find: start={} raw_offset={} relative_offset={}", start, raw_offset, relative_offset);
 
     auto end_of_match = relative_offset + needle.size();
-    highlight(relative_offset, end_of_match);
 
     return end_of_match;
+}
+
+Vector<Match> HexEditor::find_all(ByteBuffer& needle, int start)
+{
+    if (m_buffer.is_empty())
+        return {};
+
+    Vector<Match> matches;
+
+    size_t i = start;
+    while (i < m_buffer.size()) {
+        auto raw_offset = memmem(m_buffer.data() + i, m_buffer.size() - i, needle.data(), needle.size());
+        if (raw_offset == NULL)
+            break;
+
+        int relative_offset = static_cast<const u8*>(raw_offset) - m_buffer.data();
+        dbgln("find_all: needle={} start={} raw_offset={} relative_offset={}", needle.data(), i, raw_offset, relative_offset);
+        matches.append({ relative_offset, String::formatted("{}", StringView { needle }.to_string().characters()) });
+        i = relative_offset + needle.size();
+    }
+
+    if (matches.is_empty())
+        return {};
+
+    auto first_match = matches.at(0);
+    highlight(first_match.offset, first_match.offset + first_match.value.length());
+
+    return matches;
 }
