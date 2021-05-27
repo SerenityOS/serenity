@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+set -eo pipefail
 # This file will need to be run in bash, for now.
 
 
@@ -137,18 +137,24 @@ popd
 # === DOWNLOAD AND PATCH ===
 
 pushd "$DIR/Tarballs"
-    md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
-    echo "bu md5='$md5'"
-    if [ ! -e $BINUTILS_PKG ] || [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
+    md5=""
+    if [ -e "$BINUTILS_PKG" ]; then
+        md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
+        echo "bu md5='$md5'"
+    fi
+    if [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
         rm -f $BINUTILS_PKG
         curl -LO "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
         echo "Skipped downloading binutils"
     fi
 
-    md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
-    echo "gc md5='$md5'"
-    if [ ! -e $GCC_PKG ] || [ "$md5" != ${GCC_MD5SUM} ] ; then
+    md5=""
+    if [ -e "$GCC_PKG" ]; then
+        md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
+        echo "gc md5='$md5'"
+    fi
+    if [ "$md5" != ${GCC_MD5SUM} ] ; then
         rm -f $GCC_PKG
         curl -LO "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
