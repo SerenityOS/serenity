@@ -9,11 +9,47 @@
 #include <AK/Bitmap.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <Kernel/FileSystem/SysFS.h>
 #include <Kernel/PCI/Definitions.h>
 
-namespace Kernel {
+namespace Kernel::PCI {
 
-class PCI::Access {
+class BusExposedFolder final : public SystemExposedFolder {
+public:
+    static void initialize();
+
+private:
+    BusExposedFolder();
+};
+
+class ExposedDeviceFolder final : public SystemExposedFolder {
+public:
+    static NonnullRefPtr<ExposedDeviceFolder> create(const SystemExposedFolder&, Address);
+    const Address& address() const { return m_address; }
+
+private:
+    ExposedDeviceFolder(const SystemExposedFolder&, Address);
+
+    Address m_address;
+};
+
+class ExposedAttribute : public SystemExposedComponent {
+public:
+    static NonnullRefPtr<ExposedAttribute> create(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width);
+
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const override;
+    virtual ~ExposedAttribute() {};
+    virtual size_t size() const override;
+
+protected:
+    virtual OwnPtr<KBuffer> try_to_generate_buffer() const;
+    ExposedAttribute(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width);
+    NonnullRefPtr<ExposedDeviceFolder> m_device;
+    size_t m_offset;
+    size_t m_field_bytes_width;
+};
+
+class Access {
 public:
     void enumerate(Function<void(Address, ID)>&) const;
 

@@ -368,5 +368,93 @@ void Capability::write32(u32 field, u32 value)
     PCI::write32(m_address, m_ptr + field, value);
 }
 
+UNMAP_AFTER_INIT NonnullRefPtr<ExposedDeviceFolder> ExposedDeviceFolder::create(const SystemExposedFolder& parent_folder, Address address)
+{
+    return adopt_ref(*new (nothrow) ExposedDeviceFolder(parent_folder, address));
+}
+
+UNMAP_AFTER_INIT ExposedDeviceFolder::ExposedDeviceFolder(const SystemExposedFolder& parent_folder, Address address)
+    : SystemExposedFolder(String::formatted("{:04x}:{:04x}:{:02x}.{}", address.seg(), address.bus(), address.device(), address.function()), parent_folder)
+{
+    m_components.append(ExposedAttribute::create("vendor", *this, PCI_VENDOR_ID, 2));
+    m_components.append(ExposedAttribute::create("device_id", *this, PCI_DEVICE_ID, 2));
+    m_components.append(ExposedAttribute::create("class", *this, PCI_CLASS, 1));
+    m_components.append(ExposedAttribute::create("subclass", *this, PCI_SUBCLASS, 1));
+    m_components.append(ExposedAttribute::create("revision", *this, PCI_REVISION_ID, 1));
+    m_components.append(ExposedAttribute::create("progif", *this, PCI_PROG_IF, 1));
+    m_components.append(ExposedAttribute::create("subsystem_vendor", *this, PCI_SUBSYSTEM_VENDOR_ID, 2));
+    m_components.append(ExposedAttribute::create("subsystem_id", *this, PCI_SUBSYSTEM_ID, 2));
+}
+
+UNMAP_AFTER_INIT void BusExposedFolder::initialize()
+{
+    auto pci_folder = adopt_ref(*new (nothrow) BusExposedFolder());
+    SystemRegistrar::the().register_new_component(pci_folder);
+}
+
+UNMAP_AFTER_INIT BusExposedFolder::BusExposedFolder()
+    : SystemExposedFolder("pci", SystemRegistrar::the().root_folder())
+{
+    PCI::enumerate([&](const Address& address, ID) {
+        auto pci_device = PCI::ExposedDeviceFolder::create(*this, address);
+        m_components.append(pci_device);
+    });
+}
+
+NonnullRefPtr<ExposedAttribute> ExposedAttribute::create(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width)
+{
+    return adopt_ref(*new (nothrow) ExposedAttribute(name, device, offset, field_bytes_width));
+}
+
+ExposedAttribute::ExposedAttribute(String name, const ExposedDeviceFolder& device, size_t offset, size_t field_bytes_width)
+    : SystemExposedComponent(name)
+    , m_device(device)
+    , m_offset(offset)
+    , m_field_bytes_width(field_bytes_width)
+{
+}
+
+KResultOr<size_t> ExposedAttribute::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription*) const
+{
+    auto blob = try_to_generate_buffer();
+    if (!blob)
+        return KResult(EFAULT);
+
+    if ((size_t)offset >= blob->size())
+        return KSuccess;
+
+    ssize_t nread = min(static_cast<off_t>(blob->size() - offset), static_cast<off_t>(count));
+    if (!buffer.write(blob->data() + offset, nread))
+        return KResult(EFAULT);
+    return nread;
+}
+
+size_t ExposedAttribute::size() const
+{
+    auto buffer = try_to_generate_buffer();
+    if (!buffer)
+        return 0;
+    return buffer->size();
+}
+
+OwnPtr<KBuffer> ExposedAttribute::try_to_generate_buffer() const
+{
+    String value;
+    switch (m_field_bytes_width) {
+    case 1:
+        value = String::formatted("0x{:x}", PCI::read8(m_device->address(), m_offset));
+        break;
+    case 2:
+        value = String::formatted("0x{:x}", PCI::read16(m_device->address(), m_offset));
+        break;
+    case 4:
+        value = String::formatted("0x{:x}", PCI::read32(m_device->address(), m_offset));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    return KBuffer::try_create_with_bytes(value.substring_view(0).bytes());
+}
 }
 }

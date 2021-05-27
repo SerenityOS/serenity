@@ -13,7 +13,6 @@
 
 namespace Kernel {
 
-static InodeIndex s_next_inode_index;
 static AK::Singleton<SystemRegistrar> s_the;
 
 SystemRegistrar& SystemRegistrar::the()
@@ -24,7 +23,6 @@ SystemRegistrar& SystemRegistrar::the()
 UNMAP_AFTER_INIT void SystemRegistrar::initialize()
 {
     VERIFY(!s_the.is_initialized());
-    s_next_inode_index = 0;
     s_the.ensure_instance();
 }
 

@@ -51,6 +51,8 @@ UNMAP_AFTER_INIT void initialize()
         VERIFY_NOT_REACHED();
     }
 
+    PCI::BusExposedFolder::initialize();
+
     PCI::enumerate([&](const Address& address, ID id) {
         dmesgln("{} {}", address, id);
     });
