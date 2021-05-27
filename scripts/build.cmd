@@ -1,1 +1,1 @@
-# For building on Windows
+REM For building on Windows
