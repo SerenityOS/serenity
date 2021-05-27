@@ -706,7 +706,7 @@ URL Position::to_url(const Sheet& sheet) const
     URL url;
     url.set_protocol("spreadsheet");
     url.set_host("cell");
-    url.set_path(String::formatted("/{}", getpid()));
+    url.set_paths({ String::number(getpid()) });
     url.set_fragment(to_cell_identifier(sheet));
     return url;
 }
