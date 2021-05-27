@@ -151,7 +151,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     VFS::initialize();
 
-    dmesgln("Starting SerenityOS...");
+    dmesgln("Starting Hearth OS...");
 
     TimeManagement::initialize(0);
 
