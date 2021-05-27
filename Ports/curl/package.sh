@@ -1,6 +1,6 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=curl
-version=7.65.3
+version=7.77.0
 useconfigure=true
 configopts="--disable-ntlm-wb --with-ssl"
 files="https://curl.se/download/curl-${version}.tar.bz2 curl-${version}.tar.bz2
