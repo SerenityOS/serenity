@@ -16,21 +16,9 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibPDF/ColorSpace.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
-
-#define ENUMERATE_COLOR_SPACES(V) \
-    V(DeviceGray)                 \
-    V(DeviceRGB)                  \
-    V(DeviceCMYK)                 \
-    V(CalGray)                    \
-    V(CalRGB)                     \
-    V(Lab)                        \
-    V(ICCBased)                   \
-    V(Indexed)                    \
-    V(Pattern)                    \
-    V(Separation)                 \
-    V(DeviceN)
 
 namespace PDF {
 
@@ -73,23 +61,10 @@ struct TextState {
     bool knockout { true };
 };
 
-class ColorSpace {
-public:
-    enum class Type {
-#define ENUM(name) name,
-        ENUMERATE_COLOR_SPACES(ENUM)
-#undef ENUM
-    };
-
-    static Optional<ColorSpace::Type> color_space_from_string(const FlyString&);
-    static Color default_color_for_color_space(ColorSpace::Type);
-    static Color color_from_parameters(ColorSpace::Type color_space, const Vector<Value>& args);
-};
-
 struct GraphicsState {
     Gfx::AffineTransform ctm;
-    ColorSpace::Type stroke_color_space { ColorSpace::Type::DeviceGray };
-    ColorSpace::Type paint_color_space { ColorSpace::Type::DeviceGray };
+    RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
+    RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
     Gfx::Color paint_color { Gfx::Color::NamedColor::Black };
     float line_width { 1.0f };
@@ -119,7 +94,7 @@ private:
 
     // shift is the manual advance given in the TJ command array
     void show_text(const String&, int shift = 0);
-    ColorSpace::Type get_color_space(const Value&);
+    RefPtr<ColorSpace> get_color_space(const Value&);
 
     ALWAYS_INLINE const GraphicsState& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }

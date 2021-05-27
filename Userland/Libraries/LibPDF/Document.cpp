@@ -89,6 +89,11 @@ Page Document::get_page(u32 index)
     auto page_object_index = m_page_object_indices[index];
     auto raw_page_object = resolve_to<DictObject>(get_or_load_value(page_object_index));
 
+    if (!raw_page_object->contains(CommonNames::Resources)) {
+        // This page inherits its resource dictionary
+        TODO();
+    }
+
     auto resources = raw_page_object->get_dict(this, CommonNames::Resources);
     auto contents = raw_page_object->get_object(this, CommonNames::Contents);
 
