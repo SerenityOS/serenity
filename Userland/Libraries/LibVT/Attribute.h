@@ -9,6 +9,7 @@
 #include <AK/Noncopyable.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
+#include <LibVT/Color.h>
 #include <LibVT/XtermColors.h>
 
 namespace VT {
@@ -16,8 +17,8 @@ namespace VT {
 struct Attribute {
     Attribute() { reset(); }
 
-    static const u32 default_foreground_color = xterm_colors[7];
-    static const u32 default_background_color = xterm_colors[0];
+    static constexpr Color default_foreground_color = Color::named(Color::ANSIColor::DefaultForeground);
+    static constexpr Color default_background_color = Color::named(Color::ANSIColor::DefaultBackground);
 
     void reset()
     {
@@ -25,11 +26,11 @@ struct Attribute {
         background_color = default_background_color;
         flags = Flags::NoAttributes;
     }
-    u32 foreground_color {};
-    u32 background_color {};
+    Color foreground_color { default_foreground_color };
+    Color background_color { default_background_color };
 
-    u32 effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
-    u32 effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
+    Color effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
+    Color effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
 
 #ifndef KERNEL
     String href;
