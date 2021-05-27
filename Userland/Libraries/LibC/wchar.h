@@ -16,6 +16,7 @@ __BEGIN_DECLS
 #endif
 
 typedef __WINT_TYPE__ wint_t;
+typedef unsigned long int wctype_t;
 
 size_t wcslen(const wchar_t*);
 wchar_t* wcscpy(wchar_t*, const wchar_t*);
