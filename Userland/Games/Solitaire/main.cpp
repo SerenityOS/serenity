@@ -146,6 +146,7 @@ int main(int argc, char** argv)
                 statusbar.set_text(1, String::formatted("High Score: {}", score));
             }
         }
+        statusbar.set_text(2, "Timer starts after your first move");
     };
 
     GUI::ActionGroup draw_setting_actions;

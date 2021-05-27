@@ -155,6 +155,11 @@ void Game::mousedown_event(GUI::MouseEvent& event)
     if (m_new_game_animation || m_game_over_animation)
         return;
 
+    if (on_game_start && m_waiting_for_new_game) {
+        on_game_start();
+        m_waiting_for_new_game = false;
+    }
+
     auto click_location = event.position();
     for (auto& to_check : m_stacks) {
         if (to_check.type() == CardStack::Type::Waste)
@@ -440,10 +445,8 @@ void Game::paint_event(GUI::PaintEvent& event)
                 while (!m_new_deck.is_empty())
                     stack(Stock).push(m_new_deck.take_last());
                 m_new_game_animation = false;
+                m_waiting_for_new_game = true;
                 stop_timer();
-
-                if (on_game_start)
-                    on_game_start();
             }
         }
     }
