@@ -43,6 +43,9 @@ void PDFViewerWidget::initialize_menubar(GUI::Menubar& menubar)
     file_menu.add_action(GUI::CommonActions::make_quit_action([](auto&) {
         GUI::Application::the()->quit();
     }));
+
+    auto& help_menu = menubar.add_menu("&Help");
+    help_menu.add_action(GUI::CommonActions::make_about_action("PDF Viewer", GUI::Icon::default_icon("app-pdf-viewer"), window()));
 }
 
 void PDFViewerWidget::create_toolbar()
