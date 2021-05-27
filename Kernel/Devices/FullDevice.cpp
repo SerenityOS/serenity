@@ -28,10 +28,9 @@ bool FullDevice::can_read(const FileDescription&, size_t) const
 
 KResultOr<size_t> FullDevice::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    ssize_t count = min(static_cast<size_t>(PAGE_SIZE), size);
-    if (!buffer.memset(0, count))
+    if (!buffer.memset(0, size))
         return EFAULT;
-    return count;
+    return size;
 }
 
 KResultOr<size_t> FullDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t size)
