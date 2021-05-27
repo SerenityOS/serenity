@@ -1,89 +1,12 @@
-Only in curl-serenity/: config.log
-diff -ru curl-7.65.3/config.sub curl-serenity/config.sub
---- curl-7.65.3/config.sub	2019-07-19 00:41:42.000000000 +0200
-+++ curl-serenity/config.sub	2019-08-29 11:03:53.901037128 +0200
-@@ -1364,6 +1364,7 @@
- 	# Each alternative MUST end in a * to match a version number.
- 	# -sysv* is not here because it comes later, after sysvr4.
- 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
-+	      | -serenity* \
- 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+diff -Nru curl-7.77.0/config.sub curl-7.77.0-patched/config.sub
+--- curl-7.77.0/config.sub	2021-05-18 09:07:51.000000000 +0200
++++ curl-7.77.0-patched/config.sub	2021-05-27 08:28:58.201762746 +0200
+@@ -1368,7 +1368,7 @@
  	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
  	      | -sym* | -kopensolaris* | -plan9* \
-diff -ru curl-7.65.3/configure curl-serenity/configure
---- curl-7.65.3/configure	2019-07-19 00:41:41.000000000 +0200
-+++ curl-serenity/configure	2019-08-29 11:06:24.076073666 +0200
-@@ -18181,51 +18181,6 @@
- fi
- rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
- 
--
--    { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler halts on function prototype mismatch" >&5
--$as_echo_n "checking if compiler halts on function prototype mismatch... " >&6; }
--  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
--/* end confdefs.h.  */
--
--
--#     include <stdlib.h>
--      int rand(int n);
--      int rand(int n)
--      {
--        if(n)
--          return ++n;
--        else
--          return n;
--      }
--
--int main (void)
--{
--
--      int i[2]={0,0};
--      int j = rand(i[0]);
--      if(j)
--        return j;
--
-- ;
-- return 0;
--}
--
--_ACEOF
--if ac_fn_c_try_compile "$LINENO"; then :
--
--    { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
--$as_echo "no" >&6; }
--    as_fn_error $? "compiler does not halt on function prototype mismatch." "$LINENO" 5
--
--else
--
--    { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
--$as_echo "yes" >&6; }
--
--fi
--rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
--
--
-       { $as_echo "$as_me:${as_lineno-$LINENO}: checking if compiler supports hiding library internal symbols" >&5
- $as_echo_n "checking if compiler supports hiding library internal symbols... " >&6; }
-   supports_symbol_hiding="no"
-diff -ru curl-7.65.3/configure.ac curl-serenity/configure.ac
---- curl-7.65.3/configure.ac	2019-07-16 12:24:31.000000000 +0200
-+++ curl-serenity/configure.ac	2019-08-29 11:05:47.679343943 +0200
-@@ -287,7 +287,6 @@
- 
- CURL_CHECK_COMPILER_HALT_ON_ERROR
- CURL_CHECK_COMPILER_ARRAY_SIZE_NEGATIVE
--CURL_CHECK_COMPILER_PROTOTYPE_MISMATCH
- CURL_CHECK_COMPILER_SYMBOL_HIDING
- 
- CURL_CHECK_CURLDEBUG
-diff -ru curl-7.65.3/include/curl/curl.h curl-serenity/include/curl/curl.h
---- curl-7.65.3/include/curl/curl.h	2019-07-19 00:23:35.000000000 +0200
-+++ curl-serenity/include/curl/curl.h	2019-08-29 11:10:37.863071640 +0200
-@@ -75,6 +75,7 @@
-     defined(__minix) || defined(__SYMBIAN32__) || defined(__INTEGRITY) || \
-     defined(ANDROID) || defined(__ANDROID__) || defined(__OpenBSD__) || \
-     defined(__CYGWIN__) || \
-+    defined(__serenity__) || \
-    (defined(__FreeBSD_version) && (__FreeBSD_version < 800000))
- #include <sys/select.h>
- #endif
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+-	      | -aos* | -aros* | -cloudabi* | -sortix* \
++	      | -aos* | -aros* | -cloudabi* | -sortix* | -serenity* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -knetbsd* | -mirbsd* | -netbsd* \

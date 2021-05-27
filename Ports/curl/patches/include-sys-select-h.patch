@@ -1,0 +1,12 @@
+diff -ru curl-7.77.0/include/curl/curl.h curl-7.77.0-patched/include/curl/curl.h
+--- curl-7.77.0/include/curl/curl.h	2021-05-25 10:00:20.000000000 +0200
++++ curl-7.77.0-patched/include/curl/curl.h	2021-05-27 08:40:23.460428478 +0200
+@@ -74,7 +74,7 @@
+ #if defined(_AIX) || defined(__NOVELL_LIBC__) || defined(__NetBSD__) || \
+     defined(__minix) || defined(__SYMBIAN32__) || defined(__INTEGRITY) || \
+     defined(ANDROID) || defined(__ANDROID__) || defined(__OpenBSD__) || \
+-    defined(__CYGWIN__) || defined(AMIGA) || \
++    defined(__CYGWIN__) || defined(AMIGA) || defined(__serenity__) || \
+    (defined(__FreeBSD_version) && (__FreeBSD_version < 800000))
+ #include <sys/select.h>
+ #endif
