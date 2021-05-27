@@ -92,6 +92,7 @@ private:
     void handle_text_next_line_show_string(const Vector<Value>& args);
     void handle_text_next_line_show_string_set_spacing(const Vector<Value>& args);
 
+    void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
     void show_text(const String&, int shift = 0);
     RefPtr<ColorSpace> get_color_space(const Value&);
