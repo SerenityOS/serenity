@@ -504,6 +504,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
             }
 
             return;
+        case TCPFlags::SYN:
+            dbgln("handle_tcp: ignoring SYN for partially established connection");
+            return;
         default:
             dbgln("handle_tcp: unexpected flags in SynReceived state ({:x})", tcp_packet.flags());
             unused_rc = socket->send_tcp_packet(TCPFlags::RST);
