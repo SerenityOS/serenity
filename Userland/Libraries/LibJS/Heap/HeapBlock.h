@@ -21,8 +21,6 @@ public:
     static constexpr size_t block_size = 16 * KiB;
     static NonnullOwnPtr<HeapBlock> create_with_cell_size(Heap&, size_t);
 
-    void operator delete(void*);
-
     size_t cell_size() const { return m_cell_size; }
     size_t cell_count() const { return (block_size - sizeof(HeapBlock)) / m_cell_size; }
     bool is_full() const { return !has_lazy_freelist() && !m_freelist; }
