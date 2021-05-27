@@ -220,8 +220,10 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         tcp_packet.set_ack_number(m_ack_number);
     }
 
-    if (payload && !payload->read(tcp_packet.payload(), payload_size))
+    if (payload && !payload->read(tcp_packet.payload(), payload_size)) {
+        routing_decision.adapter->release_packet_buffer(*packet);
         return EFAULT;
+    }
 
     if (flags & TCPFlags::SYN) {
         ++m_sequence_number;
@@ -247,6 +249,8 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
         m_not_acked.append({ m_sequence_number, move(packet), ipv4_payload_offset, *routing_decision.adapter });
         m_not_acked_size += payload_size;
         enqueue_for_retransmit();
+    } else {
+        routing_decision.adapter->release_packet_buffer(*packet);
     }
 
     return KSuccess;
