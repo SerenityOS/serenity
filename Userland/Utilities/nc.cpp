@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         sa.sin_port = htons(port);
         sa.sin_addr.s_addr = htonl(INADDR_ANY);
         if (target) {
-            if (inet_pton(AF_INET, target, &sa.sin_addr) < 0) {
+            if (inet_pton(AF_INET, target, &sa.sin_addr) <= 0) {
                 perror("inet_pton");
                 return 1;
             }
