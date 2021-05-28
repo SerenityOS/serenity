@@ -109,7 +109,7 @@ public:
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
             return {};
-        return adopt_own(*new KBuffer(impl.release_nonnull()));
+        return adopt_own_if_nonnull(new KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -117,7 +117,7 @@ public:
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
             return {};
-        return adopt_own(*new KBuffer(impl.release_nonnull()));
+        return adopt_own_if_nonnull(new KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] static KBuffer create_with_size(size_t size, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
