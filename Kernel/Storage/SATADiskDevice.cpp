@@ -38,9 +38,4 @@ void SATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
     m_port->start_request(request);
 }
 
-String SATADiskDevice::device_name() const
-{
-    return String::formatted("hd{:c}", 'a' + minor());
-}
-
 }

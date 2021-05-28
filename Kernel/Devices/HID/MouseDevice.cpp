@@ -12,6 +12,9 @@ namespace Kernel {
 MouseDevice::MouseDevice()
     : HIDDevice(10, HIDManagement::the().generate_minor_device_number_for_mouse())
 {
+    auto name = String::formatted("mouse{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
 }
 
 MouseDevice::~MouseDevice()
@@ -47,6 +50,12 @@ KResultOr<size_t> MouseDevice::read(FileDescription&, u64, UserOrKernelBuffer& b
         lock.lock();
     }
     return nread;
+}
+
+StringView MouseDevice::device_name() const
+{
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 KResultOr<size_t> MouseDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)

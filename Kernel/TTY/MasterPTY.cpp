@@ -20,6 +20,11 @@ MasterPTY::MasterPTY(unsigned index)
     , m_slave(adopt_ref(*new SlavePTY(*this, index)))
     , m_index(index)
 {
+
+    auto name = String::formatted("{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+
     m_pts_name = String::formatted("/dev/pts/{}", m_index);
     auto process = Process::current();
     set_uid(process->uid());
@@ -120,9 +125,10 @@ String MasterPTY::absolute_path(const FileDescription&) const
     return String::formatted("ptm:{}", m_pts_name);
 }
 
-String MasterPTY::device_name() const
+StringView MasterPTY::device_name() const
 {
-    return String::formatted("{}", minor());
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 }

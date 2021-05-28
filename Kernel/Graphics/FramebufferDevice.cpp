@@ -94,11 +94,6 @@ void FramebufferDevice::activate_writes()
     m_graphical_writes_enabled = true;
 }
 
-String FramebufferDevice::device_name() const
-{
-    return String::formatted("fb{}", minor());
-}
-
 UNMAP_AFTER_INIT void FramebufferDevice::initialize()
 {
     m_real_framebuffer_vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, page_round_up(framebuffer_size_in_bytes()));
@@ -120,6 +115,10 @@ UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adap
     , m_output_port_index(output_port_index)
     , m_graphics_adapter(adapter)
 {
+    auto name = String::formatted("fb{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+
     VERIFY(!m_framebuffer_address.is_null());
     VERIFY(m_framebuffer_pitch);
     VERIFY(m_framebuffer_width);
@@ -218,6 +217,12 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
     default:
         return -EINVAL;
     };
+}
+
+StringView FramebufferDevice::device_name() const
+{
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 }

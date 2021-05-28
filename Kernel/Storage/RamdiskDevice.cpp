@@ -21,6 +21,11 @@ RamdiskDevice::RamdiskDevice(const RamdiskController& controller, NonnullOwnPtr<
     : StorageDevice(controller, major, minor, 512, region->size() / 512)
     , m_region(move(region))
 {
+    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
+    size_t drive_index = minor / 16;
+    auto name = String::formatted("ramdisk{}", drive_index);
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
     dmesgln("Ramdisk: Device #{} @ {}, Capacity={}", minor, m_region->vaddr(), max_addressable_block() * 512);
 }
 
@@ -57,11 +62,10 @@ void RamdiskDevice::start_request(AsyncBlockDeviceRequest& request)
     }
 }
 
-String RamdiskDevice::device_name() const
+StringView RamdiskDevice::device_name() const
 {
-    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t drive_index = minor() / 16;
-    return String::formatted("ramdisk{}", drive_index);
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 }

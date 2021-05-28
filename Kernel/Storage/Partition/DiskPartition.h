@@ -27,7 +27,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0600; }
-    virtual String device_name() const override;
+    virtual StringView device_name() const override;
 
     const DiskPartitionMetadata& metadata() const;
 

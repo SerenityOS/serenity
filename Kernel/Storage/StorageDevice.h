@@ -30,6 +30,7 @@ public:
     virtual bool can_write(const FileDescription&, size_t) const override;
 
     // ^Device
+    virtual StringView device_name() const override;
     virtual mode_t required_mode() const override { return 0600; }
 
 protected:

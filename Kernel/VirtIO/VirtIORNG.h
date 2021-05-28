@@ -25,7 +25,7 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return 0; }
 
     virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return "hwrng"; }
+    virtual StringView device_name() const override { return "hwrng"; }
 
     VirtIORNG(PCI::Address);
     virtual ~VirtIORNG() override;

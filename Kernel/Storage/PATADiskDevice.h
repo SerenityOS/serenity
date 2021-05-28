@@ -42,7 +42,6 @@ public:
 
     // ^BlockDevice
     virtual void start_request(AsyncBlockDeviceRequest&) override;
-    virtual String device_name() const override;
 
 private:
     PATADiskDevice(const IDEController&, IDEChannel&, DriveType, InterfaceType, u16, u64);

@@ -35,7 +35,7 @@ public:
     // ^Device
     virtual mode_t required_mode() const override { return 0440; }
 
-    virtual String device_name() const override { return String::formatted("keyboard{}", minor()); }
+    virtual StringView device_name() const override;
 
     void update_modifier(u8 modifier, bool state)
     {

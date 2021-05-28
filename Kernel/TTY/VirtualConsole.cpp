@@ -122,6 +122,10 @@ UNMAP_AFTER_INIT NonnullRefPtr<VirtualConsole> VirtualConsole::create_with_prese
 
 UNMAP_AFTER_INIT void VirtualConsole::initialize()
 {
+    auto name = String::formatted("tty{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+
     m_tty_name = String::formatted("/dev/tty{}", m_index);
     VERIFY(GraphicsManagement::the().console());
     set_size(GraphicsManagement::the().console()->max_column(), GraphicsManagement::the().console()->max_row());
@@ -391,9 +395,10 @@ void VirtualConsole::set_cursor_style(VT::CursorStyle)
     // Do nothing
 }
 
-String VirtualConsole::device_name() const
+StringView VirtualConsole::device_name() const
 {
-    return String::formatted("tty{}", minor());
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 void VirtualConsole::echo(u8 ch)

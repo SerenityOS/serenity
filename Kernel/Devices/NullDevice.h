@@ -21,7 +21,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return "null"; }
+    virtual StringView device_name() const override { return "null"; }
 
 private:
     // ^CharacterDevice

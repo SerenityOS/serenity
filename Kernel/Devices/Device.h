@@ -38,7 +38,7 @@ public:
     uid_t gid() const { return m_gid; }
 
     virtual mode_t required_mode() const = 0;
-    virtual String device_name() const = 0;
+    virtual StringView device_name() const = 0;
 
     virtual bool is_device() const override { return true; }
     virtual bool is_disk_device() const { return false; }
@@ -66,6 +66,8 @@ protected:
     void set_gid(gid_t gid) { m_gid = gid; }
 
     static HashMap<u32, Device*>& all_devices();
+
+    OwnPtr<KString> m_determined_name;
 
 private:
     unsigned m_major { 0 };

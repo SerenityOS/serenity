@@ -14,6 +14,10 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
     : CharacterDevice(229, next_device_id++)
     , VirtIODevice(address, "VirtIOConsole")
 {
+    auto name = String::formatted("hvc{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+
     if (auto cfg = get_config(ConfigurationType::Device)) {
         bool success = negotiate_features([&](u64 supported_features) {
             u64 negotiated = 0;
@@ -44,6 +48,12 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
             m_transmit_buffer = make<RingBuffer>("VirtIOConsole Transmit", RINGBUFFER_SIZE);
         }
     }
+}
+
+StringView VirtIOConsole::device_name() const
+{
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 VirtIOConsole::~VirtIOConsole()

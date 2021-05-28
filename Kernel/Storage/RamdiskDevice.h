@@ -26,7 +26,7 @@ public:
 
     // ^DiskDevice
     virtual const char* class_name() const override;
-    virtual String device_name() const override;
+    virtual StringView device_name() const override;
 
     bool is_slave() const;
 

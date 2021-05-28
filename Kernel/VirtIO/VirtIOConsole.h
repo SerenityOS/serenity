@@ -37,7 +37,7 @@ private:
     virtual mode_t required_mode() const override { return 0666; }
 
     virtual bool handle_device_config_change() override;
-    virtual String device_name() const override { return String::formatted("hvc{}", minor()); }
+    virtual StringView device_name() const override;
     virtual void handle_queue_update(u16 queue_index) override;
 
     OwnPtr<RingBuffer> m_receive_buffer;

@@ -41,11 +41,6 @@ void PATADiskDevice::start_request(AsyncBlockDeviceRequest& request)
     m_channel->start_request(request, is_slave(), m_capabilities);
 }
 
-String PATADiskDevice::device_name() const
-{
-    return String::formatted("hd{:c}", 'a' + minor());
-}
-
 bool PATADiskDevice::is_slave() const
 {
     return m_drive_type == DriveType::Slave;

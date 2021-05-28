@@ -18,6 +18,9 @@ StorageDevice::StorageDevice(const StorageController& controller, size_t sector_
     , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
 {
+    auto name = String::formatted("hd{:c}", 'a' + minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
 }
 
 StorageDevice::StorageDevice(const StorageController& controller, int major, int minor, size_t sector_size, u64 max_addressable_block)
@@ -25,6 +28,15 @@ StorageDevice::StorageDevice(const StorageController& controller, int major, int
     , m_storage_controller(controller)
     , m_max_addressable_block(max_addressable_block)
 {
+    auto name = String::formatted("hd{:c}", 'a' + minor);
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+}
+
+StringView StorageDevice::device_name() const
+{
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 const char* StorageDevice::class_name() const

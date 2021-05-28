@@ -14,6 +14,9 @@ UNMAP_AFTER_INIT SerialDevice::SerialDevice(IOAddress base_addr, unsigned minor)
     : CharacterDevice(4, minor)
     , m_base_addr(base_addr)
 {
+    auto name = String::formatted("ttyS{}", minor - 64);
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
     initialize();
 }
 
@@ -76,9 +79,10 @@ void SerialDevice::put_char(char ch)
     m_last_put_char_was_carriage_return = (ch == '\r');
 }
 
-String SerialDevice::device_name() const
+StringView SerialDevice::device_name() const
 {
-    return String::formatted("ttyS{}", minor() - 64);
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 UNMAP_AFTER_INIT void SerialDevice::initialize()

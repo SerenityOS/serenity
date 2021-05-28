@@ -112,7 +112,7 @@ private:
     virtual const char* class_name() const override { return "VirtualConsole"; }
 
     // ^Device
-    virtual String device_name() const override;
+    virtual StringView device_name() const override;
 
     void set_active(bool);
     void flush_dirty_lines();

@@ -20,6 +20,11 @@ DiskPartition::DiskPartition(BlockDevice& device, unsigned minor_number, DiskPar
     , m_device(device)
     , m_metadata(metadata)
 {
+    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
+    size_t partition_index = minor() % 16;
+    auto name = String::formatted("{}{}", m_device->device_name(), partition_index + 1);
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
 }
 
 DiskPartition::~DiskPartition()
@@ -65,11 +70,10 @@ bool DiskPartition::can_write(const FileDescription& fd, size_t offset) const
     return m_device->can_write(fd, offset + adjust);
 }
 
-String DiskPartition::device_name() const
+StringView DiskPartition::device_name() const
 {
-    // FIXME: Try to not hardcode a maximum of 16 partitions per drive!
-    size_t partition_index = minor() % 16;
-    return String::formatted("{}{}", m_device->device_name(), partition_index + 1);
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 const char* DiskPartition::class_name() const

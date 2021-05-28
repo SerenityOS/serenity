@@ -268,6 +268,9 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
 UNMAP_AFTER_INIT KeyboardDevice::KeyboardDevice()
     : HIDDevice(85, HIDManagement::the().generate_minor_device_number_for_keyboard())
 {
+    auto name = String::formatted("keyboard{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
 }
 
 // FIXME: UNMAP_AFTER_INIT is fine for now, but for hot-pluggable devices
@@ -307,6 +310,12 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
         lock.lock();
     }
     return nread;
+}
+
+StringView KeyboardDevice::device_name() const
+{
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 KResultOr<size_t> KeyboardDevice::write(FileDescription&, u64, const UserOrKernelBuffer&, size_t)

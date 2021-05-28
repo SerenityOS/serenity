@@ -17,6 +17,10 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
+    auto name = String::formatted("{}", minor());
+    m_determined_name = KString::try_create(name.substring_view(0));
+    VERIFY(m_determined_name);
+
     m_tty_name = String::formatted("/dev/pts/{}", m_index);
     auto process = Process::current();
     set_uid(process->uid());
@@ -86,9 +90,10 @@ KResult SlavePTY::close()
     return KSuccess;
 }
 
-String SlavePTY::device_name() const
+StringView SlavePTY::device_name() const
 {
-    return String::formatted("{}", minor());
+    VERIFY(m_determined_name);
+    return m_determined_name->view();
 }
 
 FileBlockCondition& SlavePTY::block_condition()

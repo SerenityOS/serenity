@@ -36,7 +36,7 @@ public:
 
     // ^Device
     virtual mode_t required_mode() const override { return 0220; }
-    virtual String device_name() const override { return "audio"; }
+    virtual StringView device_name() const override { return "audio"; }
 
 private:
     // ^IRQHandler
