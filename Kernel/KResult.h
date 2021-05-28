@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <LibC/errno_numbers.h>
