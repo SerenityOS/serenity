@@ -50,6 +50,8 @@ public:
     Vector<Range, 2> carve(const Range&) const;
     Range intersect(const Range&) const;
 
+    static KResultOr<Range> expand_to_page_boundaries(FlatPtr address, size_t size);
+
 private:
     VirtualAddress m_base;
     size_t m_size { 0 };

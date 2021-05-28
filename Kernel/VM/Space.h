@@ -33,6 +33,8 @@ public:
 
     void dump_regions();
 
+    KResult unmap_mmap_range(VirtualAddress, size_t);
+
     Optional<Range> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
     KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
