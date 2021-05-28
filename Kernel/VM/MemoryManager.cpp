@@ -464,7 +464,11 @@ OwnPtr<Region> MemoryManager::allocate_contiguous_kernel_region(size_t size, Str
     if (!range.has_value())
         return {};
     auto vmobject = ContiguousVMObject::create_with_size(size, physical_alignment);
-    return allocate_kernel_region_with_vmobject(range.value(), vmobject, name, access, cacheable);
+    if (!vmobject) {
+        kernel_page_directory().range_allocator().deallocate(range.value());
+        return {};
+    }
+    return allocate_kernel_region_with_vmobject(range.value(), *vmobject, name, access, cacheable);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, StringView name, Region::Access access, AllocationStrategy strategy, Region::Cacheable cacheable)
