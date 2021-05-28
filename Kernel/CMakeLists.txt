@@ -112,6 +112,7 @@ set(KERNEL_SOURCES
     Interrupts/SpuriousInterruptHandler.cpp
     Interrupts/UnhandledInterruptHandler.cpp
     KBufferBuilder.cpp
+    KString.cpp
     KSyms.cpp
     Lock.cpp
     Net/E1000NetworkAdapter.cpp
