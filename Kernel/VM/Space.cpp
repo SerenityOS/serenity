@@ -6,6 +6,7 @@
  */
 
 #include <AK/QuickSort.h>
+#include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AnonymousVMObject.h>
@@ -35,6 +36,103 @@ Space::Space(Process& process, NonnullRefPtr<PageDirectory> page_directory)
 
 Space::~Space()
 {
+}
+
+KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
+{
+    if (!size)
+        return EINVAL;
+
+    auto range_or_error = Range::expand_to_page_boundaries(addr.get(), size);
+    if (range_or_error.is_error())
+        return range_or_error.error();
+
+    auto range_to_unmap = range_or_error.value();
+
+    if (!is_user_range(range_to_unmap))
+        return EFAULT;
+
+    if (auto* whole_region = find_region_from_range(range_to_unmap)) {
+        if (!whole_region->is_mmap())
+            return EPERM;
+
+        PerformanceManager::add_unmap_perf_event(*Process::current(), whole_region->range());
+
+        bool success = deallocate_region(*whole_region);
+        VERIFY(success);
+        return KSuccess;
+    }
+
+    if (auto* old_region = find_region_containing(range_to_unmap)) {
+        if (!old_region->is_mmap())
+            return EPERM;
+
+        // Remove the old region from our regions tree, since were going to add another region
+        // with the exact same start address, but dont deallocate it yet
+        auto region = take_region(*old_region);
+        VERIFY(region);
+
+        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
+        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
+        auto new_regions = split_region_around_range(*region, range_to_unmap);
+
+        // Instead we give back the unwanted VM manually.
+        page_directory().range_allocator().deallocate(range_to_unmap);
+
+        // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
+        for (auto* new_region : new_regions) {
+            new_region->map(page_directory());
+        }
+
+        PerformanceManager::add_unmap_perf_event(*Process::current(), range_to_unmap);
+
+        return KSuccess;
+    }
+
+    // Try again while checkin multiple regions at a time
+    // slow: without caching
+    const auto& regions = find_regions_intersecting(range_to_unmap);
+
+    // Check if any of the regions is not mmapped, to not accidentally
+    // error-out with just half a region map left
+    for (auto* region : regions) {
+        if (!region->is_mmap())
+            return EPERM;
+    }
+
+    Vector<Region*, 2> new_regions;
+
+    for (auto* old_region : regions) {
+        // if it's a full match we can delete the complete old region
+        if (old_region->range().intersect(range_to_unmap).size() == old_region->size()) {
+            bool res = deallocate_region(*old_region);
+            VERIFY(res);
+            continue;
+        }
+
+        // Remove the old region from our regions tree, since were going to add another region
+        // with the exact same start address, but dont deallocate it yet
+        auto region = take_region(*old_region);
+        VERIFY(region);
+
+        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
+        region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+
+        // Otherwise just split the regions and collect them for future mapping
+        if (new_regions.try_append(split_region_around_range(*region, range_to_unmap)))
+            return ENOMEM;
+    }
+    // Instead we give back the unwanted VM manually at the end.
+    page_directory().range_allocator().deallocate(range_to_unmap);
+    // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
+    for (auto* new_region : new_regions) {
+        new_region->map(page_directory());
+    }
+
+    PerformanceManager::add_unmap_perf_event(*Process::current(), range_to_unmap);
+
+    return KSuccess;
 }
 
 Optional<Range> Space::allocate_range(VirtualAddress vaddr, size_t size, size_t alignment)
