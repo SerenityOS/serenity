@@ -765,8 +765,11 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
     style.set_property(property_id, value);
 }
 
-StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(const DOM::Element& element, const String& custom_property_name) const
+StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_property_with_specificity(DOM::Element& element, const String& custom_property_name) const
 {
+    if (auto maybe_property = element.resolve_custom_property(custom_property_name); maybe_property.has_value())
+        return maybe_property.value();
+
     auto parent_element = element.parent_element();
     CustomPropertyResolutionTuple parent_resolved {};
     if (parent_element)
@@ -782,6 +785,7 @@ StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_prope
 
         auto custom_property_style = match.rule->declaration().custom_property(custom_property_name);
         if (custom_property_style.has_value()) {
+            element.add_custom_property(custom_property_name, { custom_property_style.value(), match.specificity });
             return { custom_property_style.value(), match.specificity };
         }
     }
@@ -789,14 +793,14 @@ StyleResolver::CustomPropertyResolutionTuple StyleResolver::resolve_custom_prope
     return parent_resolved;
 }
 
-Optional<StyleProperty> StyleResolver::resolve_custom_property(const DOM::Element& element, const String& custom_property_name) const
+Optional<StyleProperty> StyleResolver::resolve_custom_property(DOM::Element& element, const String& custom_property_name) const
 {
     auto resolved_with_specificity = resolve_custom_property_with_specificity(element, custom_property_name);
 
     return resolved_with_specificity.style;
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const DOM::Element& element) const
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(DOM::Element& element) const
 {
     auto style = StyleProperties::create();
 
