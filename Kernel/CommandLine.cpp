@@ -178,10 +178,8 @@ UNMAP_AFTER_INIT AHCIResetMode CommandLine::ahci_reset_mode() const
     const auto ahci_reset_mode = lookup("ahci_reset_mode").value_or("controller");
     if (ahci_reset_mode == "controller") {
         return AHCIResetMode::ControllerOnly;
-    } else if (ahci_reset_mode == "none") {
-        return AHCIResetMode::None;
-    } else if (ahci_reset_mode == "complete") {
-        return AHCIResetMode::Complete;
+    } else if (ahci_reset_mode == "aggressive") {
+        return AHCIResetMode::Aggressive;
     }
     PANIC("Unknown AHCIResetMode: {}", ahci_reset_mode);
 }
