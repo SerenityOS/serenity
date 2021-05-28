@@ -51,6 +51,13 @@ private:
     virtual void context_menu_event(ContextMenuEvent&) override;
     virtual void leave_event(Core::Event&) override;
 
+    struct VisibleSectionRange {
+        int start_offset { 0 };
+        int start { 0 };
+        int end { 0 };
+    };
+    VisibleSectionRange visible_section_range() const;
+
     Gfx::IntRect section_resize_grabbable_rect(int) const;
 
     void paint_horizontal(Painter&);
