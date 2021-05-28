@@ -16,9 +16,9 @@ constexpr int bytes_per_pixel = 3;
 #define IMAGE_INFORMATION_SIZE 40
 #define PIXEL_DATA_OFFSET FILE_HEADER_SIZE + IMAGE_INFORMATION_SIZE
 
-class Streamer {
+class OutputStreamer {
 public:
-    Streamer(u8* data)
+    OutputStreamer(u8* data)
         : m_data(data)
     {
     }
@@ -88,7 +88,7 @@ ByteBuffer BMPWriter::dump(const RefPtr<Bitmap> bitmap)
     pixel_data = compress_pixel_data(pixel_data, m_compression);
 
     int file_size = PIXEL_DATA_OFFSET + pixel_data.size();
-    Streamer streamer(buffer.data());
+    OutputStreamer streamer(buffer.data());
     streamer.write_u8('B');
     streamer.write_u8('M');
     streamer.write_u32(file_size);

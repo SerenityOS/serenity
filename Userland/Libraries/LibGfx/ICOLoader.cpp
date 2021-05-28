@@ -71,7 +71,7 @@ struct [[gnu::packed]] BMP_ARGB {
 };
 static_assert(sizeof(BMP_ARGB) == 4);
 
-struct ImageDescriptor {
+struct ICOImageDescriptor {
     u16 width;
     u16 height;
     size_t offset;
@@ -89,7 +89,7 @@ struct ICOLoadingContext {
     State state { NotDecoded };
     const u8* data { nullptr };
     size_t data_size { 0 };
-    Vector<ImageDescriptor> images;
+    Vector<ICOImageDescriptor> images;
     size_t largest_index;
 };
 
@@ -126,14 +126,14 @@ static Optional<size_t> decode_ico_header(InputMemoryStream& stream)
     return { header.image_count };
 }
 
-static Optional<ImageDescriptor> decode_ico_direntry(InputMemoryStream& stream)
+static Optional<ICOImageDescriptor> decode_ico_direntry(InputMemoryStream& stream)
 {
     ICONDIRENTRY entry;
     stream >> Bytes { &entry, sizeof(entry) };
     if (stream.handle_any_error())
         return {};
 
-    ImageDescriptor desc = { entry.width, entry.height, entry.offset, entry.size, nullptr };
+    ICOImageDescriptor desc = { entry.width, entry.height, entry.offset, entry.size, nullptr };
     if (desc.width == 0)
         desc.width = 256;
     if (desc.height == 0)
@@ -192,7 +192,7 @@ static bool load_ico_directory(ICOLoadingContext& context)
     return true;
 }
 
-static bool load_ico_bmp(ICOLoadingContext& context, ImageDescriptor& desc)
+static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
 {
     BITMAPINFOHEADER info;
     if (desc.size < sizeof(info))
@@ -293,7 +293,7 @@ static bool load_ico_bitmap(ICOLoadingContext& context, Optional<size_t> index)
         return false;
     }
 
-    ImageDescriptor& desc = context.images[real_index];
+    ICOImageDescriptor& desc = context.images[real_index];
 
     PNGImageDecoderPlugin png_decoder(context.data + desc.offset, desc.size);
     if (png_decoder.sniff()) {
