@@ -38,8 +38,7 @@ enum class PCIAccessLevel {
 
 enum class AHCIResetMode {
     ControllerOnly,
-    Complete,
-    None
+    Aggressive,
 };
 
 class CommandLine {
