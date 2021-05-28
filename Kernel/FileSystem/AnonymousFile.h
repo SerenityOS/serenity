@@ -12,9 +12,9 @@ namespace Kernel {
 
 class AnonymousFile final : public File {
 public:
-    static NonnullRefPtr<AnonymousFile> create(NonnullRefPtr<AnonymousVMObject> vmobject)
+    static RefPtr<AnonymousFile> create(NonnullRefPtr<AnonymousVMObject> vmobject)
     {
-        return adopt_ref(*new AnonymousFile(move(vmobject)));
+        return adopt_ref_if_nonnull(new AnonymousFile(move(vmobject)));
     }
 
     virtual ~AnonymousFile() override;
