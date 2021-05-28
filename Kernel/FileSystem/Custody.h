@@ -21,7 +21,7 @@ namespace Kernel {
 class Custody : public RefCounted<Custody> {
     MAKE_SLAB_ALLOCATED(Custody)
 public:
-    static KResultOr<NonnullRefPtr<Custody>> create(Custody* parent, StringView name, Inode& inode, int mount_flags);
+    static KResultOr<NonnullRefPtr<Custody>> try_create(Custody* parent, StringView name, Inode&, int mount_flags);
 
     ~Custody();
 
