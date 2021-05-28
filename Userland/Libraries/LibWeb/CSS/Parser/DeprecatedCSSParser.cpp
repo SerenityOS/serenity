@@ -217,7 +217,7 @@ static bool takes_integer_value(CSS::PropertyID property_id)
     return property_id == CSS::PropertyID::ZIndex || property_id == CSS::PropertyID::FontWeight || property_id == CSS::PropertyID::Custom;
 }
 
-static StringView parse_custom_property_name(StringView value)
+static StringView parse_custom_property_name(const StringView& value)
 {
     if (!value.starts_with("var(") && !value.ends_with(")"))
         return {};
