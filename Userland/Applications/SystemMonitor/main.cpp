@@ -352,7 +352,18 @@ int main(int argc, char** argv)
     window->set_menubar(move(menubar));
 
     process_table_view.on_activation = [&](auto&) {
-        process_properties_action->activate();
+        if (process_properties_action->is_enabled())
+            process_properties_action->activate();
+    };
+
+    process_table_view.on_selection_change = [&] {
+        pid_t pid = selected_id(ProcessModel::Column::PID);
+        bool has_access = can_access_pid(pid);
+        kill_action->set_enabled(has_access);
+        stop_action->set_enabled(has_access);
+        continue_action->set_enabled(has_access);
+        profile_action->set_enabled(has_access);
+        process_properties_action->set_enabled(has_access);
     };
 
     app->on_action_enter = [](GUI::Action const& action) {
