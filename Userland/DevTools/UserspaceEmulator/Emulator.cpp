@@ -445,8 +445,8 @@ void Emulator::dispatch_one_pending_signal()
 }
 
 // Make sure the compiler doesn't "optimize away" this function:
-extern void signal_trampoline_dummy();
-void signal_trampoline_dummy()
+static void signal_trampoline_dummy() __attribute__((used));
+NEVER_INLINE void signal_trampoline_dummy()
 {
     // The trampoline preserves the current eax, pushes the signal code and
     // then calls the signal handler. We do this because, when interrupting a
