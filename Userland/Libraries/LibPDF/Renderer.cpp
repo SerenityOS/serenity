@@ -42,6 +42,15 @@ Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitm
     float scale_y = static_cast<float>(bitmap->height()) / height;
     userspace_matrix.scale(scale_x, scale_y);
 
+    // PDF user-space coordinate y axis increases from bottom to top, so we have to
+    // insert a horizontal reflection about the vertical midpoint into our transformation
+    // matrix
+
+    static Gfx::AffineTransform horizontal_reflection_matrix = { 1, 0, 0, -1, 0, 0 };
+
+    userspace_matrix.multiply(horizontal_reflection_matrix);
+    userspace_matrix.translate(0.0f, -height);
+
     m_graphics_state_stack.append(GraphicsState { userspace_matrix });
 
     m_bitmap->fill(Gfx::Color::NamedColor::White);
@@ -530,8 +539,6 @@ void Renderer::show_text(const String& string, float shift)
     VERIFY(font);
 
     auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-    // Reverse the Y axis
-    glyph_position.set_y(static_cast<float>(m_bitmap->height()) - glyph_position.y());
     // Account for the reversed font baseline
     glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
 
