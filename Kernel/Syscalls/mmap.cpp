@@ -73,7 +73,7 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, con
     bool make_executable = prot & PROT_EXEC;
 
     if (map_anonymous && make_executable)
-        return false;
+        return true;
 
     if (make_writable && make_executable)
         return false;
@@ -87,13 +87,13 @@ static bool validate_mmap_prot(int prot, bool map_stack, bool map_anonymous, con
 
     if (region) {
         if (make_writable && region->has_been_executable())
-            return false;
+            return true;
 
         if (make_executable && region->has_been_writable()) {
             if (should_make_executable_exception_for_dynamic_loader(make_readable, make_writable, make_executable, *region))
                 return true;
 
-            return false;
+            return true;
         }
     }
 
@@ -147,7 +147,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         REQUIRE_PROMISE(map_fixed);
     }
 
-    if (alignment & ~PAGE_MASK)
+    if ((alignment & ~PAGE_MASK) || alignment == 0)
         return EINVAL;
 
     if (page_round_up_would_wrap(size))
