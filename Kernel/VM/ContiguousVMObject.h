@@ -7,18 +7,18 @@
 #pragma once
 
 #include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/VMObject.h>
 
 namespace Kernel {
-
 class ContiguousVMObject final : public VMObject {
 public:
     virtual ~ContiguousVMObject() override;
 
-    static NonnullRefPtr<ContiguousVMObject> create_with_size(size_t, size_t physical_alignment = PAGE_SIZE);
+    static RefPtr<ContiguousVMObject> create_with_size(size_t, size_t physical_alignment = PAGE_SIZE);
 
 private:
-    explicit ContiguousVMObject(size_t, size_t physical_alignment);
+    explicit ContiguousVMObject(size_t, NonnullRefPtrVector<PhysicalPage>&);
     explicit ContiguousVMObject(const ContiguousVMObject&);
 
     virtual const char* class_name() const override { return "ContiguousVMObject"; }
