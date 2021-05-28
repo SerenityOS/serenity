@@ -168,10 +168,6 @@ enum ClientVerificationStaus {
 // GCM specifically asks us to transmit only the nonce, the counter is zero
 // and the fixed IV is derived from the premaster key.
 #define ENUMERATE_CIPHERS(C)                                                                                                                    \
-    C(false, CipherSuite::AES_128_GCM_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)       \
-    C(false, CipherSuite::AES_256_GCM_SHA384, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)       \
-    C(false, CipherSuite::AES_128_CCM_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_CCM, Crypto::Hash::SHA256, 16, false)     \
-    C(false, CipherSuite::AES_128_CCM_8_SHA256, SignatureAlgorithm::Anonymous, CipherAlgorithm::AES_128_CCM_8, Crypto::Hash::SHA256, 16, false) \
     C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)        \
     C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)        \
     C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)   \
