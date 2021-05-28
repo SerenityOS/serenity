@@ -56,9 +56,7 @@ public:
 
     virtual void clear(size_t x, size_t y, size_t length) const = 0;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground) const = 0;
-    virtual void write(size_t x, size_t y, String, Color background, Color foreground) const = 0;
     virtual void write(size_t x, size_t y, char ch) const = 0;
-    virtual void write(size_t x, size_t y, String) const = 0;
     virtual void write(char ch) const = 0;
 
     virtual ~Console() { }
