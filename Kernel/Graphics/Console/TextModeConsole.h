@@ -26,9 +26,7 @@ public:
     virtual void show_cursor() override;
     virtual void clear(size_t x, size_t y, size_t length) const override;
     virtual void write(size_t x, size_t y, char ch) const override;
-    virtual void write(size_t x, size_t y, String cstring) const override;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground) const override;
-    virtual void write(size_t x, size_t y, String, Color background, Color foreground) const override;
     virtual void write(char ch) const override;
 
     virtual void enable() override { }

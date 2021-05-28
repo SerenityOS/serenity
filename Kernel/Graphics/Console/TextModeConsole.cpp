@@ -132,44 +132,13 @@ void TextModeConsole::write(size_t x, size_t y, char ch) const
             m_y = 0;
     }
 }
-void TextModeConsole::write(size_t x, size_t y, String cstring) const
-{
-    ScopedSpinLock lock(m_vga_lock);
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
-    u16 color_mask = (m_default_foreground_color << 8) | (m_default_background_color << 12);
-    for (size_t index = 0; index < cstring.length(); index++) {
-        buf[index] = color_mask | cstring[index];
-    }
-    m_x = x + cstring.length();
-    if (m_x >= max_column()) {
-        m_x = 0;
-        m_y = y + 1;
-        if (m_y >= max_row())
-            m_y = 0;
-    }
-}
+
 void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground) const
 {
     ScopedSpinLock lock(m_vga_lock);
     auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
     *buf = foreground << 8 | background << 12 | ch;
     m_x = x + 1;
-    if (m_x >= max_column()) {
-        m_x = 0;
-        m_y = y + 1;
-        if (m_y >= max_row())
-            m_y = 0;
-    }
-}
-void TextModeConsole::write(size_t x, size_t y, String cstring, Color background, Color foreground) const
-{
-    ScopedSpinLock lock(m_vga_lock);
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
-    u16 color_mask = foreground << 8 | background << 12;
-    for (size_t index = 0; index < cstring.length(); index++) {
-        buf[index] = color_mask | cstring[index];
-    }
-    m_x = x + cstring.length();
     if (m_x >= max_column()) {
         m_x = 0;
         m_y = y + 1;

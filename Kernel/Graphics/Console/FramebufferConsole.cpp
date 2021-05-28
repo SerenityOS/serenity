@@ -339,17 +339,9 @@ void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Co
     }
 }
 
-void FramebufferConsole::write(size_t, size_t, String, Color, Color) const
-{
-    TODO();
-}
 void FramebufferConsole::write(size_t x, size_t y, char ch) const
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color);
-}
-void FramebufferConsole::write(size_t, size_t, String) const
-{
-    TODO();
 }
 
 void FramebufferConsole::write(char ch) const
