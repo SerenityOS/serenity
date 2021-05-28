@@ -12,9 +12,20 @@
 
 namespace Kernel {
 
-Custody::Custody(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
+KResultOr<NonnullRefPtr<Custody>> Custody::create(Custody* parent, StringView name, Inode& inode, int mount_flags)
+{
+    auto name_kstring = KString::try_create(name);
+    if (!name_kstring)
+        return ENOMEM;
+    auto custody = adopt_ref_if_nonnull(new Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
+    if (!custody)
+        return ENOMEM;
+    return custody.release_nonnull();
+}
+
+Custody::Custody(Custody* parent, NonnullOwnPtr<KString> name, Inode& inode, int mount_flags)
     : m_parent(parent)
-    , m_name(name)
+    , m_name(move(name))
     , m_inode(inode)
     , m_mount_flags(mount_flags)
 {
@@ -34,7 +45,7 @@ String Custody::absolute_path() const
     StringBuilder builder;
     for (int i = custody_chain.size() - 2; i >= 0; --i) {
         builder.append('/');
-        builder.append(custody_chain[i]->name().characters());
+        builder.append(custody_chain[i]->name());
     }
     return builder.to_string();
 }
