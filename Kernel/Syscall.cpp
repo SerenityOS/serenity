@@ -16,43 +16,47 @@ namespace Kernel {
 extern "C" void syscall_handler(TrapFrame*) __attribute__((used));
 extern "C" void syscall_asm_entry();
 
-// clang-format off
+static void syscall_asm_entry_dummy() __attribute__((used));
+NEVER_INLINE void syscall_asm_entry_dummy()
+{
+    // clang-format off
 #if ARCH(I386)
-asm(
-    ".globl syscall_asm_entry\n"
-    "syscall_asm_entry:\n"
-    "    pushl $0x0\n"
-    "    pusha\n"
-    "    pushl %ds\n"
-    "    pushl %es\n"
-    "    pushl %fs\n"
-    "    pushl %gs\n"
-    "    pushl %ss\n"
-    "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"
-    "    mov %ax, %ds\n"
-    "    mov %ax, %es\n"
-    "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"
-    "    mov %ax, %fs\n"
-    "    cld\n"
-    "    xor %esi, %esi\n"
-    "    xor %edi, %edi\n"
-    "    pushl %esp \n" // set TrapFrame::regs
-    "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"
-    "    movl %esp, %ebx \n"
-    "    pushl %ebx \n" // push pointer to TrapFrame
-    "    call enter_trap_no_irq \n"
-    "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
-    "    call syscall_handler \n"
-    "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
-    "    jmp common_trap_exit \n");
+    asm(
+        ".globl syscall_asm_entry\n"
+        "syscall_asm_entry:\n"
+        "    pushl $0x0\n"
+        "    pusha\n"
+        "    pushl %ds\n"
+        "    pushl %es\n"
+        "    pushl %fs\n"
+        "    pushl %gs\n"
+        "    pushl %ss\n"
+        "    mov $" __STRINGIFY(GDT_SELECTOR_DATA0) ", %ax\n"
+        "    mov %ax, %ds\n"
+        "    mov %ax, %es\n"
+        "    mov $" __STRINGIFY(GDT_SELECTOR_PROC) ", %ax\n"
+        "    mov %ax, %fs\n"
+        "    cld\n"
+        "    xor %esi, %esi\n"
+        "    xor %edi, %edi\n"
+        "    pushl %esp \n" // set TrapFrame::regs
+        "    subl $" __STRINGIFY(TRAP_FRAME_SIZE - 4) ", %esp \n"
+        "    movl %esp, %ebx \n"
+        "    pushl %ebx \n" // push pointer to TrapFrame
+        "    call enter_trap_no_irq \n"
+        "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+        "    call syscall_handler \n"
+        "    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
+        "    jmp common_trap_exit \n");
 #elif ARCH(X86_64)
     asm(
-    ".globl syscall_asm_entry\n"
-    "syscall_asm_entry:\n"
-    "    cli\n"
-    "    hlt\n");
+        ".globl syscall_asm_entry\n"
+        "syscall_asm_entry:\n"
+        "    cli\n"
+        "    hlt\n");
 #endif
-// clang-format on
+    // clang-format on
+}
 
 namespace Syscall {
 
