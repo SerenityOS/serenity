@@ -632,14 +632,16 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
         auto old_offset = old_region->offset_in_vmobject();
         NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
 
+        auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
+        if (!new_vmobject)
+            return ENOMEM;
+
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
         bool success = space().deallocate_region(*old_region);
         VERIFY(success);
 
-        auto new_vmobject = PrivateInodeVMObject::create_with_inode(inode);
-
-        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject, old_offset, old_name, old_prot, false);
+        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name, old_prot, false);
         if (new_region_or_error.is_error())
             return new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();
