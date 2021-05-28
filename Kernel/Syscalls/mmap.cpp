@@ -156,13 +156,14 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
     if (!is_user_range(VirtualAddress(addr), page_round_up(size)))
         return EFAULT;
 
-    String name;
+    OwnPtr<KString> name;
     if (params.name.characters) {
         if (params.name.length > PATH_MAX)
             return ENAMETOOLONG;
-        name = copy_string_from_user(params.name);
-        if (name.is_null())
-            return EFAULT;
+        auto name_or_error = try_copy_kstring_from_user(params.name);
+        if (name_or_error.is_error())
+            return name_or_error.error();
+        name = name_or_error.release_value();
     }
 
     if (size == 0)
@@ -213,7 +214,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
 
     if (map_anonymous) {
         auto strategy = map_noreserve ? AllocationStrategy::None : AllocationStrategy::Reserve;
-        auto region_or_error = space().allocate_region(range.value(), !name.is_null() ? name : "mmap", prot, strategy);
+        auto region_or_error = space().allocate_region(range.value(), {}, prot, strategy);
         if (region_or_error.is_error())
             return region_or_error.error().error();
         region = region_or_error.value();
@@ -253,8 +254,7 @@ KResultOr<FlatPtr> Process::sys$mmap(Userspace<const Syscall::SC_mmap_params*> u
         region->set_shared(true);
     if (map_stack)
         region->set_stack(true);
-    if (!name.is_null())
-        region->set_name(name);
+    region->set_name(move(name));
 
     PerformanceManager::add_mmap_perf_event(*this, *region);
 
@@ -480,9 +480,10 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
     if (params.name.length > PATH_MAX)
         return ENAMETOOLONG;
 
-    auto name = copy_string_from_user(params.name);
-    if (name.is_null())
-        return EFAULT;
+    auto name_or_error = try_copy_kstring_from_user(params.name);
+    if (name_or_error.is_error())
+        return name_or_error.error();
+    auto name = name_or_error.release_value();
 
     auto range_or_error = expand_range_to_page_boundaries((FlatPtr)params.addr, params.size);
     if (range_or_error.is_error())

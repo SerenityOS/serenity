@@ -67,7 +67,11 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
         m_tid = Process::allocate_pid().value();
     }
 
-    m_kernel_stack_region->set_name(String::formatted("Kernel stack (thread {})", m_tid.value()));
+    {
+        // FIXME: Go directly to KString
+        auto string = String::formatted("Kernel stack (thread {})", m_tid.value());
+        m_kernel_stack_region->set_name(KString::try_create(string));
+    }
 
     {
         ScopedSpinLock lock(g_tid_map_lock);

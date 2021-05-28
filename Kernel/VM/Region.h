@@ -8,11 +8,11 @@
 
 #include <AK/EnumBits.h>
 #include <AK/IntrusiveList.h>
-#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Heap/SlabAllocator.h>
+#include <Kernel/KString.h>
 #include <Kernel/VM/PageFaultResponse.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/RangeAllocator.h>
@@ -50,8 +50,8 @@ public:
         Yes,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, Region::Access access, Cacheable, bool shared);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String name, Region::Access access, Cacheable = Cacheable::Yes);
+    static NonnullOwnPtr<Region> create_user_accessible(Process*, const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable, bool shared);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable = Cacheable::Yes);
 
     ~Region();
 
@@ -67,10 +67,10 @@ public:
     bool has_been_executable() const { return m_access & Access::HasBeenExecutable; }
 
     bool is_cacheable() const { return m_cacheable; }
-    const String& name() const { return m_name; }
+    StringView name() const { return m_name ? m_name->view() : StringView {}; }
     Region::Access access() const { return static_cast<Region::Access>(m_access); }
 
-    void set_name(String name) { m_name = move(name); }
+    void set_name(OwnPtr<KString> name) { m_name = move(name); }
 
     const VMObject& vmobject() const { return *m_vmobject; }
     VMObject& vmobject() { return *m_vmobject; }
@@ -226,7 +226,7 @@ public:
     void set_syscall_region(bool b) { m_syscall_region = b; }
 
 private:
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, String, Region::Access access, Cacheable, bool shared);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, OwnPtr<KString>, Region::Access access, Cacheable, bool shared);
 
     bool do_remap_vmobject_page_range(size_t page_index, size_t page_count);
 
@@ -254,7 +254,7 @@ private:
     Range m_range;
     size_t m_offset_in_vmobject { 0 };
     NonnullRefPtr<VMObject> m_vmobject;
-    String m_name;
+    OwnPtr<KString> m_name;
     u8 m_access { Region::None };
     bool m_shared : 1 { false };
     bool m_cacheable : 1 { false };

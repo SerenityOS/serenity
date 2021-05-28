@@ -245,11 +245,8 @@ ByteBuffer CoreDump::create_notes_regions_data() const
         info.program_header_index = region_index++;
 
         memory_region_info_buffer.append((void*)&info, sizeof(info));
-
-        auto name = region->name();
-        if (name.is_null())
-            name = String::empty();
-        memory_region_info_buffer.append(name.characters(), name.length() + 1);
+        // NOTE: The region name *is* null-terminated, so the following is ok:
+        memory_region_info_buffer.append(region->name().characters_without_null_termination(), region->name().length() + 1);
 
         regions_data += memory_region_info_buffer;
     }
