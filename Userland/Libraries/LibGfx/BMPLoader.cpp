@@ -185,9 +185,9 @@ RefPtr<Gfx::Bitmap> load_bmp_from_memory(const u8* data, size_t length)
     return bitmap;
 }
 
-class Streamer {
+class InputStreamer {
 public:
-    Streamer(const u8* data, size_t size)
+    InputStreamer(const u8* data, size_t size)
         : m_data_ptr(data)
         , m_size_remaining(size)
     {
@@ -411,7 +411,7 @@ static bool check_for_invalid_bitmask_combinations(BMPLoadingContext& context)
     return true;
 }
 
-static bool set_dib_bitmasks(BMPLoadingContext& context, Streamer& streamer)
+static bool set_dib_bitmasks(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!check_for_invalid_bitmask_combinations(context))
         return false;
@@ -456,7 +456,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
         return false;
     }
 
-    Streamer streamer(context.file_bytes, bmp_header_size);
+    InputStreamer streamer(context.file_bytes, bmp_header_size);
 
     u16 header = streamer.read_u16();
     if (header != 0x4d42) {
@@ -490,7 +490,7 @@ static bool decode_bmp_header(BMPLoadingContext& context)
     return true;
 }
 
-static bool decode_bmp_core_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_core_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     auto& core = context.dib.core;
 
@@ -551,7 +551,7 @@ ALWAYS_INLINE static bool is_supported_compression_format(BMPLoadingContext& con
         || compression == Compression::RLE4 || (compression == Compression::RLE24 && context.dib_type <= DIBType::OSV2);
 }
 
-static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, bool short_variant = false)
+static bool decode_bmp_osv2_dib(BMPLoadingContext& context, InputStreamer& streamer, bool short_variant = false)
 {
     auto& core = context.dib.core;
 
@@ -636,7 +636,7 @@ static bool decode_bmp_osv2_dib(BMPLoadingContext& context, Streamer& streamer, 
     return true;
 }
 
-static bool decode_bmp_info_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_info_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!decode_bmp_core_dib(context, streamer))
         return false;
@@ -676,7 +676,7 @@ static bool decode_bmp_info_dib(BMPLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-static bool decode_bmp_v2_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_v2_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!decode_bmp_info_dib(context, streamer))
         return false;
@@ -694,7 +694,7 @@ static bool decode_bmp_v2_dib(BMPLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-static bool decode_bmp_v3_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_v3_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!decode_bmp_v2_dib(context, streamer))
         return false;
@@ -719,7 +719,7 @@ static bool decode_bmp_v3_dib(BMPLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-static bool decode_bmp_v4_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_v4_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!decode_bmp_v3_dib(context, streamer))
         return false;
@@ -742,7 +742,7 @@ static bool decode_bmp_v4_dib(BMPLoadingContext& context, Streamer& streamer)
     return true;
 }
 
-static bool decode_bmp_v5_dib(BMPLoadingContext& context, Streamer& streamer)
+static bool decode_bmp_v5_dib(BMPLoadingContext& context, InputStreamer& streamer)
 {
     if (!decode_bmp_v4_dib(context, streamer))
         return false;
@@ -775,7 +775,7 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
     if (context.file_size < bmp_header_size + 4)
         return false;
 
-    Streamer streamer(context.file_bytes + bmp_header_size, 4);
+    InputStreamer streamer(context.file_bytes + bmp_header_size, 4);
     u32 dib_size = streamer.read_u32();
 
     if (context.file_size < bmp_header_size + dib_size)
@@ -785,7 +785,7 @@ static bool decode_bmp_dib(BMPLoadingContext& context)
         return false;
     }
 
-    streamer = Streamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
+    streamer = InputStreamer(context.file_bytes + bmp_header_size + 4, context.data_offset - bmp_header_size - 4);
 
     dbgln_if(BMP_DEBUG, "BMP dib size: {}", dib_size);
 
@@ -888,7 +888,7 @@ static bool decode_bmp_color_table(BMPLoadingContext& context)
         }
     }
 
-    Streamer streamer(context.file_bytes + bmp_header_size + context.dib_size(), size_of_color_table);
+    InputStreamer streamer(context.file_bytes + bmp_header_size + context.dib_size(), size_of_color_table);
     for (u32 i = 0; !streamer.at_end() && i < max_colors; ++i) {
         if (bytes_per_color == 4) {
             if (!streamer.has_u32())
@@ -922,7 +922,7 @@ static bool uncompress_bmp_rle_data(BMPLoadingContext& context, ByteBuffer& buff
         return false;
     }
 
-    Streamer streamer(context.file_bytes + context.data_offset, context.file_size - context.data_offset);
+    InputStreamer streamer(context.file_bytes + context.data_offset, context.file_size - context.data_offset);
 
     auto compression = context.dib.info.compression;
 
@@ -1201,7 +1201,7 @@ static bool decode_bmp_pixel_data(BMPLoadingContext& context)
         bytes = rle_buffer.bytes();
     }
 
-    Streamer streamer(bytes.data(), bytes.size());
+    InputStreamer streamer(bytes.data(), bytes.size());
 
     auto process_row = [&](u32 row) -> bool {
         u32 space_remaining_before_consuming_row = streamer.remaining();
