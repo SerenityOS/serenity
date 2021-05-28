@@ -97,7 +97,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
             process.sys$exit(arg1);
             break;
         case SC_exit_thread:
-            process.sys$exit_thread(arg1);
+            process.sys$exit_thread(arg1, arg2, arg3);
             break;
         default:
             VERIFY_NOT_REACHED();
