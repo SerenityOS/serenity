@@ -379,7 +379,7 @@ public:
     KResultOr<int> sys$sched_setparam(pid_t pid, Userspace<const struct sched_param*>);
     KResultOr<int> sys$sched_getparam(pid_t pid, Userspace<struct sched_param*>);
     KResultOr<int> sys$create_thread(void* (*)(void*), Userspace<const Syscall::SC_create_thread_params*>);
-    [[noreturn]] void sys$exit_thread(Userspace<void*>);
+    [[noreturn]] void sys$exit_thread(Userspace<void*>, Userspace<void*>, size_t);
     KResultOr<int> sys$join_thread(pid_t tid, Userspace<void**> exit_value);
     KResultOr<int> sys$detach_thread(pid_t tid);
     KResultOr<int> sys$set_thread_name(pid_t tid, Userspace<const char*> buffer, size_t buffer_size);
