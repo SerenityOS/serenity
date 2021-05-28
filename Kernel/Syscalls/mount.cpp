@@ -95,6 +95,9 @@ KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> use
         return ENODEV;
     }
 
+    if (!fs)
+        return ENOMEM;
+
     if (!fs->initialize()) {
         dbgln("mount: failed to initialize {} filesystem, fd={}", fs_type, source_fd);
         return ENODEV;
