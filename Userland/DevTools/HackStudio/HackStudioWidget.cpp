@@ -48,6 +48,7 @@
 #include <LibGUI/RegularEditingEngine.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/StackWidget.h>
+#include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
 #include <LibGUI/TextBox.h>
@@ -132,6 +133,8 @@ HackStudioWidget::HackStudioWidget(const String& path_to_project)
     initialize_debugger();
 
     create_toolbar(toolbar_container);
+
+    m_statusbar = add<GUI::Statusbar>(3);
 
     auto maybe_watcher = Core::FileWatcher::create();
     if (maybe_watcher.is_error()) {
@@ -280,6 +283,8 @@ bool HackStudioWidget::open_file(const String& full_filename)
     current_editor_wrapper().set_filename(filename);
 
     current_editor().set_focus(true);
+
+    current_editor().on_cursor_change = [this] { update_statusbar(); };
     return true;
 }
 
@@ -482,6 +487,8 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
+    
+    wrapper->editor().on_cursor_change = [this] { update_statusbar(); };
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
@@ -1006,6 +1013,20 @@ void HackStudioWidget::initialize_menubar(GUI::Menubar& menubar)
     create_build_menubar(menubar);
     create_view_menubar(menubar);
     create_help_menubar(menubar);
+}
+
+void HackStudioWidget::update_statusbar()
+{
+    m_statusbar->set_text(0, String::formatted("Ln {}, Col {}", current_editor().cursor().line() + 1, current_editor().cursor().column()));
+
+    StringBuilder builder;
+    if (current_editor().has_selection()) {
+        String selected_text = current_editor().selected_text();
+        auto word_count = current_editor().number_of_selected_words();
+        builder.appendff("Selected: {} {} ({} {})", selected_text.length(), selected_text.length() == 1 ? "character" : "characters", word_count, word_count != 1 ? "words" : "word");
+    }
+
+    m_statusbar->set_text(1, builder.to_string());
 }
 
 void HackStudioWidget::handle_external_file_deletion(const String& filepath)
