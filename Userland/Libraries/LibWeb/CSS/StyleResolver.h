@@ -30,7 +30,7 @@ public:
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
 
-    NonnullRefPtr<StyleProperties> resolve_style(const DOM::Element&) const;
+    NonnullRefPtr<StyleProperties> resolve_style(DOM::Element&) const;
 
     Vector<MatchingRule> collect_matching_rules(const DOM::Element&) const;
     void sort_matching_rules(Vector<MatchingRule>&) const;
@@ -38,8 +38,8 @@ public:
         Optional<StyleProperty> style {};
         u32 specificity { 0 };
     };
-    CustomPropertyResolutionTuple resolve_custom_property_with_specificity(const DOM::Element&, const String&) const;
-    Optional<StyleProperty> resolve_custom_property(const DOM::Element&, const String&) const;
+    CustomPropertyResolutionTuple resolve_custom_property_with_specificity(DOM::Element&, const String&) const;
+    Optional<StyleProperty> resolve_custom_property(DOM::Element&, const String&) const;
 
     static bool is_inherited_property(CSS::PropertyID);
 
