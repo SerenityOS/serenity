@@ -23,7 +23,7 @@ namespace Gfx {
 static const int INTERLACE_ROW_STRIDES[] = { 8, 8, 4, 2 };
 static const int INTERLACE_ROW_OFFSETS[] = { 0, 4, 2, 1 };
 
-struct ImageDescriptor {
+struct GIFImageDescriptor {
     u16 x { 0 };
     u16 y { 0 };
     u16 width { 0 };
@@ -77,7 +77,7 @@ struct GIFLoadingContext {
     size_t data_size { 0 };
     LogicalScreen logical_screen {};
     u8 background_color_index { 0 };
-    NonnullOwnPtrVector<ImageDescriptor> images {};
+    NonnullOwnPtrVector<GIFImageDescriptor> images {};
     size_t loops { 1 };
     RefPtr<Gfx::Bitmap> frame_buffer;
     size_t current_frame { 0 };
@@ -312,26 +312,26 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
     for (size_t i = start_frame; i <= frame_index; ++i) {
         auto& image = context.images.at(i);
 
-        const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : ImageDescriptor::DisposalMethod::None;
+        const auto previous_image_disposal_method = i > 0 ? context.images.at(i - 1).disposal_method : GIFImageDescriptor::DisposalMethod::None;
 
         if (i == 0) {
             context.frame_buffer->fill(Color::Transparent);
-        } else if (i > 0 && image.disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious
-            && previous_image_disposal_method != ImageDescriptor::DisposalMethod::RestorePrevious) {
+        } else if (i > 0 && image.disposal_method == GIFImageDescriptor::DisposalMethod::RestorePrevious
+            && previous_image_disposal_method != GIFImageDescriptor::DisposalMethod::RestorePrevious) {
             // This marks the start of a run of frames that once disposed should be restored to the
             // previous underlying image contents. Therefore we make a copy of the current frame
             // buffer so that it can be restored later.
             copy_frame_buffer(*context.prev_frame_buffer, *context.frame_buffer);
         }
 
-        if (previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestoreBackground) {
+        if (previous_image_disposal_method == GIFImageDescriptor::DisposalMethod::RestoreBackground) {
             // Note: RestoreBackground could be interpreted either as restoring the underlying
             // background of the entire image (e.g. container element's background-color), or the
             // background color of the GIF itself. It appears that all major browsers and most other
             // GIF decoders adhere to the former interpretation, therefore we will do the same by
             // clearing the entire frame buffer to transparent.
             clear_rect(*context.frame_buffer, context.images.at(i - 1).rect(), Color::Transparent);
-        } else if (i > 0 && previous_image_disposal_method == ImageDescriptor::DisposalMethod::RestorePrevious) {
+        } else if (i > 0 && previous_image_disposal_method == GIFImageDescriptor::DisposalMethod::RestorePrevious) {
             // Previous frame indicated that once disposed, it should be restored to *its* previous
             // underlying image contents, therefore we restore the saved previous frame buffer.
             copy_frame_buffer(*context.frame_buffer, *context.prev_frame_buffer);
@@ -460,7 +460,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
     if (stream.handle_any_error())
         return false;
 
-    NonnullOwnPtr<ImageDescriptor> current_image = make<ImageDescriptor>();
+    NonnullOwnPtr<GIFImageDescriptor> current_image = make<GIFImageDescriptor>();
     for (;;) {
         u8 sentinel = 0;
         stream >> sentinel;
@@ -503,7 +503,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 }
 
                 u8 disposal_method = (sub_block[0] & 0x1C) >> 2;
-                current_image->disposal_method = (ImageDescriptor::DisposalMethod)disposal_method;
+                current_image->disposal_method = (GIFImageDescriptor::DisposalMethod)disposal_method;
 
                 u8 user_input = (sub_block[0] & 0x2) >> 1;
                 current_image->user_input = user_input == 1;
@@ -600,7 +600,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 }
             }
 
-            current_image = make<ImageDescriptor>();
+            current_image = make<GIFImageDescriptor>();
             continue;
         }
 
