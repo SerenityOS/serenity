@@ -78,7 +78,7 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     return thread->tid().value();
 }
 
-void Process::sys$exit_thread(Userspace<void*> exit_value)
+void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stack_location, size_t stack_size)
 {
     REQUIRE_PROMISE(thread);
 
@@ -89,6 +89,12 @@ void Process::sys$exit_thread(Userspace<void*> exit_value)
 
     auto current_thread = Thread::current();
     PerformanceManager::add_thread_exit_event(*current_thread);
+
+    if (stack_location) {
+        auto unmap_result = space().unmap_mmap_range(VirtualAddress { stack_location }, stack_size);
+        if (unmap_result.is_error())
+            dbgln("Failed to unmap thread stack, terminating thread anyway. Error code: {}", unmap_result.error());
+    }
 
     current_thread->exit(reinterpret_cast<void*>(exit_value.ptr()));
     VERIFY_NOT_REACHED();
