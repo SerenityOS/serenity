@@ -143,11 +143,15 @@ private:
     T* m_ptr = nullptr;
 };
 
+#if !defined(KERNEL)
+
 template<typename T>
 inline NonnullOwnPtr<T> adopt_own(T& object)
 {
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, object);
 }
+
+#endif
 
 template<class T, class... Args>
 inline NonnullOwnPtr<T>
@@ -180,6 +184,8 @@ struct Formatter<NonnullOwnPtr<T>> : Formatter<const T*> {
 
 }
 
+#if !defined(KERNEL)
 using AK::adopt_own;
+#endif
 using AK::make;
 using AK::NonnullOwnPtr;
