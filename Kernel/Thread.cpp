@@ -266,6 +266,12 @@ void Thread::exit(void* exit_value)
     set_should_die();
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
+    if (m_thread_specific_range.has_value()) {
+        auto* region = process().space().find_region_from_range(m_thread_specific_range.value());
+        VERIFY(region);
+        if (!process().space().deallocate_region(*region))
+            dbgln("Failed to unmap TLS range, exiting thread anyway.");
+    }
     die_if_needed();
 }
 
@@ -1020,6 +1026,8 @@ KResult Thread::make_thread_specific_region(Badge<Process>)
     auto region_or_error = process().space().allocate_region(range.value(), "Thread-specific", PROT_READ | PROT_WRITE);
     if (region_or_error.is_error())
         return region_or_error.error();
+
+    m_thread_specific_range = range.value();
 
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region_or_error.value()->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment())).as_ptr();
