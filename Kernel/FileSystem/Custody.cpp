@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<NonnullRefPtr<Custody>> Custody::create(Custody* parent, StringView name, Inode& inode, int mount_flags)
+KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringView name, Inode& inode, int mount_flags)
 {
     auto name_kstring = KString::try_create(name);
     if (!name_kstring)

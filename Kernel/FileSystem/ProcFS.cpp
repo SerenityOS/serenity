@@ -1537,7 +1537,7 @@ KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, Re
         if (!description)
             return ENOENT;
         auto proxy_inode = ProcFSProxyInode::create(const_cast<ProcFS&>(fs()), *description);
-        return Custody::create(&base, "", proxy_inode, base.mount_flags());
+        return Custody::try_create(&base, "", proxy_inode, base.mount_flags());
     }
 
     Custody* res = nullptr;
