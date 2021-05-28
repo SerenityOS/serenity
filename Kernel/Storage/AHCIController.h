@@ -48,7 +48,7 @@ private:
     RefPtr<StorageDevice> device_by_port(u32 index) const;
 
     volatile AHCI::PortRegisters& port(size_t port_number) const;
-    NonnullOwnPtr<Region> hba_region() const;
+    UNMAP_AFTER_INIT NonnullOwnPtr<Region> default_hba_region() const;
     volatile AHCI::HBA& hba() const;
 
     NonnullOwnPtr<Region> m_hba_region;
