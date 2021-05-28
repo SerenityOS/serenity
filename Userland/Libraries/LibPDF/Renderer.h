@@ -55,7 +55,9 @@ struct TextState {
     float word_spacing { 5.0f };
     float horizontal_scaling { 1.0f };
     float leading { 0.0f };
-    RefPtr<Gfx::Font> font;
+    FlyString font_family { "Liberation Serif" };
+    String font_variant { "Regular" };
+    float font_size { 12.0f };
     TextRenderingMode rendering_mode { TextRenderingMode::Fill };
     float rise { 0.0f };
     bool knockout { true };
@@ -122,7 +124,6 @@ private:
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
-    Gfx::AffineTransform m_userspace_matrix;
 
     bool m_text_rendering_matrix_is_dirty { true };
     Gfx::AffineTransform m_text_rendering_matrix;
@@ -231,7 +232,9 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    word_spacing={}\n", state.word_spacing);
         builder.appendff("    horizontal_scaling={}\n", state.horizontal_scaling);
         builder.appendff("    leading={}\n", state.leading);
-        builder.appendff("    font={}\n", state.font ? state.font->name() : "<null>");
+        builder.appendff("    font_family={}\n", state.font_family);
+        builder.appendff("    font_variant={}\n", state.font_variant);
+        builder.appendff("    font_size={}\n", state.font_size);
         builder.appendff("    rendering_mode={}\n", state.rendering_mode);
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
