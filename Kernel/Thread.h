@@ -29,6 +29,7 @@
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/VM/Range.h>
 #include <LibC/fd_set.h>
 #include <LibC/signal_numbers.h>
 
@@ -1220,6 +1221,7 @@ private:
     u32 m_kernel_stack_top { 0 };
     OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
+    Optional<Range> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
 
