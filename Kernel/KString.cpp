@@ -29,7 +29,7 @@ OwnPtr<KString> KString::try_create_uninitialized(size_t length, char*& characte
         return {};
     auto* new_string = new (slot) KString(length);
     characters = new_string->m_characters;
-    return adopt_own(*new_string);
+    return adopt_own_if_nonnull(new_string);
 }
 
 OwnPtr<KString> KString::try_clone() const
