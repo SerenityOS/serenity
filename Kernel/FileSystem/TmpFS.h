@@ -21,7 +21,7 @@ class TmpFS final : public FS {
 
 public:
     virtual ~TmpFS() override;
-    static NonnullRefPtr<TmpFS> create();
+    static RefPtr<TmpFS> create();
     virtual bool initialize() override;
 
     virtual const char* class_name() const override { return "TmpFS"; }
@@ -74,8 +74,8 @@ public:
 
 private:
     TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent);
-    static NonnullRefPtr<TmpFSInode> create(TmpFS&, InodeMetadata metadata, InodeIdentifier parent);
-    static NonnullRefPtr<TmpFSInode> create_root(TmpFS&);
+    static RefPtr<TmpFSInode> create(TmpFS&, InodeMetadata metadata, InodeIdentifier parent);
+    static RefPtr<TmpFSInode> create_root(TmpFS&);
 
     void notify_watchers();
 
