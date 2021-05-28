@@ -241,6 +241,10 @@ bool AHCIPort::initialize(ScopedSpinLock<SpinLock<u8>>& main_lock)
     VERIFY(m_lock.is_locked());
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: Initialization. Signature = 0x{:08x}", representative_port_index(), static_cast<u32>(m_port_registers.sig));
     if (!is_phy_enabled()) {
+        // Note: If PHY is not enabled, just clear the interrupt status and enable interrupts, in case
+        // we are going to hotplug a device later.
+        m_interrupt_status.clear();
+        m_interrupt_enable.set_all();
         dbgln_if(AHCI_DEBUG, "AHCI Port {}: Bailing initialization, Phy is not enabled.", representative_port_index());
         return false;
     }
