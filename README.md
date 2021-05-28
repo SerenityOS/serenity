@@ -55,6 +55,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 * C++ templates and containers (AK)
 * Event loop and utilities (LibCore)
 * 2D graphics library (LibGfx)
+* OpenGL 1.x compatible library (LibGL)
 * GUI toolkit (LibGUI)
 * Cross-process communication library (LibIPC)
 * HTML/CSS engine (LibWeb)
