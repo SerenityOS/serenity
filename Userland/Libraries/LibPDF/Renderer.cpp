@@ -33,15 +33,16 @@ Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitm
 {
     auto media_box = m_page.media_box;
 
-    m_userspace_matrix.translate(media_box.lower_left_x, media_box.lower_left_y);
+    Gfx::AffineTransform userspace_matrix;
+    userspace_matrix.translate(media_box.lower_left_x, media_box.lower_left_y);
 
     float width = media_box.upper_right_x - media_box.lower_left_x;
     float height = media_box.upper_right_y - media_box.lower_left_y;
     float scale_x = static_cast<float>(bitmap->width()) / width;
     float scale_y = static_cast<float>(bitmap->height()) / height;
-    m_userspace_matrix.scale(scale_x, scale_y);
+    userspace_matrix.scale(scale_x, scale_y);
 
-    m_graphics_state_stack.append(GraphicsState { m_userspace_matrix });
+    m_graphics_state_stack.append(GraphicsState { userspace_matrix });
 
     m_bitmap->fill(Gfx::Color::NamedColor::White);
 }
@@ -317,13 +318,9 @@ RENDERER_HANDLER(text_set_font)
         font_variant = "Regular";
     }
 
-    auto specified_font_size = args[1].to_float();
-    // FIXME: This scaling should occur when drawing the glyph rather than selecting the font.
-    // This should be removed when the painter supports arbitrary bitmap scaling.
-    specified_font_size *= state().ctm.x_scale();
+    text_state().font_size = args[1].to_float();
+    text_state().font_variant = font_variant;
 
-    text_state().font = Gfx::FontDatabase::the().get("Liberation Serif", font_variant, static_cast<int>(specified_font_size));
-    VERIFY(text_state().font);
     m_text_rendering_matrix_is_dirty = true;
 }
 
@@ -525,19 +522,24 @@ void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
 void Renderer::show_text(const String& string, float shift)
 {
     auto utf = Utf8View(string);
-    auto& font = text_state().font;
+
+    auto& text_rendering_matrix = calculate_text_rendering_matrix();
+
+    auto font_size = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
+    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
+    VERIFY(font);
+
+    auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
+    // Reverse the Y axis
+    glyph_position.set_y(static_cast<float>(m_bitmap->height()) - glyph_position.y());
+    // Account for the reversed font baseline
+    glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
+
+    auto original_position = glyph_position;
 
     for (auto code_point : utf) {
-        // FIXME: Don't calculate this matrix for every character
-        auto& text_rendering_matrix = calculate_text_rendering_matrix();
-
-        auto text_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-        text_position.set_y(static_cast<float>(m_bitmap->height()) - text_position.y());
-        text_position.set_y(text_position.y() - static_cast<float>(font->baseline()));
-
-        // FIXME: For some reason, the space character in LiberationSerif is drawn as an exclamation point
         if (code_point != 0x20)
-            m_painter.draw_glyph(text_position.to_type<int>(), code_point, *text_state().font, state().paint_color);
+            m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 
         auto glyph_width = static_cast<float>(font->glyph_width(code_point));
         auto tx = (glyph_width - shift / 1000.0f);
@@ -548,9 +550,13 @@ void Renderer::show_text(const String& string, float shift)
 
         tx *= text_state().horizontal_scaling;
 
-        m_text_rendering_matrix_is_dirty = true;
-        m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, tx, 0).multiply(m_text_matrix);
+        glyph_position += { tx, 0.0f };
     }
+
+    // Update text matrix
+    auto delta_x = glyph_position.x() - original_position.x();
+    m_text_rendering_matrix_is_dirty = true;
+    m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
 }
 
 RefPtr<ColorSpace> Renderer::get_color_space(const Value& value)
