@@ -10,6 +10,8 @@
 #include <AK/Forward.h>
 #include <AK/Time.h>
 #include <AK/Userspace.h>
+#include <Kernel/KResult.h>
+#include <Kernel/KString.h>
 #include <Kernel/UnixTypes.h>
 
 namespace Syscall {
@@ -18,6 +20,8 @@ struct StringArgument;
 
 [[nodiscard]] String copy_string_from_user(const char*, size_t);
 [[nodiscard]] String copy_string_from_user(Userspace<const char*>, size_t);
+[[nodiscard]] Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(const char*, size_t);
+[[nodiscard]] Kernel::KResultOr<NonnullOwnPtr<Kernel::KString>> try_copy_kstring_from_user(Userspace<const char*>, size_t);
 [[nodiscard]] Optional<Time> copy_time_from_user(const timespec*);
 [[nodiscard]] Optional<Time> copy_time_from_user(const timeval*);
 template<typename T>
