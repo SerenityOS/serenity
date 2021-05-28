@@ -35,8 +35,8 @@ public:
 
     Optional<Range> allocate_range(VirtualAddress, size_t, size_t alignment = PAGE_SIZE);
 
-    KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot, bool shared);
-    KResultOr<Region*> allocate_region(const Range&, const String& name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
+    KResultOr<Region*> allocate_region_with_vmobject(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, StringView name, int prot, bool shared);
+    KResultOr<Region*> allocate_region(const Range&, StringView name, int prot = PROT_READ | PROT_WRITE, AllocationStrategy strategy = AllocationStrategy::Reserve);
     bool deallocate_region(Region& region);
     OwnPtr<Region> take_region(Region& region);
 
