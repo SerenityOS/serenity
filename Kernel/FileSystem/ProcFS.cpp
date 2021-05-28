@@ -234,9 +234,9 @@ struct ProcFSInodeData : public FileDescriptionData {
     RefPtr<KBufferImpl> buffer;
 };
 
-NonnullRefPtr<ProcFS> ProcFS::create()
+RefPtr<ProcFS> ProcFS::create()
 {
-    return adopt_ref(*new ProcFS);
+    return adopt_ref_if_nonnull(new ProcFS);
 }
 
 ProcFS::~ProcFS()
@@ -1015,10 +1015,12 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
         // and if that fails we cannot return this instance anymore and just
         // create a new one.
         if (it->value->try_ref())
-            return adopt_ref(*it->value);
+            return adopt_ref_if_nonnull(it->value);
         // We couldn't ref it, so just create a new one and replace the entry
     }
-    auto inode = adopt_ref(*new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
+    auto inode = adopt_ref_if_nonnull(new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
+    if (!inode)
+        return {};
     auto result = m_inodes.set(inode_id.index().value(), inode.ptr());
     VERIFY(result == ((it == m_inodes.end()) ? AK::HashSetResult::InsertedNewEntry : AK::HashSetResult::ReplacedExistingEntry));
     return inode;
