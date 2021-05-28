@@ -814,6 +814,11 @@ inline static String copy_string_from_user(const Kernel::Syscall::StringArgument
     return copy_string_from_user(string.characters, string.length);
 }
 
+inline static KResultOr<NonnullOwnPtr<KString>> try_copy_kstring_from_user(const Kernel::Syscall::StringArgument& string)
+{
+    return try_copy_kstring_from_user(string.characters, string.length);
+}
+
 template<>
 struct AK::Formatter<Kernel::Process> : AK::Formatter<String> {
     void format(FormatBuilder& builder, const Kernel::Process& value)
