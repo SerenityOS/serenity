@@ -79,6 +79,9 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
+    static_assert(sizeof(m_colors) == sizeof(xterm_colors));
+    memcpy(m_colors, xterm_colors, sizeof(m_colors));
+
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_accepts_emoji_input(true);
@@ -147,6 +150,8 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     update_copy_action();
     update_paste_action();
+
+    set_color_scheme(m_config->read_entry("Window", "ColorScheme", "Default"));
 }
 
 TerminalWidget::~TerminalWidget()
@@ -1135,6 +1140,54 @@ void TerminalWidget::update_paste_action()
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
 }
 
+void TerminalWidget::set_color_scheme(const StringView& name)
+{
+    if (name.contains('/')) {
+        dbgln("Shenanigans! Color scheme names can't contain slashes.");
+        return;
+    }
+
+    m_color_scheme_name = name;
+
+    constexpr StringView color_names[] = {
+        "Black",
+        "Red",
+        "Green",
+        "Yellow",
+        "Blue",
+        "Magenta",
+        "Cyan",
+        "White"
+    };
+
+    auto color_config = Core::ConfigFile::open(String::formatted("/res/terminal-colors/{}.ini", name));
+
+    auto default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
+    if (default_background.has_value())
+        m_default_background_color = default_background.value();
+    else
+        m_default_background_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::Black]);
+
+    auto default_foreground = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
+    if (default_foreground.has_value())
+        m_default_foreground_color = default_foreground.value();
+    else
+        m_default_foreground_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::White]);
+
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
+        auto rgb = Gfx::Color::from_string(color_config->read_entry("Normal", color_names[color_idx]));
+        if (rgb.has_value())
+            m_colors[color_idx] = rgb.value().value();
+    }
+
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
+        auto rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_idx]));
+        if (rgb.has_value())
+            m_colors[color_idx + 8] = rgb.value().value();
+    }
+    update();
+}
+
 Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
 {
     return {
@@ -1149,15 +1202,15 @@ Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color)
     case VT::Color::Kind::RGB:
         return Gfx::Color::from_rgb(color.as_rgb());
     case VT::Color::Kind::Indexed:
-        return Gfx::Color::from_rgb(xterm_colors[color.as_indexed()]);
+        return Gfx::Color::from_rgb(m_colors[color.as_indexed()]);
     case VT::Color::Kind::Named: {
         auto ansi = color.as_named();
         if ((u16)ansi < 256)
-            return Gfx::Color::from_rgb(xterm_colors[(u16)ansi]);
+            return Gfx::Color::from_rgb(m_colors[(u16)ansi]);
         else if (ansi == VT::Color::ANSIColor::DefaultForeground)
-            return Gfx::Color::from_rgb(xterm_colors[7]);
+            return m_default_foreground_color;
         else if (ansi == VT::Color::ANSIColor::DefaultBackground)
-            return Gfx::Color::from_rgb(xterm_colors[0]);
+            return m_default_background_color;
         else
             VERIFY_NOT_REACHED();
     }

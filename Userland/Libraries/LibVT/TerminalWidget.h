@@ -81,6 +81,8 @@ public:
     void paste();
     void clear_including_history();
 
+    const StringView color_scheme_name() const { return m_color_scheme_name; }
+
     Function<void(const StringView&)> on_title_change;
     Function<void(const Gfx::IntSize&)> on_terminal_size_change;
     Function<void()> on_command_exit;
@@ -90,6 +92,8 @@ public:
     Gfx::Color terminal_color_to_rgb(VT::Color);
 
     void set_font_and_resize_to_fit(const Gfx::Font&);
+
+    void set_color_scheme(const StringView&);
 
 private:
     // ^GUI::Widget
@@ -156,6 +160,12 @@ private:
 
     // Snapshot of m_hovered_href when opening a context menu for a hyperlink.
     String m_context_menu_href;
+
+    unsigned m_colors[256];
+    Gfx::Color m_default_foreground_color;
+    Gfx::Color m_default_background_color;
+
+    String m_color_scheme_name;
 
     BellMode m_bell_mode { BellMode::Visible };
     bool m_alt_key_held { false };

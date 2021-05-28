@@ -60,4 +60,17 @@
             orientation: "Horizontal"
         }
     }
+
+    @GUI::GroupBox {
+        title: "Color scheme"
+        shrink_to_fit: true
+
+        layout: @GUI::VerticalBoxLayout {
+            margins: [6, 16, 6, 6]
+        }
+
+        @GUI::ComboBox {
+            name: "color_scheme_combo"
+        }
+    }
 }
