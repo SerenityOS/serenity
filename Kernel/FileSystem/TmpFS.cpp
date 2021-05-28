@@ -11,9 +11,9 @@
 
 namespace Kernel {
 
-NonnullRefPtr<TmpFS> TmpFS::create()
+RefPtr<TmpFS> TmpFS::create()
 {
-    return adopt_ref(*new TmpFS);
+    return adopt_ref_if_nonnull(new TmpFS);
 }
 
 TmpFS::TmpFS()
@@ -27,7 +27,7 @@ TmpFS::~TmpFS()
 bool TmpFS::initialize()
 {
     m_root_inode = TmpFSInode::create_root(*this);
-    return true;
+    return !m_root_inode.is_null();
 }
 
 NonnullRefPtr<Inode> TmpFS::root_inode() const
@@ -84,14 +84,15 @@ TmpFSInode::~TmpFSInode()
 {
 }
 
-NonnullRefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
+RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
 {
-    auto inode = adopt_ref(*new TmpFSInode(fs, metadata, parent));
-    fs.register_inode(inode);
+    auto inode = adopt_ref_if_nonnull(new TmpFSInode(fs, metadata, parent));
+    if (inode)
+        fs.register_inode(*inode);
     return inode;
 }
 
-NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
+RefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
     auto now = kgettimeofday().to_truncated_seconds();
@@ -270,10 +271,12 @@ KResultOr<NonnullRefPtr<Inode>> TmpFSInode::create_child(const String& name, mod
     metadata.mtime = now;
 
     auto child = TmpFSInode::create(fs(), metadata, identifier());
-    auto result = add_child(child, name, mode);
+    if (!child)
+        return ENOMEM;
+    auto result = add_child(*child, name, mode);
     if (result.is_error())
         return result;
-    return child;
+    return child.release_nonnull();
 }
 
 KResult TmpFSInode::add_child(Inode& child, const StringView& name, mode_t)
