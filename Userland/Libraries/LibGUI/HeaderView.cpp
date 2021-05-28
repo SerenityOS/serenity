@@ -81,6 +81,33 @@ Gfx::IntRect HeaderView::section_rect(int section) const
     return { 0, offset, width(), section_size(section) };
 }
 
+HeaderView::VisibleSectionRange HeaderView::visible_section_range() const
+{
+    auto section_count = this->section_count();
+    auto is_horizontal = m_orientation == Orientation::Horizontal;
+    auto rect = m_table_view.visible_content_rect();
+    auto start = is_horizontal ? rect.top_left().x() : rect.top_left().y();
+    auto end = is_horizontal ? rect.top_right().x() : rect.bottom_left().y();
+    auto offset = 0;
+    VisibleSectionRange range;
+    for (; range.end < section_count; ++range.end) {
+        auto& section = section_data(range.end);
+        int section_size = section.size;
+        if (offset + section_size < start) {
+            if (section.visibility)
+                offset += section_size;
+            ++range.start;
+            range.start_offset = offset;
+            continue;
+        }
+        if (offset >= end)
+            break;
+        if (section.visibility)
+            offset += section_size;
+    }
+    return range;
+}
+
 Gfx::IntRect HeaderView::section_resize_grabbable_rect(int section) const
 {
     if (!model())
@@ -104,8 +131,8 @@ void HeaderView::doubleclick_event(MouseEvent& event)
     if (!model())
         return;
 
-    int section_count = this->section_count();
-    for (int i = 0; i < section_count; ++i) {
+    auto range = visible_section_range();
+    for (int i = range.start; i < range.end; ++i) {
         if (section_resize_grabbable_rect(i).contains(event.position())) {
             if (on_resize_doubleclick)
                 on_resize_doubleclick(i);
@@ -122,9 +149,9 @@ void HeaderView::mousedown_event(MouseEvent& event)
         return;
 
     auto& model = *this->model();
-    int section_count = this->section_count();
+    auto range = visible_section_range();
 
-    for (int i = 0; i < section_count; ++i) {
+    for (int i = range.start; i < range.end; ++i) {
         if (section_resize_grabbable_rect(i).contains(event.position())) {
             m_resizing_section = i;
             m_in_section_resize = true;
@@ -174,9 +201,9 @@ void HeaderView::mousemove_event(MouseEvent& event)
     }
 
     if (event.buttons() == 0) {
-        int section_count = this->section_count();
         bool found_hovered_header = false;
-        for (int i = 0; i < section_count; ++i) {
+        auto range = visible_section_range();
+        for (int i = range.start; i < range.end; ++i) {
             if (section_resize_grabbable_rect(i).contains(event.position())) {
                 set_override_cursor(Gfx::StandardCursor::ResizeColumn);
                 set_hovered_section(-1);
@@ -223,12 +250,13 @@ void HeaderView::paint_horizontal(Painter& painter)
 {
     painter.draw_line({ 0, 0 }, { rect().right(), 0 }, palette().threed_highlight());
     painter.draw_line({ 0, rect().bottom() }, { rect().right(), rect().bottom() }, palette().threed_shadow1());
-    int x_offset = 0;
-    int section_count = this->section_count();
-    for (int section = 0; section < section_count; ++section) {
-        if (!is_section_visible(section))
+    auto range = visible_section_range();
+    int x_offset = range.start_offset;
+    for (int section = range.start; section < range.end; ++section) {
+        auto& section_data = this->section_data(section);
+        if (!section_data.visibility)
             continue;
-        int section_width = section_size(section);
+        int section_width = section_data.size;
         bool is_key_column = m_table_view.key_column() == section;
         Gfx::IntRect cell_rect(x_offset, 0, section_width + m_table_view.horizontal_padding() * 2, height());
         bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
@@ -249,7 +277,7 @@ void HeaderView::paint_horizontal(Painter& painter)
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.translate_by(1, 1);
-        painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
+        painter.draw_text(text_rect, text, font(), section_data.alignment, palette().button_text());
         x_offset += section_width + m_table_view.horizontal_padding() * 2;
     }
 
@@ -263,12 +291,13 @@ void HeaderView::paint_vertical(Painter& painter)
 {
     painter.draw_line(rect().top_left(), rect().bottom_left(), palette().threed_highlight());
     painter.draw_line(rect().top_right(), rect().bottom_right(), palette().threed_shadow1());
-    int y_offset = 0;
-    int section_count = this->section_count();
-    for (int section = 0; section < section_count; ++section) {
-        if (!is_section_visible(section))
+    auto range = visible_section_range();
+    int y_offset = range.start_offset;
+    for (int section = range.start; section < range.end; ++section) {
+        auto& section_data = this->section_data(section);
+        if (!section_data.visibility)
             continue;
-        int section_size = this->section_size(section);
+        int section_size = section_data.size;
         Gfx::IntRect cell_rect(0, y_offset, width(), section_size);
         bool pressed = section == m_pressed_section && m_pressed_section_is_pressed;
         bool hovered = false;
@@ -277,7 +306,7 @@ void HeaderView::paint_vertical(Painter& painter)
         auto text_rect = cell_rect.shrunken(m_table_view.horizontal_padding() * 2, 0);
         if (pressed)
             text_rect.translate_by(1, 1);
-        painter.draw_text(text_rect, text, font(), section_alignment(section), palette().button_text());
+        painter.draw_text(text_rect, text, font(), section_data.alignment, palette().button_text());
         y_offset += section_size;
     }
 
