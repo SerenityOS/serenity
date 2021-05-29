@@ -23,6 +23,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_day);
     JS_DECLARE_NATIVE_FUNCTION(get_full_year);
     JS_DECLARE_NATIVE_FUNCTION(set_full_year);
+    JS_DECLARE_NATIVE_FUNCTION(get_year);
+    JS_DECLARE_NATIVE_FUNCTION(set_year);
     JS_DECLARE_NATIVE_FUNCTION(get_hours);
     JS_DECLARE_NATIVE_FUNCTION(set_hours);
     JS_DECLARE_NATIVE_FUNCTION(get_milliseconds);
