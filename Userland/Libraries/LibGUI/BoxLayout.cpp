@@ -150,13 +150,18 @@ void BoxLayout::run(Widget& widget)
     // Pass 2: Distribute remaining available size evenly, respecting each item's maximum size.
     while (unfinished_items && available_size > 0) {
         int slice = available_size / unfinished_items;
+        // If available_size does not divide evenly by unfinished_items,
+        // there are some extra pixels that have to be distributed.
+        int pixels = available_size - slice * unfinished_items;
         available_size = 0;
 
         for (auto& item : items) {
             if (item.final)
                 continue;
 
-            int item_size_with_full_slice = item.size + slice;
+            int pixel = pixels ? 1 : 0;
+            pixels -= pixel;
+            int item_size_with_full_slice = item.size + slice + pixel;
             item.size = item_size_with_full_slice;
 
             if (item.max_size >= 0)
