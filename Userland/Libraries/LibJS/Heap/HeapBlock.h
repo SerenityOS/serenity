@@ -101,6 +101,9 @@ private:
     size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     alignas(Cell) u8 m_storage[];
+
+public:
+    static constexpr size_t min_possible_cell_size = sizeof(FreelistEntry);
 };
 
 }
