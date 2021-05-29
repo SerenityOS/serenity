@@ -26,7 +26,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 * x86 (32-bit) kernel with pre-emptive multi-threading
 * Hardware protections (SMEP, SMAP, UMIP, NX, WP, TSD, ...)
-* IPv4 stack with ARP, TCP, UDP and ICMP protocols
+* IPv4 stack with ARP, TCP, UDP, and ICMP protocols
 * ext2 filesystem
 * POSIX signals
 * Purgeable memory
