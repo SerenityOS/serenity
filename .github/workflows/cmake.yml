@@ -28,25 +28,19 @@ jobs:
 
     # Do we need to update the package cache first?
     # sudo apt-get update -qq
-
-    - name: Purge interfering packages
-      # Remove GCC 9 and clang-format 10 (installed by default)
-      run: sudo apt-get purge -y gcc-9 g++-9 libstdc++-9-dev clang-format-10
     - name: "Install Ubuntu dependencies"
       # These packages are already part of the ubuntu-20.04 image:
-      # cmake gcc-10 g++-10 shellcheck libgmp-dev
+      # cmake clang-format-11 gcc-10 g++-10 libstdc++-10-dev libgmp-dev npm shellcheck
       # Packages below aren't.
       #
       # We add the canonical-server/server-backports PPA to get updated QEMU releases without having to manage
       #    yet another cache in github actions
       run: |
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-11 main"
         sudo add-apt-repository ppa:canonical-server/server-backports
         sudo apt-get update
-        sudo apt-get install clang-format-11 libstdc++-10-dev libmpfr-dev libmpc-dev ninja-build npm e2fsprogs qemu-utils qemu-system-i386 ccache
+        sudo apt-get install libmpfr-dev libmpc-dev ninja-build e2fsprogs qemu-utils qemu-system-i386 ccache
     - name: Use GCC 10 instead
-      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 60 --slave /usr/bin/g++ g++ /usr/bin/g++-10
+      run: sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100 --slave /usr/bin/g++ g++ /usr/bin/g++-10
 
     - name: Install JS dependencies
       run: sudo npm install -g prettier@2.2.1
@@ -194,11 +188,9 @@ jobs:
     #
     - name: Install Ubuntu dependencies
       run: |
-        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main"
-        sudo apt-get purge -y clang-10 clang-11
+        sudo apt-get purge -y clang-11
         sudo apt-get update
-        sudo apt-get install clang-12 ninja-build binaryen
+        sudo apt-get install ninja-build binaryen
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
       if: ${{ runner.os == 'Linux' }}
