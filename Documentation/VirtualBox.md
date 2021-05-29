@@ -42,20 +42,20 @@ You will also notice that you cannot remove disk images from the **Hard Disk Sel
 
 The way around this is to use a different file name for each VDI you generate. You will then have to:
 1. Open **Settings** and go to **Storage**.
-2. Right click the current drive and click **Remove Attachment**.
-3. Click on the **Controller** and then click the add hard disk icon. Add the new VDI and click **Choose**.
+2. Right-click the current drive and click **Remove Attachment**.
+3. Click on the **Controller** and then click the "add hard disk" icon. Add the new VDI and click **Choose**.
 4. You should see the new drive attached. Make sure **Hard Disk** is set to **IDE Primary Master**.
 
 Yes, this is a mess. You can delete the old disk images without any issues. If you know a solution for this, *please* let us know.
 
 ## Configuring the virtual machine to boot Serenity
-Serenity will not be able to boot with the default configuration. There are a couple settings to adjust. Open **Settings** and:
+Serenity will not be able to boot with the default configuration. There are a couple of settings to adjust. Open **Settings** and:
 1. Go to **System**, open the **Processor** tab and tick **Enable PAE/NX**.
 2. Go to **Audio** and set **Audio Controller** to **SoundBlaster 16**.
 
 There are a couple of settings to check:
 - In **Storage**, click on the **Controller**. Make sure the controller type is PIIX4. PIIX3 and ICH6 are untested. Anything else is guaranteed not to work, as Serenity does not currently support them.
-- In **Network** and in the **Advanced** drop down, make sure the **Adapter Type** is anything but **Intel PRO/1000 MT Desktop (82540EM)**. While it is the only adapter type Serenity currently supports, it does not currently work in VirtualBox.
+- In **Network** and the **Advanced** drop-down, make sure the **Adapter Type** is anything but **Intel PRO/1000 MT Desktop (82540EM)**. While it is the only adapter type Serenity currently supports, it does not currently work in VirtualBox.
 
 Please note that at the time of writing, audio and networking do not work in VirtualBox.
 
@@ -64,4 +64,4 @@ That is all you need to boot Serenity in VirtualBox! Read on for additional conf
 ## Additional configuration (optional)
 For serial debugging, go to **Serial Ports** and enable port 1. Feel free to set the **Port Mode** to anything if you know what you're doing. The recommended mode is **Raw File**. Set **Path/Address** to where you want to store the file. This must also include the file name.
 
-While the default 16 MB of video memory is more than enough to use the default resolution, it is not enough to use all the supported resolutions. If you want to use 2560x1080, you will need to supply at minimum 22 MB of video memory.
+While the default 16 MB of video memory is more than enough to use the default resolution, it is not enough to use all the supported resolutions. If you want to use 2560x1080, you will need to supply a minimum of 22 MB of video memory.
