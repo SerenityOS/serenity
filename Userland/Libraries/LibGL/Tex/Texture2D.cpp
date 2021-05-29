@@ -6,12 +6,12 @@
 
 #include <AK/Format.h>
 #include <LibGL/GL/gl.h>
-#include <LibGL/Tex/Texture.h>
+#include <LibGL/Tex/Texture2D.h>
 #include <string.h>
 
 namespace GL {
 
-void Texture::upload_texture_data(GLenum, GLint lod, GLint internal_format, GLsizei width, GLsizei height, GLint, GLenum format, GLenum, const GLvoid* pixels)
+void Texture2D::upload_texture_data(GLenum, GLint lod, GLint internal_format, GLsizei width, GLsizei height, GLint, GLenum format, GLenum, const GLvoid* pixels)
 {
     // NOTE: Some target, format, and internal formats are currently unsupported.
     // Considering we control this library, and `gl.h` itself, we don't need to add any
@@ -112,7 +112,7 @@ void Texture::upload_texture_data(GLenum, GLint lod, GLint internal_format, GLsi
     mip.set_height(height);
 }
 
-FloatVector4 Texture::sample_texel(const FloatVector2& uv) const
+FloatVector4 Texture2D::sample_texel(const FloatVector2& uv) const
 {
     auto& mip = m_mipmaps.at(0);
 

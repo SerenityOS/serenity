@@ -1,6 +1,6 @@
 set(SOURCES
     Tex/NameAllocator.cpp
-    Tex/Texture.cpp
+    Tex/Texture2D.cpp
     Clipper.cpp
     GLBlend.cpp
     GLColor.cpp

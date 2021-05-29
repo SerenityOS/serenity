@@ -414,7 +414,7 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 {
 }
 
-void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Texture& texture)
+void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Texture2D& texture)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {
         // TODO: We'd do some kind of multitexturing/blending here
