@@ -7,9 +7,14 @@
 #pragma once
 
 #include <AK/IntrusiveList.h>
+#include <AK/Platform.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+
+#ifdef HAS_ADDRESS_SANITIZER
+#    include <sanitizer/asan_interface.h>
+#endif
 
 namespace JS {
 
@@ -27,13 +32,18 @@ public:
 
     ALWAYS_INLINE Cell* allocate()
     {
+        Cell* allocated_cell = nullptr;
         if (m_freelist) {
             VERIFY(is_valid_cell_pointer(m_freelist));
-            return exchange(m_freelist, m_freelist->next);
+            allocated_cell = exchange(m_freelist, m_freelist->next);
+        } else if (has_lazy_freelist()) {
+            allocated_cell = cell(m_next_lazy_freelist_index++);
         }
-        if (has_lazy_freelist())
-            return cell(m_next_lazy_freelist_index++);
-        return nullptr;
+
+        if (allocated_cell) {
+            ASAN_UNPOISON_MEMORY_REGION(allocated_cell, m_cell_size);
+        }
+        return allocated_cell;
     }
 
     void deallocate(Cell*);
