@@ -32,11 +32,12 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
     if (params.permissions.length > 5)
         return EINVAL;
 
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
+    auto path_or_error = get_syscall_path_argument(params.path);
+    if (path_or_error.is_error())
+        return path_or_error.error();
+    auto& path = *path_or_error.value();
 
-    if (path.value().is_empty() || path.value().characters()[0] != '/')
+    if (path.is_empty() || !path.view().starts_with('/'))
         return EINVAL;
 
     auto permissions = copy_string_from_user(params.permissions);
@@ -74,11 +75,11 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
     // If this case is encountered, the parent node of the path is returned and the custody of that inode is used instead.
     RefPtr<Custody> parent_custody; // Parent inode in case of ENOENT
     String new_unveiled_path;
-    auto custody_or_error = VFS::the().resolve_path_without_veil(path.value(), root_directory(), &parent_custody);
+    auto custody_or_error = VFS::the().resolve_path_without_veil(path.view(), root_directory(), &parent_custody);
     if (!custody_or_error.is_error()) {
         new_unveiled_path = custody_or_error.value()->absolute_path();
     } else if (custody_or_error.error() == -ENOENT && parent_custody && (new_permissions & UnveilAccess::CreateOrRemove)) {
-        String basename = LexicalPath(path.value()).basename();
+        String basename = LexicalPath(path.view()).basename();
         new_unveiled_path = String::formatted("{}/{}", parent_custody->absolute_path(), basename);
     } else {
         // FIXME Should this be EINVAL?

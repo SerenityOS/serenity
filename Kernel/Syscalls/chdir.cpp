@@ -17,7 +17,7 @@ KResultOr<int> Process::sys$chdir(Userspace<const char*> user_path, size_t path_
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
-    auto directory_or_error = VFS::the().open_directory(path.value(), current_directory());
+    auto directory_or_error = VFS::the().open_directory(path.value()->view(), current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
     m_cwd = *directory_or_error.value();

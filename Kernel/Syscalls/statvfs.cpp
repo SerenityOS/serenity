@@ -80,7 +80,7 @@ KResultOr<int> Process::sys$statvfs(Userspace<const Syscall::SC_statvfs_params*>
     if (path.is_error())
         return path.error();
 
-    return do_statvfs(path.value(), params.buf);
+    return do_statvfs(path.value()->view(), params.buf);
 }
 
 KResultOr<int> Process::sys$fstatvfs(int fd, statvfs* buf)

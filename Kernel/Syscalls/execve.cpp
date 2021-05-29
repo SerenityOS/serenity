@@ -920,7 +920,7 @@ KResultOr<int> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> u
         auto path_arg = get_syscall_path_argument(params.path);
         if (path_arg.is_error())
             return path_arg.error();
-        path = path_arg.value();
+        path = path_arg.value()->view();
     }
 
     auto copy_user_strings = [](const auto& list, auto& output) {

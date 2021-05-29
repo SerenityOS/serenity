@@ -37,7 +37,7 @@ KResultOr<int> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*>
     auto linkpath = get_syscall_path_argument(params.linkpath);
     if (linkpath.is_error())
         return linkpath.error();
-    return VFS::the().symlink(target.value(), linkpath.value(), current_directory());
+    return VFS::the().symlink(target.value()->view(), linkpath.value()->view(), current_directory());
 }
 
 }

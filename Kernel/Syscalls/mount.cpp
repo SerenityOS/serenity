@@ -119,7 +119,7 @@ KResultOr<int> Process::sys$umount(Userspace<const char*> user_mountpoint, size_
     if (mountpoint.is_error())
         return mountpoint.error();
 
-    auto custody_or_error = VFS::the().resolve_path(mountpoint.value(), current_directory());
+    auto custody_or_error = VFS::the().resolve_path(mountpoint.value()->view(), current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 

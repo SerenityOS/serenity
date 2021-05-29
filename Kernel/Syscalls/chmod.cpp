@@ -17,7 +17,7 @@ KResultOr<int> Process::sys$chmod(Userspace<const char*> user_path, size_t path_
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
-    return VFS::the().chmod(path.value(), mode, current_directory());
+    return VFS::the().chmod(path.value()->view(), mode, current_directory());
 }
 
 KResultOr<int> Process::sys$fchmod(int fd, mode_t mode)

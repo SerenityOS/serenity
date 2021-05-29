@@ -546,12 +546,12 @@ private:
 
     KResultOr<siginfo_t> do_waitid(idtype_t idtype, int id, int options);
 
-    KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
-    KResultOr<String> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
+    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const char* user_path, size_t path_length) const;
+    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(Userspace<const char*> user_path, size_t path_length) const
     {
         return get_syscall_path_argument(user_path.unsafe_userspace_ptr(), path_length);
     }
-    KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
+    KResultOr<NonnullOwnPtr<KString>> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
     bool has_tracee_thread(ProcessID tracer_pid);
 
