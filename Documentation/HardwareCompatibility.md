@@ -17,6 +17,7 @@ Serenity boots to a graphical desktop on all machines unless otherwise noted.
 | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Dell Inspiron mini 10                    | ICH7-M SATA controller works in IDE mode, RTL810xE NIC and Intel NM10 audio unsupported                                                                                                                          |
 | HP 15-ac108na                            | Pentium 3825U, Wildcat Point Chipset. AHCI works. Keyboard and trackpad work (both are PS2), trackpad scrolling/gestures don't work. RTL810xE NIC, RTL8723BE Wireless NIC, xHCI and Intel HDA audio unsupported. |
+| Lenovo Ideapad 510s                      | Sunrise Point Chipset. AHCI works. Keyboard and trackpad work (both are PS2), RTL810xE NIC, Intel 3165 Wireless NIC, USB and Intel HDA audio unsupported. |
 
 ### Motherboards
 
