@@ -257,6 +257,21 @@ void HexEditorWidget::initialize_menubar(GUI::Menubar& menubar)
         m_editor->update();
         m_last_found_index = result;
     }));
+
+    edit_menu.add_action(GUI::Action::create("Find All &Strings", { Mod_Ctrl | Mod_Shift, Key_S }, Gfx::Bitmap::load_from_file("/res/icons/16x16/find.png"), [&](const GUI::Action&) {
+        int min_length = 4;
+        auto matches = m_editor->find_all_strings(min_length);
+        m_search_results->set_model(*new SearchResultsModel(move(matches)));
+        m_search_results->update();
+
+        if (matches.is_empty()) {
+            GUI::MessageBox::show(window(), "No strings found in this file", "Not found", GUI::MessageBox::Type::Warning);
+            return;
+        }
+
+        set_search_results_visible(true);
+        m_editor->update();
+    }));
     edit_menu.add_separator();
     edit_menu.add_action(*m_goto_offset_action);
 

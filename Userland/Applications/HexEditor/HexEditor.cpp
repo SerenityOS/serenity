@@ -623,3 +623,37 @@ Vector<Match> HexEditor::find_all(ByteBuffer& needle, int start)
 
     return matches;
 }
+
+Vector<Match> HexEditor::find_all_strings(size_t min_length)
+{
+    if (m_buffer.is_empty())
+        return {};
+
+    Vector<Match> matches;
+
+    int offset = -1;
+    StringBuilder builder;
+    for (size_t i = 0; i < m_buffer.size(); i++) {
+        char c = m_buffer.bytes().at(i);
+        if (isprint(c)) {
+            if (offset == -1)
+                offset = i;
+            builder.append(c);
+        } else {
+            if (builder.length() >= min_length) {
+                dbgln("find_all_strings: relative_offset={} string={}", offset, builder.to_string());
+                matches.append({ offset, builder.to_string() });
+            }
+            builder.clear();
+            offset = -1;
+        }
+    }
+
+    if (matches.is_empty())
+        return {};
+
+    auto first_match = matches.at(0);
+    highlight(first_match.offset, first_match.offset + first_match.value.length());
+
+    return matches;
+}
