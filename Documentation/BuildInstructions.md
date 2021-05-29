@@ -143,9 +143,9 @@ brew install genext2fs
 
 Notes:
 
-- fuse-ext2 is not available as brew formula so it must be installed using `BuildFuseExt2.sh`
+- fuse-ext2 is not available as a brew formula so it must be installed using `BuildFuseExt2.sh`
 - Xcode and `xcode-tools` must be installed (`git` is required by some scripts)
-- coreutils is needed to build gcc cross compiler
+- coreutils is needed to build the GCC cross compiler
 - qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS.
 - Installing osxfuse for the first time requires enabling its system extension in System Preferences and then restarting your machine. The output from installing osxfuse with brew says this, but it's easy to miss.
@@ -192,7 +192,7 @@ $ pkg install bash coreutils git gmake ninja sudo
 ### Windows prerequisites
 
 For Windows, you will require Windows Subsystem for Linux 2 (WSL2). [Follow the WSL2 instructions here.](https://github.com/SerenityOS/serenity/blob/master/Documentation/NotesOnWSL.md)
-Do note the ```Hardware acceleration``` and ```Note on filesystems``` sections, otherwise performance will be terrible.
+Do note the ```Hardware acceleration``` and ```Note on filesystems``` sections, otherwise, performance will be terrible.
 Once you have installed a distro for WSL2, follow the Linux prerequisites above for the distro you installed, then continue as normal.
 
 You may also want to install [ninja](https://github.com/ninja-build/ninja/releases)
@@ -228,7 +228,7 @@ $ ninja image
 $ ninja run
 ```
 
-Note that the `anon` user is able to become `root` without password by default, as a development convenience.
+Note that the `anon` user is able to become `root` without a password by default, as a development convenience.
 To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
 
 On Linux, QEMU is significantly faster if it's able to use KVM. The run script will automatically enable KVM if `/dev/kvm` exists and is readable+writable by the current user.
@@ -252,7 +252,7 @@ There are some optional features that can be enabled during compilation that are
 - `ENABLE_COMPILETIME_FORMAT_CHECK`: checks for the validity of `std::format`-style format string during compilation. Enabled by default.
 - `ENABLE_PCI_IDS_DOWNLOAD`: downloads the [`pci.ids` database](https://pci-ids.ucw.cz/) that contains information about PCI devices at build time, if not already present. Enabled by default.
 - `BUILD_LAGOM`: builds [Lagom](../Meta/Lagom/ReadMe.md), which makes various SerenityOS libraries and programs available on the host system.
-- `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speedup compilation.
+- `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speed up compilation.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests
 
@@ -268,7 +268,7 @@ For the changes to take effect, SerenityOS needs to be recompiled and the disk i
 
 ## Ports
 
-To add a package from the ports collection to Serenity, for example curl, go into `Ports/curl/` and run `./package.sh`. The sourcecode for the package will be downloaded and the package will be built. After that, rebuild the disk image. The next time you start Serenity, `curl` will be available.
+To add a package from the ports collection to Serenity, for example, curl, go into `Ports/curl/` and run `./package.sh`. The source code for the package will be downloaded and the package will be built. After that, rebuild the disk image. The next time you start Serenity, `curl` will be available.
 
 ## Tests
 
