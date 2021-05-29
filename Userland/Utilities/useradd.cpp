@@ -1,14 +1,19 @@
 /*
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Brandon Pruitt  <brapru@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
+#include <AK/Random.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
+#include <crypt.h>
 #include <ctype.h>
 #include <errno.h>
 #include <pwd.h>
+#include <shadow.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -87,6 +92,12 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    FILE* spwdfile = fopen("/etc/shadow", "a");
+    if (!spwdfile) {
+        perror("failed to open /etc/shadow");
+        return 1;
+    }
+
     String home;
     if (!home_path)
         home = String::formatted("/home/{}", username);
@@ -111,21 +122,51 @@ int main(int argc, char** argv)
         }
     }
 
+    auto get_salt = []() {
+        char random_data[12];
+        fill_with_random(random_data, sizeof(random_data));
+
+        StringBuilder builder;
+        builder.append("$5$");
+        builder.append(encode_base64(ReadonlyBytes(random_data, sizeof(random_data))));
+
+        return builder.build();
+    };
+
+    char* hash = crypt(password, get_salt().characters());
+
     struct passwd p;
     p.pw_name = const_cast<char*>(username);
-    p.pw_passwd = const_cast<char*>(password);
+    p.pw_passwd = const_cast<char*>("!");
     p.pw_dir = const_cast<char*>(home.characters());
     p.pw_uid = static_cast<uid_t>(uid);
     p.pw_gid = static_cast<gid_t>(gid);
     p.pw_shell = const_cast<char*>(shell);
     p.pw_gecos = const_cast<char*>(gecos);
 
+    struct spwd s;
+    s.sp_namp = const_cast<char*>(username);
+    s.sp_pwdp = const_cast<char*>(hash);
+    s.sp_lstchg = 18727;
+    s.sp_min = 0;
+    s.sp_max = 99999;
+    s.sp_warn = -1;
+    s.sp_inact = -1;
+    s.sp_expire = -1;
+    s.sp_flag = -1;
+
     if (putpwent(&p, pwfile) < 0) {
         perror("putpwent");
         return 1;
     }
 
+    if (putspent(&s, spwdfile) < 0) {
+        perror("putspent");
+        return 1;
+    }
+
     fclose(pwfile);
+    fclose(spwdfile);
 
     return 0;
 }
