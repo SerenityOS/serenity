@@ -7,7 +7,6 @@
 #include "RangeAllocator.h"
 #include <AK/BinarySearch.h>
 #include <AK/Checked.h>
-#include <AK/QuickSort.h>
 #include <AK/Random.h>
 
 #define VM_GUARD_PAGES
