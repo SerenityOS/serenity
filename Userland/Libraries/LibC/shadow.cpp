@@ -236,8 +236,72 @@ int putspent(struct spwd* p, FILE* stream)
         return -1;
     }
 
-    int nwritten = fprintf(stream, "%s:%s:%ld:%ld:%ld:%ld:%ld:%ld:%ld\n", p->sp_namp,
-        p->sp_pwdp, p->sp_lstchg, p->sp_min, p->sp_max, p->sp_warn, p->sp_inact, p->sp_expire, p->sp_flag);
+    int nwritten;
+
+    nwritten = fprintf(stream, "%s:%s:", p->sp_namp, p->sp_pwdp);
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_lstchg != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_lstchg);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_min != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_min);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_max != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_max);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_warn != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_warn);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_inact != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_inact);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_expire != (long int)-1)
+        nwritten = fprintf(stream, "%ld:", p->sp_expire);
+    else
+        nwritten = fprintf(stream, "%c", ':');
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    if (p->sp_flag != (unsigned long int)-1)
+        nwritten = fprintf(stream, "%ld\n", p->sp_flag);
+    else
+        nwritten = fprintf(stream, "%c", '\n');
     if (!nwritten || nwritten < 0) {
         errno = ferror(stream);
         return -1;
