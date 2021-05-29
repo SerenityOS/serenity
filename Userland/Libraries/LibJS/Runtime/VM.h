@@ -12,6 +12,7 @@
 #include <AK/HashMap.h>
 #include <AK/RefCounted.h>
 #include <AK/StackInfo.h>
+#include <AK/Variant.h>
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/CommonPropertyNames.h>
 #include <LibJS/Runtime/Error.h>
@@ -22,6 +23,9 @@
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
+
+class Identifier;
+struct BindingPattern;
 
 enum class ScopeType {
     None,
@@ -180,7 +184,10 @@ public:
     ScopeType unwind_until() const { return m_unwind_until; }
 
     Value get_variable(const FlyString& name, GlobalObject&);
-    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false);
+    void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
+    void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
+    void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
+    void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
 
     Reference get_reference(const FlyString& name);
 
