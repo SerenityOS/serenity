@@ -756,9 +756,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f32_sqrt.value():
         UNARY_NUMERIC_OPERATION(float, sqrtf);
     case Instructions::f32_add.value():
-        UNARY_NUMERIC_OPERATION(float, +);
+        BINARY_NUMERIC_OPERATION(float, +, float);
     case Instructions::f32_sub.value():
-        UNARY_NUMERIC_OPERATION(float, -);
+        BINARY_NUMERIC_OPERATION(float, -, float);
     case Instructions::f32_mul.value():
         BINARY_NUMERIC_OPERATION(float, *, float);
     case Instructions::f32_div.value():
