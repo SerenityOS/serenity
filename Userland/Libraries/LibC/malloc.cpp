@@ -437,8 +437,10 @@ void* realloc(void* ptr, size_t size)
 {
     if (!ptr)
         return malloc(size);
-    if (!size)
+    if (!size) {
+        free(ptr);
         return nullptr;
+    }
 
     Threading::Locker locker(malloc_lock());
     auto existing_allocation_size = malloc_size(ptr);
