@@ -5,6 +5,7 @@
  */
 
 #include <AK/LexicalPath.h>
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/EventLoop.h>
@@ -57,7 +58,9 @@ int main(int argc, char** argv)
                 auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", symbol.filename));
                 if (access(full_path.characters(), F_OK) == 0) {
                     linked = true;
-                    out("\033]8;;file://{}{}?line_number={}\033\\", hostname, full_path, symbol.line_number);
+                    auto url = URL::create_with_file_scheme(full_path, {}, hostname);
+                    url.set_query(String::formatted("line_number={}", symbol.line_number));
+                    out("\033]8;;{}\033\\", url.serialize());
                 }
 
                 out("\033[34;1m{}:{}\033[0m", LexicalPath(symbol.filename).basename(), symbol.line_number);

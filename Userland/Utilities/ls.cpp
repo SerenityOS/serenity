@@ -10,6 +10,7 @@
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
 #include <AK/Utf8View.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
@@ -196,7 +197,8 @@ static size_t print_name(const struct stat& st, const String& name, const char* 
     if (!flag_disable_hyperlinks) {
         auto full_path = Core::File::real_path_for(path_for_hyperlink);
         if (!full_path.is_null()) {
-            out("\033]8;;file://{}{}\033\\", hostname(), full_path);
+            auto url = URL::create_with_file_scheme(full_path, {}, hostname());
+            out("\033]8;;{}\033\\", url.serialize());
         }
     }
 
