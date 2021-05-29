@@ -92,7 +92,7 @@ public:
     const String& data_payload() const { return m_data_payload; }
 
     static URL create_with_url_or_path(const String&);
-    static URL create_with_file_scheme(const String& path, const String& fragment = {});
+    static URL create_with_file_scheme(const String& path, const String& fragment = {}, const String& hostname = {});
     static URL create_with_file_protocol(const String& path, const String& fragment = {}) { return create_with_file_scheme(path, fragment); }
     static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
 
