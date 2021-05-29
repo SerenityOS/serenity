@@ -1,8 +1,8 @@
 ## SerenityOS network booting via TFTP and DHCP
 
-By network booting, this guide implies a target computer (physical or virtual) that tries to boot over the network through PXE. The setup presented here is also diskless, as the bootloader and the root file system are supplied over the network. This can be achieved using GRUB2 or PXELINUX although only GRUB2 provides a framebuffer to display the Serenity desktop.
+By network booting, this guide implies a target computer (physical or virtual) that tries to boot over the network through PXE. The setup presented here is also diskless, as the bootloader and the root file system are supplied over the network. This can be achieved using GRUB2 or PXELINUX although only GRUB2 provides a frame buffer to display the Serenity desktop.
 
-Note: it is recommended to boot a mainstream operating system through PXE on the target at least once before attempting this, if only to make sure that your setup works.
+Note: it is recommended to boot a mainstream operating system through PXE on the target at least once before attempting this if only to make sure that your setup works.
 
 ### General notes
 
@@ -97,11 +97,11 @@ You should now be able to PXE boot into Serenity if enough of your hardware is s
 
 ### PXELINUX
 
-Warning: PXELINUX cannot set up a framebuffer for Multiboot targets, so you will most likely have no graphics on real hardware.
+Warning: PXELINUX cannot set up a frame buffer for Multiboot targets, so you will most likely have no graphics on real hardware.
 
 1. Install required packages on the TFTP server
     - Debian: `apt install pxelinux tftpd-hpa`
-    - Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise the TFTP server won't serve files
+    - Make sure `/srv/tftp/` is owned by the user `tftp`, otherwise, the TFTP server won't serve files
 2. Configure the DHCP server with the following options:
     - Next server IP: `<static IP address of TFTP server>`
     - Boot filename (for BIOS): `boot/pxelinux/lpxelinux.0`
@@ -128,7 +128,7 @@ LABEL SerenityOS
 ### Troubleshooting
 
 - Issues with DHCP or TFTP usually require sniffing packets on the network to figure out.
-- TFTP is a slow protocol, transferring the QEMU disk image (~ 200 MiB) will take some time. Consider setting up a FTP or HTTP server for faster downloading of SerenityOS artefacts if your bootloader supports it.
+- TFTP is a slow protocol, transferring the QEMU disk image (~ 200 MiB) will take some time. Consider setting up an FTP or HTTP server for faster downloading of SerenityOS artifacts if your bootloader supports it.
 - Remember that SerenityOS has not been extensively tested on physical hardware.
 - Some BIOS implementations of PXE are buggy or some machines may not have a PXE boot option at all in which case you could try using [iPXE](https://ipxe.org/).
 - Virtual machines can also be booted over the network. Cheat notes for QEMU on Linux, assuming `br0` is already set up:
@@ -146,10 +146,10 @@ qemu-system-i386 -m 4096 -netdev tap,ifname=tap0,script=no,downscript=no,id=netw
 
 ## SerenityOS network booting via USB (iPXE)
 
-It is possible to boot SerenityOS with the help of a USB drive. This option seems to be reliable if netbooting with TFTP fails due to bugs in firmware. For USB booting, you will need to ensure your BIOS supports such feature.
+It is possible to boot SerenityOS with the help of a USB drive. This option seems to be reliable if netbooting with TFTP fails due to bugs in the firmware. For USB booting, you will need to ensure your BIOS supports such a feature.
 
 You will need to have a USB drive you will be willing to wipe, so make sure to back up it first.
-You will also need to setup an HTTP server on your local network. Any HTTP server implementation
+You will also need to set up an HTTP server on your local network. Any HTTP server implementation
 will work, therefore we leave it to the reader to decide on which software to use
 and to figure out the right configuration for it.
 
@@ -167,7 +167,7 @@ This file can be called in any name you'd want. For the sake of simplicity in th
 this file is named `script.ipxe` from now on.
 Don't forget to replace `X.Y.Z.W` with your HTTP server IP address.
 
-For troubleshooting purposes, you can add the following command line arguments if you suspect our implementation fails to work with your hardware:
+For troubleshooting purposes, you can add the following command-line arguments if you suspect our implementation fails to work with your hardware:
 - `disable_physical_storage`
 - `disable_ps2_controller`
 - `disable_uhci_controller`
@@ -185,4 +185,4 @@ Finally, in the `src` folder you should run:
 make EMBED=../script.ipxe bin/ipxe.usb
 ```
 
-After it compiled, you will need to `dd` the `bin/ipxe.usb` file to your USB drive.
+After it is compiled, you will need to `dd` the `bin/ipxe.usb` file to your USB drive.
