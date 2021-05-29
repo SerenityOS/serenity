@@ -439,12 +439,8 @@ Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
     }
 
     if (role == ModelRole::MimeData) {
-        if (index.column() == Column::Name) {
-            StringBuilder builder;
-            builder.append("file://");
-            builder.append(node.full_path());
-            return builder.to_string();
-        }
+        if (index.column() == Column::Name)
+            return URL::create_with_file_scheme(node.full_path()).serialize();
         return {};
     }
 

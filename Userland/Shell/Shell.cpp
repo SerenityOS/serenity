@@ -14,6 +14,7 @@
 #include <AK/ScopedValueRollback.h>
 #include <AK/StringBuilder.h>
 #include <AK/TemporaryChange.h>
+#include <AK/URL.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/Event.h>
@@ -65,7 +66,8 @@ void Shell::print_path(const String& path)
         printf("%s", path.characters());
         return;
     }
-    printf("\033]8;;file://%s%s\033\\%s\033]8;;\033\\", hostname, path.characters(), path.characters());
+    auto url = URL::create_with_file_scheme(path, {}, hostname);
+    out("\033]8;;{}\033\\{}\033]8;;\033\\", url.serialize(), path);
 }
 
 String Shell::prompt() const
