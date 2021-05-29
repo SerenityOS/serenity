@@ -116,31 +116,39 @@ void URL::set_fragment(const String& fragment)
     m_fragment = fragment;
 }
 
+// FIXME: This is by no means complete.
+// NOTE: This relies on some assumptions about how the spec-defined URL parser works that may turn out to be wrong.
 bool URL::compute_validity() const
 {
-    // FIXME: This is by no means complete.
     if (m_scheme.is_empty())
         return false;
-
-    if (m_scheme == "about") {
-        if (path().is_empty())
-            return false;
-        return true;
-    }
-
-    if (m_scheme == "file") {
-        if (path().is_empty())
-            return false;
-        return true;
-    }
 
     if (m_scheme == "data") {
         if (m_data_mime_type.is_empty())
             return false;
-        return true;
+        if (m_data_payload_is_base64) {
+            if (m_data_payload.length() % 4 != 0)
+                return false;
+            for (auto character : m_data_payload) {
+                if (!is_ascii_alphanumeric(character) || character == '+' || character == '/' || character == '=')
+                    return false;
+            }
+        }
+    } else if (m_cannot_be_a_base_url) {
+        if (m_paths.size() != 1)
+            return false;
+        if (m_paths[0].is_empty())
+            return false;
+    } else {
+        if (m_scheme.is_one_of("about", "mailto"))
+            return false;
+        // NOTE: Maybe it is allowed to have a zero-segment path.
+        if (m_paths.size() == 0)
+            return false;
     }
 
-    if (m_host.is_empty())
+    // NOTE: A file URL's host should be the empty string for localhost, not null.
+    if (m_scheme == "file" && m_host.is_null())
         return false;
 
     return true;
