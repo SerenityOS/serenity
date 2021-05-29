@@ -17,7 +17,7 @@
 
 constexpr uid_t BASE_UID = 1000;
 constexpr gid_t USERS_GID = 100;
-constexpr const char* DEFAULT_SHELL = "/bin/Shell";
+constexpr const char* DEFAULT_SHELL = "/bin/sh";
 
 int main(int argc, char** argv)
 {
