@@ -168,31 +168,31 @@ enum ClientVerificationStaus {
 // GCM specifically asks us to transmit only the nonce, the counter is zero
 // and the fixed IV is derived from the premaster key.
 #define ENUMERATE_CIPHERS(C)                                                                                                                    \
-    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)        \
-    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)        \
-    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false)   \
-    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false)   \
-    C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, SignatureAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)     \
-    C(true, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, SignatureAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA1, 16, false)      \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA1, 16, false)      \
+    C(true, CipherSuite::RSA_WITH_AES_128_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_CBC, Crypto::Hash::SHA256, 16, false) \
+    C(true, CipherSuite::RSA_WITH_AES_256_CBC_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_CBC, Crypto::Hash::SHA256, 16, false) \
+    C(true, CipherSuite::RSA_WITH_AES_128_GCM_SHA256, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_128_GCM, Crypto::Hash::SHA256, 8, true)   \
+    C(true, CipherSuite::RSA_WITH_AES_256_GCM_SHA384, KeyExchangeAlgorithm::RSA, CipherAlgorithm::AES_256_GCM, Crypto::Hash::SHA384, 8, true)
 
-constexpr SignatureAlgorithm get_signature_algorithm(CipherSuite suite)
+constexpr KeyExchangeAlgorithm get_key_exchange_algorithm(CipherSuite suite)
 {
     switch (suite) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
-        return signature;
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
+        return key_exchange;
         ENUMERATE_CIPHERS(C)
 #undef C
     default:
-        return SignatureAlgorithm::Anonymous;
+        return KeyExchangeAlgorithm::Invalid;
     }
 }
 
 constexpr CipherAlgorithm get_cipher_algorithm(CipherSuite suite)
 {
     switch (suite) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return cipher;
         ENUMERATE_CIPHERS(C)
 #undef C
@@ -205,8 +205,8 @@ struct Options {
     static Vector<CipherSuite> default_usable_cipher_suites()
     {
         Vector<CipherSuite> cipher_suites;
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    if constexpr (is_supported)                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    if constexpr (is_supported)                                              \
         cipher_suites.empend(suite);
         ENUMERATE_CIPHERS(C)
 #undef C
@@ -342,8 +342,8 @@ public:
     bool supports_cipher(CipherSuite suite) const
     {
         switch (suite) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return is_supported;
             ENUMERATE_CIPHERS(C)
 #undef C
@@ -424,8 +424,8 @@ private:
     size_t key_length() const
     {
         switch (m_context.cipher) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return cipher_key_size(cipher) / 8;
             ENUMERATE_CIPHERS(C)
 #undef C
@@ -437,8 +437,8 @@ private:
     size_t mac_length() const
     {
         switch (m_context.cipher) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return hash ::digest_size();
             ENUMERATE_CIPHERS(C)
 #undef C
@@ -450,8 +450,8 @@ private:
     size_t iv_length() const
     {
         switch (m_context.cipher) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return iv_size;
             ENUMERATE_CIPHERS(C)
 #undef C
@@ -463,8 +463,8 @@ private:
     bool is_aead() const
     {
         switch (m_context.cipher) {
-#define C(is_supported, suite, signature, cipher, hash, iv_size, is_aead) \
-    case suite:                                                           \
+#define C(is_supported, suite, key_exchange, cipher, hash, iv_size, is_aead) \
+    case suite:                                                              \
         return is_aead;
             ENUMERATE_CIPHERS(C)
 #undef C

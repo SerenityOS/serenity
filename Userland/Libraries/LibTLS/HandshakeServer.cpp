@@ -201,23 +201,36 @@ ByteBuffer TLSv12::build_server_key_exchange()
 
 ssize_t TLSv12::handle_server_key_exchange(ReadonlyBytes)
 {
-    switch (get_signature_algorithm(m_context.cipher)) {
-    case SignatureAlgorithm::Anonymous:
-        dbgln("Client key exchange for Anonymous signature is not implemented");
-        TODO();
-        break;
-    case SignatureAlgorithm::RSA:
-    case SignatureAlgorithm::DSA:
+    switch (get_key_exchange_algorithm(m_context.cipher)) {
+    case KeyExchangeAlgorithm::RSA:
+    case KeyExchangeAlgorithm::DH_DSS:
+    case KeyExchangeAlgorithm::DH_RSA:
         // RFC 5246 section 7.4.3. Server Key Exchange Message
         // It is not legal to send the server key exchange message for RSA, DH_DSS, DH_RSA
-        dbgln("Server key exchange received for RSA or DSA is not legal");
+        dbgln("Server key exchange received for RSA, DH_DSS or DH_RSA is not legal");
         return (i8)Error::UnexpectedMessage;
-    case SignatureAlgorithm::ECDSA:
-        dbgln("Client key exchange for ECDSA signature is not implemented");
+    case KeyExchangeAlgorithm::DHE_DSS:
+        dbgln("Server key exchange for DHE_DSS is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::DHE_RSA:
+        dbgln("Server key exchange for DHE_RSA is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::DH_anon:
+        dbgln("Server key exchange for DH_anon is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::ECDHE_RSA:
+    case KeyExchangeAlgorithm::ECDH_ECDSA:
+    case KeyExchangeAlgorithm::ECDH_RSA:
+    case KeyExchangeAlgorithm::ECDHE_ECDSA:
+    case KeyExchangeAlgorithm::ECDH_anon:
+        dbgln("Server key exchange for ECDHE algorithms is not implemented");
         TODO();
         break;
     default:
-        dbgln("Unknonwn client key exchange signature algorithm");
+        dbgln("Unknonwn server key exchange algorithm");
         VERIFY_NOT_REACHED();
         break;
     }

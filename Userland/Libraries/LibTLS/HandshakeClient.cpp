@@ -283,24 +283,37 @@ ByteBuffer TLSv12::build_client_key_exchange()
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
     builder.append((u8)HandshakeType::ClientKeyExchange);
 
-    switch (get_signature_algorithm(m_context.cipher)) {
-    case SignatureAlgorithm::Anonymous:
-        dbgln("Client key exchange for Anonymous signature is not implemented");
-        TODO();
-        break;
-    case SignatureAlgorithm::RSA:
+    switch (get_key_exchange_algorithm(m_context.cipher)) {
+    case KeyExchangeAlgorithm::RSA:
         build_rsa_pre_master_secret(builder);
         break;
-    case SignatureAlgorithm::DSA:
-        dbgln("Client key exchange for DSA signature is not implemented");
+    case KeyExchangeAlgorithm::DHE_DSS:
+        dbgln("Client key exchange for DHE_DSS is not implemented");
         TODO();
         break;
-    case SignatureAlgorithm::ECDSA:
-        dbgln("Client key exchange for ECDSA signature is not implemented");
+    case KeyExchangeAlgorithm::DH_DSS:
+    case KeyExchangeAlgorithm::DH_RSA:
+        dbgln("Client key exchange for DH algorithms is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::DHE_RSA:
+        dbgln("Client key exchange for DHE_RSA is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::DH_anon:
+        dbgln("Client key exchange for DH_anon is not implemented");
+        TODO();
+        break;
+    case KeyExchangeAlgorithm::ECDHE_RSA:
+    case KeyExchangeAlgorithm::ECDH_ECDSA:
+    case KeyExchangeAlgorithm::ECDH_RSA:
+    case KeyExchangeAlgorithm::ECDHE_ECDSA:
+    case KeyExchangeAlgorithm::ECDH_anon:
+        dbgln("Client key exchange for ECDHE algorithms is not implemented");
         TODO();
         break;
     default:
-        dbgln("Unknonwn client key exchange signature algorithm");
+        dbgln("Unknonwn client key exchange algorithm");
         VERIFY_NOT_REACHED();
         break;
     }
