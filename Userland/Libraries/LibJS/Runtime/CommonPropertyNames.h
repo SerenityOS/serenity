@@ -44,6 +44,7 @@ namespace JS {
     P(acosh)                                 \
     P(all)                                   \
     P(allSettled)                            \
+    P(anchor)                                \
     P(any)                                   \
     P(apply)                                 \
     P(arguments)                             \
@@ -56,7 +57,10 @@ namespace JS {
     P(atan)                                  \
     P(atan2)                                 \
     P(atanh)                                 \
+    P(big)                                   \
     P(bind)                                  \
+    P(blink)                                 \
+    P(bold)                                  \
     P(buffer)                                \
     P(byteLength)                            \
     P(byteOffset)                            \
@@ -103,9 +107,12 @@ namespace JS {
     P(finally)                               \
     P(find)                                  \
     P(findIndex)                             \
+    P(fixed)                                 \
     P(flags)                                 \
     P(flat)                                  \
     P(floor)                                 \
+    P(fontcolor)                             \
+    P(fontsize)                              \
     P(forEach)                               \
     P(freeze)                                \
     P(from)                                  \
@@ -159,12 +166,14 @@ namespace JS {
     P(isSafeInteger)                         \
     P(isSealed)                              \
     P(isView)                                \
+    P(italics)                               \
     P(join)                                  \
     P(keyFor)                                \
     P(keys)                                  \
     P(lastIndex)                             \
     P(lastIndexOf)                           \
     P(length)                                \
+    P(link)                                  \
     P(log)                                   \
     P(log1p)                                 \
     P(log2)                                  \
@@ -214,6 +223,7 @@ namespace JS {
     P(sin)                                   \
     P(sinh)                                  \
     P(slice)                                 \
+    P(small)                                 \
     P(some)                                  \
     P(sort)                                  \
     P(source)                                \
@@ -221,9 +231,12 @@ namespace JS {
     P(sqrt)                                  \
     P(startsWith)                            \
     P(sticky)                                \
+    P(strike)                                \
     P(stringify)                             \
+    P(sub)                                   \
     P(substr)                                \
     P(substring)                             \
+    P(sup)                                   \
     P(tan)                                   \
     P(tanh)                                  \
     P(test)                                  \
