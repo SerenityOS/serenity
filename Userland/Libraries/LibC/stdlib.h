@@ -25,6 +25,7 @@ size_t malloc_good_size(size_t);
 void serenity_dump_malloc_stats(void);
 void free(void*);
 __attribute__((alloc_size(2))) void* realloc(void* ptr, size_t);
+__attribute__((alloc_size(2, 3))) void* reallocarray(void* ptr, size_t nmemb, size_t);
 char* getenv(const char* name);
 char* secure_getenv(const char* name);
 int putenv(char*);

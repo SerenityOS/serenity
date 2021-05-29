@@ -455,6 +455,17 @@ void* realloc(void* ptr, size_t size)
     return new_ptr;
 }
 
+void* reallocarray(void* ptr, size_t nmemb, size_t size)
+{
+    size_t mcheck;
+    if (__builtin_umull_overflow(nmemb, size, &mcheck)) {
+        errno = ENOMEM;
+        return nullptr;
+    }
+
+    return realloc(ptr, nmemb * size);
+}
+
 void __malloc_init()
 {
     new (&malloc_lock()) Threading::Lock();
