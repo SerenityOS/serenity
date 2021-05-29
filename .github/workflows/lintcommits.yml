@@ -5,7 +5,7 @@ on: [pull_request_target]
 jobs:
   lint_commits:
     runs-on: ubuntu-20.04
-    if: always() && github.repository == 'SerenityOS/serenity'
+    if: always() && github.repository == 'SerenityOS/serenity' && !github.event.pull_request.draft
 
     steps:
       - name: Get PR Commits
