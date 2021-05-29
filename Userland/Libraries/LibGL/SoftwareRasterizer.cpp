@@ -414,6 +414,13 @@ SoftwareRasterizer::SoftwareRasterizer(const Gfx::IntSize& min_size)
 {
 }
 
+void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
+{
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [](const FloatVector2&, const FloatVector4& color) -> FloatVector4 {
+        return color;
+    });
+}
+
 void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Texture2D& texture)
 {
     rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {

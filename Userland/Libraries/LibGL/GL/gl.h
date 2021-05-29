@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -257,6 +258,7 @@ GLAPI void glReadBuffer(GLenum mode);
 GLAPI void glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels);
 GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data);
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
+GLAPI void glBindTexture(GLenum target, GLuint texture);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Jesse Buhagiar <jooster669@gmail.com>
+ * Copyright (c) 2021, Stephan Unverwerth <s.unverwerth@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,4 +23,9 @@ void glDeleteTextures(GLsizei n, const GLuint* textures)
 void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data)
 {
     g_gl_context->gl_tex_image_2d(target, level, internalFormat, width, height, border, format, type, data);
+}
+
+void glBindTexture(GLenum target, GLuint texture)
+{
+    g_gl_context->gl_bind_texture(target, texture);
 }
