@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Fei Wu <f.eiwu@yahoo.com>
+ * Copyright (c) 2021, Brandon Pruitt <brapru@pm.me>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,6 +13,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <pwd.h>
+#include <shadow.h>
 #include <spawn.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,17 +57,35 @@ int main(int argc, char** argv)
         }
     }
 
-    char temp_filename[] = "/etc/passwd.XXXXXX";
-    auto fd = mkstemp(temp_filename);
-    if (fd == -1) {
-        perror("failed to create temporary file");
+    char temp_passwd[] = "/etc/passwd.XXXXXX";
+    char temp_shadow[] = "/etc/shadow.XXXXXX";
+
+    auto temp_passwd_fd = mkstemp(temp_passwd);
+    if (temp_passwd_fd == -1) {
+        perror("failed to create temporary passwd file");
         return 1;
     }
 
-    FILE* temp_file = fdopen(fd, "w");
-    if (!temp_file) {
+    auto temp_shadow_fd = mkstemp(temp_shadow);
+    if (temp_shadow_fd == -1) {
+        perror("failed to create temporary shadow file");
+        return 1;
+    }
+
+    FILE* temp_passwd_file = fdopen(temp_passwd_fd, "w");
+    if (!temp_passwd_file) {
         perror("fdopen");
-        if (unlink(temp_filename) < 0) {
+        if (unlink(temp_passwd) < 0) {
+            perror("unlink");
+        }
+
+        return 1;
+    }
+
+    FILE* temp_shadow_file = fdopen(temp_shadow_fd, "w");
+    if (!temp_shadow_file) {
+        perror("fdopen");
+        if (unlink(temp_shadow) < 0) {
             perror("unlink");
         }
 
@@ -79,7 +99,7 @@ int main(int argc, char** argv)
     setpwent();
     for (auto* pw = getpwent(); pw; pw = getpwent()) {
         if (strcmp(pw->pw_name, username)) {
-            if (putpwent(pw, temp_file) != 0) {
+            if (putpwent(pw, temp_passwd_file) != 0) {
                 perror("failed to put an entry in the temporary passwd file");
                 rc = 1;
                 break;
@@ -92,7 +112,25 @@ int main(int argc, char** argv)
     }
     endpwent();
 
-    if (fclose(temp_file)) {
+    setspent();
+    for (auto* spwd = getspent(); spwd; spwd = getspent()) {
+        if (strcmp(spwd->sp_namp, username)) {
+            if (putspent(spwd, temp_shadow_file) != 0) {
+                perror("failed to put an entry in the temporary shadow file");
+                rc = 1;
+                break;
+            }
+        }
+    }
+    endspent();
+
+    if (fclose(temp_passwd_file)) {
+        perror("fclose");
+        if (!rc)
+            rc = 1;
+    }
+
+    if (fclose(temp_shadow_file)) {
         perror("fclose");
         if (!rc)
             rc = 1;
@@ -103,20 +141,35 @@ int main(int argc, char** argv)
         rc = 6;
     }
 
-    if (rc == 0 && chmod(temp_filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
+    if (rc == 0 && chmod(temp_passwd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
         perror("chmod");
         rc = 1;
     }
 
-    if (rc == 0 && rename(temp_filename, "/etc/passwd") < 0) {
+    if (rc == 0 && chmod(temp_shadow, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) {
+        perror("chmod");
+        rc = 1;
+    }
+
+    if (rc == 0 && rename(temp_passwd, "/etc/passwd") < 0) {
         perror("failed to rename the temporary passwd file");
         rc = 1;
     }
 
+    if (rc == 0 && rename(temp_shadow, "/etc/shadow") < 0) {
+        perror("failed to rename the temporary shadow file");
+        rc = 1;
+    }
+
     if (rc) {
-        if (unlink(temp_filename) < 0) {
+        if (unlink(temp_passwd) < 0) {
             perror("unlink");
         }
+
+        if (unlink(temp_shadow) < 0) {
+            perror("unlink");
+        }
+
         return rc;
     }
 
