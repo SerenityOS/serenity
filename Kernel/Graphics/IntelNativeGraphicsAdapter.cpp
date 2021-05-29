@@ -25,13 +25,26 @@ static constexpr IntelNativeGraphicsAdapter::PLLMaxSettings G35Limits {
     { 5, 10 }                         // p2
 };
 
+static constexpr u16 supported_models[] {
+    { 0x29c2 }, // Intel G35 Adapter
+};
+
+static bool is_supported_model(u16 device_id)
+{
+    for (auto& id : supported_models) {
+        if (id == device_id)
+            return true;
+    }
+    return false;
+}
+
 #define DDC2_I2C_ADDRESS 0x50
 
 RefPtr<IntelNativeGraphicsAdapter> IntelNativeGraphicsAdapter::initialize(PCI::Address address)
 {
     auto id = PCI::get_id(address);
     VERIFY(id.vendor_id == 0x8086);
-    if (id.device_id != 0x29c2)
+    if (!is_supported_model(id.device_id))
         return {};
     return adopt_ref(*new IntelNativeGraphicsAdapter(address));
 }
