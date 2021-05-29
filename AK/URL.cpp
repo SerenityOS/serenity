@@ -178,14 +178,17 @@ u16 URL::default_port_for_scheme(const StringView& scheme)
     return 0;
 }
 
-URL URL::create_with_file_scheme(const String& path, const String& fragment)
+URL URL::create_with_file_scheme(const String& path, const String& fragment, const String& hostname)
 {
     LexicalPath lexical_path(path);
     if (!lexical_path.is_valid() || !lexical_path.is_absolute())
         return {};
+
     URL url;
     url.set_scheme("file");
-    url.set_host(String::empty());
+    // NOTE: If the hostname is localhost (or null, which implies localhost), it should be set to the empty string.
+    //       This is because a file URL always needs a non-null hostname.
+    url.set_host(hostname.is_null() || hostname == "localhost" ? String::empty() : hostname);
     url.set_paths(lexical_path.parts());
     // NOTE: To indicate that we want to end the path with a slash, we have to append an empty path segment.
     if (path.ends_with('/'))
