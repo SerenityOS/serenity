@@ -232,18 +232,13 @@ bool Context::verify_chain() const
     return true;
 }
 
-void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
+template<typename HMACType>
+static void hmac_pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
 {
     if (!secret.size()) {
         dbgln("null secret");
         return;
     }
-
-    // RFC 5246: "In this section, we define one PRF, based on HMAC.  This PRF with the
-    //            SHA-256 hash function is used for all cipher suites defined in this
-    //            document and in TLS documents published prior to this document when
-    //            TLS 1.2 is negotiated."
-    // Apparently this PRF _always_ uses SHA256
 
     auto append_label_seed = [&](auto& hmac) {
         hmac.update(label, label_length);
@@ -252,7 +247,7 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
             hmac.update(seed_b);
     };
 
-    Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret);
+    HMACType hmac(secret);
     append_label_seed(hmac);
 
     constexpr auto digest_size = hmac.digest_size();
@@ -273,6 +268,34 @@ void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8*
         index += copy_size;
 
         digest_0.overwrite(0, hmac.process(digest_0).immutable_data(), digest_size);
+    }
+}
+
+void TLSv12::pseudorandom_function(Bytes output, ReadonlyBytes secret, const u8* label, size_t label_length, ReadonlyBytes seed, ReadonlyBytes seed_b)
+{
+    // Simplification: We only support the HMAC PRF with the hash function SHA-256 or stronger.
+
+    // RFC 5246: "In this section, we define one PRF, based on HMAC.  This PRF with the
+    //            SHA-256 hash function is used for all cipher suites defined in this
+    //            document and in TLS documents published prior to this document when
+    //            TLS 1.2 is negotiated.  New cipher suites MUST explicitly specify a
+    //            PRF and, in general, SHOULD use the TLS PRF with SHA-256 or a
+    //            stronger standard hash function."
+
+    switch (hmac_hash()) {
+    case Crypto::Hash::HashKind::SHA512:
+        hmac_pseudorandom_function<Crypto::Authentication::HMAC<Crypto::Hash::SHA512>>(output, secret, label, label_length, seed, seed_b);
+        break;
+    case Crypto::Hash::HashKind::SHA384:
+        hmac_pseudorandom_function<Crypto::Authentication::HMAC<Crypto::Hash::SHA384>>(output, secret, label, label_length, seed, seed_b);
+        break;
+    case Crypto::Hash::HashKind::SHA256:
+        hmac_pseudorandom_function<Crypto::Authentication::HMAC<Crypto::Hash::SHA256>>(output, secret, label, label_length, seed, seed_b);
+        break;
+    default:
+        dbgln("Failed to find a suitable HMAC hash");
+        VERIFY_NOT_REACHED();
+        break;
     }
 }
 

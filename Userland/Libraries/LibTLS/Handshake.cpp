@@ -140,12 +140,17 @@ ByteBuffer TLSv12::build_handshake_finished()
     PacketBuilder builder { MessageType::Handshake, m_context.options.version, 12 + 64 };
     builder.append((u8)HandshakeType::Finished);
 
-    constexpr u32 out_size = 12;
+    // RFC 5246 section 7.4.9: "In previous versions of TLS, the verify_data was always 12 octets
+    //                          long.  In the current version of TLS, it depends on the cipher
+    //                          suite.  Any cipher suite which does not explicitly specify
+    //                          verify_data_length has a verify_data_length equal to 12."
+    // Simplification: Assume that verify_data_length is always 12.
+    constexpr u32 verify_data_length = 12;
 
-    builder.append_u24(out_size);
+    builder.append_u24(verify_data_length);
 
-    u8 out[out_size];
-    auto outbuffer = Bytes { out, out_size };
+    u8 out[verify_data_length];
+    auto outbuffer = Bytes { out, verify_data_length };
     auto dummy = ByteBuffer::create_zeroed(0);
 
     auto digest = m_context.handshake_hash.digest();
