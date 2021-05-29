@@ -15,13 +15,13 @@ qemu-img convert -O vmdk /path/to/grub_disk_image /path/to/output/serenityos.vmd
 ## Creating the virtual machine
 Creating a SerenityOS virtual machine is similar to any other virtual machine. The main difference is using the already created VMDK disk image.
 
-**Please note that these instructions were written with VMware Player 15 in mind. Therefore, these instructions may not match exactly for past and future versions or VMware Workstation.**
+**Please note that these instructions were written with VMware Player 15 in mind. Therefore, these instructions may not match exactly for past and future versions of VMware Workstation.**
 
 1. Open the **Create a New Virtual Machine** dialog. Select **I will install the operating system later**.
 2. Choose **Other** as the guest operating system.
 3. Feel free to give it any name and store it anywhere.
 4. Choose any size for the hard disk. This disk will later be removed and replaced with the converted GRUB image from the previous stage.
-5. Select **Finish** to finalize creation of the virtual machine.
+5. Select **Finish** to finalize the creation of the virtual machine.
 6. Select the newly created virtual machine and click **Edit virtual machine settings**.
 7. Serenity requires at minimum 32 MB of memory. Set **Memory for this virtual machine** equal to or above 32 MB. The currently recommended size is 256 MB. Please note that Serenity is currently a 32-bit system, so anything above the ~3.5 GB mark will not be recognized.
 8. Select the existing **Hard Disk** and click **Remove**.
