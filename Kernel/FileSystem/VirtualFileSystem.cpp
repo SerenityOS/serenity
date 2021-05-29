@@ -851,7 +851,7 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
         return EINVAL;
 
     auto* unveiled_path = find_matching_unveiled_path(path);
-    if (!unveiled_path) {
+    if (!unveiled_path || unveiled_path->permissions() == UnveilAccess::None) {
         dbgln("Rejecting path '{}' since it hasn't been unveiled.", path);
         dump_backtrace();
         return ENOENT;

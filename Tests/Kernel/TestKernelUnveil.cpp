@@ -52,4 +52,8 @@ TEST_CASE(test_failures)
     res = unveil("/bin", "w");
     if (res >= 0)
         FAIL("unveil permitted after unveil state locked");
+
+    res = access("/bin/id", F_OK);
+    if (res == 0)
+        FAIL("access(..., F_OK) permitted after locked veil without relevant unveil");
 }
