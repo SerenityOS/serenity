@@ -25,14 +25,13 @@ public:
 
     int date() const { return datetime().day(); }
     int day() const { return datetime().weekday(); }
-    int full_year() const { return datetime().year(); }
     int hours() const { return datetime().hour(); }
     u16 milliseconds() const { return m_milliseconds; }
     int minutes() const { return datetime().minute(); }
     int month() const { return datetime().month() - 1; }
     int seconds() const { return datetime().second(); }
     double time() const { return datetime().timestamp() * 1000.0 + milliseconds(); }
-    int year() const { return datetime().day(); }
+    int year() const { return datetime().year(); }
 
     bool is_invalid() const { return m_is_invalid; }
     void set_is_invalid(bool value) { m_is_invalid = value; }
