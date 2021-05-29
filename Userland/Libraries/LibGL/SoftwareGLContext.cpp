@@ -667,12 +667,12 @@ void SoftwareGLContext::gl_disable(GLenum capability)
     case GL_BLEND:
         m_blend_enabled = false;
         rasterizer_options.enable_blending = false;
-        update_rasterizer_options = false;
+        update_rasterizer_options = true;
         break;
     case GL_ALPHA_TEST:
         m_alpha_test_enabled = false;
         rasterizer_options.enable_alpha_test = false;
-        update_rasterizer_options = false;
+        update_rasterizer_options = true;
         break;
     default:
         RETURN_WITH_ERROR_IF(true, GL_INVALID_ENUM);
