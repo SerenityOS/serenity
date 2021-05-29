@@ -190,7 +190,7 @@ ParseResult<Limits> Limits::parse(InputStream& stream)
     Optional<u32> max;
     if (flag) {
         size_t value;
-        if (LEB128::read_unsigned(stream, value))
+        if (!LEB128::read_unsigned(stream, value))
             return with_eof_check(stream, ParseError::ExpectedSize);
         max = value;
     }
