@@ -210,6 +210,13 @@ static bool load_ico_bmp(ICOLoadingContext& context, ICOImageDescriptor& desc)
             printf("load_ico_bmp: width %d < 0\n", info.width);
         return false;
     }
+
+    if (info.height == NumericLimits<i32>::min()) {
+        if constexpr (ICO_DEBUG)
+            printf("load_ico_bmp: height == NumericLimits<i32>::min()\n");
+        return false;
+    }
+
     bool topdown = false;
     if (info.height < 0) {
         topdown = true;
