@@ -17,7 +17,7 @@ This means that the `OwnPtr` is responsible for deleting the pointee when the `O
 
 `NonnullOwnPtr` is a special variant of `OwnPtr` with one additional property: it cannot be null. `NonnullOwnPtr` is suitable as a return type from functions that are guaranteed to never return null, and as an argument type where ownership is transferred, and the argument may not be null. In other words, if `OwnPtr` is "\*", then `NonnullOwnPtr` is "&".
 
-There is a `make<T>()` helper that creates a new object and returns it wrapped in an `NonnullOwnPtr`.
+There is a `make<T>()` helper that creates a new object and returns it wrapped in a `NonnullOwnPtr`.
 
 ```cpp
 {
