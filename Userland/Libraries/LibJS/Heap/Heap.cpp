@@ -23,7 +23,10 @@ namespace JS {
 Heap::Heap(VM& vm)
     : m_vm(vm)
 {
-    m_allocators.append(make<CellAllocator>(16));
+    if constexpr (HeapBlock::min_possible_cell_size <= 16) {
+        m_allocators.append(make<CellAllocator>(16));
+    }
+    static_assert(HeapBlock::min_possible_cell_size <= 24, "Heap Cell tracking uses too much data!");
     m_allocators.append(make<CellAllocator>(32));
     m_allocators.append(make<CellAllocator>(64));
     m_allocators.append(make<CellAllocator>(128));
