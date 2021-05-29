@@ -506,9 +506,10 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
         }
     };
 
-    if (computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both)
+    // Flex-items don't float and also don't clear.
+    if ((computed_values.clear() == CSS::Clear::Left || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_left_floating_boxes);
-    if (computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both)
+    if ((computed_values.clear() == CSS::Clear::Right || computed_values.clear() == CSS::Clear::Both) && !child_box.is_flex_item())
         clear_floating_boxes(m_right_floating_boxes);
 
     child_box.set_offset(x, y);
