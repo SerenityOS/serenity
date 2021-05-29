@@ -42,6 +42,8 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getDay, get_day, 0, attr);
     define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
     define_native_function(vm.names.setFullYear, set_full_year, 3, attr);
+    define_native_function(vm.names.getYear, get_year, 0, attr);
+    define_native_function(vm.names.setYear, set_year, 1, attr);
     define_native_function(vm.names.getHours, get_hours, 0, attr);
     define_native_function(vm.names.setHours, set_hours, 4, attr);
     define_native_function(vm.names.getMilliseconds, get_milliseconds, 0, attr);
@@ -156,6 +158,43 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto new_day = new_day_value.as_i32();
 
     datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
+    this_object->set_is_invalid(false);
+
+    return Value(this_object->time());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    if (this_object->is_invalid())
+        return js_nan();
+
+    return Value(this_object->year() - 1900);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto& datetime = this_object->datetime();
+
+    auto new_year_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_year_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_year = new_year_value.as_i32();
+    if (new_year >= 0 && new_year <= 99)
+        new_year += 1900;
+
+    datetime.set_time(new_year, datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), datetime.second());
     this_object->set_is_invalid(false);
 
     return Value(this_object->time());
