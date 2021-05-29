@@ -421,7 +421,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(label.has_value());
         size_t end = configuration.stack().size() - label->arity() - 1;
         size_t start = end;
-        while (start > 0 && !configuration.stack().entries()[start].has<Label>())
+        while (start > 0 && start < configuration.stack().size() && !configuration.stack().entries()[start].has<Label>())
             --start;
 
         configuration.stack().entries().remove(start, end - start + 1);
@@ -437,7 +437,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto& frame = configuration.frame();
         size_t end = configuration.stack().size() - frame.arity();
         size_t start = end;
-        for (; start + 1 > 0; --start) {
+        for (; start + 1 > 0 && start < configuration.stack().size(); --start) {
             auto& entry = configuration.stack().entries()[start];
             if (entry.has<Frame>()) {
                 // Leave the frame, _and_ its label.
@@ -463,6 +463,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         goto unimplemented;
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
+        TRAP_IF_NOT(index.value() < configuration.frame().module().functions().size());
         auto address = configuration.frame().module().functions()[index.value()];
         dbgln_if(WASM_TRACE_DEBUG, "call({})", address.value());
         call_address(configuration, address);
@@ -470,6 +471,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::call_indirect.value(): {
         auto& args = instruction.arguments().get<Instruction::IndirectCallArgs>();
+        TRAP_IF_NOT(args.table.value() < configuration.frame().module().tables().size());
         auto table_address = configuration.frame().module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
         auto index = configuration.stack().pop().get<Value>().to<i32>();
@@ -564,6 +566,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_size.value(): {
+        TRAP_IF_NOT(configuration.frame().module().memories().size() > 0);
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         auto pages = instance->size() / Constants::page_size;
@@ -572,6 +575,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     }
     case Instructions::memory_grow.value(): {
+        TRAP_IF_NOT(configuration.frame().module().memories().size() > 0);
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
