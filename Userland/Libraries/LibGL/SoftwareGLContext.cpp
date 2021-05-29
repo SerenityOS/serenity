@@ -36,13 +36,15 @@ static constexpr size_t MATRIX_STACK_LIMIT = 1024;
 
 #define RETURN_WITH_ERROR_IF(condition, error) \
     if (condition) {                           \
-        m_error = error;                       \
+        if (m_error == GL_NO_ERROR)            \
+            m_error = error;                   \
         return;                                \
     }
 
 #define RETURN_VALUE_WITH_ERROR_IF(condition, error, return_value) \
     if (condition) {                                               \
-        m_error = error;                                           \
+        if (m_error == GL_NO_ERROR)                                \
+            m_error = error;                                       \
         return return_value;                                       \
     }
 
@@ -61,7 +63,6 @@ void SoftwareGLContext::gl_begin(GLenum mode)
 
     m_current_draw_mode = mode;
     m_in_draw_state = true; // Certain commands will now generate an error
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_clear(GLbitfield mask)
@@ -76,8 +77,6 @@ void SoftwareGLContext::gl_clear(GLbitfield mask)
 
     if (mask & GL_DEPTH_BUFFER_BIT)
         m_rasterizer.clear_depth(static_cast<float>(m_clear_depth));
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
@@ -87,7 +86,6 @@ void SoftwareGLContext::gl_clear_color(GLclampf red, GLclampf green, GLclampf bl
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     m_clear_color = { red, green, blue, alpha };
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_clear_depth(GLdouble depth)
@@ -97,7 +95,6 @@ void SoftwareGLContext::gl_clear_depth(GLdouble depth)
     RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
 
     m_clear_depth = depth;
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
@@ -105,7 +102,6 @@ void SoftwareGLContext::gl_color(GLdouble r, GLdouble g, GLdouble b, GLdouble a)
     APPEND_TO_CALL_LIST_AND_RETURN_IF_NEEDED(gl_color, r, g, b, a);
 
     m_current_vertex_color = { (float)r, (float)g, (float)b, (float)a };
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_end()
@@ -325,7 +321,6 @@ void SoftwareGLContext::gl_end()
     vertex_list.clear();
 
     m_in_draw_state = false;
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -354,8 +349,6 @@ void SoftwareGLContext::gl_frustum(GLdouble left, GLdouble right, GLdouble botto
         dbgln_if(GL_DEBUG, "glFrustum(): frustum created with curr_matrix_mode == GL_MODELVIEW!!!");
         m_projection_matrix = m_model_view_matrix * frustum;
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top, GLdouble near_val, GLdouble far_val)
@@ -384,8 +377,6 @@ void SoftwareGLContext::gl_ortho(GLdouble left, GLdouble right, GLdouble bottom,
     } else if (m_current_matrix_mode == GL_MODELVIEW) {
         m_projection_matrix = m_model_view_matrix * projection;
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 GLenum SoftwareGLContext::gl_get_error()
@@ -393,7 +384,9 @@ GLenum SoftwareGLContext::gl_get_error()
     if (m_in_draw_state)
         return GL_INVALID_OPERATION;
 
-    return m_error;
+    auto last_error = m_error;
+    m_error = GL_NO_ERROR;
+    return last_error;
 }
 
 GLubyte* SoftwareGLContext::gl_get_string(GLenum name)
@@ -427,8 +420,6 @@ void SoftwareGLContext::gl_load_identity()
         m_model_view_matrix = FloatMatrix4x4::identity();
     else
         VERIFY_NOT_REACHED();
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
@@ -448,8 +439,6 @@ void SoftwareGLContext::gl_load_matrix(const FloatMatrix4x4& matrix)
         m_model_view_matrix = matrix;
     else
         VERIFY_NOT_REACHED();
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_matrix_mode(GLenum mode)
@@ -460,7 +449,6 @@ void SoftwareGLContext::gl_matrix_mode(GLenum mode)
     RETURN_WITH_ERROR_IF(mode < GL_MODELVIEW || mode > GL_PROJECTION, GL_INVALID_ENUM);
 
     m_current_matrix_mode = mode;
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_push_matrix()
@@ -484,8 +472,6 @@ void SoftwareGLContext::gl_push_matrix()
         dbgln_if(GL_DEBUG, "glPushMatrix(): Attempt to push matrix with invalid matrix mode {})", m_current_matrix_mode);
         return;
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_pop_matrix()
@@ -510,8 +496,6 @@ void SoftwareGLContext::gl_pop_matrix()
         dbgln_if(GL_DEBUG, "glPopMatrix(): Attempt to pop matrix with invalid matrix mode, {}", m_current_matrix_mode);
         return;
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdouble z)
@@ -528,8 +512,6 @@ void SoftwareGLContext::gl_rotate(GLdouble angle, GLdouble x, GLdouble y, GLdoub
         m_model_view_matrix = m_model_view_matrix * rotation_mat;
     else if (m_current_matrix_mode == GL_PROJECTION)
         m_projection_matrix = m_projection_matrix * rotation_mat;
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
@@ -543,8 +525,6 @@ void SoftwareGLContext::gl_scale(GLdouble x, GLdouble y, GLdouble z)
     } else if (m_current_matrix_mode == GL_PROJECTION) {
         m_projection_matrix = m_projection_matrix * Gfx::scale_matrix(FloatVector3 { static_cast<float>(x), static_cast<float>(y), static_cast<float>(z) });
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
@@ -558,8 +538,6 @@ void SoftwareGLContext::gl_translate(GLdouble x, GLdouble y, GLdouble z)
     } else if (m_current_matrix_mode == GL_PROJECTION) {
         m_projection_matrix = m_projection_matrix * Gfx::translation_matrix(FloatVector3 { (float)x, (float)y, (float)z });
     }
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
@@ -583,7 +561,6 @@ void SoftwareGLContext::gl_vertex(GLdouble x, GLdouble y, GLdouble z, GLdouble w
     vertex.v = 0.0f;
 
     vertex_list.append(vertex);
-    m_error = GL_NO_ERROR;
 }
 
 // FIXME: We need to add `r` and `q` to our GLVertex?!
@@ -593,8 +570,6 @@ void SoftwareGLContext::gl_tex_coord(GLfloat s, GLfloat t, GLfloat, GLfloat)
 
     vertex.u = s;
     vertex.v = t;
-
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei height)
@@ -607,7 +582,6 @@ void SoftwareGLContext::gl_viewport(GLint x, GLint y, GLsizei width, GLsizei hei
     (void)(y);
     (void)(width);
     (void)(height);
-    m_error = GL_NO_ERROR;
 }
 
 void SoftwareGLContext::gl_enable(GLenum capability)
