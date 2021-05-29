@@ -96,11 +96,6 @@ private:
         return reinterpret_cast<Cell*>(&m_storage[index * cell_size()]);
     }
 
-    FreelistEntry* init_freelist_entry(size_t index)
-    {
-        return new (&m_storage[index * cell_size()]) FreelistEntry();
-    }
-
     Heap& m_heap;
     size_t m_cell_size { 0 };
     size_t m_next_lazy_freelist_index { 0 };
