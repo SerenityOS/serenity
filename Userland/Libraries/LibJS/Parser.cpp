@@ -1482,6 +1482,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                 consume();
                 if (!match(TokenType::Identifier)) {
                     syntax_error("Expected a binding pattern as the value of a named element in destructuring object");
+                    break;
                 } else {
                     auto identifier_start = position();
                     auto token = consume(TokenType::Identifier);
@@ -1523,6 +1524,7 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
                     syntax_error("Expected a binding pattern after ... in destructuring list");
                 else
                     syntax_error("Expected a binding pattern or identifier in destructuring list");
+                break;
             } else {
                 RefPtr<Expression> initializer;
                 if (match(TokenType::Equals)) {
