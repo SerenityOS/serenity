@@ -42,6 +42,8 @@ void FlexFormattingContext::run(Box& box, LayoutMode layout_mode)
     float tallest_child_height = 0;
     float widest_child_width = 0;
     box.for_each_child_of_type<Box>([&](Box& child_box) {
+        child_box.set_flex_item(true);
+
         child_box.set_offset(x, y);
         tallest_child_height = max(tallest_child_height, child_box.height());
         widest_child_width = max(widest_child_width, child_box.width());
