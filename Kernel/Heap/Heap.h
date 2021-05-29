@@ -113,7 +113,7 @@ public:
         VERIFY((u8*)a >= m_chunks && (u8*)ptr < m_chunks + m_total_chunks * CHUNK_SIZE);
         VERIFY((u8*)a + a->allocation_size_in_chunks * CHUNK_SIZE <= m_chunks + m_total_chunks * CHUNK_SIZE);
 
-        size_t old_size = a->allocation_size_in_chunks * CHUNK_SIZE;
+        size_t old_size = a->allocation_size_in_chunks * CHUNK_SIZE - sizeof(AllocationHeader);
 
         if (old_size == new_size)
             return ptr;
