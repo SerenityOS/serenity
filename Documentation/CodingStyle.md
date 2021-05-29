@@ -90,7 +90,7 @@ void set_count(int); // Sets m_the_count.
 int get_count() const; // Returns m_the_count.
 ```
 
-[](#names-out-argument) Precede getters that return values through out arguments with the word "get".
+[](#names-out-argument) Precede getters that return values throughout arguments with the word "get".
 
 ###### Right:
 
@@ -152,7 +152,7 @@ void set_count(int count);
 void do_something(Context* context);
 ```
 
-[](#names-enum-to-bool) Prefer enums to bools on function parameters if callers are likely to be passing constants, since named constants are easier to read at the call site. An exception to this rule is a setter function, where the name of the function already makes clear what the boolean is.
+[](#names-enum-to-bool) Prefer enums to bools on function parameters if callers are likely to be passing constants since named constants are easier to read at the call site. An exception to this rule is a setter function, where the name of the function already makes clear what the boolean is.
 
 ###### Right:
 
@@ -173,7 +173,7 @@ set_resizable(NotResizable);
 
 [](#names-const-to-define) Prefer `const` to `#define`. Prefer inline functions to macros.
 
-[](#names-define-constants) `#defined` constants should use all uppercase names with words separated by underscores.
+[](#names-define-constants) `#defined` constants should use all-uppercase names with words separated by underscores.
 
 [](#header-guards) Use `#pragma once` instead of `#define` and `#ifdef` for header guards.
 
@@ -264,7 +264,7 @@ for (auto it = children.begin(); it != children.end(); ++it)
 [](#pointers-cpp) **Pointer and reference types in C++ code**
 Both pointer types and reference types should be written with no space between the type name and the `*` or `&`.
 
-[](#pointers-out-argument) An out argument of a function should be passed by reference except rare cases where it is optional in which case it should be passed by pointer.
+[](#pointers-out-argument) An out argument of a function should be passed by reference except in rare cases where it is optional in which case it should be passed by pointer.
 
 ###### Right:
 
@@ -362,7 +362,7 @@ swap(a, b);
 
 ### Types
 
-[](#types-unsigned) Omit "int" when using "unsigned" modifier. Do not use "signed" modifier. Use "int" by itself instead.
+[](#types-unsigned) Omit "int" when using "unsigned" modifier. Do not use the "signed" modifier. Use "int" by itself instead.
 
 ###### Right:
 
@@ -383,7 +383,7 @@ signed int c; // Doesn't omit "signed".
 
 [](#structs-vs-classes) For types with methods, prefer `class` over `struct`.
 
-* For classes, make public getters and setters, keep members private with `m_` prefix.
+* For classes, make public getters and setters, keep members private with the `m_` prefix.
 * For structs, let everything be public and skip the `m_` prefix.
 
 ###### Right:
