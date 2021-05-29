@@ -234,6 +234,12 @@ protected:
     // CUB – Cursor Backward
     void CUB(Parameters);
 
+    // CNL - Cursor Next Line
+    void CNL(Parameters);
+
+    // CPL - Cursor Previous Line
+    void CPL(Parameters);
+
     // CUP - Cursor Position
     void CUP(Parameters);
 
@@ -320,8 +326,17 @@ protected:
     // REP - Repeat
     void REP(Parameters);
 
-    // VPA - Vertical Line Position Absolute
+    // VPA - Line Position Absolute
     void VPA(Parameters);
+
+    // VPR - Line Position Relative
+    void VPR(Parameters);
+
+    // HPA - Character Position Absolute
+    void HPA(Parameters);
+
+    // HPR - Character Position Relative
+    void HPR(Parameters);
 
     // ECH - Erase Character
     void ECH(Parameters);

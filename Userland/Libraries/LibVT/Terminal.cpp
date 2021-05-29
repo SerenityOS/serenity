@@ -444,12 +444,36 @@ void Terminal::CUB(Parameters params)
     set_cursor(cursor_row(), new_column);
 }
 
+void Terminal::CNL(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+    unsigned new_row = cursor_row() + num;
+    if (new_row >= m_columns)
+        new_row = m_columns - 1;
+    set_cursor(new_row, 0);
+}
+
+void Terminal::CPL(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+    int new_row = (int)cursor_row() - num;
+    if (new_row < 0)
+        new_row = 0;
+    set_cursor(new_row, 0);
+}
+
 void Terminal::CHA(Parameters params)
 {
     unsigned new_column = 1;
     if (params.size() >= 1 && params[0] != 0)
-        new_column = params[0] - 1;
-    set_cursor(cursor_row(), new_column);
+        new_column = params[0];
+    if (new_column > m_columns)
+        new_column = m_columns;
+    set_cursor(cursor_row(), new_column - 1);
 }
 
 void Terminal::REP(Parameters params)
@@ -466,8 +490,42 @@ void Terminal::VPA(Parameters params)
 {
     unsigned new_row = 1;
     if (params.size() >= 1 && params[0] != 0)
-        new_row = params[0] - 1;
+        new_row = params[0];
+    if (new_row > m_rows)
+        new_row = m_rows;
+    set_cursor(new_row - 1, cursor_column());
+}
+
+void Terminal::VPR(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+    int new_row = cursor_row() + num;
+    if (new_row >= m_rows)
+        new_row = m_rows - 1;
     set_cursor(new_row, cursor_column());
+}
+
+void Terminal::HPA(Parameters params)
+{
+    unsigned new_column = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        new_column = params[0];
+    if (new_column > m_columns)
+        new_column = m_columns;
+    set_cursor(cursor_row(), new_column - 1);
+}
+
+void Terminal::HPR(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+    unsigned new_column = cursor_column() + num;
+    if (new_column >= m_columns)
+        new_column = m_columns - 1;
+    set_cursor(cursor_row(), new_column);
 }
 
 void Terminal::ECH(Parameters params)
@@ -925,6 +983,12 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
     case 'D':
         CUB(parameters);
         break;
+    case 'E':
+        CNL(parameters);
+        break;
+    case 'F':
+        CPL(parameters);
+        break;
     case 'G':
         CHA(parameters);
         break;
@@ -955,38 +1019,35 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
     case 'X':
         ECH(parameters);
         break;
+    case '`':
+        HPA(parameters);
+        break;
+    case 'a':
+        HPR(parameters);
+        break;
     case 'b':
         REP(parameters);
-        break;
-    case 'd':
-        VPA(parameters);
-        break;
-    case 'm':
-        SGR(parameters);
-        break;
-    case 's':
-        SCOSC();
-        break;
-    case 'u':
-        SCORC();
-        break;
-    case 't':
-        XTERM_WM(parameters);
-        break;
-    case 'r':
-        DECSTBM(parameters);
-        break;
-    case 'l':
-        RM(parameters, intermediates);
-        break;
-    case 'h':
-        SM(parameters, intermediates);
         break;
     case 'c':
         DA(parameters);
         break;
+    case 'd':
+        VPA(parameters);
+        break;
+    case 'e':
+        VPR(parameters);
+        break;
     case 'f':
         HVP(parameters);
+        break;
+    case 'h':
+        SM(parameters, intermediates);
+        break;
+    case 'l':
+        RM(parameters, intermediates);
+        break;
+    case 'm':
+        SGR(parameters);
         break;
     case 'n':
         DSR(parameters);
@@ -996,6 +1057,18 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
             DECSCUSR(parameters);
         else
             unimplemented_csi_sequence(parameters, intermediates, last_byte);
+        break;
+    case 'r':
+        DECSTBM(parameters);
+        break;
+    case 's':
+        SCOSC();
+        break;
+    case 't':
+        XTERM_WM(parameters);
+        break;
+    case 'u':
+        SCORC();
         break;
     default:
         unimplemented_csi_sequence(parameters, intermediates, last_byte);
