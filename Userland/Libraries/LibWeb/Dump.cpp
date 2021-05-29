@@ -165,7 +165,9 @@ void dump_tree(StringBuilder& builder, const Layout::Node& layout_node, bool sho
         if (box.is_inline_block())
             builder.appendff(" {}inline-block{}", inline_block_color_on, color_off);
         if (box.computed_values().display() == CSS::Display::Flex)
-            builder.appendff(" {}flex{}", flex_color_on, color_off);
+            builder.appendff(" {}flex-container{}", flex_color_on, color_off);
+        if (box.is_flex_item())
+            builder.appendff(" {}flex-item{}", flex_color_on, color_off);
 
         if (show_box_model) {
             // Dump the horizontal box properties
