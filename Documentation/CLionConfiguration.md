@@ -14,7 +14,7 @@ and set the following fields: (Assuming you use `Ninja` as the build system and 
 Source files are copied to the `Build` directory during the build, if you do not exclude them from CLion indexing they will show up
 in search results. This is often confusing, unintuitive, and can result in you losing changes you have made to files. To exclude
 these files navigate to the `Project` tool window, right-click the `Build` folder and select `Mark Directory as | Excluded`. If you
-want exclude Toolchain files as well, follow the same procedure with the following paths:
+want to exclude Toolchain files as well, follow the same procedure with the following paths:
 - `Toolchain/Local`
 - `Toolchain/Tarballs`
 - `Toolchain/Build`
@@ -23,15 +23,15 @@ want exclude Toolchain files as well, follow the same procedure with the followi
 
 It is possible to set the embedded terminal in CLion to the one that your WSL distribution provides.
 This way you can build and run serenity without leaving the IDE.
-Note that following will only help if you don't use an X-window server to access qemu.
-It is possible to install qemu natively on Windows and allow WSL to use it instead of installing qemu first on (wsl) linux and then use X server to launch serenity inside of it.
+Note that the following will only help if you don't use an X-window server to access qemu.
+It is possible to install qemu natively on Windows and allow WSL to use it instead of installing qemu first on (wsl) Linux and then use X server to launch serenity inside of it.
 Check the updated manual [here](https://github.com/SerenityOS/serenity/blob/master/Documentation/NotesOnWSL.md).
 
-- Locate the terminal emulator for your linux distribution.
+- Locate the terminal emulator for your Linux distribution.
 Open CMD with elevated privileges and cd to `C:/Program Files/WindowsApps/`.
 The directory is usually hidden and requires additional privileges. You should be able to cd as administrator.
 `dir` and look for your distribution in directory names. In case of Ubuntu, it starts with `CanonicalGroupLimited.Ubuntu20.04onWindows_2004.2020.424.0_x64`.
-cd to it. The directory should contain the shell executable. In my case it's named `ubuntu2004.exe`.
+cd to it. The directory should contain the shell executable. In my case, it's named `ubuntu2004.exe`.
 Copy `absolute/path/to/ubuntu2004.exe`.
 
 - Go to your IDE settings: `File->Settings->Tools->Terminal` and paste the path you just copied to `shell path`. Click OK.
