@@ -447,6 +447,20 @@ private:
         }
     }
 
+    Crypto::Hash::HashKind hmac_hash() const
+    {
+        switch (mac_length()) {
+        case Crypto::Hash::SHA512::DigestSize:
+            return Crypto::Hash::HashKind::SHA512;
+        case Crypto::Hash::SHA384::DigestSize:
+            return Crypto::Hash::HashKind::SHA384;
+        case Crypto::Hash::SHA256::DigestSize:
+        case Crypto::Hash::SHA1::DigestSize:
+        default:
+            return Crypto::Hash::HashKind::SHA256;
+        }
+    }
+
     size_t iv_length() const
     {
         switch (m_context.cipher) {

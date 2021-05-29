@@ -81,8 +81,8 @@ ssize_t TLSv12::handle_server_hello(ReadonlyBytes buffer, WritePacketStage& writ
     m_context.cipher = cipher;
     dbgln_if(TLS_DEBUG, "Cipher: {}", (u16)cipher);
 
-    // The handshake hash function is _always_ SHA256
-    m_context.handshake_hash.initialize(Crypto::Hash::HashKind::SHA256);
+    // Simplification: We only support handshake hash functions via HMAC
+    m_context.handshake_hash.initialize(hmac_hash());
 
     // Compression method
     if (buffer.size() - res < 1)
