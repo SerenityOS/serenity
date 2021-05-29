@@ -313,7 +313,7 @@ void SoftwareGLContext::gl_end()
         }
 
         // FIXME: Change this when we have texture units/multi-texturing
-        m_rasterizer.submit_triangle(triangle, *m_allocated_textures.find(1)->value);
+        m_rasterizer.submit_triangle(triangle, *static_ptr_cast<Texture2D>(m_allocated_textures.find(1)->value));
     }
 
     triangle_list.clear();
@@ -667,7 +667,7 @@ void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
     for (auto i = 0; i < n; i++) {
         GLuint name = textures[i];
 
-        m_allocated_textures.set(name, adopt_ref(*new Texture()));
+        m_allocated_textures.set(name, adopt_ref(*new Texture2D()));
     }
 }
 
@@ -696,14 +696,14 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     // We only support symbolic constants for now
     RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
     RETURN_WITH_ERROR_IF(type != GL_UNSIGNED_BYTE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(level < 0 || level > Texture::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
-    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture::MAX_TEXTURE_SIZE) || height > (2 + Texture::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(level < 0 || level > Texture2D::LOG2_MAX_TEXTURE_SIZE, GL_INVALID_VALUE);
+    RETURN_WITH_ERROR_IF(width < 0 || height < 0 || width > (2 + Texture2D::MAX_TEXTURE_SIZE) || height > (2 + Texture2D::MAX_TEXTURE_SIZE), GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF((width & 2) != 0 || (height & 2) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
     // TODO: Load texture from the currently active texture unit
     // This is to test the functionality of texture data upload
-    m_allocated_textures.find(1)->value->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
+    static_ptr_cast<Texture2D>(m_allocated_textures.find(1)->value)->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
 }
 
 void SoftwareGLContext::gl_front_face(GLenum face)
