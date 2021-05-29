@@ -115,7 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     if (this_object->is_invalid())
         return js_nan();
 
-    return Value(this_object->full_year());
+    return Value(this_object->year());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
