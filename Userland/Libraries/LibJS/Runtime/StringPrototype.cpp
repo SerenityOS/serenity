@@ -89,6 +89,19 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.match, match, 1, attr);
     define_native_function(vm.names.replace, replace, 2, attr);
+    define_native_function(vm.names.anchor, anchor, 1, attr);
+    define_native_function(vm.names.big, big, 0, attr);
+    define_native_function(vm.names.blink, blink, 0, attr);
+    define_native_function(vm.names.bold, bold, 0, attr);
+    define_native_function(vm.names.fixed, fixed, 0, attr);
+    define_native_function(vm.names.fontcolor, fontcolor, 1, attr);
+    define_native_function(vm.names.fontsize, fontsize, 1, attr);
+    define_native_function(vm.names.italics, italics, 0, attr);
+    define_native_function(vm.names.link, link, 1, attr);
+    define_native_function(vm.names.small, small, 0, attr);
+    define_native_function(vm.names.strike, strike, 0, attr);
+    define_native_function(vm.names.sub, sub, 0, attr);
+    define_native_function(vm.names.sup, sup, 0, attr);
     define_native_function(vm.well_known_symbol_iterator(), symbol_iterator, 0, attr);
 }
 
@@ -720,6 +733,104 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     builder.append(string.substring(position.value() + search_string.length()));
 
     return js_string(vm, builder.build());
+}
+
+// B.2.3.2.1
+static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
+{
+    auto& vm = global_object.vm();
+    if (string.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+        return {};
+    }
+    auto str = string.to_string(global_object);
+    if (vm.exception())
+        return {};
+    StringBuilder builder;
+    builder.append('<');
+    builder.append(tag);
+    if (!attribute.is_empty()) {
+        auto value_string = value.to_string(global_object);
+        if (vm.exception())
+            return {};
+        value_string.replace("\"", "&quot;", true);
+        builder.append(' ');
+        builder.append(attribute);
+        builder.append("=\"");
+        builder.append(value_string);
+        builder.append('"');
+    }
+    builder.append('>');
+    builder.append(str);
+    builder.append("</");
+    builder.append(tag);
+    builder.append('>');
+    return js_string(vm, builder.build());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::anchor)
+{
+    return create_html(global_object, vm.this_value(global_object), "a", "name", vm.argument(0));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::big)
+{
+    return create_html(global_object, vm.this_value(global_object), "big", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::blink)
+{
+    return create_html(global_object, vm.this_value(global_object), "blink", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::bold)
+{
+    return create_html(global_object, vm.this_value(global_object), "b", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fixed)
+{
+    return create_html(global_object, vm.this_value(global_object), "tt", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontcolor)
+{
+    return create_html(global_object, vm.this_value(global_object), "font", "color", vm.argument(0));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontsize)
+{
+    return create_html(global_object, vm.this_value(global_object), "font", "size", vm.argument(0));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::italics)
+{
+    return create_html(global_object, vm.this_value(global_object), "i", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::link)
+{
+    return create_html(global_object, vm.this_value(global_object), "a", "href", vm.argument(0));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::small)
+{
+    return create_html(global_object, vm.this_value(global_object), "small", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::strike)
+{
+    return create_html(global_object, vm.this_value(global_object), "strike", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sub)
+{
+    return create_html(global_object, vm.this_value(global_object), "sub", String::empty(), Value());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
+{
+    return create_html(global_object, vm.this_value(global_object), "sup", String::empty(), Value());
 }
 
 }
