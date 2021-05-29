@@ -36,13 +36,12 @@ KResultOr<int> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_para
         return EFAULT;
 
     auto map_name = get_syscall_path_argument(params.map_name);
-    if (map_name.is_error()) {
+    if (map_name.is_error())
         return map_name.error();
-    }
-    if (map_name.value().length() > map_name_max_size) {
+    if (map_name.value()->length() > map_name_max_size)
         return ENAMETOOLONG;
-    }
-    HIDManagement::the().set_maps(character_map_data, map_name.value());
+
+    HIDManagement::the().set_maps(character_map_data, map_name.value()->view());
     return 0;
 }
 

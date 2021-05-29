@@ -22,7 +22,7 @@ KResultOr<int> Process::sys$rename(Userspace<const Syscall::SC_rename_params*> u
     auto new_path = get_syscall_path_argument(params.new_path);
     if (new_path.is_error())
         return new_path.error();
-    return VFS::the().rename(old_path.value(), new_path.value(), current_directory());
+    return VFS::the().rename(old_path.value()->view(), new_path.value()->view(), current_directory());
 }
 
 }

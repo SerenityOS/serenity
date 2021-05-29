@@ -43,7 +43,7 @@ KResultOr<int> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_
     if (path.is_error())
         return path.error();
 
-    dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value(), options, mode);
+    dbgln_if(IO_DEBUG, "sys$open(dirfd={}, path='{}', options={}, mode={})", dirfd, path.value()->view(), options, mode);
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
@@ -62,7 +62,7 @@ KResultOr<int> Process::sys$open(Userspace<const Syscall::SC_open_params*> user_
         base = base_description->custody();
     }
 
-    auto result = VFS::the().open(path.value(), options, mode & ~umask(), *base);
+    auto result = VFS::the().open(path.value()->view(), options, mode & ~umask(), *base);
     if (result.is_error())
         return result.error();
     auto description = result.value();

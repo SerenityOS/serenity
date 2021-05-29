@@ -27,7 +27,7 @@ KResultOr<int> Process::sys$chown(Userspace<const Syscall::SC_chown_params*> use
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().chown(path.value(), params.uid, params.gid, current_directory());
+    return VFS::the().chown(path.value()->view(), params.uid, params.gid, current_directory());
 }
 
 }
