@@ -47,43 +47,15 @@ public:
     using RefCountType = unsigned int;
     using AllowOwnPtr = FalseType;
 
-    ALWAYS_INLINE void ref() const
-    {
-        auto old_ref_count = m_ref_count.fetch_add(1, AK::MemoryOrder::memory_order_relaxed);
-        VERIFY(old_ref_count > 0);
-        VERIFY(!Checked<RefCountType>::addition_would_overflow(old_ref_count, 1));
-    }
-
-    [[nodiscard]] ALWAYS_INLINE bool try_ref() const
-    {
-        RefCountType expected = m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
-        for (;;) {
-            if (expected == 0)
-                return false;
-            VERIFY(!Checked<RefCountType>::addition_would_overflow(expected, 1));
-            if (m_ref_count.compare_exchange_strong(expected, expected + 1, AK::MemoryOrder::memory_order_acquire))
-                return true;
-        }
-    }
-
-    ALWAYS_INLINE RefCountType ref_count() const
-    {
-        return m_ref_count.load(AK::MemoryOrder::memory_order_relaxed);
-    }
+    void ref() const;
+    [[nodiscard]] bool try_ref() const;
+    [[nodiscard]] RefCountType ref_count() const;
 
 protected:
     RefCountedBase() = default;
-    ALWAYS_INLINE ~RefCountedBase()
-    {
-        VERIFY(m_ref_count.load(AK::MemoryOrder::memory_order_relaxed) == 0);
-    }
+    ~RefCountedBase();
 
-    ALWAYS_INLINE RefCountType deref_base() const
-    {
-        auto old_ref_count = m_ref_count.fetch_sub(1, AK::MemoryOrder::memory_order_acq_rel);
-        VERIFY(old_ref_count > 0);
-        return old_ref_count - 1;
-    }
+    RefCountType deref_base() const;
 
     mutable Atomic<RefCountType> m_ref_count { 1 };
 };
