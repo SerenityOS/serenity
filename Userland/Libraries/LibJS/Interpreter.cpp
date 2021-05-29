@@ -102,11 +102,27 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     for (auto& declaration : scope_node.variables()) {
         for (auto& declarator : declaration.declarations()) {
             if (is<Program>(scope_node)) {
-                global_object.put(declarator.id().string(), js_undefined());
+                declarator.target().visit(
+                    [&](const NonnullRefPtr<Identifier>& id) {
+                        global_object.put(id->string(), js_undefined());
+                    },
+                    [&](const NonnullRefPtr<BindingPattern>& binding) {
+                        binding->for_each_assigned_name([&](const auto& name) {
+                            global_object.put(name, js_undefined());
+                        });
+                    });
                 if (exception())
                     return;
             } else {
-                scope_variables_with_declaration_kind.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
+                declarator.target().visit(
+                    [&](const NonnullRefPtr<Identifier>& id) {
+                        scope_variables_with_declaration_kind.set(id->string(), { js_undefined(), declaration.declaration_kind() });
+                    },
+                    [&](const NonnullRefPtr<BindingPattern>& binding) {
+                        binding->for_each_assigned_name([&](const auto& name) {
+                            scope_variables_with_declaration_kind.set(name, { js_undefined(), declaration.declaration_kind() });
+                        });
+                    });
             }
         }
     }

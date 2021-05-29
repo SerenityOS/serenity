@@ -10,8 +10,10 @@
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <AK/Variant.h>
 #include <AK/Vector.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/PropertyName.h>
@@ -22,6 +24,7 @@ namespace JS {
 
 class VariableDeclaration;
 class FunctionDeclaration;
+class Identifier;
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>
@@ -185,10 +188,32 @@ public:
     Value execute(Interpreter&, GlobalObject&) const override { return {}; }
 };
 
+struct BindingPattern : RefCounted<BindingPattern> {
+    struct BindingProperty {
+        RefPtr<Identifier> name;
+        RefPtr<Identifier> alias;
+        RefPtr<BindingPattern> pattern;
+        RefPtr<Expression> initializer;
+        bool is_rest { false };
+    };
+
+    enum class Kind {
+        Array,
+        Object,
+    };
+
+    void dump(int indent) const;
+    template<typename C>
+    void for_each_assigned_name(C&& callback) const;
+
+    Vector<BindingProperty> properties;
+    Kind kind { Kind::Object };
+};
+
 class FunctionNode {
 public:
     struct Parameter {
-        FlyString name;
+        Variant<FlyString, NonnullRefPtr<BindingPattern>> binding;
         RefPtr<Expression> default_value;
         bool is_rest { false };
     };
@@ -907,25 +932,32 @@ class VariableDeclarator final : public ASTNode {
 public:
     VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier> id)
         : ASTNode(move(source_range))
-        , m_id(move(id))
+        , m_target(move(id))
     {
     }
 
-    VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier> id, RefPtr<Expression> init)
+    VariableDeclarator(SourceRange source_range, NonnullRefPtr<Identifier> target, RefPtr<Expression> init)
         : ASTNode(move(source_range))
-        , m_id(move(id))
+        , m_target(move(target))
         , m_init(move(init))
     {
     }
 
-    const Identifier& id() const { return m_id; }
+    VariableDeclarator(SourceRange source_range, Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> target, RefPtr<Expression> init)
+        : ASTNode(move(source_range))
+        , m_target(move(target))
+        , m_init(move(init))
+    {
+    }
+
+    auto& target() const { return m_target; }
     const Expression* init() const { return m_init; }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
 
 private:
-    NonnullRefPtr<Identifier> m_id;
+    Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> m_target;
     RefPtr<Expression> m_init;
 };
 
@@ -1268,5 +1300,17 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 };
+
+template<typename C>
+void BindingPattern::for_each_assigned_name(C&& callback) const
+{
+    for (auto& property : properties) {
+        if (property.name) {
+            callback(property.name->string());
+            continue;
+        }
+        property.pattern->template for_each_assigned_name(forward<C>(callback));
+    }
+}
 
 }

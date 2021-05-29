@@ -131,13 +131,16 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
         StringBuilder parameters_builder;
         auto first = true;
         for (auto& parameter : script_function.parameters()) {
-            if (!first)
-                parameters_builder.append(", ");
-            first = false;
-            parameters_builder.append(parameter.name);
-            if (parameter.default_value) {
-                // FIXME: See note below
-                parameters_builder.append(" = TODO");
+            // FIXME: Also stringify binding patterns.
+            if (auto* name_ptr = parameter.binding.get_pointer<FlyString>()) {
+                if (!first)
+                    parameters_builder.append(", ");
+                first = false;
+                parameters_builder.append(*name_ptr);
+                if (parameter.default_value) {
+                    // FIXME: See note below
+                    parameters_builder.append(" = TODO");
+                }
             }
         }
         function_name = script_function.name();

@@ -71,13 +71,27 @@ LexicalEnvironment* ScriptFunction::create_environment()
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
-        variables.set(parameter.name, { js_undefined(), DeclarationKind::Var });
+        parameter.binding.visit(
+            [&](const FlyString& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
+            [&](const NonnullRefPtr<BindingPattern>& binding) {
+                binding->for_each_assigned_name([&](const auto& name) {
+                    variables.set(name, { js_undefined(), DeclarationKind::Var });
+                });
+            });
     }
 
     if (is<ScopeNode>(body())) {
         for (auto& declaration : static_cast<const ScopeNode&>(body()).variables()) {
             for (auto& declarator : declaration.declarations()) {
-                variables.set(declarator.id().string(), { js_undefined(), declaration.declaration_kind() });
+                declarator.target().visit(
+                    [&](const NonnullRefPtr<Identifier>& id) {
+                        variables.set(id->string(), { js_undefined(), declaration.declaration_kind() });
+                    },
+                    [&](const NonnullRefPtr<BindingPattern>& binding) {
+                        binding->for_each_assigned_name([&](const auto& name) {
+                            variables.set(name, { js_undefined(), declaration.declaration_kind() });
+                        });
+                    });
             }
         }
     }
@@ -108,23 +122,30 @@ Value ScriptFunction::execute_function_body()
 
     auto& call_frame_args = vm.call_frame().arguments;
     for (size_t i = 0; i < m_parameters.size(); ++i) {
-        auto parameter = m_parameters[i];
-        Value argument_value;
-        if (parameter.is_rest) {
-            auto* array = Array::create(global_object());
-            for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
-                array->indexed_properties().append(call_frame_args[rest_index]);
-            argument_value = move(array);
-        } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
-            argument_value = call_frame_args[i];
-        } else if (parameter.default_value) {
-            argument_value = parameter.default_value->execute(*interpreter, global_object());
-            if (vm.exception())
-                return {};
-        } else {
-            argument_value = js_undefined();
-        }
-        vm.current_scope()->put_to_scope(parameter.name, { argument_value, DeclarationKind::Var });
+        auto& parameter = m_parameters[i];
+        parameter.binding.visit(
+            [&](const auto& param) {
+                Value argument_value;
+                if (parameter.is_rest) {
+                    auto* array = Array::create(global_object());
+                    for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
+                        array->indexed_properties().append(call_frame_args[rest_index]);
+                    argument_value = move(array);
+                } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
+                    argument_value = call_frame_args[i];
+                } else if (parameter.default_value) {
+                    argument_value = parameter.default_value->execute(*interpreter, global_object());
+                    if (vm.exception())
+                        return;
+                } else {
+                    argument_value = js_undefined();
+                }
+
+                vm.assign(param, argument_value, global_object(), true, vm.current_scope());
+            });
+
+        if (vm.exception())
+            return {};
     }
 
     return interpreter->execute_statement(global_object(), m_body, ScopeType::Function);
