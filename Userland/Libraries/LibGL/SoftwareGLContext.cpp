@@ -313,7 +313,12 @@ void SoftwareGLContext::gl_end()
         }
 
         // FIXME: Change this when we have texture units/multi-texturing
-        m_rasterizer.submit_triangle(triangle, *static_ptr_cast<Texture2D>(m_allocated_textures.find(1)->value));
+        if (m_bound_texture_2d == 0) {
+            m_rasterizer.submit_triangle(triangle);
+        } else {
+            auto it = m_allocated_textures.find(m_bound_texture_2d);
+            m_rasterizer.submit_triangle(triangle, *static_ptr_cast<Texture2D>(it->value));
+        }
     }
 
     triangle_list.clear();
@@ -663,11 +668,11 @@ void SoftwareGLContext::gl_gen_textures(GLsizei n, GLuint* textures)
 
     m_name_allocator.allocate(n, textures);
 
-    // Let's allocate a new texture for each texture name
+    // Initialize all texture names with a nullptr
     for (auto i = 0; i < n; i++) {
         GLuint name = textures[i];
 
-        m_allocated_textures.set(name, adopt_ref(*new Texture2D()));
+        m_allocated_textures.set(name, nullptr);
     }
 }
 
@@ -678,9 +683,12 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
 
     m_name_allocator.free(n, textures);
 
-    // Let's allocate a new texture for each texture name
     for (auto i = 0; i < n; i++) {
         GLuint name = textures[i];
+
+        // unbind texture if it is currently bound
+        if (m_bound_texture_2d == name)
+            m_bound_texture_2d = 0;
 
         m_allocated_textures.remove(name);
     }
@@ -692,6 +700,9 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
 
     // We only support GL_TEXTURE_2D for now
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    // Check if there is actually a texture bound
+    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_bound_texture_2d == 0, GL_INVALID_OPERATION);
 
     // We only support symbolic constants for now
     RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
@@ -1223,6 +1234,55 @@ void SoftwareGLContext::gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei 
 
             out_ptr += component_size * component_count;
         }
+    }
+}
+
+void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+    // FIXME: We only support GL_TEXTURE_2D for now
+    RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
+
+    if (texture == 0) {
+        switch (target) {
+        case GL_TEXTURE_2D:
+            m_bound_texture_2d = 0;
+            return;
+        default:
+            VERIFY_NOT_REACHED();
+            return;
+        }
+    }
+
+    auto it = m_allocated_textures.find(texture);
+
+    // The texture name does not exist
+    RETURN_WITH_ERROR_IF(it == m_allocated_textures.end(), GL_INVALID_VALUE);
+
+    auto texture_object = it->value;
+
+    // Binding a texture to a different target than it was first bound is an invalid operation
+    // FIXME: We only support GL_TEXTURE_2D for now
+    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && !texture_object.is_null() && !texture_object->is_texture_2d(), GL_INVALID_OPERATION);
+
+    if (!texture_object) {
+        // This is the first time the texture is bound. Allocate an actual texture object
+        switch (target) {
+        case GL_TEXTURE_2D:
+            texture_object = adopt_ref(*new Texture2D());
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+            break;
+        }
+
+        m_allocated_textures.set(texture, texture_object);
+    }
+
+    switch (target) {
+    case GL_TEXTURE_2D:
+        m_bound_texture_2d = texture;
+        break;
     }
 }
 

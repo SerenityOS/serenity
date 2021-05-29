@@ -68,6 +68,7 @@ public:
     virtual void gl_read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels) override;
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
+    virtual void gl_bind_texture(GLenum target, GLuint texture) override;
 
     virtual void present() override;
 
@@ -127,6 +128,8 @@ private:
     GLclampf m_alpha_test_ref_value = 0;
 
     GLenum m_current_read_buffer = GL_BACK;
+
+    GLuint m_bound_texture_2d = 0;
 
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
