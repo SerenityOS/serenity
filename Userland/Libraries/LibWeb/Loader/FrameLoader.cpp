@@ -143,12 +143,12 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 
     auto& url = request.url();
 
-    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
-
     if (type == Type::Navigation) {
         if (auto* page = frame().page())
             page->client().page_did_start_loading(url);
     }
+
+    set_resource(ResourceLoader::the().load_resource(Resource::Type::Generic, request));
 
     if (type == Type::IFrame)
         return true;
