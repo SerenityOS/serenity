@@ -169,6 +169,9 @@ bool Node::is_floating() const
 {
     if (!has_style())
         return false;
+    // flex-items don't float.
+    if (is_flex_item())
+        return false;
     return computed_values().float_() != CSS::Float::None;
 }
 
