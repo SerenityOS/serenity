@@ -133,6 +133,7 @@ namespace JS {
     P(getUTCMinutes)                         \
     P(getUTCMonth)                           \
     P(getUTCSeconds)                         \
+    P(getYear)                               \
     P(global)                                \
     P(globalThis)                            \
     P(groups)                                \
@@ -207,6 +208,7 @@ namespace JS {
     P(setMinutes)                            \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
+    P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \
     P(sin)                                   \
