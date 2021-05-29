@@ -438,9 +438,8 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     return last_value;
 }
 
-static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, const ASTNode& node, RefPtr<BlockStatement> wrapper)
+static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, const ASTNode& node, RefPtr<BlockStatement> wrapper)
 {
-    FlyString variable_name;
     if (is<VariableDeclaration>(node)) {
         auto& variable_declaration = static_cast<const VariableDeclaration&>(node);
         VERIFY(!variable_declaration.declarations().is_empty());
@@ -449,13 +448,14 @@ static FlyString variable_from_for_declaration(Interpreter& interpreter, GlobalO
             interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
         }
         variable_declaration.execute(interpreter, global_object);
-        variable_name = variable_declaration.declarations().first().id().string();
-    } else if (is<Identifier>(node)) {
-        variable_name = static_cast<const Identifier&>(node).string();
-    } else {
-        VERIFY_NOT_REACHED();
+        return variable_declaration.declarations().first().target();
     }
-    return variable_name;
+
+    if (is<Identifier>(node)) {
+        return NonnullRefPtr(static_cast<const Identifier&>(node));
+    }
+
+    VERIFY_NOT_REACHED();
 }
 
 Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -468,7 +468,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
-    auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
+    auto target = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
             interpreter.exit_scope(*wrapper);
@@ -483,7 +483,7 @@ Value ForInStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
     while (object) {
         auto property_names = object->get_enumerable_own_property_names(Object::PropertyKind::Key);
         for (auto& value : property_names) {
-            interpreter.vm().set_variable(variable_name, value, global_object, has_declaration);
+            interpreter.vm().assign(target, value, global_object, has_declaration);
             if (interpreter.exception())
                 return {};
             last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
@@ -517,7 +517,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         VERIFY_NOT_REACHED();
     }
     RefPtr<BlockStatement> wrapper;
-    auto variable_name = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
+    auto target = variable_from_for_declaration(interpreter, global_object, m_lhs, wrapper);
     auto wrapper_cleanup = ScopeGuard([&] {
         if (wrapper)
             interpreter.exit_scope(*wrapper);
@@ -528,7 +528,7 @@ Value ForOfStatement::execute(Interpreter& interpreter, GlobalObject& global_obj
         return {};
 
     get_iterator_values(global_object, rhs_result, [&](Value value) {
-        interpreter.vm().set_variable(variable_name, value, global_object, has_declaration);
+        interpreter.vm().assign(target, value, global_object, has_declaration);
         last_value = interpreter.execute_statement(global_object, *m_body).value_or(last_value);
         if (interpreter.exception())
             return IterationDecision::Break;
@@ -1122,6 +1122,36 @@ void NullLiteral::dump(int indent) const
     outln("null");
 }
 
+void BindingPattern::dump(int indent) const
+{
+    print_indent(indent);
+    outln("BindingPattern {}", kind == Kind::Array ? "Array" : "Object");
+    print_indent(++indent);
+    outln("(Properties)");
+    for (auto& property : properties) {
+        print_indent(indent + 1);
+        outln("(Identifier)");
+        if (property.name) {
+            property.name->dump(indent + 2);
+        } else {
+            print_indent(indent + 2);
+            outln("(None)");
+        }
+
+        print_indent(indent + 1);
+        outln("(Pattern)");
+        if (property.pattern) {
+            property.pattern->dump(indent + 2);
+        } else {
+            print_indent(indent + 2);
+            outln("(None)");
+        }
+
+        print_indent(indent + 1);
+        outln("(Is Rest = {})", property.is_rest);
+    }
+}
+
 void FunctionNode::dump(int indent, const String& class_name) const
 {
     print_indent(indent);
@@ -1134,7 +1164,13 @@ void FunctionNode::dump(int indent, const String& class_name) const
             print_indent(indent + 2);
             if (parameter.is_rest)
                 out("...");
-            outln("{}", parameter.name);
+            parameter.binding.visit(
+                [&](const FlyString& name) {
+                    outln("{}", name);
+                },
+                [&](const BindingPattern& pattern) {
+                    pattern.dump(indent + 2);
+                });
             if (parameter.default_value)
                 parameter.default_value->dump(indent + 3);
         }
@@ -1543,10 +1579,16 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             auto initalizer_result = init->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
-            auto variable_name = declarator.id().string();
-            if (is<ClassExpression>(*init))
-                update_function_name(initalizer_result, variable_name);
-            interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
+            declarator.target().visit(
+                [&](const NonnullRefPtr<Identifier>& id) {
+                    auto variable_name = id->string();
+                    if (is<ClassExpression>(*init))
+                        update_function_name(initalizer_result, variable_name);
+                    interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
+                },
+                [&](const NonnullRefPtr<BindingPattern>& pattern) {
+                    interpreter.vm().assign(pattern, initalizer_result, global_object, true);
+                });
         }
     }
     return {};
@@ -1586,7 +1628,7 @@ void VariableDeclaration::dump(int indent) const
 void VariableDeclarator::dump(int indent) const
 {
     ASTNode::dump(indent);
-    m_id->dump(indent + 1);
+    m_target.visit([indent](const auto& value) { value->dump(indent + 1); });
     if (m_init)
         m_init->dump(indent + 1);
 }
