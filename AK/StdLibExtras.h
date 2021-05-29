@@ -10,7 +10,8 @@
 
 #include <AK/Assertions.h>
 
-constexpr unsigned round_up_to_power_of_two(unsigned value, unsigned power_of_two)
+template<typename T, typename U>
+constexpr auto round_up_to_power_of_two(T value, U power_of_two) requires(IsIntegral<T>&& IsIntegral<U>)
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }
