@@ -55,7 +55,7 @@ public:
     void action_entered(GUI::Action&);
     void action_left(GUI::Action&);
 
-    Function<void(String)> on_title_change;
+    Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_tab_open_request;
     Function<void(Tab&)> on_tab_close_request;
     Function<void(const Gfx::Bitmap&)> on_favicon_change;

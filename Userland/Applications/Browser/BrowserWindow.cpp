@@ -477,7 +477,7 @@ void BrowserWindow::create_new_tab(URL url, bool activate)
     VERIFY(default_favicon);
     m_tab_widget->set_tab_icon(new_tab, default_favicon);
 
-    new_tab.on_title_change = [this, &new_tab](auto title) {
+    new_tab.on_title_change = [this, &new_tab](auto& title) {
         m_tab_widget->set_tab_title(new_tab, title);
         if (m_tab_widget->active_widget() == &new_tab)
             set_window_title_for_tab(new_tab);
