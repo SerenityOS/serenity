@@ -143,7 +143,7 @@ bool FrameLoader::load(const LoadRequest& request, Type type)
 
     auto& url = request.url();
 
-    if (type == Type::Navigation) {
+    if (type == Type::Navigation || type == Type::Reload) {
         if (auto* page = frame().page())
             page->client().page_did_start_loading(url);
     }
