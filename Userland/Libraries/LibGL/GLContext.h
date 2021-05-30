@@ -60,6 +60,7 @@ public:
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) = 0;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) = 0;
     virtual void gl_bind_texture(GLenum target, GLuint texture) = 0;
+    virtual void gl_active_texture(GLenum texture) = 0;
 
     virtual void present() = 0;
 };

@@ -29,3 +29,10 @@ void glBindTexture(GLenum target, GLuint texture)
 {
     g_gl_context->gl_bind_texture(target, texture);
 }
+
+// Note: This is an _extremely_ misleading API name. This sets the active
+// texture unit, NOT the active texture itself...
+void glActiveTexture(GLenum texture)
+{
+    g_gl_context->gl_active_texture(texture);
+}

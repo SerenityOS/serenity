@@ -1286,6 +1286,13 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
     }
 }
 
+void SoftwareGLContext::gl_active_texture(GLenum texture)
+{
+    RETURN_WITH_ERROR_IF(texture < GL_TEXTURE0 || texture > GL_TEXTURE31, GL_INVALID_ENUM);
+
+    m_active_texture_unit = &m_texture_units.at(texture - GL_TEXTURE0);
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
