@@ -83,7 +83,7 @@ int main(int argc, char** argv)
 
     Vector<char const*> environment;
     for (auto& item : environment_strings)
-        environment_strings.append(item.characters());
+        environment.append(item.characters());
     environment.append(nullptr);
 
     if (execvpe(command.at(0), const_cast<char**>(arguments.data()), const_cast<char**>(environment.data())) < 0) {
