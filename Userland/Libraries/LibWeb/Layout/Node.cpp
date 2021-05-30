@@ -267,6 +267,9 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (flex_basis.has_value())
         computed_values.set_flex_basis(flex_basis.value());
 
+    computed_values.set_flex_grow_factor(specified_style.flex_grow_factor());
+    computed_values.set_flex_shrink_factor(specified_style.flex_shrink_factor());
+
     auto position = specified_style.position();
     if (position.has_value()) {
         computed_values.set_position(position.value());

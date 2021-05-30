@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
@@ -270,6 +271,32 @@ Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
         return { { CSS::FlexBasis::Length, value.value()->to_length() } };
 
     return {};
+}
+
+Optional<float> StyleProperties::flex_grow_factor() const
+{
+    auto value = property(CSS::PropertyID::FlexGrow);
+    if (!value.has_value())
+        return {};
+    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+        return { 0 };
+    if (!value.value()->is_numeric())
+        return {};
+    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    return numeric->value();
+}
+
+Optional<float> StyleProperties::flex_shrink_factor() const
+{
+    auto value = property(CSS::PropertyID::FlexShrink);
+    if (!value.has_value())
+        return {};
+    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+        return { 0 };
+    if (!value.value()->is_numeric())
+        return {};
+    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    return numeric->value();
 }
 
 Optional<CSS::Position> StyleProperties::position() const
@@ -694,5 +721,4 @@ Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
         return {};
     }
 }
-
 }
