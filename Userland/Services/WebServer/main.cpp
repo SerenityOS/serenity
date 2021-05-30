@@ -35,8 +35,8 @@ int main(int argc, char** argv)
     }
 
     if ((u16)port != port) {
-        outln("Warning: Invalid port number: {}", port);
-        port = default_port;
+        warnln("Invalid port number: {}", port);
+        return 1;
     }
 
     auto real_root_path = Core::File::real_path_for(root_path);
