@@ -18,6 +18,8 @@ String g_currently_running_test;
 String g_test_glob;
 HashMap<String, FunctionWithLength> s_exposed_global_functions;
 Function<void()> g_main_hook;
+HashMap<bool*, Tuple<String, String, char>> g_extra_args;
+IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&) = nullptr;
 TestRunner* TestRunner::s_the = nullptr;
 String g_test_root;
 int g_test_argc;
@@ -100,6 +102,8 @@ int main(int argc, char** argv)
     });
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(g_test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
+    for (auto& entry : g_extra_args)
+        args_parser.add_option(*entry.key, entry.value.get<0>().characters(), entry.value.get<1>().characters(), entry.value.get<2>());
     args_parser.add_positional_argument(specified_test_root, "Tests root directory", "path", Core::ArgsParser::Required::No);
     args_parser.add_positional_argument(common_path, "Path to tests-common.js", "common-path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
@@ -144,6 +148,9 @@ int main(int argc, char** argv)
         common_path = String::formatted("{}/Userland/Libraries/LibJS/Tests/test-common.js", serenity_source_dir);
 #endif
     }
+
+    test_root = Core::File::real_path_for(test_root);
+    common_path = Core::File::real_path_for(common_path);
 
     if (chdir(test_root.characters()) < 0) {
         auto saved_errno = errno;
