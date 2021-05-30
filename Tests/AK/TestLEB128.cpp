@@ -6,6 +6,7 @@
 
 #include <AK/LEB128.h>
 #include <AK/MemoryStream.h>
+#include <AK/NumericLimits.h>
 #include <LibTest/TestCase.h>
 
 TEST_CASE(single_byte)
@@ -111,5 +112,101 @@ TEST_CASE(two_bytes)
             EXPECT(!LEB128::read_signed(stream, output_signed));
             EXPECT(stream.handle_any_error());
         }
+    }
+}
+
+TEST_CASE(overflow_sizeof_output_unsigned)
+{
+    u8 u32_max_plus_one[] = { 0x80, 0x80, 0x80, 0x80, 0x10 };
+    {
+        u32 out = 0;
+        InputMemoryStream stream({ u32_max_plus_one, sizeof(u32_max_plus_one) });
+        EXPECT(!LEB128::read_unsigned(stream, out));
+        EXPECT_EQ(out, 0u);
+        EXPECT(!stream.handle_any_error());
+
+        u64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_unsigned(stream, out64));
+        EXPECT_EQ(out64, static_cast<u64>(NumericLimits<u32>::max()) + 1);
+        EXPECT(!stream.handle_any_error());
+    }
+
+    u8 u32_max[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
+    {
+        u32 out = 0;
+        InputMemoryStream stream({ u32_max, sizeof(u32_max) });
+        EXPECT(LEB128::read_unsigned(stream, out));
+        EXPECT_EQ(out, NumericLimits<u32>::max());
+        EXPECT(!stream.handle_any_error());
+
+        u64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_unsigned(stream, out64));
+        EXPECT_EQ(out64, NumericLimits<u32>::max());
+        EXPECT(!stream.handle_any_error());
+    }
+}
+
+TEST_CASE(overflow_sizeof_output_signed)
+{
+    u8 i32_max_plus_one[] = { 0x80, 0x80, 0x80, 0x80, 0x08 };
+    {
+        i32 out = 0;
+        InputMemoryStream stream({ i32_max_plus_one, sizeof(i32_max_plus_one) });
+        EXPECT(!LEB128::read_signed(stream, out));
+        EXPECT_EQ(out, 0);
+        EXPECT(!stream.handle_any_error());
+
+        i64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_signed(stream, out64));
+        EXPECT_EQ(out64, static_cast<i64>(NumericLimits<i32>::max()) + 1);
+        EXPECT(!stream.handle_any_error());
+    }
+
+    u8 i32_max[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x07 };
+    {
+        i32 out = 0;
+        InputMemoryStream stream({ i32_max, sizeof(i32_max) });
+        EXPECT(LEB128::read_signed(stream, out));
+        EXPECT_EQ(out, NumericLimits<i32>::max());
+        EXPECT(!stream.handle_any_error());
+
+        i64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_signed(stream, out64));
+        EXPECT_EQ(out64, NumericLimits<i32>::max());
+        EXPECT(!stream.handle_any_error());
+    }
+
+    u8 i32_min_minus_one[] = { 0xFF, 0xFF, 0xFF, 0xFF, 0x77 };
+    {
+        i32 out = 0;
+        InputMemoryStream stream({ i32_min_minus_one, sizeof(i32_min_minus_one) });
+        EXPECT(!LEB128::read_signed(stream, out));
+        EXPECT_EQ(out, 0);
+        EXPECT(!stream.handle_any_error());
+
+        i64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_signed(stream, out64));
+        EXPECT_EQ(out64, static_cast<i64>(NumericLimits<i32>::min()) - 1);
+        EXPECT(!stream.handle_any_error());
+    }
+
+    u8 i32_min[] = { 0x80, 0x80, 0x80, 0x80, 0x78 };
+    {
+        i32 out = 0;
+        InputMemoryStream stream({ i32_min, sizeof(i32_min) });
+        EXPECT(LEB128::read_signed(stream, out));
+        EXPECT_EQ(out, NumericLimits<i32>::min());
+        EXPECT(!stream.handle_any_error());
+
+        i64 out64 = 0;
+        stream.seek(0);
+        EXPECT(LEB128::read_signed(stream, out64));
+        EXPECT_EQ(out64, NumericLimits<i32>::min());
+        EXPECT(!stream.handle_any_error());
     }
 }
