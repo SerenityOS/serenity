@@ -160,6 +160,7 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE const char& operator[](size_t i) const
     {
+        VERIFY(!is_null());
         return (*m_impl)[i];
     }
 
