@@ -126,7 +126,7 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
         skip_over_whitespace();
     for (; it != utf8_view.end(); ++it) {
         if (!is_ascii_space(*it)) {
-            builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_point_length_in_bytes());
+            builder.append(StringView { it.underlying_code_point_bytes() });
         } else {
             builder.append(' ');
             skip_over_whitespace();
