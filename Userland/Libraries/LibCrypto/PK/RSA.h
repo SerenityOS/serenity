@@ -31,8 +31,6 @@ public:
     {
     }
 
-    //--stuff it should do
-
     const Integer& modulus() const { return m_modulus; }
     const Integer& public_exponent() const { return m_public_exponent; }
     size_t length() const { return m_length; }
@@ -66,7 +64,6 @@ public:
     {
     }
 
-    //--stuff it should do
     const Integer& modulus() const { return m_modulus; }
     const Integer& private_exponent() const { return m_private_exponent; }
     const Integer& public_exponent() const { return m_public_exponent; }

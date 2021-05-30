@@ -176,7 +176,7 @@ Result<const BitmapView, DecodeError> Decoder::decode_bit_string(ReadonlyBytes d
         return DecodeError::InvalidInputFormat;
 
     auto unused_bits = data[0];
-    auto total_size_in_bits = data.size() * 8;
+    auto total_size_in_bits = (data.size() - 1) * 8;
 
     if (unused_bits > total_size_in_bits)
         return DecodeError::Overflow;
