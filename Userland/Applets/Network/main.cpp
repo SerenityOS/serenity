@@ -109,7 +109,7 @@ private:
 
         auto file = Core::File::construct("/proc/net/adapters");
         if (!file->open(Core::OpenMode::ReadOnly)) {
-            fprintf(stderr, "Error: %s\n", file->error_string());
+            dbgln("Error: Could not open {}: {}", file->name(), file->error_string());
             return adapter_info.to_string();
         }
 
