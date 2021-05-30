@@ -44,9 +44,9 @@ public:
     [[nodiscard]] StringView string_view() const;
     void clear();
 
-    [[nodiscard]] size_t length() const { return m_length; }
-    [[nodiscard]] bool is_empty() const { return m_length == 0; }
-    void trim(size_t count) { m_length -= count; }
+    [[nodiscard]] size_t length() const { return m_buffer.size(); }
+    [[nodiscard]] bool is_empty() const { return m_buffer.is_empty(); }
+    void trim(size_t count) { m_buffer.resize(m_buffer.size() - count); }
 
     template<class SeparatorType, class CollectionType>
     void join(const SeparatorType& separator, const CollectionType& collection)
@@ -68,7 +68,6 @@ private:
 
     static constexpr size_t inline_capacity = 128;
     AK::Detail::ByteBuffer<inline_capacity> m_buffer;
-    size_t m_length { 0 };
 };
 
 }
