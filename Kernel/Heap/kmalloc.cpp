@@ -257,11 +257,11 @@ void* kmalloc(size_t size)
         PANIC("kmalloc: Out of memory (requested size: {})", size);
     }
 
-    Process* current_process = Process::current();
-    if (!current_process && Scheduler::colonel_initialized())
-        current_process = Scheduler::colonel();
-    if (current_process)
-        PerformanceManager::add_kmalloc_perf_event(*current_process, size, (FlatPtr)ptr);
+    Thread* current_thread = Thread::current();
+    if (!current_thread)
+        current_thread = Processor::idle_thread();
+    if (current_thread)
+        PerformanceManager::add_kmalloc_perf_event(*current_thread, size, (FlatPtr)ptr);
 
     return ptr;
 }
@@ -277,11 +277,11 @@ void kfree(void* ptr)
     ++g_nested_kfree_calls;
 
     if (g_nested_kfree_calls == 1) {
-        Process* current_process = Process::current();
-        if (!current_process && Scheduler::colonel_initialized())
-            current_process = Scheduler::colonel();
-        if (current_process)
-            PerformanceManager::add_kfree_perf_event(*current_process, 0, (FlatPtr)ptr);
+        Thread* current_thread = Thread::current();
+        if (!current_thread)
+            current_thread = Processor::idle_thread();
+        if (current_thread)
+            PerformanceManager::add_kfree_perf_event(*current_thread, 0, (FlatPtr)ptr);
     }
 
     g_kmalloc_global->m_heap.deallocate(ptr);

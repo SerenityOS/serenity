@@ -19,6 +19,7 @@ void Process::sys$exit(int status)
     }
 
     auto* current_thread = Thread::current();
+    current_thread->set_profiling_suppressed();
     PerformanceManager::add_thread_exit_event(*current_thread);
 
     die();
