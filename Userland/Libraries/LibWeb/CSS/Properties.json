@@ -217,6 +217,14 @@
       "flex-wrap"
     ]
   },
+  "flex-grow": {
+    "inherited": false,
+    "initial": 0
+  },
+  "flex-shrink": {
+    "inherited": false,
+    "initial": 0
+  },
   "flex-wrap": {
     "inherited": false,
     "initial": "nowrap"

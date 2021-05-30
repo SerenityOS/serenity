@@ -54,6 +54,8 @@ public:
     Optional<CSS::FlexDirection> flex_direction() const;
     Optional<CSS::FlexWrap> flex_wrap() const;
     Optional<CSS::FlexBasisData> flex_basis() const;
+    Optional<float> flex_grow_factor() const;
+    Optional<float> flex_shrink_factor() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
     Optional<CSS::Repeat> background_repeat_x() const;
