@@ -6,6 +6,7 @@
 
 #include "Client.h"
 #include <AK/Base64.h>
+#include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
@@ -50,7 +51,7 @@ void Client::start()
         }
 
         auto request = builder.to_byte_buffer();
-        dbgln("Got raw request: '{}'", String::copy(request));
+        dbgln_if(WEBSERVER_DEBUG, "Got raw request: '{}'", String::copy(request));
         handle_request(request);
         die();
     };
@@ -63,9 +64,11 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     auto& request = request_or_error.value();
 
-    dbgln("Got HTTP request: {} {}", request.method_name(), request.resource());
-    for (auto& header : request.headers()) {
-        dbgln("    {} => {}", header.name, header.value);
+    if constexpr (WEBSERVER_DEBUG) {
+        dbgln("Got HTTP request: {} {}", request.method_name(), request.resource());
+        for (auto& header : request.headers()) {
+            dbgln("    {} => {}", header.name, header.value);
+        }
     }
 
     if (request.method() != HTTP::HttpRequest::Method::GET) {
@@ -74,7 +77,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     }
 
     auto requested_path = LexicalPath::join("/", request.resource()).string();
-    dbgln("Canonical requested path: '{}'", requested_path);
+    dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
     path_builder.append(m_root_path);
