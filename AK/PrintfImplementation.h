@@ -452,7 +452,13 @@ ALWAYS_INLINE int printf_internal(PutChFunc putch, char* buffer, const char*& fm
                 }
             }
             if (*p == '*') {
-                state.field_width = NextArgument<int>()(ap);
+                if (state.dot) {
+                    state.has_fraction_length = true;
+                    state.fraction_length = NextArgument<int>()(ap);
+                } else {
+                    state.field_width = NextArgument<int>()(ap);
+                }
+
                 if (*(p + 1))
                     goto one_more;
             }
