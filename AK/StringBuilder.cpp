@@ -26,7 +26,7 @@ inline void StringBuilder::will_append(size_t size)
     if (needed_capacity > inline_capacity)
         expanded_capacity *= 2;
     VERIFY(!expanded_capacity.has_overflow());
-    m_buffer.grow(expanded_capacity.value());
+    m_buffer.resize(expanded_capacity.value());
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)

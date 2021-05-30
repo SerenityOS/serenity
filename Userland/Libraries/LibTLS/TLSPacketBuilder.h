@@ -75,7 +75,7 @@ public:
         m_current_length += bytes;
 
         if (m_packet_data.size() < m_current_length) {
-            m_packet_data.grow(m_current_length);
+            m_packet_data.resize(m_current_length);
         }
 
         m_packet_data.overwrite(old_length, data, bytes);

@@ -165,8 +165,7 @@ UnsignedBigInteger random_number(const UnsignedBigInteger& min, const UnsignedBi
     UnsignedBigInteger base;
     auto size = range.trimmed_length() * sizeof(u32) + 2;
     // "+2" is intentional (see below).
-    ByteBuffer buffer;
-    buffer.grow(size);
+    auto buffer = ByteBuffer::create_uninitialized(size);
     auto* buf = buffer.data();
 
     fill_with_random(buf, size);

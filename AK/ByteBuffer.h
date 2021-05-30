@@ -26,7 +26,7 @@ public:
 
     ByteBuffer(ByteBuffer const& other)
     {
-        grow(other.size());
+        resize(other.size());
         VERIFY(m_size == other.size());
         __builtin_memcpy(data(), other.data(), other.size());
     }
@@ -39,7 +39,7 @@ public:
     ByteBuffer& operator=(ByteBuffer&& other)
     {
         if (this != &other) {
-            if (!is_inline())
+            if (!m_inline)
                 kfree(m_outline_buffer);
             move_from(move(other));
         }
@@ -52,7 +52,7 @@ public:
             if (m_size > other.size())
                 internal_trim(other.size(), true);
             else
-                grow(other.size());
+                resize(other.size());
             __builtin_memcpy(data(), other.data(), other.size());
         }
         return *this;
@@ -111,8 +111,8 @@ public:
     [[nodiscard]] bool is_empty() const { return !m_size; }
     [[nodiscard]] size_t size() const { return m_size; }
 
-    [[nodiscard]] u8* data() { return is_inline() ? m_inline_buffer : m_outline_buffer; }
-    [[nodiscard]] u8 const* data() const { return is_inline() ? m_inline_buffer : m_outline_buffer; }
+    [[nodiscard]] u8* data() { return m_inline ? m_inline_buffer : m_outline_buffer; }
+    [[nodiscard]] u8 const* data() const { return m_inline ? m_inline_buffer : m_outline_buffer; }
 
     [[nodiscard]] Bytes bytes() { return { data(), size() }; }
     [[nodiscard]] ReadonlyBytes bytes() const { return { data(), size() }; }
@@ -141,20 +141,28 @@ public:
 
     void clear()
     {
-        if (!is_inline())
+        if (!m_inline) {
             kfree(m_outline_buffer);
+            m_inline = true;
+        }
         m_size = 0;
     }
 
-    ALWAYS_INLINE void grow(size_t new_size)
+    ALWAYS_INLINE void resize(size_t new_size)
     {
-        if (new_size <= m_size)
-            return;
-        if (new_size <= capacity()) {
-            m_size = new_size;
+        if (new_size <= m_size) {
+            trim(new_size);
             return;
         }
-        grow_slowpath(new_size);
+        ensure_capacity(new_size);
+        m_size = new_size;
+    }
+
+    ALWAYS_INLINE void ensure_capacity(size_t new_capacity)
+    {
+        if (new_capacity <= capacity())
+            return;
+        ensure_capacity_slowpath(new_capacity);
     }
 
     void append(void const* data, size_t data_size)
@@ -163,7 +171,7 @@ public:
             return;
         VERIFY(data != nullptr);
         int old_size = size();
-        grow(size() + data_size);
+        resize(size() + data_size);
         __builtin_memcpy(this->data() + old_size, data, data_size);
     }
 
@@ -187,42 +195,47 @@ public:
     operator Bytes() { return bytes(); }
     operator ReadonlyBytes() const { return bytes(); }
 
+    ALWAYS_INLINE size_t capacity() const { return m_inline ? inline_capacity : m_outline_capacity; }
+
 private:
     ByteBuffer(size_t size)
     {
-        grow(size);
+        resize(size);
         VERIFY(m_size == size);
     }
 
     void move_from(ByteBuffer&& other)
     {
         m_size = other.m_size;
-        if (other.m_size > inline_capacity) {
+        m_inline = other.m_inline;
+        if (!other.m_inline) {
             m_outline_buffer = other.m_outline_buffer;
             m_outline_capacity = other.m_outline_capacity;
         } else
             __builtin_memcpy(m_inline_buffer, other.m_inline_buffer, other.m_size);
         other.m_size = 0;
+        other.m_inline = true;
     }
 
     void internal_trim(size_t size, bool may_discard_existing_data)
     {
         VERIFY(size <= m_size);
-        if (!is_inline() && size <= inline_capacity) {
+        if (!m_inline && size <= inline_capacity) {
             // m_inline_buffer and m_outline_buffer are part of a union, so save the pointer
             auto outline_buffer = m_outline_buffer;
             if (!may_discard_existing_data)
                 __builtin_memcpy(m_inline_buffer, outline_buffer, size);
             kfree(outline_buffer);
+            m_inline = true;
         }
         m_size = size;
     }
 
-    NEVER_INLINE void grow_slowpath(size_t new_size)
+    NEVER_INLINE void ensure_capacity_slowpath(size_t new_capacity)
     {
         u8* new_buffer;
-        auto new_capacity = kmalloc_good_size(new_size);
-        if (!is_inline()) {
+        new_capacity = kmalloc_good_size(new_capacity);
+        if (!m_inline) {
             new_buffer = (u8*)krealloc(m_outline_buffer, new_capacity);
             VERIFY(new_buffer);
         } else {
@@ -232,13 +245,9 @@ private:
         }
         m_outline_buffer = new_buffer;
         m_outline_capacity = new_capacity;
-        m_size = new_size;
+        m_inline = false;
     }
 
-    ALWAYS_INLINE bool is_inline() const { return m_size <= inline_capacity; }
-    ALWAYS_INLINE size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
-
-    size_t m_size { 0 };
     union {
         u8 m_inline_buffer[inline_capacity];
         struct {
@@ -246,6 +255,8 @@ private:
             size_t m_outline_capacity;
         };
     };
+    size_t m_size { 0 };
+    bool m_inline { true };
 };
 
 }
