@@ -22,9 +22,9 @@ VirtIOQueue::VirtIOQueue(u16 queue_size, u16 notify_offset)
     // TODO: ensure alignment!!!
     u8* ptr = m_queue_region->vaddr().as_ptr();
     memset(ptr, 0, m_queue_region->size());
-    m_descriptors = reinterpret_cast<VirtIOQueueDescriptor*>(ptr);
-    m_driver = reinterpret_cast<VirtIOQueueDriver*>(ptr + size_of_descriptors);
-    m_device = reinterpret_cast<VirtIOQueueDevice*>(ptr + size_of_descriptors + size_of_driver);
+    m_descriptors = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDescriptor*>(ptr));
+    m_driver = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDriver*>(ptr + size_of_descriptors));
+    m_device = adopt_own_if_nonnull(reinterpret_cast<VirtIOQueueDevice*>(ptr + size_of_descriptors + size_of_driver));
 
     for (auto i = 0; i + 1 < queue_size; i++) {
         m_descriptors[i].next = i + 1; // link all of the descriptors in a line

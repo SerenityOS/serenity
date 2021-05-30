@@ -18,7 +18,7 @@ UNMAP_AFTER_INIT void SpuriousInterruptHandler::initialize(u8 interrupt_number)
 void SpuriousInterruptHandler::register_handler(GenericInterruptHandler& handler)
 {
     VERIFY(!m_real_handler);
-    m_real_handler = &handler;
+    m_real_handler = adopt_own_if_nonnull(&handler);
 }
 void SpuriousInterruptHandler::unregister_handler(GenericInterruptHandler&)
 {

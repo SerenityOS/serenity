@@ -1102,7 +1102,7 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
     }
 
     if (!cached_data)
-        cached_data = new ProcFSInodeData;
+        cached_data = adopt_own_if_nonnull(new ProcFSInodeData);
     auto& buffer = static_cast<ProcFSInodeData&>(*cached_data).buffer;
     if (buffer) {
         // If we're reusing the buffer, reset the size to 0 first. This

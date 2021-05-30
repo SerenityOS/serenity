@@ -15,13 +15,12 @@ template<typename T>
 class OwnPtr {
 public:
     OwnPtr() = default;
-    explicit OwnPtr(T* ptr)
-        : m_ptr(ptr)
+
+    OwnPtr(decltype(nullptr))
+        : m_ptr(nullptr)
     {
-        static_assert(
-            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
-            "Use RefPtr<> for RefCounted types");
     }
+
     OwnPtr(OwnPtr&& other)
         : m_ptr(other.leak_ptr())
     {
@@ -96,13 +95,7 @@ public:
         return *this;
     }
 
-    OwnPtr& operator=(T* ptr)
-    {
-        if (m_ptr != ptr)
-            delete m_ptr;
-        m_ptr = ptr;
-        return *this;
-    }
+    OwnPtr& operator=(T* ptr) = delete;
 
     OwnPtr& operator=(std::nullptr_t)
     {
@@ -181,6 +174,20 @@ public:
         ::swap(m_ptr, other.m_ptr);
     }
 
+    static OwnPtr lift(T* ptr)
+    {
+        return OwnPtr { ptr };
+    }
+
+protected:
+    explicit OwnPtr(T* ptr)
+        : m_ptr(ptr)
+    {
+        static_assert(
+            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
+            "Use RefPtr<> for RefCounted types");
+    }
+
 private:
     T* m_ptr = nullptr;
 };
@@ -195,7 +202,7 @@ template<typename T>
 inline OwnPtr<T> adopt_own_if_nonnull(T* object)
 {
     if (object)
-        return OwnPtr<T>(object);
+        return OwnPtr<T>::lift(object);
     return {};
 }
 

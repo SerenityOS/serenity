@@ -108,7 +108,7 @@ KResultOr<int> Process::sys$profiling_free_buffer(pid_t pid)
         {
             ScopedCritical critical;
 
-            perf_events = g_global_perf_events;
+            perf_events = adopt_own_if_nonnull(g_global_perf_events);
             g_global_perf_events = nullptr;
         }
 

@@ -576,7 +576,7 @@ KResult Plan9FS::read_and_dispatch_one_message()
         auto completion = optional_completion.value();
         ScopedSpinLock lock(completion->lock);
         completion->result = KSuccess;
-        completion->message = new Message { buffer.release_nonnull() };
+        completion->message = adopt_own_if_nonnull(new Message { buffer.release_nonnull() });
         completion->completed = true;
 
         m_completions.remove(header.tag);
