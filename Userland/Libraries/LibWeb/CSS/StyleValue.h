@@ -86,6 +86,11 @@ enum class FlexWrap {
     WrapReverse
 };
 
+enum class FlexBasis {
+    Content,
+    Length
+};
+
 enum class WhiteSpace {
     Normal,
     Pre,
