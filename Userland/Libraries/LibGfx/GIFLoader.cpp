@@ -335,6 +335,9 @@ static bool decode_frame(GIFLoadingContext& context, size_t frame_index)
             copy_frame_buffer(*context.frame_buffer, *context.prev_frame_buffer);
         }
 
+        if (image.lzw_min_code_size > 8)
+            return false;
+
         LZWDecoder decoder(image.lzw_encoded_bytes, image.lzw_min_code_size);
 
         // Add GIF-specific control codes
