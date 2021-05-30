@@ -366,14 +366,21 @@ size_t String::count(const String& needle) const
     return count;
 }
 
+#define is_multibyte_character(x) (characters()[x] & 0xC0) == 0x80
 String String::reverse() const
 {
     StringBuilder reversed_string;
-    for (size_t i = length(); i-- > 0;) {
-        reversed_string.append(characters()[i]);
+    for (size_t i = length(), j; i-- > 0;) {
+        if (is_multibyte_character(i))
+            continue;
+        j = i;
+        do
+            reversed_string.append(characters()[j]);
+        while (is_multibyte_character(++j));
     }
     return reversed_string.to_string();
 }
+#undef is_multibyte_character
 
 String escape_html_entities(const StringView& html)
 {
