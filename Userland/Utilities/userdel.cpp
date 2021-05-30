@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
 
     if (rc == 0 && !user_exists) {
-        fprintf(stderr, "specified user doesn't exist\n");
+        warnln("specified user doesn't exist");
         rc = 6;
     }
 
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         String real_path = Core::File::real_path_for(home_directory);
 
         if (real_path == "/") {
-            fprintf(stderr, "home directory is /, not deleted!\n");
+            warnln("home directory is /, not deleted!");
             return 12;
         }
 
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
             return 12;
         }
         if (WEXITSTATUS(wstatus)) {
-            fprintf(stderr, "failed to remove the home directory\n");
+            warnln("failed to remove the home directory");
             return 12;
         }
     }
