@@ -25,7 +25,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
         if (!is_superuser())
             return EPERM;
         ScopedCritical critical;
-        g_profiling_event_mask = event_mask;
+        g_profiling_event_mask = PERF_EVENT_PROCESS_CREATE | PERF_EVENT_THREAD_CREATE | PERF_EVENT_MMAP;
         if (g_global_perf_events)
             g_global_perf_events->clear();
         else
@@ -40,6 +40,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
             PerformanceManager::add_process_created_event(process);
             return IterationDecision::Continue;
         });
+        g_profiling_event_mask = event_mask;
         return 0;
     }
 
@@ -51,12 +52,13 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
         return ESRCH;
     if (!is_superuser() && process->uid() != euid())
         return EPERM;
-    g_profiling_event_mask = event_mask;
+    g_profiling_event_mask = PERF_EVENT_PROCESS_CREATE | PERF_EVENT_THREAD_CREATE | PERF_EVENT_MMAP;
     process->set_profiling(true);
     if (!process->create_perf_events_buffer_if_needed()) {
         process->set_profiling(false);
         return ENOMEM;
     }
+    g_profiling_event_mask = event_mask;
     if (!TimeManagement::the().enable_profile_timer()) {
         process->set_profiling(false);
         return ENOTSUP;

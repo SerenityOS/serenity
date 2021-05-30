@@ -88,6 +88,7 @@ void Process::sys$exit_thread(Userspace<void*> exit_value, Userspace<void*> stac
     }
 
     auto current_thread = Thread::current();
+    current_thread->set_profiling_suppressed();
     PerformanceManager::add_thread_exit_event(*current_thread);
 
     if (stack_location) {
