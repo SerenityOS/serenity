@@ -10,7 +10,9 @@
 #    include <new>
 
 #    ifndef AK_OS_MACOS
+extern "C" {
 inline size_t malloc_good_size(size_t size) { return size; }
+}
 #    else
 #        include <malloc/malloc.h>
 #    endif
