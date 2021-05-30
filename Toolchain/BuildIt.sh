@@ -91,6 +91,48 @@ buildstep() {
     "$@" 2>&1 | sed $'s|^|\x1b[34m['"${NAME}"$']\x1b[39m |'
 }
 
+# === DEPENDENCIES ===
+buildstep dependencies echo "Checking whether 'make' is available..."
+if ! command -v ${MAKE:-make} >/dev/null; then
+    buildstep dependencies echo "Please make sure to install GNU Make (for the '${MAKE:-make}' tool)."
+    exit 1
+fi
+
+buildstep dependencies echo "Checking whether 'patch' is available..."
+if ! command -v patch >/dev/null; then
+    buildstep dependencies echo "Please make sure to install GNU patch (for the 'patch' tool)."
+    exit 1
+fi
+
+buildstep dependencies echo "Checking whether 'makeinfo' is available..."
+if ! command -v makeinfo >/dev/null; then
+    buildstep dependencies echo "Please make sure to install GNU Texinfo (for the 'makeinfo' tool)."
+    exit 1
+fi
+
+buildstep dependencies echo "Checking whether your C compiler works..."
+if ! ${CC:-cc} -o /dev/null -xc - >/dev/null <<'PROGRAM'
+int main() {}
+PROGRAM
+then
+    buildstep dependencies echo "Please make sure to install a working C compiler."
+    exit 1
+fi
+
+if [ "$SYSTEM_NAME" != "Darwin" ]; then
+    for lib in gmp mpc mpfr; do
+        buildstep dependencies echo "Checking whether the $lib library and headers are available..."
+        if ! ${CC:-cc} -I /usr/local/include -L /usr/local/lib -l$lib -o /dev/null -xc - >/dev/null <<PROGRAM
+#include <$lib.h>
+int main() {}
+PROGRAM
+        then
+            echo "Please make sure to install the $lib library and headers."
+            exit 1
+        fi
+    done
+fi
+
 # === CHECK CACHE AND REUSE ===
 
 pushd "$DIR"
