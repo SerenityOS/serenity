@@ -120,7 +120,7 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (adjust_time && set_time) {
-        fprintf(stderr, "-a and -s are mutually exclusive\n");
+        warnln("-a and -s are mutually exclusive");
         return 1;
     }
 
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
 
     auto* hostent = gethostbyname(host);
     if (!hostent) {
-        fprintf(stderr, "Lookup failed for '%s'\n", host);
+        warnln("Lookup failed for '{}'", host);
         return 1;
     }
 
@@ -192,7 +192,7 @@ int main(int argc, char** argv)
         return 1;
     }
     if ((size_t)rc < sizeof(packet)) {
-        fprintf(stderr, "incomplete packet send\n");
+        warnln("incomplete packet send");
         return 1;
     }
 
@@ -207,7 +207,7 @@ int main(int argc, char** argv)
     timeval userspace_receive_time;
     gettimeofday(&userspace_receive_time, nullptr);
     if ((size_t)rc < sizeof(packet)) {
-        fprintf(stderr, "incomplete packet recv\n");
+        warnln("incomplete packet recv");
         return 1;
     }
 
@@ -220,23 +220,23 @@ int main(int argc, char** argv)
 
     // Checks 3 and 4 from end of section 5 of rfc4330.
     if (packet.version_number() != 3 && packet.version_number() != 4) {
-        fprintf(stderr, "unexpected version number %d\n", packet.version_number());
+        warnln("unexpected version number {}", packet.version_number());
         return 1;
     }
     if (packet.mode() != 4) { // 4 means "server", which should be the reply to our 3 ("client") request.
-        fprintf(stderr, "unexpected mode %d\n", packet.mode());
+        warnln("unexpected mode {}", packet.mode());
         return 1;
     }
     if (packet.stratum == 0 || packet.stratum >= 16) {
-        fprintf(stderr, "unexpected stratum value %d\n", packet.stratum);
+        warnln("unexpected stratum value {}", packet.stratum);
         return 1;
     }
     if (packet.origin_timestamp != random_transmit_timestamp) {
-        fprintf(stderr, "expected %#016" PRIx64 " as origin timestamp, got %#016" PRIx64 "\n", random_transmit_timestamp, packet.origin_timestamp);
+        warnln("expected {:#016x} as origin timestamp, got {:#016x}", random_transmit_timestamp, packet.origin_timestamp);
         return 1;
     }
     if (packet.transmit_timestamp == 0) {
-        fprintf(stderr, "got transmit_timestamp 0\n");
+        warnln("got transmit_timestamp 0");
         return 1;
     }
 
@@ -258,32 +258,32 @@ int main(int argc, char** argv)
     }
 
     if (verbose) {
-        printf("NTP response from %s:\n", inet_ntoa(peer_address.sin_addr));
-        printf("Leap Information: %d\n", packet.leap_information());
-        printf("Version Number: %d\n", packet.version_number());
-        printf("Mode: %d\n", packet.mode());
-        printf("Stratum: %d\n", packet.stratum);
-        printf("Poll: %d\n", packet.stratum);
-        printf("Precision: %d\n", packet.precision);
-        printf("Root delay: %#x\n", ntohl(packet.root_delay));
-        printf("Root dispersion: %#x\n", ntohl(packet.root_dispersion));
+        outln("NTP response from {}:", inet_ntoa(peer_address.sin_addr));
+        outln("Leap Information: {}", packet.leap_information());
+        outln("Version Number: {}", packet.version_number());
+        outln("Mode: {}", packet.mode());
+        outln("Stratum: {}", packet.stratum);
+        outln("Poll: {}", packet.stratum);
+        outln("Precision: {}", packet.precision);
+        outln("Root delay: {:x}", ntohl(packet.root_delay));
+        outln("Root dispersion: {:x}", ntohl(packet.root_dispersion));
 
         u32 ref_id = ntohl(packet.reference_id);
-        printf("Reference ID: %#x", ref_id);
+        out("Reference ID: {:x}", ref_id);
         if (packet.stratum == 1) {
-            printf(" ('%c%c%c%c')", (ref_id & 0xff000000) >> 24, (ref_id & 0xff0000) >> 16, (ref_id & 0xff00) >> 8, ref_id & 0xff);
+            out(" ('{:c}{:c}{:c}{:c}')", (ref_id & 0xff000000) >> 24, (ref_id & 0xff0000) >> 16, (ref_id & 0xff00) >> 8, ref_id & 0xff);
         }
-        printf("\n");
+        outln();
 
-        printf("Reference timestamp:   %#016" PRIx64 " (%s)\n", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
-        printf("Origin timestamp:      %#016" PRIx64 " (%s)\n", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
-        printf("Receive timestamp:     %#016" PRIx64 " (%s)\n", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
-        printf("Transmit timestamp:    %#016" PRIx64 " (%s)\n", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
-        printf("Destination timestamp: %#016" PRIx64 " (%s)\n", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
+        outln("Reference timestamp:   {:#016x} ({})", be64toh(packet.reference_timestamp), format_ntp_timestamp(be64toh(packet.reference_timestamp)).characters());
+        outln("Origin timestamp:      {:#016x} ({})", origin_timestamp, format_ntp_timestamp(origin_timestamp).characters());
+        outln("Receive timestamp:     {:#016x} ({})", receive_timestamp, format_ntp_timestamp(receive_timestamp).characters());
+        outln("Transmit timestamp:    {:#016x} ({})", transmit_timestamp, format_ntp_timestamp(transmit_timestamp).characters());
+        outln("Destination timestamp: {:#016x} ({})", destination_timestamp, format_ntp_timestamp(destination_timestamp).characters());
 
         // When the system isn't under load, user-space t and packet_t are identical. If a shell with `yes` is running, it can be as high as 30ms in this program,
         // which gets user-space time immediately after the recvmsg() call. In programs that have an event loop reading from multiple sockets, it could be higher.
-        printf("Receive latency: %" PRId64 ".%06d s\n", (i64)kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
+        outln("Receive latency: {}.{:06} s", (i64)kernel_to_userspace_latency.tv_sec, (int)kernel_to_userspace_latency.tv_usec);
     }
 
     // Parts of the "Clock Filter" computations, https://tools.ietf.org/html/rfc5905#section-10
@@ -305,8 +305,8 @@ int main(int argc, char** argv)
     // Or, equivalently, (T1+T4)/2 estimates local time, (T2+T3)/2 estimate server time, this is the difference.
     double offset_s = 0.5 * (timestamp_difference_in_seconds(T1, T2) + timestamp_difference_in_seconds(T4, T3));
     if (verbose)
-        printf("Delay: %f\n", delay_s);
-    printf("Offset: %f\n", offset_s);
+        outln("Delay: {}", delay_s);
+    outln("Offset: {}", offset_s);
 
     if (adjust_time) {
         long delta_us = static_cast<long>(round(offset_s * 1'000'000));
