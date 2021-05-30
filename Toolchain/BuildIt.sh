@@ -104,12 +104,6 @@ if ! command -v patch >/dev/null; then
     exit 1
 fi
 
-buildstep dependencies echo "Checking whether 'makeinfo' is available..."
-if ! command -v makeinfo >/dev/null; then
-    buildstep dependencies echo "Please make sure to install GNU Texinfo (for the 'makeinfo' tool)."
-    exit 1
-fi
-
 buildstep dependencies echo "Checking whether your C compiler works..."
 if ! ${CC:-cc} -o /dev/null -xc - >/dev/null <<'PROGRAM'
 int main() {}
