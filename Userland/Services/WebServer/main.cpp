@@ -35,14 +35,14 @@ int main(int argc, char** argv)
     }
 
     if ((u16)port != port) {
-        printf("Warning: invalid port number: %d\n", port);
+        outln("Warning: Invalid port number: {}", port);
         port = default_port;
     }
 
     auto real_root_path = Core::File::real_path_for(root_path);
 
     if (!Core::File::exists(real_root_path)) {
-        fprintf(stderr, "Root path does not exist: '%s'\n", root_path);
+        warnln("Root path does not exist: '{}'", root_path);
         return 1;
     }
 
