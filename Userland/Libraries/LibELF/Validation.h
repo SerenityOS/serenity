@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2020, Andrew Kaster <akaster@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
