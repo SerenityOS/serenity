@@ -26,12 +26,12 @@ inline void StringBuilder::will_append(size_t size)
     if (needed_capacity > inline_capacity)
         expanded_capacity *= 2;
     VERIFY(!expanded_capacity.has_overflow());
-    m_buffer.resize(expanded_capacity.value());
+    m_buffer.ensure_capacity(expanded_capacity.value());
 }
 
 StringBuilder::StringBuilder(size_t initial_capacity)
-    : m_buffer(decltype(m_buffer)::create_uninitialized(initial_capacity))
 {
+    m_buffer.ensure_capacity(initial_capacity);
 }
 
 void StringBuilder::append(const StringView& str)
@@ -39,7 +39,7 @@ void StringBuilder::append(const StringView& str)
     if (str.is_empty())
         return;
     will_append(str.length());
-    memcpy(data() + m_length, str.characters_without_null_termination(), str.length());
+    m_buffer.append(str.characters_without_null_termination(), str.length());
     m_length += str.length();
 }
 
@@ -51,7 +51,7 @@ void StringBuilder::append(const char* characters, size_t length)
 void StringBuilder::append(char ch)
 {
     will_append(1);
-    data()[m_length] = ch;
+    m_buffer.append(&ch, 1);
     m_length += 1;
 }
 
