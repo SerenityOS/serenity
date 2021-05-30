@@ -31,6 +31,34 @@ public:
     virtual Optional<GUI::AutocompleteProvider::ProjectLocation> find_declaration_of(const String& filename, const GUI::TextPosition& identifier_position) override;
 
 private:
+    struct SymbolName {
+        StringView name;
+        Vector<StringView> scope;
+
+        static SymbolName create(StringView, Vector<StringView>&&);
+        String scope_as_string() const;
+        String to_string() const;
+
+        bool operator==(const SymbolName&) const = default;
+    };
+
+    struct Symbol {
+        SymbolName name;
+        NonnullRefPtr<Declaration> declaration;
+
+        // Local symbols are symbols that should not appear in a global symbol search.
+        // For example, a variable that is declared inside a function will have is_local = true.
+        bool is_local { false };
+
+        enum class IsLocal {
+            No,
+            Yes
+        };
+        static Symbol create(StringView name, const Vector<StringView>& scope, NonnullRefPtr<Declaration>, IsLocal is_local);
+    };
+
+    friend Traits<SymbolName>;
+
     struct DocumentData {
         const String& filename() const { return m_filename; }
         const String& text() const { return m_text; }
@@ -60,8 +88,8 @@ private:
         OwnPtr<Preprocessor> m_preprocessor;
         OwnPtr<Parser> m_parser;
 
-        // FIXME: This HashTable must be re-computed if a declaration from a header file is modified
-        HashTable<NonnullRefPtr<Declaration>> m_declarations_from_headers;
+        HashMap<SymbolName, Symbol> m_symbols;
+        HashTable<String> m_available_headers;
     };
 
     Vector<GUI::AutocompleteProvider::Entry> autocomplete_property(const DocumentData&, const MemberExpression&, const String partial_text) const;
@@ -70,23 +98,21 @@ private:
     String type_of_property(const DocumentData&, const Identifier&) const;
     String type_of_variable(const Identifier&) const;
     bool is_property(const ASTNode&) const;
-    bool is_empty_property(const DocumentData&, const ASTNode&, const Position& autocomplete_position) const;
     RefPtr<Declaration> find_declaration_of(const DocumentData&, const ASTNode&) const;
+    RefPtr<Declaration> find_declaration_of(const DocumentData&, const SymbolName&) const;
 
     enum class RecurseIntoScopes {
         No,
         Yes
     };
-    NonnullRefPtrVector<Declaration> get_available_declarations(const DocumentData&, const ASTNode&, RecurseIntoScopes) const;
 
     struct PropertyInfo {
         StringView name;
         RefPtr<Type> type;
     };
     Vector<PropertyInfo> properties_of_type(const DocumentData& document, const String& type) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations_including_headers(const DocumentData&, RecurseIntoScopes) const;
-    NonnullRefPtrVector<Declaration> get_global_declarations(const DocumentData&, RecurseIntoScopes) const;
-    NonnullRefPtrVector<Declaration> get_declarations_recursive(const ASTNode&) const;
+    Vector<Symbol> get_child_symbols(const ASTNode&) const;
+    Vector<Symbol> get_child_symbols(const ASTNode&, const Vector<StringView>& scope, Symbol::IsLocal) const;
 
     const DocumentData* get_document_data(const String& file) const;
     const DocumentData* get_or_create_document_data(const String& file);
@@ -96,16 +122,73 @@ private:
     String document_path_from_include_path(const StringView& include_path) const;
     void update_declared_symbols(DocumentData&);
     GUI::AutocompleteProvider::DeclarationType type_of_declaration(const Declaration&);
-    String scope_of_declaration(const Declaration&) const;
-    String scope_of_name_or_identifier(const ASTNode& node) const;
+    Vector<StringView> scope_of_node(const ASTNode&) const;
+    Vector<StringView> scope_of_reference_to_symbol(const ASTNode&) const;
+
     Optional<GUI::AutocompleteProvider::ProjectLocation> find_preprocessor_definition(const DocumentData&, const GUI::TextPosition&);
 
     OwnPtr<DocumentData> create_document_data(String&& text, const String& filename);
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_property(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_name(const DocumentData&, const ASTNode&, Optional<Token> containing_token) const;
     Optional<Vector<GUI::AutocompleteProvider::Entry>> try_autocomplete_include(const DocumentData&, Token include_path_token);
+    static bool is_symbol_available(const Symbol&, const Vector<StringView>& current_scope, const Vector<StringView>& reference_scope);
+
+    template<typename Func>
+    void for_each_available_symbol(const DocumentData&, Func) const;
+
+    template<typename Func>
+    void for_each_included_document_recursive(const DocumentData&, Func) const;
 
     HashMap<String, OwnPtr<DocumentData>> m_documents;
+};
+
+template<typename Func>
+void CppComprehensionEngine::for_each_available_symbol(const DocumentData& document, Func func) const
+{
+    for (auto& item : document.m_symbols) {
+        auto decision = func(item.value);
+        if (decision == IterationDecision::Break)
+            return;
+    }
+
+    for_each_included_document_recursive(document, [&](const DocumentData& document) {
+        for (auto& item : document.m_symbols) {
+            auto decision = func(item.value);
+            if (decision == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+}
+
+template<typename Func>
+void CppComprehensionEngine::for_each_included_document_recursive(const DocumentData& document, Func func) const
+{
+    for (auto& included_path : document.m_available_headers) {
+        auto* included_document = get_document_data(included_path);
+        if (!included_document)
+            continue;
+        auto decision = func(*included_document);
+        if (decision == IterationDecision::Break)
+            continue;
+    }
+}
+
+}
+
+namespace AK {
+
+template<>
+struct Traits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> : public GenericTraits<LanguageServers::Cpp::CppComprehensionEngine::SymbolName> {
+    static unsigned hash(const LanguageServers::Cpp::CppComprehensionEngine::SymbolName& key)
+    {
+        unsigned hash = 0;
+        hash = pair_int_hash(hash, string_hash(key.name.characters_without_null_termination(), key.name.length()));
+        for (auto& scope_part : key.scope) {
+            hash = pair_int_hash(hash, string_hash(scope_part.characters_without_null_termination(), scope_part.length()));
+        }
+        return hash;
+    }
 };
 
 }
