@@ -33,13 +33,13 @@ public:
     PageClient& client() { return m_client; }
     const PageClient& client() const { return m_client; }
 
-    Web::Frame& main_frame() { return *m_main_frame; }
-    const Web::Frame& main_frame() const { return *m_main_frame; }
+    Web::BrowsingContext& top_level_browsing_context() { return *m_top_level_browsing_context; }
+    const Web::BrowsingContext& top_level_browsing_context() const { return *m_top_level_browsing_context; }
 
-    Web::Frame& focused_frame();
-    const Web::Frame& focused_frame() const { return const_cast<Page*>(this)->focused_frame(); }
+    Web::BrowsingContext& focused_context();
+    const Web::BrowsingContext& focused_context() const { return const_cast<Page*>(this)->focused_context(); }
 
-    void set_focused_frame(Badge<EventHandler>, Frame&);
+    void set_focused_browsing_context(Badge<EventHandler>, BrowsingContext&);
 
     void load(const URL&);
     void load(const LoadRequest&);
@@ -59,8 +59,8 @@ public:
 private:
     PageClient& m_client;
 
-    RefPtr<Frame> m_main_frame;
-    WeakPtr<Frame> m_focused_frame;
+    RefPtr<BrowsingContext> m_top_level_browsing_context;
+    WeakPtr<BrowsingContext> m_focused_context;
 };
 
 class PageClient {
@@ -68,7 +68,7 @@ public:
     virtual bool is_multi_process() const = 0;
     virtual Gfx::Palette palette() const = 0;
     virtual Gfx::IntRect screen_rect() const = 0;
-    virtual void page_did_set_document_in_main_frame(DOM::Document*) { }
+    virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) { }
     virtual void page_did_change_title(const String&) { }
     virtual void page_did_start_loading(const URL&) { }
     virtual void page_did_finish_loading(const URL&) { }

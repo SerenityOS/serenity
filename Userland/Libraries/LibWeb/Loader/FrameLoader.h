@@ -23,7 +23,7 @@ public:
         IFrame,
     };
 
-    explicit FrameLoader(Frame&);
+    explicit FrameLoader(BrowsingContext&);
     ~FrameLoader();
 
     bool load(const URL&, Type);
@@ -31,8 +31,8 @@ public:
 
     void load_html(const StringView&, const URL&);
 
-    Frame& frame() { return m_frame; }
-    const Frame& frame() const { return m_frame; }
+    BrowsingContext& browsing_context() { return m_browsing_context; }
+    const BrowsingContext& browsing_context() const { return m_browsing_context; }
 
 private:
     // ^ResourceClient
@@ -42,7 +42,7 @@ private:
     void load_error_page(const URL& failed_url, const String& error_message);
     bool parse_document(DOM::Document&, const ByteBuffer& data);
 
-    Frame& m_frame;
+    BrowsingContext& m_browsing_context;
     size_t m_redirects_count { 0 };
 };
 

@@ -14,8 +14,8 @@
 #include <LibWeb/HTML/HTMLImageElement.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EventHandler.h>
-#include <LibWeb/Page/Frame.h>
 #include <LibWeb/UIEvents/EventNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
@@ -87,7 +87,7 @@ static Gfx::IntPoint compute_mouse_event_offset(const Gfx::IntPoint& position, c
     };
 }
 
-EventHandler::EventHandler(Badge<Frame>, Frame& frame)
+EventHandler::EventHandler(Badge<BrowsingContext>, BrowsingContext& frame)
     : m_frame(frame)
     , m_edit_event_handler(make<EditEventHandler>(frame))
 {
@@ -158,7 +158,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (result.layout_node && result.layout_node->dom_node()) {
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).content_frame())
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
@@ -202,13 +202,13 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             return false;
 
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).content_frame())
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
 
         if (auto* page = m_frame.page())
-            page->set_focused_frame({}, m_frame);
+            page->set_focused_browsing_context({}, m_frame);
 
         auto offset = compute_mouse_event_offset(position, *result.layout_node);
         node->dispatch_event(UIEvents::MouseEvent::create(UIEvents::EventNames::mousedown, offset.x(), offset.y(), position.x(), position.y()));
@@ -222,7 +222,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         auto& image_element = downcast<HTML::HTMLImageElement>(*node);
         auto image_url = image_element.document().complete_url(image_element.src());
         if (auto* page = m_frame.page())
-            page->client().page_did_request_image_context_menu(m_frame.to_main_frame_position(position), image_url, "", modifiers, image_element.bitmap());
+            page->client().page_did_request_image_context_menu(m_frame.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
         return true;
     }
 
@@ -237,7 +237,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 auto anchor = href.substring_view(1, href.length() - 1);
                 m_frame.scroll_to_anchor(anchor);
             } else {
-                if (m_frame.is_main_frame()) {
+                if (m_frame.is_top_level()) {
                     if (auto* page = m_frame.page())
                         page->client().page_did_click_link(url, link->target(), modifiers);
                 } else {
@@ -247,7 +247,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             }
         } else if (button == GUI::MouseButton::Right) {
             if (auto* page = m_frame.page())
-                page->client().page_did_request_link_context_menu(m_frame.to_main_frame_position(position), url, link->target(), modifiers);
+                page->client().page_did_request_link_context_menu(m_frame.to_top_level_position(position), url, link->target(), modifiers);
         } else if (button == GUI::MouseButton::Middle) {
             if (auto* page = m_frame.page())
                 page->client().page_did_middle_click_link(url, link->target(), modifiers);
@@ -262,7 +262,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             }
         } else if (button == GUI::MouseButton::Right) {
             if (auto* page = m_frame.page())
-                page->client().page_did_request_context_menu(m_frame.to_main_frame_position(position));
+                page->client().page_did_request_context_menu(m_frame.to_top_level_position(position));
         }
     }
     return true;
@@ -299,7 +299,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).content_frame())
+            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
             return false;
         }
@@ -340,7 +340,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         if (hovered_node_changed) {
             RefPtr<HTML::HTMLElement> hovered_html_element = document.hovered_node() ? document.hovered_node()->enclosing_html_element_with_attribute(HTML::AttributeNames::title) : nullptr;
             if (hovered_html_element && !hovered_html_element->title().is_null()) {
-                page->client().page_did_enter_tooltip_area(m_frame.to_main_frame_position(position), hovered_html_element->title());
+                page->client().page_did_enter_tooltip_area(m_frame.to_top_level_position(position), hovered_html_element->title());
             } else {
                 page->client().page_did_leave_tooltip_area();
             }

@@ -8,7 +8,7 @@
 #include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/ImageBox.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -16,12 +16,12 @@ ImageBox::ImageBox(DOM::Document& document, DOM::Element& element, NonnullRefPtr
     : ReplacedBox(document, element, move(style))
     , m_image_loader(image_loader)
 {
-    frame().register_viewport_client(*this);
+    browsing_context().register_viewport_client(*this);
 }
 
 ImageBox::~ImageBox()
 {
-    frame().unregister_viewport_client(*this);
+    browsing_context().unregister_viewport_client(*this);
 }
 
 int ImageBox::preferred_width() const

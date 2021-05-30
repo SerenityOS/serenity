@@ -21,11 +21,11 @@
 
 namespace Web {
 
-class Frame : public TreeNode<Frame> {
+class BrowsingContext : public TreeNode<BrowsingContext> {
 public:
-    static NonnullRefPtr<Frame> create_subframe(DOM::Element& host_element, Frame& main_frame) { return adopt_ref(*new Frame(host_element, main_frame)); }
-    static NonnullRefPtr<Frame> create(Page& page) { return adopt_ref(*new Frame(page)); }
-    ~Frame();
+    static NonnullRefPtr<BrowsingContext> create_nested(DOM::Element& host_element, BrowsingContext& top_level_browsing_context) { return adopt_ref(*new BrowsingContext(host_element, top_level_browsing_context)); }
+    static NonnullRefPtr<BrowsingContext> create(Page& page) { return adopt_ref(*new BrowsingContext(page)); }
+    ~BrowsingContext();
 
     class ViewportClient {
     public:
@@ -35,8 +35,8 @@ public:
     void register_viewport_client(ViewportClient&);
     void unregister_viewport_client(ViewportClient&);
 
-    bool is_main_frame() const { return this == &m_main_frame; }
-    bool is_focused_frame() const;
+    bool is_top_level() const { return this == &m_top_level_browsing_context; }
+    bool is_focused_context() const;
 
     const DOM::Document* document() const { return m_document; }
     DOM::Document* document() { return m_document; }
@@ -63,14 +63,14 @@ public:
 
     void scroll_to_anchor(const String&);
 
-    Frame& main_frame() { return m_main_frame; }
-    const Frame& main_frame() const { return m_main_frame; }
+    BrowsingContext& top_level_browsing_context() { return m_top_level_browsing_context; }
+    BrowsingContext const& top_level_browsing_context() const { return m_top_level_browsing_context; }
 
     DOM::Element* host_element() { return m_host_element; }
     const DOM::Element* host_element() const { return m_host_element; }
 
-    Gfx::IntPoint to_main_frame_position(const Gfx::IntPoint&);
-    Gfx::IntRect to_main_frame_rect(const Gfx::IntRect&);
+    Gfx::IntPoint to_top_level_position(const Gfx::IntPoint&);
+    Gfx::IntRect to_top_level_rect(const Gfx::IntRect&);
 
     const DOM::Position& cursor_position() const { return m_cursor_position; }
     void set_cursor_position(DOM::Position);
@@ -90,15 +90,15 @@ public:
     HashMap<URL, size_t> const& frame_nesting_levels() const { return m_frame_nesting_levels; }
 
 private:
-    explicit Frame(DOM::Element& host_element, Frame& main_frame);
-    explicit Frame(Page&);
+    explicit BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context);
+    explicit BrowsingContext(Page&);
 
     void reset_cursor_blink_cycle();
 
     void setup();
 
     WeakPtr<Page> m_page;
-    Frame& m_main_frame;
+    BrowsingContext& m_top_level_browsing_context;
 
     FrameLoader m_loader;
     EventHandler m_event_handler;

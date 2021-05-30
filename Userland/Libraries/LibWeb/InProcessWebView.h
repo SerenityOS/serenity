@@ -70,7 +70,7 @@ private:
     virtual Gfx::Palette palette() const override { return GUI::AbstractScrollableWidget::palette(); }
     virtual Gfx::IntRect screen_rect() const override { return GUI::Desktop::the().rect(); }
     virtual void page_did_change_title(const String&) override;
-    virtual void page_did_set_document_in_main_frame(DOM::Document*) override;
+    virtual void page_did_set_document_in_top_level_browsing_context(DOM::Document*) override;
     virtual void page_did_start_loading(const URL&) override;
     virtual void page_did_finish_loading(const URL&) override;
     virtual void page_did_change_selection() override;

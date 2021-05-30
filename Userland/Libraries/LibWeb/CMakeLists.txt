@@ -205,9 +205,9 @@ set(SOURCES
     Namespace.cpp
     NavigationTiming/PerformanceTiming.cpp
     OutOfProcessWebView.cpp
+    Page/BrowsingContext.cpp
     Page/EditEventHandler.cpp
     Page/EventHandler.cpp
-    Page/Frame.cpp
     Page/Page.cpp
     Painting/BorderPainting.cpp
     Painting/StackingContext.cpp

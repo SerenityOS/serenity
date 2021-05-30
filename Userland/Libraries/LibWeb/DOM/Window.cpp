@@ -14,7 +14,7 @@
 #include <LibWeb/HighResolutionTime/Performance.h>
 #include <LibWeb/InProcessWebView.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::DOM {
 
@@ -139,7 +139,7 @@ void Window::cancel_animation_frame(i32 id)
 
 void Window::did_set_location_href(Badge<Bindings::LocationObject>, const URL& new_href)
 {
-    auto* frame = document().frame();
+    auto* frame = document().browsing_context();
     if (!frame)
         return;
     frame->loader().load(new_href, FrameLoader::Type::Navigation);
@@ -147,7 +147,7 @@ void Window::did_set_location_href(Badge<Bindings::LocationObject>, const URL& n
 
 void Window::did_call_location_reload(Badge<Bindings::LocationObject>)
 {
-    auto* frame = document().frame();
+    auto* frame = document().browsing_context();
     if (!frame)
         return;
     frame->loader().load(document().url(), FrameLoader::Type::Reload);

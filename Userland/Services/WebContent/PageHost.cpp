@@ -10,7 +10,7 @@
 #include <LibGfx/SystemTheme.h>
 #include <LibWeb/Cookie/ParsedCookie.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <WebContent/WebContentClientEndpoint.h>
 
 namespace WebContent {
@@ -48,7 +48,7 @@ void PageHost::set_palette_impl(const Gfx::PaletteImpl& impl)
 
 Web::Layout::InitialContainingBlockBox* PageHost::layout_root()
 {
-    auto* document = page().main_frame().document();
+    auto* document = page().top_level_browsing_context().document();
     if (!document)
         return nullptr;
     return document->layout_node();
@@ -73,7 +73,7 @@ void PageHost::paint(const Gfx::IntRect& content_rect, Gfx::Bitmap& target)
 
 void PageHost::set_viewport_rect(const Gfx::IntRect& rect)
 {
-    page().main_frame().set_viewport_rect(rect);
+    page().top_level_browsing_context().set_viewport_rect(rect);
 }
 
 void PageHost::page_did_invalidate(const Gfx::IntRect& content_rect)

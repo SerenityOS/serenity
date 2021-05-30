@@ -13,7 +13,7 @@
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/LabelableNode.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

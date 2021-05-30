@@ -65,8 +65,8 @@ public:
     DOM::Document& document() { return m_document; }
     const DOM::Document& document() const { return m_document; }
 
-    const Frame& frame() const;
-    Frame& frame();
+    const BrowsingContext& browsing_context() const;
+    BrowsingContext& browsing_context();
 
     const InitialContainingBlockBox& root() const;
     InitialContainingBlockBox& root();

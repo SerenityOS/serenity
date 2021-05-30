@@ -13,7 +13,7 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/ListItemBox.h>
 #include <LibWeb/Layout/ReplacedBox.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -516,7 +516,7 @@ void BlockFormattingContext::place_block_level_non_replaced_element_in_normal_fl
 
 void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_mode)
 {
-    auto viewport_rect = context_box().frame().viewport_rect();
+    auto viewport_rect = context_box().browsing_context().viewport_rect();
 
     auto& icb = downcast<Layout::InitialContainingBlockBox>(context_box());
     icb.build_stacking_context_tree();

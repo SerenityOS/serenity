@@ -23,7 +23,7 @@ void HTMLTitleElement::children_changed()
 {
     HTMLElement::children_changed();
     if (auto* page = document().page()) {
-        if (document().frame() == &page->main_frame())
+        if (document().browsing_context() == &page->top_level_browsing_context())
             page->client().page_did_change_title(document().title());
     }
 }
