@@ -80,6 +80,12 @@ enum class FlexDirection {
     ColumnReverse,
 };
 
+enum class FlexWrap {
+    Nowrap,
+    Wrap,
+    WrapReverse
+};
+
 enum class WhiteSpace {
     Normal,
     Pre,

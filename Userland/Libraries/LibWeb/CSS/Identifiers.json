@@ -165,6 +165,8 @@
   "visible",
   "vertical-text",
   "wait",
+  "wrap",
+  "wrap-reverse",
   "w-resize",
   "x-large",
   "x-small",

@@ -207,6 +207,10 @@
     "inherited": false,
     "initial": "row"
   },
+  "flex-wrap": {
+    "inherited": false,
+    "initial": "nowrap"
+  },
   "float": {
     "inherited": false,
     "initial": "none"

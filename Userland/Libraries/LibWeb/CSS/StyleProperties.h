@@ -51,6 +51,7 @@ public:
     Optional<CSS::TextTransform> text_transform() const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::FlexDirection> flex_direction() const;
+    Optional<CSS::FlexWrap> flex_wrap() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
     Optional<CSS::Repeat> background_repeat_x() const;

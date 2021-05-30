@@ -28,6 +28,7 @@ public:
     static CSS::Repeat background_repeat() { return CSS::Repeat::Repeat; }
     static CSS::ListStyleType list_style_type() { return CSS::ListStyleType::Disc; }
     static CSS::FlexDirection flex_direction() { return CSS::FlexDirection::Row; }
+    static CSS::FlexWrap flex_wrap() { return CSS::FlexWrap::Nowrap; }
     static CSS::Overflow overflow() { return CSS::Overflow::Visible; }
 };
 
@@ -51,6 +52,7 @@ public:
     CSS::Position position() const { return m_noninherited.position; }
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
+    CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -127,6 +129,7 @@ protected:
         CSS::Repeat background_repeat_x { InitialValues::background_repeat() };
         CSS::Repeat background_repeat_y { InitialValues::background_repeat() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
+        CSS::FlexWrap flex_wrap { InitialValues::flex_wrap() };
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
     } m_noninherited;
@@ -172,6 +175,7 @@ public:
     BorderData& border_right() { return m_noninherited.border_right; }
     BorderData& border_bottom() { return m_noninherited.border_bottom; }
     void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
+    void set_flex_wrap(CSS::FlexWrap value) { m_noninherited.flex_wrap = value; }
 };
 
 }
