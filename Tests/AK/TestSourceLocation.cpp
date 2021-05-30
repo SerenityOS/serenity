@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021, Andrew Kaster <andrewdkaster@gmail.com>
+ * Copyright (c) 2021, Andrew Kaster <akaster@serenityos.org>
  * Copyright (c) 2021, Brian Gianforcaro <bgianf@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
