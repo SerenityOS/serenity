@@ -207,6 +207,12 @@
     "inherited": false,
     "initial": "row"
   },
+  "flex-flow": {
+    "longhands": [
+      "flex-direction",
+      "flex-wrap"
+    ]
+  },
   "flex-wrap": {
     "inherited": false,
     "initial": "nowrap"

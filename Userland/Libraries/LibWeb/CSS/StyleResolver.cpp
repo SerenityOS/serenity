@@ -762,6 +762,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::FlexFlow) {
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() == 0)
+            return;
+
+        auto direction = parse_css_value(context, parts[0]);
+        style.set_property(CSS::PropertyID::FlexDirection, direction.release_nonnull());
+
+        if (parts.size() > 1) {
+            auto wrap = parse_css_value(context, parts[1]);
+            style.set_property(CSS::PropertyID::FlexWrap, wrap.release_nonnull());
+        }
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 
