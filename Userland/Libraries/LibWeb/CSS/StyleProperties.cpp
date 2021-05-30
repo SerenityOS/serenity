@@ -257,6 +257,21 @@ Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
     }
 }
 
+Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
+{
+    auto value = property(CSS::PropertyID::FlexBasis);
+    if (!value.has_value())
+        return {};
+
+    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
+        return { { CSS::FlexBasis::Content, {} } };
+
+    if (value.value()->is_length())
+        return { { CSS::FlexBasis::Length, value.value()->to_length() } };
+
+    return {};
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);

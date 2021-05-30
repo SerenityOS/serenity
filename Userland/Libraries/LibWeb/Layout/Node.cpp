@@ -263,6 +263,10 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     if (flex_wrap.has_value())
         computed_values.set_flex_wrap(flex_wrap.value());
 
+    auto flex_basis = specified_style.flex_basis();
+    if (flex_basis.has_value())
+        computed_values.set_flex_basis(flex_basis.value());
+
     auto position = specified_style.position();
     if (position.has_value()) {
         computed_values.set_position(position.value());

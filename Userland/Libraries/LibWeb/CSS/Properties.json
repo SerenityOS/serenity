@@ -203,6 +203,10 @@
     "inherited": false,
     "initial": "inline"
   },
+  "flex-basis": {
+    "inherited": false,
+    "initial": "content"
+  },
   "flex-direction": {
     "inherited": false,
     "initial": "row"
