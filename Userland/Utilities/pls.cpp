@@ -28,30 +28,31 @@ bool unveil_paths(const char*);
 // Unveil paths, given the current user's path and the command they want to execute
 bool unveil_paths(const char* command)
 {
-    bool did_unveil_ok = false;
-
-    // Attempt to unveil command via `realpath`
-    auto* command_path = realpath(command, nullptr);
-
-    // Command found via `realpath` (meaning it was probably a locally executed program)
-    if (command_path) {
-        if (unveil(command_path, "x") == 0)
-            did_unveil_ok = true;
-
-        free(command_path);
-        return did_unveil_ok;
+    // Unveil all trusted paths with browse permissions
+    auto trusted_directories = Array { "/bin", "/usr/bin", "/usr/local/bin" };
+    for (auto directory : trusted_directories) {
+        if (unveil(directory, "b") < 0) {
+            perror("unveil");
+            return false;
+        }
     }
 
-    // Okay, so we couldn't find the actual file specified by the user, let's
-    // instead search PATH for it...
+    // Attempt to unveil command via `realpath`
+    auto command_path = Core::File::real_path_for(command);
+
+    // Command found via `realpath` (meaning it was probably a locally executed program)
+    if (!command_path.is_empty()) {
+        if (unveil(command_path.characters(), "x") == 0)
+            return true;
+        return false;
+    }
+
     auto command_path_system = Core::find_executable_in_path(command);
     if (command_path_system.is_empty())
         return false;
-
-    if (unveil(command_path_system.characters(), "x") == 0)
-        did_unveil_ok = true;
-
-    return did_unveil_ok;
+    if (unveil(command_path_system.characters(), "x") < 0)
+        return false;
+    return true;
 }
 
 int main(int argc, char** argv)
@@ -59,8 +60,12 @@ int main(int argc, char** argv)
     Vector<const char*> command;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(command, "Command to run at elevated privilege level", "command");
-
     args_parser.parse(argc, argv);
+
+    // Unveil command path.
+    // Fail silently to prevent disclosing whether the specified path is valid
+    auto command_path = LexicalPath(Core::File::real_path_for(command.at(0))).dirname();
+    unveil(command_path.characters(), "b");
 
     if (pledge("stdio tty rpath exec id", nullptr) < 0) {
         perror("pledge");
@@ -87,12 +92,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    // Unveil all paths in the user's PATH, as well as the command they've specified.
-    auto unveil_count = unveil_paths(command.at(0));
-    if (unveil_count == 0) {
-        warnln("Error: Failed to unveil paths!");
-        return 1;
-    }
+    // Find and unveil the user's command executable.
+    // Fail silently to prevent disclosing whether the specified path is valid
+    unveil_paths(command.at(0));
 
     // Lock veil
     unveil(nullptr, nullptr);
