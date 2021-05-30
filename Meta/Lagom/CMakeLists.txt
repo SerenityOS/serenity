@@ -197,6 +197,17 @@ if (BUILD_LAGOM)
         target_link_libraries(sql_lagom Lagom)
         target_link_libraries(sql_lagom stdc++)
 
+        add_executable(test-iodevice ../../Tests/LibCore/TestLibCoreIODevice.cpp ${LIBTEST_MAIN})
+        set_target_properties(test-iodevice PROPERTIES OUTPUT_NAME test-iodevice)
+        target_link_libraries(test-iodevice Lagom)
+        target_link_libraries(test-iodevice LagomTest)
+        target_link_libraries(test-iodevice stdc++)
+        add_test(
+            NAME test-iodevice
+            COMMAND test-iodevice
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibCore
+        )
+
         add_executable(wasm_lagom ../../Userland/Utilities/wasm.cpp)
         set_target_properties(wasm_lagom PROPERTIES OUTPUT_NAME wasm)
         target_link_libraries(wasm_lagom Lagom)
