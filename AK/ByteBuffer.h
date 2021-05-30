@@ -50,7 +50,7 @@ public:
     {
         if (this != &other) {
             if (m_size > other.size())
-                internal_trim(other.size(), true);
+                trim(other.size(), true);
             else
                 resize(other.size());
             __builtin_memcpy(data(), other.data(), other.size());
@@ -126,11 +126,6 @@ public:
     [[nodiscard]] void* end_pointer() { return data() + m_size; }
     [[nodiscard]] void const* end_pointer() const { return data() + m_size; }
 
-    void trim(size_t size)
-    {
-        internal_trim(size, false);
-    }
-
     [[nodiscard]] ByteBuffer slice(size_t offset, size_t size) const
     {
         // I cannot hand you a slice I don't have
@@ -151,7 +146,7 @@ public:
     ALWAYS_INLINE void resize(size_t new_size)
     {
         if (new_size <= m_size) {
-            trim(new_size);
+            trim(new_size, false);
             return;
         }
         ensure_capacity(new_size);
@@ -217,7 +212,7 @@ private:
         other.m_inline = true;
     }
 
-    void internal_trim(size_t size, bool may_discard_existing_data)
+    void trim(size_t size, bool may_discard_existing_data)
     {
         VERIFY(size <= m_size);
         if (!m_inline && size <= inline_capacity) {

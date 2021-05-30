@@ -61,7 +61,7 @@ ByteBuffer IODevice::read(size_t max_size)
     int nread = ::read(m_fd, buffer_ptr, remaining_buffer_space);
     if (nread < 0) {
         if (taken_from_buffered) {
-            buffer.trim(taken_from_buffered);
+            buffer.resize(taken_from_buffered);
             return buffer;
         }
         set_error(errno);
@@ -70,12 +70,12 @@ ByteBuffer IODevice::read(size_t max_size)
     if (nread == 0) {
         set_eof(true);
         if (taken_from_buffered) {
-            buffer.trim(taken_from_buffered);
+            buffer.resize(taken_from_buffered);
             return buffer;
         }
         return {};
     }
-    buffer.trim(taken_from_buffered + nread);
+    buffer.resize(taken_from_buffered + nread);
     return buffer;
 }
 
@@ -195,7 +195,7 @@ String IODevice::read_line(size_t max_size)
             Vector<u8> new_buffered_data;
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
-            line.trim(line_index);
+            line.resize(line_index);
             return String::copy(line, Chomp);
         }
     }

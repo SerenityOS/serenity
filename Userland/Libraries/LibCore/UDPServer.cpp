@@ -72,7 +72,7 @@ ByteBuffer UDPServer::receive(size_t size, sockaddr_in& in)
         return {};
     }
 
-    buf.trim(rlen);
+    buf.resize(rlen);
     return buf;
 }
 
