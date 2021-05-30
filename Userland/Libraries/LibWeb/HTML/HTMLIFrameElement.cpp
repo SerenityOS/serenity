@@ -8,7 +8,7 @@
 #include <LibWeb/HTML/HTMLIFrameElement.h>
 #include <LibWeb/Layout/FrameBox.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 
@@ -43,7 +43,7 @@ void HTMLIFrameElement::inserted()
 
 void HTMLIFrameElement::load_src(const String& value)
 {
-    if (!m_content_frame)
+    if (!m_nested_browsing_context)
         return;
 
     if (value.is_null())
@@ -60,7 +60,7 @@ void HTMLIFrameElement::load_src(const String& value)
     }
 
     dbgln("Loading iframe document from {}", value);
-    m_content_frame->loader().load(url, FrameLoader::Type::IFrame);
+    m_nested_browsing_context->loader().load(url, FrameLoader::Type::IFrame);
 }
 
 }

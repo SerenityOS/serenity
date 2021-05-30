@@ -15,7 +15,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -104,16 +104,16 @@ HitTestResult Node::hit_test(const Gfx::IntPoint& position, HitTestType type) co
     return result;
 }
 
-const Frame& Node::frame() const
+const BrowsingContext& Node::browsing_context() const
 {
-    VERIFY(document().frame());
-    return *document().frame();
+    VERIFY(document().browsing_context());
+    return *document().browsing_context();
 }
 
-Frame& Node::frame()
+BrowsingContext& Node::browsing_context()
 {
-    VERIFY(document().frame());
-    return *document().frame();
+    VERIFY(document().browsing_context());
+    return *document().browsing_context();
 }
 
 const InitialContainingBlockBox& Node::root() const
@@ -140,7 +140,7 @@ void Node::set_needs_display()
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                frame().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
+                browsing_context().set_needs_display(enclosing_int_rect(fragment.absolute_rect()));
             }
             return IterationDecision::Continue;
         });

@@ -17,7 +17,7 @@
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/RadioButton.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 

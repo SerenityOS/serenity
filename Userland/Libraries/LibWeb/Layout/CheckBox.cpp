@@ -10,7 +10,7 @@
 #include <LibGfx/StylePainter.h>
 #include <LibWeb/Layout/CheckBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -48,7 +48,7 @@ void CheckBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsig
     set_needs_display();
 
     m_tracking_mouse = true;
-    frame().event_handler().set_mouse_event_tracking_layout_node(this);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
 void CheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
@@ -68,7 +68,7 @@ void CheckBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
 
     m_being_pressed = false;
     m_tracking_mouse = false;
-    frame().event_handler().set_mouse_event_tracking_layout_node(nullptr);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
 void CheckBox::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)

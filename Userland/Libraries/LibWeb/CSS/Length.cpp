@@ -7,7 +7,7 @@
 #include <LibWeb/CSS/Length.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/HTML/HTMLHtmlElement.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::CSS {
 
@@ -21,16 +21,16 @@ float Length::relative_length_to_px(const Layout::Node& layout_node) const
     case Type::Rem:
         return m_value * layout_node.document().document_element()->layout_node()->font_size();
     case Type::Vw:
-        return layout_node.document().frame()->viewport_rect().width() * (m_value / 100);
+        return layout_node.document().browsing_context()->viewport_rect().width() * (m_value / 100);
     case Type::Vh:
-        return layout_node.document().frame()->viewport_rect().height() * (m_value / 100);
+        return layout_node.document().browsing_context()->viewport_rect().height() * (m_value / 100);
     case Type::Vmin: {
-        auto viewport = layout_node.document().frame()->viewport_rect();
+        auto viewport = layout_node.document().browsing_context()->viewport_rect();
 
         return min(viewport.width(), viewport.height()) * (m_value / 100);
     }
     case Type::Vmax: {
-        auto viewport = layout_node.document().frame()->viewport_rect();
+        auto viewport = layout_node.document().browsing_context()->viewport_rect();
 
         return max(viewport.width(), viewport.height()) * (m_value / 100);
     }

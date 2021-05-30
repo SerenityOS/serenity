@@ -13,14 +13,14 @@
 #include <LibWeb/Layout/BreakNode.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/UIEvents/EventNames.h>
 
 namespace Web {
 
-Frame::Frame(DOM::Element& host_element, Frame& main_frame)
-    : m_page(*main_frame.page())
-    , m_main_frame(main_frame)
+BrowsingContext::BrowsingContext(DOM::Element& host_element, BrowsingContext& top_level_browsing_context)
+    : m_page(*top_level_browsing_context.page())
+    , m_top_level_browsing_context(top_level_browsing_context)
     , m_loader(*this)
     , m_event_handler({}, *this)
     , m_host_element(host_element)
@@ -28,23 +28,23 @@ Frame::Frame(DOM::Element& host_element, Frame& main_frame)
     setup();
 }
 
-Frame::Frame(Page& page)
+BrowsingContext::BrowsingContext(Page& page)
     : m_page(page)
-    , m_main_frame(*this)
+    , m_top_level_browsing_context(*this)
     , m_loader(*this)
     , m_event_handler({}, *this)
 {
     setup();
 }
 
-Frame::~Frame()
+BrowsingContext::~BrowsingContext()
 {
 }
 
-void Frame::setup()
+void BrowsingContext::setup()
 {
     m_cursor_blink_timer = Core::Timer::construct(500, [this] {
-        if (!is_focused_frame())
+        if (!is_focused_context())
             return;
         if (m_cursor_position.node() && m_cursor_position.node()->layout_node()) {
             m_cursor_blink_state = !m_cursor_blink_state;
@@ -53,24 +53,24 @@ void Frame::setup()
     });
 }
 
-void Frame::did_edit(Badge<EditEventHandler>)
+void BrowsingContext::did_edit(Badge<EditEventHandler>)
 {
     reset_cursor_blink_cycle();
 }
 
-void Frame::reset_cursor_blink_cycle()
+void BrowsingContext::reset_cursor_blink_cycle()
 {
     m_cursor_blink_state = true;
     m_cursor_blink_timer->restart();
     m_cursor_position.node()->layout_node()->set_needs_display();
 }
 
-bool Frame::is_focused_frame() const
+bool BrowsingContext::is_focused_context() const
 {
-    return m_page && &m_page->focused_frame() == this;
+    return m_page && &m_page->focused_context() == this;
 }
 
-void Frame::set_document(DOM::Document* document)
+void BrowsingContext::set_document(DOM::Document* document)
 {
     if (m_document == document)
         return;
@@ -78,21 +78,21 @@ void Frame::set_document(DOM::Document* document)
     m_cursor_position = {};
 
     if (m_document)
-        m_document->detach_from_frame({}, *this);
+        m_document->detach_from_browsing_context({}, *this);
 
     m_document = document;
 
     if (m_document) {
-        m_document->attach_to_frame({}, *this);
-        if (m_page && is_main_frame())
+        m_document->attach_to_browsing_context({}, *this);
+        if (m_page && is_top_level())
             m_page->client().page_did_change_title(m_document->title());
     }
 
     if (m_page)
-        m_page->client().page_did_set_document_in_main_frame(m_document);
+        m_page->client().page_did_set_document_in_top_level_browsing_context(m_document);
 }
 
-void Frame::set_viewport_rect(const Gfx::IntRect& rect)
+void BrowsingContext::set_viewport_rect(const Gfx::IntRect& rect)
 {
     bool did_change = false;
 
@@ -116,7 +116,7 @@ void Frame::set_viewport_rect(const Gfx::IntRect& rect)
     }
 }
 
-void Frame::set_size(const Gfx::IntSize& size)
+void BrowsingContext::set_size(const Gfx::IntSize& size)
 {
     if (m_size == size)
         return;
@@ -130,7 +130,7 @@ void Frame::set_size(const Gfx::IntSize& size)
         client->frame_did_set_viewport_rect(viewport_rect());
 }
 
-void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
+void BrowsingContext::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
 {
     if (m_viewport_scroll_offset == offset)
         return;
@@ -140,14 +140,14 @@ void Frame::set_viewport_scroll_offset(const Gfx::IntPoint& offset)
         client->frame_did_set_viewport_rect(viewport_rect());
 }
 
-void Frame::set_needs_display(const Gfx::IntRect& rect)
+void BrowsingContext::set_needs_display(const Gfx::IntRect& rect)
 {
     if (!viewport_rect().intersects(rect))
         return;
 
-    if (is_main_frame()) {
+    if (is_top_level()) {
         if (m_page)
-            m_page->client().page_did_invalidate(to_main_frame_rect(rect));
+            m_page->client().page_did_invalidate(to_top_level_rect(rect));
         return;
     }
 
@@ -155,7 +155,7 @@ void Frame::set_needs_display(const Gfx::IntRect& rect)
         host_element()->layout_node()->set_needs_display();
 }
 
-void Frame::scroll_to_anchor(const String& fragment)
+void BrowsingContext::scroll_to_anchor(const String& fragment)
 {
     if (!document())
         return;
@@ -190,18 +190,18 @@ void Frame::scroll_to_anchor(const String& fragment)
         m_page->client().page_did_request_scroll_into_view(enclosing_int_rect(float_rect));
 }
 
-Gfx::IntRect Frame::to_main_frame_rect(const Gfx::IntRect& a_rect)
+Gfx::IntRect BrowsingContext::to_top_level_rect(const Gfx::IntRect& a_rect)
 {
     auto rect = a_rect;
-    rect.set_location(to_main_frame_position(a_rect.location()));
+    rect.set_location(to_top_level_position(a_rect.location()));
     return rect;
 }
 
-Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
+Gfx::IntPoint BrowsingContext::to_top_level_position(const Gfx::IntPoint& a_position)
 {
     auto position = a_position;
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor->is_main_frame())
+        if (ancestor->is_top_level())
             break;
         if (!ancestor->host_element())
             return {};
@@ -212,7 +212,7 @@ Gfx::IntPoint Frame::to_main_frame_position(const Gfx::IntPoint& a_position)
     return position;
 }
 
-void Frame::set_cursor_position(DOM::Position position)
+void BrowsingContext::set_cursor_position(DOM::Position position)
 {
     if (m_cursor_position == position)
         return;
@@ -228,7 +228,7 @@ void Frame::set_cursor_position(DOM::Position position)
     reset_cursor_blink_cycle();
 }
 
-String Frame::selected_text() const
+String BrowsingContext::selected_text() const
 {
     StringBuilder builder;
     if (!m_document)
@@ -275,29 +275,29 @@ String Frame::selected_text() const
     return builder.to_string();
 }
 
-void Frame::register_viewport_client(ViewportClient& client)
+void BrowsingContext::register_viewport_client(ViewportClient& client)
 {
     auto result = m_viewport_clients.set(&client);
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
-void Frame::unregister_viewport_client(ViewportClient& client)
+void BrowsingContext::unregister_viewport_client(ViewportClient& client)
 {
     bool was_removed = m_viewport_clients.remove(&client);
     VERIFY(was_removed);
 }
 
-void Frame::register_frame_nesting(URL const& url)
+void BrowsingContext::register_frame_nesting(URL const& url)
 {
     m_frame_nesting_levels.ensure(url)++;
 }
 
-bool Frame::is_frame_nesting_allowed(URL const& url) const
+bool BrowsingContext::is_frame_nesting_allowed(URL const& url) const
 {
     return m_frame_nesting_levels.get(url).value_or(0) < 3;
 }
 
-bool Frame::increment_cursor_position_offset()
+bool BrowsingContext::increment_cursor_position_offset()
 {
     if (!m_cursor_position.increment_offset())
         return false;
@@ -305,7 +305,7 @@ bool Frame::increment_cursor_position_offset()
     return true;
 }
 
-bool Frame::decrement_cursor_position_offset()
+bool BrowsingContext::decrement_cursor_position_offset()
 {
     if (!m_cursor_position.decrement_offset())
         return false;

@@ -12,7 +12,7 @@
 #include <LibWeb/Layout/TableFormattingContext.h>
 #include <LibWeb/Layout/TableRowBox.h>
 #include <LibWeb/Layout/TableRowGroupBox.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 

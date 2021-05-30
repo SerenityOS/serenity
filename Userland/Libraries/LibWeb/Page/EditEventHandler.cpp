@@ -12,8 +12,8 @@
 #include <LibWeb/DOM/Text.h>
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Layout/LayoutPosition.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EditEventHandler.h>
-#include <LibWeb/Page/Frame.h>
 
 namespace Web {
 

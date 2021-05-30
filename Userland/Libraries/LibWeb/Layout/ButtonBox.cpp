@@ -11,7 +11,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/ButtonBox.h>
 #include <LibWeb/Layout/Label.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -63,7 +63,7 @@ void ButtonBox::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, unsi
     set_needs_display();
 
     m_tracking_mouse = true;
-    frame().event_handler().set_mouse_event_tracking_layout_node(this);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
 void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
@@ -73,7 +73,7 @@ void ButtonBox::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& positio
 
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protected_this = *this;
-    NonnullRefPtr protected_frame = frame();
+    NonnullRefPtr protected_frame = browsing_context();
 
     bool is_inside_node_or_label = enclosing_int_rect(absolute_rect()).contains(position);
     if (!is_inside_node_or_label)
@@ -114,7 +114,7 @@ void ButtonBox::handle_associated_label_mouseup(Badge<Label>)
 {
     // NOTE: Handling the click may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protected_this = *this;
-    NonnullRefPtr protected_frame = frame();
+    NonnullRefPtr protected_frame = browsing_context();
 
     dom_node().did_click_button({});
     m_being_pressed = false;

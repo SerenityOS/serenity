@@ -179,7 +179,7 @@ class TextNode;
 namespace Web {
 class EventHandler;
 class EditEventHandler;
-class Frame;
+class BrowsingContext;
 class FrameLoader;
 class InProcessWebView;
 class LoadRequest;

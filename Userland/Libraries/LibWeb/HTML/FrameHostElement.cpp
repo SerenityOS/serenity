@@ -8,7 +8,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/HTML/FrameHostElement.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 
@@ -26,18 +26,18 @@ void FrameHostElement::inserted()
     HTMLElement::inserted();
     if (!is_connected())
         return;
-    if (auto* frame = document().frame()) {
-        m_content_frame = Frame::create_subframe(*this, frame->main_frame());
-        m_content_frame->set_frame_nesting_levels(frame->frame_nesting_levels());
-        m_content_frame->register_frame_nesting(document().url());
+    if (auto* frame = document().browsing_context()) {
+        m_nested_browsing_context = BrowsingContext::create_nested(*this, frame->top_level_browsing_context());
+        m_nested_browsing_context->set_frame_nesting_levels(frame->frame_nesting_levels());
+        m_nested_browsing_context->register_frame_nesting(document().url());
     }
 }
 
 Origin FrameHostElement::content_origin() const
 {
-    if (!m_content_frame || !m_content_frame->document())
+    if (!m_nested_browsing_context || !m_nested_browsing_context->document())
         return {};
-    return m_content_frame->document()->origin();
+    return m_nested_browsing_context->document()->origin();
 }
 
 bool FrameHostElement::may_access_from_origin(const Origin& origin) const
@@ -47,10 +47,10 @@ bool FrameHostElement::may_access_from_origin(const Origin& origin) const
 
 const DOM::Document* FrameHostElement::content_document() const
 {
-    return m_content_frame ? m_content_frame->document() : nullptr;
+    return m_nested_browsing_context ? m_nested_browsing_context->document() : nullptr;
 }
 
-void FrameHostElement::content_frame_did_load(Badge<FrameLoader>)
+void FrameHostElement::nested_browsing_context_did_load(Badge<FrameLoader>)
 {
     dispatch_event(DOM::Event::create(EventNames::load));
 }

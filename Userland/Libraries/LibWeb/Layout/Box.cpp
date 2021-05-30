@@ -10,7 +10,7 @@
 #include <LibWeb/HTML/HTMLHtmlElement.h>
 #include <LibWeb/Layout/BlockBox.h>
 #include <LibWeb/Layout/Box.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Painting/BorderPainting.h>
 
 namespace Web::Layout {
@@ -293,7 +293,7 @@ HitTestResult Box::hit_test(const Gfx::IntPoint& position, HitTestType type) con
 void Box::set_needs_display()
 {
     if (!is_inline()) {
-        frame().set_needs_display(enclosing_int_rect(absolute_rect()));
+        browsing_context().set_needs_display(enclosing_int_rect(absolute_rect()));
         return;
     }
 

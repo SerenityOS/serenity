@@ -10,7 +10,7 @@
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/RadioButton.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::Layout {
 
@@ -48,7 +48,7 @@ void RadioButton::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint&, un
     set_needs_display();
 
     m_tracking_mouse = true;
-    frame().event_handler().set_mouse_event_tracking_layout_node(this);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
 void RadioButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
@@ -68,7 +68,7 @@ void RadioButton::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& posit
 
     m_being_pressed = false;
     m_tracking_mouse = false;
-    frame().event_handler().set_mouse_event_tracking_layout_node(nullptr);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
 void RadioButton::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned, unsigned)

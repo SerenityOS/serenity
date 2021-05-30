@@ -31,7 +31,7 @@
 #include <LibWeb/Layout/InitialContainingBlockBox.h>
 #include <LibWeb/Loader/ResourceLoader.h>
 #include <LibWeb/OutOfProcessWebView.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 
 namespace Browser {
 

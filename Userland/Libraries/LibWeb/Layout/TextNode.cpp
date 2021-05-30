@@ -12,7 +12,7 @@
 #include <LibWeb/Layout/InlineFormattingContext.h>
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <ctype.h>
 
 namespace Web::Layout {
@@ -77,17 +77,17 @@ void TextNode::paint_fragment(PaintContext& context, const LineBoxFragment& frag
 
 void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragment& fragment) const
 {
-    if (!frame().is_focused_frame())
+    if (!browsing_context().is_focused_context())
         return;
 
-    if (!frame().cursor_blink_state())
+    if (!browsing_context().cursor_blink_state())
         return;
 
-    if (frame().cursor_position().node() != &dom_node())
+    if (browsing_context().cursor_position().node() != &dom_node())
         return;
 
     // NOTE: This checks if the cursor is before the start or after the end of the fragment. If it is at the end, after all text, it should still be painted.
-    if (frame().cursor_position().offset() < (unsigned)fragment.start() || frame().cursor_position().offset() > (unsigned)(fragment.start() + fragment.length()))
+    if (browsing_context().cursor_position().offset() < (unsigned)fragment.start() || browsing_context().cursor_position().offset() > (unsigned)(fragment.start() + fragment.length()))
         return;
 
     if (!fragment.layout_node().dom_node() || !fragment.layout_node().dom_node()->is_editable())
@@ -95,7 +95,7 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
 
     auto fragment_rect = fragment.absolute_rect();
 
-    float cursor_x = fragment_rect.x() + font().width(fragment.text().substring_view(0, frame().cursor_position().offset() - fragment.start()));
+    float cursor_x = fragment_rect.x() + font().width(fragment.text().substring_view(0, browsing_context().cursor_position().offset() - fragment.start()));
     float cursor_top = fragment_rect.top();
     float cursor_height = fragment_rect.height();
     Gfx::IntRect cursor_rect(cursor_x, cursor_top, 1, cursor_height);
@@ -234,7 +234,7 @@ void TextNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint& positi
     if (!parent() || !is<Label>(*parent()))
         return;
     downcast<Label>(*parent()).handle_mousedown_on_label({}, position, button);
-    frame().event_handler().set_mouse_event_tracking_layout_node(this);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
 void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)
@@ -246,7 +246,7 @@ void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
     NonnullRefPtr protect = *this;
 
     downcast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
-    frame().event_handler().set_mouse_event_tracking_layout_node(nullptr);
+    browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
 void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& position, unsigned button, unsigned)

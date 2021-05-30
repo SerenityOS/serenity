@@ -26,7 +26,7 @@
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/Window.h>
 #include <LibWeb/Origin.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/WebAssembly/WebAssemblyObject.h>
 
 #include <LibWeb/Bindings/WindowObjectHelper.h>
@@ -344,10 +344,10 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    auto* this_frame = impl->document().frame();
-    VERIFY(this_frame);
-    VERIFY(this_frame->main_frame().document());
-    auto& top_window = this_frame->main_frame().document()->window();
+    auto* this_browsing_context = impl->document().browsing_context();
+    VERIFY(this_browsing_context);
+    VERIFY(this_browsing_context->top_level_browsing_context().document());
+    auto& top_window = this_browsing_context->top_level_browsing_context().document()->window();
     return top_window.wrapper();
 }
 
@@ -356,14 +356,14 @@ JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
-    auto* this_frame = impl->document().frame();
-    VERIFY(this_frame);
-    if (this_frame->parent()) {
-        VERIFY(this_frame->parent()->document());
-        auto& parent_window = this_frame->parent()->document()->window();
+    auto* this_browsing_context = impl->document().browsing_context();
+    VERIFY(this_browsing_context);
+    if (this_browsing_context->parent()) {
+        VERIFY(this_browsing_context->parent()->document());
+        auto& parent_window = this_browsing_context->parent()->document()->window();
         return parent_window.wrapper();
     }
-    VERIFY(this_frame == &this_frame->main_frame());
+    VERIFY(this_browsing_context == &this_browsing_context->top_level_browsing_context());
     return impl->wrapper();
 }
 

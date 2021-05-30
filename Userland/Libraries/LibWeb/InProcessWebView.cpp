@@ -23,8 +23,8 @@
 #include <LibWeb/Layout/Node.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Loader/ResourceLoader.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/Page/EventHandler.h>
-#include <LibWeb/Page/Frame.h>
 #include <LibWeb/Painting/PaintContext.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
 
@@ -89,7 +89,7 @@ void InProcessWebView::select_all()
 
 String InProcessWebView::selected_text() const
 {
-    return page().focused_frame().selected_text();
+    return page().focused_context().selected_text();
 }
 
 void InProcessWebView::page_did_layout()
@@ -104,7 +104,7 @@ void InProcessWebView::page_did_change_title(const String& title)
         on_title_change(title);
 }
 
-void InProcessWebView::page_did_set_document_in_main_frame(DOM::Document* document)
+void InProcessWebView::page_did_set_document_in_top_level_browsing_context(DOM::Document* document)
 {
     if (on_set_document)
         on_set_document(document);
@@ -210,17 +210,17 @@ void InProcessWebView::layout_and_sync_size()
     bool had_vertical_scrollbar = vertical_scrollbar().is_visible();
     bool had_horizontal_scrollbar = horizontal_scrollbar().is_visible();
 
-    page().main_frame().set_size(available_size());
+    page().top_level_browsing_context().set_size(available_size());
     set_content_size(layout_root()->size().to_type<int>());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
-        page().main_frame().set_size(available_size());
+        page().top_level_browsing_context().set_size(available_size());
         set_content_size(layout_root()->size().to_type<int>());
     }
 
-    page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
+    page().top_level_browsing_context().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
 }
 
 void InProcessWebView::resize_event(GUI::ResizeEvent& event)
@@ -319,9 +319,9 @@ void InProcessWebView::keydown_event(GUI::KeyEvent& event)
 
 URL InProcessWebView::url() const
 {
-    if (!page().main_frame().document())
+    if (!page().top_level_browsing_context().document())
         return {};
-    return page().main_frame().document()->url();
+    return page().top_level_browsing_context().document()->url();
 }
 
 void InProcessWebView::reload()
@@ -331,13 +331,13 @@ void InProcessWebView::reload()
 
 void InProcessWebView::load_html(const StringView& html, const URL& url)
 {
-    page().main_frame().loader().load_html(html, url);
+    page().top_level_browsing_context().loader().load_html(html, url);
 }
 
 bool InProcessWebView::load(const URL& url)
 {
     set_override_cursor(Gfx::StandardCursor::None);
-    return page().main_frame().loader().load(url, FrameLoader::Type::Navigation);
+    return page().top_level_browsing_context().loader().load(url, FrameLoader::Type::Navigation);
 }
 
 const Layout::InitialContainingBlockBox* InProcessWebView::layout_root() const
@@ -360,27 +360,27 @@ void InProcessWebView::page_did_request_scroll_into_view(const Gfx::IntRect& rec
 
 void InProcessWebView::load_empty_document()
 {
-    page().main_frame().set_document(nullptr);
+    page().top_level_browsing_context().set_document(nullptr);
 }
 
 DOM::Document* InProcessWebView::document()
 {
-    return page().main_frame().document();
+    return page().top_level_browsing_context().document();
 }
 
 const DOM::Document* InProcessWebView::document() const
 {
-    return page().main_frame().document();
+    return page().top_level_browsing_context().document();
 }
 
 void InProcessWebView::set_document(DOM::Document* document)
 {
-    page().main_frame().set_document(document);
+    page().top_level_browsing_context().set_document(document);
 }
 
 void InProcessWebView::did_scroll()
 {
-    page().main_frame().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
+    page().top_level_browsing_context().set_viewport_scroll_offset({ horizontal_scrollbar().value(), vertical_scrollbar().value() });
 }
 
 void InProcessWebView::drop_event(GUI::DropEvent& event)

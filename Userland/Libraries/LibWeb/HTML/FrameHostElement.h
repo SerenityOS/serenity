@@ -15,20 +15,20 @@ public:
     FrameHostElement(DOM::Document&, QualifiedName);
     virtual ~FrameHostElement() override;
 
-    Frame* content_frame() { return m_content_frame; }
-    const Frame* content_frame() const { return m_content_frame; }
+    BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
+    const BrowsingContext* nested_browsing_context() const { return m_nested_browsing_context; }
 
     const DOM::Document* content_document() const;
 
     Origin content_origin() const;
     bool may_access_from_origin(const Origin&) const;
 
-    void content_frame_did_load(Badge<FrameLoader>);
+    void nested_browsing_context_did_load(Badge<FrameLoader>);
 
     virtual void inserted() override;
 
 protected:
-    RefPtr<Frame> m_content_frame;
+    RefPtr<BrowsingContext> m_nested_browsing_context;
 };
 
 }

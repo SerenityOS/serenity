@@ -10,7 +10,7 @@
 #include <LibWeb/HTML/HTMLInputElement.h>
 #include <LibWeb/HTML/SubmitEvent.h>
 #include <LibWeb/InProcessWebView.h>
-#include <LibWeb/Page/Frame.h>
+#include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/URLEncoder.h>
 
 namespace Web::HTML {
