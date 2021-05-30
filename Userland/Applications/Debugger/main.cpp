@@ -171,10 +171,10 @@ static bool handle_examine_command(const String& command)
     u32 address = strtoul(argument.characters() + 2, nullptr, 16);
     auto res = g_debug_session->peek((u32*)address);
     if (!res.has_value()) {
-        printf("could not examine memory at address 0x%x\n", address);
+        outln("Could not examine memory at address {:p}", address);
         return true;
     }
-    printf("0x%x\n", res.value());
+    outln("{:#x}", res.value());
     return true;
 }
 
