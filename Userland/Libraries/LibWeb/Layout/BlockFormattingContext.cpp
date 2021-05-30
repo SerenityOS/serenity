@@ -296,18 +296,10 @@ static float compute_auto_height_for_block_level_element(const Box& box)
     return bottom.value_or(0) - top.value_or(0);
 }
 
-void BlockFormattingContext::compute_height(Box& box)
+float BlockFormattingContext::compute_theoretical_height(const Box& box)
 {
     auto& computed_values = box.computed_values();
     auto& containing_block = *box.containing_block();
-
-    // First, resolve the top/bottom parts of the surrounding box model.
-    box.box_model().margin.top = computed_values.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box);
-    box.box_model().margin.bottom = computed_values.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
-    box.box_model().border.top = computed_values.border_top().width;
-    box.box_model().border.bottom = computed_values.border_bottom().width;
-    box.box_model().padding.top = computed_values.padding().top.resolved_or_zero(box, containing_block.width()).to_px(box);
-    box.box_model().padding.bottom = computed_values.padding().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
 
     // Then work out what the height is, based on box type and CSS properties.
     float height = 0;
@@ -330,7 +322,22 @@ void BlockFormattingContext::compute_height(Box& box)
     if (!specified_min_height.is_auto()
         && !(computed_values.min_height().is_percentage() && !containing_block.computed_values().height().is_absolute()))
         height = max(height, specified_min_height.to_px(box));
+    return height;
+}
 
+void BlockFormattingContext::compute_height(Box& box)
+{
+    auto& computed_values = box.computed_values();
+    auto& containing_block = *box.containing_block();
+    // First, resolve the top/bottom parts of the surrounding box model.
+    box.box_model().margin.top = computed_values.margin().top.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().margin.bottom = computed_values.margin().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().border.top = computed_values.border_top().width;
+    box.box_model().border.bottom = computed_values.border_bottom().width;
+    box.box_model().padding.top = computed_values.padding().top.resolved_or_zero(box, containing_block.width()).to_px(box);
+    box.box_model().padding.bottom = computed_values.padding().bottom.resolved_or_zero(box, containing_block.width()).to_px(box);
+
+    auto height = compute_theoretical_height(box);
     box.set_height(height);
 }
 
