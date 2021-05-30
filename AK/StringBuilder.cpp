@@ -18,7 +18,7 @@ namespace AK {
 
 inline void StringBuilder::will_append(size_t size)
 {
-    Checked<size_t> needed_capacity = m_length;
+    Checked<size_t> needed_capacity = m_buffer.size();
     needed_capacity += size;
     VERIFY(!needed_capacity.has_overflow());
     // Prefer to completely use the existing capacity first
@@ -41,7 +41,6 @@ void StringBuilder::append(const StringView& str)
         return;
     will_append(str.length());
     m_buffer.append(str.characters_without_null_termination(), str.length());
-    m_length += str.length();
 }
 
 void StringBuilder::append(const char* characters, size_t length)
@@ -53,7 +52,6 @@ void StringBuilder::append(char ch)
 {
     will_append(1);
     m_buffer.append(&ch, 1);
-    m_length += 1;
 }
 
 void StringBuilder::appendvf(const char* fmt, va_list ap)
@@ -83,13 +81,12 @@ String StringBuilder::build() const
 
 StringView StringBuilder::string_view() const
 {
-    return StringView { data(), m_length };
+    return StringView { data(), m_buffer.size() };
 }
 
 void StringBuilder::clear()
 {
     m_buffer.clear();
-    m_length = 0;
 }
 
 void StringBuilder::append_code_point(u32 code_point)
