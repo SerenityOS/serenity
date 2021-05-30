@@ -160,6 +160,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
 {
     VERIFY(model());
     auto& model = *this->model();
+    auto tree_column = model.tree_column();
     int indent_level = 1;
     int y_offset = 0;
     int tree_column_x_offset = this->tree_column_x_offset();
@@ -194,7 +195,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
         ++indent_level;
         int row_count = model.row_count(index);
         for (int i = 0; i < row_count; ++i) {
-            if (traverse_index(model.index(i, model.tree_column(), index)) == IterationDecision::Break)
+            if (traverse_index(model.index(i, tree_column, index)) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         --indent_level;
@@ -202,7 +203,7 @@ void TreeView::traverse_in_paint_order(Callback callback) const
     };
     int root_count = model.row_count();
     for (int root_index = 0; root_index < root_count; ++root_index) {
-        if (traverse_index(model.index(root_index, model.tree_column(), ModelIndex())) == IterationDecision::Break)
+        if (traverse_index(model.index(root_index, tree_column, ModelIndex())) == IterationDecision::Break)
             break;
     }
 }
@@ -225,6 +226,7 @@ void TreeView::paint_event(PaintEvent& event)
 
     auto visible_content_rect = this->visible_content_rect();
     int tree_column = model.tree_column();
+    int column_count = model.column_count();
     int tree_column_x_offset = this->tree_column_x_offset();
 
     int y_offset = column_header().height();
@@ -263,7 +265,7 @@ void TreeView::paint_event(PaintEvent& event)
         }
 
         int row_width = 0;
-        for (int column_index = 0; column_index < model.column_count(); ++column_index) {
+        for (int column_index = 0; column_index < column_count; ++column_index) {
             if (!column_header().is_section_visible(column_index))
                 continue;
             row_width += this->column_width(column_index) + horizontal_padding() * 2;
@@ -278,7 +280,7 @@ void TreeView::paint_event(PaintEvent& event)
             painter.fill_rect(row_rect, background_color);
 
         int x_offset = 0;
-        for (int column_index = 0; column_index < model.column_count(); ++column_index) {
+        for (int column_index = 0; column_index < column_count; ++column_index) {
             if (!column_header().is_section_visible(column_index))
                 continue;
             int column_width = this->column_width(column_index);
