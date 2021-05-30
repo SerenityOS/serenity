@@ -511,7 +511,7 @@ static bool load_gif_frame_descriptors(GIFLoadingContext& context)
                 u8 transparent = sub_block[0] & 1;
                 current_image->transparent = transparent == 1;
 
-                u16 duration = sub_block[1] + ((u16)sub_block[2] >> 8);
+                u16 duration = sub_block[1] + ((u16)sub_block[2] << 8);
                 current_image->duration = duration;
 
                 current_image->transparency_index = sub_block[3];
