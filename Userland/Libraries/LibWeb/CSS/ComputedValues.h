@@ -39,6 +39,11 @@ public:
     float width { 0 };
 };
 
+struct FlexBasisData {
+    CSS::FlexBasis type { CSS::FlexBasis::Content };
+    CSS::Length length {};
+};
+
 class ComputedValues {
 public:
     CSS::Float float_() const { return m_noninherited.float_; }
@@ -53,6 +58,7 @@ public:
     CSS::WhiteSpace white_space() const { return m_inherited.white_space; }
     CSS::FlexDirection flex_direction() const { return m_noninherited.flex_direction; }
     CSS::FlexWrap flex_wrap() const { return m_noninherited.flex_wrap; }
+    FlexBasisData flex_basis() const { return m_noninherited.flex_basis; }
     const CSS::Length& width() const { return m_noninherited.width; }
     const CSS::Length& min_width() const { return m_noninherited.min_width; }
     const CSS::Length& max_width() const { return m_noninherited.max_width; }
@@ -130,6 +136,7 @@ protected:
         CSS::Repeat background_repeat_y { InitialValues::background_repeat() };
         CSS::FlexDirection flex_direction { InitialValues::flex_direction() };
         CSS::FlexWrap flex_wrap { InitialValues::flex_wrap() };
+        CSS::FlexBasisData flex_basis {};
         CSS::Overflow overflow_x { InitialValues::overflow() };
         CSS::Overflow overflow_y { InitialValues::overflow() };
     } m_noninherited;
@@ -176,6 +183,7 @@ public:
     BorderData& border_bottom() { return m_noninherited.border_bottom; }
     void set_flex_direction(CSS::FlexDirection value) { m_noninherited.flex_direction = value; }
     void set_flex_wrap(CSS::FlexWrap value) { m_noninherited.flex_wrap = value; }
+    void set_flex_basis(FlexBasisData value) { m_noninherited.flex_basis = value; }
 };
 
 }
