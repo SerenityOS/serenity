@@ -1961,7 +1961,9 @@ NonnullRefPtr<Statement> Parser::parse_for_in_of_statement(NonnullRefPtr<ASTNode
         auto declarations = static_cast<VariableDeclaration&>(*lhs).declarations();
         if (declarations.size() > 1)
             syntax_error("multiple declarations not allowed in for..in/of");
-        if (declarations.first().init() != nullptr)
+        if (declarations.size() < 1)
+            syntax_error("need exactly one variable declaration in for..in/of");
+        else if (declarations.first().init() != nullptr)
             syntax_error("variable initializer not allowed in for..in/of");
     }
     auto in_or_of = consume();
