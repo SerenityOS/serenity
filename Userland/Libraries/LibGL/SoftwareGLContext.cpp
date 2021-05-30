@@ -312,13 +312,7 @@ void SoftwareGLContext::gl_end()
                 continue;
         }
 
-        // FIXME: Change this when we have texture units/multi-texturing
-        if (m_bound_texture_2d == 0) {
-            m_rasterizer.submit_triangle(triangle);
-        } else {
-            auto it = m_allocated_textures.find(m_bound_texture_2d);
-            m_rasterizer.submit_triangle(triangle, *static_ptr_cast<Texture2D>(it->value));
-        }
+        m_rasterizer.submit_triangle(triangle, m_texture_units);
     }
 
     triangle_list.clear();
@@ -686,9 +680,15 @@ void SoftwareGLContext::gl_delete_textures(GLsizei n, const GLuint* textures)
     for (auto i = 0; i < n; i++) {
         GLuint name = textures[i];
 
-        // unbind texture if it is currently bound
-        if (m_bound_texture_2d == name)
-            m_bound_texture_2d = 0;
+        auto texture_object = m_allocated_textures.find(name);
+        if (texture_object == m_allocated_textures.end() || texture_object->value.is_null())
+            continue;
+
+        // Check all texture units
+        for (auto& texture_unit : m_texture_units) {
+            if (texture_object->value == texture_unit.bound_texture())
+                texture_unit.unbind_texture(GL_TEXTURE_2D);
+        }
 
         m_allocated_textures.remove(name);
     }
@@ -702,7 +702,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF(target != GL_TEXTURE_2D, GL_INVALID_ENUM);
 
     // Check if there is actually a texture bound
-    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_bound_texture_2d == 0, GL_INVALID_OPERATION);
+    RETURN_WITH_ERROR_IF(target == GL_TEXTURE_2D && m_active_texture_unit->currently_bound_target() != GL_TEXTURE_2D, GL_INVALID_OPERATION);
 
     // We only support symbolic constants for now
     RETURN_WITH_ERROR_IF(!(internal_format == GL_RGB || internal_format == GL_RGBA), GL_INVALID_ENUM);
@@ -712,9 +712,7 @@ void SoftwareGLContext::gl_tex_image_2d(GLenum target, GLint level, GLint intern
     RETURN_WITH_ERROR_IF((width & 2) != 0 || (height & 2) != 0, GL_INVALID_VALUE);
     RETURN_WITH_ERROR_IF(border < 0 || border > 1, GL_INVALID_VALUE);
 
-    // TODO: Load texture from the currently active texture unit
-    // This is to test the functionality of texture data upload
-    static_ptr_cast<Texture2D>(m_allocated_textures.find(1)->value)->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
+    m_active_texture_unit->bound_texture_2d()->upload_texture_data(target, level, internal_format, width, height, border, format, type, data);
 }
 
 void SoftwareGLContext::gl_front_face(GLenum face)
@@ -1246,7 +1244,7 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
     if (texture == 0) {
         switch (target) {
         case GL_TEXTURE_2D:
-            m_bound_texture_2d = 0;
+            m_active_texture_unit->unbind_texture(target);
             return;
         default:
             VERIFY_NOT_REACHED();
@@ -1281,7 +1279,7 @@ void SoftwareGLContext::gl_bind_texture(GLenum target, GLuint texture)
 
     switch (target) {
     case GL_TEXTURE_2D:
-        m_bound_texture_2d = texture;
+        m_active_texture_unit->bind_texture_to_target(target, texture_object);
         break;
     }
 }

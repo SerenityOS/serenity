@@ -17,14 +17,16 @@ public:
 
     void bind_texture_to_target(GLenum texture_target, const RefPtr<Texture>& texture);
     void unbind_texture(GLenum texture_target);
-    const RefPtr<Texture>& get_bound_texture() const { return m_currently_bound_texture; }
+
+    RefPtr<Texture2D>& bound_texture_2d() const { return m_texture_target_2d; }
+    RefPtr<Texture>& bound_texture() const { return m_currently_bound_texture; }
 
     GLenum currently_bound_target() const { return m_currently_bound_target; }
-    bool is_bound() const { return m_currently_bound_texture != nullptr; }
+    bool is_bound() const { return !m_currently_bound_texture.is_null(); }
 
 private:
-    RefPtr<Texture2D> m_texture_target_2d { nullptr };
-    RefPtr<Texture> m_currently_bound_texture { nullptr };
+    mutable RefPtr<Texture2D> m_texture_target_2d { nullptr };
+    mutable RefPtr<Texture> m_currently_bound_texture { nullptr };
     GLenum m_currently_bound_target;
 };
 

@@ -131,8 +131,6 @@ private:
 
     GLenum m_current_read_buffer = GL_BACK;
 
-    GLuint m_bound_texture_2d = 0;
-
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     Clipper m_clipper;
