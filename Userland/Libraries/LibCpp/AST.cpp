@@ -61,6 +61,10 @@ NonnullRefPtrVector<Declaration> FunctionDeclaration::declarations() const
     for (auto& arg : m_parameters) {
         declarations.append(arg);
     }
+
+    if (m_definition)
+        declarations.append(m_definition->declarations());
+
     return declarations;
 }
 
