@@ -56,12 +56,22 @@ int openpty(int* amaster, int* aslave, char* name, const struct termios* termp, 
         return -1;
     }
     if (termp) {
-        // FIXME: error handling
-        tcsetattr(*aslave, TCSAFLUSH, termp);
+        if (tcsetattr(*aslave, TCSAFLUSH, termp) == -1) {
+            int error = errno;
+            close(*aslave);
+            close(*amaster);
+            errno = error;
+            return -1;
+        }
     }
     if (winp) {
-        // FIXME: error handling
-        ioctl(*aslave, TIOCGWINSZ, winp);
+        if (ioctl(*aslave, TIOCGWINSZ, winp) == -1) {
+            int error = errno;
+            close(*aslave);
+            close(*amaster);
+            errno = error;
+            return -1;
+        }
     }
 
     dbgln("openpty, master={}, slave={}, tty_name={}", *amaster, *aslave, tty_name);
