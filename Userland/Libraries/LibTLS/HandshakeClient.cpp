@@ -117,8 +117,7 @@ bool TLSv12::compute_master_secret_from_pre_master_secret(size_t length)
         return false;
     }
 
-    m_context.master_key.clear();
-    m_context.master_key.grow(length);
+    m_context.master_key.resize(length);
 
     pseudorandom_function(
         m_context.master_key,
