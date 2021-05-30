@@ -1,6 +1,8 @@
 #!/bin/sh
 
 source $(dirname "$0")/test-commons.inc
+# go to a writable directory
+cd /tmp
 
 # Simple usage, single doc
 echo <<-test > sh.doc.test
@@ -71,4 +73,6 @@ test
 test2
 
 rm -f sh.doc.test
+# return to original directory
+cd -
 pass
