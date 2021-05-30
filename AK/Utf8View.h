@@ -33,7 +33,13 @@ public:
         return m_ptr - other.m_ptr;
     }
 
-    size_t code_point_length_in_bytes() const;
+    // Note : These methods return the information about the underlying UTF-8 bytes.
+    // If the UTF-8 string encoding is not valid at the iterator's position, then the underlying bytes might be different from the
+    // decoded character's re-encoded bytes (which will be an `0xFFFD REPLACEMENT CHARACTER` with an UTF-8 length of three bytes).
+    // If your code relies on the decoded character being equivalent to the re-encoded character, use the `UTF8View::validate()`
+    // method on the view prior to using its iterator.
+    size_t underlying_code_point_length_in_bytes() const;
+    ReadonlyBytes underlying_code_point_bytes() const;
     bool done() const { return m_length == 0; }
 
 private:
