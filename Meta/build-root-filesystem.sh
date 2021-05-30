@@ -50,9 +50,6 @@ chmod 660 mnt/etc/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
-chmod 0400 mnt/etc/plsusers
-chown 0:0 mnt/etc/plsusers
-
 chown 0:$wheel_gid mnt/bin/su
 chown 0:$wheel_gid mnt/bin/passwd
 chown 0:$wheel_gid mnt/bin/ping
@@ -66,8 +63,8 @@ chown 0:0 mnt/res/kernel.map
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
 chmod 4750 mnt/bin/su
+chmod 4750 mnt/bin/pls
 chmod 4755 mnt/bin/passwd
-chmod 4751 mnt/bin/pls
 chmod 4755 mnt/bin/ping
 chmod 4755 mnt/bin/traceroute
 chmod 4750 mnt/bin/reboot
