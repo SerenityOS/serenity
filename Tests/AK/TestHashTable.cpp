@@ -16,6 +16,31 @@ TEST_CASE(construct)
     EXPECT_EQ(IntTable().size(), 0u);
 }
 
+TEST_CASE(basic_move)
+{
+    HashTable<int> foo;
+    foo.set(1);
+    EXPECT_EQ(foo.size(), 1u);
+    auto bar = move(foo);
+    EXPECT_EQ(bar.size(), 1u);
+    EXPECT_EQ(foo.size(), 0u);
+    foo = move(bar);
+    EXPECT_EQ(bar.size(), 0u);
+    EXPECT_EQ(foo.size(), 1u);
+}
+
+TEST_CASE(move_is_not_swap)
+{
+    HashTable<int> foo;
+    foo.set(1);
+    HashTable<int> bar;
+    bar.set(2);
+    foo = move(bar);
+    EXPECT(foo.contains(2));
+    EXPECT(!bar.contains(1));
+    EXPECT_EQ(bar.size(), 0u);
+}
+
 TEST_CASE(populate)
 {
     HashTable<String> strings;

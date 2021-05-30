@@ -110,7 +110,8 @@ public:
 
     HashTable& operator=(HashTable&& other) noexcept
     {
-        swap(*this, other);
+        HashTable temporary { move(other) };
+        swap(*this, temporary);
         return *this;
     }
 
