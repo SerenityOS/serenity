@@ -15,7 +15,6 @@
             errno = -rc;                           \
             return (bad_ret);                      \
         }                                          \
-        errno = 0;                                 \
         return (good_ret);                         \
     } while (0)
 
