@@ -370,7 +370,7 @@ void TreeView::paint_event(PaintEvent& event)
     });
 }
 
-void TreeView::scroll_into_view(const ModelIndex& a_index, bool scroll_horizontally, bool scroll_vertically)
+void TreeView::scroll_into_view(const ModelIndex& a_index, bool, bool scroll_vertically)
 {
     if (!a_index.is_valid())
         return;
@@ -382,7 +382,7 @@ void TreeView::scroll_into_view(const ModelIndex& a_index, bool scroll_horizonta
         }
         return IterationDecision::Continue;
     });
-    AbstractScrollableWidget::scroll_into_view(found_rect, scroll_horizontally, scroll_vertically);
+    AbstractScrollableWidget::scroll_into_view(found_rect, false, scroll_vertically);
 }
 
 void TreeView::model_did_update(unsigned flags)
