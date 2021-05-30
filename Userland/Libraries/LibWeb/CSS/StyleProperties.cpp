@@ -240,6 +240,23 @@ Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
     }
 }
 
+Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
+{
+    auto value = property(CSS::PropertyID::FlexWrap);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Wrap:
+        return CSS::FlexWrap::Wrap;
+    case CSS::ValueID::Nowrap:
+        return CSS::FlexWrap::Nowrap;
+    case CSS::ValueID::WrapReverse:
+        return CSS::FlexWrap::WrapReverse;
+    default:
+        return {};
+    }
+}
+
 Optional<CSS::Position> StyleProperties::position() const
 {
     auto value = property(CSS::PropertyID::Position);
