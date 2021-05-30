@@ -264,8 +264,13 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
         computed_values.set_flex_wrap(flex_wrap.value());
 
     auto position = specified_style.position();
-    if (position.has_value())
+    if (position.has_value()) {
         computed_values.set_position(position.value());
+        if (position.value() == CSS::Position::Absolute) {
+            m_has_definite_width = true;
+            m_has_definite_height = true;
+        }
+    }
 
     auto text_align = specified_style.text_align();
     if (text_align.has_value())
@@ -310,9 +315,15 @@ void NodeWithStyle::apply_style(const CSS::StyleProperties& specified_style)
     computed_values.set_background_color(specified_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document(), Color::Transparent));
 
     computed_values.set_z_index(specified_style.z_index());
+
+    if (auto width = specified_style.property(CSS::PropertyID::Width); width.has_value())
+        m_has_definite_width = true;
     computed_values.set_width(specified_style.length_or_fallback(CSS::PropertyID::Width, {}));
     computed_values.set_min_width(specified_style.length_or_fallback(CSS::PropertyID::MinWidth, {}));
     computed_values.set_max_width(specified_style.length_or_fallback(CSS::PropertyID::MaxWidth, {}));
+
+    if (auto height = specified_style.property(CSS::PropertyID::Height); height.has_value())
+        m_has_definite_height = true;
     computed_values.set_height(specified_style.length_or_fallback(CSS::PropertyID::Height, {}));
     computed_values.set_min_height(specified_style.length_or_fallback(CSS::PropertyID::MinHeight, {}));
     computed_values.set_max_height(specified_style.length_or_fallback(CSS::PropertyID::MaxHeight, {}));

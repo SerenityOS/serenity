@@ -204,6 +204,9 @@ public:
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
+    bool has_definite_height() const { return m_has_definite_height; }
+    bool has_definite_width() const { return m_has_definite_width; }
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
@@ -216,6 +219,9 @@ private:
     RefPtr<CSS::ImageStyleValue> m_background_image;
 
     CSS::Position m_position;
+
+    bool m_has_definite_height { false };
+    bool m_has_definite_width { false };
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {
