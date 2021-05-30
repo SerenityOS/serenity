@@ -12,6 +12,7 @@
 #include "SoftwareRasterizer.h"
 #include "Tex/NameAllocator.h"
 #include "Tex/Texture.h"
+#include "Tex/TextureUnit.h"
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
 #include <AK/Tuple.h>
@@ -138,6 +139,8 @@ private:
     // Texture objects
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
+    Array<TextureUnit, 32> m_texture_units;
+    TextureUnit* m_active_texture_unit { &m_texture_units[0] };
 
     SoftwareRasterizer m_rasterizer;
 
