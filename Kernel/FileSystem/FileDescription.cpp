@@ -183,6 +183,32 @@ KResultOr<size_t> FileDescription::write(const UserOrKernelBuffer& data, size_t 
     return nwritten_or_error;
 }
 
+KResultOr<size_t> FileDescription::pread(UserOrKernelBuffer& buffer, size_t count, off_t offset)
+{
+    Locker locker(m_lock);
+    if (Checked<off_t>::addition_would_overflow(m_current_offset, count) || Checked<off_t>::addition_would_overflow(m_current_offset, offset)) {
+        return EOVERFLOW;
+    }
+    auto last_offset = m_current_offset;
+    auto nread_or_error = m_file->read(*this, offset, buffer, count);
+    evaluate_block_conditions();
+    m_current_offset = last_offset;
+    return nread_or_error;
+}
+
+KResultOr<size_t> FileDescription::pwrite(const UserOrKernelBuffer& data, size_t size, off_t offset)
+{
+    Locker locker(m_lock);
+    if (Checked<off_t>::addition_would_overflow(m_current_offset, size) || Checked<off_t>::addition_would_overflow(m_current_offset, size)) {
+        return EOVERFLOW;
+    }
+    auto last_offset = m_current_offset;
+    auto nwritten_or_error = m_file->write(*this, offset, data, size);
+    evaluate_block_conditions();
+    m_current_offset = last_offset;
+    return nwritten_or_error;
+}
+
 bool FileDescription::can_write() const
 {
     return m_file->can_write(*this, offset());

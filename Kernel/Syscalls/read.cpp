@@ -39,7 +39,7 @@ KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
         return EBADF;
 
     if (!description->is_readable())
-        return EBADF;
+        return EACCES;
 
     if (description->is_directory())
         return EISDIR;
@@ -97,6 +97,44 @@ KResultOr<ssize_t> Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size
     if (!user_buffer.has_value())
         return EFAULT;
     auto result = description->read(user_buffer.value(), size);
+    if (result.is_error())
+        return result.error();
+    return result.value();
+}
+
+KResultOr<ssize_t> Process::sys$pread(Userspace<const Syscall::SC_pread_params*> user_params)
+{
+    REQUIRE_PROMISE(stdio);
+
+    Syscall::SC_pread_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+    if (params.offset < 0)
+        return EINVAL;
+    if (params.size == 0)
+        return 0;
+    dbgln_if(IO_DEBUG, "sys$pread({}, {}, {})", params.fd, params.buffer + params.offset, params.size);
+    auto description = file_description(params.fd);
+    if (!description)
+        return EBADF;
+    if (!description->is_readable())
+        return EACCES;
+    if (description->is_directory())
+        return EISDIR;
+    if (description->is_blocking()) {
+        if (!description->can_read()) {
+            auto unblock_flags = BlockFlags::None;
+            if (Thread::current()->block<Thread::ReadBlocker>({}, *description, unblock_flags).was_interrupted())
+                return EINTR;
+            if (!has_flag(unblock_flags, BlockFlags::Read))
+                return EAGAIN;
+            // TODO: handle exceptions in unblock_flags
+        }
+    }
+    auto user_buffer = UserOrKernelBuffer::for_user_buffer(params.buffer, params.size);
+    if (!user_buffer.has_value())
+        return EFAULT;
+    auto result = description->pread(user_buffer.value(), params.size, params.offset);
     if (result.is_error())
         return result.error();
     return result.value();

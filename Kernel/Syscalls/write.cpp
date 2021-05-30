@@ -45,7 +45,7 @@ KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> io
         auto buffer = UserOrKernelBuffer::for_user_buffer((u8*)vec.iov_base, vec.iov_len);
         if (!buffer.has_value())
             return EFAULT;
-        auto result = do_write(*description, buffer.value(), vec.iov_len);
+        auto result = do_write(*description, buffer.value(), vec.iov_len, Optional<off_t>());
         if (result.is_error()) {
             if (nwritten == 0)
                 return result.error();
@@ -57,7 +57,7 @@ KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     return nwritten;
 }
 
-KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
+KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size, Optional<off_t> offset)
 {
     ssize_t total_nwritten = 0;
 
@@ -82,7 +82,8 @@ KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrK
             }
             // TODO: handle exceptions in unblock_flags
         }
-        auto nwritten_or_error = description.write(data.offset(total_nwritten), data_size - total_nwritten);
+        auto remainder = data_size - total_nwritten;
+        auto nwritten_or_error = offset.has_value() ? description.pwrite(data.offset(total_nwritten), remainder, offset.value()) : description.write(data.offset(total_nwritten), remainder);
         if (nwritten_or_error.is_error()) {
             if (total_nwritten > 0)
                 return total_nwritten;
@@ -109,12 +110,37 @@ KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t
     if (!description)
         return EBADF;
     if (!description->is_writable())
-        return EBADF;
+        return EACCES;
 
     auto buffer = UserOrKernelBuffer::for_user_buffer(data, static_cast<size_t>(size));
     if (!buffer.has_value())
         return EFAULT;
-    return do_write(*description, buffer.value(), size);
+    return do_write(*description, buffer.value(), size, Optional<off_t>());
+}
+
+KResultOr<ssize_t> Process::sys$pwrite(Userspace<const Syscall::SC_pwrite_params*> user_params)
+{
+    REQUIRE_PROMISE(stdio);
+
+    Syscall::SC_pwrite_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+    if (params.offset < 0)
+        return EINVAL;
+    if (params.size == 0)
+        return 0;
+
+    dbgln_if(IO_DEBUG, "sys$pwrite({}, {}, {})", params.fd, params.buffer + params.offset, params.size);
+    auto description = file_description(params.fd);
+    if (!description)
+        return EBADF;
+    if (!description->is_writable())
+        return EACCES;
+
+    auto buffer = UserOrKernelBuffer::for_user_buffer(const_cast<u8*>(params.buffer), params.size);
+    if (!buffer.has_value())
+        return EFAULT;
+    return do_write(*description, buffer.value(), params.size, Optional(params.offset));
 }
 
 }

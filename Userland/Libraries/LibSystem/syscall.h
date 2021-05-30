@@ -38,5 +38,4 @@ inline uintptr_t syscall(auto function, auto arg0, auto arg1, auto arg2)
 {
     return syscall3((uintptr_t)function, (uintptr_t)arg0, (uintptr_t)arg1, (uintptr_t)arg2);
 }
-
 #endif

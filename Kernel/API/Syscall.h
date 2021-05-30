@@ -180,7 +180,9 @@ namespace Kernel {
     S(readv)                      \
     S(emuctl)                     \
     S(statvfs)                    \
-    S(fstatvfs)
+    S(fstatvfs)                   \
+    S(pread)                      \
+    S(pwrite)
 
 namespace Syscall {
 
@@ -464,6 +466,20 @@ struct SC_inode_watcher_add_watch_params {
 struct SC_statvfs_params {
     StringArgument path;
     struct statvfs* buf;
+};
+
+struct SC_pread_params {
+    int fd;
+    u8* buffer;
+    size_t size;
+    int64_t offset;
+};
+
+struct SC_pwrite_params {
+    int fd;
+    const u8* buffer;
+    size_t size;
+    int64_t offset;
 };
 
 void initialize();

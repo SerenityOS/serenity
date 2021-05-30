@@ -49,6 +49,8 @@ public:
     KResultOr<off_t> seek(off_t, int whence);
     KResultOr<size_t> read(UserOrKernelBuffer&, size_t);
     KResultOr<size_t> write(const UserOrKernelBuffer& data, size_t);
+    KResultOr<size_t> pread(UserOrKernelBuffer&, size_t, off_t);
+    KResultOr<size_t> pwrite(const UserOrKernelBuffer& data, size_t, off_t);
     KResult stat(::stat&);
 
     KResult chmod(mode_t);

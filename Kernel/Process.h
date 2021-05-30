@@ -294,8 +294,10 @@ public:
     KResultOr<int> sys$close(int fd);
     KResultOr<ssize_t> sys$read(int fd, Userspace<u8*>, ssize_t);
     KResultOr<ssize_t> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    KResultOr<ssize_t> sys$pread(Userspace<const Syscall::SC_pread_params*>);
     KResultOr<ssize_t> sys$write(int fd, Userspace<const u8*>, ssize_t);
     KResultOr<ssize_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    KResultOr<ssize_t> sys$pwrite(Userspace<const Syscall::SC_pwrite_params*>);
     KResultOr<int> sys$fstat(int fd, Userspace<stat*>);
     KResultOr<int> sys$stat(Userspace<const Syscall::SC_stat_params*>);
     KResultOr<int> sys$lseek(int fd, Userspace<off_t*>, int whence);
@@ -531,7 +533,7 @@ private:
     void delete_perf_events_buffer();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
-    KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
+    KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t, Optional<off_t>);
 
     KResultOr<int> do_statvfs(String path, statvfs* buf);
 
