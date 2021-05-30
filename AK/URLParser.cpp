@@ -215,7 +215,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
     Utf8CodePointIterator iterator = input.begin();
 
     auto get_remaining = [&input, &iterator] {
-        return input.substring_view(iterator - input.begin() + iterator.code_point_length_in_bytes()).as_string();
+        return input.substring_view(iterator - input.begin() + iterator.underlying_code_point_length_in_bytes()).as_string();
     };
 
     // NOTE: "continue" should only be used to prevent incrementing the iterator, as this is done at the end of the loop.

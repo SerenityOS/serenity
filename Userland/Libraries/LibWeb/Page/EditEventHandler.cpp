@@ -26,7 +26,7 @@ void EditEventHandler::handle_delete_character_after(const DOM::Position& cursor
 
     auto& node = *static_cast<DOM::Text*>(const_cast<DOM::Node*>(cursor_position.node()));
     auto& text = node.data();
-    auto code_point_length = Utf8View(text).iterator_at_byte_offset(cursor_position.offset()).code_point_length_in_bytes();
+    auto code_point_length = Utf8View(text).iterator_at_byte_offset(cursor_position.offset()).underlying_code_point_length_in_bytes();
 
     StringBuilder builder;
     builder.append(text.substring_view(0, cursor_position.offset()));
