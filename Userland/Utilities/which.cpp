@@ -24,10 +24,10 @@ int main(int argc, char** argv)
 
     auto fullpath = Core::find_executable_in_path(filename);
     if (fullpath.is_null()) {
-        printf("no '%s' in path\n", filename);
+        warnln("no '{}' in path", filename);
         return 1;
     }
 
-    printf("%s\n", fullpath.characters());
+    outln("{}", fullpath);
     return 0;
 }
