@@ -187,6 +187,8 @@ public:
     operator Bytes() { return bytes(); }
     operator ReadonlyBytes() const { return bytes(); }
 
+    ALWAYS_INLINE size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
+
 private:
     ByteBuffer(size_t size)
     {
@@ -236,7 +238,6 @@ private:
     }
 
     ALWAYS_INLINE bool is_inline() const { return m_size <= inline_capacity; }
-    ALWAYS_INLINE size_t capacity() const { return is_inline() ? inline_capacity : m_outline_capacity; }
 
     size_t m_size { 0 };
     union {
