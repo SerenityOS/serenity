@@ -1,7 +1,8 @@
 #!/bin/sh
 
 source $(dirname "$0")/test-commons.inc
-
+# go to a writable directory
+cd /tmp
 singlecommand_ok=yes
 multicommand_ok=yes
 inlineexec_ok=yes
@@ -95,5 +96,6 @@ if not test \
 
     fail "Something failed :("
 }
-
+# return to original directory
+cd -
 echo PASS
