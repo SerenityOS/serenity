@@ -1131,6 +1131,9 @@ public:
         return m_nested_profiler_calls.fetch_sub(1, AK::MemoryOrder::memory_order_acquire);
     }
 
+    bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
+    void set_profiling_suppressed() { m_is_profiling_suppressed = true; }
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>);
 
@@ -1272,6 +1275,8 @@ private:
     Atomic<u32> m_nested_profiler_calls { 0 };
 
     RefPtr<Timer> m_block_timer;
+
+    bool m_is_profiling_suppressed { false };
 
     void yield_without_holding_big_lock();
     void donate_without_holding_big_lock(RefPtr<Thread>&, const char*);
