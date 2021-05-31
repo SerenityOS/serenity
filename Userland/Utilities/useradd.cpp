@@ -7,6 +7,7 @@
 
 #include <AK/Base64.h>
 #include <AK/Random.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <crypt.h>
@@ -95,8 +96,14 @@ int main(int argc, char** argv)
     FILE* spwdfile = fopen("/etc/shadow", "a");
     if (!spwdfile) {
         perror("failed to open /etc/shadow");
+        fclose(spwdfile);
         return 1;
     }
+
+    auto fclose_ret = ScopeGuard([=] {
+        fclose(pwfile);
+        fclose(spwdfile);
+    });
 
     String home;
     if (!home_path)
@@ -164,9 +171,6 @@ int main(int argc, char** argv)
         perror("putspent");
         return 1;
     }
-
-    fclose(pwfile);
-    fclose(spwdfile);
 
     return 0;
 }

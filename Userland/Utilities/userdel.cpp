@@ -104,6 +104,8 @@ int main(int argc, char** argv)
         if (strcmp(pw->pw_name, username)) {
             if (putpwent(pw, temp_passwd_file) != 0) {
                 perror("failed to put an entry in the temporary passwd file");
+                fclose(temp_shadow_file);
+                fclose(temp_passwd_file);
                 return 1;
             }
         } else {
@@ -119,6 +121,8 @@ int main(int argc, char** argv)
         if (strcmp(spwd->sp_namp, username)) {
             if (putspent(spwd, temp_shadow_file) != 0) {
                 perror("failed to put an entry in the temporary shadow file");
+                fclose(temp_shadow_file);
+                fclose(temp_passwd_file);
                 return 1;
             }
         }
