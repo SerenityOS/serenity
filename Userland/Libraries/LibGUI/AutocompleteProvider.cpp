@@ -92,6 +92,10 @@ AutocompleteBox::AutocompleteBox(TextEditor& editor)
 
 void AutocompleteBox::update_suggestions(Vector<AutocompleteProvider::Entry>&& suggestions)
 {
+    // FIXME: There's a potential race here if, after the user selected an autocomplete suggestion,
+    // the LanguageServer sends an update and this function is executed before AutocompleteBox::apply_suggestion()
+    // is executed.
+
     bool has_suggestions = !suggestions.is_empty();
     if (m_suggestion_view->model()) {
         auto& model = *static_cast<AutocompleteSuggestionModel*>(m_suggestion_view->model());
