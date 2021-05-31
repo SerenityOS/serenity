@@ -70,7 +70,7 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
     default:
         if (m_modifiers & Mod_Alt) {
             switch (ch) {
-            case 0x02 ... 0x07: // 1 to 6
+            case 0x02 ... 0x01 + ConsoleManagement::s_max_virtual_consoles:
                 g_io_work->queue([this, ch]() {
                     ConsoleManagement::the().switch_to(ch - 0x02);
                 });
