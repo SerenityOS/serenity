@@ -57,7 +57,7 @@ URL url_from_user_input(const String& input)
 void Tab::start_download(const URL& url)
 {
     auto window = GUI::Window::construct(&this->window());
-    window->resize(300, 150);
+    window->resize(300, 170);
     window->set_title(String::formatted("0% of {}", url.basename()));
     window->set_resizable(false);
     window->set_main_widget<DownloadWidget>(url);
