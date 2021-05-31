@@ -136,7 +136,7 @@ void Job::on_socket_connected()
                 return;
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
-                fprintf(stderr, "Job: Expected HTTP status\n");
+                warnln("Job: Expected HTTP status");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
             auto parts = line.split_view(' ');
@@ -146,7 +146,7 @@ void Job::on_socket_connected()
             }
             auto code = parts[1].to_uint();
             if (!code.has_value()) {
-                fprintf(stderr, "Job: Expected numeric HTTP status\n");
+                warnln("Job: Expected numeric HTTP status");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             m_code = code.value();
@@ -164,7 +164,7 @@ void Job::on_socket_connected()
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                fprintf(stderr, "Job: Expected HTTP header\n");
+                warnln("Job: Expected HTTP header");
                 return did_fail(Core::NetworkJob::Error::ProtocolFailed);
             }
             if (line.is_empty()) {
@@ -185,7 +185,7 @@ void Job::on_socket_connected()
                     // that is not a valid trailing header.
                     return finish_up();
                 }
-                fprintf(stderr, "Job: Expected HTTP header with key/value\n");
+                warnln("Job: Expected HTTP header with key/value");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
             auto name = parts[0];
