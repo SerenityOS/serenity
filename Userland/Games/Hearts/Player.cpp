@@ -73,18 +73,16 @@ size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Ca
 
 Optional<size_t> Player::pick_low_points_high_value_card(Optional<Card::Type> type)
 {
+    auto sorted_hand = hand_sorted_by_fn(compare_card_value);
     int min_points = -1;
     Optional<size_t> card_index;
-    for (ssize_t i = hand.size() - 1; i >= 0; i--) {
-        auto& card = hand[i];
-        if (card.is_null())
+    for (auto& cwi : sorted_hand) {
+        if (type.has_value() && cwi.card->type() != type.value())
             continue;
-        if (type.has_value() && card->type() != type.value())
-            continue;
-        auto points = hearts_card_points(*card);
+        auto points = hearts_card_points(*cwi.card);
         if (min_points == -1 || points < min_points) {
             min_points = points;
-            card_index = i;
+            card_index = cwi.index;
         }
     }
     VERIFY(card_index.has_value() || type.has_value());
