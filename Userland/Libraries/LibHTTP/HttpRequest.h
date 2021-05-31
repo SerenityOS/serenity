@@ -21,7 +21,13 @@ public:
         Invalid,
         HEAD,
         GET,
-        POST
+        POST,
+        PUT,
+        DELETE,
+        TRACE,
+        OPTIONS,
+        CONNECT,
+        PATCH
     };
 
     struct Header {
