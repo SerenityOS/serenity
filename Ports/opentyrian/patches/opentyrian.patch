@@ -1,0 +1,83 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+new file mode 100644
+index 0000000..dfb9649
+--- /dev/null
++++ b/CMakeLists.txt
+@@ -0,0 +1,4 @@
++cmake_minimum_required(VERSION 3.16)
++project(opentyrian LANGUAGES C)
++install(FILES CREDITS NEWS README DESTINATION share/doc/opentyrian)
++add_subdirectory(src)
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+new file mode 100644
+index 0000000..b8d71b9
+--- /dev/null
++++ b/src/CMakeLists.txt
+@@ -0,0 +1,67 @@
++find_package(SDL2 REQUIRED)
++add_executable(tyrian
++        animlib.c
++        arg_parse.c
++        backgrnd.c
++        config.c
++        config_file.c
++        destruct.c
++        editship.c
++        episodes.c
++        file.c
++        font.c
++        fonthand.c
++        game_menu.c
++        helptext.c
++        joystick.c
++        jukebox.c
++        keyboard.c
++        lds_play.c
++        loudness.c
++        lvllib.c
++        lvlmast.c
++        mainint.c
++        menus.c
++        mouse.c
++        mtrand.c
++        musmast.c
++        network.c
++        nortsong.c
++        nortvars.c
++        opentyr.c
++        opl.c
++        palette.c
++        params.c
++        pcxload.c
++        pcxmast.c
++        picload.c
++        player.c
++        scroller.c
++        setup.c
++        shots.c
++        sizebuf.c
++        sndmast.c
++        sprite.c
++        starlib.c
++        std_support.c
++        tyrian2.c
++        varz.c
++        vga256d.c
++        vga_palette.c
++        video.c
++        video_scale.c
++        video_scale_hqNx.c
++        xmas.c)
++target_include_directories(tyrian PRIVATE . ${SDL2_INCLUDE_DIRS})
++if("${SDL2_LIBRARIES}" STREQUAL "")
++    message(WARNING "SDL2_LIBRARIES wasn't set, manually setting to SDL2::SDL2")
++    set(SDL2_LIBRARIES "SDL2::SDL2")
++endif()
++
++target_compile_options(tyrian PRIVATE -std=iso9899:1999 )
++target_compile_definitions(tyrian PRIVATE
++        -DNDEBUG
++        -DTYRIAN_DIR=\"/usr/local/share/games/opentyrian\")
++target_link_libraries(tyrian m ${SDL2_LIBRARIES})
++install(TARGETS tyrian
++        RUNTIME DESTINATION bin)
