@@ -21,6 +21,10 @@ addresses for each frame in the stack producing a backtrace.
 * If Kernel addresses are available, they will not be symbolicated unless
   the current user has access to the `/boot/Kernel` file.
 
+## Arguments
+
+* `pid`: Process ID
+
 ## Examples
 
 View all stacks of pid number 10:
