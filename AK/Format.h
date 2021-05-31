@@ -314,6 +314,18 @@ struct Formatter<char*> : Formatter<const char*> {
 template<size_t Size>
 struct Formatter<char[Size]> : Formatter<const char*> {
 };
+template<size_t Size>
+struct Formatter<unsigned char[Size]> : Formatter<StringView> {
+    void format(FormatBuilder& builder, const unsigned char* value)
+    {
+        if (m_mode == Mode::Pointer) {
+            Formatter<FlatPtr> formatter { *this };
+            formatter.format(builder, reinterpret_cast<FlatPtr>(value));
+        } else {
+            Formatter<StringView>::format(builder, { value, Size });
+        }
+    }
+};
 template<>
 struct Formatter<String> : Formatter<StringView> {
 };
