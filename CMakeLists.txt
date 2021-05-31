@@ -8,6 +8,12 @@ if(NOT "${CMAKE_BUILD_TYPE}" STREQUAL "")
     "and that's all there is.")
 endif()
 
+if (CMAKE_COMPILER_IS_GNUCXX AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 10.2)
+  message(FATAL_ERROR
+      "A GCC version less than 10.2 was detected (${CMAKE_CXX_COMPILER_VERSION}), this is unsupported.\n"
+      "Please re-read the build instructions documentation, and upgrade your host compiler.\n")
+endif()
+
 set(CMAKE_INSTALL_MESSAGE NEVER)
 
 enable_testing()
