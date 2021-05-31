@@ -25,13 +25,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
 
     unveil(nullptr, nullptr);
 
-    auto f = Core::File::construct("/proc/dmesg");
-    if (!f->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "open: failed to open /proc/dmesg: %s\n", f->error_string());
+    auto file = Core::File::construct("/proc/dmesg");
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        warnln("Failed to open {}: {}", file->name(), file->error_string());
         return 1;
     }
-    const auto& b = f->read_all();
-    for (size_t i = 0; i < b.size(); ++i)
-        putchar(b[i]);
+    auto buffer = file->read_all();
+    out("{}", String::copy(buffer));
     return 0;
 }

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/Optional.h>
 #include <stdio.h>
 #include <string.h>
@@ -58,8 +59,8 @@ int main(int argc, char** argv)
     }
 
     if (argc < 3) {
-        printf("usage: chmod <octal-mode> <path...>\n"
-               "       chmod [[ugoa][+-=][rwx...],...] <path...>\n");
+        warnln("usage: chmod <octal-mode> <path...>");
+        warnln("       chmod [[ugoa][+-=][rwx...],...] <path...>");
         return 1;
     }
 
@@ -100,7 +101,7 @@ int main(int argc, char** argv)
                 continue;
             }
             if (!tmp_mask.has_value()) {
-                fprintf(stderr, "chmod: invalid mode: %s\n", argv[1]);
+                warnln("chmod: invalid mode: {}", argv[1]);
                 return 1;
             }
             mask |= tmp_mask.value();

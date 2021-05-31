@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     if (new_argv.size() == 0) {
         for (auto entry = environ; *entry != nullptr; ++entry)
-            printf("%s\n", *entry);
+            outln("{}", *entry);
 
         return 0;
     }

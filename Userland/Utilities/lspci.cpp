@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 
     auto proc_pci = Core::File::construct("/proc/pci");
     if (!proc_pci->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", proc_pci->error_string());
+        warnln("Failed to open {}: {}", proc_pci->name(), proc_pci->error_string());
         return 1;
     }
 

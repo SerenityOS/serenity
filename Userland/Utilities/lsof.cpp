@@ -66,7 +66,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 {
     auto file = Core::File::open(String::formatted("/proc/{}/fds", pid), Core::OpenMode::ReadOnly);
     if (file.is_error()) {
-        printf("lsof: PID %d: %s\n", pid, file.error().characters());
+        outln("lsof: PID {}: {}", pid, file.error());
         return Vector<OpenFile>();
     }
     auto data = file.value()->read_all();
@@ -95,7 +95,7 @@ static Vector<OpenFile> get_open_files_by_pid(pid_t pid)
 
 static void display_entry(const OpenFile& file, const Core::ProcessStatistics& statistics)
 {
-    printf("%-28s %4d %4d %-10s %4d %s\n", statistics.name.characters(), file.pid, statistics.pgid, statistics.username.characters(), file.fd, file.full_name.characters());
+    outln("{:28} {:>4} {:>4} {:10} {:>4} {}", statistics.name, file.pid, statistics.pgid, statistics.username, file.fd, file.full_name);
 }
 
 int main(int argc, char* argv[])
@@ -145,7 +145,7 @@ int main(int argc, char* argv[])
             arg_uid_int = arg.value();
     }
 
-    printf("%-28s %4s %4s %-10s %4s %s\n", "COMMAND", "PID", "PGID", "USER", "FD", "NAME");
+    outln("{:28} {:>4} {:>4} {:10} {:>4} {}", "COMMAND", "PID", "PGID", "USER", "FD", "NAME");
     auto processes = Core::ProcessStatisticsReader::get_all();
     if (!processes.has_value())
         return 1;

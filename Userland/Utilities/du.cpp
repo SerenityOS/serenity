@@ -136,7 +136,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
     if (--max_depth >= 0 && S_ISDIR(path_stat.st_mode)) {
         auto di = Core::DirIterator(path, Core::DirIterator::SkipParentAndBaseDir);
         if (di.has_error()) {
-            fprintf(stderr, "DirIterator: %s\n", di.error_string());
+            warnln("DirIterator: {}", di.error_string());
             return 1;
         }
         while (di.has_next()) {
@@ -167,7 +167,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
     size = size / block_size + (size % block_size != 0);
 
     if (du_option.time_type == DuOption::TimeType::NotUsed)
-        printf("%" PRIi64 "\t%s\n", size, path.characters());
+        outln("{}\t{}", size, path);
     else {
         auto time = path_stat.st_mtime;
         switch (du_option.time_type) {
@@ -181,7 +181,7 @@ int print_space_usage(const String& path, const DuOption& du_option, int max_dep
         }
 
         const auto formatted_time = Core::DateTime::from_timestamp(time).to_string();
-        printf("%" PRIi64 "\t%s\t%s\n", size, formatted_time.characters(), path.characters());
+        outln("{}\t{}\t{}", size, formatted_time, path);
     }
 
     return 0;

@@ -85,18 +85,18 @@ int main(int argc, char** argv)
 
     auto print_column = [](auto& column, auto& string) {
         if (!column.width) {
-            printf("%s", string.characters());
+            out("{}", string);
             return;
         }
         if (column.alignment == Alignment::Right)
-            printf("%*s ", column.width, string.characters());
+            out("{1:>{0}} ", column.width, string);
         else
-            printf("%-*s ", column.width, string.characters());
+            out("{1:{0}} ", column.width, string);
     };
 
     for (auto& column : columns)
         print_column(column, column.title);
-    printf("\n");
+    outln();
 
     auto processes = Core::ProcessStatisticsReader::get_all();
     if (!processes.has_value())
@@ -132,7 +132,7 @@ int main(int argc, char** argv)
 
         for (auto& column : columns)
             print_column(column, column.buffer);
-        printf("\n");
+        outln();
     }
 
     return 0;

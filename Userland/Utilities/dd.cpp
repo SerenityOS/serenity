@@ -41,7 +41,7 @@ static String split_at_equals(const char* argument)
 
     auto values = string_value.split('=');
     if (values.size() != 2) {
-        fprintf(stderr, "Unable to parse: %s\n", argument);
+        warnln("Unable to parse: {}", argument);
         return {};
     } else {
         return values[1];
@@ -57,7 +57,7 @@ static int handle_io_file_arguments(int& fd, int flags, const char* argument)
 
     fd = open(value.characters(), flags, 0666);
     if (fd == -1) {
-        fprintf(stderr, "Unable to open: %s\n", value.characters());
+        warnln("Unable to open: {}", value);
         return -1;
     } else {
         return 0;
@@ -89,13 +89,13 @@ static int handle_size_arguments(size_t& numeric_value, const char* argument)
 
     Optional<unsigned> numeric_optional = value.to_uint();
     if (!numeric_optional.has_value()) {
-        fprintf(stderr, "Invalid size-value: %s\n", value.characters());
+        warnln("Invalid size-value: {}", value);
         return -1;
     }
 
     numeric_value = numeric_optional.value() * suffix_multiplier;
     if (numeric_value < 1) {
-        fprintf(stderr, "Invalid size-value: %lu\n", numeric_value);
+        warnln("Invalid size-value: {}", numeric_value);
         return -1;
     } else {
         return 0;
@@ -119,7 +119,7 @@ static int handle_status_arguments(Status& status, const char* argument)
         status = None;
         return 0;
     } else {
-        fprintf(stderr, "Unknown status: %s\n", value.characters());
+        warnln("Unknown status: {}", value);
         return -1;
     }
 }
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
 
     for (int a = 1; a < argc; a++) {
         if (!strcmp(argv[a], "--help")) {
-            printf("%s", usage);
+            out("{}", usage);
             return 0;
         } else if (!strncmp(argv[a], "if=", 3)) {
             if (handle_io_file_arguments(input_fd, input_flags, argv[a]) < 0) {
@@ -175,19 +175,19 @@ int main(int argc, char** argv)
                 return 1;
             }
         } else {
-            fprintf(stderr, "%s", usage);
+            warn("{}", usage);
             return 1;
         }
     }
 
     if ((buffer = (uint8_t*)malloc(block_size)) == nullptr) {
-        fprintf(stderr, "Unable to allocate %lu bytes for the buffer.\n", block_size);
+        warnln("Unable to allocate {} bytes for the buffer.", block_size);
         return -1;
     }
 
     if (seek > 0) {
         if (lseek(output_fd, seek * block_size, SEEK_SET) < 0) {
-            fprintf(stderr, "Unable to seek %lu bytes.\n", seek * block_size);
+            warnln("Unable to seek {} bytes.", seek * block_size);
             return -1;
         }
     }
@@ -195,7 +195,7 @@ int main(int argc, char** argv)
     while (1) {
         nread = read(input_fd, buffer, block_size);
         if (nread < 0) {
-            fprintf(stderr, "Cannot read from the input.\n");
+            warnln("Cannot read from the input.");
             break;
         } else if (nread == 0) {
             break;
@@ -212,7 +212,7 @@ int main(int argc, char** argv)
 
             nwritten = write(output_fd, buffer, nread);
             if (nwritten < 0) {
-                fprintf(stderr, "Cannot write to the output.\n");
+                warnln("Cannot write to the output.");
                 break;
             } else if (nwritten == 0) {
                 break;
@@ -233,9 +233,9 @@ int main(int argc, char** argv)
     }
 
     if (status == Default) {
-        fprintf(stderr, "%lu+%lu blocks in\n", total_blocks_in, partial_blocks_in);
-        fprintf(stderr, "%lu+%lu blocks out\n", total_blocks_out, partial_blocks_out);
-        fprintf(stderr, "%lu bytes copied.\n", total_bytes_copied);
+        warnln("{}+{} blocks in", total_blocks_in, partial_blocks_in);
+        warnln("{}+{} blocks out", total_blocks_out, partial_blocks_out);
+        warnln("{} bytes copied.", total_bytes_copied);
     }
 
     free(buffer);

@@ -37,15 +37,15 @@ int main(int argc, char** argv)
     auto print_line = [&] {
         for (size_t i = 0; i < 16; ++i) {
             if (i < line.size())
-                printf("%02x ", line[i]);
+                out("{:02x} ", line[i]);
             else
-                printf("   ");
+                out("   ");
 
             if (i == 7)
-                printf("  ");
+                out("  ");
         }
 
-        printf("  ");
+        out("  ");
 
         for (size_t i = 0; i < 16; ++i) {
             if (i < line.size() && isprint(line[i]))

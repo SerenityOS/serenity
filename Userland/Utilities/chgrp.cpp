@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     gid_t new_gid = -1;
 
     if (String(gid_arg).is_empty()) {
-        fprintf(stderr, "Empty gid option\n");
+        warnln("Empty gid option");
         return 1;
     }
 
@@ -43,7 +43,7 @@ int main(int argc, char** argv)
     } else {
         auto* group = getgrnam(gid_arg);
         if (!group) {
-            fprintf(stderr, "Unknown group '%s'\n", gid_arg);
+            warnln("Unknown group '{}'", gid_arg);
             return 1;
         }
         new_gid = group->gr_gid;

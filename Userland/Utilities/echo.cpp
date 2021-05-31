@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -23,12 +24,8 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(values, "Values to print out", "string", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
-    for (size_t i = 0; i < values.size(); ++i) {
-        fputs(values[i], stdout);
-        if (i != values.size() - 1)
-            fputc(' ', stdout);
-    }
+    out("{}", String::join(' ', values));
     if (!no_trailing_newline)
-        printf("\n");
+        outln();
     return 0;
 }

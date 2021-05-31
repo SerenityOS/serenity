@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -12,7 +13,7 @@
 int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("usage: fgrep <str>\n");
+        warnln("usage: fgrep <str>");
         return 0;
     }
     for (;;) {

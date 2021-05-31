@@ -13,7 +13,6 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <inttypes.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 static bool flag_human_readable = false;
@@ -37,14 +36,14 @@ int main(int argc, char** argv)
 
     auto file = Core::File::construct("/proc/df");
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/df: %s\n", file->error_string());
+        warnln("Failed to open {}: {}", file->name(), file->error_string());
         return 1;
     }
 
     if (flag_human_readable) {
-        printf("Filesystem      Size        Used    Available   Mount point\n");
+        outln("Filesystem      Size        Used    Available   Mount point");
     } else {
-        printf("Filesystem    Blocks        Used    Available   Mount point\n");
+        outln("Filesystem    Blocks        Used    Available   Mount point");
     }
 
     auto file_contents = file->read_all();
@@ -61,20 +60,20 @@ int main(int argc, char** argv)
         auto block_size = fs_object.get("block_size").to_u64();
         auto mount_point = fs_object.get("mount_point").to_string();
 
-        printf("%-10s", fs.characters());
+        out("{:10}", fs);
 
         if (flag_human_readable) {
-            printf("%10s  ", human_readable_size(total_block_count * block_size).characters());
-            printf("%10s   ", human_readable_size((total_block_count - free_block_count) * block_size).characters());
-            printf("%10s   ", human_readable_size(free_block_count * block_size).characters());
+            out("{:>10}  ", human_readable_size(total_block_count * block_size));
+            out("{:>10}   ", human_readable_size((total_block_count - free_block_count) * block_size));
+            out("{:>10}   ", human_readable_size(free_block_count * block_size));
         } else {
-            printf("%10" PRIu64 "  ", (uint64_t)total_block_count);
-            printf("%10" PRIu64 "   ", (uint64_t)(total_block_count - free_block_count));
-            printf("%10" PRIu64 "   ", (uint64_t)free_block_count);
+            out("{:>10}  ", (uint64_t)total_block_count);
+            out("{:>10}   ", (uint64_t)(total_block_count - free_block_count));
+            out("{:>10}   ", (uint64_t)free_block_count);
         }
 
-        printf("%s", mount_point.characters());
-        printf("\n");
+        out("{}", mount_point);
+        outln();
     });
 
     return 0;

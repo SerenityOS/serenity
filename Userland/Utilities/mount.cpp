@@ -36,7 +36,7 @@ static int parse_options(const StringView& options)
         else if (part == "remount")
             flags |= MS_REMOUNT;
         else
-            fprintf(stderr, "Ignoring invalid option: %s\n", part.to_string().characters());
+            warnln("Ignoring invalid option: {}", part);
     }
     return flags;
 }
@@ -69,7 +69,7 @@ static bool mount_all()
 
     auto fstab = Core::File::construct("/etc/fstab");
     if (!fstab->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Failed to open /etc/fstab: %s\n", fstab->error_string());
+        warnln("Failed to open {}: {}", fstab->name(), fstab->error_string());
         return false;
     }
 
@@ -83,7 +83,7 @@ static bool mount_all()
 
         Vector<String> parts = line.split('\t');
         if (parts.size() < 3) {
-            fprintf(stderr, "Invalid fstab entry: %s\n", line.characters());
+            warnln("Invalid fstab entry: {}", line);
             all_ok = false;
             continue;
         }
@@ -105,7 +105,7 @@ static bool mount_all()
 
         int rc = mount(fd, mountpoint, fstype, flags);
         if (rc != 0) {
-            fprintf(stderr, "Failed to mount %s (FD: %d) (%s) on %s: %s\n", filename, fd, fstype, mountpoint, strerror(errno));
+            warnln("Failed to mount {} (FD: {}) ({}) on {}: {}", filename, fd, fstype, mountpoint, strerror(errno));
             all_ok = false;
             continue;
         }
@@ -119,7 +119,7 @@ static bool print_mounts()
     // Output info about currently mounted filesystems.
     auto df = Core::File::construct("/proc/df");
     if (!df->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
+        warnln("Failed to open {}: {}", df->name(), df->error_string());
         return false;
     }
 
@@ -135,23 +135,23 @@ static bool print_mounts()
         auto readonly = fs_object.get("readonly").to_bool();
         auto mount_flags = fs_object.get("mount_flags").to_int();
 
-        printf("%s on %s type %s (", source.characters(), mount_point.characters(), class_name.characters());
+        out("{} on {} type {} (", source, mount_point, class_name);
 
         if (readonly || mount_flags & MS_RDONLY)
-            printf("ro");
+            out("ro");
         else
-            printf("rw");
+            out("rw");
 
         if (mount_flags & MS_NODEV)
-            printf(",nodev");
+            out(",nodev");
         if (mount_flags & MS_NOEXEC)
-            printf(",noexec");
+            out(",noexec");
         if (mount_flags & MS_NOSUID)
-            printf(",nosuid");
+            out(",nosuid");
         if (mount_flags & MS_BIND)
-            printf(",bind");
+            out(",bind");
 
-        printf(")\n");
+        outln(")");
     });
 
     return true;

@@ -26,9 +26,9 @@ enum class BinaryFileMode {
 template<typename... Ts>
 void fail(StringView format, Ts... args)
 {
-    fprintf(stderr, "\x1b[31m");
+    warn("\x1b[31m");
     warnln(format, forward<Ts>(args)...);
-    fprintf(stderr, "\x1b[0m");
+    warn("\x1b[0m");
     abort();
 }
 

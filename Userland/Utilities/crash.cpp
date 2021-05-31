@@ -249,7 +249,7 @@ int main(int argc, char** argv)
     if (do_use_io_instruction || do_all_crash_types) {
         Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
-            printf("Keyboard status: %#02x\n", keyboard_status);
+            outln("Keyboard status: {:#02x}", keyboard_status);
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
@@ -267,7 +267,7 @@ int main(int argc, char** argv)
                 perror("pledge");
                 return Crash::Failure::DidNotCrash;
             }
-            printf("Didn't pledge 'stdio', this should fail!\n");
+            outln("Didn't pledge 'stdio', this should fail!");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

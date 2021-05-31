@@ -54,25 +54,25 @@ int main(int argc, char** argv)
 
     // Let's run a quick sanity check on username
     if (strpbrk(username, "\\/!@#$%^&*()~+=`:\n")) {
-        fprintf(stderr, "invalid character in username, %s\n", username);
+        warnln("invalid character in username, {}", username);
         return 1;
     }
 
     // Disallow names starting with _ and -
     if (username[0] == '_' || username[0] == '-' || !isalpha(username[0])) {
-        fprintf(stderr, "invalid username, %s\n", username);
+        warnln("invalid username, {}", username);
         return 1;
     }
 
     if (uid < 0) {
-        fprintf(stderr, "invalid uid %d!\n", uid);
+        warnln("invalid uid {}!", uid);
         return 3;
     }
 
     // First, let's sort out the uid for the user
     if (uid > 0) {
         if (getpwuid(static_cast<uid_t>(uid))) {
-            fprintf(stderr, "uid %u already exists!\n", uid);
+            warnln("uid {} already exists!", uid);
             return 4;
         }
 
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
     }
 
     if (gid < 0) {
-        fprintf(stderr, "invalid gid %d\n", gid);
+        warnln("invalid gid {}", gid);
         return 3;
     }
 

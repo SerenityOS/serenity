@@ -78,16 +78,16 @@ int head(const String& filename, bool print_filename, ssize_t line_count, ssize_
     } else {
         fd = open(filename.characters(), O_RDONLY);
         if (fd < 0) {
-            fprintf(stderr, "can't open %s for reading: %s\n", filename.characters(), strerror(errno));
+            warnln("Failed to open {}: {}", filename, strerror(errno));
             return 1;
         }
     }
 
     if (print_filename) {
         if (is_stdin) {
-            puts("==> standard input <==");
+            outln("==> standard input <==");
         } else {
-            printf("==> %s <==\n", filename.characters());
+            outln("==> {} <==", filename);
         }
     }
 

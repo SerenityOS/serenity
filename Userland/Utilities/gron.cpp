@@ -42,13 +42,13 @@ int main(int argc, char** argv)
     }
 
     if (argc != 2 || !strcmp(argv[1], "--help")) {
-        fprintf(stderr, "usage: gron <file>\n");
-        fprintf(stderr, "Print each value in a JSON file with its fully expanded key.\n");
+        warnln("usage: gron <file>");
+        warnln("Print each value in a JSON file with its fully expanded key.");
         return 0;
     }
     auto file = Core::File::construct(argv[1]);
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
+        warnln("Failed to open {}: {}", file->name(), file->error_string());
         return 1;
     }
 
@@ -79,19 +79,19 @@ int main(int argc, char** argv)
 static void print(const String& name, const JsonValue& value, Vector<String>& trail)
 {
     for (size_t i = 0; i < trail.size(); ++i)
-        printf("%s", trail[i].characters());
+        out("{}", trail[i]);
 
-    printf("%s%s%s = ", color_name, name.characters(), color_off);
+    out("{}{}{} = ", color_name, name, color_off);
 
     if (value.is_object()) {
-        printf("%s{}%s;\n", color_brace, color_off);
+        outln("{}{{}}{};", color_brace, color_off);
         trail.append(String::formatted("{}{}{}.", color_name, name, color_off));
         value.as_object().for_each_member([&](auto& on, auto& ov) { print(on, ov, trail); });
         trail.take_last();
         return;
     }
     if (value.is_array()) {
-        printf("%s[]%s;\n", color_brace, color_off);
+        outln("{}[]{};", color_brace, color_off);
         trail.append(String::formatted("{}{}{}", color_name, name, color_off));
         for (int i = 0; i < value.as_array().size(); ++i) {
             auto element_name = String::formatted("{}{}[{}{}{}{}{}]{}", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
@@ -102,18 +102,18 @@ static void print(const String& name, const JsonValue& value, Vector<String>& tr
     }
     switch (value.type()) {
     case JsonValue::Type::Null:
-        printf("%s", color_null);
+        out("{}", color_null);
         break;
     case JsonValue::Type::Bool:
-        printf("%s", color_bool);
+        out("{}", color_bool);
         break;
     case JsonValue::Type::String:
-        printf("%s", color_string);
+        out("{}", color_string);
         break;
     default:
-        printf("%s", color_index);
+        out("{}", color_index);
         break;
     }
 
-    printf("%s%s;\n", value.serialized<StringBuilder>().characters(), color_off);
+    outln("{}{};", value.serialized<StringBuilder>(), color_off);
 }

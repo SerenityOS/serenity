@@ -23,7 +23,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
     for (auto& it : processes.value()) {
         if (it.name == process_name) {
             if (!omit_pid || it.pid != pid) {
-                printf(" %d" + (displayed_at_least_one ? 0 : 1), it.pid);
+                out(displayed_at_least_one ? " {}" : "{}", it.pid);
                 displayed_at_least_one = true;
 
                 if (single_shot)
@@ -33,7 +33,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
     }
 
     if (displayed_at_least_one)
-        printf("\n");
+        outln();
 
     return 0;
 }
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         } else {
             auto number = StringView(omit_pid_value).to_uint();
             if (!number.has_value()) {
-                fprintf(stderr, "Invalid value for -o\n");
+                warnln("Invalid value for -o");
                 args_parser.print_usage(stderr, argv[0]);
                 return 1;
             }

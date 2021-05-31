@@ -30,9 +30,9 @@ int main(int argc, char** argv)
             perror(path);
             return 1;
         }
-        printf("%s", destination.characters());
+        out("{}", destination);
         if (!no_newline)
-            putchar('\n');
+            outln();
     }
 
     return 0;

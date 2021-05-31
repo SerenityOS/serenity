@@ -25,21 +25,21 @@ int main(int argc, char** argv)
     auto audio_client = Audio::ClientConnection::construct();
     NonnullRefPtr<Audio::Loader> loader = Audio::Loader::create(path);
     if (loader->has_error()) {
-        fprintf(stderr, "Failed to load audio file: %s\n", loader->error_string());
+        warnln("Failed to load audio file: {}", loader->error_string());
         return 1;
     }
 
-    printf("\033[34;1m Playing\033[0m: %s\n", path);
-    printf("\033[34;1m  Format\033[0m: %u Hz, %u-bit, %s\n",
+    outln("\033[34;1m Playing\033[0m: {}", path);
+    outln("\033[34;1m  Format\033[0m: {} Hz, {}-bit, {}",
         loader->sample_rate(),
         loader->bits_per_sample(),
         loader->num_channels() == 1 ? "Mono" : "Stereo");
-    printf("\033[34;1mProgress\033[0m: \033[s");
+    out("\033[34;1mProgress\033[0m: \033[s");
     for (;;) {
         auto samples = loader->get_more_samples();
         if (samples) {
-            printf("\033[u");
-            printf("%d/%d", loader->loaded_samples(), loader->total_samples());
+            out("\033[u");
+            out("{}/{}", loader->loaded_samples(), loader->total_samples());
             fflush(stdout);
             audio_client->enqueue(*samples);
         } else if (should_loop) {
@@ -50,6 +50,6 @@ int main(int argc, char** argv)
             break;
         }
     }
-    printf("\n");
+    outln();
     return 0;
 }

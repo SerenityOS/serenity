@@ -41,7 +41,7 @@ int main(int argc, char** argv)
         ? Core::Account::from_name(user)
         : Core::Account::from_uid(0);
     if (account_or_error.is_error()) {
-        fprintf(stderr, "Core::Account::from_name: %s\n", account_or_error.error().characters());
+        warnln("Core::Account::from_name: {}", account_or_error.error());
         return 1;
     }
 

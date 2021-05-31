@@ -15,7 +15,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: kill [-signal] <PID>\n");
+    warnln("usage: kill [-signal] <PID>");
     exit(1);
 }
 
@@ -57,14 +57,14 @@ int main(int argc, char** argv)
             number = StringView(&argv[1][1]).to_uint();
 
         if (!number.has_value()) {
-            printf("'%s' is not a valid signal name or number\n", &argv[1][1]);
+            warnln("'{}' is not a valid signal name or number", &argv[1][1]);
             return 2;
         }
         signum = number.value();
     }
     auto pid_opt = String(argv[pid_argi]).to_int();
     if (!pid_opt.has_value()) {
-        printf("'%s' is not a valid PID\n", argv[pid_argi]);
+        warnln("'{}' is not a valid PID", argv[pid_argi]);
         return 3;
     }
     pid_t pid = pid_opt.value();

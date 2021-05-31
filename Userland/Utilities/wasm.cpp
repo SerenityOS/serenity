@@ -27,15 +27,15 @@ static void print_buffer(ReadonlyBytes buffer, int split)
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
             if (i % split == 0 && i) {
-                printf("    ");
+                out("    ");
                 for (size_t j = i - split; j < i; ++j) {
                     auto ch = buffer[j];
-                    printf("%c", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
+                    out("{:c}", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
                 }
-                puts("");
+                outln();
             }
         }
-        printf("%02x ", buffer[i]);
+        out("{:02x} ", buffer[i]);
     }
     puts("");
 }

@@ -56,5 +56,5 @@ int main(int argc, char** argv)
     }
 
     auto encoded = encode_base64(buffer);
-    printf("%s\n", encoded.characters());
+    outln("{}", encoded);
 }

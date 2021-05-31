@@ -13,7 +13,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: killall [-signal] process_name\n");
+    warnln("usage: killall [-signal] process_name");
     exit(1);
 }
 
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
             number = String(&argv[1][1]).to_uint();
 
         if (!number.has_value()) {
-            printf("'%s' is not a valid signal name or number\n", &argv[1][1]);
+            warnln("'{}' is not a valid signal name or number", &argv[1][1]);
             return 2;
         }
         signum = number.value();

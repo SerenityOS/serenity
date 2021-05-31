@@ -35,22 +35,22 @@ int main(int argc, char** argv)
         // Okay, let's do a reverse lookup.
         auto* hostent = gethostbyaddr(&addr.sin_addr, sizeof(in_addr), AF_INET);
         if (!hostent) {
-            fprintf(stderr, "Reverse lookup failed for '%s'\n", name_or_ip);
+            warnln("Reverse lookup failed for '{}'", name_or_ip);
             return 1;
         }
-        printf("%s is %s\n", name_or_ip, hostent->h_name);
+        outln("{} is {}", name_or_ip, hostent->h_name);
         return 0;
     }
 
     auto* hostent = gethostbyname(name_or_ip);
     if (!hostent) {
-        fprintf(stderr, "Lookup failed for '%s'\n", name_or_ip);
+        warnln("Lookup failed for '{}'", name_or_ip);
         return 1;
     }
 
     char buffer[INET_ADDRSTRLEN];
     const char* ip_str = inet_ntop(AF_INET, hostent->h_addr_list[0], buffer, sizeof(buffer));
 
-    printf("%s is %s\n", name_or_ip, ip_str);
+    outln("{} is {}", name_or_ip, ip_str);
     return 0;
 }

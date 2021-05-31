@@ -25,10 +25,10 @@ int main(int argc, char** argv)
             perror("gethostname");
             return 1;
         }
-        printf("%s\n", buffer);
+        outln("{}", buffer);
     } else {
         if (strlen(hostname) >= HOST_NAME_MAX) {
-            fprintf(stderr, "Hostname must be less than %i characters\n", HOST_NAME_MAX);
+            warnln("Hostname must be less than {} characters", HOST_NAME_MAX);
             return 1;
         }
         sethostname(hostname, strlen(hostname));
