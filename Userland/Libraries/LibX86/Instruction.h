@@ -864,14 +864,14 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
     if (!m_descriptor->mnemonic) {
         if (has_sub_op()) {
             if (has_slash)
-                fprintf(stderr, "Instruction %02X %02X /%u not understood\n", m_op, m_sub_op, slash());
+                warnln("Instruction {:02X} {:02X} /{} not understood", m_op, m_sub_op, slash());
             else
-                fprintf(stderr, "Instruction %02X %02X not understood\n", m_op, m_sub_op);
+                warnln("Instruction {:02X} {:02X} not understood", m_op, m_sub_op);
         } else {
             if (has_slash)
-                fprintf(stderr, "Instruction %02X /%u not understood\n", m_op, slash());
+                warnln("Instruction {:02X} /{} not understood", m_op, slash());
             else
-                fprintf(stderr, "Instruction %02X not understood\n", m_op);
+                warnln("Instruction {:02X} not understood", m_op);
         }
         m_descriptor = nullptr;
         return;
@@ -915,7 +915,7 @@ ALWAYS_INLINE Instruction::Instruction(InstructionStreamType& stream, bool o32, 
 
 #ifdef DISALLOW_INVALID_LOCK_PREFIX
     if (m_has_lock_prefix && !m_descriptor->lock_prefix_allowed) {
-        fprintf(stderr, "Instruction not allowed with LOCK prefix, this will raise #UD\n");
+        warnln("Instruction not allowed with LOCK prefix, this will raise #UD");
         m_descriptor = nullptr;
     }
 #endif
