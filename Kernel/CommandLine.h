@@ -49,8 +49,8 @@ public:
     static void initialize();
 
     [[nodiscard]] const String& string() const { return m_string; }
-    Optional<String> lookup(const String& key) const;
-    [[nodiscard]] bool contains(const String& key) const;
+    Optional<String> lookup(const StringView& key) const;
+    [[nodiscard]] bool contains(const StringView& key) const;
 
     [[nodiscard]] bool is_boot_profiling_enabled() const;
     [[nodiscard]] bool is_ide_enabled() const;
@@ -76,11 +76,11 @@ public:
 private:
     CommandLine(const String&);
 
-    void add_arguments(const Vector<String>& args);
+    void add_arguments(const Vector<StringView>& args);
     void build_commandline(const String& cmdline_from_bootloader);
 
     String m_string;
-    HashMap<String, String> m_params;
+    HashMap<StringView, StringView> m_params;
 };
 
 const CommandLine& kernel_command_line();
