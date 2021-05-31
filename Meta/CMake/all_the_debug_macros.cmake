@@ -68,7 +68,6 @@ set(PORTABLE_IMAGE_LOADER_DEBUG ON)
 set(SYNTAX_HIGHLIGHTING_DEBUG ON)
 set(KEYBOARD_SHORTCUTS_DEBUG ON)
 set(KMALLOC_DEBUG ON)
-set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
 set(MARKDOWN_DEBUG ON)
 set(REGEX_DEBUG ON)
 set(TLS_DEBUG ON)
@@ -208,3 +207,5 @@ set(WEBSERVER_DEBUG ON)
 # set(DEFINE_DEBUG_REGISTER ON)
 # Clogs up build: The WrapperGenerator stuff is run at compile time.
 # set(WRAPPER_GENERATOR_DEBUG ON)
+# Immediately finds violations during boot, shouldn't be discoverable by people who aren't working on fixing.
+# set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
