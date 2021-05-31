@@ -169,6 +169,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Right) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
+            set_override_cursor(Gfx::StandardCursor::None);
             m_available_moves.clear();
         } else {
             m_current_marking.from = mouse_to_square(event);
@@ -181,6 +182,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     auto piece = board().get_piece(square);
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
+        set_override_cursor(Gfx::StandardCursor::Drag);
         m_drag_point = event.position();
         m_moving_square = square;
 
@@ -219,6 +221,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         return;
 
     m_dragging_piece = false;
+    set_override_cursor(Gfx::StandardCursor::Hand);
     m_available_moves.clear();
 
     auto target_square = mouse_to_square(event);
@@ -282,6 +285,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
                 VERIFY_NOT_REACHED();
             }
             if (over) {
+                set_override_cursor(Gfx::StandardCursor::None);
                 set_drag_enabled(false);
                 update();
                 GUI::MessageBox::show(window(), msg, "Game Over", GUI::MessageBox::Type::Information);
@@ -299,8 +303,20 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
-    if (!m_dragging_piece)
+    if (m_engine && board().turn() != side())
         return;
+
+    if (!m_dragging_piece) {
+        auto square = mouse_to_square(event);
+        if (!square.in_bounds())
+            return;
+        auto piece = board().get_piece(square);
+        if (piece.color == board().turn())
+            set_override_cursor(Gfx::StandardCursor::Hand);
+        else
+            set_override_cursor(Gfx::StandardCursor::None);
+        return;
+    }
 
     m_drag_point = event.position();
     update();
@@ -308,6 +324,7 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
 
 void ChessWidget::keydown_event(GUI::KeyEvent& event)
 {
+    set_override_cursor(Gfx::StandardCursor::None);
     switch (event.key()) {
     case KeyCode::Key_Left:
         playback_move(PlaybackDirection::Backward);
