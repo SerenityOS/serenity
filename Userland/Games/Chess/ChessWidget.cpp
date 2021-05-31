@@ -169,6 +169,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     if (event.button() == GUI::MouseButton::Right) {
         if (m_dragging_piece) {
             m_dragging_piece = false;
+            set_override_cursor(Gfx::StandardCursor::None);
             m_available_moves.clear();
         } else {
             m_current_marking.from = mouse_to_square(event);
@@ -181,6 +182,7 @@ void ChessWidget::mousedown_event(GUI::MouseEvent& event)
     auto piece = board().get_piece(square);
     if (drag_enabled() && piece.color == board().turn() && !m_playback) {
         m_dragging_piece = true;
+        set_override_cursor(Gfx::StandardCursor::Drag);
         m_drag_point = event.position();
         m_moving_square = square;
 
@@ -219,6 +221,7 @@ void ChessWidget::mouseup_event(GUI::MouseEvent& event)
         return;
 
     m_dragging_piece = false;
+    set_override_cursor(Gfx::StandardCursor::Hand);
     m_available_moves.clear();
 
     auto target_square = mouse_to_square(event);
@@ -299,8 +302,15 @@ void ChessWidget::mousemove_event(GUI::MouseEvent& event)
     if (!frame_inner_rect().contains(event.position()))
         return;
 
-    if (!m_dragging_piece)
+    if (!m_dragging_piece) {
+        auto square = mouse_to_square(event);
+        auto piece = board().get_piece(square);
+        if(piece.color == board().turn())
+            set_override_cursor(Gfx::StandardCursor::Hand);
+        else
+            set_override_cursor(Gfx::StandardCursor::None);
         return;
+    }
 
     m_drag_point = event.position();
     update();
