@@ -10,10 +10,10 @@
 
 namespace Web::HTML {
 
-class FrameHostElement : public HTMLElement {
+class BrowsingContextContainer : public HTMLElement {
 public:
-    FrameHostElement(DOM::Document&, QualifiedName);
-    virtual ~FrameHostElement() override;
+    BrowsingContextContainer(DOM::Document&, QualifiedName);
+    virtual ~BrowsingContextContainer() override;
 
     BrowsingContext* nested_browsing_context() { return m_nested_browsing_context; }
     const BrowsingContext* nested_browsing_context() const { return m_nested_browsing_context; }
