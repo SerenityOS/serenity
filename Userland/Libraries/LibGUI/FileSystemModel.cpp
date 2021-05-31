@@ -93,7 +93,7 @@ void FileSystemModel::Node::traverse_if_needed()
     Core::DirIterator di(full_path, m_model.should_show_dotfiles() ? Core::DirIterator::SkipParentAndBaseDir : Core::DirIterator::SkipDots);
     if (di.has_error()) {
         m_error = di.error();
-        fprintf(stderr, "DirIterator: %s\n", di.error_string());
+        warnln("DirIterator: {}", di.error_string());
         return;
     }
 

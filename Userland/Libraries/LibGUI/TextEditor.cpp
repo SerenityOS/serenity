@@ -1291,7 +1291,7 @@ void TextEditor::cut()
     if (!is_editable())
         return;
     auto selected_text = this->selected_text();
-    printf("Cut: \"%s\"\n", selected_text.characters());
+    dbgln("Cut: \"{}\"", selected_text);
     Clipboard::the().set_plain_text(selected_text);
     delete_selection();
 }
@@ -1299,7 +1299,7 @@ void TextEditor::cut()
 void TextEditor::copy()
 {
     auto selected_text = this->selected_text();
-    printf("Copy: \"%s\"\n", selected_text.characters());
+    dbgln("Copy: \"{}\"\n", selected_text);
     Clipboard::the().set_plain_text(selected_text);
 }
 
@@ -1313,7 +1313,7 @@ void TextEditor::paste()
     if (paste_text.is_empty())
         return;
 
-    printf("Paste: \"%s\"\n", String::copy(paste_text).characters());
+    dbgln("Paste: \"{}\"", String::copy(paste_text));
 
     TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(paste_text);
