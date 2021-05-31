@@ -77,7 +77,7 @@ static bool parse_grpdb_entry(const String& line)
 {
     auto parts = line.split_view(':', true);
     if (parts.size() != 4) {
-        fprintf(stderr, "getgrent(): Malformed entry on line %u: '%s' has %zu parts\n", s_line_number, line.characters(), parts.size());
+        warnln("getgrent(): Malformed entry on line {}: '{}' has {} parts", s_line_number, line, parts.size());
         return false;
     }
 
@@ -89,7 +89,7 @@ static bool parse_grpdb_entry(const String& line)
 
     auto gid = gid_string.to_uint();
     if (!gid.has_value()) {
-        fprintf(stderr, "getgrent(): Malformed GID on line %u\n", s_line_number);
+        warnln("getgrent(): Malformed GID on line {}", s_line_number);
         return false;
     }
 
@@ -119,7 +119,7 @@ struct group* getgrent()
             return nullptr;
 
         if (ferror(s_stream)) {
-            fprintf(stderr, "getgrent(): Read error: %s\n", strerror(ferror(s_stream)));
+            warnln("getgrent(): Read error: {}", strerror(ferror(s_stream)));
             return nullptr;
         }
 

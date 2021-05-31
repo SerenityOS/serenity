@@ -9,7 +9,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <assert.h>
-#include <stdio.h>
 #include <string.h>
 #include <termcap.h>
 
@@ -21,8 +20,7 @@ char* BC;
 
 int tgetent([[maybe_unused]] char* bp, [[maybe_unused]] const char* name)
 {
-    if constexpr (TERMCAP_DEBUG)
-        fprintf(stderr, "tgetent: bp=%p, name='%s'\n", bp, name);
+    warnln_if(TERMCAP_DEBUG, "tgetent: bp={:p}, name='{}'", bp, name);
     PC = '\0';
     BC = const_cast<char*>("\033[D");
     UP = const_cast<char*>("\033[A");
@@ -80,8 +78,7 @@ static void ensure_caps()
 char* tgetstr(const char* id, char** area)
 {
     ensure_caps();
-    if constexpr (TERMCAP_DEBUG)
-        fprintf(stderr, "tgetstr: id='%s'\n", id);
+    warnln_if(TERMCAP_DEBUG, "tgetstr: id='{}'", id);
     auto it = caps->find(id);
     if (it != caps->end()) {
         char* ret = *area;
@@ -90,7 +87,7 @@ char* tgetstr(const char* id, char** area)
         *area += strlen(val) + 1;
         return ret;
     }
-    fprintf(stderr, "tgetstr: missing cap id='%s'\n", id);
+    warnln_if(TERMCAP_DEBUG, "tgetstr: missing cap id='{}'", id);
     return nullptr;
 }
 
@@ -98,8 +95,7 @@ char* tgetstr(const char* id, char** area)
 
 int tgetflag([[maybe_unused]] const char* id)
 {
-    if constexpr (TERMCAP_DEBUG)
-        fprintf(stderr, "tgetflag: '%s'\n", id);
+    warnln_if(TERMCAP_DEBUG, "tgetflag: '{}'", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return 1;
@@ -108,8 +104,7 @@ int tgetflag([[maybe_unused]] const char* id)
 
 int tgetnum(const char* id)
 {
-    if constexpr (TERMCAP_DEBUG)
-        fprintf(stderr, "tgetnum: '%s'\n", id);
+    warnln_if(TERMCAP_DEBUG, "tgetnum: '{}'", id);
     auto it = caps->find(id);
     if (it != caps->end())
         return atoi((*it).value);
