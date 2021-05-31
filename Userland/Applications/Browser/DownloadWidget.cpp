@@ -68,8 +68,8 @@ DownloadWidget::DownloadWidget(const URL& url)
     animation_container.set_fixed_height(32);
     auto& animation_layout = animation_container.set_layout<GUI::HorizontalBoxLayout>();
 
-    auto& browser_image = animation_container.add<GUI::ImageWidget>();
-    browser_image.load_from_file("/res/graphics/download-animation.gif");
+    m_browser_image = animation_container.add<GUI::ImageWidget>();
+    m_browser_image->load_from_file("/res/graphics/download-animation.gif");
     animation_layout.add_spacer();
 
     auto& source_label = add<GUI::Label>(String::formatted("From: {}", url));
@@ -156,6 +156,8 @@ void DownloadWidget::did_finish(bool success)
 {
     dbgln("did_finish, success={}", success);
 
+    m_browser_image->load_from_file("/res/graphics/download-finished.gif");
+    window()->set_title("Download finished!");
     m_close_button->set_enabled(true);
     m_cancel_button->set_text("Open in Folder");
     m_cancel_button->on_click = [this](auto) {
