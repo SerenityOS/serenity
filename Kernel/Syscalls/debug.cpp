@@ -19,7 +19,7 @@ KResultOr<int> Process::sys$dump_backtrace()
 
 KResultOr<int> Process::sys$dbgputch(u8 ch)
 {
-    IO::out8(0xe9, ch);
+    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
     return 0;
 }
 
@@ -33,7 +33,7 @@ KResultOr<size_t> Process::sys$dbgputstr(Userspace<const u8*> characters, int le
         return EFAULT;
     return buffer.value().read_buffered<1024>(length, [&](u8 const* buffer, size_t buffer_size) {
         for (size_t i = 0; i < buffer_size; ++i)
-            IO::out8(0xe9, buffer[i]);
+            IO::out8(IO::BOCHS_DEBUG_PORT, buffer[i]);
         return buffer_size;
     });
 }

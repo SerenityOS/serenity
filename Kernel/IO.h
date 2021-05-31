@@ -13,6 +13,10 @@
 
 namespace IO {
 
+// Every character written to this IO port is written to the Bochs console
+// (e.g. the console where Qemu is running).
+static constexpr u16 BOCHS_DEBUG_PORT = 0xE9;
+
 inline u8 in8(u16 port)
 {
     u8 value;

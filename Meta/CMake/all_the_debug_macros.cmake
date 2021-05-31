@@ -209,3 +209,7 @@ set(WEBSERVER_DEBUG ON)
 # set(WRAPPER_GENERATOR_DEBUG ON)
 # Immediately finds violations during boot, shouldn't be discoverable by people who aren't working on fixing.
 # set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
+# False positive: CONSOLE_OUT_TO_BOCHS_DEBUG_PORT is a flag for ConsoleDevice, not a feature.
+# set(CONSOLE_OUT_TO_BOCHS_DEBUG_PORT)
+# False positive: BOCHS_DEBUG_PORT represents an IO port constant
+# set(BOCHS_DEBUG_PORT)
