@@ -13,7 +13,7 @@
 namespace Web::HTML {
 
 HTMLIFrameElement::HTMLIFrameElement(DOM::Document& document, QualifiedName qualified_name)
-    : FrameHostElement(document, move(qualified_name))
+    : BrowsingContextContainer(document, move(qualified_name))
 {
 }
 
@@ -36,7 +36,7 @@ void HTMLIFrameElement::parse_attribute(const FlyString& name, const String& val
 
 void HTMLIFrameElement::inserted()
 {
-    FrameHostElement::inserted();
+    BrowsingContextContainer::inserted();
     if (is_connected())
         load_src(attribute(HTML::AttributeNames::src));
 }
