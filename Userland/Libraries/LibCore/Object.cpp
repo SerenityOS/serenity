@@ -149,12 +149,12 @@ void Object::stop_timer()
 void Object::dump_tree(int indent)
 {
     for (int i = 0; i < indent; ++i) {
-        printf(" ");
+        out(" ");
     }
-    printf("%s{%p}", class_name(), this);
+    out("{}{{{:p}}}", class_name(), this);
     if (!name().is_null())
-        printf(" %s", name().characters());
-    printf("\n");
+        out(" {}", name());
+    outln();
 
     for_each_child([&](auto& child) {
         child.dump_tree(indent + 2);
