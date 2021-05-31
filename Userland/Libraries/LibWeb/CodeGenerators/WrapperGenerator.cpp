@@ -397,7 +397,7 @@ int main(int argc, char** argv)
 
     auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
     if (file_or_error.is_error()) {
-        fprintf(stderr, "Cannot open %s\n", path);
+        warnln("Failed to open {}: {}", path, file_or_error.error());
         return 1;
     }
 
