@@ -65,7 +65,7 @@ void Job::on_socket_connected()
 
             auto line = read_line(PAGE_SIZE);
             if (line.is_null()) {
-                fprintf(stderr, "Job: Expected status line\n");
+                warnln("Job: Expected status line");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::TransmissionFailed); });
             }
 
@@ -77,7 +77,7 @@ void Job::on_socket_connected()
 
             auto status = parts[0].to_uint();
             if (!status.has_value()) {
-                fprintf(stderr, "Job: Expected numeric status code\n");
+                warnln("Job: Expected numeric status code");
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
@@ -97,7 +97,7 @@ void Job::on_socket_connected()
             } else if (m_status >= 60 && m_status < 70) {
                 m_state = State::InBody;
             } else {
-                fprintf(stderr, "Job: Expected status between 10 and 69; instead got %d\n", m_status);
+                warnln("Job: Expected status between 10 and 69; instead got {}", m_status);
                 return deferred_invoke([this](auto&) { did_fail(Core::NetworkJob::Error::ProtocolFailed); });
             }
 
