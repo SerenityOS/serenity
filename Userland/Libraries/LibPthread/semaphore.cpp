@@ -111,7 +111,7 @@ int sem_post(sem_t* sem)
     }
 
     rc = pthread_mutex_unlock(&sem->mtx);
-    if (errno != 0) {
+    if (rc != 0) {
         errno = rc;
         return -1;
     }
@@ -153,7 +153,7 @@ int sem_unlink(const char*)
 int sem_wait(sem_t* sem)
 {
     auto rc = pthread_mutex_lock(&sem->mtx);
-    if (errno != 0) {
+    if (rc != 0) {
         errno = rc;
         return -1;
     }
