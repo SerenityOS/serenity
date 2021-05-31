@@ -167,3 +167,88 @@ inline const char* key_code_to_string(KeyCode key)
         return nullptr;
     }
 }
+
+inline KeyCode visible_code_point_to_key_code(u32 code_point)
+{
+    switch (code_point) {
+#define MATCH_ALPHA(letter) \
+    case #letter[0]: \
+    case #letter[0] + 32: \
+        return KeyCode::Key_##letter;
+    MATCH_ALPHA(A)
+    MATCH_ALPHA(B)
+    MATCH_ALPHA(C)
+    MATCH_ALPHA(D)
+    MATCH_ALPHA(E)
+    MATCH_ALPHA(F)
+    MATCH_ALPHA(G)
+    MATCH_ALPHA(H)
+    MATCH_ALPHA(I)
+    MATCH_ALPHA(J)
+    MATCH_ALPHA(K)
+    MATCH_ALPHA(L)
+    MATCH_ALPHA(M)
+    MATCH_ALPHA(N)
+    MATCH_ALPHA(O)
+    MATCH_ALPHA(P)
+    MATCH_ALPHA(Q)
+    MATCH_ALPHA(R)
+    MATCH_ALPHA(S)
+    MATCH_ALPHA(T)
+    MATCH_ALPHA(U)
+    MATCH_ALPHA(V)
+    MATCH_ALPHA(W)
+    MATCH_ALPHA(X)
+    MATCH_ALPHA(Y)
+    MATCH_ALPHA(Z)
+
+#define MATCH(name, character) \
+    case character[0]: \
+        return KeyCode::Key_##name;
+    MATCH(ExclamationPoint, "!")
+    MATCH(DoubleQuote, "\"")
+    MATCH(Hashtag, "#")
+    MATCH(Dollar, "$")
+    MATCH(Percent, "%")
+    MATCH(Ampersand, "&")
+    MATCH(Apostrophe, "'")
+    MATCH(LeftParen, "(")
+    MATCH(RightParen, ")")
+    MATCH(Asterisk, "*")
+    MATCH(Plus, "+")
+    MATCH(Comma, ",")
+    MATCH(Minus, "-")
+    MATCH(Period, ".")
+    MATCH(Slash, "/")
+    MATCH(0, "0")
+    MATCH(1, "1")
+    MATCH(2, "2")
+    MATCH(3, "3")
+    MATCH(4, "4")
+    MATCH(5, "5")
+    MATCH(6, "6")
+    MATCH(7, "7")
+    MATCH(8, "8")
+    MATCH(9, "9")
+    MATCH(Colon, ":")
+    MATCH(Semicolon, ";")
+    MATCH(LessThan, "<")
+    MATCH(Equal, "=")
+    MATCH(GreaterThan, ">")
+    MATCH(QuestionMark, "?")
+    MATCH(AtSign, "@")
+    MATCH(LeftBracket, "[")
+    MATCH(RightBracket, "]")
+    MATCH(Backslash, "\\")
+    MATCH(Circumflex, "^")
+    MATCH(Underscore, "_")
+    MATCH(LeftBrace, "{")
+    MATCH(RightBrace, "}")
+    MATCH(Pipe, "|")
+    MATCH(Tilde, "~")
+    MATCH(Backtick, "`")
+
+    default:
+        return KeyCode::Key_Invalid;
+    }
+}
