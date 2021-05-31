@@ -176,7 +176,7 @@ private:
     virtual KResultOr<u16> protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
     virtual KResult protocol_bind() override;
-    virtual KResult protocol_listen() override;
+    virtual KResult protocol_listen(bool did_allocate_port) override;
 
     void enqueue_for_retransmit();
     void dequeue_for_retransmit();

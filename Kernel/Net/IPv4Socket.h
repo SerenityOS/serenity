@@ -21,6 +21,11 @@ class NetworkAdapter;
 class TCPPacket;
 class TCPSocket;
 
+struct PortAllocationResult {
+    KResultOr<u16> error_or_port;
+    bool did_allocate;
+};
+
 class IPv4Socket : public Socket {
 public:
     static KResultOr<NonnullRefPtr<Socket>> create(int type, int protocol);
@@ -72,10 +77,10 @@ protected:
     IPv4Socket(int type, int protocol);
     virtual const char* class_name() const override { return "IPv4Socket"; }
 
-    KResultOr<u16> allocate_local_port_if_needed();
+    PortAllocationResult allocate_local_port_if_needed();
 
     virtual KResult protocol_bind() { return KSuccess; }
-    virtual KResult protocol_listen() { return KSuccess; }
+    virtual KResult protocol_listen([[maybe_unused]] bool did_allocate_port) { return KSuccess; }
     virtual KResultOr<size_t> protocol_receive(ReadonlyBytes /* raw_ipv4_packet */, UserOrKernelBuffer&, size_t, int) { return ENOTIMPL; }
     virtual KResultOr<size_t> protocol_send(const UserOrKernelBuffer&, size_t) { return ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }

@@ -365,12 +365,15 @@ KResult TCPSocket::protocol_bind()
     return KSuccess;
 }
 
-KResult TCPSocket::protocol_listen()
+KResult TCPSocket::protocol_listen(bool did_allocate_port)
 {
-    Locker locker(sockets_by_tuple().lock());
-    if (sockets_by_tuple().resource().contains(tuple()))
-        return EADDRINUSE;
-    sockets_by_tuple().resource().set(tuple(), this);
+    if (!did_allocate_port) {
+        Locker socket_locker(sockets_by_tuple().lock());
+        if (sockets_by_tuple().resource().contains(tuple()))
+            return EADDRINUSE;
+        sockets_by_tuple().resource().set(tuple(), this);
+    }
+
     set_direction(Direction::Passive);
     set_state(State::Listen);
     set_setup_state(SetupState::Completed);
@@ -387,8 +390,8 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
 
-    if (auto result = allocate_local_port_if_needed(); result.is_error())
-        return result.error();
+    if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error())
+        return result.error_or_port.error();
 
     m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
