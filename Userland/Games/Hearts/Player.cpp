@@ -107,13 +107,17 @@ Optional<size_t> Player::pick_slightly_higher_value_card(Card& other_card)
     return {};
 }
 
-size_t Player::pick_max_points_card()
+size_t Player::pick_max_points_card(Function<bool(Card&)> ignore_card)
 {
     auto queen_of_spades_maybe = pick_specific_card(Card::Type::Spades, CardValue::Queen);
     if (queen_of_spades_maybe.has_value())
         return queen_of_spades_maybe.value();
-    if (has_card_of_type(Card::Type::Hearts))
-        return pick_last_card();
+    if (has_card_of_type(Card::Type::Hearts)) {
+        auto highest_hearts_card_index = pick_last_card();
+        auto& card = hand[highest_hearts_card_index];
+        if (!ignore_card(*card))
+            return highest_hearts_card_index;
+    }
     return pick_low_points_high_value_card().value();
 }
 
