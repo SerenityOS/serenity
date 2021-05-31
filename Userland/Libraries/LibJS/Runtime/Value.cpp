@@ -1020,7 +1020,7 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
         auto lhs_i32 = lhs_numeric.to_i32(global_object);
-        auto rhs_u32 = rhs_numeric.to_u32(global_object);
+        auto rhs_u32 = rhs_numeric.to_u32(global_object) % 32;
         return Value(lhs_i32 >> rhs_u32);
     }
     if (both_bigint(lhs_numeric, rhs_numeric)) {
