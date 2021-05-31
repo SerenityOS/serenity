@@ -837,13 +837,11 @@ static bool process_IHDR(ReadonlyBytes data, PNGLoadingContext& context)
     context.filter_method = ihdr.filter_method;
     context.interlace_method = ihdr.interlace_method;
 
-    if constexpr (PNG_DEBUG) {
-        printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
-        printf("     Color type: %d\n", context.color_type);
-        printf("Compress Method: %d\n", context.compression_method);
-        printf("  Filter Method: %d\n", context.filter_method);
-        printf(" Interlace type: %d\n", context.interlace_method);
-    }
+    dbgln_if(PNG_DEBUG, "PNG: {}x{} ({} bpp)", context.width, context.height, context.bit_depth);
+    dbgln_if(PNG_DEBUG, "     Color type: {}", context.color_type);
+    dbgln_if(PNG_DEBUG, "Compress Method: {}", context.compression_method);
+    dbgln_if(PNG_DEBUG, "  Filter Method: {}", context.filter_method);
+    dbgln_if(PNG_DEBUG, " Interlace type: {}", context.interlace_method);
 
     if (context.interlace_method != PngInterlaceMethod::Null && context.interlace_method != PngInterlaceMethod::Adam7) {
         dbgln_if(PNG_DEBUG, "PNGLoader::process_IHDR: unknown interlace method: {}", context.interlace_method);
@@ -908,31 +906,26 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
-        if constexpr (PNG_DEBUG)
-            printf("Bail at chunk_size\n");
+        dbgln_if(PNG_DEBUG, "Bail at chunk_size");
         return false;
     }
     u8 chunk_type[5];
     chunk_type[4] = '\0';
     if (!streamer.read_bytes(chunk_type, 4)) {
-        if constexpr (PNG_DEBUG)
-            printf("Bail at chunk_type\n");
+        dbgln_if(PNG_DEBUG, "Bail at chunk_type");
         return false;
     }
     ReadonlyBytes chunk_data;
     if (!streamer.wrap_bytes(chunk_data, chunk_size)) {
-        if constexpr (PNG_DEBUG)
-            printf("Bail at chunk_data\n");
+        dbgln_if(PNG_DEBUG, "Bail at chunk_data");
         return false;
     }
     u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
-        if constexpr (PNG_DEBUG)
-            printf("Bail at chunk_crc\n");
+        dbgln_if(PNG_DEBUG, "Bail at chunk_crc");
         return false;
     }
-    if constexpr (PNG_DEBUG)
-        printf("Chunk type: '%s', size: %u, crc: %x\n", chunk_type, chunk_size, chunk_crc);
+    dbgln_if(PNG_DEBUG, "Chunk type: '{}', size: {}, crc: {:x}", chunk_type, chunk_size, chunk_crc);
 
     if (!strcmp((const char*)chunk_type, "IHDR"))
         return process_IHDR(chunk_data, context);
