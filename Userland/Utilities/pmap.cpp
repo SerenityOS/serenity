@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>

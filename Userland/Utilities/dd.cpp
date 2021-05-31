@@ -7,15 +7,12 @@
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
-
 #include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 const char* usage = "usage:\n"
                     "\tdd <options>\n"

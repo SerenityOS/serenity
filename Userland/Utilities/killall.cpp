@@ -10,7 +10,6 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 
 static void print_usage_and_exit()
 {
