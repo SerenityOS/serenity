@@ -24,7 +24,7 @@ public:
     {
         if (!value.is_object())
             return {};
-        auto entry = value.as_object();
+        auto& entry = value.as_object();
         Quote q;
         if (!entry.has("quote") || !entry.has("author") || !entry.has("utc_time") || !entry.has("url"))
             return {};

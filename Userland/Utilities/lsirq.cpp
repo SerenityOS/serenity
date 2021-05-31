@@ -42,7 +42,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     auto json = JsonValue::from_string(file_contents);
     VERIFY(json.has_value());
     json.value().as_array().for_each([](auto& value) {
-        auto handler = value.as_object();
+        auto& handler = value.as_object();
         auto purpose = handler.get("purpose").to_string();
         auto interrupt = handler.get("interrupt_line").to_string();
         auto controller = handler.get("controller").to_string();

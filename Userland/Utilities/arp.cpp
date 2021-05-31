@@ -7,7 +7,6 @@
 #include <AK/Assertions.h>
 #include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
-#include <AK/String.h>
 #include <LibCore/File.h>
 #include <stdio.h>
 
@@ -24,7 +23,7 @@ int main()
     auto json = JsonValue::from_string(file_contents);
     VERIFY(json.has_value());
     json.value().as_array().for_each([](auto& value) {
-        auto if_object = value.as_object();
+        auto& if_object = value.as_object();
 
         auto ip_address = if_object.get("ip_address").to_string();
         auto mac_address = if_object.get("mac_address").to_string();

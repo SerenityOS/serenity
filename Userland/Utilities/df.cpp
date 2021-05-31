@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     VERIFY(json_result.has_value());
     auto json = json_result.value().as_array();
     json.for_each([](auto& value) {
-        auto fs_object = value.as_object();
+        auto& fs_object = value.as_object();
         auto fs = fs_object.get("class_name").to_string();
         auto total_block_count = fs_object.get("total_block_count").to_u64();
         auto free_block_count = fs_object.get("free_block_count").to_u64();
