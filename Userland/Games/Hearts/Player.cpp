@@ -11,9 +11,23 @@
 
 namespace Hearts {
 
+static bool compare_card_value(CardWithIndex& cwi1, CardWithIndex& cwi2)
+{
+    return hearts_card_value(*cwi2.card) < hearts_card_value(*cwi1.card);
+}
+
+static bool compare_card_points_and_value(CardWithIndex& cwi1, CardWithIndex& cwi2)
+{
+    if (hearts_card_points(*cwi2.card) < hearts_card_points(*cwi1.card))
+        return true;
+    if (hearts_card_points(*cwi1.card) == hearts_card_points(*cwi2.card) && hearts_card_value(*cwi2.card) < hearts_card_value(*cwi1.card))
+        return true;
+    return false;
+}
+
 NonnullRefPtrVector<Card> Player::pick_cards_to_pass(PassingDirection)
 {
-    auto sorted_hand = hand_sorted_by_points_and_value();
+    auto sorted_hand = hand_sorted_by_fn(compare_card_value);
     NonnullRefPtrVector<Card> cards;
     cards.append(*sorted_hand[0].card);
     cards.append(*sorted_hand[1].card);
@@ -21,7 +35,7 @@ NonnullRefPtrVector<Card> Player::pick_cards_to_pass(PassingDirection)
     return cards;
 }
 
-Vector<CardWithIndex> Player::hand_sorted_by_points_and_value() const
+Vector<CardWithIndex> Player::hand_sorted_by_fn(bool (*fn)(CardWithIndex&, CardWithIndex&)) const
 {
     Vector<CardWithIndex> sorted_hand;
     for (size_t i = 0; i < hand.size(); i++) {
@@ -29,19 +43,13 @@ Vector<CardWithIndex> Player::hand_sorted_by_points_and_value() const
         if (card)
             sorted_hand.empend(*card, i);
     }
-    quick_sort(sorted_hand, [](auto& cwi1, auto& cwi2) {
-        if (hearts_card_points(*cwi2.card) < hearts_card_points(*cwi1.card))
-            return true;
-        if (hearts_card_points(*cwi1.card) == hearts_card_points(*cwi2.card) && hearts_card_value(*cwi2.card) < hearts_card_value(*cwi1.card))
-            return true;
-        return false;
-    });
+    quick_sort(sorted_hand, fn);
     return sorted_hand;
 }
 
 size_t Player::pick_lead_card(Function<bool(Card&)> valid_play, Function<bool(Card&)> prefer_card)
 {
-    auto sorted_hand = hand_sorted_by_points_and_value();
+    auto sorted_hand = hand_sorted_by_fn(compare_card_points_and_value);
 
     if constexpr (HEARTS_DEBUG) {
         dbgln("Sorted hand:");
