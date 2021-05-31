@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
                 }
             } else {
                 if (!S_ISDIR(st.st_mode)) {
-                    fprintf(stderr, "mkdir: cannot create directory '%s': not a directory\n", path.characters());
+                    warnln("mkdir: cannot create directory '{}': not a directory", path);
                     has_errors = true;
                     break;
                 }

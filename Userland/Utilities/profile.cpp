@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 
     if (pid_argument || all_processes) {
         if (!(enable ^ disable ^ wait ^ free)) {
-            fprintf(stderr, "-p <PID> requires -e xor -d xor -w xor -f.\n");
+            warnln("-p <PID> requires -e xor -d xor -w xor -f.");
             return 1;
         }
 

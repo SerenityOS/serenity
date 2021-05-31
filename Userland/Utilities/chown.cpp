@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     }
 
     if (argc < 3) {
-        printf("usage: chown <uid[:gid]> <path>\n");
+        warnln("usage: chown <uid[:gid]> <path>");
         return 0;
     }
 
@@ -30,11 +30,11 @@ int main(int argc, char** argv)
 
     auto parts = String(argv[1]).split(':', true);
     if (parts.is_empty()) {
-        fprintf(stderr, "Empty uid/gid spec\n");
+        warnln("Empty uid/gid spec");
         return 1;
     }
     if (parts[0].is_empty() || (parts.size() == 2 && parts[1].is_empty()) || parts.size() > 2) {
-        fprintf(stderr, "Invalid uid/gid spec\n");
+        warnln("Invalid uid/gid spec");
         return 1;
     }
 
@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     } else {
         auto* passwd = getpwnam(parts[0].characters());
         if (!passwd) {
-            fprintf(stderr, "Unknown user '%s'\n", parts[0].characters());
+            warnln("Unknown user '{}'", parts[0]);
             return 1;
         }
         new_uid = passwd->pw_uid;
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         } else {
             auto* group = getgrnam(parts[1].characters());
             if (!group) {
-                fprintf(stderr, "Unknown group '%s'\n", parts[1].characters());
+                warnln("Unknown group '{}'", parts[1]);
                 return 1;
             }
             new_gid = group->gr_gid;

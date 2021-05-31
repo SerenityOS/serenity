@@ -94,15 +94,15 @@ static void print_buffer(ReadonlyBytes buffer, int split)
     for (size_t i = 0; i < buffer.size(); ++i) {
         if (split > 0) {
             if (i % split == 0 && i) {
-                printf("    ");
+                out("    ");
                 for (size_t j = i - split; j < i; ++j) {
                     auto ch = buffer[j];
-                    printf("%c", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
+                    out("{}", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
                 }
-                puts("");
+                outln();
             }
         }
-        printf("%02x ", buffer[i]);
+        out("{:02x} ", buffer[i]);
     }
     puts("");
 }
@@ -130,16 +130,16 @@ static int run(Function<void(const char*, size_t)> fn)
         }
     } else {
         if (filename == nullptr) {
-            puts("must specify a filename");
+            warnln("must specify a filename");
             return 1;
         }
         if (!Core::File::exists(filename)) {
-            puts("File does not exist");
+            warnln("File does not exist");
             return 1;
         }
         auto file = Core::File::open(filename, Core::OpenMode::ReadOnly);
         if (file.is_error()) {
-            printf("That's a weird file man...\n");
+            warnln("Failed to open {}: {}", filename, file.error());
             return 1;
         }
         auto buffer = file.value()->read_all();
@@ -160,7 +160,7 @@ static void tls(const char* message, size_t len)
         tls->on_tls_ready_to_read = [](auto& tls) {
             auto buffer = tls.read();
             if (buffer.has_value())
-                fprintf(stdout, "%.*s", (int)buffer.value().size(), buffer.value().data());
+                out("{}", StringView { buffer->data(), buffer->size() });
         };
         tls->on_tls_ready_to_write = [&](auto&) {
             if (write.size()) {
@@ -196,7 +196,7 @@ static void aes_cbc(const char* message, size_t len)
         cipher.encrypt(buffer, enc_span, iv);
 
         if (binary)
-            printf("%.*s", (int)enc_span.size(), enc_span.data());
+            out("{}", StringView { enc_span.data(), enc_span.size() });
         else
             print_buffer(enc_span, Crypto::Cipher::AESCipher::block_size());
     } else {
@@ -207,27 +207,27 @@ static void aes_cbc(const char* message, size_t len)
         auto dec = cipher.create_aligned_buffer(buffer.size());
         auto dec_span = dec.bytes();
         cipher.decrypt(buffer, dec_span, iv);
-        printf("%.*s\n", (int)dec_span.size(), dec_span.data());
+        outln("{}", StringView { dec_span.data(), dec_span.size() });
     }
 }
 
 static void adler32(const char* message, size_t len)
 {
     auto checksum = Crypto::Checksum::Adler32({ (const u8*)message, len });
-    printf("%#10X\n", checksum.digest());
+    outln("{:#10X}", checksum.digest());
 }
 
 static void crc32(const char* message, size_t len)
 {
     auto checksum = Crypto::Checksum::CRC32({ (const u8*)message, len });
-    printf("%#10X\n", checksum.digest());
+    outln("{:#10X}", checksum.digest());
 }
 
 static void md5(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::MD5::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::Hash::MD5::digest_size(), digest.data);
+        out("{}", StringView { digest.data, Crypto::Hash::MD5::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::MD5::digest_size() }, -1);
 }
@@ -237,7 +237,7 @@ static void hmac_md5(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::MD5> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.digest_size(), mac.data);
+        out("{}", StringView { mac.data, hmac.digest_size() });
     else
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
@@ -246,7 +246,7 @@ static void sha1(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA1::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::Hash::SHA1::digest_size(), digest.data);
+        out("{}", StringView { digest.data, Crypto::Hash::SHA1::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA1::digest_size() }, -1);
 }
@@ -255,7 +255,7 @@ static void sha256(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA256::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::Hash::SHA256::digest_size(), digest.data);
+        out("{}", StringView { digest.data, Crypto::Hash::SHA256::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA256::digest_size() }, -1);
 }
@@ -265,7 +265,7 @@ static void hmac_sha256(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::SHA256> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.digest_size(), mac.data);
+        out("{}", StringView { mac.data, hmac.digest_size() });
     else
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
@@ -274,7 +274,7 @@ static void sha384(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA384::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::Hash::SHA384::digest_size(), digest.data);
+        out("{}", StringView { digest.data, Crypto::Hash::SHA384::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA384::digest_size() }, -1);
 }
@@ -283,7 +283,7 @@ static void sha512(const char* message, size_t len)
 {
     auto digest = Crypto::Hash::SHA512::hash((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)Crypto::Hash::SHA512::digest_size(), digest.data);
+        out("{}", StringView { digest.data, Crypto::Hash::SHA512::digest_size() });
     else
         print_buffer({ digest.data, Crypto::Hash::SHA512::digest_size() }, -1);
 }
@@ -293,7 +293,7 @@ static void hmac_sha512(const char* message, size_t len)
     Crypto::Authentication::HMAC<Crypto::Hash::SHA512> hmac(secret_key);
     auto mac = hmac.process((const u8*)message, len);
     if (binary)
-        printf("%.*s", (int)hmac.digest_size(), mac.data);
+        out("{}", StringView { mac.data, hmac.digest_size() });
     else
         print_buffer({ mac.data, hmac.digest_size() }, -1);
 }
@@ -319,18 +319,18 @@ auto main(int argc, char** argv) -> int
 
     StringView mode_sv { mode };
     if (mode_sv == "list") {
-        puts("test-crypto modes");
-        puts("\tdigest - Access digest (authentication) functions");
-        puts("\thash - Access hash functions");
-        puts("\tchecksum - Access checksum functions");
-        puts("\tencrypt -- Access encryption functions");
-        puts("\tdecrypt -- Access decryption functions");
-        puts("\ttls -- Connect to a peer over TLS 1.2");
-        puts("\tlist -- List all known modes");
-        puts("these modes only contain tests");
-        puts("\ttest -- Run every test suite");
-        puts("\tbigint -- Run big integer test suite");
-        puts("\tpk -- Run Public-key system tests");
+        outln("test-crypto modes");
+        outln("\tdigest - Access digest (authentication) functions");
+        outln("\thash - Access hash functions");
+        outln("\tchecksum - Access checksum functions");
+        outln("\tencrypt -- Access encryption functions");
+        outln("\tdecrypt -- Access decryption functions");
+        outln("\ttls -- Connect to a peer over TLS 1.2");
+        outln("\tlist -- List all known modes");
+        outln("these modes only contain tests");
+        outln("\ttest -- Run every test suite");
+        outln("\tbigint -- Run big integer test suite");
+        outln("\tpk -- Run Public-key system tests");
         return 0;
     }
 
@@ -364,7 +364,7 @@ auto main(int argc, char** argv) -> int
                 return sha512_tests();
             return run(sha512);
         }
-        printf("unknown hash function '%s'\n", suite);
+        warnln("unknown hash function '{}'", suite);
         return 1;
     }
     if (mode_sv == "checksum") {
@@ -382,7 +382,7 @@ auto main(int argc, char** argv) -> int
                 return adler32_tests();
             return run(adler32);
         }
-        printf("unknown checksum function '%s'\n", suite);
+        warnln("unknown checksum function '{}'", suite);
         return 1;
     }
     if (mode_sv == "digest") {
@@ -413,7 +413,7 @@ auto main(int argc, char** argv) -> int
             if (run_tests)
                 return ghash_tests();
         }
-        printf("unknown hash function '%s'\n", suite);
+        warnln("unknown hash function '{}'", suite);
         return 1;
     }
     if (mode_sv == "pk") {
@@ -507,11 +507,11 @@ auto main(int argc, char** argv) -> int
                 return aes_cbc_tests();
 
             if (!Crypto::Cipher::AESCipher::KeyType::is_valid_key_size(key_bits)) {
-                printf("Invalid key size for AES: %d\n", key_bits);
+                warnln("Invalid key size for AES: {}", key_bits);
                 return 1;
             }
             if (strlen(secret_key) != (size_t)key_bits / 8) {
-                printf("Key must be exactly %d bytes long\n", key_bits / 8);
+                warnln("Key must be exactly {} bytes long", key_bits / 8);
                 return 1;
             }
             return run(aes_cbc);
@@ -522,39 +522,39 @@ auto main(int argc, char** argv) -> int
 
             return 1;
         } else {
-            printf("Unknown cipher suite '%s'\n", suite);
+            warnln("Unknown cipher suite '{}'", suite);
             return 1;
         }
     }
-    printf("Unknown mode '%s', check out the list of modes\n", mode);
+    warnln("Unknown mode '{}', check out the list of modes", mode);
     return 1;
 }
 
 #define I_TEST(thing)                       \
     {                                       \
-        printf("Testing " #thing "... ");   \
+        out("Testing " #thing "... ");      \
         fflush(stdout);                     \
         gettimeofday(&start_time, nullptr); \
     }
-#define PASS                                                                          \
-    {                                                                                 \
-        struct timeval end_time {                                                     \
-            0, 0                                                                      \
-        };                                                                            \
-        gettimeofday(&end_time, nullptr);                                             \
-        time_t interval_s = end_time.tv_sec - start_time.tv_sec;                      \
-        suseconds_t interval_us = end_time.tv_usec;                                   \
-        if (interval_us < start_time.tv_usec) {                                       \
-            interval_s -= 1;                                                          \
-            interval_us += 1000000;                                                   \
-        }                                                                             \
-        interval_us -= start_time.tv_usec;                                            \
-        printf("PASS %llds %lldus\n", (long long)interval_s, (long long)interval_us); \
+#define PASS                                                                   \
+    {                                                                          \
+        struct timeval end_time {                                              \
+            0, 0                                                               \
+        };                                                                     \
+        gettimeofday(&end_time, nullptr);                                      \
+        time_t interval_s = end_time.tv_sec - start_time.tv_sec;               \
+        suseconds_t interval_us = end_time.tv_usec;                            \
+        if (interval_us < start_time.tv_usec) {                                \
+            interval_s -= 1;                                                   \
+            interval_us += 1000000;                                            \
+        }                                                                      \
+        interval_us -= start_time.tv_usec;                                     \
+        outln("PASS {}s {}us", (long long)interval_s, (long long)interval_us); \
     }
-#define FAIL(reason)                   \
-    do {                               \
-        printf("FAIL: " #reason "\n"); \
-        g_some_test_failed = true;     \
+#define FAIL(reason)               \
+    do {                           \
+        outln("FAIL: " #reason);   \
+        g_some_test_failed = true; \
     } while (0)
 
 static ByteBuffer operator""_b(const char* string, size_t length)
@@ -731,7 +731,7 @@ static void aes_cbc_test_decrypt()
         cipher.decrypt(in, out_span, iv);
         if (out_span.size() != strlen(true_value)) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", strlen(true_value), out_span.size());
+            outln("Expected {} bytes but got {}", strlen(true_value), out_span.size());
         } else if (memcmp(out_span.data(), true_value, strlen(true_value)) != 0) {
             FAIL(invalid data);
             print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
@@ -807,7 +807,7 @@ static void aes_ctr_test_encrypt()
         cipher.encrypt(in, out_span, ivec);
         if (out_expected.size() != out_actual.size()) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
+            outln("Expected {} bytes but got {}", out_expected.size(), out_span.size());
             print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else if (memcmp(out_expected.data(), out_span.data(), out_expected.size()) != 0) {
             FAIL(invalid data);
@@ -1002,7 +1002,7 @@ static void aes_ctr_test_decrypt()
         cipher.decrypt(in, out_span, ivec);
         if (out_expected.size() != out_span.size()) {
             FAIL(size mismatch);
-            printf("Expected %zu bytes but got %zu\n", out_expected.size(), out_span.size());
+            outln("Expected {} bytes but got {}", out_expected.size(), out_span.size());
             print_buffer(out_span, Crypto::Cipher::AESCipher::block_size());
         } else if (memcmp(out_expected.data(), out_span.data(), out_expected.size()) != 0) {
             FAIL(invalid data);
@@ -1547,7 +1547,7 @@ static void sha1_test_name()
     Crypto::Hash::SHA1 sha;
     if (sha.class_name() != "SHA1") {
         FAIL(Invalid class name);
-        printf("%s\n", sha.class_name().characters());
+        outln("{}", sha.class_name());
     } else
         PASS;
 }
@@ -1619,7 +1619,7 @@ static void sha256_test_name()
     Crypto::Hash::SHA256 sha;
     if (sha.class_name() != "SHA256") {
         FAIL(Invalid class name);
-        printf("%s\n", sha.class_name().characters());
+        outln("{}", sha.class_name());
     } else
         PASS;
 }
@@ -1730,7 +1730,7 @@ static void sha384_test_name()
     Crypto::Hash::SHA384 sha;
     if (sha.class_name() != "SHA384") {
         FAIL(Invalid class name);
-        printf("%s\n", sha.class_name().characters());
+        outln("{}", sha.class_name());
     } else
         PASS;
 }
@@ -1776,7 +1776,7 @@ static void sha512_test_name()
     Crypto::Hash::SHA512 sha;
     if (sha.class_name() != "SHA512") {
         FAIL(Invalid class name);
-        printf("%s\n", sha.class_name().characters());
+        outln("{}", sha.class_name());
     } else
         PASS;
 }
@@ -2561,8 +2561,11 @@ static void bigint_theory_modular_power()
                 PASS;
             } else {
                 FAIL(Wrong result);
-                printf("b: %s\ne: %s\nm: %s\nexpect: %s\nactual: %s\n",
-                    test_case.base.to_base10().characters(), test_case.exp.to_base10().characters(), test_case.mod.to_base10().characters(), test_case.expected.to_base10().characters(), actual.to_base10().characters());
+                outln("b: {}", test_case.base.to_base10());
+                outln("e: {}", test_case.exp.to_base10());
+                outln("m: {}", test_case.mod.to_base10());
+                outln("expect: {}", test_case.expected.to_base10());
+                outln("actual: {}", actual.to_base10());
             }
         }
     }
@@ -2599,8 +2602,8 @@ static void bigint_theory_primality()
             PASS;
         } else {
             FAIL(Wrong primality guess);
-            printf("The number %s is %sa prime, but the test said it is %sa prime!\n",
-                test_case.candidate.to_base10().characters(), test_case.expected_result ? "" : "not ", actual_result ? "" : "not ");
+            outln("The number {} is {}a prime, but the test said it is {}a prime!",
+                test_case.candidate.to_base10(), test_case.expected_result ? "" : "not ", actual_result ? "" : "not ");
         }
     }
 }
@@ -2623,10 +2626,10 @@ static void bigint_theory_random_number()
             auto actual_result = Crypto::NumberTheory::random_number(test_case.min, test_case.max);
             if (actual_result < test_case.min) {
                 FAIL(Too small);
-                printf("The generated number %s is smaller than the requested minimum %s. (max = %s)\n", actual_result.to_base10().characters(), test_case.min.to_base10().characters(), test_case.max.to_base10().characters());
+                outln("The generated number {} is smaller than the requested minimum {}. (max = {})", actual_result.to_base10(), test_case.min.to_base10(), test_case.max.to_base10());
             } else if (!(actual_result < test_case.max)) {
                 FAIL(Too large);
-                printf("The generated number %s is larger-or-equal to the requested maximum %s. (min = %s)\n", actual_result.to_base10().characters(), test_case.max.to_base10().characters(), test_case.min.to_base10().characters());
+                outln("The generated number {} is larger-or-equal to the requested maximum {}. (min = {})", actual_result.to_base10(), test_case.max.to_base10(), test_case.min.to_base10());
             } else {
                 PASS;
             }
@@ -2639,10 +2642,10 @@ static void bigint_theory_random_number()
             "100000000000000000000000000000"_bigint);         // 10**29
         if (actual_result < "100000000000000000000"_bigint) { // 10**20
             FAIL(Too small);
-            printf("The generated number %s is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
+            outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
         } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
             FAIL(Too large);
-            printf("The generated number %s is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.\n", actual_result.to_base10().characters());
+            outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
         } else {
             PASS;
         }

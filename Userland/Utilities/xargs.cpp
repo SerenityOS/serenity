@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     size_t max_lines = max(max_lines_for_one_command, 0);
 
     if (!split_with_nulls && strlen(specified_delimiter) > 1) {
-        fprintf(stderr, "xargs: the delimiter must be a single byte\n");
+        warnln("xargs: the delimiter must be a single byte");
         return 1;
     }
 
@@ -205,8 +205,7 @@ bool run_command(Vector<char*>&& child_argv, bool verbose, bool is_stdin, int de
     if (verbose) {
         StringBuilder builder;
         builder.join(" ", child_argv);
-        fprintf(stderr, "xargs: %s\n", builder.to_string().characters());
-        fflush(stderr);
+        warnln("xargs: {}", builder.to_string());
     }
 
     auto pid = fork();

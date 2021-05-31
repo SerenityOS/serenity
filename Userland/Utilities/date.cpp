@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         auto number = String(set_date).to_uint();
 
         if (!number.has_value()) {
-            fprintf(stderr, "date: Invalid timestamp value");
+            warnln("date: Invalid timestamp value");
             return 1;
         }
 
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     // FIXME: this should be improved and will need to be cleaned up
     // when additional output formats and formatting is supported
     if (print_unix_date && print_iso_8601 && print_rfc_3339 && print_rfc_5322) {
-        fprintf(stderr, "date: multiple output formats specified\n");
+        warnln("date: multiple output formats specified");
         return 1;
     }
 
@@ -60,19 +60,19 @@ int main(int argc, char** argv)
     auto date = Core::DateTime::from_timestamp(now);
 
     if (print_unix_date) {
-        printf("%lld\n", (long long)now);
+        outln("{}", (long long)now);
         return 0;
     } else if (print_iso_8601) {
-        printf("%s\n", date.to_string("%Y-%m-%dT%H:%M:%S-00:00").characters());
+        outln("{}", date.to_string("%Y-%m-%dT%H:%M:%S-00:00"));
         return 0;
     } else if (print_rfc_5322) {
-        printf("%s\n", date.to_string("%a, %d %b %Y %H:%M:%S -0000").characters());
+        outln("{}", date.to_string("%a, %d %b %Y %H:%M:%S -0000"));
         return 0;
     } else if (print_rfc_3339) {
-        printf("%s\n", date.to_string("%Y-%m-%d %H:%M:%S-00:00").characters());
+        outln("{}", date.to_string("%Y-%m-%d %H:%M:%S-00:00"));
         return 0;
     } else {
-        printf("%s\n", date.to_string().characters());
+        outln("{}", date.to_string());
         return 0;
     }
 }

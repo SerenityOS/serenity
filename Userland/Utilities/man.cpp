@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
             }
         }
         if (!section) {
-            fprintf(stderr, "No man page for %s\n", name);
+            warnln("No man page for {}", name);
             exit(1);
         }
     }
@@ -92,11 +92,11 @@ int main(int argc, char* argv[])
     auto buffer = file->read_all();
     auto source = String::copy(buffer);
 
-    printf("%s(%s)\t\tSerenityOS manual\n", name, section);
+    outln("{}({})\t\tSerenityOS manual", name, section);
 
     auto document = Markdown::Document::parse(source);
     VERIFY(document);
 
     String rendered = document->render_for_terminal(view_width);
-    printf("%s", rendered.characters());
+    out("{}", rendered);
 }

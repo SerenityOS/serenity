@@ -48,12 +48,12 @@ int main(int argc, char** argv)
     args_parser.parse(argc, argv);
 
     if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
-        fprintf(stderr, "cannot print only names or real IDs in default format\n");
+        warnln("cannot print only names or real IDs in default format");
         return 1;
     }
 
     if (flag_print_uid + flag_print_gid + flag_print_gid_all > 1) {
-        fprintf(stderr, "cannot print \"only\" of more than one choice\n");
+        warnln("cannot print \"only\" of more than one choice");
         return 1;
     }
 
@@ -65,9 +65,9 @@ static bool print_uid_object(uid_t uid)
 {
     if (flag_print_name) {
         struct passwd* pw = getpwuid(uid);
-        printf("%s", pw ? pw->pw_name : "n/a");
+        out("{}", pw ? pw->pw_name : "n/a");
     } else
-        printf("%u", uid);
+        out("{}", uid);
 
     return true;
 }
@@ -76,9 +76,9 @@ static bool print_gid_object(gid_t gid)
 {
     if (flag_print_name) {
         struct group* gr = getgrgid(gid);
-        printf("%s", gr ? gr->gr_name : "n/a");
+        out("{}", gr ? gr->gr_name : "n/a");
     } else
-        printf("%u", gid);
+        out("{}", gid);
     return true;
 }
 
@@ -97,11 +97,11 @@ static bool print_gid_list()
         for (int g = 0; g < extra_gid_count; ++g) {
             auto* gr = getgrgid(extra_gids[g]);
             if (flag_print_name && gr)
-                printf("%s", gr->gr_name);
+                out("{}", gr->gr_name);
             else
-                printf("%u", extra_gids[g]);
+                out("{}", extra_gids[g]);
             if (g != extra_gid_count - 1)
-                printf(" ");
+                out(" ");
         }
     }
     return true;
@@ -114,7 +114,7 @@ static bool print_full_id_list()
     struct passwd* pw = getpwuid(uid);
     struct group* gr = getgrgid(gid);
 
-    printf("uid=%u(%s) gid=%u(%s)", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
+    out("uid={}({}) gid={}({})", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
 
     int extra_gid_count = getgroups(0, nullptr);
     if (extra_gid_count) {
@@ -124,15 +124,15 @@ static bool print_full_id_list()
             perror("\ngetgroups");
             return false;
         }
-        printf(" groups=");
+        out(" groups=");
         for (int g = 0; g < extra_gid_count; ++g) {
             auto* gr = getgrgid(extra_gids[g]);
             if (gr)
-                printf("%u(%s)", extra_gids[g], gr->gr_name);
+                out("{}({})", extra_gids[g], gr->gr_name);
             else
-                printf("%u", extra_gids[g]);
+                out("{}", extra_gids[g]);
             if (g != extra_gid_count - 1)
-                printf(",");
+                out(",");
         }
     }
     return true;
@@ -154,6 +154,6 @@ static int print_id_objects()
             return 1;
     }
 
-    printf("\n");
+    outln();
     return 0;
 }

@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <AK/Types.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -12,28 +13,28 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define EXPECT_OK(syscall, address, size)                                                                                                   \
-    do {                                                                                                                                    \
-        rc = syscall(fd, (void*)(address), (size_t)(size));                                                                                 \
-        if (rc < 0) {                                                                                                                       \
-            fprintf(stderr, "Expected success: " #syscall "(%p, %zu), got rc=%d, errno=%d\n", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                                   \
+#define EXPECT_OK(syscall, address, size)                                                                                         \
+    do {                                                                                                                          \
+        rc = syscall(fd, (void*)(address), (size_t)(size));                                                                       \
+        if (rc < 0) {                                                                                                             \
+            warnln("Expected success: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
+        }                                                                                                                         \
     } while (0)
 
-#define EXPECT_EFAULT(syscall, address, size)                                                                                              \
-    do {                                                                                                                                   \
-        rc = syscall(fd, (void*)(address), (size_t)(size));                                                                                \
-        if (rc >= 0 || errno != EFAULT) {                                                                                                  \
-            fprintf(stderr, "Expected EFAULT: " #syscall "(%p, %zu), got rc=%d, errno=%d\n", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                                  \
+#define EXPECT_EFAULT(syscall, address, size)                                                                                    \
+    do {                                                                                                                         \
+        rc = syscall(fd, (void*)(address), (size_t)(size));                                                                      \
+        if (rc >= 0 || errno != EFAULT) {                                                                                        \
+            warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
+        }                                                                                                                        \
     } while (0)
 
-#define EXPECT_EFAULT_NO_FD(syscall, address, size)                                                                                        \
-    do {                                                                                                                                   \
-        rc = syscall((address), (size_t)(size));                                                                                           \
-        if (rc >= 0 || errno != EFAULT) {                                                                                                  \
-            fprintf(stderr, "Expected EFAULT: " #syscall "(%p, %zu), got rc=%d, errno=%d\n", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                                  \
+#define EXPECT_EFAULT_NO_FD(syscall, address, size)                                                                              \
+    do {                                                                                                                         \
+        rc = syscall((address), (size_t)(size));                                                                                 \
+        if (rc >= 0 || errno != EFAULT) {                                                                                        \
+            warnln("Expected EFAULT: " #syscall "({:p}, {}), got rc={}, errno={}", (void*)(address), (size_t)(size), rc, errno); \
+        }                                                                                                                        \
     } while (0)
 
 int main(int, char**)

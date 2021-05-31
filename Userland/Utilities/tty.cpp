@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -14,6 +15,6 @@ int main(int, char**)
         perror("Error");
         return 1;
     }
-    printf("%s\n", tty);
+    outln("{}", tty);
     return 0;
 }

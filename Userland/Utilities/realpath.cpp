@@ -28,7 +28,7 @@ int main(int argc, char** argv)
         perror("realpath");
         return 1;
     }
-    printf("%s\n", value);
+    outln("{}", value);
     free(value);
     return 0;
 }

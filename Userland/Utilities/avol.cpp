@@ -28,19 +28,19 @@ int main(int argc, char** argv)
 
     if (!mute && !unmute && !volume) {
         auto volume = audio_client->get_main_mix_volume();
-        printf("Volume: %d\n", volume);
+        outln("Volume: {}", volume);
         return 0;
     }
     if (!(mute ^ unmute ^ (volume != nullptr))) {
-        fprintf(stderr, "Only one of mute, unmute or volume must be used\n");
+        warnln("Only one of mute, unmute or volume must be used");
         return 1;
     }
     if (mute) {
         audio_client->set_muted(true);
-        printf("Muted.\n");
+        outln("Muted.");
     } else if (unmute) {
         audio_client->set_muted(false);
-        printf("Unmuted.\n");
+        outln("Unmuted.");
     } else {
         auto new_volume = atoi(volume);
         audio_client->set_main_mix_volume(new_volume);

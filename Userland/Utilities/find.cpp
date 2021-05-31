@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/CheckedFormatString.h>
 #include <AK/LexicalPath.h>
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
@@ -23,16 +24,13 @@ bool g_follow_symlinks = false;
 bool g_there_was_an_error = false;
 bool g_have_seen_action_command = false;
 
-[[noreturn]] static void fatal_error(const char* format, ...)
+template<typename... Parameters>
+[[noreturn]] static void fatal_error(CheckedFormatString<Parameters...>&& fmtstr, Parameters const&... parameters)
 {
-    fputs("\033[31m", stderr);
-
-    va_list ap;
-    va_start(ap, format);
-    vfprintf(stderr, format, ap);
-    va_end(ap);
-
-    fputs("\033[0m\n", stderr);
+    warn("\033[31m");
+    warn(move(fmtstr), parameters...);
+    warn("\033[0m");
+    warnln();
     exit(1);
 }
 
@@ -67,7 +65,7 @@ public:
     {
         StringView type = arg;
         if (type.length() != 1 || !StringView("bcdlpfs").contains(type[0]))
-            fatal_error("Invalid mode: \033[1m%s", arg);
+            fatal_error("Invalid mode: \033[1m{}", arg);
         m_type = type[0];
     }
 
@@ -105,7 +103,7 @@ public:
     {
         auto number = StringView(arg).to_uint();
         if (!number.has_value())
-            fatal_error("Invalid number: \033[1m%s", arg);
+            fatal_error("Invalid number: \033[1m{}", arg);
         m_links = number.value();
     }
 
@@ -128,7 +126,7 @@ public:
             // Attempt to parse it as decimal UID.
             auto number = StringView(arg).to_uint();
             if (!number.has_value())
-                fatal_error("Invalid user: \033[1m%s", arg);
+                fatal_error("Invalid user: \033[1m{}", arg);
             m_uid = number.value();
         }
     }
@@ -152,7 +150,7 @@ public:
             // Attempt to parse it as decimal GID.
             auto number = StringView(arg).to_int();
             if (!number.has_value())
-                fatal_error("Invalid group: \033[1m%s", arg);
+                fatal_error("Invalid group: \033[1m{}", arg);
             m_gid = number.value();
         }
     }
@@ -177,7 +175,7 @@ public:
         }
         auto number = view.to_uint();
         if (!number.has_value())
-            fatal_error("Invalid size: \033[1m%s", arg);
+            fatal_error("Invalid size: \033[1m{}", arg);
         m_size = number.value();
     }
 
@@ -224,7 +222,7 @@ public:
 private:
     virtual bool evaluate(const char* file_path) const override
     {
-        printf("%s%c", file_path, m_terminator);
+        out("{}{}", file_path, m_terminator);
         return true;
     }
 
@@ -354,7 +352,7 @@ static OwnPtr<Command> parse_simple_command(char* argv[])
             command_argv.append(argv[optind]);
         return make<ExecCommand>(move(command_argv));
     } else {
-        fatal_error("Unsupported command \033[1m%s", argv[optind]);
+        fatal_error("Unsupported command \033[1m{}", argv[optind]);
     }
 }
 
@@ -467,7 +465,7 @@ static void walk_tree(const char* root_path, Command& command)
     }
 
     if (dir_iterator.has_error()) {
-        fprintf(stderr, "%s: %s\n", root_path, dir_iterator.error_string());
+        warnln("{}: {}", root_path, dir_iterator.error_string());
         g_there_was_an_error = true;
     }
 }
