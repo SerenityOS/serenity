@@ -362,7 +362,7 @@ ALWAYS_INLINE ExecutionResult OpCode_SaveRightNamedCaptureGroup::execute(const M
             map.set(capture_group_name, { view, input.line, start_position, input.global_offset + start_position }); // take view to original string
         }
     } else {
-        fprintf(stderr, "Didn't find corresponding capture group match for name=%s, match_index=%lu\n", capture_group_name.to_string().characters(), input.match_index);
+        warnln("Didn't find corresponding capture group match for name={}, match_index={}", capture_group_name.to_string(), input.match_index);
     }
 
     return ExecutionResult::Continue;
@@ -490,7 +490,7 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
                 return ExecutionResult::Failed_ExecuteLowPrioForks;
 
         } else {
-            fprintf(stderr, "Undefined comparison: %i\n", (int)compare_type);
+            warnln("Undefined comparison: {}", (int)compare_type);
             VERIFY_NOT_REACHED();
             break;
         }
