@@ -35,12 +35,12 @@ public:
     String fragment() const { return m_fragment; }
     u16 port() const { return m_port; }
 
-    void set_protocol(const String& protocol);
-    void set_host(const String& host);
-    void set_port(const u16 port);
-    void set_path(const String& path);
-    void set_query(const String& query);
-    void set_fragment(const String& fragment);
+    void set_protocol(const String&);
+    void set_host(const String&);
+    void set_port(const u16);
+    void set_path(const String&);
+    void set_query(const String&);
+    void set_fragment(const String&);
 
     String basename() const;
     String to_string() const;
@@ -56,11 +56,11 @@ public:
     const String& data_mime_type() const { return m_data_mime_type; }
     const String& data_payload() const { return m_data_payload; }
 
-    static URL create_with_url_or_path(const String& url_or_path);
+    static URL create_with_url_or_path(const String&);
     static URL create_with_file_protocol(const String& path, const String& fragment = {});
     static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
-    static bool protocol_requires_port(const String& protocol);
-    static u16 default_port_for_protocol(const String& protocol);
+    static bool protocol_requires_port(const StringView&);
+    static u16 default_port_for_protocol(const StringView&);
 
     bool operator==(const URL& other) const
     {
