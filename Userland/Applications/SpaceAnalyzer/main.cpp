@@ -86,7 +86,7 @@ static void fill_mounts(Vector<MountInfo>& output)
     VERIFY(json.has_value());
 
     json.value().as_array().for_each([&output](auto& value) {
-        auto filesystem_object = value.as_object();
+        auto& filesystem_object = value.as_object();
         MountInfo mount_info;
         mount_info.mount_point = filesystem_object.get("mount_point").to_string();
         mount_info.source = filesystem_object.get("source").as_string_or("none");

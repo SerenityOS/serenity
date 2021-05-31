@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     auto json = JsonValue::from_string(file_contents);
     VERIFY(json.has_value());
     json.value().as_array().for_each([db, format](auto& value) {
-        auto dev = value.as_object();
+        auto& dev = value.as_object();
         auto seg = dev.get("seg").to_u32();
         auto bus = dev.get("bus").to_u32();
         auto device = dev.get("device").to_u32();

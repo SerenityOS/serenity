@@ -68,7 +68,7 @@ void print(const JsonValue& value, int spaces_per_indent, int indent, bool use_c
 {
     if (value.is_object()) {
         size_t printed_members = 0;
-        auto object = value.as_object();
+        auto& object = value.as_object();
         outln("{{");
         object.for_each_member([&](auto& member_name, auto& member_value) {
             ++printed_members;

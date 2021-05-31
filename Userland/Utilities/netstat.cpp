@@ -123,7 +123,7 @@ int main(int argc, char** argv)
         });
 
         for (auto& value : sorted_regions) {
-            auto if_object = value.as_object();
+            auto& if_object = value.as_object();
 
             auto bytes_in = if_object.get("bytes_in").to_string();
             auto bytes_out = if_object.get("bytes_out").to_string();
@@ -174,7 +174,7 @@ int main(int argc, char** argv)
         });
 
         for (auto& value : sorted_regions) {
-            auto if_object = value.as_object();
+            auto& if_object = value.as_object();
 
             auto local_address = if_object.get("local_address").to_string();
             auto local_port = if_object.get("local_port").to_string();
