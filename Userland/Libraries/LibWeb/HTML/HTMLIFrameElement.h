@@ -6,11 +6,11 @@
 
 #pragma once
 
-#include <LibWeb/HTML/FrameHostElement.h>
+#include <LibWeb/HTML/BrowsingContextContainer.h>
 
 namespace Web::HTML {
 
-class HTMLIFrameElement final : public FrameHostElement {
+class HTMLIFrameElement final : public BrowsingContextContainer {
 public:
     using WrapperType = Bindings::HTMLIFrameElementWrapper;
 

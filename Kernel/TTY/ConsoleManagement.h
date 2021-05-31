@@ -20,6 +20,8 @@ class ConsoleManagement {
 public:
     ConsoleManagement();
 
+    static constexpr unsigned s_max_virtual_consoles = 6;
+
     static bool is_initialized();
     static ConsoleManagement& the();
 

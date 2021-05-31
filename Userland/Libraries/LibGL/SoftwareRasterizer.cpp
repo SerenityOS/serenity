@@ -421,13 +421,24 @@ void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle)
     });
 }
 
-void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Texture2D& texture)
+void SoftwareRasterizer::submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units)
 {
-    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {
+    rasterize_triangle(m_options, *m_render_target, *m_depth_buffer, triangle, [&texture_units](const FloatVector2& uv, const FloatVector4& color) -> FloatVector4 {
         // TODO: We'd do some kind of multitexturing/blending here
         // Construct a vector for the texel we want to sample
-        FloatVector4 texel = texture.sample_texel(uv);
-        return texel * color;
+        FloatVector4 texel = color;
+
+        for (const auto& texture_unit : texture_units) {
+
+            // No texture is bound to this texture unit
+            if (!texture_unit.is_bound())
+                continue;
+
+            // FIXME: Don't assume Texture2D, _and_ work out how we blend/do multitexturing properly.....
+            texel = texel * static_ptr_cast<Texture2D>(texture_unit.bound_texture())->sample_texel(uv);
+        }
+
+        return texel;
     });
 }
 

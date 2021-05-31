@@ -78,6 +78,7 @@ multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
 extern "C" const char kernel_cmdline[4096];
+bool g_in_early_boot;
 
 namespace Kernel {
 
@@ -111,6 +112,7 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
         asm volatile("cli;hlt");
     }
 
+    g_in_early_boot = true;
     setup_serial_debug();
 
     // We need to copy the command line before kmalloc is initialized,
@@ -270,6 +272,9 @@ void init_stage2(void*)
 
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_memory_after_init();
+
+    // Switch out of early boot mode.
+    g_in_early_boot = false;
 
     int error;
 

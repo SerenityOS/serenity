@@ -10,6 +10,8 @@
 #include "GL/gl.h"
 #include "GLStruct.h"
 #include "Tex/Texture2D.h"
+#include "Tex/TextureUnit.h"
+#include <AK/Array.h>
 #include <AK/OwnPtr.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Vector4.h>
@@ -31,7 +33,7 @@ class SoftwareRasterizer final {
 public:
     SoftwareRasterizer(const Gfx::IntSize& min_size);
 
-    void submit_triangle(const GLTriangle& triangle, const Texture2D& texture);
+    void submit_triangle(const GLTriangle& triangle, const Array<TextureUnit, 32>& texture_units);
     void submit_triangle(const GLTriangle& triangle);
     void resize(const Gfx::IntSize& min_size);
     void clear_color(const FloatVector4&);

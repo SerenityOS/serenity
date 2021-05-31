@@ -75,18 +75,18 @@ struct MountInfo {
 static void fill_mounts(Vector<MountInfo>& output)
 {
     // Output info about currently mounted filesystems.
-    auto df = Core::File::construct("/proc/df");
-    if (!df->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
+    auto file = Core::File::construct("/proc/df");
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        warnln("Failed to open {}: {}", file->name(), file->error_string());
         return;
     }
 
-    auto content = df->read_all();
+    auto content = file->read_all();
     auto json = JsonValue::from_string(content);
     VERIFY(json.has_value());
 
     json.value().as_array().for_each([&output](auto& value) {
-        auto filesystem_object = value.as_object();
+        auto& filesystem_object = value.as_object();
         MountInfo mount_info;
         mount_info.mount_point = filesystem_object.get("mount_point").to_string();
         mount_info.source = filesystem_object.get("source").as_string_or("none");

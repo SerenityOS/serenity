@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/JsonObject.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
@@ -60,7 +59,7 @@ int main(int argc, char** argv)
     });
 
     for (auto& value : sorted_regions) {
-        auto map = value.as_object();
+        auto& map = value.as_object();
         auto address = map.get("address").to_int();
         auto size = map.get("size").to_string();
 

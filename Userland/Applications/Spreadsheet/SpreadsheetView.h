@@ -124,10 +124,14 @@ private:
                 commit();
                 on_cursor_key_pressed(event);
             };
+            textbox->on_focusout = [this] {
+                on_cell_focusout(index(), value());
+            };
             return textbox;
         }
 
         Function<void(GUI::KeyEvent&)> on_cursor_key_pressed;
+        Function<void(const GUI::ModelIndex&, const GUI::Variant&)> on_cell_focusout;
 
     private:
         bool m_has_set_initial_value { false };

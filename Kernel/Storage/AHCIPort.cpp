@@ -4,6 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+// For more information about locking in this code
+// please look at Documentation/Kernel/AHCILocking.md
+
 #include <AK/Atomic.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/Storage/AHCIPort.h>

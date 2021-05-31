@@ -6,6 +6,8 @@
 
 #include <Kernel/KString.h>
 
+extern bool g_in_early_boot;
+
 namespace Kernel {
 
 OwnPtr<KString> KString::try_create(StringView const& string)
@@ -21,6 +23,15 @@ OwnPtr<KString> KString::try_create(StringView const& string)
     return new_string;
 }
 
+NonnullOwnPtr<KString> KString::must_create(StringView const& string)
+{
+    // We can only enforce success during early boot.
+    VERIFY(g_in_early_boot);
+    auto kstring = KString::try_create(string);
+    VERIFY(kstring != nullptr);
+    return kstring.release_nonnull();
+}
+
 OwnPtr<KString> KString::try_create_uninitialized(size_t length, char*& characters)
 {
     size_t allocation_size = sizeof(KString) + (sizeof(char) * length) + sizeof(char);
@@ -30,6 +41,15 @@ OwnPtr<KString> KString::try_create_uninitialized(size_t length, char*& characte
     auto* new_string = new (slot) KString(length);
     characters = new_string->m_characters;
     return adopt_own_if_nonnull(new_string);
+}
+
+NonnullOwnPtr<KString> KString::must_create_uninitialized(size_t length, char*& characters)
+{
+    // We can only enforce success during early boot.
+    VERIFY(g_in_early_boot);
+    auto kstring = KString::try_create_uninitialized(length, characters);
+    VERIFY(kstring != nullptr);
+    return kstring.release_nonnull();
 }
 
 OwnPtr<KString> KString::try_clone() const

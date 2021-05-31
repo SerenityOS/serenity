@@ -7,7 +7,6 @@
 #include <LibCore/ArgsParser.h>
 #include <serenity.h>
 #include <stdio.h>
-#include <string.h>
 
 int main(int argc, char** argv)
 {

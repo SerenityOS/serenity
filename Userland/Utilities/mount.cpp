@@ -5,7 +5,6 @@
  */
 
 #include <AK/Assertions.h>
-#include <AK/ByteBuffer.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
@@ -129,7 +128,7 @@ static bool print_mounts()
     VERIFY(json.has_value());
 
     json.value().as_array().for_each([](auto& value) {
-        auto fs_object = value.as_object();
+        auto& fs_object = value.as_object();
         auto class_name = fs_object.get("class_name").to_string();
         auto mount_point = fs_object.get("mount_point").to_string();
         auto source = fs_object.get("source").as_string_or("none");

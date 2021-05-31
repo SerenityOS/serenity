@@ -31,6 +31,7 @@ set(AK_TEST_SOURCES
     TestIntrusiveList.cpp
     TestIntrusiveRedBlackTree.cpp
     TestJSON.cpp
+    TestLEB128.cpp
     TestLexicalPath.cpp
     TestMACAddress.cpp
     TestMemMem.cpp

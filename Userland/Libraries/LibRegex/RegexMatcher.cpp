@@ -363,16 +363,12 @@ ALWAYS_INLINE Optional<bool> Matcher<Parser>::execute_low_prio_forks(const Match
     for (auto& state : states) {
 
         state.instruction_position = state.fork_at_position;
-#if REGEX_DEBUG
-        fprintf(stderr, "Forkstay... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
-#endif
+        dbgln_if(REGEX_DEBUG, "Forkstay... ip = {}, sp = {}", state.instruction_position, state.string_position);
         auto success = execute(input, state, output, recursion_level);
         if (!success.has_value())
             return {};
         if (success.value()) {
-#if REGEX_DEBUG
-            fprintf(stderr, "Forkstay succeeded... ip = %lu, sp = %lu\n", state.instruction_position, state.string_position);
-#endif
+            dbgln_if(REGEX_DEBUG, "Forkstay succeeded... ip = {}, sp = {}", state.instruction_position, state.string_position);
             original_state = state;
             return true;
         }

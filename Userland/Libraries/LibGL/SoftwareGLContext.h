@@ -12,6 +12,7 @@
 #include "SoftwareRasterizer.h"
 #include "Tex/NameAllocator.h"
 #include "Tex/Texture.h"
+#include "Tex/TextureUnit.h"
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
 #include <AK/Tuple.h>
@@ -69,6 +70,7 @@ public:
     virtual void gl_tex_image_2d(GLenum target, GLint level, GLint internal_format, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* data) override;
     virtual void gl_tex_coord(GLfloat s, GLfloat t, GLfloat r, GLfloat q) override;
     virtual void gl_bind_texture(GLenum target, GLuint texture) override;
+    virtual void gl_active_texture(GLenum texture) override;
 
     virtual void present() override;
 
@@ -129,8 +131,6 @@ private:
 
     GLenum m_current_read_buffer = GL_BACK;
 
-    GLuint m_bound_texture_2d = 0;
-
     NonnullRefPtr<Gfx::Bitmap> m_frontbuffer;
 
     Clipper m_clipper;
@@ -138,6 +138,8 @@ private:
     // Texture objects
     TextureNameAllocator m_name_allocator;
     HashMap<GLuint, RefPtr<Texture>> m_allocated_textures;
+    Array<TextureUnit, 32> m_texture_units;
+    TextureUnit* m_active_texture_unit { &m_texture_units[0] };
 
     SoftwareRasterizer m_rasterizer;
 

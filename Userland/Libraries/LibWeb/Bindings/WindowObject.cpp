@@ -339,25 +339,33 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::btoa)
     return JS::js_string(vm, move(encoded));
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-top
 JS_DEFINE_NATIVE_GETTER(WindowObject::top_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
+
     auto* this_browsing_context = impl->document().browsing_context();
-    VERIFY(this_browsing_context);
+    if (!this_browsing_context)
+        return JS::js_null();
+
     VERIFY(this_browsing_context->top_level_browsing_context().document());
     auto& top_window = this_browsing_context->top_level_browsing_context().document()->window();
     return top_window.wrapper();
 }
 
+// https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 JS_DEFINE_NATIVE_GETTER(WindowObject::parent_getter)
 {
     auto* impl = impl_from(vm, global_object);
     if (!impl)
         return {};
+
     auto* this_browsing_context = impl->document().browsing_context();
-    VERIFY(this_browsing_context);
+    if (!this_browsing_context)
+        return JS::js_null();
+
     if (this_browsing_context->parent()) {
         VERIFY(this_browsing_context->parent()->document());
         auto& parent_window = this_browsing_context->parent()->document()->window();

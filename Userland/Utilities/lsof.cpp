@@ -174,7 +174,7 @@ int main(int argc, char* argv[])
         if (open_files.is_empty())
             return 0;
 
-        for (auto file : open_files) {
+        for (auto& file : open_files) {
             display_entry(file, *processes->find_if([&](auto& entry) { return entry.pid == arg_pid; }));
         }
     }
