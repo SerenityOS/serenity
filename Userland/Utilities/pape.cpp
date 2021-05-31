@@ -6,18 +6,10 @@
 
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Desktop.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 static int handle_show_all()
 {

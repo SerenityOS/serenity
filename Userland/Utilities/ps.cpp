@@ -6,9 +6,7 @@
 
 #include <AK/QuickSort.h>
 #include <LibCore/ArgsParser.h>
-#include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
 

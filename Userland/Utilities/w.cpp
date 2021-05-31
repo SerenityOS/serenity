@@ -10,7 +10,6 @@
 #include <LibCore/DateTime.h>
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
-#include <inttypes.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <sys/stat.h>

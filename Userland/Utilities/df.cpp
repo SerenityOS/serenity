@@ -10,15 +10,11 @@
 #include <AK/JsonObject.h>
 #include <AK/NumberFormat.h>
 #include <AK/String.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
-#include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 static bool flag_human_readable = false;
 

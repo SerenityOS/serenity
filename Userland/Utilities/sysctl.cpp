@@ -7,16 +7,9 @@
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <dirent.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
 
 static String read_var(const String& name)
 {

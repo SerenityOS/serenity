@@ -7,7 +7,6 @@
 #include <AK/String.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DateTime.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
