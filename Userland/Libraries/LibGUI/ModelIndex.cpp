@@ -19,6 +19,17 @@ Variant ModelIndex::data(ModelRole role) const
     return model()->data(*this, role);
 }
 
+bool ModelIndex::is_parent_of(const ModelIndex& child) const
+{
+    auto current_index = child.parent();
+    while (current_index.is_valid()) {
+        if (current_index == *this)
+            return true;
+        current_index = current_index.parent();
+    }
+    return false;
+}
+
 ModelIndex ModelIndex::sibling(int row, int column) const
 {
     if (!is_valid())

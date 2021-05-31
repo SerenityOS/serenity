@@ -26,6 +26,7 @@ public:
     void* internal_data() const { return m_internal_data; }
 
     ModelIndex parent() const;
+    bool is_parent_of(const ModelIndex&) const;
 
     bool operator==(const ModelIndex& other) const
     {

@@ -148,6 +148,10 @@ void TreeView::toggle_index(const ModelIndex& index)
     VERIFY(model()->row_count(index));
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
+
+    if (!metadata.open && index.is_parent_of(cursor_index()))
+        set_cursor(index, SelectionUpdate::Set);
+
     if (on_toggle)
         on_toggle(index, metadata.open);
     update_column_sizes();
