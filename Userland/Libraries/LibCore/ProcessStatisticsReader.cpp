@@ -11,7 +11,6 @@
 #include <LibCore/File.h>
 #include <LibCore/ProcessStatisticsReader.h>
 #include <pwd.h>
-#include <stdio.h>
 
 namespace Core {
 
@@ -21,13 +20,13 @@ Optional<Vector<Core::ProcessStatistics>> ProcessStatisticsReader::get_all(RefPt
 {
     if (proc_all_file) {
         if (!proc_all_file->seek(0, Core::SeekMode::SetPosition)) {
-            fprintf(stderr, "ProcessStatisticsReader: Failed to refresh /proc/all: %s\n", proc_all_file->error_string());
+            warnln("ProcessStatisticsReader: Failed to refresh /proc/all: {}", proc_all_file->error_string());
             return {};
         }
     } else {
         proc_all_file = Core::File::construct("/proc/all");
         if (!proc_all_file->open(Core::OpenMode::ReadOnly)) {
-            fprintf(stderr, "ProcessStatisticsReader: Failed to open /proc/all: %s\n", proc_all_file->error_string());
+            warnln("ProcessStatisticsReader: Failed to open /proc/all: {}", proc_all_file->error_string());
             return {};
         }
     }
