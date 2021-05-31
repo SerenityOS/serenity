@@ -73,7 +73,7 @@ static void critical_console_out(char ch)
         serial_putch(ch);
     // No need to output things to the real ConsoleDevice as no one is likely
     // to read it (because we are in a fatal situation, so only print things and halt)
-    IO::out8(0xe9, ch);
+    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
     // We emit chars directly to the string. this is necessary in few cases,
     // especially when we want to avoid any memory allocations...
     if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
@@ -91,7 +91,7 @@ static void console_out(char ch)
     if (ConsoleDevice::is_initialized()) {
         ConsoleDevice::the().put_char(ch);
     } else {
-        IO::out8(0xe9, ch);
+        IO::out8(IO::BOCHS_DEBUG_PORT, ch);
     }
     if (ConsoleManagement::is_initialized()) {
         ConsoleManagement::the().debug_tty()->emit_char(ch);
@@ -149,7 +149,7 @@ static void debugger_out(char ch)
 {
     if (serial_debug)
         serial_putch(ch);
-    IO::out8(0xe9, ch);
+    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 }
 
 extern "C" void dbgputstr(const char* characters, size_t length)

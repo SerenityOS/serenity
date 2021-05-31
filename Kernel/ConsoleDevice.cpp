@@ -10,8 +10,8 @@
 #include <Kernel/SpinLock.h>
 #include <Kernel/kstdio.h>
 
-// Bytes output to 0xE9 end up on the Bochs console. It's very handy.
-#define CONSOLE_OUT_TO_E9
+// Output bytes to kernel debug port 0xE9 (Bochs console). It's very handy.
+#define CONSOLE_OUT_TO_BOCHS_DEBUG_PORT
 
 static AK::Singleton<ConsoleDevice> s_the;
 static Kernel::SpinLock g_console_lock;
@@ -67,9 +67,8 @@ Kernel::KResultOr<size_t> ConsoleDevice::write(FileDescription&, u64, const Kern
 void ConsoleDevice::put_char(char ch)
 {
     Kernel::ScopedSpinLock lock(g_console_lock);
-#ifdef CONSOLE_OUT_TO_E9
-    //if (ch != 27)
-    IO::out8(0xe9, ch);
+#ifdef CONSOLE_OUT_TO_BOCHS_DEBUG_PORT
+    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
 #endif
     m_logbuffer.enqueue(ch);
 }
