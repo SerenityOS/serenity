@@ -148,8 +148,7 @@ Parser::Result Parser::parse(Optional<AllOptions> regex_options)
     else
         set_error(Error::InvalidPattern);
 
-    if constexpr (REGEX_DEBUG)
-        fprintf(stderr, "[PARSER] Produced bytecode with %lu entries (opcodes + arguments)\n", m_parser_state.bytecode.size());
+    dbgln_if(REGEX_DEBUG, "[PARSER] Produced bytecode with {} entries (opcodes + arguments)", m_parser_state.bytecode.size());
     return {
         move(m_parser_state.bytecode),
         move(m_parser_state.capture_groups_count),
@@ -460,8 +459,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
         if (match(TokenType::EscapeSequence)) {
             length = 1;
             Token t = consume();
-            if constexpr (REGEX_DEBUG)
-                printf("[PARSER] EscapeSequence with substring %s\n", String(t.value()).characters());
+            dbgln_if(REGEX_DEBUG, "[PARSER] EscapeSequence with substring {}", t.value());
 
             bytecode.insert_bytecode_compare_values({ { CharacterCompareType::Char, (u32)t.value().characters_without_null_termination()[1] } });
             should_parse_repetition_symbol = true;

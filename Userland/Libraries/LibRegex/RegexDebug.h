@@ -27,7 +27,7 @@ public:
         auto& bytecode = regex.parser_result.bytecode;
         size_t index { 0 };
         for (auto& value : bytecode) {
-            fprintf(m_file, "OpCode i=%3lu [0x%02X]\n", index, (u32)value);
+            outln(m_file, "OpCode i={:3} [{:#02X}]", index, (u32)value);
             ++index;
         }
     }
@@ -46,7 +46,7 @@ public:
             }
 
             print_opcode("PrintBytecode", *opcode, state);
-            fprintf(m_file, "%s", m_debug_stripline.characters());
+            out(m_file, "{}", m_debug_stripline);
 
             if (is<OpCode_Exit>(*opcode))
                 break;
@@ -59,19 +59,18 @@ public:
 
     void print_opcode(const String& system, OpCode& opcode, MatchState& state, size_t recursion = 0, bool newline = true) const
     {
-        fprintf(m_file, "%-15s | %-5lu | %-9lu | %-35s | %-30s | %-20s%s",
+        out(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}",
             system.characters(),
             state.instruction_position,
             recursion,
             opcode.to_string().characters(),
             opcode.arguments_string().characters(),
-            String::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position).characters(),
-            newline ? "\n" : "");
-
+            String::formatted("ip: {:3},   sp: {:3}", state.instruction_position, state.string_position));
+        if (newline)
+            outln();
         if (newline && is<OpCode_Compare>(opcode)) {
-            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string()) {
-                fprintf(m_file, "%-15s | %-5s | %-9s | %-35s | %-30s | %-20s%s", "", "", "", "", line.characters(), "", "\n");
-            }
+            for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string())
+                outln(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}", "", "", "", "", line, "");
         }
     }
 
@@ -88,15 +87,15 @@ public:
             builder.appendff(", next ip: {}", state.instruction_position + opcode.size());
         }
 
-        fprintf(m_file, " | %-20s\n", builder.to_string().characters());
+        out(m_file, " | {:20}", builder.to_string());
 
         if (is<OpCode_Compare>(opcode)) {
             for (auto& line : to<OpCode_Compare>(opcode).variable_arguments_to_string(input)) {
-                fprintf(m_file, "%-15s | %-5s | %-9s | %-35s | %-30s | %-20s%s", "", "", "", "", line.characters(), "", "\n");
+                outln(m_file, "{:15} | {:5} | {:9} | {:35} | {:30} | {:20}", "", "", "", "", line, "");
             }
         }
 
-        fprintf(m_file, "%s", m_debug_stripline.characters());
+        out(m_file, "{}", m_debug_stripline);
     }
 
     void print_header()
@@ -110,7 +109,7 @@ public:
         auto str = builder.to_string();
         VERIFY(!str.is_empty());
 
-        fprintf(m_file, "%s\n", str.characters());
+        outln(m_file, "{}", str);
         fflush(m_file);
 
         builder.clear();
