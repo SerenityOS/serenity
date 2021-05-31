@@ -433,14 +433,14 @@ static bool fill_getserv_buffers(const char* line, ssize_t read)
     // Services file entries should always at least contain
     // name and port/protocol, separated by tabs.
     if (split_line.size() < 2) {
-        fprintf(stderr, "getservent(): malformed services file\n");
+        warnln("getservent(): malformed services file");
         return false;
     }
     __getserv_name_buffer = split_line[0];
 
     auto port_protocol_split = String(split_line[1]).split('/');
     if (port_protocol_split.size() < 2) {
-        fprintf(stderr, "getservent(): malformed services file\n");
+        warnln("getservent(): malformed services file");
         return false;
     }
     auto number = port_protocol_split[0].to_int();
@@ -615,7 +615,7 @@ static bool fill_getproto_buffers(const char* line, ssize_t read)
     // This indicates an incorrect file format. Protocols file entries should
     // always have at least a name and a protocol.
     if (split_line.size() < 2) {
-        fprintf(stderr, "getprotoent(): malformed protocols file\n");
+        warnln("getprotoent(): malformed protocols file");
         return false;
     }
     __getproto_name_buffer = split_line[0];
