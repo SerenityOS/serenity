@@ -245,6 +245,11 @@ void KeyboardDevice::key_state_changed(u8 scan_code, bool pressed)
     event.caps_lock_on = m_caps_lock_on;
     event.code_point = HIDManagement::the().character_map().get_char(event);
 
+    // If using a non-QWERTY layout, event.key needs to be updated to be the same as event.code_point
+    KeyCode mapped_key = visible_code_point_to_key_code(event.code_point);
+    if (mapped_key != KeyCode::Key_Invalid)
+        event.key = mapped_key;
+
     if (pressed)
         event.flags |= Is_Press;
     if (HIDManagement::the().m_client)
