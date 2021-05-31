@@ -146,6 +146,7 @@ int main(int argc, char** argv)
     const char* url_str = nullptr;
     bool save_at_provided_name = false;
     const char* data = nullptr;
+    const char* method_param = nullptr;
     String method = "GET";
     HashMap<String, String, CaseInsensitiveStringTraits> request_headers;
 
@@ -169,10 +170,15 @@ int main(int argc, char** argv)
             request_headers.set(header.substring_view(0, split.value()), header.substring_view(split.value() + 1));
             return true;
         } });
+    args_parser.add_option(method_param, "(HTTP only) Set the method for the HTTP request", "method", 'm', "method");
     args_parser.add_positional_argument(url_str, "URL to download from", "url");
     args_parser.parse(argc, argv);
 
-    if (data) {
+    if (method_param) {
+        // If method is specified, use it.
+        method = method_param;
+    } else if (data) {
+        // If data is provided, default to POST.
         method = "POST";
         // FIXME: Content-Type?
     }
