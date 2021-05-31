@@ -34,6 +34,7 @@ private:
     RefPtr<GUI::Label> m_progress_label;
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_close_button;
+    RefPtr<GUI::CheckBox> m_close_on_finish_checkbox;
     OwnPtr<Core::OutputFileStream> m_output_file_stream;
     Core::ElapsedTimer m_elapsed_timer;
 };
