@@ -17,8 +17,6 @@ const int column_width = 22;
 char print_buffer[line_width * line_count];
 char temp_buffer[line_width * 8];
 
-int target_year;
-int target_month;
 int target_day;
 
 int current_year;
