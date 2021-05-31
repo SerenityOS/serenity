@@ -356,8 +356,12 @@ size_t Game::pick_card(Player& player)
         RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(m_trick[0].type()));
         if (is_first_trick)
             return player.pick_low_points_high_value_card().value();
-        else
-            return player.pick_max_points_card();
+        else {
+            auto ignore_card = [this, &player](Card& card) {
+                return !other_player_has_higher_value_card(player, card);
+            };
+            return player.pick_max_points_card(move(ignore_card));
+        }
     }
     RETURN_CARD_IF_VALID(player.pick_lower_value_card(*high_card));
     bool is_third_player = m_trick.size() == 2;
@@ -382,8 +386,10 @@ size_t Game::pick_card(Player& player)
         RETURN_CARD_IF_VALID(player.pick_slightly_higher_value_card(*high_card));
     if (is_first_trick)
         return player.pick_low_points_high_value_card().value();
-    else
-        return player.pick_max_points_card();
+    auto ignore_card = [this, &player](Card& card) {
+        return !other_player_has_higher_value_card(player, card);
+    };
+    return player.pick_max_points_card(move(ignore_card));
 }
 
 void Game::let_player_play_card()
