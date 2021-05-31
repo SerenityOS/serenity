@@ -637,7 +637,9 @@ u32 Value::to_u32(GlobalObject& global_object) const
     if (signbit(value))
         int_val = -int_val;
     auto int32bit = fmod(int_val, NumericLimits<u32>::max() + 1.0);
-    return static_cast<u32>(int32bit);
+    // Cast to i64 here to ensure that the double --> u32 cast doesn't invoke undefined behavior
+    // Otherwise, negative numbers cause a UBSAN warning.
+    return static_cast<u32>(static_cast<i64>(int32bit));
 }
 
 // 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
