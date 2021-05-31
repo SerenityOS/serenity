@@ -14,7 +14,9 @@ namespace Kernel {
 class KString {
 public:
     static OwnPtr<KString> try_create_uninitialized(size_t, char*&);
+    static NonnullOwnPtr<KString> must_create_uninitialized(size_t, char*&);
     static OwnPtr<KString> try_create(StringView const&);
+    static NonnullOwnPtr<KString> must_create(StringView const&);
 
     OwnPtr<KString> try_clone() const;
 
