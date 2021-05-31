@@ -327,10 +327,7 @@ size_t Game::pick_card(Player& player)
             auto prefer_card = [this, &player](Card& card) {
                 return !other_player_has_lower_value_card(player, card) && other_player_has_higher_value_card(player, card);
             };
-            auto lower_value_card_in_play = [this, &player](Card& card) {
-                return other_player_has_lower_value_card(player, card);
-            };
-            return player.pick_lead_card(move(valid_card), move(prefer_card), move(lower_value_card_in_play));
+            return player.pick_lead_card(move(valid_card), move(prefer_card));
         }
     }
     auto* high_card = &m_trick[0];
