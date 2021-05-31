@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -35,24 +36,25 @@ int main(int, char**)
     unsigned seconds;
     sscanf(buffer, "%u", &seconds);
 
-    printf("Up ");
+    out("Up ");
 
     if (seconds / 86400 > 0) {
-        printf("%d day%s, ", seconds / 86400, (seconds / 86400) == 1 ? "" : "s");
+        out("{} day{}, ", seconds / 86400, (seconds / 86400) == 1 ? "" : "s");
         seconds %= 86400;
     }
 
     if (seconds / 3600 > 0) {
-        printf("%d hour%s, ", seconds / 3600, (seconds / 3600) == 1 ? "" : "s");
+        out("{} hour{}, ", seconds / 3600, (seconds / 3600) == 1 ? "" : "s");
         seconds %= 3600;
     }
 
     if (seconds / 60 > 0) {
-        printf("%d minute%s, ", seconds / 60, (seconds / 60) == 1 ? "" : "s");
+        out("{} minute{}, ", seconds / 60, (seconds / 60) == 1 ? "" : "s");
         seconds %= 60;
     }
 
-    printf("%d second%s\n", seconds, seconds == 1 ? "" : "s");
+    out("{} second{}", seconds, seconds == 1 ? "" : "s");
+    outln();
 
     fclose(fp);
     return 0;

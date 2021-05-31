@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         return 1;
     }
     double remaining_delta = remaining_delta_timeval.tv_sec + remaining_delta_timeval.tv_usec / 1'000'000.0;
-    printf("%f\n", remaining_delta);
+    outln("{}", remaining_delta);
 
     return 0;
 }

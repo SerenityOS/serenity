@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -16,7 +17,7 @@ constexpr unsigned encoded_device(unsigned major, unsigned minor)
 
 static int usage()
 {
-    printf("usage: mknod <name> <c|b|p> [<major> <minor>]\n");
+    warnln("usage: mknod <name> <c|b|p> [<major> <minor>]");
     return 0;
 }
 

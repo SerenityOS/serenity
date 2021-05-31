@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <AK/StdLibExtras.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ static double get_double(const char* name, const char* d_string, int* number_of_
     char* end;
     double d = strtod(d_string, &end);
     if (d == 0 && end == d_string) {
-        fprintf(stderr, "%s: invalid argument \"%s\"\n", name, d_string);
+        warnln("{}: invalid argument \"{}\"", name, d_string);
         print_usage(stderr);
         exit(1);
     }
@@ -73,18 +74,18 @@ int main(int argc, const char* argv[])
         end = get_double(argv[0], argv[3], &number_of_end_decimals);
         break;
     default:
-        fprintf(stderr, "%s: unexpected number of arguments\n", argv[0]);
+        warnln("{}: unexpected number of arguments", argv[0]);
         print_usage(stderr);
         return 1;
     }
 
     if (step == 0) {
-        fprintf(stderr, "%s: increment must not be 0\n", argv[0]);
+        warnln("{}: increment must not be 0", argv[0]);
         return 1;
     }
 
     if (__builtin_isnan(start) || __builtin_isnan(step) || __builtin_isnan(end)) {
-        fprintf(stderr, "%s: start, step, and end must not be NaN\n", argv[0]);
+        warnln("{}: start, step, and end must not be NaN", argv[0]);
         return 1;
     }
 
@@ -101,7 +102,7 @@ int main(int argc, const char* argv[])
             else if ((dot - buf) + 1 + number_of_decimals < (int)sizeof(buf))
                 dot[1 + number_of_decimals] = '\0';
         }
-        printf("%s\n", buf);
+        outln("{}", buf);
         d += step;
     }
 

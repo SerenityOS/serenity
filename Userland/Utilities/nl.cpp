@@ -7,7 +7,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/ArgsParser.h>
-
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
         for (auto& file : files) {
             FILE* file_pointer = fopen(file, "r");
             if (!file_pointer) {
-                fprintf(stderr, "unable to open %s\n", file);
+                warnln("Failed to open {}: {}", file, strerror(errno));
                 continue;
             }
             file_pointers.append(file_pointer);
@@ -78,20 +78,20 @@ int main(int argc, char** argv)
             if (previous_character == 0 || previous_character == '\n') {
                 if (next_character == '\n' && number_style != NumberAllLines) {
                     // Skip printing line count on empty lines.
-                    printf("\n");
+                    outln();
                     continue;
                 }
                 if (number_style != NumberNoLines)
-                    printf("%*d%s", number_width, (line_number += increment), separator);
+                    out("{1:{0}}{2}", number_width, (line_number += increment), separator);
                 else
-                    printf("%*s", number_width, "");
+                    out("{1:{0}}", number_width, "");
             }
             putchar(next_character);
             previous_character = next_character;
         }
         fclose(file_pointer);
         if (previous_character != '\n')
-            printf("\n"); // for cases where files have no trailing newline
+            outln(); // for cases where files have no trailing newline
     }
     return 0;
 }

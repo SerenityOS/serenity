@@ -47,7 +47,7 @@ int main(int argc, char** argv)
         }
 
         if (verbose)
-            printf("'%s' -> '%s'\n", source, destination);
+            outln("'{}' -> '{}'", source, destination);
     }
     return 0;
 }

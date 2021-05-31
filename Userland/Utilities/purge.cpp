@@ -33,6 +33,6 @@ int main(int argc, char** argv)
         perror("purge");
         return 1;
     }
-    printf("Purged page count: %d\n", purged_page_count);
+    outln("Purged page count: {}", purged_page_count);
     return 0;
 }

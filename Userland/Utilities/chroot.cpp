@@ -65,7 +65,7 @@ int main(int argc, char** argv)
                 else if (part == "remount")
                     flags |= MS_REMOUNT;
                 else if (part == "bind")
-                    fprintf(stderr, "Ignoring -o bind, as it doesn't make sense for chroot\n");
+                    warnln("Ignoring -o bind, as it doesn't make sense for chroot");
                 else
                     return false;
             }

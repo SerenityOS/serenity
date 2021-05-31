@@ -19,12 +19,12 @@ static String read_var(const String& name)
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
     if (!f->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "open: %s\n", f->error_string());
+        warnln("Failed to open {}: {}", f->name(), f->error_string());
         exit(1);
     }
     const auto& b = f->read_all();
     if (f->error() < 0) {
-        fprintf(stderr, "read: %s\n", f->error_string());
+        warnln("Failed to read: {}", f->error_string());
         exit(1);
     }
     return String((const char*)b.data(), b.size(), Chomp);
@@ -38,12 +38,12 @@ static void write_var(const String& name, const String& value)
     auto path = builder.to_string();
     auto f = Core::File::construct(path);
     if (!f->open(Core::OpenMode::WriteOnly)) {
-        fprintf(stderr, "open: %s\n", f->error_string());
+        warnln("Failed to open: {}", f->error_string());
         exit(1);
     }
     f->write(value);
     if (f->error() < 0) {
-        fprintf(stderr, "write: %s\n", f->error_string());
+        warnln("Failed to write: {}", f->error_string());
         exit(1);
     }
 }
@@ -52,13 +52,13 @@ static int handle_show_all()
 {
     Core::DirIterator di("/proc/sys", Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "DirIterator: %s\n", di.error_string());
+        outln("DirIterator: {}", di.error_string());
         return 1;
     }
 
     while (di.has_next()) {
         String variable_name = di.next_path();
-        printf("%s = %s\n", variable_name.characters(), read_var(variable_name).characters());
+        outln("{} = {}", variable_name, read_var(variable_name));
     }
     return 0;
 }
@@ -71,13 +71,13 @@ static int handle_var(const String& var)
     bool is_write = parts.size() > 1;
 
     if (!is_write) {
-        printf("%s = %s\n", variable_name.characters(), read_var(variable_name).characters());
+        outln("{} = {}", variable_name, read_var(variable_name));
         return 0;
     }
 
-    printf("%s = %s", variable_name.characters(), read_var(variable_name).characters());
+    out("{} = {}", variable_name, read_var(variable_name));
     write_var(variable_name, parts[1]);
-    printf(" -> %s\n", read_var(variable_name).characters());
+    outln(" -> {}", read_var(variable_name));
     return 0;
 }
 

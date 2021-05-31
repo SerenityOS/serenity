@@ -15,20 +15,20 @@ static int handle_show_all()
 {
     Core::DirIterator di("/res/wallpapers", Core::DirIterator::SkipDots);
     if (di.has_error()) {
-        fprintf(stderr, "DirIterator: %s\n", di.error_string());
+        warnln("DirIterator: {}", di.error_string());
         return 1;
     }
 
     while (di.has_next()) {
         String name = di.next_path();
-        printf("%s\n", name.characters());
+        outln("{}", name);
     }
     return 0;
 }
 
 static int handle_show_current()
 {
-    printf("%s\n", GUI::Desktop::the().wallpaper().characters());
+    outln("{}", GUI::Desktop::the().wallpaper());
     return 0;
 }
 
@@ -39,7 +39,7 @@ static int handle_set_pape(const String& name)
     builder.append(name);
     String path = builder.to_string();
     if (!GUI::Desktop::the().set_wallpaper(path)) {
-        fprintf(stderr, "pape: Failed to set wallpaper %s\n", path.characters());
+        warnln("pape: Failed to set wallpaper {}", path);
         return 1;
     }
     return 0;

@@ -107,7 +107,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char** argv)
     }
 
     auto date = Core::DateTime::from_timestamp(time(nullptr));
-    printf("Today is %s\n", DiscordianDate(date).to_string().characters());
+    outln("Today is {}", DiscordianDate(date).to_string());
 
     return 0;
 }

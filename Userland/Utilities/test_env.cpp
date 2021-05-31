@@ -5,6 +5,7 @@
  */
 
 #include <AK/Assertions.h>
+#include <AK/Format.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,11 +15,11 @@ static void assert_env(const char* name, const char* value)
     char* result = getenv(name);
     if (!result) {
         perror("getenv");
-        printf("(When reading value for '%s'; we expected '%s'.)\n", name, value);
+        outln("(When reading value for '{}'; we expected '{}'.)", name, value);
         VERIFY(false);
     }
     if (strcmp(result, value) != 0) {
-        printf("Expected '%s', got '%s' instead.\n", value, result);
+        outln("Expected '{}', got '{}' instead.", value, result);
         VERIFY(false);
     }
 }
@@ -77,17 +78,17 @@ static void test_settenv_overwrite_empty()
 
 int main(int, char**)
 {
-#define RUNTEST(x)                      \
-    {                                   \
-        printf("Running " #x " ...\n"); \
-        x();                            \
-        printf("Success!\n");           \
+#define RUNTEST(x)                   \
+    {                                \
+        outln("Running " #x " ..."); \
+        x();                         \
+        outln("Success!");           \
     }
     RUNTEST(test_getenv_preexisting);
     RUNTEST(test_puttenv);
     RUNTEST(test_settenv);
     RUNTEST(test_settenv_overwrite_empty);
-    printf("PASS\n");
+    outln("PASS");
 
     return 0;
 }

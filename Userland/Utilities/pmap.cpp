@@ -37,16 +37,16 @@ int main(int argc, char** argv)
 
     auto file = Core::File::construct(String::formatted("/proc/{}/vm", pid));
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", file->error_string());
+        warnln("Failed to open {}: {}", file->name(), file->error_string());
         return 1;
     }
 
-    printf("%s:\n", pid);
+    outln("{}:", pid);
 
     if (extended) {
-        printf("Address         Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name\n");
+        outln("Address         Size   Resident      Dirty Access  VMObject Type  Purgeable   CoW Pages Name");
     } else {
-        printf("Address         Size Access  Name\n");
+        outln("Address         Size Access  Name");
     }
 
     auto file_contents = file->read_all();
@@ -70,8 +70,8 @@ int main(int argc, char** argv)
             (map.get("shared").to_bool() ? "s" : "-"),
             (map.get("syscall").to_bool() ? "c" : "-"));
 
-        printf("%08x  ", address);
-        printf("%10s ", size.characters());
+        out("{:08x}  ", address);
+        out("{:>10} ", size);
         if (extended) {
             auto resident = map.get("amount_resident").to_string();
             auto dirty = map.get("amount_dirty").to_string();
@@ -80,18 +80,18 @@ int main(int argc, char** argv)
                 vmobject = vmobject.substring(0, vmobject.length() - 8);
             auto purgeable = map.get("purgeable").to_string();
             auto cow_pages = map.get("cow_pages").to_string();
-            printf("%10s ", resident.characters());
-            printf("%10s ", dirty.characters());
-            printf("%-6s ", access.characters());
-            printf("%-14s ", vmobject.characters());
-            printf("%-10s ", purgeable.characters());
-            printf("%10s ", cow_pages.characters());
+            out("{:>10} ", resident);
+            out("{:>10} ", dirty);
+            out("{:6} ", access);
+            out("{:14} ", vmobject);
+            out("{:10} ", purgeable);
+            out("{:>10} ", cow_pages);
         } else {
-            printf("%-6s ", access.characters());
+            out("{:6} ", access);
         }
         auto name = map.get("name").to_string();
-        printf("%-20s", name.characters());
-        printf("\n");
+        out("{:20}", name);
+        outln();
     }
 
     return 0;
