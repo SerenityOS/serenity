@@ -397,6 +397,11 @@ void Game::let_player_play_card()
 
     if (player.is_human) {
         m_human_can_play = true;
+        if constexpr (HEARTS_DEBUG) {
+            auto card_index = pick_card(player);
+            auto& card = player.hand[card_index];
+            card->set_inverted(true);
+        }
         update();
         return;
     }
