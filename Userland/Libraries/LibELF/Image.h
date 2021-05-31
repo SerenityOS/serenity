@@ -189,7 +189,7 @@ public:
     template<VoidFunction<ProgramHeader> F>
     void for_each_program_header(F) const;
 
-    Optional<Section> lookup_section(String const& name) const;
+    Optional<Section> lookup_section(StringView const& name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
@@ -199,7 +199,7 @@ public:
     FlatPtr base_address() const { return (FlatPtr)m_buffer; }
     size_t size() const { return m_size; }
 
-    Optional<Symbol> find_demangled_function(const String& name) const;
+    Optional<Symbol> find_demangled_function(const StringView& name) const;
 
     bool has_symbols() const { return symbol_count(); }
     String symbolicate(u32 address, u32* offset = nullptr) const;

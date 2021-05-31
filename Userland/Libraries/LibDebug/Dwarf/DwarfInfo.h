@@ -60,7 +60,7 @@ public:
 private:
     void populate_compilation_units();
 
-    ReadonlyBytes section_data(const String& section_name) const;
+    ReadonlyBytes section_data(const StringView& section_name) const;
 
     const ELF::Image& m_elf;
     ReadonlyBytes m_debug_info_data;

@@ -17,7 +17,7 @@ namespace Debug {
 
 DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf, String source_root, FlatPtr base_address)
     : m_elf(move(elf))
-    , m_source_root(source_root)
+    , m_source_root(move(source_root))
     , m_base_address(base_address)
     , m_dwarf_info(*m_elf)
 {
@@ -78,7 +78,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
 void DebugInfo::prepare_lines()
 {
-    auto section = elf().lookup_section(".debug_line");
+    auto section = elf().lookup_section(".debug_line"sv);
     if (!section.has_value())
         return;
 

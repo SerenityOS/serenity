@@ -13,15 +13,15 @@ namespace Debug::Dwarf {
 DwarfInfo::DwarfInfo(const ELF::Image& elf)
     : m_elf(elf)
 {
-    m_debug_info_data = section_data(".debug_info");
-    m_abbreviation_data = section_data(".debug_abbrev");
-    m_debug_strings_data = section_data(".debug_str");
-    m_debug_line_strings_data = section_data(".debug_line_str");
+    m_debug_info_data = section_data(".debug_info"sv);
+    m_abbreviation_data = section_data(".debug_abbrev"sv);
+    m_debug_strings_data = section_data(".debug_str"sv);
+    m_debug_line_strings_data = section_data(".debug_line_str"sv);
 
     populate_compilation_units();
 }
 
-ReadonlyBytes DwarfInfo::section_data(const String& section_name) const
+ReadonlyBytes DwarfInfo::section_data(const StringView& section_name) const
 {
     auto section = m_elf.lookup_section(section_name);
     if (!section.has_value())
