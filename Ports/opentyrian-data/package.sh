@@ -6,7 +6,8 @@ files="http://camanis.net/tyrian/tyrian21.zip tyrian21.zip 7790d09a2a3addcd33c66
 auth_type=sha256
 
 build() {
-    run_nocd unzip -o tyrian21.zip && cd tyrian21 && rm -v *.exe
+    run_nocd unzip -o tyrian21.zip
+    run_nocd rm -v tyrian21/*.exe
 }
 
 install() {

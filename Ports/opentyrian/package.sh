@@ -6,7 +6,6 @@ files="https://github.com/opentyrian/opentyrian/archive/${version}.tar.gz ${vers
 auth_type=sha256
 configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_SOURCE_DIR/Toolchain/CMake/CMakeToolchain.txt"
 depends="SDL2 opentyrian-data"
-workdir="${port}-${version}"
 
 launcher_name=OpenTyrian
 launcher_category=Games
