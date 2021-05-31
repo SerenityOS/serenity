@@ -787,8 +787,13 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
         auto rhs_u32 = rhs_numeric.to_u32(global_object);
         return Value(lhs_i32 << rhs_u32);
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
-        TODO();
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        auto multiplier_divisor = Crypto::SignedBigInteger { Crypto::NumberTheory::Power(Crypto::UnsignedBigInteger(2), rhs_numeric.as_bigint().big_integer().unsigned_value()) };
+        if (rhs_numeric.as_bigint().big_integer().is_negative())
+            return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().divided_by(multiplier_divisor).quotient);
+        else
+            return js_bigint(global_object.heap(), lhs_numeric.as_bigint().big_integer().multiplied_by(multiplier_divisor));
+    }
     global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "left-shift");
     return {};
 }
@@ -813,8 +818,11 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
         auto rhs_u32 = rhs_numeric.to_u32(global_object);
         return Value(lhs_i32 >> rhs_u32);
     }
-    if (both_bigint(lhs_numeric, rhs_numeric))
-        TODO();
+    if (both_bigint(lhs_numeric, rhs_numeric)) {
+        auto rhs_negated = rhs_numeric.as_bigint().big_integer();
+        rhs_negated.negate();
+        return left_shift(global_object, lhs, js_bigint(global_object.heap(), rhs_negated));
+    }
     global_object.vm().throw_exception<TypeError>(global_object, ErrorType::BigIntBadOperatorOtherType, "right-shift");
     return {};
 }
