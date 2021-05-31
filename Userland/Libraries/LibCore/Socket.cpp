@@ -106,7 +106,7 @@ bool Socket::connect(const SocketAddress& address)
     auto dest_address = address.to_string();
     bool fits = dest_address.copy_characters_to_buffer(saddr.sun_path, sizeof(saddr.sun_path));
     if (!fits) {
-        fprintf(stderr, "Core::Socket: Failed to connect() to %s: Path is too long!\n", dest_address.characters());
+        warnln("Core::Socket: Failed to connect() to {}: Path is too long!", dest_address);
         errno = EINVAL;
         return false;
     }
@@ -139,7 +139,7 @@ bool Socket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
             return true;
         }
         int saved_errno = errno;
-        fprintf(stderr, "Core::Socket: Failed to connect() to %s: %s\n", destination_address().to_string().characters(), strerror(saved_errno));
+        warnln("Core::Socket: Failed to connect() to {}: {}", destination_address().to_string(), strerror(saved_errno));
         errno = saved_errno;
         return false;
     }
