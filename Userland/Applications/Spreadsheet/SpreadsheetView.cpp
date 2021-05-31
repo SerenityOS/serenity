@@ -186,6 +186,9 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
             m_table_view->stop_editing();
             m_table_view->dispatch_event(event);
         };
+        delegate->on_cell_focusout = [this](auto& index, auto& value) {
+            m_table_view->model()->set_data(index, value);
+        };
         return delegate;
     };
 
