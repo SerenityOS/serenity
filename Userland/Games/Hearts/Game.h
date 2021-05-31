@@ -50,6 +50,7 @@ private:
     int calculate_score(Player& player);
     bool other_player_has_lower_value_card(Player& player, Card& card);
     bool other_player_has_higher_value_card(Player& player, Card& card);
+    bool other_player_has_queen_of_spades(Player& player);
 
     void reposition_hand(Player&);
     bool is_card_highlighted(Card& card);

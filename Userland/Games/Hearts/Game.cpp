@@ -304,6 +304,19 @@ bool Game::other_player_has_higher_value_card(Player& player, Card& card)
     return false;
 }
 
+bool Game::other_player_has_queen_of_spades(Player& player)
+{
+    for (auto& other_player : m_players) {
+        if (&player != &other_player) {
+            for (auto& other_card : other_player.hand) {
+                if (other_card && other_card->type() == Card::Type::Spades && hearts_card_value(*other_card) == CardValue::Queen)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
 #define RETURN_CARD_IF_VALID(card)     \
     do {                               \
         auto card_index = (card);      \
@@ -347,10 +360,26 @@ size_t Game::pick_card(Player& player)
             return player.pick_max_points_card();
     }
     RETURN_CARD_IF_VALID(player.pick_lower_value_card(*high_card));
-    if (!is_trailing_player)
-        RETURN_CARD_IF_VALID(player.pick_slightly_higher_value_card(*high_card));
-    else
+    bool is_third_player = m_trick.size() == 2;
+    bool play_highest_value_card = false;
+    if (is_trailing_player)
+        play_highest_value_card = true;
+    if (is_third_player && !trick_has_points) {
+        play_highest_value_card = true;
+
+        if (high_card->type() == Card::Type::Spades && other_player_has_queen_of_spades(player)) {
+            Optional<size_t> chosen_card_index = player.pick_low_points_high_value_card(high_card->type());
+            if (chosen_card_index.has_value()) {
+                auto& card = player.hand[chosen_card_index.value()];
+                if (hearts_card_value(*card) > CardValue::Queen)
+                    play_highest_value_card = false;
+            }
+        }
+    }
+    if (play_highest_value_card)
         RETURN_CARD_IF_VALID(player.pick_low_points_high_value_card(high_card->type()));
+    else
+        RETURN_CARD_IF_VALID(player.pick_slightly_higher_value_card(*high_card));
     if (is_first_trick)
         return player.pick_low_points_high_value_card().value();
     else
