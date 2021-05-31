@@ -38,7 +38,7 @@ public:
     Optional<size_t> pick_low_points_high_value_card(Optional<Card::Type> type = {});
     Optional<size_t> pick_lower_value_card(Card& other_card);
     Optional<size_t> pick_slightly_higher_value_card(Card& other_card);
-    size_t pick_max_points_card();
+    size_t pick_max_points_card(Function<bool(Card&)>);
     Optional<size_t> pick_specific_card(Card::Type type, CardValue value);
     size_t pick_last_card();
     bool has_card_of_type(Card::Type type);
