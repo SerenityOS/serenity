@@ -349,7 +349,7 @@ void URL::set_host(const String& host)
     m_valid = compute_validity();
 }
 
-void URL::set_port(u16 port)
+void URL::set_port(const u16 port)
 {
     m_port = port;
     m_valid = compute_validity();
@@ -404,12 +404,12 @@ bool URL::compute_validity() const
     return true;
 }
 
-bool URL::protocol_requires_port(const String& protocol)
+bool URL::protocol_requires_port(const StringView& protocol)
 {
     return (default_port_for_protocol(protocol) != 0);
 }
 
-u16 URL::default_port_for_protocol(const String& protocol)
+u16 URL::default_port_for_protocol(const StringView& protocol)
 {
     if (protocol == "http")
         return 80;
