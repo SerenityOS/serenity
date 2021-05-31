@@ -6,22 +6,22 @@
 
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
-#include <LibWeb/HTML/FrameHostElement.h>
+#include <LibWeb/HTML/BrowsingContextContainer.h>
 #include <LibWeb/Origin.h>
 #include <LibWeb/Page/BrowsingContext.h>
 
 namespace Web::HTML {
 
-FrameHostElement::FrameHostElement(DOM::Document& document, QualifiedName qualified_name)
+BrowsingContextContainer::BrowsingContextContainer(DOM::Document& document, QualifiedName qualified_name)
     : HTMLElement(document, move(qualified_name))
 {
 }
 
-FrameHostElement::~FrameHostElement()
+BrowsingContextContainer::~BrowsingContextContainer()
 {
 }
 
-void FrameHostElement::inserted()
+void BrowsingContextContainer::inserted()
 {
     HTMLElement::inserted();
     if (!is_connected())
@@ -33,24 +33,24 @@ void FrameHostElement::inserted()
     }
 }
 
-Origin FrameHostElement::content_origin() const
+Origin BrowsingContextContainer::content_origin() const
 {
     if (!m_nested_browsing_context || !m_nested_browsing_context->document())
         return {};
     return m_nested_browsing_context->document()->origin();
 }
 
-bool FrameHostElement::may_access_from_origin(const Origin& origin) const
+bool BrowsingContextContainer::may_access_from_origin(const Origin& origin) const
 {
     return origin.is_same(content_origin());
 }
 
-const DOM::Document* FrameHostElement::content_document() const
+const DOM::Document* BrowsingContextContainer::content_document() const
 {
     return m_nested_browsing_context ? m_nested_browsing_context->document() : nullptr;
 }
 
-void FrameHostElement::nested_browsing_context_did_load(Badge<FrameLoader>)
+void BrowsingContextContainer::nested_browsing_context_did_load(Badge<FrameLoader>)
 {
     dispatch_event(DOM::Event::create(EventNames::load));
 }
