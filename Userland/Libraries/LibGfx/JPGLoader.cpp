@@ -122,7 +122,6 @@ struct MacroblockMeta {
 };
 
 struct ComponentSpec {
-    u8 serial_id { 255 }; // In the interval [0, 3).
     u8 id { 0 };
     u8 hsample_factor { 1 }; // Horizontal sampling factor.
     u8 vsample_factor { 1 }; // Vertical sampling factor.
@@ -187,7 +186,7 @@ struct JPGLoadingContext {
     u8 hsample_factor { 0 };
     u8 vsample_factor { 0 };
     u8 component_count { 0 };
-    HashMap<u8, ComponentSpec> components;
+    Vector<ComponentSpec, 3> components;
     RefPtr<Gfx::Bitmap> bitmap;
     u16 dc_reset_interval { 0 };
     HashMap<u8, HuffmanTableSpec> dc_tables;
@@ -251,6 +250,18 @@ static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTa
     return {};
 }
 
+static inline i32* get_component(Macroblock& block, unsigned component)
+{
+    switch (component) {
+    case 0:
+        return block.y;
+    case 1:
+        return block.cb;
+    default:
+        return block.cr;
+    }
+}
+
 /**
  * Build the macroblocks possible by reading single (MCU) subsampled pair of CbCr.
  * Depending on the sampling factors, we may not see triples of y, cb, cr in that
@@ -268,8 +279,8 @@ static Optional<u8> get_next_symbol(HuffmanStreamState& hstream, const HuffmanTa
  */
 static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& macroblocks, u32 hcursor, u32 vcursor)
 {
-    for (auto it = context.components.begin(); it != context.components.end(); ++it) {
-        ComponentSpec& component = it->value;
+    for (unsigned component_i = 0; component_i < context.component_count; component_i++) {
+        auto& component = context.components[component_i];
 
         if (component.dc_destination_id >= context.dc_tables.size())
             return false;
@@ -306,8 +317,8 @@ static bool build_macroblocks(JPGLoadingContext& context, Vector<Macroblock>& ma
                 if (dc_length != 0 && dc_diff < (1 << (dc_length - 1)))
                     dc_diff -= (1 << dc_length) - 1;
 
-                i32* select_component = component.serial_id == 0 ? block.y : (component.serial_id == 1 ? block.cb : block.cr);
-                auto& previous_dc = context.previous_dc_values[component.serial_id];
+                auto select_component = get_component(block, component_i);
+                auto& previous_dc = context.previous_dc_values[component_i];
                 select_component[0] = previous_dc += dc_diff;
 
                 // Compute the AC coefficients.
@@ -502,21 +513,14 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
     }
 
     for (int i = 0; i < component_count; i++) {
-        ComponentSpec* component = nullptr;
         u8 component_id = 0;
         stream >> component_id;
         if (stream.handle_any_error())
             return false;
 
-        auto it = context.components.find(component_id);
-        if (it != context.components.end()) {
-            component = &it->value;
-            if (i != component->serial_id) {
-                dbgln("JPEG decode failed (i != component->serial_id)");
-                return false;
-            }
-        } else {
-            dbgln_if(JPG_DEBUG, "{}: Unsupported component id: {}!", stream.offset(), component_id);
+        auto& component = context.components[i];
+        if (component.id != component_id) {
+            dbgln("JPEG decode failed (component.id != component_id)");
             return false;
         }
 
@@ -525,21 +529,21 @@ static bool read_start_of_scan(InputMemoryStream& stream, JPGLoadingContext& con
         if (stream.handle_any_error())
             return false;
 
-        component->dc_destination_id = table_ids >> 4;
-        component->ac_destination_id = table_ids & 0x0F;
+        component.dc_destination_id = table_ids >> 4;
+        component.ac_destination_id = table_ids & 0x0F;
 
         if (context.dc_tables.size() != context.ac_tables.size()) {
             dbgln_if(JPG_DEBUG, "{}: DC & AC table count mismatch!", stream.offset());
             return false;
         }
 
-        if (!context.dc_tables.contains(component->dc_destination_id)) {
-            dbgln_if(JPG_DEBUG, "DC table (id: {}) does not exist!", component->dc_destination_id);
+        if (!context.dc_tables.contains(component.dc_destination_id)) {
+            dbgln_if(JPG_DEBUG, "DC table (id: {}) does not exist!", component.dc_destination_id);
             return false;
         }
 
-        if (!context.ac_tables.contains(component->ac_destination_id)) {
-            dbgln_if(JPG_DEBUG, "AC table (id: {}) does not exist!", component->ac_destination_id);
+        if (!context.ac_tables.contains(component.ac_destination_id)) {
+            dbgln_if(JPG_DEBUG, "AC table (id: {}) does not exist!", component.ac_destination_id);
             return false;
         }
     }
@@ -731,7 +735,6 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
 
     for (u8 i = 0; i < context.component_count; i++) {
         ComponentSpec component;
-        component.serial_id = i;
 
         stream >> component.id;
         if (stream.handle_any_error())
@@ -744,7 +747,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
         component.hsample_factor = subsample_factors >> 4;
         component.vsample_factor = subsample_factors & 0x0F;
 
-        if (component.serial_id == 0) {
+        if (i == 0) {
             // By convention, downsampling is applied only on chroma components. So we should
             //  hope to see the maximum sampling factor in the luma component.
             if (!validate_luma_and_modify_context(component, context)) {
@@ -772,7 +775,7 @@ static bool read_start_of_frame(InputMemoryStream& stream, JPGLoadingContext& co
             return false;
         }
 
-        context.components.set(component.id, component);
+        context.components.append(move(component));
     }
 
     return true;
@@ -842,14 +845,14 @@ static void dequantize(JPGLoadingContext& context, Vector<Macroblock>& macrobloc
 {
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (auto it = context.components.begin(); it != context.components.end(); ++it) {
-                auto& component = it->value;
+            for (u32 i = 0; i < context.component_count; i++) {
+                auto& component = context.components[i];
                 const u32* table = component.qtable_id == 0 ? context.luma_table : context.chroma_table;
                 for (u32 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u32 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[mb_index];
-                        int* block_component = component.serial_id == 0 ? block.y : (component.serial_id == 1 ? block.cb : block.cr);
+                        int* block_component = get_component(block, i);
                         for (u32 k = 0; k < 64; k++)
                             block_component[k] *= table[k];
                     }
@@ -878,13 +881,13 @@ static void inverse_dct(const JPGLoadingContext& context, Vector<Macroblock>& ma
 
     for (u32 vcursor = 0; vcursor < context.mblock_meta.vcount; vcursor += context.vsample_factor) {
         for (u32 hcursor = 0; hcursor < context.mblock_meta.hcount; hcursor += context.hsample_factor) {
-            for (auto it = context.components.begin(); it != context.components.end(); ++it) {
-                auto& component = it->value;
+            for (u32 component_i = 0; component_i < context.component_count; component_i++) {
+                auto& component = context.components[component_i];
                 for (u8 vfactor_i = 0; vfactor_i < component.vsample_factor; vfactor_i++) {
                     for (u8 hfactor_i = 0; hfactor_i < component.hsample_factor; hfactor_i++) {
                         u32 mb_index = (vcursor + vfactor_i) * context.mblock_meta.hpadded_count + (hfactor_i + hcursor);
                         Macroblock& block = macroblocks[mb_index];
-                        i32* block_component = component.serial_id == 0 ? block.y : (component.serial_id == 1 ? block.cb : block.cr);
+                        i32* block_component = get_component(block, component_i);
                         for (u32 k = 0; k < 8; ++k) {
                             const float g0 = block_component[0 * 8 + k] * s0;
                             const float g1 = block_component[4 * 8 + k] * s4;
