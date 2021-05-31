@@ -102,6 +102,12 @@ endif()
 if (ENABLE_ALL_DEBUG_FACILITIES)
     set(ENABLE_ALL_THE_DEBUG_MACROS ON)
     set(ENABLE_EXTRA_KERNEL_DEBUG_SYMBOLS ON)
+
+    # Immediately finds violations during boot, shouldn't be discoverable
+    # by people who aren't working on fixing issues. Use this check to make
+    # sure this code continues to build instead of all_debug_macros to avoid
+    # people filing bugs.
+    set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)
