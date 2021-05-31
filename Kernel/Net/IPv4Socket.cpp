@@ -121,8 +121,9 @@ KResult IPv4Socket::bind(Userspace<const sockaddr*> user_address, socklen_t addr
 KResult IPv4Socket::listen(size_t backlog)
 {
     Locker locker(lock());
-    if (auto result = allocate_local_port_if_needed(); result.is_error() && result.error() != -ENOPROTOOPT)
-        return result.error();
+    auto result = allocate_local_port_if_needed();
+    if (result.error_or_port.is_error() && result.error_or_port.error() != -ENOPROTOOPT)
+        return result.error_or_port.error();
 
     set_backlog(backlog);
     m_role = Role::Listener;
@@ -130,7 +131,7 @@ KResult IPv4Socket::listen(size_t backlog)
 
     dbgln_if(IPV4_SOCKET_DEBUG, "IPv4Socket({}) listening with backlog={}", this, backlog);
 
-    return protocol_listen();
+    return protocol_listen(result.did_allocate);
 }
 
 KResult IPv4Socket::connect(FileDescription& description, Userspace<const sockaddr*> address, socklen_t address_size, ShouldBlock should_block)
@@ -172,16 +173,16 @@ bool IPv4Socket::can_write(const FileDescription&, size_t) const
     return is_connected();
 }
 
-KResultOr<u16> IPv4Socket::allocate_local_port_if_needed()
+PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
 {
     Locker locker(lock());
     if (m_local_port)
-        return m_local_port;
+        return { m_local_port, false };
     auto port_or_error = protocol_allocate_local_port();
     if (port_or_error.is_error())
-        return port_or_error.error();
+        return { port_or_error.error(), false };
     m_local_port = port_or_error.value();
-    return port_or_error.value();
+    return { m_local_port, true };
 }
 
 KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer& data, size_t data_length, [[maybe_unused]] int flags, Userspace<const sockaddr*> addr, socklen_t addr_length)
@@ -212,8 +213,8 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
     if (m_local_address.to_u32() == 0)
         m_local_address = routing_decision.adapter->ipv4_address();
 
-    if (auto result = allocate_local_port_if_needed(); result.is_error() && result.error() != -ENOPROTOOPT)
-        return result.error();
+    if (auto result = allocate_local_port_if_needed(); result.error_or_port.is_error() && result.error_or_port.error() != -ENOPROTOOPT)
+        return result.error_or_port.error();
 
     dbgln_if(IPV4_SOCKET_DEBUG, "sendto: destination={}:{}", m_peer_address, m_peer_port);
 
