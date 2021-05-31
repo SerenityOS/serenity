@@ -167,3 +167,92 @@ inline const char* key_code_to_string(KeyCode key)
         return nullptr;
     }
 }
+
+inline KeyCode visible_code_point_to_key_code(u32 code_point)
+{
+    switch (code_point) {
+#define MATCH_ALPHA(letter) \
+    case #letter[0]:        \
+    case #letter[0] + 32:   \
+        return KeyCode::Key_##letter;
+        MATCH_ALPHA(A)
+        MATCH_ALPHA(B)
+        MATCH_ALPHA(C)
+        MATCH_ALPHA(D)
+        MATCH_ALPHA(E)
+        MATCH_ALPHA(F)
+        MATCH_ALPHA(G)
+        MATCH_ALPHA(H)
+        MATCH_ALPHA(I)
+        MATCH_ALPHA(J)
+        MATCH_ALPHA(K)
+        MATCH_ALPHA(L)
+        MATCH_ALPHA(M)
+        MATCH_ALPHA(N)
+        MATCH_ALPHA(O)
+        MATCH_ALPHA(P)
+        MATCH_ALPHA(Q)
+        MATCH_ALPHA(R)
+        MATCH_ALPHA(S)
+        MATCH_ALPHA(T)
+        MATCH_ALPHA(U)
+        MATCH_ALPHA(V)
+        MATCH_ALPHA(W)
+        MATCH_ALPHA(X)
+        MATCH_ALPHA(Y)
+        MATCH_ALPHA(Z)
+#undef MATCH_ALPHA
+
+#define MATCH_KEY(name, character) \
+    case character:                \
+        return KeyCode::Key_##name;
+        MATCH_KEY(ExclamationPoint, '!')
+        MATCH_KEY(DoubleQuote, '"')
+        MATCH_KEY(Hashtag, '#')
+        MATCH_KEY(Dollar, '$')
+        MATCH_KEY(Percent, '%')
+        MATCH_KEY(Ampersand, '&')
+        MATCH_KEY(Apostrophe, '\'')
+        MATCH_KEY(LeftParen, '(')
+        MATCH_KEY(RightParen, ')')
+        MATCH_KEY(Asterisk, '*')
+        MATCH_KEY(Plus, '+')
+        MATCH_KEY(Comma, ',')
+        MATCH_KEY(Minus, '-')
+        MATCH_KEY(Period, '.')
+        MATCH_KEY(Slash, '/')
+        MATCH_KEY(0, '0')
+        MATCH_KEY(1, '1')
+        MATCH_KEY(2, '2')
+        MATCH_KEY(3, '3')
+        MATCH_KEY(4, '4')
+        MATCH_KEY(5, '5')
+        MATCH_KEY(6, '6')
+        MATCH_KEY(7, '7')
+        MATCH_KEY(8, '8')
+        MATCH_KEY(9, '9')
+        MATCH_KEY(Colon, ':')
+        MATCH_KEY(Semicolon, ';')
+        MATCH_KEY(LessThan, '<')
+        MATCH_KEY(Equal, '=')
+        MATCH_KEY(GreaterThan, '>')
+        MATCH_KEY(QuestionMark, '?')
+        MATCH_KEY(AtSign, '@')
+        MATCH_KEY(LeftBracket, '[')
+        MATCH_KEY(RightBracket, ']')
+        MATCH_KEY(Backslash, '\\')
+        MATCH_KEY(Circumflex, '^')
+        MATCH_KEY(Underscore, '_')
+        MATCH_KEY(LeftBrace, '{')
+        MATCH_KEY(RightBrace, '}')
+        MATCH_KEY(Pipe, '|')
+        MATCH_KEY(Tilde, '~')
+        MATCH_KEY(Backtick, '`')
+        MATCH_KEY(Space, ' ')
+        MATCH_KEY(Tab, '\t')
+#undef MATCH_KEY
+
+    default:
+        return KeyCode::Key_Invalid;
+    }
+}
