@@ -631,6 +631,11 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
     case Instructions::i64_reinterpret_f64.value():
     case Instructions::f32_reinterpret_i32.value():
     case Instructions::f64_reinterpret_i64.value():
+    case Instructions::i32_extend8_s.value():
+    case Instructions::i32_extend16_s.value():
+    case Instructions::i64_extend8_s.value():
+    case Instructions::i64_extend16_s.value():
+    case Instructions::i64_extend32_s.value():
         return Vector { Instruction { opcode } };
     case 0xfc: {
         // These are multibyte instructions.

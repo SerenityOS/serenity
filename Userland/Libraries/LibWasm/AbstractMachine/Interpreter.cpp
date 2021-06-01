@@ -900,6 +900,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::table_grow.value():
     case Instructions::table_size.value():
     case Instructions::table_fill.value():
+    case Instructions::i32_extend8_s.value():
+    case Instructions::i32_extend16_s.value():
+    case Instructions::i64_extend8_s.value():
+    case Instructions::i64_extend16_s.value():
+    case Instructions::i64_extend32_s.value():
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
