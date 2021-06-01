@@ -449,7 +449,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         configuration.stack().entries().remove(start, end - start);
 
         // Jump past the call/indirect instruction
-        configuration.ip() = configuration.frame().expression().instructions().size() - 1;
+        configuration.ip() = configuration.frame().expression().instructions().size();
         return;
     }
     case Instructions::br.value():
