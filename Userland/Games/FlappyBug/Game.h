@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Optional.h>
+#include <AK/Random.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -77,6 +78,7 @@ private:
         void reset()
         {
             x = game_width;
+            gap_top_y = get_random_uniform(game_height - gap_height);
         }
 
         Gfx::FloatRect top_rect() const
