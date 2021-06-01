@@ -18,9 +18,18 @@ Game::Game()
 void Game::reset()
 {
     m_active = false;
+    m_last_score = m_difficulty;
     m_difficulty = 1;
     m_bug.reset();
     m_obstacle.reset();
+}
+
+void Game::game_over()
+{
+    if (m_highscore.value_or(0) < m_difficulty) {
+        m_highscore = m_difficulty;
+    }
+    reset();
 }
 
 void Game::timer_event(Core::TimerEvent&)
@@ -39,7 +48,13 @@ void Game::paint_event(GUI::PaintEvent& event)
     painter.fill_rect(enclosing_int_rect(m_obstacle.bottom_rect()), Color::White);
     painter.fill_ellipse(enclosing_int_rect(m_bug.rect()), Color::Red);
 
-    painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::Green);
+    if (m_active) {
+        painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::Green);
+    } else if (m_highscore.has_value()) {
+        painter.draw_text(rect(), String::formatted("Your score: {:.0}\nHighscore: {:.0}\nPress any key to start", m_last_score, m_highscore.value()), Gfx::TextAlignment::Center, Color::Green);
+    } else {
+        painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::Green);
+    }
 }
 
 void Game::keydown_event(GUI::KeyEvent& event)
@@ -58,18 +73,18 @@ void Game::keydown_event(GUI::KeyEvent& event)
 void Game::tick()
 {
     if (m_active) {
-        m_difficulty += 0.0001f;
+        m_difficulty += 1.0f / 16.0f;
 
         m_bug.fall();
         m_bug.apply_velocity();
-        m_obstacle.x -= 4 + m_difficulty;
+        m_obstacle.x -= 4 + m_difficulty / 16.0f;
 
         if (m_bug.y > game_height || m_bug.y < 0) {
-            reset();
+            game_over();
         }
 
         if (m_bug.rect().intersects(m_obstacle.top_rect()) || m_bug.rect().intersects(m_obstacle.bottom_rect())) {
-            reset();
+            game_over();
         }
 
         if (m_obstacle.x < 0) {

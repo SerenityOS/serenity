@@ -33,6 +33,7 @@ private:
 
     void tick();
     void reset();
+    void game_over();
 
     struct Bug {
         const float x { 50 };
@@ -95,6 +96,8 @@ private:
     Bug m_bug;
     Obstacle m_obstacle;
     bool m_active;
+    Optional<float> m_highscore;
+    float m_last_score;
     float m_difficulty;
 };
 
