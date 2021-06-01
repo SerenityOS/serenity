@@ -12,8 +12,11 @@
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
+#include <LibGfx/BMPLoader.h>
 #include <LibGfx/BMPWriter.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/ImageDecoder.h>
+#include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGWriter.h>
 #include <stdio.h>
 
@@ -49,7 +52,22 @@ void Image::paint_into(GUI::Painter& painter, const Gfx::IntRect& dest_rect)
     }
 }
 
-RefPtr<Image> Image::create_from_file(const String& file_path)
+RefPtr<Image> Image::create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
+{
+    auto image = create_with_size({ bitmap->width(), bitmap->height() });
+    if (image.is_null())
+        return nullptr;
+
+    auto layer = Layer::create_with_bitmap(*image, *bitmap, "Background");
+    if (layer.is_null())
+        return nullptr;
+
+    image->add_layer(layer.release_nonnull());
+
+    return image;
+}
+
+RefPtr<Image> Image::create_from_pixel_paint_file(String const& file_path)
 {
     auto file = fopen(file_path.characters(), "r");
     fseek(file, 0L, SEEK_END);
@@ -85,6 +103,16 @@ RefPtr<Image> Image::create_from_file(const String& file_path)
     });
 
     return image;
+}
+
+RefPtr<Image> Image::create_from_file(String const& file_path)
+{
+    auto bitmap = Gfx::Bitmap::load_from_file(file_path);
+    if (bitmap) {
+        return create_from_bitmap(bitmap);
+    }
+
+    return create_from_pixel_paint_file(file_path);
 }
 
 void Image::save(const String& file_path) const
