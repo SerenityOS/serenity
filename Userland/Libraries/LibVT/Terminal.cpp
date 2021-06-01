@@ -736,9 +736,11 @@ void Terminal::DCH(Parameters params)
         num = params[0];
 
     auto& line = active_buffer()[cursor_row()];
+    num = min(num, static_cast<int>(line.length()) - cursor_column());
+
     // Move n characters of line to the left
     for (size_t i = cursor_column(); i < line.length() - num; i++)
-        line.set_code_point(i, line.code_point(i + num));
+        line.cell_at(i) = line.cell_at(i + num);
 
     // Fill remainder of line with blanks
     for (size_t i = line.length() - num; i < line.length(); i++)
@@ -868,14 +870,16 @@ void Terminal::ICH(Parameters params)
     unsigned num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
-
     auto& line = active_buffer()[cursor_row()];
+
+    auto max_insert = static_cast<unsigned>(line.length()) - cursor_column();
+    num = min(num, max_insert);
     // Move characters after cursor to the right
-    for (unsigned i = line.length() - num; i >= cursor_column(); --i)
-        line.set_code_point(i + num, line.code_point(i));
+    for (int i = line.length() - num - 1; i >= cursor_column(); --i)
+        line.cell_at(i + num) = line.cell_at(i);
 
     // Fill n characters after cursor with blanks
-    for (unsigned i = 0; i < num; i++)
+    for (unsigned i = 0; i < num; ++i)
         line.set_code_point(cursor_column() + i, ' ');
 
     line.set_dirty(true);
