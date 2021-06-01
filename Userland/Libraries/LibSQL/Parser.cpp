@@ -23,6 +23,9 @@ NonnullRefPtr<Statement> Parser::next_statement()
 
     if (match(TokenType::With)) {
         auto common_table_expression_list = parse_common_table_expression_list();
+        if (!common_table_expression_list)
+            return create_ast_node<ErrorStatement>();
+
         return terminate_statement(parse_statement_with_expression_list(move(common_table_expression_list)));
     }
 
@@ -331,13 +334,18 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
     return create_ast_node<Select>(move(common_table_expression_list), select_all, move(result_column_list), move(table_or_subquery_list), move(where_clause), move(group_by_clause), move(ordering_term_list), move(limit_clause));
 }
 
-NonnullRefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
+RefPtr<CommonTableExpressionList> Parser::parse_common_table_expression_list()
 {
     consume(TokenType::With);
     bool recursive = consume_if(TokenType::Recursive);
 
     NonnullRefPtrVector<CommonTableExpression> common_table_expression;
     parse_comma_separated_list(false, [&]() { common_table_expression.append(parse_common_table_expression()); });
+
+    if (common_table_expression.is_empty()) {
+        expected("Common table expression list");
+        return {};
+    }
 
     return create_ast_node<CommonTableExpressionList>(recursive, move(common_table_expression));
 }

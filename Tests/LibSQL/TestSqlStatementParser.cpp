@@ -682,6 +682,8 @@ TEST_CASE(select)
 
 TEST_CASE(common_table_expression)
 {
+    EXPECT(parse("WITH").is_error());
+    EXPECT(parse("WITH;").is_error());
     EXPECT(parse("WITH DELETE FROM table;").is_error());
     EXPECT(parse("WITH table DELETE FROM table;").is_error());
     EXPECT(parse("WITH table AS DELETE FROM table;").is_error());
