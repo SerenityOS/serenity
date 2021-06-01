@@ -267,7 +267,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             event.executable = perf_event.get("executable").to_string();
 
             auto old_process = current_processes.get(event.pid).value();
-            old_process->end_valid = event.timestamp - 1;
+            old_process->end_valid = event.timestamp;
 
             current_processes.remove(event.pid);
 
@@ -282,7 +282,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             continue;
         } else if (event.type == "process_exit"sv) {
             auto old_process = current_processes.get(event.pid).value();
-            old_process->end_valid = event.timestamp - 1;
+            old_process->end_valid = event.timestamp;
 
             current_processes.remove(event.pid);
             continue;
