@@ -256,6 +256,8 @@ namespace JS {
     P(trace)                                 \
     P(trim)                                  \
     P(trimEnd)                               \
+    P(trimLeft)                              \
+    P(trimRight)                             \
     P(trimStart)                             \
     P(trunc)                                 \
     P(undefined)                             \
