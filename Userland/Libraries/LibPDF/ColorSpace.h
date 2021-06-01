@@ -30,7 +30,7 @@ class ColorSpace : public RefCounted<ColorSpace> {
 public:
     virtual ~ColorSpace() = default;
 
-    virtual Color color(const Vector<Value>& arguments) const = 0;
+    virtual Color color(Vector<Value> const& arguments) const = 0;
 };
 
 class DeviceGrayColorSpace final : public ColorSpace {
@@ -39,7 +39,7 @@ public:
 
     virtual ~DeviceGrayColorSpace() override = default;
 
-    virtual Color color(const Vector<Value>& arguments) const override;
+    virtual Color color(Vector<Value> const& arguments) const override;
 
 private:
     DeviceGrayColorSpace() = default;
@@ -51,7 +51,7 @@ public:
 
     virtual ~DeviceRGBColorSpace() override = default;
 
-    virtual Color color(const Vector<Value>& arguments) const override;
+    virtual Color color(Vector<Value> const& arguments) const override;
 
 private:
     DeviceRGBColorSpace() = default;
@@ -63,7 +63,7 @@ public:
 
     virtual ~DeviceCMYKColorSpace() override = default;
 
-    virtual Color color(const Vector<Value>& arguments) const override;
+    virtual Color color(Vector<Value> const& arguments) const override;
 
 private:
     DeviceCMYKColorSpace() = default;
@@ -74,7 +74,7 @@ public:
     static RefPtr<CalRGBColorSpace> create(RefPtr<Document>, Vector<Value>&& parameters);
     virtual ~CalRGBColorSpace() override = default;
 
-    virtual Color color(const Vector<Value>& arguments) const override;
+    virtual Color color(Vector<Value> const& arguments) const override;
 
 private:
     CalRGBColorSpace() = default;
