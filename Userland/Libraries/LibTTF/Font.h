@@ -54,7 +54,7 @@ public:
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id, float x_scale, float y_scale) const;
     u32 glyph_count() const;
     u16 units_per_em() const;
-    u32 glyph_id_for_codepoint(u32 codepoint) const { return m_cmap.glyph_id_for_codepoint(codepoint); }
+    u32 glyph_id_for_code_point(u32 code_point) const { return m_cmap.glyph_id_for_code_point(code_point); }
     String family() const;
     String variant() const;
     u16 weight() const;
@@ -110,7 +110,7 @@ public:
         m_x_scale = (point_width * dpi_x) / (POINTS_PER_INCH * units_per_em);
         m_y_scale = (point_height * dpi_y) / (POINTS_PER_INCH * units_per_em);
     }
-    u32 glyph_id_for_codepoint(u32 codepoint) const { return m_font->glyph_id_for_codepoint(codepoint); }
+    u32 glyph_id_for_code_point(u32 code_point) const { return m_font->glyph_id_for_code_point(code_point); }
     ScaledFontMetrics metrics() const { return m_font->metrics(m_x_scale, m_y_scale); }
     ScaledGlyphMetrics glyph_metrics(u32 glyph_id) const { return m_font->glyph_metrics(glyph_id, m_x_scale, m_y_scale); }
     RefPtr<Gfx::Bitmap> raster_glyph(u32 glyph_id) const;
@@ -120,7 +120,7 @@ public:
     virtual u8 presentation_size() const override { return m_point_height; }
     virtual u16 weight() const override { return m_font->weight(); }
     virtual Gfx::Glyph glyph(u32 code_point) const override;
-    virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_codepoint(code_point) > 0; }
+    virtual bool contains_glyph(u32 code_point) const override { return m_font->glyph_id_for_code_point(code_point) > 0; }
     virtual u8 glyph_width(size_t ch) const override;
     virtual int glyph_or_emoji_width(u32 code_point) const override;
     virtual u8 glyph_height() const override { return m_point_height; }

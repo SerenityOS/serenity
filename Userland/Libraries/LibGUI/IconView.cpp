@@ -435,8 +435,8 @@ void IconView::get_item_rects(int item_index, ItemData& item_data, const Gfx::Fo
         Utf8View utf8_view(item_data.text);
         auto it = utf8_view.begin();
         for (; it != utf8_view.end(); ++it) {
-            auto codepoint = *it;
-            auto glyph_width = font.glyph_width(codepoint);
+            auto code_point = *it;
+            auto glyph_width = font.glyph_width(code_point);
             if ((current_line_width + glyph_width + font.glyph_spacing()) > available_width) {
                 item_data.wrapped_text_lines.append(item_data.text.substring_view(current_line_start, utf8_view.byte_offset_of(it) - current_line_start));
                 current_line_start = utf8_view.byte_offset_of(it);

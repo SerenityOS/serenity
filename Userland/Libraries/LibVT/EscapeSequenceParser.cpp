@@ -39,10 +39,10 @@ Vector<EscapeSequenceParser::OscParameter> EscapeSequenceParser::osc_parameters(
 void EscapeSequenceParser::perform_action(EscapeSequenceStateMachine::Action action, u8 byte)
 {
     auto advance_utf8 = [&](u8 byte) {
-        u32 new_codepoint = m_code_point;
-        new_codepoint <<= 6;
-        new_codepoint |= byte & 0x3f;
-        return new_codepoint;
+        u32 new_code_point = m_code_point;
+        new_code_point <<= 6;
+        new_code_point |= byte & 0x3f;
+        return new_code_point;
     };
 
     switch (action) {

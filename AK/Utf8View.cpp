@@ -71,20 +71,20 @@ Utf8View Utf8View::substring_view(size_t byte_offset, size_t byte_length) const
     return Utf8View { string };
 }
 
-Utf8View Utf8View::unicode_substring_view(size_t codepoint_offset, size_t codepoint_length) const
+Utf8View Utf8View::unicode_substring_view(size_t code_point_offset, size_t code_point_length) const
 {
-    if (codepoint_length == 0)
+    if (code_point_length == 0)
         return {};
 
-    size_t codepoint_index = 0, offset_in_bytes = 0;
+    size_t code_point_index = 0, offset_in_bytes = 0;
     for (auto iterator = begin(); !iterator.done(); ++iterator) {
-        if (codepoint_index == codepoint_offset)
+        if (code_point_index == code_point_offset)
             offset_in_bytes = byte_offset_of(iterator);
-        if (codepoint_index == codepoint_offset + codepoint_length - 1) {
+        if (code_point_index == code_point_offset + code_point_length - 1) {
             size_t length_in_bytes = byte_offset_of(++iterator) - offset_in_bytes;
             return substring_view(offset_in_bytes, length_in_bytes);
         }
-        ++codepoint_index;
+        ++code_point_index;
     }
 
     VERIFY_NOT_REACHED();

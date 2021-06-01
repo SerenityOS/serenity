@@ -44,7 +44,7 @@ public:
         {
         }
         // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-        u32 glyph_id_for_codepoint(u32 codepoint) const;
+        u32 glyph_id_for_code_point(u32 code_point) const;
         Platform platform_id() const;
         u16 encoding_id() const { return m_encoding_id; }
         Format format() const;
@@ -73,8 +73,8 @@ public:
             Record = 12,
         };
 
-        u32 glyph_id_for_codepoint_table_4(u32 codepoint) const;
-        u32 glyph_id_for_codepoint_table_12(u32 codepoint) const;
+        u32 glyph_id_for_code_point_table_4(u32 code_point) const;
+        u32 glyph_id_for_code_point_table_12(u32 code_point) const;
 
         ReadonlyBytes m_slice;
         u16 m_raw_platform_id { 0 };
@@ -86,7 +86,7 @@ public:
     Optional<Subtable> subtable(u32 index) const;
     void set_active_index(u32 index) { m_active_index = index; }
     // Returns 0 if glyph not found. This corresponds to the "missing glyph"
-    u32 glyph_id_for_codepoint(u32 codepoint) const;
+    u32 glyph_id_for_code_point(u32 code_point) const;
 
 private:
     enum class Offsets {

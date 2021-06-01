@@ -534,7 +534,7 @@ void Renderer::show_text(const String& string, int shift)
     auto utf = Utf8View(string);
     auto& font = text_state().font;
 
-    for (auto codepoint : utf) {
+    for (auto code_point : utf) {
         // FIXME: Don't calculate this matrix for every character
         auto& text_rendering_matrix = calculate_text_rendering_matrix();
 
@@ -542,14 +542,14 @@ void Renderer::show_text(const String& string, int shift)
         text_position.set_y(static_cast<float>(m_bitmap->height()) - text_position.y());
 
         // FIXME: For some reason, the space character in LiberationSerif is drawn as an exclamation point
-        if (codepoint != 0x20)
-            m_painter.draw_glyph(text_position.to_type<int>(), codepoint, *text_state().font, state().paint_color);
+        if (code_point != 0x20)
+            m_painter.draw_glyph(text_position.to_type<int>(), code_point, *text_state().font, state().paint_color);
 
-        auto glyph_width = static_cast<float>(font->glyph_width(codepoint));
+        auto glyph_width = static_cast<float>(font->glyph_width(code_point));
         auto tx = (glyph_width - static_cast<float>(shift) / 1000.0f);
         tx += text_state().character_spacing;
 
-        if (codepoint == ' ')
+        if (code_point == ' ')
             tx += text_state().word_spacing;
 
         tx *= text_state().horizontal_scaling;

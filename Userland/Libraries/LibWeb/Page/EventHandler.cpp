@@ -379,10 +379,10 @@ bool EventHandler::focus_previous_element()
     return false;
 }
 
-constexpr bool should_ignore_keydown_event(u32 codepoint)
+constexpr bool should_ignore_keydown_event(u32 code_point)
 {
-    // FIXME: There are probably also keys with non-zero codepoints that should be filtered out.
-    return codepoint == 0;
+    // FIXME: There are probably also keys with non-zero code points that should be filtered out.
+    return code_point == 0;
 }
 
 bool EventHandler::handle_keydown(KeyCode key, unsigned modifiers, u32 code_point)
