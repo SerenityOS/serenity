@@ -14,7 +14,7 @@ int main(int argc, char** argv)
 {
     if (argc < 2) {
         warnln("usage: fgrep <str>");
-        return 0;
+        return 1;
     }
     for (;;) {
         char buf[4096];

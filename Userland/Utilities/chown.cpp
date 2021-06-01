@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 
     if (argc < 3) {
         warnln("usage: chown <uid[:gid]> <path>");
-        return 0;
+        return 1;
     }
 
     uid_t new_uid = -1;

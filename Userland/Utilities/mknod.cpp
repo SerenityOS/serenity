@@ -18,7 +18,7 @@ constexpr unsigned encoded_device(unsigned major, unsigned minor)
 static int usage()
 {
     warnln("usage: mknod <name> <c|b|p> [<major> <minor>]");
-    return 0;
+    return 1;
 }
 
 int main(int argc, char** argv)

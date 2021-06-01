@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     if (argc != 2 || !strcmp(argv[1], "--help")) {
         warnln("usage: gron <file>");
         warnln("Print each value in a JSON file with its fully expanded key.");
-        return 0;
+        return argc != 2 ? 1 : 0;
     }
     auto file = Core::File::construct(argv[1]);
     if (!file->open(Core::OpenMode::ReadOnly)) {
