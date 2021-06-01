@@ -16,6 +16,6 @@ struct URLQueryParam {
     String value;
 };
 
-String urlencode(const Vector<URLQueryParam>&);
+String urlencode(const Vector<URLQueryParam>&, URL::PercentEncodeSet);
 
 }
