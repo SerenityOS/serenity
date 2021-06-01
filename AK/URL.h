@@ -79,9 +79,7 @@ public:
 
     String serialize(ExcludeFragment = ExcludeFragment::No) const;
     String serialize_for_display() const;
-
     String to_string() const { return serialize(); }
-    String to_string_encoded() const { return serialize(); }
 
     bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
