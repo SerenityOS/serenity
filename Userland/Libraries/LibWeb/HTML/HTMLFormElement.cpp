@@ -105,14 +105,14 @@ void HTMLFormElement::submit_form(RefPtr<HTMLElement> submitter, bool from_submi
     });
 
     if (effective_method == "get") {
-        url.set_query(urlencode(parameters));
+        url.set_query(urlencode(parameters, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded));
     }
 
     LoadRequest request;
     request.set_url(url);
 
     if (effective_method == "post") {
-        auto body = urlencode(parameters).to_byte_buffer();
+        auto body = urlencode(parameters, URL::PercentEncodeSet::ApplicationXWWWFormUrlencoded).to_byte_buffer();
         request.set_method("POST");
         request.set_header("Content-Type", "application/x-www-form-urlencoded");
         request.set_header("Content-Length", String::number(body.size()));
