@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/SourceLocation.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/HTML/Parser/Entities.h>
 #include <LibWeb/HTML/Parser/HTMLToken.h>
 #include <LibWeb/HTML/Parser/HTMLTokenizer.h>
-#include <ctype.h>
 #include <string.h>
 
 namespace Web::HTML {
@@ -93,25 +93,25 @@ namespace Web::HTML {
     if (!current_input_character.has_value())
 
 #define ON_ASCII_ALPHA \
-    if (current_input_character.has_value() && isalpha(current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii_alpha(current_input_character.value()))
 
 #define ON_ASCII_ALPHANUMERIC \
-    if (current_input_character.has_value() && isalnum(current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii_alphanumeric(current_input_character.value()))
 
 #define ON_ASCII_UPPER_ALPHA \
-    if (current_input_character.has_value() && current_input_character.value() >= 'A' && current_input_character.value() <= 'Z')
+    if (current_input_character.has_value() && is_ascii_upper_alpha(current_input_character.value()))
 
 #define ON_ASCII_LOWER_ALPHA \
-    if (current_input_character.has_value() && current_input_character.value() >= 'a' && current_input_character.value() <= 'z')
+    if (current_input_character.has_value() && is_ascii_lower_alpha(current_input_character.value()))
 
 #define ON_ASCII_DIGIT \
-    if (current_input_character.has_value() && isdigit(current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii_digit(current_input_character.value()))
 
 #define ON_ASCII_HEX_DIGIT \
-    if (current_input_character.has_value() && isxdigit(current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii_hex_digit(current_input_character.value()))
 
 #define ON_WHITESPACE \
-    if (current_input_character.has_value() && strchr("\t\n\f ", current_input_character.value()))
+    if (current_input_character.has_value() && is_ascii(current_input_character.value()) && "\t\n\f "sv.contains(current_input_character.value()))
 
 #define ANYTHING_ELSE if (1)
 
@@ -170,26 +170,6 @@ namespace Web::HTML {
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
     dbgln_if(TOKENIZER_TRACE_DEBUG, "Parse error (tokenization) {}", location);
-}
-
-static inline bool is_surrogate(u32 code_point)
-{
-    return (code_point & 0xfffff800) == 0xd800;
-}
-
-static inline bool is_noncharacter(u32 code_point)
-{
-    return code_point >= 0xfdd0 && (code_point <= 0xfdef || (code_point & 0xfffe) == 0xfffe) && code_point <= 0x10ffff;
-}
-
-static inline bool is_c0_control(u32 code_point)
-{
-    return code_point <= 0x1f;
-}
-
-static inline bool is_control(u32 code_point)
-{
-    return is_c0_control(code_point) || (code_point >= 0x7f && code_point <= 0x9f);
 }
 
 Optional<u32> HTMLTokenizer::next_code_point()
@@ -322,7 +302,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_current_token.m_tag.tag_name.append(to_ascii_lowercase(current_input_character.value()));
                     m_current_token.m_end_position = nth_last_position(0);
                     continue;
                 }
@@ -458,7 +438,7 @@ _StartOfFunction:
                 ON_ASCII_UPPER_ALPHA
                 {
                     create_new_token(HTMLToken::Type::DOCTYPE);
-                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    m_current_token.m_doctype.name.append(to_ascii_lowercase(current_input_character.value()));
                     m_current_token.m_doctype.missing_name = false;
                     SWITCH_TO(DOCTYPEName);
                 }
@@ -507,7 +487,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_doctype.name.append(tolower(current_input_character.value()));
+                    m_current_token.m_doctype.name.append(to_ascii_lowercase(current_input_character.value()));
                     continue;
                 }
                 ON(0)
@@ -550,10 +530,10 @@ _StartOfFunction:
                 }
                 ANYTHING_ELSE
                 {
-                    if (toupper(current_input_character.value()) == 'P' && consume_next_if_match("UBLIC", CaseSensitivity::CaseInsensitive)) {
+                    if (to_ascii_uppercase(current_input_character.value()) == 'P' && consume_next_if_match("UBLIC", CaseSensitivity::CaseInsensitive)) {
                         SWITCH_TO(AfterDOCTYPEPublicKeyword);
                     }
-                    if (toupper(current_input_character.value()) == 'S' && consume_next_if_match("YSTEM", CaseSensitivity::CaseInsensitive)) {
+                    if (to_ascii_uppercase(current_input_character.value()) == 'S' && consume_next_if_match("YSTEM", CaseSensitivity::CaseInsensitive)) {
                         SWITCH_TO(AfterDOCTYPESystemKeyword);
                     }
                     log_parse_error();
@@ -1068,7 +1048,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(tolower(current_input_character.value()));
+                    m_current_token.m_tag.attributes.last().local_name_builder.append_code_point(to_ascii_lowercase(current_input_character.value()));
                     continue;
                 }
                 ON(0)
@@ -1558,7 +1538,7 @@ _StartOfFunction:
 
                     if (consumed_as_part_of_an_attribute() && !match.value().entity.ends_with(';')) {
                         auto next_code_point = peek_code_point(0);
-                        if (next_code_point.has_value() && (next_code_point.value() == '=' || isalnum(next_code_point.value()))) {
+                        if (next_code_point.has_value() && (next_code_point.value() == '=' || is_ascii_alphanumeric(next_code_point.value()))) {
                             FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
                             SWITCH_TO_RETURN_STATE;
                         }
@@ -1720,14 +1700,14 @@ _StartOfFunction:
                     log_parse_error();
                     m_character_reference_code = 0xFFFD;
                 }
-                if (is_surrogate(m_character_reference_code)) {
+                if (is_unicode_surrogate(m_character_reference_code)) {
                     log_parse_error();
                     m_character_reference_code = 0xFFFD;
                 }
-                if (is_noncharacter(m_character_reference_code)) {
+                if (is_unicode_noncharacter(m_character_reference_code)) {
                     log_parse_error();
                 }
-                if (m_character_reference_code == 0xd || (is_control(m_character_reference_code) && !isspace(m_character_reference_code))) {
+                if (m_character_reference_code == 0xd || (is_unicode_control(m_character_reference_code) && !is_ascii_space(m_character_reference_code))) {
                     log_parse_error();
                     constexpr struct {
                         u32 number;
@@ -1870,7 +1850,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_current_token.m_tag.tag_name.append(to_ascii_lowercase(current_input_character.value()));
                     m_temporary_buffer.append(current_input_character.value());
                     continue;
                 }
@@ -1980,7 +1960,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_current_token.m_tag.tag_name.append(to_ascii_lowercase(current_input_character.value()));
                     m_temporary_buffer.append(current_input_character.value());
                     continue;
                 }
@@ -2193,7 +2173,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_current_token.m_tag.tag_name.append(to_ascii_lowercase(current_input_character.value()));
                     m_temporary_buffer.append(current_input_character.value());
                     continue;
                 }
@@ -2247,7 +2227,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_temporary_buffer.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(to_ascii_lowercase(current_input_character.value()));
                     EMIT_CURRENT_CHARACTER;
                 }
                 ON_ASCII_LOWER_ALPHA
@@ -2393,7 +2373,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_temporary_buffer.append(tolower(current_input_character.value()));
+                    m_temporary_buffer.append(to_ascii_lowercase(current_input_character.value()));
                     EMIT_CURRENT_CHARACTER;
                 }
                 ON_ASCII_LOWER_ALPHA
@@ -2512,7 +2492,7 @@ _StartOfFunction:
                 }
                 ON_ASCII_UPPER_ALPHA
                 {
-                    m_current_token.m_tag.tag_name.append(tolower(current_input_character.value()));
+                    m_current_token.m_tag.tag_name.append(to_ascii_lowercase(current_input_character.value()));
                     m_temporary_buffer.append(current_input_character.value());
                     continue;
                 }
@@ -2598,7 +2578,7 @@ bool HTMLTokenizer::consume_next_if_match(const StringView& string, CaseSensitiv
         // FIXME: This should be more Unicode-aware.
         if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
             if (code_point.value() < 0x80) {
-                if (tolower(code_point.value()) != tolower(string[i]))
+                if (to_ascii_lowercase(code_point.value()) != to_ascii_lowercase(string[i]))
                     return false;
                 continue;
             }

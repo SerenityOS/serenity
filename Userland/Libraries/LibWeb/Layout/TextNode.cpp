@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
@@ -13,7 +14,6 @@
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/BrowsingContext.h>
-#include <ctype.h>
 
 namespace Web::Layout {
 
@@ -30,7 +30,7 @@ TextNode::~TextNode()
 static bool is_all_whitespace(const StringView& string)
 {
     for (size_t i = 0; i < string.length(); ++i) {
-        if (!isspace(string[i]))
+        if (!is_ascii_space(string[i]))
             return false;
     }
     return true;
@@ -116,7 +116,7 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
     auto it = utf8_view.begin();
     auto skip_over_whitespace = [&] {
         auto prev = it;
-        while (it != utf8_view.end() && isspace(*it)) {
+        while (it != utf8_view.end() && is_ascii_space(*it)) {
             prev = it;
             ++it;
         }
@@ -125,7 +125,7 @@ void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_
     if (previous_is_empty_or_ends_in_whitespace)
         skip_over_whitespace();
     for (; it != utf8_view.end(); ++it) {
-        if (!isspace(*it)) {
+        if (!is_ascii_space(*it)) {
             builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_point_length_in_bytes());
         } else {
             builder.append(' ');
@@ -160,7 +160,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 
         float chunk_width;
         if (do_wrap_lines) {
-            if (do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
+            if (do_collapse && is_ascii_space(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
                 // This is a non-empty chunk that starts with collapsible whitespace.
                 // We are at either at the start of a new line, or after something that ended in whitespace,
                 // so we don't need to contribute our own whitespace to the line. Skip over it instead!
@@ -264,7 +264,7 @@ TextNode::ChunkIterator::ChunkIterator(StringView const& text, LayoutMode layout
     , m_start_of_chunk(m_utf8_view.begin())
     , m_iterator(m_utf8_view.begin())
 {
-    m_last_was_space = !text.is_empty() && isspace(*m_utf8_view.begin());
+    m_last_was_space = !text.is_empty() && is_ascii_space(*m_utf8_view.begin());
 }
 
 Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
@@ -286,7 +286,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
                 return result.release_value();
         }
         if (m_wrap_lines) {
-            bool is_space = isspace(*m_iterator);
+            bool is_space = is_ascii_space(*m_iterator);
             if (is_space != m_last_was_space) {
                 m_last_was_space = is_space;
                 if (auto result = try_commit_chunk(m_iterator, false); result.has_value())

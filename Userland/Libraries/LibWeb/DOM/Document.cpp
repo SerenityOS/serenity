@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
 #include <LibCore/Timer.h>
@@ -53,7 +54,6 @@
 #include <LibWeb/Page/BrowsingContext.h>
 #include <LibWeb/SVG/TagNames.h>
 #include <LibWeb/UIEvents/MouseEvent.h>
-#include <ctype.h>
 
 namespace Web::DOM {
 
@@ -253,7 +253,7 @@ String Document::title() const
     StringBuilder builder;
     bool last_was_space = false;
     for (auto code_point : Utf8View(raw_title)) {
-        if (isspace(code_point)) {
+        if (is_ascii_space(code_point)) {
             last_was_space = true;
         } else {
             if (last_was_space && !builder.is_empty())

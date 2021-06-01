@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Hex.h>
 #include <AK/Platform.h>
 #include <AK/TemporaryChange.h>
@@ -56,7 +57,6 @@
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
-#include <ctype.h>
 
 namespace JS {
 
@@ -249,16 +249,10 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     }
 
     auto parse_digit = [&](u32 code_point, i32 radix) -> Optional<i32> {
-        i32 digit = -1;
-
-        if (isdigit(code_point))
-            digit = code_point - '0';
-        else if (islower(code_point))
-            digit = 10 + (code_point - 'a');
-        else if (isupper(code_point))
-            digit = 10 + (code_point - 'A');
-
-        if (digit == -1 || digit >= radix)
+        if (!is_ascii_hex_digit(code_point) || radix <= 0)
+            return {};
+        auto digit = parse_ascii_hex_digit(code_point);
+        if (digit >= (u32)radix)
             return {};
         return digit;
     };

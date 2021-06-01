@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/SourceLocation.h>
 #include <AK/Vector.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/CSS/Parser/Tokenizer.h>
-#include <ctype.h>
 
 #define CSS_TOKENIZER_TRACE 0
 
@@ -18,11 +18,6 @@
 static inline void log_parse_error(const SourceLocation& location = SourceLocation::current())
 {
     dbgln_if(CSS_TOKENIZER_TRACE, "Parse error (css tokenization) {} ", location);
-}
-
-static inline bool is_surrogate(u32 code_point)
-{
-    return (code_point & 0xfffff800) == 0xd800;
 }
 
 static inline bool is_quotation_mark(u32 code_point)
@@ -35,24 +30,14 @@ static inline bool is_greater_than_maximum_allowed_code_point(u32 code_point)
     return code_point > 0x10FFFF;
 }
 
-static inline bool is_hex_digit(u32 code_point)
-{
-    return isxdigit(code_point);
-}
-
 static inline bool is_low_line(u32 code_point)
 {
     return code_point == 0x5F;
 }
 
-static inline bool is_non_ascii(u32 code_point)
-{
-    return code_point >= 0x80;
-}
-
 static inline bool is_name_start_code_point(u32 code_point)
 {
-    return isalpha(code_point) || is_non_ascii(code_point) || is_low_line(code_point);
+    return is_ascii_alpha(code_point) || !is_ascii(code_point) || is_low_line(code_point);
 }
 
 static inline bool is_hyphen_minus(u32 code_point)
@@ -62,7 +47,7 @@ static inline bool is_hyphen_minus(u32 code_point)
 
 static inline bool is_name_code_point(u32 code_point)
 {
-    return is_name_start_code_point(code_point) || isdigit(code_point) || is_hyphen_minus(code_point);
+    return is_name_start_code_point(code_point) || is_ascii_digit(code_point) || is_hyphen_minus(code_point);
 }
 
 static inline bool is_non_printable(u32 code_point)
@@ -303,12 +288,12 @@ u32 Tokenizer::consume_escaped_code_point()
 
     auto input = code_point.value();
 
-    if (is_hex_digit(input)) {
+    if (is_ascii_hex_digit(input)) {
         StringBuilder builder;
         builder.append_code_point(input);
 
         size_t counter = 0;
-        while (is_hex_digit(peek_code_point().value()) && counter++ < 5) {
+        while (is_ascii_hex_digit(peek_code_point().value()) && counter++ < 5) {
             builder.append_code_point(next_code_point().value());
         }
 
@@ -317,7 +302,7 @@ u32 Tokenizer::consume_escaped_code_point()
         }
 
         auto unhexed = strtoul(builder.to_string().characters(), nullptr, 16);
-        if (unhexed == 0 || is_surrogate(unhexed) || is_greater_than_maximum_allowed_code_point(unhexed)) {
+        if (unhexed == 0 || is_unicode_surrogate(unhexed) || is_greater_than_maximum_allowed_code_point(unhexed)) {
             return REPLACEMENT_CHARACTER;
         }
 
@@ -378,14 +363,14 @@ CSSNumber Tokenizer::consume_a_number()
 
     for (;;) {
         auto digits = peek_code_point().value();
-        if (!isdigit(digits))
+        if (!is_ascii_digit(digits))
             break;
 
         repr.append_code_point(next_code_point().value());
     }
 
     auto maybe_number = peek_twin().value();
-    if (is_full_stop(maybe_number.first) && isdigit(maybe_number.second)) {
+    if (is_full_stop(maybe_number.first) && is_ascii_digit(maybe_number.second)) {
         repr.append_code_point(next_code_point().value());
         repr.append_code_point(next_code_point().value());
 
@@ -393,7 +378,7 @@ CSSNumber Tokenizer::consume_a_number()
 
         for (;;) {
             auto digits = peek_code_point();
-            if (digits.has_value() && !isdigit(digits.value()))
+            if (digits.has_value() && !is_ascii_digit(digits.value()))
                 break;
 
             repr.append_code_point(next_code_point().value());
@@ -403,12 +388,12 @@ CSSNumber Tokenizer::consume_a_number()
     auto maybe_exp = peek_triplet().value();
     if (is_E(maybe_exp.first) || is_e(maybe_exp.first)) {
         if (is_plus_sign(maybe_exp.second) || is_hyphen_minus(maybe_exp.second)) {
-            if (isdigit(maybe_exp.third)) {
+            if (is_ascii_digit(maybe_exp.third)) {
                 repr.append_code_point(next_code_point().value());
                 repr.append_code_point(next_code_point().value());
                 repr.append_code_point(next_code_point().value());
             }
-        } else if (isdigit(maybe_exp.second)) {
+        } else if (is_ascii_digit(maybe_exp.second)) {
             repr.append_code_point(next_code_point().value());
             repr.append_code_point(next_code_point().value());
         }
@@ -417,7 +402,7 @@ CSSNumber Tokenizer::consume_a_number()
 
         for (;;) {
             auto digits = peek_code_point().value();
-            if (!isdigit(digits))
+            if (!is_ascii_digit(digits))
                 break;
 
             repr.append_code_point(next_code_point().value());
@@ -588,19 +573,19 @@ bool Tokenizer::starts_with_a_number() const
 bool Tokenizer::starts_with_a_number(U32Triplet values)
 {
     if (is_plus_sign(values.first) || is_hyphen_minus(values.first)) {
-        if (isdigit(values.second))
+        if (is_ascii_digit(values.second))
             return true;
 
-        if (is_full_stop(values.second) && isdigit(values.third))
+        if (is_full_stop(values.second) && is_ascii_digit(values.third))
             return true;
 
         return false;
     }
 
     if (is_full_stop(values.first))
-        return isdigit(values.second);
+        return is_ascii_digit(values.second);
 
-    if (isdigit(values.first))
+    if (is_ascii_digit(values.first))
         return true;
 
     return false;
@@ -902,7 +887,7 @@ Token Tokenizer::consume_a_token()
         return create_new_token(Token::TokenType::CloseCurly);
     }
 
-    if (isdigit(input)) {
+    if (is_ascii_digit(input)) {
         dbgln_if(CSS_TOKENIZER_TRACE, "is digit");
         reconsume_current_input_code_point();
         return consume_a_numeric_token();

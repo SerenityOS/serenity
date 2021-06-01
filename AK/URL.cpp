@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/StringBuilder.h>
@@ -13,26 +14,6 @@
 #include <AK/Utf8View.h>
 
 namespace AK {
-
-constexpr bool is_ascii_alpha(u32 code_point)
-{
-    return ('a' <= code_point && code_point <= 'z') || ('A' <= code_point && code_point <= 'Z');
-}
-
-constexpr bool is_ascii_digit(u32 code_point)
-{
-    return '0' <= code_point && code_point <= '9';
-}
-
-constexpr bool is_ascii_alphanumeric(u32 code_point)
-{
-    return is_ascii_alpha(code_point) || is_ascii_digit(code_point);
-}
-
-constexpr bool is_ascii_hex_digit(u32 code_point)
-{
-    return is_ascii_digit(code_point) || (code_point >= 'a' && code_point <= 'f') || (code_point >= 'A' && code_point <= 'F');
-}
 
 // FIXME: It could make sense to force users of URL to use URLParser::parse() explicitly instead of using a constructor.
 URL::URL(StringView const& string)
@@ -403,17 +384,6 @@ String URL::percent_encode(StringView const& input, URL::PercentEncodeSet set)
     return builder.to_string();
 }
 
-constexpr u8 parse_hex_digit(u8 digit)
-{
-    if (digit >= '0' && digit <= '9')
-        return digit - '0';
-    if (digit >= 'a' && digit <= 'f')
-        return digit - 'a' + 10;
-    if (digit >= 'A' && digit <= 'F')
-        return digit - 'A' + 10;
-    VERIFY_NOT_REACHED();
-}
-
 String URL::percent_decode(StringView const& input)
 {
     if (!input.contains('%'))
@@ -427,9 +397,9 @@ String URL::percent_decode(StringView const& input)
             builder.append_code_point(*it);
         } else {
             ++it;
-            u8 byte = parse_hex_digit(*it) << 4;
+            u8 byte = parse_ascii_hex_digit(*it) << 4;
             ++it;
-            byte += parse_hex_digit(*it);
+            byte += parse_ascii_hex_digit(*it);
             builder.append(byte);
         }
     }

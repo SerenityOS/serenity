@@ -4,11 +4,22 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <LibGUI/EditingEngine.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/TextEditor.h>
 
 namespace GUI {
+
+constexpr bool is_vim_alphanumeric(u32 code_point)
+{
+    return is_ascii_alphanumeric(code_point) || code_point == '_';
+}
+
+constexpr bool is_vim_punctuation(u32 code_point)
+{
+    return is_ascii_punctuation(code_point) && code_point != '_';
+}
 
 EditingEngine::~EditingEngine()
 {
@@ -379,15 +390,7 @@ TextPosition EditingEngine::find_beginning_of_next_word()
      * If the end of the input is reached, jump there
      */
 
-    auto vim_isalnum = [](int c) {
-        return c == '_' || isalnum(c);
-    };
-
-    auto vim_ispunct = [](int c) {
-        return c != '_' && ispunct(c);
-    };
-
-    bool started_on_punct = vim_ispunct(m_editor->current_line().to_utf8().characters()[m_editor->cursor().column()]);
+    bool started_on_punct = is_vim_punctuation(m_editor->current_line().to_utf8().characters()[m_editor->cursor().column()]);
     bool has_seen_whitespace = false;
     bool is_first_line = true;
     auto& lines = m_editor->lines();
@@ -409,18 +412,18 @@ TextPosition EditingEngine::find_beginning_of_next_word()
             const u32* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
-            if (started_on_punct && vim_isalnum(current_char)) {
+            if (started_on_punct && is_vim_alphanumeric(current_char)) {
                 return { line_index, column_index };
             }
 
-            if (vim_ispunct(current_char) && !started_on_punct) {
+            if (is_vim_punctuation(current_char) && !started_on_punct) {
                 return { line_index, column_index };
             }
 
-            if (isspace(current_char))
+            if (is_ascii_space(current_char))
                 has_seen_whitespace = true;
 
-            if (has_seen_whitespace && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
+            if (has_seen_whitespace && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char))) {
                 return { line_index, column_index };
             }
 
@@ -449,14 +452,6 @@ TextPosition EditingEngine::find_end_of_next_word()
      * If the end of the input is reached, jump there
      */
 
-    auto vim_isalnum = [](int c) {
-        return c == '_' || isalnum(c);
-    };
-
-    auto vim_ispunct = [](int c) {
-        return c != '_' && ispunct(c);
-    };
-
     bool is_first_line = true;
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
@@ -481,7 +476,7 @@ TextPosition EditingEngine::find_end_of_next_word()
             const u32* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
-            if (column_index == lines.at(line_index).length() - 1 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char)))
+            if (column_index == lines.at(line_index).length() - 1 && !is_first_iteration && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char)))
                 return { line_index, column_index };
             else if (column_index == lines.at(line_index).length() - 1) {
                 is_first_iteration = false;
@@ -490,10 +485,10 @@ TextPosition EditingEngine::find_end_of_next_word()
 
             const u32 next_char = line_chars[column_index + 1];
 
-            if (!is_first_iteration && vim_isalnum(current_char) && (isspace(next_char) || vim_ispunct(next_char)))
+            if (!is_first_iteration && is_vim_alphanumeric(current_char) && (is_ascii_space(next_char) || is_vim_punctuation(next_char)))
                 return { line_index, column_index };
 
-            if (!is_first_iteration && vim_ispunct(current_char) && (isspace(next_char) || vim_isalnum(next_char)))
+            if (!is_first_iteration && is_vim_punctuation(current_char) && (is_ascii_space(next_char) || is_vim_alphanumeric(next_char)))
                 return { line_index, column_index };
 
             if (line_index == lines.size() - 1 && column_index == line.length() - 1) {
@@ -513,15 +508,7 @@ void EditingEngine::move_to_end_of_next_word()
 
 TextPosition EditingEngine::find_end_of_previous_word()
 {
-    auto vim_isalnum = [](int c) {
-        return c == '_' || isalnum(c);
-    };
-
-    auto vim_ispunct = [](int c) {
-        return c != '_' && ispunct(c);
-    };
-
-    bool started_on_punct = vim_ispunct(m_editor->current_line().to_utf8().characters()[m_editor->cursor().column()]);
+    bool started_on_punct = is_vim_punctuation(m_editor->current_line().to_utf8().characters()[m_editor->cursor().column()]);
     bool is_first_line = true;
     bool has_seen_whitespace = false;
     auto& lines = m_editor->lines();
@@ -545,19 +532,19 @@ TextPosition EditingEngine::find_end_of_previous_word()
             const u32* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
-            if (started_on_punct && vim_isalnum(current_char)) {
+            if (started_on_punct && is_vim_alphanumeric(current_char)) {
                 return { line_index, column_index };
             }
 
-            if (vim_ispunct(current_char) && !started_on_punct) {
+            if (is_vim_punctuation(current_char) && !started_on_punct) {
                 return { line_index, column_index };
             }
 
-            if (isspace(current_char)) {
+            if (is_ascii_space(current_char)) {
                 has_seen_whitespace = true;
             }
 
-            if (has_seen_whitespace && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
+            if (has_seen_whitespace && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char))) {
                 return { line_index, column_index };
             }
 
@@ -580,14 +567,6 @@ void EditingEngine::move_to_end_of_previous_word()
 
 TextPosition EditingEngine::find_beginning_of_previous_word()
 {
-    auto vim_isalnum = [](int c) {
-        return c == '_' || isalnum(c);
-    };
-
-    auto vim_ispunct = [](int c) {
-        return c != '_' && ispunct(c);
-    };
-
     bool is_first_iterated_line = true;
     bool is_first_iteration = true;
     auto& lines = m_editor->lines();
@@ -618,7 +597,7 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
             const u32* line_chars = line.view().code_points();
             const u32 current_char = line_chars[column_index];
 
-            if (column_index == 0 && !is_first_iteration && (vim_isalnum(current_char) || vim_ispunct(current_char))) {
+            if (column_index == 0 && !is_first_iteration && (is_vim_alphanumeric(current_char) || is_vim_punctuation(current_char))) {
                 return { line_index, column_index };
             } else if (line_index == 0 && column_index == 0) {
                 return { line_index, column_index };
@@ -629,10 +608,10 @@ TextPosition EditingEngine::find_beginning_of_previous_word()
 
             const u32 next_char = line_chars[column_index - 1];
 
-            if (!is_first_iteration && vim_isalnum(current_char) && (isspace(next_char) || vim_ispunct(next_char)))
+            if (!is_first_iteration && is_vim_alphanumeric(current_char) && (is_ascii_space(next_char) || is_vim_punctuation(next_char)))
                 return { line_index, column_index };
 
-            if (!is_first_iteration && vim_ispunct(current_char) && (isspace(next_char) || vim_isalnum(next_char)))
+            if (!is_first_iteration && is_vim_punctuation(current_char) && (is_ascii_space(next_char) || is_vim_alphanumeric(next_char)))
                 return { line_index, column_index };
 
             is_first_iteration = false;

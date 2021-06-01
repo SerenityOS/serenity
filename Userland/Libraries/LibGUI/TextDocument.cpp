@@ -5,6 +5,7 @@
  */
 
 #include <AK/Badge.h>
+#include <AK/CharacterTypes.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -12,7 +13,6 @@
 #include <LibGUI/TextDocument.h>
 #include <LibGUI/TextEditor.h>
 #include <LibRegex/Regex.h>
-#include <ctype.h>
 
 namespace GUI {
 
@@ -104,7 +104,7 @@ size_t TextDocumentLine::first_non_whitespace_column() const
 {
     for (size_t i = 0; i < length(); ++i) {
         auto code_point = code_points()[i];
-        if (!isspace(code_point))
+        if (!is_ascii_space(code_point))
             return i;
     }
     return length();
@@ -114,7 +114,7 @@ Optional<size_t> TextDocumentLine::last_non_whitespace_column() const
 {
     for (ssize_t i = length() - 1; i >= 0; --i) {
         auto code_point = code_points()[i];
-        if (!isspace(code_point))
+        if (!is_ascii_space(code_point))
             return i;
     }
     return {};
@@ -124,7 +124,7 @@ bool TextDocumentLine::ends_in_whitespace() const
 {
     if (!length())
         return false;
-    return isspace(code_points()[length() - 1]);
+    return is_ascii_space(code_points()[length() - 1]);
 }
 
 bool TextDocumentLine::can_select() const
@@ -638,11 +638,11 @@ TextPosition TextDocument::first_word_break_before(const TextPosition& position,
     if (target.column() == line.length())
         modifier = 1;
 
-    auto is_start_alphanumeric = isalnum(line.code_points()[target.column() - modifier]);
+    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column() - modifier]);
 
     while (target.column() > 0) {
         auto prev_code_point = line.code_points()[target.column() - 1];
-        if ((is_start_alphanumeric && !isalnum(prev_code_point)) || (!is_start_alphanumeric && isalnum(prev_code_point)))
+        if ((is_start_alphanumeric && !is_ascii_alphanumeric(prev_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(prev_code_point)))
             break;
         target.set_column(target.column() - 1);
     }
@@ -662,11 +662,11 @@ TextPosition TextDocument::first_word_break_after(const TextPosition& position) 
         return TextPosition(position.line() + 1, 0);
     }
 
-    auto is_start_alphanumeric = isalnum(line.code_points()[target.column()]);
+    auto is_start_alphanumeric = is_ascii_alphanumeric(line.code_points()[target.column()]);
 
     while (target.column() < line.length()) {
         auto next_code_point = line.code_points()[target.column()];
-        if ((is_start_alphanumeric && !isalnum(next_code_point)) || (!is_start_alphanumeric && isalnum(next_code_point)))
+        if ((is_start_alphanumeric && !is_ascii_alphanumeric(next_code_point)) || (!is_start_alphanumeric && is_ascii_alphanumeric(next_code_point)))
             break;
         target.set_column(target.column() + 1);
     }
