@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import struct
 from sys import argv, stderr
 from os import path
 from string import whitespace
@@ -156,7 +156,7 @@ def genarg(spec):
                 return '-NaN' if math.copysign(1.0, x) < 0 else 'NaN'
             if math.isinf(x):
                 return 'Infinity' if x > 0 else '-Infinity'
-            return str(x)
+            return x
         except ValueError:
             try:
                 x = float.fromhex(x)
@@ -165,20 +165,25 @@ def genarg(spec):
                     return '-NaN' if math.copysign(1.0, x) < 0 else 'NaN'
                 if math.isinf(x):
                     return 'Infinity' if x > 0 else '-Infinity'
-                return str(x)
+                return x
             except ValueError:
                 try:
                     x = int(x, 0)
-                    return str(x)
+                    return x
                 except ValueError:
                     return x
 
     x = gen()
-    if x.startswith('nan'):
-        return 'NaN'
-    if x.startswith('-nan'):
-        return '-NaN'
-    return x
+    if isinstance(x, str):
+        if x.startswith('nan'):
+            return 'NaN'
+        if x.startswith('-nan'):
+            return '-NaN'
+        return x
+    if spec['type'] == 'i32':
+        # cast back to i32 to get the correct sign
+        return str(struct.unpack('>i', struct.pack('>q', int(x))[4:])[0])
+    return str(x)
 
 
 all_names_in_main = {}
@@ -249,7 +254,7 @@ def main():
         with NamedTemporaryFile("w+") as temp:
             temp.write(description["module"])
             temp.flush()
-            rc = call(["wasm-as", "-n", temp.name, "-o", outpath])
+            rc = call(["wasm-as", "-n", "-all", temp.name, "-o", outpath])
             if rc != 0:
                 print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
                 continue
