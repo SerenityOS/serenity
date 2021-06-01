@@ -177,6 +177,12 @@ int main(int argc, char** argv)
         game.setup(mode);
     }));
     game_menu.add_separator();
+    auto undo_action = GUI::CommonActions::make_undo_action([&](auto&) {
+        game.perform_undo();
+    });
+    undo_action->set_enabled(false);
+    game_menu.add_action(undo_action);
+    game_menu.add_separator();
     game_menu.add_action(single_card_draw_action);
     game_menu.add_action(three_card_draw_action);
     game_menu.add_separator();
@@ -190,6 +196,11 @@ int main(int argc, char** argv)
     window->set_menubar(move(menubar));
     window->set_icon(app_icon.bitmap_for_size(16));
     window->show();
+
+    game.on_undo_availability_change = [&](bool undo_available) {
+        undo_action->set_enabled(undo_available);
+    };
+
     game.setup(mode);
 
     return app->exec();
