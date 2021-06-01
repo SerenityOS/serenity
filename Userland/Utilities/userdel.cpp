@@ -8,6 +8,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/Account.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <ctype.h>
@@ -41,8 +42,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    unveil(nullptr, nullptr);
-
     const char* username = nullptr;
     bool remove_home = false;
 
@@ -51,12 +50,28 @@ int main(int argc, char** argv)
     args_parser.add_positional_argument(username, "Login user identity (username)", "login");
     args_parser.parse(argc, argv);
 
-    if (!remove_home) {
+    auto account_or_error = Core::Account::from_name(username);
+
+    if (account_or_error.is_error()) {
+        warnln("Core::Account::from_name: {}", account_or_error.error());
+        return 1;
+    }
+
+    auto& target_account = account_or_error.value();
+
+    if (remove_home) {
+        if (unveil(target_account.home_directory().characters(), "c") < 0) {
+            perror("unveil");
+            return 1;
+        }
+    } else {
         if (pledge("stdio wpath rpath cpath fattr", nullptr) < 0) {
             perror("pledge");
             return 1;
         }
     }
+
+    unveil(nullptr, nullptr);
 
     char temp_passwd[] = "/etc/passwd.XXXXXX";
     char temp_shadow[] = "/etc/shadow.XXXXXX";
@@ -96,27 +111,20 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    bool user_exists = false;
-    String home_directory;
-
     setpwent();
     for (auto* pw = getpwent(); pw; pw = getpwent()) {
-        if (strcmp(pw->pw_name, username)) {
+        if (strcmp(pw->pw_name, target_account.username().characters())) {
             if (putpwent(pw, temp_passwd_file) != 0) {
                 perror("failed to put an entry in the temporary passwd file");
                 return 1;
             }
-        } else {
-            user_exists = true;
-            if (remove_home)
-                home_directory = pw->pw_dir;
         }
     }
     endpwent();
 
     setspent();
     for (auto* spwd = getspent(); spwd; spwd = getspent()) {
-        if (strcmp(spwd->sp_namp, username)) {
+        if (strcmp(spwd->sp_namp, target_account.username().characters())) {
             if (putspent(spwd, temp_shadow_file) != 0) {
                 perror("failed to put an entry in the temporary shadow file");
                 return 1;
@@ -132,11 +140,6 @@ int main(int argc, char** argv)
 
     if (fclose(temp_shadow_file)) {
         perror("fclose");
-        return 1;
-    }
-
-    if (!user_exists) {
-        warnln("specified user doesn't exist");
         return 1;
     }
 
@@ -163,10 +166,10 @@ int main(int argc, char** argv)
     unlink_temp_files_guard.disarm();
 
     if (remove_home) {
-        if (access(home_directory.characters(), F_OK) == -1)
+        if (access(target_account.home_directory().characters(), F_OK) == -1)
             return 0;
 
-        String real_path = Core::File::real_path_for(home_directory);
+        String real_path = Core::File::real_path_for(target_account.home_directory());
 
         if (real_path == "/") {
             warnln("home directory is /, not deleted!");
@@ -174,7 +177,7 @@ int main(int argc, char** argv)
         }
 
         pid_t child;
-        const char* argv[] = { "rm", "-r", home_directory.characters(), nullptr };
+        const char* argv[] = { "rm", "-r", target_account.home_directory().characters(), nullptr };
         if ((errno = posix_spawn(&child, "/bin/rm", nullptr, nullptr, const_cast<char**>(argv), environ))) {
             perror("posix_spawn");
             return 12;
