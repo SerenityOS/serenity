@@ -99,12 +99,13 @@ Vector<StringView> StringView::lines(bool consider_cr) const
             if (last_ch_was_cr) {
                 substart = i + 1;
                 split_view = false;
-                last_ch_was_cr = false;
             }
         }
         if (ch == '\r') {
             split_view = true;
             last_ch_was_cr = true;
+        } else {
+            last_ch_was_cr = false;
         }
         if (split_view) {
             size_t sublen = i - substart;
