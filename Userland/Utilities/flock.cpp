@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 {
     if (argc < 3) {
         warnln("usage: flock <path> <command...>");
-        return 0;
+        return 1;
     }
 
     pid_t child_pid;
