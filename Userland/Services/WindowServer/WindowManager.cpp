@@ -1545,7 +1545,7 @@ Gfx::IntRect WindowManager::dnd_rect() const
 
 void WindowManager::invalidate_after_theme_or_font_change()
 {
-    Compositor::the().set_background_color(palette().desktop_background().to_string());
+    Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_string()));
     WindowFrame::reload_config();
     for_each_window([&](Window& window) {
         window.frame().theme_changed();
@@ -1569,6 +1569,7 @@ bool WindowManager::update_theme(String theme_path, String theme_name)
     m_palette = Gfx::PaletteImpl::create_with_anonymous_buffer(new_theme);
     auto wm_config = Core::ConfigFile::open("/etc/WindowServer.ini");
     wm_config->write_entry("Theme", "Name", theme_name);
+    wm_config->remove_entry("Background", "Color");
     wm_config->sync();
     invalidate_after_theme_or_font_change();
     return true;
