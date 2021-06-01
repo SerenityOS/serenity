@@ -27,6 +27,10 @@ ParseStatus Parser::parse(ByteBuffer&& buffer, bool expecting_tag)
         return { true, { ContinueRequest { data } } };
     }
 
+    while (try_consume("*")) {
+        parse_untagged();
+    }
+
     if (expecting_tag) {
         if (at_end()) {
             m_incomplete = true;
@@ -115,6 +119,30 @@ unsigned Parser::parse_number()
     }
 
     return number.value();
+}
+
+void Parser::parse_untagged()
+{
+    consume(" ");
+
+    if (try_consume("CAPABILITY")) {
+        parse_capability_response();
+    } else {
+        auto x = parse_while([](u8 x) { return x != '\r'; });
+        consume("\r\n");
+        dbgln("ignored {}", x);
+    }
+}
+
+void Parser::parse_capability_response()
+{
+    auto capability = AK::Vector<String>();
+    while (!try_consume("\r\n")) {
+        consume(" ");
+        auto x = String(parse_atom());
+        capability.append(x);
+    }
+    m_response.data().add_capabilities(move(capability));
 }
 
 StringView Parser::parse_atom()

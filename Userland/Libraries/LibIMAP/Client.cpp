@@ -112,6 +112,8 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
     switch (command) {
     case CommandType::Noop:
         return "NOOP"sv.bytes();
+    case CommandType::Capability:
+        return "CAPABILITY"sv.bytes();
     }
     VERIFY_NOT_REACHED();
 }
