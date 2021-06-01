@@ -5,7 +5,6 @@
  */
 
 #include "Game.h"
-#include <AK/Random.h>
 
 namespace FlappyBug {
 
