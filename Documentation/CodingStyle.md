@@ -396,7 +396,7 @@ struct Thingy {
 
 class Doohickey {
 public:
-    const String& name() const { return m_name; }
+    String const& name() const { return m_name; }
     int frob_count() const { return m_frob_count; }
 
     void jam();
@@ -421,7 +421,7 @@ private:
 
 class Doohickey {
 public:
-    const String& name() const { return this->name; }
+    String const& name() const { return this->name; }
 
     void jam();
 
@@ -583,3 +583,18 @@ public:
 }
 ```
 
+### Const placement
+
+[](#east-const) Use "east const" style where `const` is written on the right side of the type being qualified. See [this article](https://mariusbancila.ro/blog/2018/11/23/join-the-east-const-revolution/) for more information about east const.
+
+###### Right:
+
+```cpp
+Salt const& m_salt;
+```
+
+###### Wrong:
+
+```cpp
+const Salt& m_salt;
+```
