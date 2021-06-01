@@ -113,6 +113,13 @@ bool HexEditor::write_to_file(const String& path)
     return true;
 }
 
+size_t HexEditor::selection_size()
+{
+    if (!has_selection())
+        return 0;
+    return abs(m_selection_end - m_selection_start) + 1;
+}
+
 bool HexEditor::copy_selected_hex_to_clipboard()
 {
     if (!has_selection())
@@ -561,7 +568,7 @@ void HexEditor::paint_event(GUI::PaintEvent& event)
 
 void HexEditor::select_all()
 {
-    highlight(0, m_buffer.size());
+    highlight(0, m_buffer.size() - 1);
     set_position(0);
 }
 
@@ -575,7 +582,7 @@ void HexEditor::highlight(int start, int end)
 int HexEditor::find_and_highlight(ByteBuffer& needle, int start)
 {
     auto end_of_match = find(needle, start);
-    highlight(end_of_match - needle.size(), end_of_match);
+    highlight(end_of_match - needle.size(), end_of_match - 1);
     return end_of_match;
 }
 
