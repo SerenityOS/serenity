@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
@@ -25,7 +26,6 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <LibSyntax/Highlighter.h>
-#include <ctype.h>
 #include <fcntl.h>
 #include <math.h>
 #include <stdio.h>
@@ -1232,12 +1232,12 @@ size_t TextEditor::number_of_selected_words() const
     bool in_word = false;
     auto selected_text = this->selected_text();
     for (char c : selected_text) {
-        if (in_word && isspace(c)) {
+        if (in_word && is_ascii_space(c)) {
             in_word = false;
             word_count++;
             continue;
         }
-        if (!in_word && !isspace(c))
+        if (!in_word && !is_ascii_space(c))
             in_word = true;
     }
     if (in_word)
@@ -1561,7 +1561,7 @@ void TextEditor::recompute_visual_lines(size_t line_index)
         auto glyph_spacing = font().glyph_spacing();
         for (size_t i = 0; i < line.length(); ++i) {
             auto code_point = line.code_points()[i];
-            if (isspace(code_point)) {
+            if (is_ascii_space(code_point)) {
                 last_whitespace_index = i;
                 line_width_since_last_whitespace = 0;
             }
