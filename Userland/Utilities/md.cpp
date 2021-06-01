@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     auto document = Markdown::Document::parse(input);
 
     if (!document) {
-        warnln("Error parsing");
+        warnln("Error parsing Markdown document");
         return 1;
     }
 
