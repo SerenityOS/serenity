@@ -59,7 +59,7 @@ private:
     NonnullRefPtr<Update> parse_update_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Delete> parse_delete_statement(RefPtr<CommonTableExpressionList>);
     NonnullRefPtr<Select> parse_select_statement(RefPtr<CommonTableExpressionList>);
-    NonnullRefPtr<CommonTableExpressionList> parse_common_table_expression_list();
+    RefPtr<CommonTableExpressionList> parse_common_table_expression_list();
 
     NonnullRefPtr<Expression> parse_primary_expression();
     NonnullRefPtr<Expression> parse_secondary_expression(NonnullRefPtr<Expression> primary);
