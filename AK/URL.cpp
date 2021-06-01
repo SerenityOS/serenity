@@ -35,7 +35,7 @@ constexpr bool is_ascii_hex_digit(u32 code_point)
 }
 
 // FIXME: It could make sense to force users of URL to use URLParser::parse() explicitly instead of using a constructor.
-URL::URL(const StringView& string)
+URL::URL(StringView const& string)
     : URL(URLParser::parse({}, string))
 {
     if constexpr (URL_PARSER_DEBUG) {
@@ -58,7 +58,7 @@ String URL::path() const
     return builder.to_string();
 }
 
-URL URL::complete_url(const String& string) const
+URL URL::complete_url(String const& string) const
 {
     if (!is_valid())
         return {};
@@ -66,31 +66,31 @@ URL URL::complete_url(const String& string) const
     return URLParser::parse({}, string, this);
 }
 
-void URL::set_scheme(const String& scheme)
+void URL::set_scheme(String scheme)
 {
-    m_scheme = scheme;
+    m_scheme = move(scheme);
     m_valid = compute_validity();
 }
 
-void URL::set_username(const String& username)
+void URL::set_username(String username)
 {
-    m_username = username;
+    m_username = move(username);
     m_valid = compute_validity();
 }
 
-void URL::set_password(const String& password)
+void URL::set_password(String password)
 {
-    m_password = password;
+    m_password = move(password);
     m_valid = compute_validity();
 }
 
-void URL::set_host(const String& host)
+void URL::set_host(String host)
 {
-    m_host = host;
+    m_host = move(host);
     m_valid = compute_validity();
 }
 
-void URL::set_port(const u16 port)
+void URL::set_port(u16 port)
 {
     if (port == default_port_for_scheme(m_scheme)) {
         m_port = 0;
@@ -100,20 +100,20 @@ void URL::set_port(const u16 port)
     m_valid = compute_validity();
 }
 
-void URL::set_paths(const Vector<String>& paths)
+void URL::set_paths(Vector<String> paths)
 {
-    m_paths = paths;
+    m_paths = move(paths);
     m_valid = compute_validity();
 }
 
-void URL::set_query(const String& query)
+void URL::set_query(String query)
 {
-    m_query = query;
+    m_query = move(query);
 }
 
-void URL::set_fragment(const String& fragment)
+void URL::set_fragment(String fragment)
 {
-    m_fragment = fragment;
+    m_fragment = move(fragment);
 }
 
 // FIXME: This is by no means complete.
@@ -154,12 +154,12 @@ bool URL::compute_validity() const
     return true;
 }
 
-bool URL::scheme_requires_port(const StringView& scheme)
+bool URL::scheme_requires_port(StringView const& scheme)
 {
     return (default_port_for_scheme(scheme) != 0);
 }
 
-u16 URL::default_port_for_scheme(const StringView& scheme)
+u16 URL::default_port_for_scheme(StringView const& scheme)
 {
     if (scheme == "http")
         return 80;
@@ -178,7 +178,7 @@ u16 URL::default_port_for_scheme(const StringView& scheme)
     return 0;
 }
 
-URL URL::create_with_file_scheme(const String& path, const String& fragment, const String& hostname)
+URL URL::create_with_file_scheme(String const& path, String const& fragment, String const& hostname)
 {
     LexicalPath lexical_path(path);
     if (!lexical_path.is_valid() || !lexical_path.is_absolute())
@@ -197,7 +197,7 @@ URL URL::create_with_file_scheme(const String& path, const String& fragment, con
     return url;
 }
 
-URL URL::create_with_url_or_path(const String& url_or_path)
+URL URL::create_with_url_or_path(String const& url_or_path)
 {
     URL url = url_or_path;
     if (url.is_valid())
@@ -207,20 +207,8 @@ URL URL::create_with_url_or_path(const String& url_or_path)
     return URL::create_with_file_scheme(path);
 }
 
-URL URL::create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64)
-{
-    URL url;
-    url.set_scheme("data");
-    url.m_valid = true;
-    url.m_data_payload = payload;
-    url.m_data_mime_type = mime_type;
-    url.m_data_payload_is_base64 = is_base64;
-
-    return url;
-}
-
 // https://url.spec.whatwg.org/#special-scheme
-bool URL::is_special_scheme(const StringView& scheme)
+bool URL::is_special_scheme(StringView const& scheme)
 {
     return scheme.is_one_of("ftp", "file", "http", "https", "ws", "wss");
 }
@@ -337,7 +325,7 @@ String URL::serialize_for_display() const
     return builder.to_string();
 }
 
-bool URL::equals(const URL& other, ExcludeFragment exclude_fragments) const
+bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
 {
     if (!m_valid || !other.m_valid)
         return false;
@@ -404,7 +392,7 @@ void URL::append_percent_encoded_if_necessary(StringBuilder& builder, u32 code_p
         builder.append_code_point(code_point);
 }
 
-String URL::percent_encode(const StringView& input, URL::PercentEncodeSet set)
+String URL::percent_encode(StringView const& input, URL::PercentEncodeSet set)
 {
     StringBuilder builder;
     for (auto code_point : Utf8View(input)) {
@@ -424,7 +412,7 @@ constexpr u8 parse_hex_digit(u8 digit)
     VERIFY_NOT_REACHED();
 }
 
-String URL::percent_decode(const StringView& input)
+String URL::percent_decode(StringView const& input)
 {
     if (!input.contains('%'))
         return input;

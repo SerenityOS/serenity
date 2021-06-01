@@ -36,43 +36,43 @@ public:
     };
 
     URL() = default;
-    URL(const StringView&);
-    URL(const char* string)
+    URL(StringView const&);
+    URL(char const* string)
         : URL(StringView(string))
     {
     }
-    URL(const String& string)
+    URL(String const& string)
         : URL(string.view())
     {
     }
 
-    bool is_valid() const { return m_valid; }
+    bool const& is_valid() const { return m_valid; }
 
-    String scheme() const { return m_scheme; }
-    String protocol() const { return m_scheme; }
-    String username() const { return m_username; }
-    String password() const { return m_password; }
-    String host() const { return m_host; }
-    const Vector<String>& paths() const { return m_paths; }
-    String query() const { return m_query; }
-    String fragment() const { return m_fragment; }
+    String const& scheme() const { return m_scheme; }
+    String const& protocol() const { return m_scheme; }
+    String const& username() const { return m_username; }
+    String const& password() const { return m_password; }
+    String const& host() const { return m_host; }
+    Vector<String> const& paths() const { return m_paths; }
+    String const& query() const { return m_query; }
+    String const& fragment() const { return m_fragment; }
     u16 port() const { return m_port ? m_port : default_port_for_scheme(m_scheme); }
-    bool cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
+    bool const& cannot_be_a_base_url() const { return m_cannot_be_a_base_url; }
 
     bool includes_credentials() const { return !m_username.is_empty() || !m_password.is_empty(); }
     bool is_special() const { return is_special_scheme(m_scheme); }
 
-    void set_scheme(const String&);
-    void set_protocol(const String& protocol) { set_scheme(protocol); }
-    void set_username(const String&);
-    void set_password(const String&);
-    void set_host(const String&);
-    void set_port(const u16);
-    void set_paths(const Vector<String>&);
-    void set_query(const String&);
-    void set_fragment(const String&);
-    void set_cannot_be_a_base_url(const bool value) { m_cannot_be_a_base_url = value; }
-    void append_path(const String& path) { m_paths.append(path); }
+    void set_scheme(String);
+    void set_protocol(String protocol) { set_scheme(move(protocol)); }
+    void set_username(String);
+    void set_password(String);
+    void set_host(String);
+    void set_port(u16);
+    void set_paths(Vector<String>);
+    void set_query(String);
+    void set_fragment(String);
+    void set_cannot_be_a_base_url(bool value) { m_cannot_be_a_base_url = value; }
+    void append_path(String path) { m_paths.append(path); }
 
     String path() const;
     String basename() const;
@@ -83,27 +83,27 @@ public:
     String to_string() const { return serialize(); }
     String to_string_encoded() const { return serialize(); }
 
-    bool equals(const URL& other, ExcludeFragment = ExcludeFragment::No) const;
+    bool equals(URL const& other, ExcludeFragment = ExcludeFragment::No) const;
 
-    URL complete_url(const String&) const;
+    URL complete_url(String const&) const;
 
     bool data_payload_is_base64() const { return m_data_payload_is_base64; }
-    const String& data_mime_type() const { return m_data_mime_type; }
-    const String& data_payload() const { return m_data_payload; }
+    String const& data_mime_type() const { return m_data_mime_type; }
+    String const& data_payload() const { return m_data_payload; }
 
-    static URL create_with_url_or_path(const String&);
-    static URL create_with_file_scheme(const String& path, const String& fragment = {}, const String& hostname = {});
-    static URL create_with_file_protocol(const String& path, const String& fragment = {}) { return create_with_file_scheme(path, fragment); }
-    static URL create_with_data(const StringView& mime_type, const StringView& payload, bool is_base64 = false);
+    static URL create_with_url_or_path(String const&);
+    static URL create_with_file_scheme(String const& path, String const& fragment = {}, String const& hostname = {});
+    static URL create_with_file_protocol(String const& path, String const& fragment = {}) { return create_with_file_scheme(path, fragment); }
+    static URL create_with_data(String mime_type, String payload, bool is_base64 = false) { return URL(move(mime_type), move(payload), is_base64); };
 
-    static bool scheme_requires_port(const StringView&);
-    static u16 default_port_for_scheme(const StringView&);
-    static bool is_special_scheme(const StringView&);
+    static bool scheme_requires_port(StringView const&);
+    static u16 default_port_for_scheme(StringView const&);
+    static bool is_special_scheme(StringView const&);
 
-    static String percent_encode(const StringView& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
-    static String percent_decode(const StringView& input);
+    static String percent_encode(StringView const& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
+    static String percent_decode(StringView const& input);
 
-    bool operator==(const URL& other) const
+    bool operator==(URL const& other) const
     {
         if (this == &other)
             return true;
@@ -148,7 +148,7 @@ private:
 
 template<>
 struct Formatter<URL> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const URL& value)
+    void format(FormatBuilder& builder, URL const& value)
     {
         Formatter<StringView>::format(builder, value.serialize());
     }
@@ -156,7 +156,7 @@ struct Formatter<URL> : Formatter<StringView> {
 
 template<>
 struct Traits<URL> : public GenericTraits<URL> {
-    static unsigned hash(const URL& url) { return url.to_string().hash(); }
+    static unsigned hash(URL const& url) { return url.to_string().hash(); }
 };
 
 }
