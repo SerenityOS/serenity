@@ -98,7 +98,19 @@ def generate(ast):
                     "result": parse_typed_value(entry[2]) if len(entry) == 3 else None
                 })
             else:
-                print("Ignoring unknown assertion argument", entry[1][0], file=stderr)
+                if not len(tests):
+                    tests.append({
+                        "module": "",
+                        "tests": []
+                    })
+                tests[-1]["tests"].append({
+                    "kind": "testgen_fail",
+                    "function": {
+                        "name": "<unknown>",
+                        "args": []
+                    },
+                    "reason": f"Unknown assertion {entry[0][0][len('assert_'):]}"
+                })
         elif len(entry) >= 2 and entry[0][0] == 'invoke':
             # toplevel invoke :shrug:
             tests[-1]["tests"].append({
@@ -110,7 +122,19 @@ def generate(ast):
                 "result": parse_typed_value(entry[2]) if len(entry) == 3 else None
             })
         else:
-            print("Ignoring unknown entry", entry, file=stderr)
+            if not len(tests):
+                tests.append({
+                    "module": "",
+                    "tests": []
+                })
+            tests[-1]["tests"].append({
+                "kind": "testgen_fail",
+                "function": {
+                    "name": "<unknown>",
+                    "args": []
+                },
+                "reason": f"Unknown command {entry[0][0]}"
+            })
     return tests
 
 
@@ -177,6 +201,9 @@ def genresult(ident, entry):
 
     if entry['kind'] == 'ignore':
         return f'module.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])});\n    '
+
+    if entry['kind'] == 'testgen_fail':
+        return f'throw Exception("Test Generator Failure: " + {json.dumps(entry["reason"])});\n    '
 
     return f'throw Exception("(Test Generator) Unknown test kind {entry["kind"]}");\n    '
 
