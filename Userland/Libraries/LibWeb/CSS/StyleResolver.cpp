@@ -318,6 +318,54 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Flex) {
+        if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
+            style.set_property(CSS::PropertyID::FlexBasis, value);
+            return;
+        }
+
+        if (!value.is_string())
+            return;
+
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() == 1) {
+            // FIXME: Parse float value here.
+            // FIXME: Maybe add NumericStyleValue or sth for that.
+            //        Also extend parse_css_value.
+            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
+            return;
+        }
+
+        if (parts.size() == 2) {
+            // FIXME: Parse float value from parts[0] here.
+            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
+
+            auto second_value = parse_css_value(context, parts[1]);
+            if (second_value->is_length() || (second_value->is_identifier() && second_value->to_identifier() == CSS::ValueID::Content)) {
+                style.set_property(CSS::PropertyID::FlexBasis, *second_value);
+            } else {
+                // FIXME: Parse float value from parts[1] here.
+                style.set_property(CSS::PropertyID::FlexShrink, ""sv);
+            }
+            return;
+        }
+
+        if (parts.size() == 3) {
+            // FIXME: Parse float value from parts[0] here.
+            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
+            // FIXME: Parse float value from parts[1] here.
+            style.set_property(CSS::PropertyID::FlexShrink, ""sv);
+
+            auto third_value = parse_css_value(context, parts[2]);
+            if (third_value->is_length() || (third_value->is_identifier() && third_value->to_identifier() == CSS::ValueID::Content))
+                style.set_property(CSS::PropertyID::FlexBasis, *third_value);
+            return;
+        }
+
+        dbgln("Unsure what to do with CSS flex value '{}'", value.to_string());
+        return;
+    }
+
     if (property_id == CSS::PropertyID::BorderTop
         || property_id == CSS::PropertyID::BorderRight
         || property_id == CSS::PropertyID::BorderBottom
