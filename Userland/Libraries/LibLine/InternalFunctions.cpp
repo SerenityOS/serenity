@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/FileStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/ScopedValueRollback.h>
@@ -11,7 +12,6 @@
 #include <AK/TemporaryChange.h>
 #include <LibCore/File.h>
 #include <LibLine/Editor.h>
-#include <ctype.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -84,7 +84,7 @@ void Editor::cursor_left_word()
         for (;;) {
             if (m_cursor == 0)
                 break;
-            if (skipped_at_least_one_character && !isalnum(m_buffer[m_cursor - 1])) // stop *after* a non-alnum, but only if it changes the position
+            if (skipped_at_least_one_character && !is_ascii_alphanumeric(m_buffer[m_cursor - 1])) // stop *after* a non-alnum, but only if it changes the position
                 break;
             skipped_at_least_one_character = true;
             --m_cursor;
@@ -109,7 +109,7 @@ void Editor::cursor_right_word()
         for (;;) {
             if (m_cursor >= m_buffer.size())
                 break;
-            if (!isalnum(m_buffer[++m_cursor]))
+            if (!is_ascii_alphanumeric(m_buffer[++m_cursor]))
                 break;
         }
         m_buffer.take_last();
@@ -178,7 +178,7 @@ void Editor::erase_word_backwards()
     // A word here is space-separated. `foo=bar baz` is two words.
     bool has_seen_nonspace = false;
     while (m_cursor > 0) {
-        if (isspace(m_buffer[m_cursor - 1])) {
+        if (is_ascii_space(m_buffer[m_cursor - 1])) {
             if (has_seen_nonspace)
                 break;
         } else {
@@ -375,27 +375,27 @@ void Editor::transpose_words()
 
     // Move to end of word under (or after) caret.
     size_t cursor = m_cursor;
-    while (cursor < m_buffer.size() && !isalnum(m_buffer[cursor]))
+    while (cursor < m_buffer.size() && !is_ascii_alphanumeric(m_buffer[cursor]))
         ++cursor;
-    while (cursor < m_buffer.size() && isalnum(m_buffer[cursor]))
+    while (cursor < m_buffer.size() && is_ascii_alphanumeric(m_buffer[cursor]))
         ++cursor;
 
     // Move left over second word and the space to its right.
     size_t end = cursor;
     size_t start = cursor;
-    while (start > 0 && !isalnum(m_buffer[start - 1]))
+    while (start > 0 && !is_ascii_alphanumeric(m_buffer[start - 1]))
         --start;
-    while (start > 0 && isalnum(m_buffer[start - 1]))
+    while (start > 0 && is_ascii_alphanumeric(m_buffer[start - 1]))
         --start;
     size_t start_second_word = start;
 
     // Move left over space between the two words.
-    while (start > 0 && !isalnum(m_buffer[start - 1]))
+    while (start > 0 && !is_ascii_alphanumeric(m_buffer[start - 1]))
         --start;
     size_t start_gap = start;
 
     // Move left over first word.
-    while (start > 0 && isalnum(m_buffer[start - 1]))
+    while (start > 0 && is_ascii_alphanumeric(m_buffer[start - 1]))
         --start;
 
     if (start != start_gap) {
@@ -452,7 +452,7 @@ void Editor::erase_alnum_word_backwards()
     // A word here is contiguous alnums. `foo=bar baz` is three words.
     bool has_seen_alnum = false;
     while (m_cursor > 0) {
-        if (!isalnum(m_buffer[m_cursor - 1])) {
+        if (!is_ascii_alphanumeric(m_buffer[m_cursor - 1])) {
             if (has_seen_alnum)
                 break;
         } else {
@@ -467,7 +467,7 @@ void Editor::erase_alnum_word_forwards()
     // A word here is contiguous alnums. `foo=bar baz` is three words.
     bool has_seen_alnum = false;
     while (m_cursor < m_buffer.size()) {
-        if (!isalnum(m_buffer[m_cursor])) {
+        if (!is_ascii_alphanumeric(m_buffer[m_cursor])) {
             if (has_seen_alnum)
                 break;
         } else {
@@ -480,15 +480,15 @@ void Editor::erase_alnum_word_forwards()
 void Editor::case_change_word(Editor::CaseChangeOp change_op)
 {
     // A word here is contiguous alnums. `foo=bar baz` is three words.
-    while (m_cursor < m_buffer.size() && !isalnum(m_buffer[m_cursor]))
+    while (m_cursor < m_buffer.size() && !is_ascii_alphanumeric(m_buffer[m_cursor]))
         ++m_cursor;
     size_t start = m_cursor;
-    while (m_cursor < m_buffer.size() && isalnum(m_buffer[m_cursor])) {
+    while (m_cursor < m_buffer.size() && is_ascii_alphanumeric(m_buffer[m_cursor])) {
         if (change_op == CaseChangeOp::Uppercase || (change_op == CaseChangeOp::Capital && m_cursor == start)) {
-            m_buffer[m_cursor] = toupper(m_buffer[m_cursor]);
+            m_buffer[m_cursor] = to_ascii_uppercase(m_buffer[m_cursor]);
         } else {
             VERIFY(change_op == CaseChangeOp::Lowercase || (change_op == CaseChangeOp::Capital && m_cursor > start));
-            m_buffer[m_cursor] = tolower(m_buffer[m_cursor]);
+            m_buffer[m_cursor] = to_ascii_lowercase(m_buffer[m_cursor]);
         }
         ++m_cursor;
         m_refresh_needed = true;
