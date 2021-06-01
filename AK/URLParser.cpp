@@ -196,12 +196,16 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
         if (raw_input[i] <= 0x20) {
             ++start_index;
             has_validation_error = true;
+        } else {
+            break;
         }
     }
-    for (size_t i = 0; i < raw_input.length(); ++i) {
-        if (raw_input[raw_input.length() - 1 - i] <= 0x20) {
+    for (ssize_t i = raw_input.length() - 1; i >= 0; --i) {
+        if (raw_input[i] <= 0x20) {
             --end_index;
             has_validation_error = true;
+        } else {
+            break;
         }
     }
     if (has_validation_error)

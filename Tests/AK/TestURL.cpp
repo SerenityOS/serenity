@@ -307,3 +307,24 @@ TEST_CASE(complete_url)
 
     EXPECT(base_url.complete_url("../index.html#fragment").equals(base_url));
 }
+
+TEST_CASE(leading_whitespace)
+{
+    URL url { "   https://foo.com/" };
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.to_string(), "https://foo.com/");
+}
+
+TEST_CASE(trailing_whitespace)
+{
+    URL url { "https://foo.com/   " };
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.to_string(), "https://foo.com/");
+}
+
+TEST_CASE(leading_and_trailing_whitespace)
+{
+    URL url { "      https://foo.com/   " };
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.to_string(), "https://foo.com/");
+}
