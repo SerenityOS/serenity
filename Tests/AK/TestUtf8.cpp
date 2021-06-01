@@ -71,7 +71,7 @@ TEST_CASE(validate_invalid_ut8)
 TEST_CASE(iterate_utf8)
 {
     Utf8View view("Some weird characters \u00A9\u266A\uA755");
-    Utf8CodepointIterator iterator = view.begin();
+    Utf8CodePointIterator iterator = view.begin();
 
     EXPECT(*iterator == 'S');
     EXPECT(iterator.peek().has_value() && iterator.peek().value() == 'S');
@@ -98,7 +98,7 @@ TEST_CASE(iterate_utf8)
 
     EXPECT(iterator.done());
     EXPECT(!iterator.peek(0).has_value());
-    EXPECT_CRASH("Dereferencing Utf8CodepointIterator which is already done.", [&iterator] {
+    EXPECT_CRASH("Dereferencing Utf8CodePointIterator which is already done.", [&iterator] {
         *iterator;
         return Test::Crash::Failure::DidNotCrash;
     });

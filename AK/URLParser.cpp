@@ -227,7 +227,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
     bool password_token_seen = false;
 
     Utf8View input(processed_input);
-    Utf8CodepointIterator iterator = input.begin();
+    Utf8CodePointIterator iterator = input.begin();
 
     auto get_remaining = [&input, &iterator] {
         return input.substring_view(iterator - input.begin() + iterator.code_point_length_in_bytes()).as_string();
