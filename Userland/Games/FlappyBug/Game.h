@@ -77,7 +77,7 @@ private:
 
         void reset()
         {
-            x = game_width;
+            x = game_width + width;
             gap_top_y = get_random_uniform(game_height - gap_height);
         }
 
