@@ -100,6 +100,12 @@ public:
         return has_value() == other.has_value() && (!has_value() || value() == other.value());
     }
 
+    template<typename O>
+    ALWAYS_INLINE bool operator==(O const& other) const
+    {
+        return has_value() && value() == other;
+    }
+
     ALWAYS_INLINE ~Optional()
     {
         clear();

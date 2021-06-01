@@ -53,3 +53,46 @@ TEST_CASE(short_notation)
     EXPECT_EQ(value->length(), 3u);
     EXPECT_EQ(*value, "foo");
 }
+
+TEST_CASE(comparison_without_values)
+{
+    Optional<StringView> opt0;
+    Optional<StringView> opt1;
+    Optional<String> opt2;
+    EXPECT_EQ(opt0, opt1);
+    EXPECT_EQ(opt0, opt2);
+}
+
+TEST_CASE(comparison_with_values)
+{
+    Optional<StringView> opt0;
+    Optional<StringView> opt1 = "foo";
+    Optional<String> opt2 = "foo";
+    Optional<StringView> opt3 = "bar";
+    EXPECT_NE(opt0, opt1);
+    EXPECT_EQ(opt1, opt2);
+    EXPECT_NE(opt1, opt3);
+}
+
+TEST_CASE(comparison_to_underlying_types)
+{
+    Optional<String> opt0;
+    EXPECT_NE(opt0, String());
+    EXPECT_NE(opt0, "foo");
+
+    Optional<StringView> opt1 = "foo";
+    EXPECT_EQ(opt1, "foo");
+    EXPECT_NE(opt1, "bar");
+    EXPECT_EQ(opt1, String("foo"));
+}
+
+TEST_CASE(comparison_with_numeric_types)
+{
+    Optional<u8> opt0;
+    EXPECT_NE(opt0, 0);
+    Optional<u8> opt1 = 7;
+    EXPECT_EQ(opt1, 7);
+    EXPECT_EQ(opt1, 7.0);
+    EXPECT_EQ(opt1, 7u);
+    EXPECT_NE(opt1, -2);
+}
