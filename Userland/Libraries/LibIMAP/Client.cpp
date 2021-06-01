@@ -114,6 +114,10 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "NOOP"sv.bytes();
     case CommandType::Capability:
         return "CAPABILITY"sv.bytes();
+    case CommandType::List:
+        return "LIST"sv.bytes();
+    case CommandType::Select:
+        return "SELECT"sv.bytes();
     }
     VERIFY_NOT_REACHED();
 }
@@ -143,10 +147,34 @@ RefPtr<Promise<Optional<Response>>> Client::send_command(Command&& command)
     return promise;
 }
 
+template<typename T>
+RefPtr<Promise<Optional<T>>> cast_promise(RefPtr<Promise<Optional<Response>>> promise_variant)
+{
+    auto new_promise = promise_variant->map<Optional<T>>(
+        [](Optional<Response>& variant) {
+            return variant.has_value() ? move(variant->get<T>()) : Optional<T>();
+        });
+    return new_promise;
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name, StringView mailbox)
+{
+    auto command = Command { CommandType::List, m_current_command,
+        { String::formatted("\"{}\"", reference_name),
+            String::formatted("\"{}\"", mailbox) } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
 RefPtr<Promise<Optional<Response>>> Client::send_simple_command(CommandType type)
 {
     auto command = Command { type, m_current_command, {} };
     return send_command(move(command));
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::select(StringView string)
+{
+    auto command = Command { CommandType::Select, m_current_command, { string } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 void Client::handle_parsed_response(ParseStatus&& parse_status)
