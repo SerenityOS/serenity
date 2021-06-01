@@ -49,7 +49,7 @@ int main(int argc, char** argv)
 
     const char* image_file = nullptr;
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(image_file, "Pixel Paint image file (*.pp) to open", "path", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     auto app_icon = GUI::Icon::default_icon("app-pixel-paint");

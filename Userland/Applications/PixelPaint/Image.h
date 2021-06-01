@@ -37,7 +37,8 @@ protected:
 class Image : public RefCounted<Image> {
 public:
     static RefPtr<Image> create_with_size(const Gfx::IntSize&);
-    static RefPtr<Image> create_from_file(const String& file_path);
+    static RefPtr<Image> create_from_file(String const& file_path);
+    static RefPtr<Image> create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap);
 
     size_t layer_count() const { return m_layers.size(); }
     const Layer& layer(size_t index) const { return m_layers.at(index); }
@@ -73,6 +74,8 @@ public:
 
 private:
     explicit Image(const Gfx::IntSize&);
+
+    static RefPtr<Image> create_from_pixel_paint_file(String const& file_path);
 
     void did_change();
     void did_modify_layer_stack();
