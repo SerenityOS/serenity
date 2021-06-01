@@ -170,6 +170,8 @@ public:
         F64,
         FunctionReference,
         ExternReference,
+        NullFunctionReference,
+        NullExternReference,
     };
 
     explicit ValueType(Kind kind)
@@ -177,7 +179,7 @@ public:
     {
     }
 
-    auto is_reference() const { return m_kind == ExternReference || m_kind == FunctionReference; }
+    auto is_reference() const { return m_kind == ExternReference || m_kind == FunctionReference || m_kind == NullExternReference || m_kind == NullFunctionReference; }
     auto is_numeric() const { return !is_reference(); }
     auto kind() const { return m_kind; }
 
@@ -198,6 +200,10 @@ public:
             return "funcref";
         case ExternReference:
             return "externref";
+        case NullFunctionReference:
+            return "ref.null externref";
+        case NullExternReference:
+            return "ref.null funcref";
         }
         VERIFY_NOT_REACHED();
     }
