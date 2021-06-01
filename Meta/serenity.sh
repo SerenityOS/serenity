@@ -118,7 +118,7 @@ cmd_with_target() {
 }
 
 ensure_target() {
-    [ -d "$BUILD_DIR" ] || create_build_dir
+    [ -f "$BUILD_DIR/build.ninja" ] || create_build_dir
 }
 
 run_tests() {
@@ -209,9 +209,7 @@ run_gdb() {
 if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
-    # FIXME: We should probably call ensure_toolchain first, but this somehow causes
-    # this error after the toolchain finished building:
-    # ninja: error: loading 'build.ninja': No such file or directory
+    ensure_toolchain
     ensure_target
     [ "$TARGET" = "lagom" ] || ensure_toolchain
     case "$CMD" in
