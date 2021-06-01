@@ -81,4 +81,13 @@ Messages::InspectorServer::IdentifyResponse ClientConnection::identify(pid_t pid
     return response;
 }
 
+Messages::InspectorServer::IsInspectableResponse ClientConnection::is_inspectable(pid_t pid)
+{
+    auto process = InspectableProcess::from_pid(pid);
+    if (!process)
+        return false;
+
+    return true;
+}
+
 }
