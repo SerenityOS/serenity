@@ -14,29 +14,29 @@ namespace AK {
 
 class Utf32View;
 
-class Utf32CodepointIterator {
+class Utf32CodePointIterator {
     friend class Utf32View;
 
 public:
-    Utf32CodepointIterator() = default;
-    ~Utf32CodepointIterator() = default;
+    Utf32CodePointIterator() = default;
+    ~Utf32CodePointIterator() = default;
 
-    bool operator==(const Utf32CodepointIterator& other) const
+    bool operator==(const Utf32CodePointIterator& other) const
     {
         return m_ptr == other.m_ptr && m_length == other.m_length;
     }
-    bool operator!=(const Utf32CodepointIterator& other) const
+    bool operator!=(const Utf32CodePointIterator& other) const
     {
         return !(*this == other);
     }
-    Utf32CodepointIterator& operator++()
+    Utf32CodePointIterator& operator++()
     {
         VERIFY(m_length > 0);
         m_ptr++;
         m_length--;
         return *this;
     }
-    ssize_t operator-(const Utf32CodepointIterator& other) const
+    ssize_t operator-(const Utf32CodePointIterator& other) const
     {
         return m_ptr - other.m_ptr;
     }
@@ -50,7 +50,7 @@ public:
     bool done() const { return !m_length; }
 
 private:
-    Utf32CodepointIterator(const u32* ptr, size_t length)
+    Utf32CodePointIterator(const u32* ptr, size_t length)
         : m_ptr(ptr)
         , m_length((ssize_t)length)
     {
@@ -61,7 +61,7 @@ private:
 
 class Utf32View {
 public:
-    using Iterator = Utf32CodepointIterator;
+    using Iterator = Utf32CodePointIterator;
 
     Utf32View() = default;
     Utf32View(const u32* code_points, size_t length)
@@ -71,12 +71,12 @@ public:
         VERIFY(code_points || length == 0);
     }
 
-    Utf32CodepointIterator begin() const
+    Utf32CodePointIterator begin() const
     {
         return { begin_ptr(), m_length };
     }
 
-    Utf32CodepointIterator end() const
+    Utf32CodePointIterator end() const
     {
         return { end_ptr(), 0 };
     }
@@ -85,7 +85,7 @@ public:
     bool is_empty() const { return m_length == 0; }
     size_t length() const { return m_length; }
 
-    size_t iterator_offset(const Utf32CodepointIterator& it) const
+    size_t iterator_offset(const Utf32CodePointIterator& it) const
     {
         VERIFY(it.m_ptr >= m_code_points);
         VERIFY(it.m_ptr < m_code_points + m_length);
