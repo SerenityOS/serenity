@@ -77,7 +77,7 @@ TEST_CASE(ends_with)
 
 TEST_CASE(lines)
 {
-    String test_string = "a\nb\r\nc\rd";
+    String test_string = "a\rb\nc\r\nd";
     StringView test_string_view = test_string.view();
     Vector<StringView> test_string_vector = test_string_view.lines();
     EXPECT_EQ(test_string_vector.size(), 4u);
