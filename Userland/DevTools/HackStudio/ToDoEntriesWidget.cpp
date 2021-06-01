@@ -6,13 +6,8 @@
 
 #include "ToDoEntriesWidget.h"
 #include "HackStudio.h"
-#include "Project.h"
 #include "ToDoEntries.h"
-#include <AK/StringBuilder.h>
 #include <LibGUI/BoxLayout.h>
-#include <LibGUI/Button.h>
-#include <LibGUI/TableView.h>
-#include <LibGUI/TextBox.h>
 #include <LibGfx/FontDatabase.h>
 
 namespace HackStudio {
@@ -22,16 +17,18 @@ public:
     enum Column {
         Filename,
         Text,
+        Line,
+        Column,
         __Count
     };
 
-    explicit ToDoEntriesModel(const Vector<ToDoEntryPair>&& matches)
+    explicit ToDoEntriesModel(Vector<Cpp::Parser::TodoEntry> const&& matches)
         : m_matches(move(matches))
     {
     }
 
-    virtual int row_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return m_matches.size(); }
-    virtual int column_count(const GUI::ModelIndex& = GUI::ModelIndex()) const override { return Column::__Count; }
+    virtual int row_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return m_matches.size(); }
+    virtual int column_count(GUI::ModelIndex const& = GUI::ModelIndex()) const override { return Column::__Count; }
 
     virtual String column_name(int column) const override
     {
@@ -40,12 +37,16 @@ public:
             return "Filename";
         case Column::Text:
             return "Text";
+        case Column::Line:
+            return "Line";
+        case Column::Column:
+            return "Col";
         default:
             VERIFY_NOT_REACHED();
         }
     }
 
-    virtual GUI::Variant data(const GUI::ModelIndex& index, GUI::ModelRole role) const override
+    virtual GUI::Variant data(GUI::ModelIndex const& index, GUI::ModelRole role) const override
     {
         if (role == GUI::ModelRole::TextAlignment)
             return Gfx::TextAlignment::CenterLeft;
@@ -60,7 +61,11 @@ public:
             case Column::Filename:
                 return match.filename;
             case Column::Text:
-                return match.comment;
+                return match.content;
+            case Column::Line:
+                return String::formatted("{}", match.line + 1);
+            case Column::Column:
+                return String::formatted("{}", match.column);
             }
         }
         return {};
@@ -77,7 +82,7 @@ public:
     }
 
 private:
-    Vector<ToDoEntryPair> m_matches;
+    Vector<Cpp::Parser::TodoEntry> m_matches;
 };
 
 void ToDoEntriesWidget::refresh()
@@ -91,6 +96,11 @@ ToDoEntriesWidget::ToDoEntriesWidget()
 {
     set_layout<GUI::VerticalBoxLayout>();
     m_result_view = add<GUI::TableView>();
+
+    m_result_view->on_activation = [](auto& index) {
+        auto& match = *(Cpp::Parser::TodoEntry const*)index.internal_data();
+        open_file(match.filename, match.line, match.column);
+    };
 }
 
 }

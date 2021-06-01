@@ -14,20 +14,20 @@ ToDoEntries& HackStudio::ToDoEntries::the()
     return s_instance;
 }
 
-void ToDoEntries::set_entries(const String& filename, const Vector<String>&& entries)
+void ToDoEntries::set_entries(String const& filename, Vector<Cpp::Parser::TodoEntry> const&& entries)
 {
     m_document_to_entries.set(filename, move(entries));
     if (on_update)
         on_update();
 }
 
-Vector<ToDoEntryPair> ToDoEntries::get_entries()
+Vector<Cpp::Parser::TodoEntry> ToDoEntries::get_entries()
 {
-    Vector<ToDoEntryPair> ret;
-    for (auto& it : m_document_to_entries)
+    Vector<Cpp::Parser::TodoEntry> ret;
+    for (auto& it : m_document_to_entries) {
         for (auto& entry : it.value)
-            ret.append({ it.key, entry });
-
+            ret.append({ entry.content, it.key, entry.line, entry.column });
+    }
     return ret;
 }
 

@@ -14,6 +14,7 @@
 #include <AK/Vector.h>
 
 namespace Cpp {
+
 class Preprocessor {
 
 public:
