@@ -499,7 +499,7 @@ class ImportSection {
 public:
     class Import {
     public:
-        using ImportDesc = Variant<TypeIndex, TableType, MemoryType, GlobalType>;
+        using ImportDesc = Variant<TypeIndex, TableType, MemoryType, GlobalType, FunctionType>;
         Import(String module, String name, ImportDesc description)
             : m_module(move(module))
             , m_name(move(name))

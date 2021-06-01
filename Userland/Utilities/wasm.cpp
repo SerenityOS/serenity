@@ -49,11 +49,14 @@ static void sigint_handler(int)
     g_continue = false;
 }
 
-static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer&, const Wasm::Instruction&, const Wasm::Interpreter& interpreter)
+static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, const Wasm::Instruction& instr, const Wasm::Interpreter& interpreter)
 {
     if (interpreter.did_trap()) {
         g_continue = false;
         const_cast<Wasm::Interpreter&>(interpreter).clear_trap();
+        warnln("Trapped when executing ip={}", ip);
+        g_printer.print(instr);
+        warnln("");
     }
     return true;
 }
@@ -274,6 +277,7 @@ int main(int argc, char* argv[])
     String exported_function_to_execute;
     Vector<u64> values_to_push;
     Vector<String> modules_to_link_in;
+    HashMap<Wasm::Linker::Name, Wasm::HostFunction> exported_host_functions;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(filename, "File name to parse", "file");
@@ -307,6 +311,71 @@ int main(int argc, char* argv[])
                 return true;
             }
             return false;
+        },
+    });
+    parser.add_option(Core::ArgsParser::Option {
+        .requires_argument = true,
+        .help_string = "Export a noop function that returns default-initialised values (module!name::t,t,t...:t,t,t...)",
+        .long_name = "export-noop",
+        .short_name = 0,
+        .value_name = "module!name:atypes:rtypes",
+        .accept_value = [&](const char* str) -> bool {
+            GenericLexer lexer { str };
+            auto name = lexer.consume_until("::");
+            auto parts = name.split_view('!');
+            if (parts.size() != 2) {
+                warnln("Expected a two-part name module!name, got '{}'", name);
+                return false;
+            }
+            auto module_name = parts[0];
+            auto export_name = parts[1];
+
+            auto arg_types = lexer.consume_until(":").split_view(',');
+            auto ret_types = lexer.consume_all().split_view(',');
+            Vector<Wasm::ValueType> argument_types, return_types;
+            for (auto& name : arg_types) {
+                if (name == "i32") {
+                    argument_types.empend(Wasm::ValueType::Kind::I32);
+                } else if (name == "i64") {
+                    argument_types.empend(Wasm::ValueType::Kind::I64);
+                } else if (name == "f32") {
+                    argument_types.empend(Wasm::ValueType::Kind::F32);
+                } else if (name == "f64") {
+                    argument_types.empend(Wasm::ValueType::Kind::F64);
+                } else {
+                    warnln("Unknown type '{}'", name);
+                    return false;
+                }
+            }
+            for (auto& name : ret_types) {
+                if (name == "i32") {
+                    return_types.empend(Wasm::ValueType::Kind::I32);
+                } else if (name == "i64") {
+                    return_types.empend(Wasm::ValueType::Kind::I64);
+                } else if (name == "f32") {
+                    return_types.empend(Wasm::ValueType::Kind::F32);
+                } else if (name == "f64") {
+                    return_types.empend(Wasm::ValueType::Kind::F64);
+                } else {
+                    warnln("Unknown type '{}'", name);
+                    return false;
+                }
+            }
+
+            Wasm::FunctionType function_type { argument_types, return_types };
+            exported_host_functions.set(
+                Wasm::Linker::Name { module_name, export_name, function_type },
+                Wasm::HostFunction {
+                    [&](auto&, auto&) -> Wasm::Result {
+                        Vector<Wasm::Value> values;
+                        values.ensure_capacity(return_types.size());
+                        for (auto& type : return_types)
+                            values.empend(type, 0ull);
+                        return Wasm::Result { move(values) };
+                    },
+                    function_type });
+
+            return true;
         },
     });
     parser.parse(argc, argv);
@@ -365,9 +434,20 @@ int main(int argc, char* argv[])
             linked_instances.append(instantiation_result.release_value());
         }
 
+        HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
+        for (auto& entry : exported_host_functions) {
+            auto address = machine.store().allocate(move(entry.value));
+            if (!address.has_value()) {
+                warnln("Could not export {}/{}", entry.key.module, entry.key.name);
+                return 1;
+            }
+            exports.set(entry.key, *address);
+        }
+
         Wasm::Linker linker { parse_result.value() };
         for (auto& instance : linked_instances)
             linker.link(instance);
+        linker.link(exports);
         auto link_result = linker.finish();
         if (link_result.is_error()) {
             warnln("Linking main module failed");
