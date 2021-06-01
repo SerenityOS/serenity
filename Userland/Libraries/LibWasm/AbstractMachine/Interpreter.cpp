@@ -368,6 +368,34 @@ ALWAYS_INLINE static T rotr(T value, R shift)
     return (value >> shift) | (value << ((-shift) & mask));
 }
 
+template<typename T>
+ALWAYS_INLINE static i32 clz(T value)
+{
+    if (value == 0)
+        return sizeof(T) * CHAR_BIT;
+
+    if constexpr (sizeof(T) == 4)
+        return __builtin_clz(value);
+    else if constexpr (sizeof(T) == 8)
+        return __builtin_clzll(value);
+    else
+        VERIFY_NOT_REACHED();
+}
+
+template<typename T>
+ALWAYS_INLINE static i32 ctz(T value)
+{
+    if (value == 0)
+        return sizeof(T) * CHAR_BIT;
+
+    if constexpr (sizeof(T) == 4)
+        return __builtin_ctz(value);
+    else if constexpr (sizeof(T) == 8)
+        return __builtin_ctzll(value);
+    else
+        VERIFY_NOT_REACHED();
+}
+
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
@@ -717,9 +745,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f64_ge.value():
         BINARY_NUMERIC_OPERATION(double, >, i32);
     case Instructions::i32_clz.value():
+        UNARY_NUMERIC_OPERATION(i32, clz);
     case Instructions::i32_ctz.value():
+        UNARY_NUMERIC_OPERATION(i32, ctz);
     case Instructions::i32_popcnt.value():
-        goto unimplemented;
+        UNARY_NUMERIC_OPERATION(i32, __builtin_popcount);
     case Instructions::i32_add.value():
         BINARY_NUMERIC_OPERATION(i32, +, i32);
     case Instructions::i32_sub.value():
@@ -751,9 +781,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i32_rotr.value():
         BINARY_PREFIX_NUMERIC_OPERATION(u32, rotr, i32);
     case Instructions::i64_clz.value():
+        UNARY_NUMERIC_OPERATION(i64, clz);
     case Instructions::i64_ctz.value():
+        UNARY_NUMERIC_OPERATION(i64, ctz);
     case Instructions::i64_popcnt.value():
-        goto unimplemented;
+        UNARY_NUMERIC_OPERATION(i64, __builtin_popcountll);
     case Instructions::i64_add.value():
         OVF_CHECKED_BINARY_NUMERIC_OPERATION(i64, +, i64);
     case Instructions::i64_sub.value():
