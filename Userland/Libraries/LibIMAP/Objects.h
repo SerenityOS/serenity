@@ -17,10 +17,12 @@
 
 namespace IMAP {
 enum class CommandType {
+    Capability,
     Noop,
 };
 
 enum class ResponseType : unsigned {
+    Capability = 1u << 0,
 };
 
 class Parser;
@@ -65,8 +67,22 @@ public:
         m_response_type = m_response_type | static_cast<unsigned>(response_type);
     }
 
+    void add_capabilities(Vector<String>&& capabilities)
+    {
+        m_capabilities = move(capabilities);
+        add_response_type(ResponseType::Capability);
+    }
+
+    Vector<String>& capabilities()
+    {
+        VERIFY(contains_response_type(ResponseType::Capability));
+        return m_capabilities;
+    }
+
 private:
     unsigned m_response_type;
+
+    Vector<String> m_capabilities;
 };
 
 class SolidResponse {

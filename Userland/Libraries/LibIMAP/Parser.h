@@ -32,13 +32,22 @@ private:
 
     bool try_consume(StringView);
     bool at_end() { return position >= m_buffer.size(); };
+
     void parse_response_done();
+
     void consume(StringView x);
+
     unsigned parse_number();
     Optional<unsigned> try_parse_number();
+
     void parse_untagged();
+
     StringView parse_atom();
+
     ResponseStatus parse_status();
+
     StringView parse_while(Function<bool(u8)> should_consume);
+
+    void parse_capability_response();
 };
 }
