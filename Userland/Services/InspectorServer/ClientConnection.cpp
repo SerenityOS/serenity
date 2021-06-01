@@ -31,33 +31,33 @@ Messages::InspectorServer::GetAllObjectsResponse ClientConnection::get_all_objec
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return { String {} };
+        return String {};
 
     JsonObject request;
     request.set("type", "GetAllObjects");
     process->send_request(request);
     auto response = process->wait_for_response();
-    return { response };
+    return response;
 }
 
 Messages::InspectorServer::SetInspectedObjectResponse ClientConnection::set_inspected_object(pid_t pid, u64 object_id)
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return { false };
+        return false;
 
     JsonObject request;
     request.set("type", "SetInspectedObject");
     request.set("address", object_id);
     process->send_request(request);
-    return { true };
+    return true;
 }
 
 Messages::InspectorServer::SetObjectPropertyResponse ClientConnection::set_object_property(pid_t pid, u64 object_id, String const& name, String const& value)
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return { false };
+        return false;
 
     JsonObject request;
     request.set("type", "SetProperty");
@@ -65,20 +65,20 @@ Messages::InspectorServer::SetObjectPropertyResponse ClientConnection::set_objec
     request.set("name", name);
     request.set("value", value);
     process->send_request(request);
-    return { true };
+    return true;
 }
 
 Messages::InspectorServer::IdentifyResponse ClientConnection::identify(pid_t pid)
 {
     auto process = InspectableProcess::from_pid(pid);
     if (!process)
-        return { String {} };
+        return String {};
 
     JsonObject request;
     request.set("type", "Identify");
     process->send_request(request);
     auto response = process->wait_for_response();
-    return { response };
+    return response;
 }
 
 }
