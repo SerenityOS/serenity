@@ -327,6 +327,8 @@ String URL::serialize_for_display() const
 
 bool URL::equals(URL const& other, ExcludeFragment exclude_fragments) const
 {
+    if (this == &other)
+        return true;
     if (!m_valid || !other.m_valid)
         return false;
     return serialize(exclude_fragments) == other.serialize(exclude_fragments);

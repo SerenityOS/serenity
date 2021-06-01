@@ -101,12 +101,7 @@ public:
     static String percent_encode(StringView const& input, PercentEncodeSet set = PercentEncodeSet::Userinfo);
     static String percent_decode(StringView const& input);
 
-    bool operator==(URL const& other) const
-    {
-        if (this == &other)
-            return true;
-        return equals(other, ExcludeFragment::No);
-    }
+    bool operator==(URL const& other) const { return equals(other, ExcludeFragment::No); }
 
 private:
     URL(String&& data_mime_type, String&& data_payload, bool payload_is_base64)
