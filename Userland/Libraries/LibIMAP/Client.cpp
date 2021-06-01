@@ -114,6 +114,10 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "NOOP"sv.bytes();
     case CommandType::Capability:
         return "CAPABILITY"sv.bytes();
+    case CommandType::Logout:
+        return "LOGOUT"sv.bytes();
+    case CommandType::Login:
+        return "LOGIN"sv.bytes();
     case CommandType::List:
         return "LIST"sv.bytes();
     case CommandType::Select:
@@ -155,6 +159,12 @@ RefPtr<Promise<Optional<T>>> cast_promise(RefPtr<Promise<Optional<Response>>> pr
             return variant.has_value() ? move(variant->get<T>()) : Optional<T>();
         });
     return new_promise;
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::login(StringView username, StringView password)
+{
+    auto command = Command { CommandType::Login, m_current_command, { username, password } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 RefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name, StringView mailbox)

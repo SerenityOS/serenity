@@ -21,6 +21,7 @@ public:
     RefPtr<Promise<Optional<Response>>> send_command(Command&&);
     RefPtr<Promise<Optional<Response>>> send_simple_command(CommandType);
     void send_raw(StringView data);
+    RefPtr<Promise<Optional<SolidResponse>>> login(StringView username, StringView password);
     RefPtr<Promise<Optional<SolidResponse>>> list(StringView reference_name, StringView mailbox_name);
     RefPtr<Promise<Optional<SolidResponse>>> select(StringView string);
 
