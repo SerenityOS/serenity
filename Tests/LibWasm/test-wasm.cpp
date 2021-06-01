@@ -173,10 +173,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         auto value = vm.argument(index++).to_double(global_object);
         switch (param.kind()) {
         case Wasm::ValueType::Kind::I32:
-            arguments.append(Wasm::Value(static_cast<i32>(value)));
+            arguments.append(Wasm::Value(param, static_cast<u64>(value)));
             break;
         case Wasm::ValueType::Kind::I64:
-            arguments.append(Wasm::Value(static_cast<i64>(value)));
+            arguments.append(Wasm::Value(param, static_cast<u64>(value)));
             break;
         case Wasm::ValueType::Kind::F32:
             arguments.append(Wasm::Value(static_cast<float>(value)));

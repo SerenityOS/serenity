@@ -700,17 +700,17 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i32_popcnt.value():
         goto unimplemented;
     case Instructions::i32_add.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, +, i32);
+        BINARY_NUMERIC_OPERATION(i32, +, i32);
     case Instructions::i32_sub.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, -, i32);
+        BINARY_NUMERIC_OPERATION(i32, -, i32);
     case Instructions::i32_mul.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, *, i32);
+        BINARY_NUMERIC_OPERATION(i32, *, i32);
     case Instructions::i32_divs.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(i32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
+        BINARY_NUMERIC_OPERATION(i32, /, i32, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
     case Instructions::i32_divu.value():
-        OVF_CHECKED_BINARY_NUMERIC_OPERATION(u32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
+        BINARY_NUMERIC_OPERATION(u32, /, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_rems.value():
-        BINARY_NUMERIC_OPERATION(i32, %, i32, TRAP_IF_NOT(rhs.value() != 0));
+        BINARY_NUMERIC_OPERATION(i32, %, i32, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
     case Instructions::i32_remu.value():
         BINARY_NUMERIC_OPERATION(u32, %, i32, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i32_and.value():
@@ -742,7 +742,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_divu.value():
         OVF_CHECKED_BINARY_NUMERIC_OPERATION(u64, /, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_rems.value():
-        BINARY_NUMERIC_OPERATION(i64, %, i64, TRAP_IF_NOT(rhs.value() != 0));
+        BINARY_NUMERIC_OPERATION(i64, %, i64, TRAP_IF_NOT(!(Checked<i32>(lhs.value()) /= rhs.value()).has_overflow()));
     case Instructions::i64_remu.value():
         BINARY_NUMERIC_OPERATION(u64, %, i64, TRAP_IF_NOT(rhs.value() != 0));
     case Instructions::i64_and.value():
