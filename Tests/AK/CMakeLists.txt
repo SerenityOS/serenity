@@ -10,6 +10,7 @@ set(AK_TEST_SOURCES
     TestBitCast.cpp
     TestBitmap.cpp
     TestByteBuffer.cpp
+    TestCharacterTypes.cpp
     TestChecked.cpp
     TestCircularDeque.cpp
     TestCircularDuplexStream.cpp
