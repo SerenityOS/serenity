@@ -202,9 +202,11 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                 warnln("Returned:");
             for (auto& value : result.values()) {
                 auto str = value.value().visit(
-                    [&](const auto& value) {
+                    [&]<typename T>(const T& value) {
                         if constexpr (requires { value.value(); })
                             return String::formatted("  -> addr{} ", value.value());
+                        else if constexpr (IsSame<Wasm::Value::Null, T>)
+                            return String::formatted("  ->addr(null)");
                         else
                             return String::formatted("  -> {} ", value);
                     });
@@ -460,9 +462,11 @@ int main(int argc, char* argv[])
                 warnln("Returned:");
             for (auto& value : result.values()) {
                 value.value().visit(
-                    [&](const auto& value) {
+                    [&]<typename T>(const T& value) {
                         if constexpr (requires { value.value(); })
                             out("  -> addr{} ", value.value());
+                        else if constexpr (IsSame<Wasm::Value::Null, T>)
+                            out("  ->addr(null)");
                         else
                             out("  -> {} ", value);
                     });

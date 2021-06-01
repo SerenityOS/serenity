@@ -262,7 +262,10 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
     case Wasm::ValueType::FunctionReference:
         // FIXME: What's the name of a function reference that isn't exported?
         return create_native_function(wasm_value.to<Wasm::FunctionAddress>().value(), "FIXME_IHaveNoIdeaWhatThisShouldBeCalled", global_object);
+    case Wasm::ValueType::NullFunctionReference:
+        return JS::js_null();
     case Wasm::ValueType::ExternReference:
+    case Wasm::ValueType::NullExternReference:
         TODO();
     }
     VERIFY_NOT_REACHED();
@@ -304,6 +307,8 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
     }
     case Wasm::ValueType::FunctionReference:
     case Wasm::ValueType::ExternReference:
+    case Wasm::ValueType::NullFunctionReference:
+    case Wasm::ValueType::NullExternReference:
         TODO();
     }
 

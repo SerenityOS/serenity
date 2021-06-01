@@ -85,6 +85,8 @@ void Configuration::dump_stack()
                 v.value().visit([]<typename T>(const T& v) {
                     if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
                         dbgln("    {}", v);
+                    else if constexpr (IsSame<Value::Null, T>)
+                        dbgln("    *null");
                     else
                         dbgln("    *{}", v.value());
                 });
@@ -95,6 +97,8 @@ void Configuration::dump_stack()
                     local.value().visit([]<typename T>(const T& v) {
                         if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
                             dbgln("        {}", v);
+                        else if constexpr (IsSame<Value::Null, T>)
+                            dbgln("    *null");
                         else
                             dbgln("        *{}", v.value());
                     });

@@ -190,6 +190,12 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
         case Wasm::ValueType::Kind::ExternReference:
             arguments.append(Wasm::Value(Wasm::ExternAddress { static_cast<u64>(value) }));
             break;
+        case Wasm::ValueType::Kind::NullFunctionReference:
+            arguments.append(Wasm::Value(Wasm::Value::Null { Wasm::ValueType(Wasm::ValueType::Kind::FunctionReference) }));
+            break;
+        case Wasm::ValueType::Kind::NullExternReference:
+            arguments.append(Wasm::Value(Wasm::Value::Null { Wasm::ValueType(Wasm::ValueType::Kind::ExternReference) }));
+            break;
         }
     }
 
@@ -206,6 +212,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     result.values().first().value().visit(
         [&](const auto& value) { return_value = JS::Value(static_cast<double>(value)); },
         [&](const Wasm::FunctionAddress& index) { return_value = JS::Value(static_cast<double>(index.value())); },
-        [&](const Wasm::ExternAddress& index) { return_value = JS::Value(static_cast<double>(index.value())); });
+        [&](const Wasm::ExternAddress& index) { return_value = JS::Value(static_cast<double>(index.value())); },
+        [&](const Wasm::Value::Null&) { return_value = JS::js_null(); });
     return return_value;
 }

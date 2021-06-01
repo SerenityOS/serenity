@@ -590,10 +590,29 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
     case Instructions::table_get.value():
     case Instructions::table_set.value():
-    case Instructions::ref_null.value():
-    case Instructions::ref_func.value():
-    case Instructions::ref_is_null.value():
         goto unimplemented;
+    case Instructions::ref_null.value(): {
+        auto type = instruction.arguments().get<ValueType>();
+        TRAP_IF_NOT(type.is_reference());
+        configuration.stack().push(Value(Value::Null { type }));
+        return;
+    };
+    case Instructions::ref_func.value(): {
+        auto index = instruction.arguments().get<FunctionIndex>().value();
+        auto& functions = configuration.frame().module().functions();
+        TRAP_IF_NOT(functions.size() > index);
+        auto address = functions[index];
+        configuration.stack().push(Value(ValueType(ValueType::FunctionReference), address.value()));
+        return;
+    }
+    case Instructions::ref_is_null.value(): {
+        auto top = configuration.stack().peek().get_pointer<Value>();
+        TRAP_IF_NOT(top);
+        TRAP_IF_NOT(top->type().is_reference());
+        auto is_null = top->to<Value::Null>().has_value();
+        configuration.stack().peek() = Value(ValueType(ValueType::I32), static_cast<u64>(is_null ? 1 : 0));
+        return;
+    }
     case Instructions::drop.value():
         configuration.stack().pop();
         return;
