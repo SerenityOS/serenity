@@ -10,6 +10,7 @@
 #include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/Opcode.h>
 #include <LibWasm/Printer/Printer.h>
+#include <limits.h>
 #include <math.h>
 
 namespace Wasm {
@@ -345,6 +346,26 @@ Vector<Value> BytecodeInterpreter::pop_values(Configuration& configuration, size
             TRAP_IF_NOT_NORETURN(value);
     }
     return results;
+}
+
+template<typename T, typename R>
+ALWAYS_INLINE static T rotl(T value, R shift)
+{
+    // generates a single 'rol' instruction if shift is positive
+    // otherwise generate a `ror`
+    auto const mask = CHAR_BIT * sizeof(T) - 1;
+    shift &= mask;
+    return (value << shift) | (value >> ((-shift) & mask));
+}
+
+template<typename T, typename R>
+ALWAYS_INLINE static T rotr(T value, R shift)
+{
+    // generates a single 'ror' instruction if shift is positive
+    // otherwise generate a `rol`
+    auto const mask = CHAR_BIT * sizeof(T) - 1;
+    shift &= mask;
+    return (value >> shift) | (value << ((-shift) & mask));
 }
 
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
@@ -726,7 +747,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i32_shru.value():
         BINARY_NUMERIC_OPERATION(u32, >>, i32);
     case Instructions::i32_rotl.value():
+        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotl, i32);
     case Instructions::i32_rotr.value():
+        BINARY_PREFIX_NUMERIC_OPERATION(u32, rotr, i32);
     case Instructions::i64_clz.value():
     case Instructions::i64_ctz.value():
     case Instructions::i64_popcnt.value():
@@ -758,8 +781,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_shru.value():
         BINARY_NUMERIC_OPERATION(u64, >>, i64);
     case Instructions::i64_rotl.value():
+        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotl, i64);
     case Instructions::i64_rotr.value():
-        goto unimplemented;
+        BINARY_PREFIX_NUMERIC_OPERATION(u64, rotr, i64);
     case Instructions::f32_abs.value():
         UNARY_NUMERIC_OPERATION(float, fabsf);
     case Instructions::f32_neg.value():
