@@ -672,6 +672,8 @@ bool MainWidget::request_close()
 
     if (result == GUI::MessageBox::ExecYes) {
         m_save_action->activate();
+        if (editor().document().is_modified())
+            return false;
         return true;
     }
 
