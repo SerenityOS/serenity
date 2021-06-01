@@ -190,6 +190,10 @@ public:
                 return;
             }
         }
+        if (other == 0) {
+            m_overflow = true;
+            return;
+        }
         m_value /= other;
     }
 
