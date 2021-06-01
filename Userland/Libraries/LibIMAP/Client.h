@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2021, Kyle Pereira <hey@xylepereira.me>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#pragma once
+
+#include <AK/Function.h>
+#include <LibIMAP/Parser.h>
+#include <LibTLS/TLSv12.h>
+
+namespace IMAP {
+class Client {
+    friend class Parser;
+
+public:
+    Client(StringView host, unsigned port, bool start_with_tls);
+
+    Optional<RefPtr<Promise<Empty>>> connect();
+    RefPtr<Promise<Optional<Response>>> send_command(Command&&);
+    RefPtr<Promise<Optional<Response>>> send_simple_command(CommandType);
+    void send_raw(StringView data);
+    void close();
+
+    Function<void(ResponseData&&)> unrequested_response_callback;
+
+private:
+    StringView m_host;
+    unsigned m_port;
+    RefPtr<Core::Socket> m_socket;
+    RefPtr<TLS::TLSv12> m_tls_socket;
+
+    void on_ready_to_receive();
+    void on_tls_ready_to_receive();
+
+    bool m_tls;
+    int m_current_command = 1;
+
+    bool connect_tls();
+    bool connect_plaintext();
+
+    // Sent but response not received
+    Vector<RefPtr<Promise<Optional<Response>>>> m_pending_promises;
+    // Not yet sent
+    Vector<Command> m_command_queue {};
+
+    RefPtr<Promise<bool>> m_connect_pending {};
+
+    ByteBuffer m_buffer;
+    Parser m_parser;
+
+    bool m_expecting_response { false };
+    void handle_parsed_response(ParseStatus&& parse_status);
+    void send_next_command();
+};
+}
