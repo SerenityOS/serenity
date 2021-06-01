@@ -79,14 +79,14 @@ public:
         m_as_object = obj;
     }
 
-    Value(const Value& other)
+    Value(Value const& other)
     {
         *this = other;
     }
 
     ~Value();
 
-    Value& operator=(const Value& other);
+    Value& operator=(Value const& other);
 
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_type == Type::Empty; }
     [[nodiscard]] ALWAYS_INLINE bool is_null() const { return m_type == Type::Null; }
@@ -191,7 +191,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::Value& value)
+    void format(FormatBuilder& builder, PDF::Value const& value)
     {
         Formatter<StringView>::format(builder, value.to_string());
     }
