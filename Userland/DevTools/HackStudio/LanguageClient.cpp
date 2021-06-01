@@ -99,7 +99,7 @@ void ServerConnection::declarations_in_document(const String& filename, const Ve
     ProjectDeclarations::the().set_declared_symbols(filename, declarations);
 }
 
-void ServerConnection::todo_entries_in_document(const String& filename, const Vector<String>& todo_entries)
+void ServerConnection::todo_entries_in_document(String const& filename, Vector<Cpp::Parser::TodoEntry> const& todo_entries)
 {
     ToDoEntries::the().set_entries(filename, move(todo_entries));
 }

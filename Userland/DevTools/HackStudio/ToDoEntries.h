@@ -10,13 +10,9 @@
 #include <AK/HashMap.h>
 #include <AK/Noncopyable.h>
 #include <AK/String.h>
+#include <LibCpp/Parser.h>
 
 namespace HackStudio {
-
-struct ToDoEntryPair {
-    String filename;
-    String comment;
-};
 
 class ToDoEntries {
     AK_MAKE_NONCOPYABLE(ToDoEntries);
@@ -24,15 +20,15 @@ class ToDoEntries {
 public:
     static ToDoEntries& the();
 
-    void set_entries(const String& filename, const Vector<String>&& entries);
+    void set_entries(String const& filename, Vector<Cpp::Parser::TodoEntry> const&& entries);
 
-    Vector<ToDoEntryPair> get_entries();
+    Vector<Cpp::Parser::TodoEntry> get_entries();
 
     Function<void()> on_update = nullptr;
 
 private:
     ToDoEntries() = default;
-    HashMap<String, Vector<String>> m_document_to_entries;
+    HashMap<String, Vector<Cpp::Parser::TodoEntry>> m_document_to_entries;
 };
 
 }

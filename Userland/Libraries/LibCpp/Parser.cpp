@@ -961,13 +961,13 @@ void Parser::print_tokens() const
     }
 }
 
-Vector<String> Parser::get_todo_entries() const
+Vector<Parser::TodoEntry> Parser::get_todo_entries() const
 {
-    Vector<String> ret;
+    Vector<TodoEntry> ret;
     for (auto& token : m_tokens) {
         if (token.type() == Token::Type::Comment) {
             if (token.text().contains("TODO")) {
-                ret.append(token.text());
+                ret.append({ token.text(), m_filename, token.start().line, token.start().column });
             }
         }
     }

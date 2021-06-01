@@ -32,7 +32,7 @@ void CodeComprehensionEngine::set_declarations_of_document(const String& filenam
     set_declarations_of_document_callback(filename, move(declarations));
 }
 
-void CodeComprehensionEngine::set_todo_entries_of_document(const String& filename, Vector<String>&& todo_entries)
+void CodeComprehensionEngine::set_todo_entries_of_document(String const& filename, Vector<Cpp::Parser::TodoEntry>&& todo_entries)
 {
     VERIFY(set_todo_entries_of_document_callback);
     set_todo_entries_of_document_callback(filename, move(todo_entries));

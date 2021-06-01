@@ -8,6 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <LibCpp/Parser.h>
 #include <LibGUI/AutocompleteProvider.h>
 #include <LibIPC/Decoder.h>
 #include <LibIPC/Encoder.h>
@@ -99,6 +100,35 @@ inline bool decode(Decoder& decoder, GUI::AutocompleteProvider::Declaration& dec
         return false;
 
     declaration.type = static_cast<GUI::AutocompleteProvider::DeclarationType>(type);
+    return true;
+}
+
+template<>
+inline bool encode(Encoder& encoder, Cpp::Parser::TodoEntry const& entry)
+{
+    encoder << entry.content;
+    encoder << entry.filename;
+    encoder << (u64)entry.line;
+    encoder << (u64)entry.column;
+    return true;
+}
+
+template<>
+inline bool decode(Decoder& decoder, Cpp::Parser::TodoEntry& entry)
+{
+    u64 line = 0;
+    u64 column = 0;
+    if (!decoder.decode(entry.content))
+        return false;
+    if (!decoder.decode(entry.filename))
+        return false;
+    if (!decoder.decode(line))
+        return false;
+    if (!decoder.decode(column))
+        return false;
+
+    entry.line = line;
+    entry.column = column;
     return true;
 }
 

@@ -6,9 +6,7 @@
 
 #pragma once
 
-#include <LibGUI/Button.h>
 #include <LibGUI/TableView.h>
-#include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 
 namespace HackStudio {
