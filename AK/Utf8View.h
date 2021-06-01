@@ -14,21 +14,21 @@ namespace AK {
 
 class Utf8View;
 
-class Utf8CodepointIterator {
+class Utf8CodePointIterator {
     friend class Utf8View;
 
 public:
-    Utf8CodepointIterator() = default;
-    ~Utf8CodepointIterator() = default;
+    Utf8CodePointIterator() = default;
+    ~Utf8CodePointIterator() = default;
 
-    bool operator==(const Utf8CodepointIterator&) const;
-    bool operator!=(const Utf8CodepointIterator&) const;
-    Utf8CodepointIterator& operator++();
+    bool operator==(const Utf8CodePointIterator&) const;
+    bool operator!=(const Utf8CodePointIterator&) const;
+    Utf8CodePointIterator& operator++();
     u32 operator*() const;
     // NOTE: This returns {} if the peek is at or past EOF.
     Optional<u32> peek(size_t offset = 0) const;
 
-    ssize_t operator-(const Utf8CodepointIterator& other) const
+    ssize_t operator-(const Utf8CodePointIterator& other) const
     {
         return m_ptr - other.m_ptr;
     }
@@ -37,14 +37,14 @@ public:
     bool done() const { return m_length == 0; }
 
 private:
-    Utf8CodepointIterator(const unsigned char*, size_t);
+    Utf8CodePointIterator(const unsigned char*, size_t);
     const unsigned char* m_ptr { nullptr };
     size_t m_length;
 };
 
 class Utf8View {
 public:
-    using Iterator = Utf8CodepointIterator;
+    using Iterator = Utf8CodePointIterator;
 
     Utf8View() = default;
     explicit Utf8View(const String&);
@@ -54,13 +54,13 @@ public:
 
     const StringView& as_string() const { return m_string; }
 
-    Utf8CodepointIterator begin() const;
-    Utf8CodepointIterator end() const;
-    Utf8CodepointIterator iterator_at_byte_offset(size_t) const;
+    Utf8CodePointIterator begin() const;
+    Utf8CodePointIterator end() const;
+    Utf8CodePointIterator iterator_at_byte_offset(size_t) const;
 
     const unsigned char* bytes() const { return begin_ptr(); }
     size_t byte_length() const { return m_string.length(); }
-    size_t byte_offset_of(const Utf8CodepointIterator&) const;
+    size_t byte_offset_of(const Utf8CodePointIterator&) const;
 
     Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
     Utf8View substring_view(size_t byte_offset) const { return substring_view(byte_offset, byte_length() - byte_offset); }
@@ -70,7 +70,7 @@ public:
     bool is_empty() const { return m_string.is_empty(); }
     bool starts_with(const Utf8View&) const;
 
-    size_t iterator_offset(const Utf8CodepointIterator& it) const
+    size_t iterator_offset(const Utf8CodePointIterator& it) const
     {
         return byte_offset_of(it);
     }
@@ -103,5 +103,5 @@ private:
 
 }
 
-using AK::Utf8CodepointIterator;
+using AK::Utf8CodePointIterator;
 using AK::Utf8View;

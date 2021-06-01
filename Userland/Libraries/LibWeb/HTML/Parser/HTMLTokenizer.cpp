@@ -2675,7 +2675,7 @@ bool HTMLTokenizer::consumed_as_part_of_an_attribute() const
     return m_return_state == State::AttributeValueUnquoted || m_return_state == State::AttributeValueSingleQuoted || m_return_state == State::AttributeValueDoubleQuoted;
 }
 
-void HTMLTokenizer::restore_to(const Utf8CodepointIterator& new_iterator)
+void HTMLTokenizer::restore_to(const Utf8CodePointIterator& new_iterator)
 {
     if (new_iterator != m_prev_utf8_iterator) {
         auto diff = m_prev_utf8_iterator - new_iterator;

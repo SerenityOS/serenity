@@ -146,7 +146,7 @@ private:
 
     bool consumed_as_part_of_an_attribute() const;
 
-    void restore_to(const Utf8CodepointIterator& new_iterator);
+    void restore_to(const Utf8CodePointIterator& new_iterator);
     auto& nth_last_position(size_t n = 0) { return m_source_positions.at(m_source_positions.size() - 1 - n); }
 
     State m_state { State::Data };
@@ -159,8 +159,8 @@ private:
     StringView m_input;
 
     Utf8View m_utf8_view;
-    Utf8CodepointIterator m_utf8_iterator;
-    Utf8CodepointIterator m_prev_utf8_iterator;
+    Utf8CodePointIterator m_utf8_iterator;
+    Utf8CodePointIterator m_prev_utf8_iterator;
 
     HTMLToken m_current_token;
 

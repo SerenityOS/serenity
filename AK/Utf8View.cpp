@@ -36,17 +36,17 @@ const unsigned char* Utf8View::end_ptr() const
     return begin_ptr() + m_string.length();
 }
 
-Utf8CodepointIterator Utf8View::begin() const
+Utf8CodePointIterator Utf8View::begin() const
 {
     return { begin_ptr(), m_string.length() };
 }
 
-Utf8CodepointIterator Utf8View::end() const
+Utf8CodePointIterator Utf8View::end() const
 {
     return { end_ptr(), 0 };
 }
 
-Utf8CodepointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) const
+Utf8CodePointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) const
 {
     size_t current_offset = 0;
     for (auto iterator = begin(); !iterator.done(); ++iterator) {
@@ -57,7 +57,7 @@ Utf8CodepointIterator Utf8View::iterator_at_byte_offset(size_t byte_offset) cons
     return end();
 }
 
-size_t Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
+size_t Utf8View::byte_offset_of(const Utf8CodePointIterator& it) const
 {
     VERIFY(it.m_ptr >= begin_ptr());
     VERIFY(it.m_ptr <= end_ptr());
@@ -173,23 +173,23 @@ bool Utf8View::starts_with(const Utf8View& start) const
     return true;
 }
 
-Utf8CodepointIterator::Utf8CodepointIterator(const unsigned char* ptr, size_t length)
+Utf8CodePointIterator::Utf8CodePointIterator(const unsigned char* ptr, size_t length)
     : m_ptr(ptr)
     , m_length(length)
 {
 }
 
-bool Utf8CodepointIterator::operator==(const Utf8CodepointIterator& other) const
+bool Utf8CodePointIterator::operator==(const Utf8CodePointIterator& other) const
 {
     return m_ptr == other.m_ptr && m_length == other.m_length;
 }
 
-bool Utf8CodepointIterator::operator!=(const Utf8CodepointIterator& other) const
+bool Utf8CodePointIterator::operator!=(const Utf8CodePointIterator& other) const
 {
     return !(*this == other);
 }
 
-Utf8CodepointIterator& Utf8CodepointIterator::operator++()
+Utf8CodePointIterator& Utf8CodePointIterator::operator++()
 {
     VERIFY(m_length > 0);
 
@@ -206,7 +206,7 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
     return *this;
 }
 
-size_t Utf8CodepointIterator::code_point_length_in_bytes() const
+size_t Utf8CodePointIterator::code_point_length_in_bytes() const
 {
     VERIFY(m_length > 0);
     size_t code_point_length_in_bytes = 0;
@@ -216,7 +216,7 @@ size_t Utf8CodepointIterator::code_point_length_in_bytes() const
     return code_point_length_in_bytes;
 }
 
-u32 Utf8CodepointIterator::operator*() const
+u32 Utf8CodePointIterator::operator*() const
 {
     VERIFY(m_length > 0);
 
@@ -240,7 +240,7 @@ u32 Utf8CodepointIterator::operator*() const
     return code_point_value_so_far;
 }
 
-Optional<u32> Utf8CodepointIterator::peek(size_t offset) const
+Optional<u32> Utf8CodePointIterator::peek(size_t offset) const
 {
     if (offset == 0) {
         if (this->done())
