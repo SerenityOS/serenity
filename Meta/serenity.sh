@@ -209,9 +209,8 @@ run_gdb() {
 if [[ "$CMD" =~ ^(build|install|image|run|gdb|test|rebuild|recreate|kaddr2line|addr2line|setup-and-run)$ ]]; then
     cmd_with_target
     [[ "$CMD" != "recreate" && "$CMD" != "rebuild" ]] || delete_target
-    ensure_toolchain
-    ensure_target
     [ "$TARGET" = "lagom" ] || ensure_toolchain
+    ensure_target
     case "$CMD" in
         build)
             build_target "$@"
