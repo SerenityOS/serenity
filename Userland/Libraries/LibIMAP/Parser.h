@@ -43,11 +43,24 @@ private:
     void parse_untagged();
 
     StringView parse_atom();
+    StringView parse_quoted_string();
+    StringView parse_string();
+    Optional<StringView> parse_nstring();
 
     ResponseStatus parse_status();
+
+    template<typename T>
+    Vector<T> parse_list(T (*converter)(StringView));
+
+    static MailboxFlag parse_mailbox_flag(StringView s);
 
     StringView parse_while(Function<bool(u8)> should_consume);
 
     void parse_capability_response();
+
+    ListItem parse_list_item();
+
+    StringView parse_literal_string();
+    StringView parse_astring();
 };
 }
