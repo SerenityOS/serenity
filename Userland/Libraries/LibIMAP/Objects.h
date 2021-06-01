@@ -19,6 +19,8 @@ namespace IMAP {
 enum class CommandType {
     Capability,
     List,
+    Login,
+    Logout,
     Noop,
     Select,
 };
@@ -50,6 +52,7 @@ enum class ResponseType : unsigned {
     UIDValidity = 1u << 6,
     Unseen = 1u << 7,
     PermanentFlags = 1u << 8,
+    Bye = 1u << 13,
 };
 
 class Parser;
@@ -208,6 +211,18 @@ public:
         return m_permanent_flags;
     }
 
+    void set_bye(Optional<String> message)
+    {
+        add_response_type(ResponseType::Bye);
+        m_bye_message = move(message);
+    }
+
+    Optional<String>& bye_message()
+    {
+        VERIFY(contains_response_type(ResponseType::Bye));
+        return m_bye_message;
+    }
+
 private:
     unsigned m_response_type;
 
@@ -222,6 +237,7 @@ private:
     unsigned m_unseen {};
     Vector<String> m_permanent_flags;
     Vector<String> m_flags;
+    Optional<String> m_bye_message;
 };
 
 class SolidResponse {

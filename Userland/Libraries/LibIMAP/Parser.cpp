@@ -179,6 +179,10 @@ void Parser::parse_untagged()
             parse_while([](u8 x) { return x != '\r'; });
             consume("\r\n");
         }
+    } else if (try_consume("BYE")) {
+        auto message = parse_while([](u8 x) { return x != '\r'; });
+        consume("\r\n");
+        m_response.data().set_bye(message.is_empty() ? Optional<String>() : Optional<String>(message));
     } else {
         auto x = parse_while([](u8 x) { return x != '\r'; });
         consume("\r\n");
