@@ -12,6 +12,7 @@ set(LIBC_SOURCES
     grp.cpp
     inttypes.cpp
     ioctl.cpp
+    langinfo.cpp
     libcinit.cpp
     libgen.cpp
     link.cpp
