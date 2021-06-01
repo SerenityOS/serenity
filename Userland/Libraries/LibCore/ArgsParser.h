@@ -55,12 +55,14 @@ public:
     void add_option(bool& value, const char* help_string, const char* long_name, char short_name);
     void add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(String& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
+    void add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name);
     void add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
     void add_option(double& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
 
     void add_positional_argument(Arg&&);
     void add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(String& value, const char* help_string, const char* name, Required required = Required::Yes);
+    void add_positional_argument(StringView& value, char const* help_string, char const* name, Required required = Required::Yes);
     void add_positional_argument(int& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(double& value, const char* help_string, const char* name, Required required = Required::Yes);
     void add_positional_argument(Vector<const char*>& value, const char* help_string, const char* name, Required required = Required::Yes);

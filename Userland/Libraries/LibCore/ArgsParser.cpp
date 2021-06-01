@@ -285,6 +285,22 @@ void ArgsParser::add_option(String& value, const char* help_string, const char* 
     add_option(move(option));
 }
 
+void ArgsParser::add_option(StringView& value, char const* help_string, char const* long_name, char short_name, char const* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_option(move(option));
+}
+
 void ArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
     Option option {
@@ -340,6 +356,21 @@ void ArgsParser::add_positional_argument(const char*& value, const char* help_st
 }
 
 void ArgsParser::add_positional_argument(String& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void ArgsParser::add_positional_argument(StringView& value, char const* help_string, char const* name, Required required)
 {
     Arg arg {
         help_string,
