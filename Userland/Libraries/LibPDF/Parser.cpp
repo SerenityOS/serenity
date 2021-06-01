@@ -24,18 +24,18 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-Vector<Command> Parser::parse_graphics_commands(const ReadonlyBytes& bytes)
+Vector<Command> Parser::parse_graphics_commands(ReadonlyBytes const& bytes)
 {
     auto parser = adopt_ref(*new Parser(bytes));
     return parser->parse_graphics_commands();
 }
 
-Parser::Parser(Badge<Document>, const ReadonlyBytes& bytes)
+Parser::Parser(Badge<Document>, ReadonlyBytes const& bytes)
     : m_reader(bytes)
 {
 }
 
-Parser::Parser(const ReadonlyBytes& bytes)
+Parser::Parser(ReadonlyBytes const& bytes)
     : m_reader(bytes)
 {
 }
@@ -390,7 +390,7 @@ RefPtr<DictObject> Parser::parse_file_trailer()
     return dict;
 }
 
-Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(const ReadonlyBytes& hint_stream_bytes)
+Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(ReadonlyBytes const& hint_stream_bytes)
 {
     if (hint_stream_bytes.size() < sizeof(PageOffsetHintTable))
         return {};
@@ -438,7 +438,7 @@ Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(const
     return hint_table;
 }
 
-Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(const PageOffsetHintTable& hint_table, const ReadonlyBytes& hint_stream_bytes)
+Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes const& hint_stream_bytes)
 {
     InputMemoryStream input_stream(hint_stream_bytes);
     input_stream.seek(sizeof(PageOffsetHintTable));
@@ -1167,7 +1167,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::Parser::LinearizationDictionary& dict)
+    void format(FormatBuilder& format_builder, PDF::Parser::LinearizationDictionary const& dict)
     {
         StringBuilder builder;
         builder.append("{\n");
@@ -1188,7 +1188,7 @@ struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::Parser::PageOffsetHintTable& table)
+    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTable const& table)
     {
         StringBuilder builder;
         builder.append("{\n");
@@ -1212,7 +1212,7 @@ struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::Parser::PageOffsetHintTableEntry& entry)
+    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTableEntry const& entry)
     {
         StringBuilder builder;
         builder.append("{\n");

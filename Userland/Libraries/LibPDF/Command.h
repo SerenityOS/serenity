@@ -96,7 +96,7 @@ enum class CommandType {
 
 class Command {
 public:
-    static CommandType command_type_from_symbol(const StringView& symbol_string)
+    static CommandType command_type_from_symbol(StringView const& symbol_string)
     {
 #define V(name, snake_name, symbol) \
     if (symbol_string == #symbol)   \
@@ -152,7 +152,7 @@ public:
     }
 
     [[nodiscard]] ALWAYS_INLINE CommandType command_type() const { return m_command_type; }
-    [[nodiscard]] ALWAYS_INLINE const Vector<Value>& arguments() const { return m_arguments; }
+    [[nodiscard]] ALWAYS_INLINE Vector<Value> const& arguments() const { return m_arguments; }
 
 private:
     CommandType m_command_type;
@@ -165,7 +165,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Command> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::Command& command)
+    void format(FormatBuilder& format_builder, PDF::Command const& command)
     {
         StringBuilder builder;
         builder.appendff("{} ({})",

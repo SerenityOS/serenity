@@ -15,7 +15,7 @@ Value::~Value()
         m_as_object->unref();
 }
 
-Value& Value::operator=(const Value& other)
+Value& Value::operator=(Value const& other)
 {
     m_type = other.m_type;
     switch (m_type) {

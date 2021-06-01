@@ -72,9 +72,9 @@ struct OutlineDict final : public RefCounted<OutlineDict> {
 
 class Document final : public RefCounted<Document> {
 public:
-    static RefPtr<Document> create(const ReadonlyBytes& bytes);
+    static RefPtr<Document> create(ReadonlyBytes const& bytes);
 
-    ALWAYS_INLINE const RefPtr<OutlineDict>& outline() const { return m_outline; }
+    ALWAYS_INLINE RefPtr<OutlineDict> const& outline() const { return m_outline; }
 
     [[nodiscard]] Value get_or_load_value(u32 index);
 
@@ -92,12 +92,12 @@ public:
     // Strips away the layer of indirection by turning indirect value
     // refs into the value they reference, and indirect values into
     // the value being wrapped.
-    Value resolve(const Value& value);
+    Value resolve(Value const& value);
 
     // Like resolve, but unwraps the Value into the given type. Accepts
     // any object type, and the three primitive Value types.
     template<IsValueType T>
-    UnwrappedValueType<T> resolve_to(const Value& value)
+    UnwrappedValueType<T> resolve_to(Value const& value)
     {
         auto resolved = resolve(value);
 
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    explicit Document(const NonnullRefPtr<Parser>& parser);
+    explicit Document(NonnullRefPtr<Parser> const& parser);
 
     // FIXME: Currently, to improve performance, we don't load any pages at Document
     // construction, rather we just load the page structure and populate
@@ -123,11 +123,11 @@ private:
     // improve lookup time. This would reduce the initial overhead by not loading
     // every page tree node of, say, a 1000+ page PDF file.
     bool build_page_tree();
-    bool add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree);
+    bool add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree);
 
     void build_outline();
-    NonnullRefPtr<OutlineItem> build_outline_item(NonnullRefPtr<DictObject> outline_item_dict);
-    NonnullRefPtrVector<OutlineItem> build_outline_item_chain(const Value& first_ref, const Value& last_ref);
+    NonnullRefPtr<OutlineItem> build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict);
+    NonnullRefPtrVector<OutlineItem> build_outline_item_chain(Value const& first_ref, Value const& last_ref);
 
     NonnullRefPtr<Parser> m_parser;
     RefPtr<DictObject> m_catalog;
@@ -143,7 +143,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Rectangle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::Rectangle& rectangle)
+    void format(FormatBuilder& builder, PDF::Rectangle const& rectangle)
     {
         Formatter<StringView>::format(builder,
             String::formatted("Rectangle {{ ll=({}, {}), ur=({}, {}) }}",
@@ -156,7 +156,7 @@ struct Formatter<PDF::Rectangle> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::Page> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::Page& page)
+    void format(FormatBuilder& builder, PDF::Page const& page)
     {
         constexpr auto fmt_string = "Page {{\n  resources={}\n  contents={}\n  media_box={}\n  crop_box={}\n  user_unit={}\n  rotate={}\n}}";
         auto str = String::formatted(fmt_string,
@@ -172,7 +172,7 @@ struct Formatter<PDF::Page> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::Destination> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::Destination& destination)
+    void format(FormatBuilder& builder, PDF::Destination const& destination)
     {
         String type_str;
         switch (destination.type) {
@@ -213,7 +213,7 @@ struct Formatter<PDF::Destination> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::OutlineItem> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::OutlineItem& item)
+    void format(FormatBuilder& builder, PDF::OutlineItem const& item)
     {
         Formatter<StringView>::format(builder, item.to_string(0));
     }
@@ -221,7 +221,7 @@ struct Formatter<PDF::OutlineItem> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::OutlineDict> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::OutlineDict& dict)
+    void format(FormatBuilder& builder, PDF::OutlineDict const& dict)
     {
         StringBuilder child_builder;
         child_builder.append('[');

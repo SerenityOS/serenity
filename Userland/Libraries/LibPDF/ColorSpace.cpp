@@ -15,7 +15,7 @@ RefPtr<DeviceGrayColorSpace> DeviceGrayColorSpace::the()
     return instance;
 }
 
-Color DeviceGrayColorSpace::color(const Vector<Value>& arguments) const
+Color DeviceGrayColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 1);
     auto gray = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -28,7 +28,7 @@ RefPtr<DeviceRGBColorSpace> DeviceRGBColorSpace::the()
     return instance;
 }
 
-Color DeviceRGBColorSpace::color(const Vector<Value>& arguments) const
+Color DeviceRGBColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto r = static_cast<u8>(arguments[0].to_float() * 255.0f);
@@ -43,7 +43,7 @@ RefPtr<DeviceCMYKColorSpace> DeviceCMYKColorSpace::the()
     return instance;
 }
 
-Color DeviceCMYKColorSpace::color(const Vector<Value>& arguments) const
+Color DeviceCMYKColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 4);
     auto c = arguments[0].to_float();
@@ -196,7 +196,7 @@ constexpr Array<float, 3> convert_to_srgb(Array<float, 3> xyz)
     return matrix_multiply(conversion_matrix, xyz);
 }
 
-Color CalRGBColorSpace::color(const Vector<Value>& arguments) const
+Color CalRGBColorSpace::color(Vector<Value> const& arguments) const
 {
     VERIFY(arguments.size() == 3);
     auto a = clamp(arguments[0].to_float(), 0.0f, 1.0f);

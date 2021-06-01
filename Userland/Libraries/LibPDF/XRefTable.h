@@ -52,7 +52,7 @@ public:
         return true;
     }
 
-    void add_section(const XRefSection& section)
+    void add_section(XRefSection const& section)
     {
         m_entries.ensure_capacity(section.starting_index + section.count);
 
@@ -98,7 +98,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::XRefEntry& entry)
+    void format(FormatBuilder& builder, PDF::XRefEntry const& entry)
     {
         Formatter<StringView>::format(builder,
             String::formatted("XRefEntry {{ offset={} generation={} used={} }}",
@@ -110,7 +110,7 @@ struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::XRefTable> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::XRefTable& table)
+    void format(FormatBuilder& format_builder, PDF::XRefTable const& table)
     {
         StringBuilder builder;
         builder.append("XRefTable {");
