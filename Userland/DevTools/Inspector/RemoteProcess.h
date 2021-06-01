@@ -32,6 +32,8 @@ public:
 
     void set_property(FlatPtr object, const StringView& name, const JsonValue& value);
 
+    bool is_inspectable();
+
     Function<void()> on_update;
 
 private:

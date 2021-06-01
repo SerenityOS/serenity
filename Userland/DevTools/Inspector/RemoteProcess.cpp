@@ -88,6 +88,11 @@ void RemoteProcess::set_property(FlatPtr object, const StringView& name, const J
     m_client->async_set_object_property(m_pid, object, name, value.to_string());
 }
 
+bool RemoteProcess::is_inspectable()
+{
+    return m_client->is_inspectable(m_pid);
+}
+
 void RemoteProcess::update()
 {
     {

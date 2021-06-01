@@ -66,11 +66,13 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
+    bool gui_mode = argc != 2;
     pid_t pid;
 
     auto app = GUI::Application::construct(argc, argv);
     auto app_icon = GUI::Icon::default_icon("app-inspector");
-    if (argc != 2) {
+    if (gui_mode) {
+    choose_pid:
         auto process_chooser = GUI::ProcessChooser::construct("Inspector", "Inspect", app_icon.bitmap_for_size(16));
         if (process_chooser->exec() == GUI::Dialog::ExecCancel)
             return 0;
@@ -84,21 +86,26 @@ int main(int argc, char** argv)
 
     auto window = GUI::Window::construct();
 
-    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
-            "/bin/Help",
-            { URL::create_with_file_protocol("/usr/share/man/man1/Inspector.md") })
-        || !Desktop::Launcher::seal_allowlist()) {
-        warnln("Failed to set up allowed launch URLs");
-        return 1;
-    }
-
     if (pid == getpid()) {
         GUI::MessageBox::show(window, "Cannot inspect Inspector itself!", "Error", GUI::MessageBox::Type::Error);
         return 1;
     }
 
-    if (access(String::formatted("/proc/{}", pid).characters(), R_OK) == -1) {
-        GUI::MessageBox::show(window, "Inspector doesn't have permission to access the process.", "Error", GUI::MessageBox::Type::Error);
+    RemoteProcess remote_process(pid);
+    if (!remote_process.is_inspectable()) {
+        GUI::MessageBox::show(window, String::formatted("Process pid={} is not inspectable", remote_process.pid()), "Error", GUI::MessageBox::Type::Error);
+        if (gui_mode) {
+            goto choose_pid;
+        } else {
+            return 1;
+        }
+    }
+
+    if (!Desktop::Launcher::add_allowed_handler_with_only_specific_urls(
+            "/bin/Help",
+            { URL::create_with_file_protocol("/usr/share/man/man1/Inspector.md") })
+        || !Desktop::Launcher::seal_allowlist()) {
+        warnln("Failed to set up allowed launch URLs");
         return 1;
     }
 
@@ -122,8 +129,6 @@ int main(int argc, char** argv)
     widget.set_layout<GUI::VerticalBoxLayout>();
 
     auto& splitter = widget.add<GUI::HorizontalSplitter>();
-
-    RemoteProcess remote_process(pid);
 
     remote_process.on_update = [&] {
         if (!remote_process.process_name().is_null())
