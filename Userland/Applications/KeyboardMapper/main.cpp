@@ -57,7 +57,7 @@ int main(int argc, char** argv)
 
     auto open_action = GUI::CommonActions::make_open_action(
         [&](auto&) {
-            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open");
+            Optional<String> path = GUI::FilePicker::get_open_filepath(window, "Open", "/res/keymaps/");
             if (path.has_value()) {
                 keyboard_mapper_widget->load_from_file(path.value());
             }
