@@ -152,7 +152,8 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                     result.values().first().value().visit(
                         [&](const auto& value) { offset = value; },
                         [&](const FunctionAddress&) { instantiation_result = InstantiationError { "Data segment offset returned an address" }; },
-                        [&](const ExternAddress&) { instantiation_result = InstantiationError { "Data segment offset returned an address" }; });
+                        [&](const ExternAddress&) { instantiation_result = InstantiationError { "Data segment offset returned an address" }; },
+                        [&](const Value::Null&) { instantiation_result = InstantiationError { "Data segment offset returned a null reference" }; });
                     if (instantiation_result.has_value() && instantiation_result->is_error())
                         return;
                     if (main_module_instance.memories().size() <= data.index.value()) {

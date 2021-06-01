@@ -45,7 +45,11 @@ public:
     {
     }
 
-    using AnyValueType = Variant<i32, i64, float, double, FunctionAddress, ExternAddress>;
+    struct Null {
+        ValueType type;
+    };
+
+    using AnyValueType = Variant<i32, i64, float, double, FunctionAddress, ExternAddress, Null>;
     explicit Value(AnyValueType value)
         : m_value(move(value))
         , m_type(ValueType::I32)
@@ -62,6 +66,8 @@ public:
             m_type = ValueType { ValueType::FunctionReference };
         else if (m_value.has<ExternAddress>())
             m_type = ValueType { ValueType::ExternReference };
+        else if (m_value.has<Null>())
+            m_type = ValueType { m_value.get<Null>().type.kind() == ValueType::ExternReference ? ValueType::NullExternReference : ValueType::NullFunctionReference };
         else
             VERIFY_NOT_REACHED();
     }
@@ -89,6 +95,14 @@ public:
             break;
         case ValueType::Kind::F64:
             m_value = bit_cast<double>(raw_value);
+            break;
+        case ValueType::Kind::NullFunctionReference:
+            VERIFY(raw_value == 0);
+            m_value = Null { ValueType(ValueType::Kind::FunctionReference) };
+            break;
+        case ValueType::Kind::NullExternReference:
+            VERIFY(raw_value == 0);
+            m_value = Null { ValueType(ValueType::Kind::ExternReference) };
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -139,6 +153,10 @@ public:
             [&](const ExternAddress& address) {
                 if constexpr (IsSame<T, ExternAddress>)
                     result = address;
+            },
+            [&](const Null& null) {
+                if constexpr (IsSame<T, Null>)
+                    result = null;
             });
         return result;
     }
