@@ -14,12 +14,12 @@ namespace PDF {
 
 class Reader {
 public:
-    explicit Reader(const ReadonlyBytes& bytes)
+    explicit Reader(ReadonlyBytes const& bytes)
         : m_bytes(bytes)
     {
     }
 
-    ALWAYS_INLINE const ReadonlyBytes& bytes() const { return m_bytes; }
+    ALWAYS_INLINE ReadonlyBytes const& bytes() const { return m_bytes; }
     ALWAYS_INLINE size_t offset() const { return m_offset; }
 
     bool done() const

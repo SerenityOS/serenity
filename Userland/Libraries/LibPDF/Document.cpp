@@ -34,7 +34,7 @@ String OutlineItem::to_string(int indent) const
     return builder.to_string();
 }
 
-RefPtr<Document> Document::create(const ReadonlyBytes& bytes)
+RefPtr<Document> Document::create(ReadonlyBytes const& bytes)
 {
     auto parser = adopt_ref(*new Parser({}, bytes));
     auto document = adopt_ref(*new Document(parser));
@@ -49,7 +49,7 @@ RefPtr<Document> Document::create(const ReadonlyBytes& bytes)
     return document;
 }
 
-Document::Document(const NonnullRefPtr<Parser>& parser)
+Document::Document(NonnullRefPtr<Parser> const& parser)
     : m_parser(parser)
 {
     m_parser->set_document(this);
@@ -131,7 +131,7 @@ Page Document::get_page(u32 index)
     return page;
 }
 
-Value Document::resolve(const Value& value)
+Value Document::resolve(Value const& value)
 {
     if (value.is_ref()) {
         // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
@@ -159,7 +159,7 @@ bool Document::build_page_tree()
     return add_page_tree_node_to_page_tree(page_tree);
 }
 
-bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree)
+bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree)
 {
     if (!page_tree->contains(CommonNames::Kids) || !page_tree->contains(CommonNames::Count))
         return false;
@@ -216,7 +216,7 @@ void Document::build_outline()
         m_outline->count = outline_dict->get_value(CommonNames::Count).as_int();
 }
 
-NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> outline_item_dict)
+NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
 
@@ -284,7 +284,7 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
     return outline_item;
 }
 
-NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(const Value& first_ref, const Value& last_ref)
+NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
 {
     VERIFY(first_ref.is_ref());
     VERIFY(last_ref.is_ref());

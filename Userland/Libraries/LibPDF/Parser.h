@@ -18,12 +18,12 @@ class Document;
 
 class Parser final : public RefCounted<Parser> {
 public:
-    static Vector<Command> parse_graphics_commands(const ReadonlyBytes&);
+    static Vector<Command> parse_graphics_commands(ReadonlyBytes const&);
 
-    Parser(Badge<Document>, const ReadonlyBytes&);
+    Parser(Badge<Document>, ReadonlyBytes const&);
 
-    [[nodiscard]] ALWAYS_INLINE const RefPtr<DictObject>& trailer() const { return m_trailer; }
-    void set_document(const RefPtr<Document>& document) { m_document = document; }
+    [[nodiscard]] ALWAYS_INLINE RefPtr<DictObject> const& trailer() const { return m_trailer; }
+    void set_document(RefPtr<Document> const& document) { m_document = document; }
 
     // Parses the header and initializes the xref table and trailer
     bool initialize();
@@ -80,15 +80,15 @@ private:
     friend struct AK::Formatter<PageOffsetHintTable>;
     friend struct AK::Formatter<PageOffsetHintTableEntry>;
 
-    explicit Parser(const ReadonlyBytes&);
+    explicit Parser(ReadonlyBytes const&);
 
     bool parse_header();
     bool initialize_linearization_dict();
     bool initialize_linearized_xref_table();
     bool initialize_non_linearized_xref_table();
     bool initialize_hint_tables();
-    Optional<PageOffsetHintTable> parse_page_offset_hint_table(const ReadonlyBytes& hint_stream_bytes);
-    Optional<Vector<PageOffsetHintTableEntry>> parse_all_page_offset_hint_table_entries(const PageOffsetHintTable&, const ReadonlyBytes& hint_stream_bytes);
+    Optional<PageOffsetHintTable> parse_page_offset_hint_table(ReadonlyBytes const& hint_stream_bytes);
+    Optional<Vector<PageOffsetHintTableEntry>> parse_all_page_offset_hint_table_entries(PageOffsetHintTable const&, ReadonlyBytes const& hint_stream_bytes);
     RefPtr<XRefTable> parse_xref_table();
     RefPtr<DictObject> parse_file_trailer();
 

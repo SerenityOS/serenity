@@ -9,7 +9,7 @@
 #include <LibPDF/Renderer.h>
 
 #define RENDERER_HANDLER(name) \
-    void Renderer::handle_##name([[maybe_unused]] const Vector<Value>& args)
+    void Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args)
 
 #define RENDERER_TODO(name)                                         \
     RENDERER_HANDLER(name)                                          \
@@ -20,12 +20,12 @@
 
 namespace PDF {
 
-void Renderer::render(Document& document, const Page& page, RefPtr<Gfx::Bitmap> bitmap)
+void Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
 {
     Renderer(document, page, bitmap).render();
 }
 
-Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitmap> bitmap)
+Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
     : m_document(document)
     , m_bitmap(bitmap)
     , m_page(page)
@@ -83,7 +83,7 @@ void Renderer::render()
         handle_command(command);
 }
 
-void Renderer::handle_command(const Command& command)
+void Renderer::handle_command(Command const& command)
 {
     switch (command.command_type()) {
 #define V(name, snake_name, symbol)               \
@@ -528,7 +528,7 @@ void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
         handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) });
 }
 
-void Renderer::show_text(const String& string, float shift)
+void Renderer::show_text(String const& string, float shift)
 {
     auto utf = Utf8View(string);
 
@@ -566,7 +566,7 @@ void Renderer::show_text(const String& string, float shift)
     m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
 }
 
-RefPtr<ColorSpace> Renderer::get_color_space(const Value& value)
+RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 {
     auto name = object_cast<NameObject>(value.as_object())->name();
 
@@ -600,7 +600,7 @@ RefPtr<ColorSpace> Renderer::get_color_space(const Value& value)
     TODO();
 }
 
-const Gfx::AffineTransform& Renderer::calculate_text_rendering_matrix()
+Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
 {
     if (m_text_rendering_matrix_is_dirty) {
         m_text_rendering_matrix = Gfx::AffineTransform(
