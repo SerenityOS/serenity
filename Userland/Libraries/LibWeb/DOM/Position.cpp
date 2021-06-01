@@ -39,7 +39,7 @@ bool Position::increment_offset()
 
     for (auto iterator = text.begin(); !iterator.done(); ++iterator) {
         if (text.byte_offset_of(iterator) >= m_offset) {
-            // NOTE: If the current offset is inside a multi-byte codepoint, it will be moved to the start of the next codepoint.
+            // NOTE: If the current offset is inside a multi-byte code point, it will be moved to the start of the next code point.
             m_offset = text.byte_offset_of(++iterator);
             return true;
         }
@@ -66,7 +66,7 @@ bool Position::decrement_offset()
         last_smaller_offset = text.byte_offset_of(iterator);
     }
 
-    // NOTE: If the current offset is inside a multi-byte codepoint, it will be moved to the start of that codepoint.
+    // NOTE: If the current offset is inside a multi-byte code point, it will be moved to the start of that code point.
     m_offset = last_smaller_offset;
     return true;
 }

@@ -71,8 +71,8 @@ public:
     [[nodiscard]] Vector<Token> parse();
 
 private:
-    [[nodiscard]] Optional<u32> next_codepoint();
-    [[nodiscard]] Optional<u32> peek_codepoint(size_t offset = 0) const;
+    [[nodiscard]] Optional<u32> next_code_point();
+    [[nodiscard]] Optional<u32> peek_code_point(size_t offset = 0) const;
     [[nodiscard]] Optional<U32Twin> peek_twin() const;
     [[nodiscard]] Optional<U32Triplet> peek_triplet() const;
 
@@ -80,16 +80,16 @@ private:
     [[nodiscard]] static Token create_value_token(Token::TokenType, String value);
     [[nodiscard]] static Token create_value_token(Token::TokenType, u32 value);
     [[nodiscard]] Token consume_a_token();
-    [[nodiscard]] Token consume_string_token(u32 ending_codepoint);
+    [[nodiscard]] Token consume_string_token(u32 ending_code_point);
     [[nodiscard]] Token consume_a_numeric_token();
     [[nodiscard]] Token consume_an_ident_like_token();
     [[nodiscard]] CSSNumber consume_a_number();
     [[nodiscard]] String consume_a_name();
-    [[nodiscard]] u32 consume_escaped_codepoint();
+    [[nodiscard]] u32 consume_escaped_code_point();
     [[nodiscard]] Token consume_a_url_token();
     void consume_the_remnants_of_a_bad_url();
     void consume_comments();
-    void reconsume_current_input_codepoint();
+    void reconsume_current_input_code_point();
     [[nodiscard]] bool is_valid_escape_sequence();
     [[nodiscard]] static bool is_valid_escape_sequence(U32Twin);
     [[nodiscard]] bool would_start_an_identifier();

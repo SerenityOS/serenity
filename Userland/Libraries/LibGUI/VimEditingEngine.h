@@ -84,7 +84,7 @@ public:
         EndOfWord,
         // End of a WORD.
         EndOfWORD,
-        // Characters (or Unicode codepoints based on how pedantic you want to
+        // Characters (or Unicode code points based on how pedantic you want to
         // get).
         Character,
         // Used for find-mode.

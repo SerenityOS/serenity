@@ -248,15 +248,15 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
         }
     }
 
-    auto parse_digit = [&](u32 codepoint, i32 radix) -> Optional<i32> {
+    auto parse_digit = [&](u32 code_point, i32 radix) -> Optional<i32> {
         i32 digit = -1;
 
-        if (isdigit(codepoint))
-            digit = codepoint - '0';
-        else if (islower(codepoint))
-            digit = 10 + (codepoint - 'a');
-        else if (isupper(codepoint))
-            digit = 10 + (codepoint - 'A');
+        if (isdigit(code_point))
+            digit = code_point - '0';
+        else if (islower(code_point))
+            digit = 10 + (code_point - 'a');
+        else if (isupper(code_point))
+            digit = 10 + (code_point - 'A');
 
         if (digit == -1 || digit >= radix)
             return {};
@@ -265,8 +265,8 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 
     bool had_digits = false;
     double number = 0;
-    for (auto codepoint : Utf8View(s)) {
-        auto digit = parse_digit(codepoint, radix);
+    for (auto code_point : Utf8View(s)) {
+        auto digit = parse_digit(code_point, radix);
         if (!digit.has_value())
             break;
         had_digits = true;

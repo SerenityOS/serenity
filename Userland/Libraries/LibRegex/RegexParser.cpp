@@ -1485,7 +1485,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             if (try_skip("u")) {
                 if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
-                    // FIXME: While codepoint ranges are supported, codepoint matches as "Char" are not!
+                    // FIXME: While code point ranges are supported, code point matches as "Char" are not!
                     return { { .code_point = code_point.value(), .is_character_class = false } };
                 } else if (!unicode) {
                     // '\u' is allowed in non-unicode mode, just matches 'u'.

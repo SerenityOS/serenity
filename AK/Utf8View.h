@@ -64,8 +64,8 @@ public:
 
     Utf8View substring_view(size_t byte_offset, size_t byte_length) const;
     Utf8View substring_view(size_t byte_offset) const { return substring_view(byte_offset, byte_length() - byte_offset); }
-    Utf8View unicode_substring_view(size_t codepoint_offset, size_t codepoint_length) const;
-    Utf8View unicode_substring_view(size_t codepoint_offset) const { return unicode_substring_view(codepoint_offset, length() - codepoint_offset); }
+    Utf8View unicode_substring_view(size_t code_point_offset, size_t code_point_length) const;
+    Utf8View unicode_substring_view(size_t code_point_offset) const { return unicode_substring_view(code_point_offset, length() - code_point_offset); }
 
     bool is_empty() const { return m_string.is_empty(); }
     bool starts_with(const Utf8View&) const;
