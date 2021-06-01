@@ -251,6 +251,8 @@ int main(int argc, char** argv)
         auto result = GUI::MessageBox::show(window, "The document has been modified. Would you like to save?", "Unsaved changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
         if (result == GUI::MessageBox::ExecYes) {
             save_action->activate();
+            if (window->is_modified())
+                return GUI::Window::CloseRequestDecision::StayOpen;
             return GUI::Window::CloseRequestDecision::Close;
         }
 
