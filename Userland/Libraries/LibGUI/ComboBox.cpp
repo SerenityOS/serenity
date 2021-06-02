@@ -225,11 +225,8 @@ void ComboBox::open()
     };
 
     auto taskbar_height = GUI::Desktop::the().taskbar_height();
-    // NOTE: This is so the combobox bottom edge exactly fits the taskbar's
-    //       top edge - the value was found through trial and error though.
-    auto offset = 8;
     Gfx::IntRect list_window_rect { my_screen_rect.bottom_left(), size };
-    list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height + offset));
+    list_window_rect.intersect(Desktop::the().rect().shrunken(0, taskbar_height * 2));
 
     m_editor->set_focus(true);
     if (m_selected_index.has_value()) {
