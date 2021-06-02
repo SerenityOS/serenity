@@ -20,7 +20,8 @@ set(CMAKE_STAGING_PREFIX ${SERENITY_BUILD_DIR}/Root/usr/local)
 set(CMAKE_INSTALL_PREFIX ${SERENITY_BUILD_DIR}/Root/usr/local)
 set(CMAKE_INSTALL_DATAROOTDIR ${SERENITY_BUILD_DIR}/Root/usr/local/share)
 
-set(CMAKE_AR $ENV{SERENITY_ARCH}-pc-serenity-ar)
+set(CMAKE_AR $ENV{SERENITY_ARCH}-pc-serenity-gcc-ar)
+set(CMAKE_RANLIB $ENV{SERENITY_ARCH}-pc-serenity-gcc-ranlib)
 set(CMAKE_C_COMPILER $ENV{SERENITY_ARCH}-pc-serenity-gcc)
 set(CMAKE_CXX_COMPILER $ENV{SERENITY_ARCH}-pc-serenity-g++)
 
