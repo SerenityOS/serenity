@@ -77,6 +77,7 @@ int main(int argc, char** argv)
     s_window->set_menubar(menubar);
 
     s_window->on_close_request = [&]() -> GUI::Window::CloseRequestDecision {
+        s_hack_studio_widget->locator().close();
         if (s_hack_studio_widget->warn_unsaved_changes("There are unsaved changes, do you want to save before exiting?") == HackStudioWidget::ContinueDecision::Yes)
             return GUI::Window::CloseRequestDecision::Close;
         return GUI::Window::CloseRequestDecision::StayOpen;
