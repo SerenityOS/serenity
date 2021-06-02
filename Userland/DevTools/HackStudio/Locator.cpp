@@ -103,9 +103,12 @@ Locator::Locator(Core::Object* parent)
     m_textbox->on_change = [this] {
         update_suggestions();
     };
+
     m_textbox->on_escape_pressed = [this] {
         m_popup_window->hide();
+        m_textbox->set_focus(false);
     };
+
     m_textbox->on_up_pressed = [this] {
         GUI::ModelIndex new_index = m_suggestion_view->selection().first();
         if (new_index.is_valid())
@@ -136,6 +139,10 @@ Locator::Locator(Core::Object* parent)
         if (!selected_index.is_valid())
             return;
         open_suggestion(selected_index);
+    };
+
+    m_textbox->on_focusout = [&]() {
+        close();
     };
 
     m_popup_window = GUI::Window::construct(parent);
