@@ -116,6 +116,8 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "CAPABILITY"sv.bytes();
     case CommandType::Logout:
         return "LOGOUT"sv.bytes();
+    case CommandType ::Idle:
+        return "IDLE"sv.bytes();
     case CommandType::Login:
         return "LOGIN"sv.bytes();
     case CommandType::List:
@@ -231,6 +233,19 @@ void Client::send_next_command()
 
     send_raw(buffer);
     m_expecting_response = true;
+}
+RefPtr<Promise<Optional<ContinueRequest>>> Client::idle()
+{
+    auto promise = send_simple_command(CommandType::Idle);
+    return cast_promise<ContinueRequest>(promise);
+}
+RefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
+{
+    auto promise = Promise<Optional<Response>>::construct();
+    m_pending_promises.append(promise);
+    send_raw("DONE");
+    m_expecting_response = true;
+    return cast_promise<SolidResponse>(promise);
 }
 
 void Client::close()
