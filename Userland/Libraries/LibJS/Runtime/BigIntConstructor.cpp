@@ -26,9 +26,10 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.prototype, global_object.bigint_prototype(), 0);
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 
-    u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.asIntN, as_int_n, 2, attr);
-    define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
+    // TODO: Implement these functions below and uncomment this.
+    // u8 attr = Attribute::Writable | Attribute::Configurable;
+    // define_native_function(vm.names.asIntN, as_int_n, 2, attr);
+    // define_native_function(vm.names.asUintN, as_uint_n, 2, attr);
 }
 
 BigIntConstructor::~BigIntConstructor()
