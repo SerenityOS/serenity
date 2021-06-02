@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, sin-ack <sin-ack@protonmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,6 +36,13 @@ public:
     virtual ~ModelClient() { }
 
     virtual void model_did_update(unsigned flags) = 0;
+
+    virtual void model_did_insert_rows([[maybe_unused]] ModelIndex const& parent, [[maybe_unused]] int first, [[maybe_unused]] int last) { }
+    virtual void model_did_insert_columns([[maybe_unused]] ModelIndex const& parent, [[maybe_unused]] int first, [[maybe_unused]] int last) { }
+    virtual void model_did_move_rows([[maybe_unused]] ModelIndex const& source_parent, [[maybe_unused]] int first, [[maybe_unused]] int last, [[maybe_unused]] ModelIndex const& target_parent, [[maybe_unused]] int target_index) { }
+    virtual void model_did_move_columns([[maybe_unused]] ModelIndex const& source_parent, [[maybe_unused]] int first, [[maybe_unused]] int last, [[maybe_unused]] ModelIndex const& target_parent, [[maybe_unused]] int target_index) { }
+    virtual void model_did_delete_rows([[maybe_unused]] ModelIndex const& parent, [[maybe_unused]] int first, [[maybe_unused]] int last) { }
+    virtual void model_did_delete_columns([[maybe_unused]] ModelIndex const& parent, [[maybe_unused]] int first, [[maybe_unused]] int last) { }
 };
 
 class Model : public RefCounted<Model> {
@@ -93,6 +101,7 @@ protected:
     Model();
 
     void for_each_view(Function<void(AbstractView&)>);
+    void for_each_client(Function<void(ModelClient&)>);
     void did_update(unsigned flags = UpdateFlag::InvalidateAllIndices);
 
     static bool string_matches(const StringView& str, const StringView& needle, unsigned flags)
@@ -107,7 +116,85 @@ protected:
 
     ModelIndex create_index(int row, int column, const void* data = nullptr) const;
 
+    void begin_insert_rows(ModelIndex const& parent, int first, int last);
+    void begin_insert_columns(ModelIndex const& parent, int first, int last);
+    void begin_move_rows(ModelIndex const& source_parent, int first, int last, ModelIndex const& target_parent, int target_index);
+    void begin_move_columns(ModelIndex const& source_parent, int first, int last, ModelIndex const& target_parent, int target_index);
+    void begin_delete_rows(ModelIndex const& parent, int first, int last);
+    void begin_delete_columns(ModelIndex const& parent, int first, int last);
+
+    void end_insert_rows();
+    void end_insert_columns();
+    void end_move_rows();
+    void end_move_columns();
+    void end_delete_rows();
+    void end_delete_columns();
+
+    void change_persistent_index_list(Vector<ModelIndex> const& old_indices, Vector<ModelIndex> const& new_indices);
+
 private:
+    enum class OperationType {
+        Invalid = 0,
+        Insert,
+        Move,
+        Delete,
+        Reset
+    };
+    enum class Direction {
+        Row,
+        Column
+    };
+
+    struct Operation {
+        OperationType type { OperationType::Invalid };
+        Direction direction { Direction::Row };
+        ModelIndex source_parent;
+        int first { 0 };
+        int last { 0 };
+        ModelIndex target_parent;
+        int target { 0 };
+
+        Operation(OperationType type)
+            : type(type)
+        {
+        }
+
+        Operation(OperationType type, Direction direction, ModelIndex const& parent, int first, int last)
+            : type(type)
+            , direction(direction)
+            , source_parent(parent)
+            , first(first)
+            , last(last)
+        {
+        }
+
+        Operation(OperationType type, Direction direction, ModelIndex const& source_parent, int first, int last, ModelIndex const& target_parent, int target)
+            : type(type)
+            , direction(direction)
+            , source_parent(source_parent)
+            , first(first)
+            , last(last)
+            , target_parent(target_parent)
+            , target(target)
+        {
+        }
+    };
+
+    void handle_insert(Operation const&);
+    void handle_move(Operation const&);
+    void handle_delete(Operation const&);
+
+    template<bool IsRow>
+    void save_deleted_indices(ModelIndex const& parent, int first, int last);
+
+    HashMap<ModelIndex, OwnPtr<PersistentHandle>> m_persistent_handles;
+    Vector<Operation> m_operation_stack;
+    // NOTE: We need to save which indices have been deleted before the delete
+    // actually happens, because we can't figure out which persistent handles
+    // belong to us in end_delete_rows/columns (because accessing the parents of
+    // the indices might be impossible).
+    Vector<Vector<ModelIndex>> m_deleted_indices_stack;
+
     HashTable<AbstractView*> m_views;
     HashTable<ModelClient*> m_clients;
 };
