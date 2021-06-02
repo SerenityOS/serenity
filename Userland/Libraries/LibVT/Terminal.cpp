@@ -638,8 +638,7 @@ void Terminal::SU(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (u16 i = 0; i < count; i++)
-        scroll_up();
+    scroll_up(count);
 }
 
 void Terminal::SD(Parameters params)
@@ -648,8 +647,7 @@ void Terminal::SD(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (u16 i = 0; i < count; i++)
-        scroll_down();
+    scroll_down(count);
 }
 
 void Terminal::DECSCUSR(Parameters params)
@@ -681,54 +679,36 @@ void Terminal::DECSCUSR(Parameters params)
     }
 }
 
-#ifndef KERNEL
 void Terminal::IL(Parameters params)
 {
-    unsigned count = 1;
+    size_t count = 1;
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
-    invalidate_cursor();
-    for (; count > 0; --count) {
-        active_buffer().insert(cursor_row(), make<Line>(m_columns));
-        if (m_scroll_region_bottom + 1 < active_buffer().size())
-            active_buffer().remove(m_scroll_region_bottom + 1);
-        else
-            active_buffer().remove(active_buffer().size() - 1);
+    if (!is_within_scroll_region(cursor_row())) {
+        dbgln("Shenanigans! Tried to insert line outside the scroll region");
+        return;
     }
-
-    m_need_full_flush = true;
+    scroll_down(cursor_row(), m_scroll_region_bottom, count);
 }
-#endif
 
 void Terminal::DA(Parameters)
 {
     emit_string("\033[?1;0c");
 }
 
-#ifndef KERNEL
 void Terminal::DL(Parameters params)
 {
-    int count = 1;
+    size_t count = 1;
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
-
-    if (count == 1 && cursor_row() == 0) {
-        scroll_up();
+    if (!is_within_scroll_region(cursor_row())) {
+        dbgln("Shenanigans! Tried to delete line outside the scroll region");
         return;
     }
-
-    int max_count = m_rows - (m_scroll_region_top + cursor_row());
-    count = min(count, max_count);
-
-    for (int c = count; c > 0; --c) {
-        active_buffer().remove(cursor_row());
-        if (m_scroll_region_bottom < active_buffer().size())
-            active_buffer().insert(m_scroll_region_bottom, make<Line>(m_columns));
-        else
-            active_buffer().append(make<Line>(m_columns));
-    }
+    scroll_up(cursor_row(), m_scroll_region_bottom, count);
 }
 
+#ifndef KERNEL
 void Terminal::DCH(Parameters params)
 {
     int num = 1;
@@ -765,33 +745,75 @@ void Terminal::linefeed()
 
 void Terminal::carriage_return()
 {
+    dbgln_if(TERMINAL_DEBUG, "Carriage return");
     set_cursor(cursor_row(), 0);
 }
 
-#ifndef KERNEL
-void Terminal::scroll_up()
+void Terminal::scroll_up(size_t count)
 {
-    dbgln_if(TERMINAL_DEBUG, "Scroll up 1 line");
-    // NOTE: We have to invalidate the cursor first.
-    invalidate_cursor();
-    if (m_scroll_region_top == 0 && !m_use_alternate_screen_buffer) {
-        auto line = move(active_buffer().ptr_at(m_scroll_region_top));
-        add_line_to_history(move(line));
-        m_client.terminal_history_changed();
-    }
-    active_buffer().remove(m_scroll_region_top);
-    active_buffer().insert(m_scroll_region_bottom, make<Line>(m_columns));
-    m_need_full_flush = true;
+    scroll_up(m_scroll_region_top, m_scroll_region_bottom, count);
 }
 
-void Terminal::scroll_down()
+void Terminal::scroll_down(size_t count)
 {
-    dbgln_if(TERMINAL_DEBUG, "Scroll down 1 line");
+    scroll_down(m_scroll_region_top, m_scroll_region_bottom, count);
+}
+
+#ifndef KERNEL
+// Insert `count` blank lines at the bottom of the region. Text moves up, top lines get added to the scrollback.
+void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
+{
+    VERIFY(region_top <= region_bottom);
+    VERIFY(region_bottom < rows());
+    // Only the specified region should be affected.
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    dbgln_if(TERMINAL_DEBUG, "Scroll up {} lines in region {}-{}", count, region_top, region_bottom);
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
-    active_buffer().remove(m_scroll_region_bottom);
-    active_buffer().insert(m_scroll_region_top, make<Line>(m_columns));
-    m_need_full_flush = true;
+
+    if (!m_use_alternate_screen_buffer && max_history_size() != 0)
+        for (size_t i = 0; i < count; ++i)
+            add_line_to_history(move(active_buffer().ptr_at(region_top + i)));
+
+    if (count == region_size) {
+        for (u16 row = region_top; row <= region_bottom; ++row)
+            active_buffer()[row].clear(Attribute());
+        return;
+    }
+
+    active_buffer().remove(region_top, count);
+    for (size_t i = 0; i < count; ++i)
+        active_buffer().insert(region_bottom - count + i + 1, make<Line>(m_columns));
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        active_buffer()[row].set_dirty(true);
+    if (!m_use_alternate_screen_buffer && max_history_size() != 0)
+        m_client.terminal_history_changed();
+}
+
+// Insert `count` blank lines at the top of the region. Text moves down. Does not affect the scrollback buffer.
+void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
+{
+    VERIFY(region_top <= region_bottom);
+    VERIFY(region_bottom < rows());
+    // Only the specified region should be affected.
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    dbgln_if(TERMINAL_DEBUG, "Scroll down {} lines in region {}-{}", count, region_top, region_bottom);
+    // NOTE: We have to invalidate the cursor first.
+    invalidate_cursor();
+
+    if (count == region_size) {
+        for (u16 row = region_top; row <= region_bottom; ++row)
+            active_buffer()[row].set_dirty(true);
+        return;
+    }
+
+    active_buffer().remove(region_bottom - count + 1, count);
+    for (size_t i = 0; i < count; ++i)
+        active_buffer().insert(region_top, make<Line>(m_columns));
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        active_buffer()[row].set_dirty(true);
 }
 
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)

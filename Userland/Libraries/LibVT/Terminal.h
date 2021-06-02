@@ -171,6 +171,11 @@ public:
         return m_needs_bracketed_paste;
     };
 
+    bool is_within_scroll_region(u16 line) const
+    {
+        return line >= m_scroll_region_top && line <= m_scroll_region_bottom;
+    }
+
 protected:
     // ^EscapeSequenceExecutor
     virtual void emit_code_point(u32) override;
@@ -199,18 +204,17 @@ protected:
     };
 
     void carriage_return();
-#ifndef KERNEL
-    void scroll_up();
-    void scroll_down();
+    inline void scroll_up(size_t count = 1);
+    inline void scroll_down(size_t count = 1);
     void linefeed();
+#ifndef KERNEL
+    void scroll_up(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_down(u16 region_top, u16 region_bottom, size_t count);
     void put_character_at(unsigned row, unsigned column, u32 ch);
-    void set_window_title(const String&);
 #else
-    virtual void scroll_up() = 0;
-    virtual void scroll_down() = 0;
-    virtual void linefeed() = 0;
+    virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) = 0;
+    virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) = 0;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) = 0;
-    virtual void set_window_title(const String&) = 0;
 #endif
 
     void unimplemented_control_code(u8);
@@ -307,18 +311,18 @@ protected:
     // SD - Scroll Down (called "Pan Up" in VT510)
     void SD(Parameters);
 
-#ifndef KERNEL
     // IL - Insert Line
     void IL(Parameters);
+
+#ifndef KERNEL
     // DCH - Delete Character
     void DCH(Parameters);
+#else
+    virtual void DCH(Parameters) = 0;
+#endif
+
     // DL - Delete Line
     void DL(Parameters);
-#else
-    virtual void IL(Parameters) = 0;
-    virtual void DCH(Parameters) = 0;
-    virtual void DL(Parameters) = 0;
-#endif
 
     // CHA - Cursor Horizontal Absolute
     void CHA(Parameters);

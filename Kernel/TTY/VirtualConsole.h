@@ -37,17 +37,12 @@ private:
     virtual void clear() override;
     virtual void clear_including_history() override;
 
-    virtual void scroll_up() override;
-    virtual void scroll_down() override;
-    virtual void linefeed() override;
+    virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) override;
+    virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) override;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
-    virtual void set_window_title(const String&) override;
 
     virtual void ICH(Parameters) override;
-
-    virtual void IL(Parameters) override;
     virtual void DCH(Parameters) override;
-    virtual void DL(Parameters) override;
 };
 
 class VirtualConsole final : public TTY
@@ -140,8 +135,8 @@ private:
 
     void on_code_point(u32);
 
-    void scroll_down();
-    void scroll_up();
+    void scroll_down(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_up(u16 region_top, u16 region_bottom, size_t count);
     void clear_line(size_t index);
     void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
 

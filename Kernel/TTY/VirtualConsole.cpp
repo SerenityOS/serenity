@@ -48,6 +48,9 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_columns = determined_columns;
     m_rows = determined_rows;
 
+    m_scroll_region_top = 0;
+    m_scroll_region_bottom = determined_rows - 1;
+
     m_current_state.cursor.clamp(rows() - 1, columns() - 1);
     m_normal_saved_state.cursor.clamp(rows() - 1, columns() - 1);
     m_alternate_saved_state.cursor.clamp(rows() - 1, columns() - 1);
@@ -59,49 +62,31 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_horizontal_tabs[determined_columns - 1] = 1;
     m_client.terminal_did_resize(m_columns, m_rows);
 }
-void ConsoleImpl::scroll_up()
+void ConsoleImpl::scroll_up(u16 region_top, u16 region_bottom, size_t count)
 {
     // NOTE: We have to invalidate the cursor first.
     m_client.invalidate_cursor(cursor_row());
-    m_client.scroll_up();
+    m_client.scroll_up(region_top, region_bottom, count);
 }
-void ConsoleImpl::scroll_down()
+
+void ConsoleImpl::scroll_down(u16 region_top, u16 region_bottom, size_t count)
 {
+    m_client.invalidate_cursor(cursor_row());
+    m_client.scroll_down(region_top, region_bottom, count);
 }
-void ConsoleImpl::linefeed()
-{
-    u16 new_row = cursor_row();
-    u16 max_row = rows() - 1;
-    if (new_row == max_row) {
-        // NOTE: We have to invalidate the cursor first.
-        m_client.invalidate_cursor(new_row);
-        m_client.scroll_up();
-    } else {
-        ++new_row;
-    }
-    set_cursor(new_row, 0);
-}
+
 void ConsoleImpl::put_character_at(unsigned row, unsigned column, u32 ch)
 {
     m_client.put_character_at(row, column, ch, m_current_state.attribute);
     m_last_code_point = ch;
 }
-void ConsoleImpl::set_window_title(const String&)
-{
-}
+
 void ConsoleImpl::ICH(Parameters)
 {
     // FIXME: Implement this
 }
-void ConsoleImpl::IL(Parameters)
-{
-    // FIXME: Implement this
-}
+
 void ConsoleImpl::DCH(Parameters)
-{
-    // FIXME: Implement this
-}
-void ConsoleImpl::DL(Parameters)
 {
     // FIXME: Implement this
 }
@@ -196,8 +181,11 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, const Circ
     , m_console_impl(*this)
 {
     initialize();
-    for (auto& ch : log) {
-        echo(ch);
+    // HACK: We have to go through the TTY layer for correct newline handling.
+    // It would be nice to not have to make all these calls, but we can't get the underlying data pointer
+    // and head index. If we did that, we could reduce this to at most 2 calls.
+    for (auto ch : log) {
+        emit_char(ch);
     }
 }
 
@@ -305,7 +293,9 @@ void VirtualConsole::set_active(bool active)
 
 void VirtualConsole::emit_char(char ch)
 {
-    echo(ch);
+    // Since we are standards-compliant by not moving to column 1 on '\n', we have to add an extra carriage return to
+    // do newlines properly. The `TTY` layer handles adding it.
+    echo_with_processing(static_cast<u8>(ch));
 }
 
 void VirtualConsole::flush_dirty_lines()
@@ -381,10 +371,7 @@ String VirtualConsole::device_name() const
 
 void VirtualConsole::echo(u8 ch)
 {
-    if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        on_tty_write(buffer, 1);
-    }
+    m_console_impl.on_input(ch);
 }
 
 VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)
@@ -407,11 +394,30 @@ void VirtualConsole::clear()
     m_console_impl.set_cursor(0, 0);
 }
 
-void VirtualConsole::scroll_up()
+void VirtualConsole::scroll_up(u16 region_top, u16 region_bottom, size_t count)
 {
-    memmove(m_cells->vaddr().as_ptr(), m_cells->vaddr().offset(columns() * sizeof(Cell)).as_ptr(), ((rows() - 1) * columns() * sizeof(Cell)));
-    clear_line(rows() - 1);
-    m_console_impl.m_need_full_flush = true;
+    VERIFY(region_top <= region_bottom);
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    size_t line_bytes = (columns() * sizeof(Cell));
+    memmove(m_cells->vaddr().offset(line_bytes * region_top).as_ptr(), m_cells->vaddr().offset(line_bytes * (region_top + count)).as_ptr(), line_bytes * (region_size - count));
+    for (size_t i = 0; i < count; ++i)
+        clear_line(region_bottom - i);
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        m_lines[row].dirty = true;
+}
+
+void VirtualConsole::scroll_down(u16 region_top, u16 region_bottom, size_t count)
+{
+    VERIFY(region_top <= region_bottom);
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    size_t line_bytes = (columns() * sizeof(Cell));
+    memmove(m_cells->vaddr().offset(line_bytes * (region_top + count)).as_ptr(), m_cells->vaddr().offset(line_bytes * region_top).as_ptr(), line_bytes * (region_size - count));
+    for (size_t i = 0; i < count; ++i)
+        clear_line(region_top + i);
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        m_lines[row].dirty = true;
 }
 
 void VirtualConsole::clear_line(size_t y_index)
