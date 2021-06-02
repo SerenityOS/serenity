@@ -11,7 +11,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibDesktop/Launcher.h>
-#include <string.h>
 
 int main(int argc, char* argv[])
 {
@@ -25,21 +24,8 @@ int main(int argc, char* argv[])
     bool all_ok = true;
 
     for (auto& url_or_path : urls_or_paths) {
-        auto url = URL::create_with_url_or_path(url_or_path);
-
-        if (url.protocol() == "file") {
-            // NOTE: Since URL::create_with_url_or_path() returns "file:///" for ".", and we chose
-            // to fix that in open(1) itself using Core::File::real_path_for(), we have to
-            // conditionally chose either the URL's path or user-specified argument (also a path).
-            auto real_path = Core::File::real_path_for(StringView(url_or_path).starts_with("file://") ? url.path() : url_or_path);
-            if (real_path.is_null()) {
-                // errno *should* be preserved from Core::File::real_path_for().
-                warnln("Failed to open '{}': {}", url.path(), strerror(errno));
-                all_ok = false;
-                continue;
-            }
-            url = URL::create_with_url_or_path(real_path);
-        }
+        auto path = Core::File::real_path_for(url_or_path);
+        auto url = URL::create_with_url_or_path(path.is_null() ? url_or_path : path);
 
         if (!Desktop::Launcher::open(url)) {
             warnln("Failed to open '{}'", url);
