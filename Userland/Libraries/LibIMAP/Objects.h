@@ -26,8 +26,11 @@ enum class CommandType {
     Noop,
     Search,
     Select,
+    Status,
+    Store,
     UIDFetch,
     UIDSearch,
+    UIDStore,
 };
 
 enum class MailboxFlag : unsigned {
@@ -60,6 +63,7 @@ enum class ResponseType : unsigned {
     Fetch = 1u << 9,
     Search = 1u << 10,
     Bye = 1u << 13,
+    Status = 1u << 14
 };
 
 enum class FetchResponseType : unsigned {
@@ -71,7 +75,85 @@ enum class FetchResponseType : unsigned {
     BodyStructure = 1u << 6,
 };
 
+enum class StatusItemType : unsigned {
+    Recent = 1u << 1,
+    UIDNext = 1u << 2,
+    UIDValidity = 1u << 3,
+    Unseen = 1u << 4,
+    Messages = 1u << 5,
+};
+
 class Parser;
+
+class StatusItem {
+public:
+    [[nodiscard]] unsigned status_items() const
+    {
+        return m_status_items;
+    }
+
+    [[nodiscard]] bool contains_status_item_type(StatusItemType type) const
+    {
+        return (static_cast<unsigned>(type) & m_status_items) != 0;
+    }
+
+    void add_status_item_type(StatusItemType type)
+    {
+        m_status_items |= static_cast<unsigned>(type);
+    }
+
+    void set_mailbox(String&& mailbox) { m_mailbox = move(mailbox); }
+    String& mailbox() { return m_mailbox; }
+
+    unsigned get(StatusItemType type) const
+    {
+        VERIFY(contains_status_item_type(type));
+        switch (type) {
+        case StatusItemType::Recent:
+            return m_recent;
+        case StatusItemType::UIDNext:
+            return m_uid_next;
+        case StatusItemType::UIDValidity:
+            return m_uid_validity;
+        case StatusItemType::Unseen:
+            return m_unseen;
+        case StatusItemType::Messages:
+            return m_messages;
+        }
+        VERIFY_NOT_REACHED();
+    }
+
+    void set(StatusItemType type, unsigned value)
+    {
+        add_status_item_type(type);
+        switch (type) {
+        case StatusItemType::Recent:
+            m_recent = value;
+            break;
+        case StatusItemType::UIDNext:
+            m_uid_next = value;
+            break;
+        case StatusItemType::UIDValidity:
+            m_uid_validity = value;
+            break;
+        case StatusItemType::Unseen:
+            m_unseen = value;
+            break;
+        case StatusItemType::Messages:
+            m_uid_next = value;
+            break;
+        }
+    }
+
+private:
+    unsigned m_status_items { 0 };
+    unsigned m_messages { 0 };
+    unsigned m_recent { 0 };
+    unsigned m_uid_next { 0 };
+    unsigned m_uid_validity { 0 };
+    unsigned m_unseen { 0 };
+    String m_mailbox;
+};
 
 struct Address {
     Optional<String> name;
@@ -564,6 +646,17 @@ public:
         return m_bye_message;
     }
 
+    void set_status(StatusItem&& status_item)
+    {
+        add_response_type(ResponseType::Status);
+        m_status_item = move(status_item);
+    }
+
+    StatusItem& status_item()
+    {
+        return m_status_item;
+    }
+
 private:
     unsigned m_response_type;
 
@@ -581,6 +674,13 @@ private:
     Vector<Tuple<unsigned, FetchResponseData>> m_fetch_responses;
     Vector<unsigned> m_search_results;
     Optional<String> m_bye_message;
+    StatusItem m_status_item;
+};
+
+enum class StoreMethod {
+    Replace,
+    Add,
+    Remove
 };
 
 class SolidResponse {
