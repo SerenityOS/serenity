@@ -194,6 +194,41 @@ void Parser::parse_untagged()
         auto message = parse_while([](u8 x) { return x != '\r'; });
         consume("\r\n");
         m_response.data().set_bye(message.is_empty() ? Optional<String>() : Optional<String>(message));
+    } else if (try_consume("STATUS")) {
+        consume(" ");
+        auto mailbox = parse_astring();
+        consume(" (");
+        auto status_item = StatusItem();
+        status_item.set_mailbox(mailbox);
+        while (!try_consume(")")) {
+            auto status_att = parse_atom();
+            consume(" ");
+            auto value = parse_number();
+
+            auto type = StatusItemType::Recent;
+            if (status_att.matches("MESSAGES")) {
+                type = StatusItemType::Messages;
+            } else if (status_att.matches("UNSEEN")) {
+                type = StatusItemType::Unseen;
+            } else if (status_att.matches("UIDNEXT")) {
+                type = StatusItemType::UIDNext;
+            } else if (status_att.matches("UIDVALIDITY")) {
+                type = StatusItemType::UIDValidity;
+            } else if (status_att.matches("RECENT")) {
+                type = StatusItemType::Recent;
+            } else {
+                dbgln("Unmatched status attribute: {}", status_att);
+                m_parsing_failed = true;
+            }
+
+            status_item.set(type, value);
+
+            if (!at_end() && m_buffer[position] != ')')
+                consume(" ");
+        }
+        m_response.data().set_status(move(status_item));
+        try_consume(" "); // Not in the spec but the Outlook server sends a space for some reason.
+        consume("\r\n");
     } else {
         auto x = parse_while([](u8 x) { return x != '\r'; });
         consume("\r\n");

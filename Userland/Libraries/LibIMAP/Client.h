@@ -26,8 +26,10 @@ public:
     RefPtr<Promise<Optional<SolidResponse>>> select(StringView string);
     RefPtr<Promise<Optional<SolidResponse>>> search(Optional<String> charset, Vector<SearchKey>&& search_keys, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> fetch(FetchCommand request, bool uid);
+    RefPtr<Promise<Optional<SolidResponse>>> store(StoreMethod, Sequence, bool silent, Vector<String> const& flags, bool uid);
     RefPtr<Promise<Optional<ContinueRequest>>> idle();
     RefPtr<Promise<Optional<SolidResponse>>> finish_idle();
+    RefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
 
     void close();
 
