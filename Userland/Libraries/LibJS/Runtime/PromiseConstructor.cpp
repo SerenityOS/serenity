@@ -28,10 +28,11 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.length, Value(1));
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
-    define_native_function(vm.names.all, all, 1, attr);
-    define_native_function(vm.names.allSettled, all_settled, 1, attr);
-    define_native_function(vm.names.any, any, 1, attr);
-    define_native_function(vm.names.race, race, 1, attr);
+    // TODO: Implement these functions below and uncomment this.
+    // define_native_function(vm.names.all, all, 1, attr);
+    // define_native_function(vm.names.allSettled, all_settled, 1, attr);
+    // define_native_function(vm.names.any, any, 1, attr);
+    // define_native_function(vm.names.race, race, 1, attr);
     define_native_function(vm.names.reject, reject, 1, attr);
     define_native_function(vm.names.resolve, resolve, 1, attr);
 }
