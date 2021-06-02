@@ -10,12 +10,11 @@
 
 namespace JS {
 
-Object* get_iterator(GlobalObject& global_object, Value value, String hint, Value method)
+Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Value method)
 {
     auto& vm = global_object.vm();
-    VERIFY(hint == "sync" || hint == "async");
     if (method.is_empty()) {
-        if (hint == "async")
+        if (hint == IteratorHint::Async)
             TODO();
         auto object = value.to_object(global_object);
         if (!object)
@@ -100,7 +99,7 @@ void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<
 {
     auto& vm = global_object.vm();
 
-    auto iterator = get_iterator(global_object, value, "sync", method);
+    auto iterator = get_iterator(global_object, value, IteratorHint::Sync, method);
     if (!iterator)
         return;
 
