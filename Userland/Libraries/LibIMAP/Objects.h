@@ -65,9 +65,83 @@ enum class FetchResponseType : unsigned {
     InternalDate = 1u << 3,
     Envelope = 1u << 4,
     Flags = 1u << 5,
+    BodyStructure = 1u << 6,
 };
 
 class Parser;
+
+struct Address {
+    Optional<String> name;
+    Optional<String> source_route;
+    Optional<String> mailbox;
+    Optional<String> host;
+};
+
+struct Envelope {
+    Optional<String> date; // Format of date not specified.
+    Optional<String> subject;
+    Optional<Vector<Address>> from;
+    Optional<Vector<Address>> sender;
+    Optional<Vector<Address>> reply_to;
+    Optional<Vector<Address>> to;
+    Optional<Vector<Address>> cc;
+    Optional<Vector<Address>> bcc;
+    Optional<String> in_reply_to;
+    Optional<String> message_id;
+};
+
+class BodyStructure;
+
+struct BodyExtension {
+    AK::Variant<Optional<String>, unsigned, Vector<OwnPtr<BodyExtension>>> data;
+};
+
+struct MultiPartBodyStructureData {
+    Optional<Tuple<String, HashMap<String, String>>> disposition;
+    Vector<OwnPtr<BodyStructure>> bodies;
+    Vector<String> langs;
+    String media_type;
+    Optional<HashMap<String, String>> params;
+    Optional<String> location;
+    Optional<Vector<BodyExtension>> extensions;
+};
+
+struct BodyStructureData {
+    String type;
+    String subtype;
+    Optional<String> id {};
+    Optional<String> desc {};
+    String encoding;
+    HashMap<String, String> fields;
+    unsigned bytes { 0 };
+    unsigned lines { 0 };
+    Optional<Envelope> envelope;
+
+    Optional<String> md5 {};
+    Optional<Tuple<String, HashMap<String, String>>> disposition {};
+    Optional<Vector<String>> langs {};
+    Optional<String> location {};
+
+    Optional<Vector<BodyExtension>> extensions {};
+};
+
+class BodyStructure {
+    friend Parser;
+
+public:
+    explicit BodyStructure(BodyStructureData&& data)
+        : m_data(move(data))
+    {
+    }
+
+    explicit BodyStructure(MultiPartBodyStructureData&& data)
+        : m_data(move(data))
+    {
+    }
+
+private:
+    AK::Variant<BodyStructureData, MultiPartBodyStructureData> m_data;
+};
 
 // Set -1 for '*' i.e highest possible value.
 struct Sequence {
@@ -79,6 +153,7 @@ struct Sequence {
 
 struct FetchCommand {
     enum class DataItemType {
+        BodyStructure,
         Envelope,
         Flags,
         InternalDate,
@@ -138,25 +213,6 @@ struct ListItem {
     unsigned flags;
     String reference;
     String name;
-};
-
-struct Address {
-    Optional<String> name;
-    Optional<String> source_route;
-    Optional<String> mailbox;
-    Optional<String> host;
-};
-struct Envelope {
-    Optional<String> date; // Format of date not specified.
-    Optional<String> subject;
-    Optional<Vector<Address>> from;
-    Optional<Vector<Address>> sender;
-    Optional<Vector<Address>> reply_to;
-    Optional<Vector<Address>> to;
-    Optional<Vector<Address>> cc;
-    Optional<Vector<Address>> bcc;
-    Optional<String> in_reply_to;
-    Optional<String> message_id;
 };
 
 class FetchResponseData {
@@ -236,7 +292,20 @@ public:
         return m_flags;
     }
 
+    void set_body_structure(BodyStructure&& structure)
+    {
+        add_response_type(FetchResponseType::BodyStructure);
+        m_body_structure = move(structure);
+    }
+
+    BodyStructure& body_structure()
+    {
+        VERIFY(contains_response_type(FetchResponseType::BodyStructure));
+        return m_body_structure;
+    }
+
     FetchResponseData()
+        : m_body_structure(BodyStructureData {})
     {
     }
 
@@ -247,6 +316,7 @@ private:
     Envelope m_envelope;
     unsigned m_uid { 0 };
     unsigned m_response_type { 0 };
+    BodyStructure m_body_structure;
 };
 
 class ResponseData {

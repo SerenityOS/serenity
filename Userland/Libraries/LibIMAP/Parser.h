@@ -68,5 +68,12 @@ private:
     Optional<Vector<Address>> parse_address_list();
     Address parse_address();
     StringView parse_astring();
+    HashMap<String, String> parse_body_fields_params();
+    BodyStructure parse_body_structure();
+    BodyStructure parse_one_part_body();
+    Tuple<String, HashMap<String, String>> parse_disposition();
+    Vector<String> parse_langs();
+    BodyExtension parse_body_extension();
+    Envelope parse_envelope();
 };
 }
