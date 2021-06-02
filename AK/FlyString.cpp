@@ -73,11 +73,6 @@ FlyString::FlyString(StringView const& string)
     }
 }
 
-FlyString::FlyString(const char* string)
-    : FlyString(static_cast<String>(string))
-{
-}
-
 template<typename T>
 Optional<T> FlyString::to_int() const
 {
