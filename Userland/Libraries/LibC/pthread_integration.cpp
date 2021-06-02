@@ -96,7 +96,7 @@ int __pthread_mutex_lock(pthread_mutex_t* mutex)
     pthread_t this_thread = __pthread_self();
     for (;;) {
         u32 expected = 0;
-        if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acq_rel)) {
+        if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acquire)) {
             if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == this_thread) {
                 mutex->level++;
                 return 0;
@@ -128,7 +128,7 @@ int pthread_mutex_unlock(pthread_mutex_t*) __attribute__((weak, alias("__pthread
 int __pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
     u32 expected = 0;
-    if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acq_rel)) {
+    if (!AK::atomic_compare_exchange_strong(&mutex->lock, expected, 1u, AK::memory_order_acquire)) {
         if (mutex->type == __PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
             mutex->level++;
             return 0;
