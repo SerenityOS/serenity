@@ -185,7 +185,6 @@ public:
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
     u64 last_timestamp() const { return m_last_timestamp; }
-    u32 deepest_stack_depth() const { return m_deepest_stack_depth; }
 
     void set_timestamp_filter_range(u64 start, u64 end);
     void clear_timestamp_filter_range();
@@ -245,7 +244,6 @@ private:
 
     Vector<ProcessFilter> m_process_filters;
 
-    u32 m_deepest_stack_depth { 0 };
     bool m_inverted { false };
     bool m_show_top_functions { false };
     bool m_show_percentages { false };
