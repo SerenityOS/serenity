@@ -16,7 +16,7 @@ Locker locker(m_lock);
 return true;
 ```
 
-This lock doesn't disable interrupts at all, and if it already in use, the scheduler will simply yield away from that section until it tries to lock it again.
+This lock doesn't disable interrupts at all, and if it is already in use, the scheduler will simply yield away from that section until it tries to lock it again.
 
 ### Hard lock - `SpinLock<u8>`
 
@@ -31,7 +31,7 @@ ScopedSpinLock lock(m_lock);
 return true;
 ```
 
-### Why we need soft and hard locking in the AHCI code?
+### Why do we need soft and hard locking in the AHCI code?
 
 First of all, the proper way of taking a `SpinLock` and `Lock` is to:
 ```c++

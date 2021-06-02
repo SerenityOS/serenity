@@ -12,7 +12,7 @@ Every instance of the **Browser** application can have one or more tabs open. Ea
 
 Two important aspects of web browsing are further separated from the **WebContent** process: *network requests* and *image decoding*, segregated to the **RequestServer** and **ImageDecoder** processes respectively.
 
-All processes and are aggressively sandboxed using the `pledge()` and `unveil()` mechanisms. Furthermore, all processes except **Browser** run as an unprivileged user, separate from the primary logged-in desktop user.
+All processes are aggressively sandboxed using the `pledge()` and `unveil()` mechanisms. Furthermore, all processes except **Browser** run as an unprivileged user, separate from the primary logged-in desktop user.
 
 ### Process: WebContent
 
@@ -26,7 +26,7 @@ For DNS lookups, **RequestServer** asks for help from the system's global **Look
 
 ### Process: ImageDecoder
 
-This process can decode images (PNG, JPEG, BMP, ICO, PBM, etc.) into bitmaps. Each image is decoded in a fresh **ImageDecoder** process. These are strongly sandboxed and can't do much except receive encoded bitmap data and return a bitmap to **WebContent** if decoding successful.
+This process can decode images (PNG, JPEG, BMP, ICO, PBM, etc.) into bitmaps. Each image is decoded in a fresh **ImageDecoder** process. These are strongly sandboxed and can't do much except receive encoded bitmap data and return a bitmap to **WebContent** if decoding is successful.
 
 ### How processes are spawned
 
