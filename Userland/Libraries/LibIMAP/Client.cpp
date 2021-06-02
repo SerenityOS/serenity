@@ -146,6 +146,22 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "UID SEARCH"sv.bytes();
     case CommandType::Append:
         return "APPEND"sv.bytes();
+    case CommandType::Examine:
+        return "EXAMINE"sv.bytes();
+    case CommandType::ListSub:
+        return "LSUB"sv.bytes();
+    case CommandType::Expunge:
+        return "EXPUNGE"sv.bytes();
+    case CommandType::Subscribe:
+        return "SUBSCRIBE"sv.bytes();
+    case CommandType::Unsubscribe:
+        return "UNSUBSCRIBE"sv.bytes();
+    case CommandType::Authenticate:
+        return "AUTHENTICATE"sv.bytes();
+    case CommandType::Check:
+        return "CHECK"sv.bytes();
+    case CommandType::Close:
+        return "CLOSE"sv.bytes();
     case CommandType::Rename:
         return "RENAME"sv.bytes();
     case CommandType::Status:
@@ -198,6 +214,14 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::login(StringView username, Stri
 RefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name, StringView mailbox)
 {
     auto command = Command { CommandType::List, m_current_command,
+        { String::formatted("\"{}\"", reference_name),
+            String::formatted("\"{}\"", mailbox) } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::lsub(StringView reference_name, StringView mailbox)
+{
+    auto command = Command { CommandType::ListSub, m_current_command,
         { String::formatted("\"{}\"", reference_name),
             String::formatted("\"{}\"", mailbox) } };
     return cast_promise<SolidResponse>(send_command(move(command)));
@@ -266,6 +290,13 @@ void Client::send_next_command()
     send_raw(buffer);
     m_expecting_response = true;
 }
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::examine(StringView string)
+{
+    auto command = Command { CommandType::Examine, m_current_command, { string } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
 RefPtr<Promise<Optional<SolidResponse>>> Client::create_mailbox(StringView name)
 {
     auto command = Command { CommandType::Create, m_current_command, { name } };
@@ -392,6 +423,21 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Mess
     };
 
     return cast_promise<SolidResponse>(response_promise);
+}
+RefPtr<Promise<Optional<SolidResponse>>> Client::subscribe(StringView mailbox)
+{
+    auto command = Command { CommandType::Subscribe, m_current_command, { mailbox } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+RefPtr<Promise<Optional<SolidResponse>>> Client::unsubscribe(StringView mailbox)
+{
+    auto command = Command { CommandType::Unsubscribe, m_current_command, { mailbox } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+RefPtr<Promise<Optional<Response>>> Client::authenticate(StringView method)
+{
+    auto command = Command { CommandType::Authenticate, m_current_command, { method } };
+    return send_command(move(command));
 }
 RefPtr<Promise<Optional<SolidResponse>>> Client::rename(StringView from, StringView to)
 {

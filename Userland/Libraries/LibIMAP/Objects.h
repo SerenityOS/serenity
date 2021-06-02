@@ -18,13 +18,19 @@
 namespace IMAP {
 enum class CommandType {
     Append,
+    Authenticate,
     Capability,
     Copy,
+    Check,
+    Close,
     Create,
     Delete,
+    Examine,
+    Expunge,
     Fetch,
     Idle,
     List,
+    ListSub,
     Login,
     Logout,
     Noop,
@@ -33,10 +39,12 @@ enum class CommandType {
     Select,
     Status,
     Store,
+    Subscribe,
     UIDCopy,
     UIDFetch,
     UIDSearch,
     UIDStore,
+    Unsubscribe,
 };
 
 enum class MailboxFlag : unsigned {
@@ -68,6 +76,8 @@ enum class ResponseType : unsigned {
     PermanentFlags = 1u << 8,
     Fetch = 1u << 9,
     Search = 1u << 10,
+    ListSub = 1u << 11,
+    Expunged = 1u << 12,
     Bye = 1u << 13,
     Status = 1u << 14
 };
@@ -532,6 +542,18 @@ public:
         return m_list_items;
     }
 
+    void add_lsub_item(ListItem&& item)
+    {
+        add_response_type(ResponseType::List);
+        m_lsub_items.append(move(item));
+    }
+
+    Vector<ListItem>& lsub_items()
+    {
+        VERIFY(contains_response_type(ResponseType::ListSub));
+        return m_lsub_items;
+    }
+
     void set_exists(unsigned exists)
     {
         add_response_type(ResponseType::Exists);
@@ -640,6 +662,18 @@ public:
         return m_search_results;
     }
 
+    void add_expunged(unsigned message)
+    {
+        add_response_type(ResponseType::Expunged);
+        m_expunged.append(message);
+    }
+
+    Vector<unsigned>& expunged()
+    {
+        VERIFY(contains_response_type(ResponseType::Expunged));
+        return m_expunged;
+    }
+
     void set_bye(Optional<String> message)
     {
         add_response_type(ResponseType::Bye);
@@ -668,6 +702,8 @@ private:
 
     Vector<String> m_capabilities;
     Vector<ListItem> m_list_items;
+    Vector<ListItem> m_lsub_items;
+    Vector<unsigned> m_expunged;
 
     unsigned m_recent {};
     unsigned m_exists {};
