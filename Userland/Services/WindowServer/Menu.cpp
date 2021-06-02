@@ -588,6 +588,8 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
 
     if (adjusted_pos.x() + window.width() >= Screen::the().width() - margin) {
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
+    } else {
+        adjusted_pos.set_x(adjusted_pos.x() + 1);
     }
     if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
