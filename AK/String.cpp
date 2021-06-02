@@ -15,11 +15,6 @@
 
 namespace AK {
 
-String::String(const StringView& view)
-{
-    m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
-}
-
 bool String::operator==(const FlyString& fly_string) const
 {
     return *this == String(fly_string.impl());
@@ -70,11 +65,6 @@ bool String::operator>(const String& other) const
         return false;
 
     return strcmp(characters(), other.characters()) > 0;
-}
-
-String String::empty()
-{
-    return StringImpl::the_empty_stringimpl();
 }
 
 bool String::copy_characters_to_buffer(char* buffer, size_t buffer_size) const
@@ -454,11 +444,6 @@ bool String::operator==(const char* cstring) const
     if (!cstring)
         return false;
     return !__builtin_strcmp(characters(), cstring);
-}
-
-StringView String::view() const
-{
-    return { characters(), length() };
 }
 
 InputStream& operator>>(InputStream& stream, String& string)
