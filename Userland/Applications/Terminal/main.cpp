@@ -18,7 +18,6 @@
 #include <LibGUI/CheckBox.h>
 #include <LibGUI/Event.h>
 #include <LibGUI/FontPicker.h>
-#include <LibGUI/GroupBox.h>
 #include <LibGUI/Icon.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -28,12 +27,10 @@
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
-#include <LibGfx/Font.h>
 #include <LibGfx/Palette.h>
 #include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <pty.h>
 #include <pwd.h>
 #include <serenity.h>
@@ -43,7 +40,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
-#include <sys/select.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
