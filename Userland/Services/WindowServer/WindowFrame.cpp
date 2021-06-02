@@ -34,20 +34,20 @@ static Gfx::WindowTheme::WindowType to_theme_window_type(WindowType type)
     }
 }
 
-static Gfx::Bitmap* s_minimize_icon;
-static Gfx::Bitmap* s_maximize_icon;
-static Gfx::Bitmap* s_restore_icon;
-static Gfx::Bitmap* s_close_icon;
-static Gfx::Bitmap* s_close_modified_icon;
+static RefPtr<Gfx::Bitmap> s_minimize_icon;
+static RefPtr<Gfx::Bitmap> s_maximize_icon;
+static RefPtr<Gfx::Bitmap> s_restore_icon;
+static RefPtr<Gfx::Bitmap> s_close_icon;
+static RefPtr<Gfx::Bitmap> s_close_modified_icon;
 
 static String s_last_title_button_icons_path;
 static int s_last_title_button_icons_scale;
 
-static Gfx::Bitmap* s_active_window_shadow;
-static Gfx::Bitmap* s_inactive_window_shadow;
-static Gfx::Bitmap* s_menu_shadow;
-static Gfx::Bitmap* s_taskbar_shadow;
-static Gfx::Bitmap* s_tooltip_shadow;
+static RefPtr<Gfx::Bitmap> s_active_window_shadow;
+static RefPtr<Gfx::Bitmap> s_inactive_window_shadow;
+static RefPtr<Gfx::Bitmap> s_menu_shadow;
+static RefPtr<Gfx::Bitmap> s_taskbar_shadow;
+static RefPtr<Gfx::Bitmap> s_tooltip_shadow;
 static String s_last_active_window_shadow_path;
 static String s_last_inactive_window_shadow_path;
 static String s_last_menu_shadow_path;
@@ -119,63 +119,48 @@ void WindowFrame::reload_config()
     if (!s_minimize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-minimize.png");
-        if (s_minimize_icon)
-            s_minimize_icon->unref();
-        if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
-            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png", icons_scale).leak_ref();
+        if (!(s_minimize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale)))
+            s_minimize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/downward-triangle.png", icons_scale);
         full_path.clear();
     }
     if (!s_maximize_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-maximize.png");
-        if (s_maximize_icon)
-            s_maximize_icon->unref();
-        if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
-            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png", icons_scale).leak_ref();
+        if (!(s_maximize_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale)))
+            s_maximize_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/upward-triangle.png", icons_scale);
         full_path.clear();
     }
     if (!s_restore_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-restore.png");
-        if (s_restore_icon)
-            s_restore_icon->unref();
-        if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
-            s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png", icons_scale).leak_ref();
+        if (!(s_restore_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale)))
+            s_restore_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-restore.png", icons_scale);
         full_path.clear();
     }
     if (!s_close_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-close.png");
-        if (s_close_icon)
-            s_close_icon->unref();
-        if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
-            s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale).leak_ref();
+        if (!(s_close_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale)))
+            s_close_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close.png", icons_scale);
         full_path.clear();
     }
     if (!s_close_modified_icon || s_last_title_button_icons_path != icons_path || s_last_title_button_icons_scale != icons_scale) {
         full_path.append(icons_path);
         full_path.append("window-close-modified.png");
-        if (s_close_modified_icon)
-            s_close_modified_icon->unref();
-        if (!(s_close_modified_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale).leak_ref()))
-            s_close_modified_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close-modified.png", icons_scale).leak_ref();
+        if (!(s_close_modified_icon = Gfx::Bitmap::load_from_file(full_path.to_string(), icons_scale)))
+            s_close_modified_icon = Gfx::Bitmap::load_from_file("/res/icons/16x16/window-close-modified.png", icons_scale);
         full_path.clear();
     }
 
     s_last_title_button_icons_path = icons_path;
     s_last_title_button_icons_scale = icons_scale;
 
-    auto load_shadow = [](const String& path, String& last_path, Gfx::Bitmap*& shadow_bitmap) {
+    auto load_shadow = [](const String& path, String& last_path, RefPtr<Gfx::Bitmap>& shadow_bitmap) {
         if (path.is_empty()) {
             last_path = String::empty();
-            if (shadow_bitmap) {
-                shadow_bitmap->unref();
-                shadow_bitmap = nullptr;
-            }
+            shadow_bitmap = nullptr;
         } else if (!shadow_bitmap || shadow_bitmap->scale() != s_last_title_button_icons_scale || last_path != path) {
-            if (shadow_bitmap)
-                shadow_bitmap->unref();
-            shadow_bitmap = Gfx::Bitmap::load_from_file(path, s_last_title_button_icons_scale).leak_ref();
+            shadow_bitmap = Gfx::Bitmap::load_from_file(path, s_last_title_button_icons_scale);
             if (shadow_bitmap)
                 last_path = path;
             else
@@ -399,16 +384,16 @@ void WindowFrame::render_to_cache()
 
     m_has_alpha_channel = Gfx::WindowTheme::current().frame_uses_alpha(window_state_for_theme(), WindowManager::the().palette());
 
-    static Gfx::Bitmap* s_tmp_bitmap;
+    static RefPtr<Gfx::Bitmap> s_tmp_bitmap;
     auto frame_rect = rect();
     auto total_frame_rect = frame_rect;
     Gfx::Bitmap* shadow_bitmap = inflate_for_shadow(total_frame_rect, m_shadow_offset);
     auto window_rect = m_window.rect();
     auto scale = Screen::the().scale_factor();
     if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(total_frame_rect.size()) || s_tmp_bitmap->scale() != scale) {
-        if (s_tmp_bitmap)
-            s_tmp_bitmap->unref();
-        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, total_frame_rect.size(), scale).leak_ref();
+        // Explicitly clear the old bitmap first so this works on machines with very little memory
+        s_tmp_bitmap = nullptr;
+        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, total_frame_rect.size(), scale);
         if (!s_tmp_bitmap) {
             dbgln("Could not create bitmap of size {}", total_frame_rect.size());
             return;
