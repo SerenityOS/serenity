@@ -46,6 +46,7 @@ protected:
     virtual void mousemove_event(MouseEvent&) override;
     virtual void mouseup_event(MouseEvent&) override;
     virtual void keydown_event(KeyEvent&) override;
+    virtual void keyup_event(KeyEvent&) override;
     virtual void enter_event(Core::Event&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void change_event(Event&) override;
