@@ -74,7 +74,7 @@ GUI::Variant SamplesModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
             return event.tid;
 
         if (index.column() == Column::ExecutableName) {
-            if (auto* process = m_profile.find_process(event.pid, event.timestamp))
+            if (auto* process = m_profile.find_process(event.pid, event.serial))
                 return process->executable;
             return "";
         }

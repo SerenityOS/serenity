@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     for (auto& process : profile->processes()) {
         bool matching_event_found = false;
         for (auto& event : profile->events()) {
-            if (event.pid == process.pid && process.valid_at(event.timestamp)) {
+            if (event.pid == process.pid && process.valid_at(event.serial)) {
                 matching_event_found = true;
                 break;
             }
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
         auto& timeline_header = timeline_header_container->add<TimelineHeader>(*profile, process);
         timeline_header.set_shrink_to_fit(true);
         timeline_header.on_selection_change = [&](bool selected) {
-            auto end_valid = process.end_valid == 0 ? profile->last_timestamp() : process.end_valid;
+            auto end_valid = process.end_valid == EventSerialNumber {} ? EventSerialNumber::max_valid_serial() : process.end_valid;
             if (selected)
                 profile->add_process_filter(process.pid, process.start_valid, end_valid);
             else
