@@ -34,6 +34,7 @@ private:
     void tick();
     void reset();
     void game_over();
+    bool ready_to_start() const;
 
     struct Bug {
         const float x { 50 };
@@ -99,6 +100,7 @@ private:
     Optional<float> m_highscore;
     float m_last_score;
     float m_difficulty;
+    float m_restart_cooldown;
 };
 
 }

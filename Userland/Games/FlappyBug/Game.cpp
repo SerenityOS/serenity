@@ -20,6 +20,7 @@ void Game::reset()
     m_active = false;
     m_last_score = m_difficulty;
     m_difficulty = 1;
+    m_restart_cooldown = 3;
     m_bug.reset();
     m_obstacle.reset();
 }
@@ -30,6 +31,19 @@ void Game::game_over()
         m_highscore = m_difficulty;
     }
     reset();
+}
+
+bool Game::ready_to_start() const
+{
+    if (!m_highscore.has_value()) {
+        return true;
+    }
+
+    if (m_restart_cooldown <= 0) {
+        return true;
+    }
+
+    return false;
 }
 
 void Game::timer_event(Core::TimerEvent&)
@@ -51,7 +65,8 @@ void Game::paint_event(GUI::PaintEvent& event)
     if (m_active) {
         painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::Green);
     } else if (m_highscore.has_value()) {
-        painter.draw_text(rect(), String::formatted("Your score: {:.0}\nHighscore: {:.0}\nPress any key to start", m_last_score, m_highscore.value()), Gfx::TextAlignment::Center, Color::Green);
+        auto message = String::formatted("Your score: {:.0}\nHighscore: {:.0}\n\n{}", m_last_score, m_highscore.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
+        painter.draw_text(rect(), message, Gfx::TextAlignment::Center, Color::Green);
     } else {
         painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::Green);
     }
@@ -64,8 +79,12 @@ void Game::keydown_event(GUI::KeyEvent& event)
         GUI::Application::the()->quit();
         break;
     default:
-        m_active = true;
-        m_bug.flap();
+        if (ready_to_start()) {
+            m_active = true;
+        }
+        if (m_active) {
+            m_bug.flap();
+        }
         break;
     }
 }
@@ -91,6 +110,8 @@ void Game::tick()
             m_obstacle.reset();
         }
     }
+
+    m_restart_cooldown -= 1.0f / 16.0f;
 
     update();
 }
