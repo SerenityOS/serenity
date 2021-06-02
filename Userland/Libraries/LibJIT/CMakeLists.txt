@@ -1,4 +1,5 @@
 set(SOURCES
+    X86Assembler.cpp
     InstructionBuffer.cpp
 )
 

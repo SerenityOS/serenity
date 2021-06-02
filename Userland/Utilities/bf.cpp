@@ -8,6 +8,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <LibJIT/InstructionBuffer.h>
+#include <LibJIT/X86Assembler.h>
 #include <unistd.h>
 
 enum class Instruction : u8 {
@@ -182,40 +183,26 @@ static char platform_getchar()
 // edi = &putchar
 void BrainFuckJIT::parse_source_file(NonnullRefPtr<Core::File> file)
 {
+    JIT::X86Assembler assembler(m_buffer);
     m_program = ::parse_source_file(file);
     m_program_start = m_buffer.get_current_offset();
+    auto const memory_register = X86::RegisterEBX;
+    auto const putchar_register = X86::RegisterEDI;
+    auto const getchar_register = X86::RegisterEDX;
+    auto const scratch_register8 = X86::RegisterCL;
+    auto const scratch_register32 = X86::RegisterECX;
+
     // Initialize the data array
     m_data.resize(30000);
     for (auto& c : m_data)
         c = 0;
-
     void* start_of_memory = &m_data[0];
 
     // Function prelude
-    m_buffer.append_bytes({
-        // push %ebp
-        0x55,
-        // mov %ebp, %esp
-        0x89,
-        0xe5,
-        // push %ebx
-        0x53,
-        // push %edi
-        0x57,
-        // mov %ebx, start_of_memory
-        0xbb,
-    });
-    m_buffer.append_le(bit_cast<u32>(start_of_memory));
-    m_buffer.append_bytes({
-        // mov %edi, putchar
-        0xbf,
-    });
-    m_buffer.append_le(bit_cast<u32>(&platform_putchar));
-    m_buffer.append_bytes({
-        // mov %edx, getchar
-        0xba,
-    });
-    m_buffer.append_le(bit_cast<u32>(&platform_getchar));
+    assembler.prelude();
+    assembler.move<32>(JIT::RegisterIndex(memory_register), JIT::Immediate(bit_cast<u32>(start_of_memory)));
+    assembler.move<32>(JIT::RegisterIndex(putchar_register), JIT::Immediate(bit_cast<u32>(&platform_putchar)));
+    assembler.move<32>(JIT::RegisterIndex(getchar_register), JIT::Immediate(bit_cast<u32>(&platform_getchar)));
 
     Vector<JIT::JITLabel> loop_starts;
     Vector<JIT::JITPatchLocation> loop_start_patch_locations;
@@ -223,119 +210,65 @@ void BrainFuckJIT::parse_source_file(NonnullRefPtr<Core::File> file)
         auto instruction = m_program[i];
         switch (instruction) {
         case Instruction::IncrementPointer: {
-            // inc %ebx
-            m_buffer.append_bytes({ 0x43 });
+            assembler.inc_register32(memory_register);
             break;
         }
         case Instruction::DecrementPointer: {
-            // dec %ebx
-            m_buffer.append_bytes({ 0x4b });
+            assembler.dec_register32(memory_register);
             break;
         }
         case Instruction::IncrementCell: {
-            m_buffer.append_bytes({
-                // mov %cl, [%ebx]
-                0x8a,
-                0x0b,
-                // inc %cl
-                0xfe,
-                0xc1,
-                // mov [%ebx], %cl
-                0x88,
-                0x0b,
-            });
+            assembler.move<8>(JIT::RegisterIndex(scratch_register8), JIT::DereferencedRegisterIndex(memory_register));
+            assembler.inc_register8(scratch_register8);
+            assembler.move<8>(JIT::DereferencedRegisterIndex(memory_register), JIT::RegisterIndex(scratch_register8));
             break;
         }
         case Instruction::DecrementCell: {
-            m_buffer.append_bytes({
-                // mov %cl, [%ebx]
-                0x8a,
-                0x0b,
-                // dec %cl
-                0xfe,
-                0xc9,
-                // mov [%ebx], %cl
-                0x88,
-                0x0b,
-            });
+            assembler.move<8>(JIT::RegisterIndex(scratch_register8), JIT::DereferencedRegisterIndex(memory_register));
+            assembler.dec_register8(scratch_register8);
+            assembler.move<8>(JIT::DereferencedRegisterIndex(memory_register), JIT::RegisterIndex(scratch_register8));
             break;
         }
         case Instruction::PutChar: {
-            m_buffer.append_bytes({
-                // push %edx
-                0x52,
-                // mov %cl, [%ebx]
-                0x8a,
-                0x0b,
-                // push %ecx
-                0x51,
-                // call %edi
-                0xff,
-                0xd7,
-                // add %esp, 4
-                0x83,
-                0xc4,
-                0x04,
-                // pop %edx
-                0x5a,
-            });
+            assembler.push_register32(getchar_register);
+            assembler.move<8>(JIT::RegisterIndex(scratch_register8), JIT::DereferencedRegisterIndex(memory_register));
+            assembler.push_register32(scratch_register32);
+            assembler.call(putchar_register);
+            assembler.add_register32_imm32(X86::RegisterESP, 4);
+            assembler.pop_register32(getchar_register);
             break;
         }
         case Instruction::GetChar: {
-            m_buffer.append_bytes({
-                // push %edx
-                0x52,
-                // call %edx
-                0xff,
-                0xd2,
-                // mov [%ebx], %al
-                0x88,
-                0x03,
-                // pop %edx
-                0x5a,
-            });
+            assembler.push_register32(getchar_register);
+            assembler.call(getchar_register);
+            assembler.move<8>(JIT::DereferencedRegisterIndex(memory_register), JIT::RegisterIndex(X86::RegisterAL));
+            assembler.pop_register32(getchar_register);
             break;
         }
         case Instruction::BeginLoop: {
-            // What we do here is:
-            // Store the current offset in loop_starts
-
-            // load cell
-            // check if cell is 0
-            // if it is, jump to 0x00000000 (patched later in the code generator)
+            // 1. Load cell
+            // 2. Check if cell is 0
+            // 3. If it is, jump to 0x00000000 (patched later in the code generator to the end of this loop)
             loop_starts.append(m_buffer.get_current_offset());
-            m_buffer.append_bytes({
-                // mov %cl, [%ebx]
-                0x8a,
-                0x0b,
-                // test cl, cl
-                0x84,
-                0xc9,
-            });
-            loop_start_patch_locations.append(m_buffer.get_relative_patch_location(2));
-            m_buffer.append_bytes({
-                // jz 0x00000000
-                0x0f,
-                0x84,
-            });
-            m_buffer.append_bytes({ 0x00, 0x00, 0x00, 0x00 });
+            assembler.move<8>(JIT::RegisterIndex(scratch_register8), JIT::DereferencedRegisterIndex(memory_register));
+            assembler.test<8>(JIT::RegisterIndex(scratch_register8), JIT::RegisterIndex(scratch_register8));
+            auto address_patch_location = assembler.jump_relative_on_condition(JIT::EqualityCondition::Equal, 0);
+            loop_start_patch_locations.append(address_patch_location);
             break;
         }
         case Instruction::EndLoop: {
+            // Determine start of loop
+            // Generate unconditional backwards jump
+            // Patch branch instruction at start of loop to point past the end of it
             if (loop_starts.is_empty()) {
                 outln("Error: Unmatched ]");
                 exit(1);
             }
-            auto loop_start = loop_starts.take_last();
-            auto forward_jump_loc = loop_start_patch_locations.take_last();
-            outln("Got from stack: loop_start = {:x}, forward_jump_loc = {:x}", loop_start.value(), forward_jump_loc.value());
-            auto backwards_jump_start_address = m_buffer.get_current_offset();
-            m_buffer.append_bytes({
-                // jmp (start of loop)
-                0xe9,
-            });
-            m_buffer.append_le((u32)(loop_start - backwards_jump_start_address - 5).value());
-            auto end_of_loop = m_buffer.get_current_offset();
+            auto const loop_start = loop_starts.take_last();
+            auto const forward_jump_loc = loop_start_patch_locations.take_last();
+            auto const backwards_jump_start_address = m_buffer.get_current_offset();
+            assembler.jump_relative((loop_start - backwards_jump_start_address).value());
+            auto const end_of_loop = m_buffer.get_current_offset();
             m_buffer.write_le(forward_jump_loc, (u32)(end_of_loop.value() - forward_jump_loc.value() - 4));
             break;
         }
@@ -346,19 +279,8 @@ void BrainFuckJIT::parse_source_file(NonnullRefPtr<Core::File> file)
         exit(1);
     }
     // Function epilogue
-    m_buffer.append_bytes({
-        // mov %esp, %ebp
-        0x89,
-        0xec,
-        // pop ebp
-        0x5d,
-        // pop %ebi
-        0x5f,
-        // pop %ebx
-        0x5b,
-        // ret
-        0xc3,
-    });
+    assembler.epilogue();
+    assembler.ret();
 }
 
 void BrainFuckJIT::exec()
