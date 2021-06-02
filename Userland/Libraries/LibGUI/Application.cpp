@@ -27,7 +27,13 @@ public:
     void set_tooltip(const String& tooltip)
     {
         m_label->set_text(Gfx::parse_ampersand_string(tooltip));
-        set_rect(rect().x(), rect().y(), m_label->min_width() + 10, m_label->font().glyph_height() + 8);
+        int tooltip_width = m_label->min_width() + 10;
+
+        Gfx::IntRect desktop_rect = Desktop::the().rect();
+        if (tooltip_width > desktop_rect.width())
+            tooltip_width = desktop_rect.width();
+
+        set_rect(rect().x(), rect().y(), tooltip_width, m_label->font().glyph_height() + 8);
     }
 
 private:
@@ -196,6 +202,8 @@ void Application::tooltip_show_timer_did_fire()
     if (adjusted_pos.y() + m_tooltip_window->height() >= desktop_rect.height() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -(m_tooltip_window->height() * 2));
     }
+    if (adjusted_pos.x() < 0)
+        adjusted_pos.set_x(0);
 
     m_tooltip_window->move_to(adjusted_pos);
     m_tooltip_window->show();
