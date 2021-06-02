@@ -23,7 +23,10 @@ public:
     }
     FlyString(const String&);
     FlyString(const StringView&);
-    FlyString(const char*);
+    FlyString(const char* string)
+        : FlyString(static_cast<String>(string))
+    {
+    }
 
     FlyString& operator=(const FlyString& other)
     {
