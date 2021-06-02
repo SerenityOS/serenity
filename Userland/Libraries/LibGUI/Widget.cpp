@@ -726,6 +726,8 @@ void Widget::set_visible(bool visible)
         parent->invalidate_layout();
     if (m_visible)
         update();
+    if (!m_visible && is_focused())
+        set_focus(false);
 
     if (m_visible) {
         ShowEvent e;
