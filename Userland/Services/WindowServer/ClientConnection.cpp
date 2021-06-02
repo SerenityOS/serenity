@@ -363,6 +363,10 @@ Messages::WindowServer::SetWindowRectResponse ClientConnection::set_window_rect(
         dbgln("ClientConnection: Ignoring SetWindowRect request for fullscreen window");
         return nullptr;
     }
+    if (rect.width() > INT16_MAX || rect.height() > INT16_MAX) {
+        did_misbehave(String::formatted("SetWindowRect: Bad window sizing(width={}, height={}), dimension exceeds INT16_MAX", rect.width(), rect.height()).characters());
+        return nullptr;
+    }
 
     if (rect.location() != window.rect().location()) {
         window.set_default_positioned(false);
