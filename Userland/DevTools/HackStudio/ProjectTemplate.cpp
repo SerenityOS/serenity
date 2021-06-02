@@ -8,11 +8,9 @@
 #include <AK/LexicalPath.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibCore/ArgsParser.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
-#include <assert.h>
 #include <fcntl.h>
 #include <spawn.h>
 #include <sys/stat.h>
