@@ -34,5 +34,11 @@ wchar_t* wcstok(wchar_t*, const wchar_t*, wchar_t**);
 long wcstol(const wchar_t*, wchar_t**, int);
 long long wcstoll(const wchar_t*, wchar_t**, int);
 wint_t btowc(int c);
+size_t mbrtowc(wchar_t*, const char*, size_t, mbstate_t*);
+size_t mbrlen(const char*, size_t, mbstate_t*);
+size_t wcrtomb(char*, wchar_t, mbstate_t*);
+int wcscoll(const wchar_t*, const wchar_t*);
+int wctob(wint_t);
+int mbsinit(const mbstate_t*);
 
 __END_DECLS

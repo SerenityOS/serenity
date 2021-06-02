@@ -159,4 +159,40 @@ wint_t btowc(int)
     dbgln("FIXME: Implement btowc()");
     TODO();
 }
+
+size_t mbrtowc(wchar_t*, const char*, size_t, mbstate_t*)
+{
+    dbgln("FIXME: Implement mbrtowc()");
+    TODO();
+}
+
+size_t mbrlen(const char*, size_t, mbstate_t*)
+{
+    dbgln("FIXME: Implement mbrlen()");
+    TODO();
+}
+
+size_t wcrtomb(char*, wchar_t, mbstate_t*)
+{
+    dbgln("FIXME: Implement wcrtomb()");
+    TODO();
+}
+
+int wcscoll(const wchar_t*, const wchar_t*)
+{
+    dbgln("FIXME: Implement wcscoll()");
+    TODO();
+}
+
+int wctob(wint_t)
+{
+    dbgln("FIXME: Implement wctob()");
+    TODO();
+}
+
+int mbsinit(const mbstate_t*)
+{
+    dbgln("FIXME: Implement mbsinit()");
+    TODO();
+}
 }
