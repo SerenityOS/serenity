@@ -60,7 +60,7 @@ int main(int argc, char** argv)
 
     for (auto& value : sorted_regions) {
         auto& map = value.as_object();
-        auto address = map.get("address").to_int();
+        auto address = map.get("address").to_uint();
         auto size = map.get("size").to_string();
 
         auto access = String::formatted("{}{}{}{}{}",
