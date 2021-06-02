@@ -409,7 +409,13 @@ void WindowFrame::render_to_cache()
         if (s_tmp_bitmap)
             s_tmp_bitmap->unref();
         s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, total_frame_rect.size(), scale).leak_ref();
+        if (!s_tmp_bitmap) {
+            dbgln("Could not create bitmap of size {}", total_frame_rect.size());
+            return;
+        }
     }
+
+    VERIFY(s_tmp_bitmap);
 
     auto top_bottom_height = total_frame_rect.height() - window_rect.height();
     auto left_right_width = total_frame_rect.width() - window_rect.width();
