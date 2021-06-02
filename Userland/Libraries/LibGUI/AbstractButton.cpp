@@ -146,11 +146,27 @@ void AbstractButton::leave_event(Core::Event&)
 void AbstractButton::keydown_event(KeyEvent& event)
 {
     if (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space) {
-        click(event.modifiers());
+        m_being_pressed = true;
+        update();
+        event.accept();
+        return;
+    } else if (m_being_pressed && event.key() == KeyCode::Key_Escape) {
+        m_being_pressed = false;
+        update();
         event.accept();
         return;
     }
     Widget::keydown_event(event);
+}
+
+void AbstractButton::keyup_event(KeyEvent& event)
+{
+    if (m_being_pressed && (event.key() == KeyCode::Key_Return || event.key() == KeyCode::Key_Space)) {
+        click(event.modifiers());
+        event.accept();
+        return;
+    }
+    Widget::keyup_event(event);
 }
 
 void AbstractButton::paint_text(Painter& painter, const Gfx::IntRect& rect, const Gfx::Font& font, Gfx::TextAlignment text_alignment)
