@@ -18,6 +18,9 @@ __BEGIN_DECLS
 typedef __WINT_TYPE__ wint_t;
 typedef unsigned long int wctype_t;
 
+typedef struct {
+} mbstate_t;
+
 size_t wcslen(const wchar_t*);
 wchar_t* wcscpy(wchar_t*, const wchar_t*);
 wchar_t* wcsncpy(wchar_t*, const wchar_t*, size_t);
