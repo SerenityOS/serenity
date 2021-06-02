@@ -393,6 +393,13 @@ int main(int argc, char** argv)
 
     window->set_menubar(menubar);
 
+    window->on_close = [&]() {
+        if (find_window)
+            find_window->close();
+        if (settings_window)
+            settings_window->close();
+    };
+
     if (unveil("/res", "r") < 0) {
         perror("unveil");
         return 1;
