@@ -140,6 +140,9 @@ void Parser::parse_untagged()
         } else if (data_type.matches("FETCH")) {
             auto fetch_response = parse_fetch_response();
             m_response.data().add_fetch_response(number.value(), move(fetch_response));
+        } else if (data_type.matches("EXPUNGE")) {
+            m_response.data().add_expunged(number.value());
+            consume("\r\n");
         }
         return;
     }
@@ -149,6 +152,9 @@ void Parser::parse_untagged()
     } else if (try_consume("LIST")) {
         auto item = parse_list_item();
         m_response.data().add_list_item(move(item));
+    } else if (try_consume("LSUB")) {
+        auto item = parse_list_item();
+        m_response.data().add_lsub_item(move(item));
     } else if (try_consume("FLAGS")) {
         consume(" ");
         auto flags = parse_list(+[](StringView x) { return String(x); });
