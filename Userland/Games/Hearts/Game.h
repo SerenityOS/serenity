@@ -44,6 +44,7 @@ private:
     void continue_game_after_delay(int interval_ms = 750);
     void advance_game();
     size_t pick_card(Player& player);
+    size_t pick_first_card_ltr(Player& player);
     size_t player_index(Player& player);
     Player& current_player();
     bool game_ended() const { return m_trick_number == 13; }
