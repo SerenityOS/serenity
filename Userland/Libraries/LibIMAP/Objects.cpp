@@ -74,7 +74,7 @@ String FetchCommand::DataItem::serialize() const
         return "UID";
     case DataItemType::PeekBody:
         TODO();
-    case DataItemType::BodySection:
+    case DataItemType::BodySection: {
         StringBuilder sb;
         sb.appendff("BODY[{}]", section.value().serialize());
         if (partial_fetch) {
@@ -82,6 +82,9 @@ String FetchCommand::DataItem::serialize() const
         }
 
         return sb.build();
+    }
+    case DataItemType::BodyStructure:
+        return "BODYSTRUCTURE";
     }
     VERIFY_NOT_REACHED();
 }
