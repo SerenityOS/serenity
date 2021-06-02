@@ -40,10 +40,6 @@ Profile::Profile(Vector<Process> processes, Vector<Event> events)
     m_model = ProfileModel::create(*this);
     m_samples_model = SamplesModel::create(*this);
 
-    for (auto& event : m_events) {
-        m_deepest_stack_depth = max((u32)event.frames.size(), m_deepest_stack_depth);
-    }
-
     rebuild_tree();
 }
 
