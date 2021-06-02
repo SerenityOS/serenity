@@ -128,14 +128,24 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "FETCH"sv.bytes();
     case CommandType::Store:
         return "STORE"sv.bytes();
+    case CommandType::Copy:
+        return "COPY"sv.bytes();
+    case CommandType::Create:
+        return "CREATE"sv.bytes();
+    case CommandType::Delete:
+        return "DELETE"sv.bytes();
     case CommandType::Search:
         return "SEARCH"sv.bytes();
     case CommandType::UIDFetch:
         return "UID FETCH"sv.bytes();
     case CommandType::UIDStore:
         return "UID STORE"sv.bytes();
+    case CommandType::UIDCopy:
+        return "UID COPY"sv.bytes();
     case CommandType::UIDSearch:
         return "UID SEARCH"sv.bytes();
+    case CommandType::Rename:
+        return "RENAME"sv.bytes();
     case CommandType::Status:
         return "STATUS"sv.bytes();
     }
@@ -254,6 +264,18 @@ void Client::send_next_command()
     send_raw(buffer);
     m_expecting_response = true;
 }
+RefPtr<Promise<Optional<SolidResponse>>> Client::create_mailbox(StringView name)
+{
+    auto command = Command { CommandType::Create, m_current_command, { name } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::delete_mailbox(StringView name)
+{
+    auto command = Command { CommandType::Delete, m_current_command, { name } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
 RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<String> const& flags, bool uid)
 {
     StringBuilder data_item_name;
@@ -338,6 +360,19 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vect
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
+RefPtr<Promise<Optional<SolidResponse>>> Client::rename(StringView from, StringView to)
+{
+    auto command = Command { CommandType::Rename, m_current_command, { from, to } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+RefPtr<Promise<Optional<SolidResponse>>> Client::copy(Sequence sequence_set, StringView name, bool uid)
+{
+    auto command = Command {
+        uid ? CommandType::UIDCopy : CommandType::Copy, m_current_command, { sequence_set.serialize(), name }
+    };
+
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
 void Client::close()
 {
     if (m_tls) {
