@@ -47,10 +47,15 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_visualization = m_player_view->add<BarsVisualizationWidget>();
 
+    // Set a temporary value for total samples.
+    // This value will be set properly when we load a new file.
+    const int total_samples = this->manager().total_length() * 44100;
+
     m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
     m_playback_progress_slider->set_min(0);
-    m_playback_progress_slider->set_max(this->manager().total_length() * 44100); //this value should be set when we load a new file
+    m_playback_progress_slider->set_max(total_samples);
+    m_playback_progress_slider->set_page_step(total_samples / 10);
     m_playback_progress_slider->on_knob_released = [&](int value) {
         this->manager().seek(value);
     };
@@ -139,7 +144,9 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
         int samples_played = client_connection().get_played_samples() + this->manager().last_seek();
         int current_second = samples_played / 44100;
         timestamp_label.set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", current_second / 3600, current_second / 60, current_second % 60));
-        m_playback_progress_slider->set_value(samples_played);
+        if (!m_playback_progress_slider->mouse_is_down()) {
+            m_playback_progress_slider->set_value(samples_played);
+        }
 
         dynamic_cast<Visualization*>(m_visualization.ptr())->set_buffer(this->manager().current_buffer());
         dynamic_cast<Visualization*>(m_visualization.ptr())->set_samplerate(loaded_file_samplerate());
@@ -191,11 +198,11 @@ void SoundPlayerWidgetAdvancedView::open_file(StringView path)
     }
     m_window.set_title(String::formatted("{} - Sound Player", loader->file()->filename()));
     m_playback_progress_slider->set_max(loader->total_samples());
+    m_playback_progress_slider->set_page_step(loader->total_samples() / 10);
     m_playback_progress_slider->set_enabled(true);
     m_play_button->set_enabled(true);
     m_play_button->set_icon(*m_pause_icon);
     m_stop_button->set_enabled(true);
-    m_playback_progress_slider->set_max(loader->total_samples());
     manager().set_loader(move(loader));
     set_has_loaded_file(true);
     set_loaded_file_samplerate(loader->sample_rate());
