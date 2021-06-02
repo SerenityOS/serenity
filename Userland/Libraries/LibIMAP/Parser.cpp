@@ -225,41 +225,14 @@ FetchResponseData Parser::parse_fetch_response()
     while (!try_consume(")")) {
         auto data_item = parse_fetch_data_item();
         switch (data_item.type) {
-        case FetchCommand::DataItemType::Envelope: {
+        case FetchCommand::DataItemType::BodyStructure: {
             consume(" (");
-            auto date = parse_nstring();
-            consume(" ");
-            auto subject = parse_nstring();
-            consume(" ");
-            auto from = parse_address_list();
-            consume(" ");
-            auto sender = parse_address_list();
-            consume(" ");
-            auto reply_to = parse_address_list();
-            consume(" ");
-            auto to = parse_address_list();
-            consume(" ");
-            auto cc = parse_address_list();
-            consume(" ");
-            auto bcc = parse_address_list();
-            consume(" ");
-            auto in_reply_to = parse_nstring();
-            consume(" ");
-            auto message_id = parse_nstring();
-            consume(")");
-            Envelope envelope = {
-                date.has_value() ? Optional<String>(date.value()) : Optional<String>(),
-                subject.has_value() ? Optional<String>(subject.value()) : Optional<String>(),
-                from,
-                sender,
-                reply_to,
-                to,
-                cc,
-                bcc,
-                in_reply_to.has_value() ? Optional<String>(in_reply_to.value()) : Optional<String>(),
-                message_id.has_value() ? Optional<String>(message_id.value()) : Optional<String>(),
-            };
-            fetch_response.set_envelope(move(envelope));
+            auto structure = parse_body_structure();
+            fetch_response.set_body_structure(move(structure));
+            break;
+        }
+        case FetchCommand::DataItemType::Envelope: {
+            fetch_response.set_envelope(parse_envelope());
             break;
         }
         case FetchCommand::DataItemType::Flags: {
@@ -296,6 +269,236 @@ FetchResponseData Parser::parse_fetch_response()
     }
     consume("\r\n");
     return fetch_response;
+}
+Envelope Parser::parse_envelope()
+{
+    consume(" (");
+    auto date = parse_nstring();
+    consume(" ");
+    auto subject = parse_nstring();
+    consume(" ");
+    auto from = parse_address_list();
+    consume(" ");
+    auto sender = parse_address_list();
+    consume(" ");
+    auto reply_to = parse_address_list();
+    consume(" ");
+    auto to = parse_address_list();
+    consume(" ");
+    auto cc = parse_address_list();
+    consume(" ");
+    auto bcc = parse_address_list();
+    consume(" ");
+    auto in_reply_to = parse_nstring();
+    consume(" ");
+    auto message_id = parse_nstring();
+    consume(")");
+    Envelope envelope = {
+        date.has_value() ? AK::Optional<String>(date.value()) : AK::Optional<String>(),
+        subject.has_value() ? AK::Optional<String>(subject.value()) : AK::Optional<String>(),
+        from,
+        sender,
+        reply_to,
+        to,
+        cc,
+        bcc,
+        in_reply_to.has_value() ? AK::Optional<String>(in_reply_to.value()) : AK::Optional<String>(),
+        message_id.has_value() ? AK::Optional<String>(message_id.value()) : AK::Optional<String>(),
+    };
+    return envelope;
+}
+BodyStructure Parser::parse_body_structure()
+{
+    if (!at_end() && m_buffer[position] == '(') {
+        auto data = MultiPartBodyStructureData();
+        while (try_consume("(")) {
+            auto child = parse_body_structure();
+            data.bodies.append(make<BodyStructure>(move(child)));
+        }
+        consume(" ");
+        data.media_type = parse_string();
+
+        if (!try_consume(")")) {
+            consume(" ");
+            data.params = try_consume("NIL") ? Optional<HashMap<String, String>>() : parse_body_fields_params();
+            if (!try_consume(")")) {
+                consume(" ");
+                if (!try_consume("NIL")) {
+                    data.disposition = { parse_disposition() };
+                }
+
+                if (!try_consume(")")) {
+                    consume(" ");
+                    if (!try_consume("NIL")) {
+                        data.langs = { parse_langs() };
+                    }
+
+                    if (!try_consume(")")) {
+                        consume(" ");
+                        data.location = try_consume("NIL") ? Optional<String>() : Optional<String>(parse_string());
+
+                        if (!try_consume(")")) {
+                            consume(" ");
+                            Vector<BodyExtension> extensions;
+                            while (!try_consume(")")) {
+                                extensions.append(parse_body_extension());
+                                try_consume(" ");
+                            }
+                            data.extensions = { move(extensions) };
+                        }
+                    }
+                }
+            }
+        }
+
+        return BodyStructure(move(data));
+    } else {
+        return parse_one_part_body();
+    }
+}
+BodyStructure Parser::parse_one_part_body()
+{
+    auto type = parse_string();
+    consume(" ");
+    auto subtype = parse_string();
+    consume(" ");
+    if (type.equals_ignoring_case("TEXT")) {
+        // body-type-text
+        auto params = parse_body_fields_params();
+        consume(" ");
+        auto id = parse_nstring();
+        consume(" ");
+        auto description = parse_nstring();
+        consume(" ");
+        auto encoding = parse_string();
+        consume(" ");
+        auto num_octets = parse_number();
+        consume(" ");
+        auto num_lines = parse_number();
+
+        auto data = BodyStructureData {
+            type,
+            subtype,
+            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
+            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            encoding,
+            params,
+            num_octets,
+            num_lines,
+            {}
+        };
+
+        if (!try_consume(")")) {
+            consume(" ");
+            auto md5 = parse_nstring();
+            if (md5.has_value())
+                data.md5 = { md5.value() };
+            if (!try_consume(")")) {
+                consume(" ");
+                if (!try_consume("NIL")) {
+                    auto disposition = parse_disposition();
+                    data.disposition = { disposition };
+                }
+
+                if (!try_consume(")")) {
+                    consume(" ");
+                    if (!try_consume("NIL")) {
+                        data.langs = { parse_langs() };
+                    }
+
+                    if (!try_consume(")")) {
+                        consume(" ");
+                        auto location = parse_nstring();
+                        if (location.has_value())
+                            data.location = { location.value() };
+
+                        Vector<BodyExtension> extensions;
+                        while (!try_consume(")")) {
+                            extensions.append(parse_body_extension());
+                            try_consume(" ");
+                        }
+                        data.extensions = { move(extensions) };
+                    }
+                }
+            }
+        }
+
+        return BodyStructure(move(data));
+    } else if (type.equals_ignoring_case("MESSAGE") && subtype.equals_ignoring_case("RFC822")) {
+        // body-type-message
+        auto params = parse_body_fields_params();
+        consume(" ");
+        auto id = parse_nstring();
+        consume(" ");
+        auto description = parse_nstring();
+        consume(" ");
+        auto encoding = parse_string();
+        consume(" ");
+        auto num_octets = parse_number();
+        consume(" ");
+        auto envelope = parse_envelope();
+
+        BodyStructureData data {
+            type,
+            subtype,
+            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
+            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            encoding,
+            params,
+            num_octets,
+            0,
+            envelope
+        };
+
+        return BodyStructure(move(data));
+    } else {
+        // body-type-basic
+        auto params = parse_body_fields_params();
+        consume(" ");
+        auto id = parse_nstring();
+        consume(" ");
+        auto description = parse_nstring();
+        consume(" ");
+        auto encoding = parse_string();
+        consume(" ");
+        auto num_octets = parse_number();
+        consume(" ");
+
+        BodyStructureData data {
+            type,
+            subtype,
+            id.has_value() ? Optional<String>(id.value()) : Optional<String>(),
+            description.has_value() ? Optional<String>(description.value()) : Optional<String>(),
+            encoding,
+            params,
+            num_octets,
+            0,
+            {}
+        };
+
+        return BodyStructure(move(data));
+    }
+}
+Vector<String> Parser::parse_langs()
+{
+    AK::Vector<String> langs;
+    if (!try_consume("(")) {
+        langs.append(parse_string());
+    } else {
+        while (!try_consume(")")) {
+            langs.append(parse_string());
+            try_consume(" ");
+        }
+    }
+    return langs;
+}
+Tuple<String, HashMap<String, String>> Parser::parse_disposition()
+{
+    auto disposition_type = parse_string();
+    consume(" ");
+    auto disposition_vals = parse_body_fields_params();
+    consume(")");
+    return { move(disposition_type), move(disposition_vals) };
 }
 
 StringView Parser::parse_literal_string()
@@ -510,6 +713,10 @@ FetchCommand::DataItem Parser::parse_fetch_data_item()
         return FetchCommand::DataItem {
             .type = FetchCommand::DataItemType::Envelope
         };
+    } else if (msg_attr.equals_ignoring_case("BODY") || msg_attr.equals_ignoring_case("BODYSTRUCTURE")) {
+        return FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::BodyStructure
+        };
     } else {
         dbgln("msg_attr not matched: {}", msg_attr);
         m_parsing_failed = true;
@@ -556,5 +763,39 @@ StringView Parser::parse_astring()
         return parse_string();
     else
         return parse_atom();
+}
+HashMap<String, String> Parser::parse_body_fields_params()
+{
+    if (try_consume("NIL"))
+        return {};
+
+    HashMap<String, String> fields;
+    consume("(");
+    while (!try_consume(")")) {
+        auto key = parse_string();
+        consume(" ");
+        auto value = parse_string();
+        fields.set(key, value);
+        try_consume(" ");
+    }
+
+    return fields;
+}
+BodyExtension Parser::parse_body_extension()
+{
+    if (try_consume("NIL")) {
+        return BodyExtension { Optional<String> {} };
+    } else if (try_consume("(")) {
+        Vector<OwnPtr<BodyExtension>> extensions;
+        while (!try_consume(")")) {
+            extensions.append(make<BodyExtension>(parse_body_extension()));
+            try_consume(" ");
+        }
+        return BodyExtension { move(extensions) };
+    } else if (!at_end() && (m_buffer[position] == '"' || m_buffer[position] == '{')) {
+        return BodyExtension { { parse_string() } };
+    } else {
+        return BodyExtension { parse_number() };
+    }
 }
 }
