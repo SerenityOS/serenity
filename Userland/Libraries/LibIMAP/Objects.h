@@ -18,12 +18,14 @@
 namespace IMAP {
 enum class CommandType {
     Capability,
+    Fetch,
     Idle,
     List,
     Login,
     Logout,
     Noop,
     Select,
+    UIDFetch,
 };
 
 enum class MailboxFlag : unsigned {
@@ -53,11 +55,72 @@ enum class ResponseType : unsigned {
     UIDValidity = 1u << 6,
     Unseen = 1u << 7,
     PermanentFlags = 1u << 8,
+    Fetch = 1u << 9,
     Bye = 1u << 13,
+};
+
+enum class FetchResponseType : unsigned {
+    Body = 1u << 1,
+    UID = 1u << 2,
+    InternalDate = 1u << 3,
+    Envelope = 1u << 4,
+    Flags = 1u << 5,
 };
 
 class Parser;
 
+// Set -1 for '*' i.e highest possible value.
+struct Sequence {
+    int start;
+    int end;
+
+    [[nodiscard]] String serialize() const;
+};
+
+struct FetchCommand {
+    enum class DataItemType {
+        Envelope,
+        Flags,
+        InternalDate,
+        UID,
+        PeekBody,
+        BodySection
+    };
+
+    struct DataItem {
+        enum class SectionType {
+            Header,
+            HeaderFields,
+            HeaderFieldsNot,
+            Text,
+            Parts
+        };
+        struct Section {
+            SectionType type;
+
+            Optional<Vector<int>> parts {};
+            bool ends_with_mime {};
+
+            Optional<Vector<String>> headers {};
+
+            [[nodiscard]] String serialize() const;
+        };
+
+        DataItemType type;
+
+        Optional<Section> section {};
+        bool partial_fetch { false };
+        int start { 0 };
+        int octets { 0 };
+
+        [[nodiscard]] String serialize() const;
+    };
+
+    Vector<Sequence> sequence_set;
+    Vector<DataItem> data_items;
+
+    String serialize();
+};
 struct Command {
 public:
     CommandType type;
@@ -75,6 +138,115 @@ struct ListItem {
     unsigned flags;
     String reference;
     String name;
+};
+
+struct Address {
+    Optional<String> name;
+    Optional<String> source_route;
+    Optional<String> mailbox;
+    Optional<String> host;
+};
+struct Envelope {
+    Optional<String> date; // Format of date not specified.
+    Optional<String> subject;
+    Optional<Vector<Address>> from;
+    Optional<Vector<Address>> sender;
+    Optional<Vector<Address>> reply_to;
+    Optional<Vector<Address>> to;
+    Optional<Vector<Address>> cc;
+    Optional<Vector<Address>> bcc;
+    Optional<String> in_reply_to;
+    Optional<String> message_id;
+};
+
+class FetchResponseData {
+public:
+    [[nodiscard]] unsigned response_type() const
+    {
+        return m_response_type;
+    }
+
+    [[nodiscard]] bool contains_response_type(FetchResponseType response_type) const
+    {
+        return (static_cast<unsigned>(response_type) & m_response_type) != 0;
+    }
+
+    void add_response_type(FetchResponseType type)
+    {
+        m_response_type |= static_cast<unsigned>(type);
+    }
+
+    void add_body_data(FetchCommand::DataItem&& data_item, Optional<String>&& body)
+    {
+        add_response_type(FetchResponseType::Body);
+        m_bodies.append({ move(data_item), move(body) });
+    }
+
+    Vector<Tuple<FetchCommand::DataItem, Optional<String>>>& body_data()
+    {
+        VERIFY(contains_response_type(FetchResponseType::Body));
+        return m_bodies;
+    }
+
+    void set_uid(unsigned uid)
+    {
+        add_response_type(FetchResponseType::UID);
+        m_uid = uid;
+    }
+
+    [[nodiscard]] unsigned uid() const
+    {
+        VERIFY(contains_response_type(FetchResponseType::UID));
+        return m_uid;
+    }
+
+    void set_internal_date(Core::DateTime time)
+    {
+        add_response_type(FetchResponseType::InternalDate);
+        m_internal_date = time;
+    }
+
+    Core::DateTime& internal_date()
+    {
+        VERIFY(contains_response_type(FetchResponseType::InternalDate));
+        return m_internal_date;
+    }
+
+    void set_envelope(Envelope&& envelope)
+    {
+        add_response_type(FetchResponseType::Envelope);
+        m_envelope = move(envelope);
+    }
+
+    Envelope& envelope()
+    {
+        VERIFY(contains_response_type(FetchResponseType::Envelope));
+        return m_envelope;
+    }
+
+    void set_flags(Vector<String>&& flags)
+    {
+        add_response_type(FetchResponseType::Flags);
+        m_flags = move(flags);
+    }
+
+    Vector<String>& flags()
+    {
+        VERIFY(contains_response_type(FetchResponseType::Flags));
+        return m_flags;
+    }
+
+    FetchResponseData()
+    {
+    }
+
+private:
+    Vector<String> m_flags;
+    Vector<Tuple<FetchCommand::DataItem, Optional<String>>> m_bodies;
+    Core::DateTime m_internal_date;
+    Envelope m_envelope;
+    unsigned m_uid { 0 };
+    unsigned m_response_type { 0 };
 };
 
 class ResponseData {
@@ -212,6 +384,18 @@ public:
         return m_permanent_flags;
     }
 
+    void add_fetch_response(unsigned message, FetchResponseData&& data)
+    {
+        add_response_type(ResponseType::Fetch);
+        m_fetch_responses.append(Tuple<unsigned, FetchResponseData> { move(message), move(data) });
+    }
+
+    Vector<Tuple<unsigned, FetchResponseData>>& fetch_data()
+    {
+        VERIFY(contains_response_type(ResponseType::Fetch));
+        return m_fetch_responses;
+    }
+
     void set_bye(Optional<String> message)
     {
         add_response_type(ResponseType::Bye);
@@ -238,6 +422,7 @@ private:
     unsigned m_unseen {};
     Vector<String> m_permanent_flags;
     Vector<String> m_flags;
+    Vector<Tuple<unsigned, FetchResponseData>> m_fetch_responses;
     Optional<String> m_bye_message;
 };
 
