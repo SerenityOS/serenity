@@ -24,6 +24,7 @@ public:
     RefPtr<Promise<Optional<SolidResponse>>> login(StringView username, StringView password);
     RefPtr<Promise<Optional<SolidResponse>>> list(StringView reference_name, StringView mailbox_name);
     RefPtr<Promise<Optional<SolidResponse>>> select(StringView string);
+    RefPtr<Promise<Optional<SolidResponse>>> search(Optional<String> charset, Vector<SearchKey>&& search_keys, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> fetch(FetchCommand request, bool uid);
     RefPtr<Promise<Optional<ContinueRequest>>> idle();
     RefPtr<Promise<Optional<SolidResponse>>> finish_idle();
