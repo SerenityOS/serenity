@@ -57,4 +57,9 @@ OwnPtr<KString> KString::try_clone() const
     return try_create(view());
 }
 
+void KString::operator delete(void* string)
+{
+    kfree(string);
+}
+
 }
