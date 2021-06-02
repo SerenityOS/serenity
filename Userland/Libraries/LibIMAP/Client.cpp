@@ -126,12 +126,18 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "SELECT"sv.bytes();
     case CommandType::Fetch:
         return "FETCH"sv.bytes();
+    case CommandType::Store:
+        return "STORE"sv.bytes();
     case CommandType::Search:
         return "SEARCH"sv.bytes();
     case CommandType::UIDFetch:
         return "UID FETCH"sv.bytes();
+    case CommandType::UIDStore:
+        return "UID STORE"sv.bytes();
     case CommandType::UIDSearch:
         return "UID SEARCH"sv.bytes();
+    case CommandType::Status:
+        return "STATUS"sv.bytes();
     }
     VERIFY_NOT_REACHED();
 }
@@ -248,6 +254,32 @@ void Client::send_next_command()
     send_raw(buffer);
     m_expecting_response = true;
 }
+RefPtr<Promise<Optional<SolidResponse>>> Client::store(StoreMethod method, Sequence sequence_set, bool silent, Vector<String> const& flags, bool uid)
+{
+    StringBuilder data_item_name;
+    switch (method) {
+    case StoreMethod::Replace:
+        data_item_name.append("FLAGS");
+        break;
+    case StoreMethod::Add:
+        data_item_name.append("+FLAGS");
+        break;
+    case StoreMethod::Remove:
+        data_item_name.append("-FLAGS");
+        break;
+    }
+    if (silent) {
+        data_item_name.append(".SILENT");
+    }
+
+    StringBuilder flags_builder;
+    flags_builder.append('(');
+    flags_builder.join(" ", flags);
+    flags_builder.append(')');
+
+    auto command = Command { uid ? CommandType::UIDStore : CommandType::Store, m_current_command, { sequence_set.serialize(), data_item_name.build(), flags_builder.build() } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
 RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<String> charset, Vector<SearchKey>&& keys, bool uid)
 {
     Vector<String> args;
@@ -274,6 +306,36 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::finish_idle()
     send_raw("DONE");
     m_expecting_response = true;
     return cast_promise<SolidResponse>(promise);
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vector<StatusItemType> const& types)
+{
+    Vector<String> args;
+    for (auto type : types) {
+        switch (type) {
+        case StatusItemType::Recent:
+            args.append("RECENT");
+            break;
+        case StatusItemType::UIDNext:
+            args.append("UIDNEXT");
+            break;
+        case StatusItemType::UIDValidity:
+            args.append("UIDVALIDITY");
+            break;
+        case StatusItemType::Unseen:
+            args.append("UNSEEN");
+            break;
+        case StatusItemType::Messages:
+            args.append("MESSAGES");
+            break;
+        }
+    }
+    StringBuilder types_list;
+    types_list.append('(');
+    types_list.join(" ", args);
+    types_list.append(')');
+    auto command = Command { CommandType::Status, m_current_command, { mailbox, types_list.build() } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
 void Client::close()
