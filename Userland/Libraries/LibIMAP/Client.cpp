@@ -144,6 +144,8 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "UID COPY"sv.bytes();
     case CommandType::UIDSearch:
         return "UID SEARCH"sv.bytes();
+    case CommandType::Append:
+        return "APPEND"sv.bytes();
     case CommandType::Rename:
         return "RENAME"sv.bytes();
     case CommandType::Status:
@@ -360,6 +362,37 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::status(StringView mailbox, Vect
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 
+RefPtr<Promise<Optional<SolidResponse>>> Client::append(StringView mailbox, Message&& message, Optional<Vector<String>> flags, Optional<Core::DateTime> date_time)
+{
+    Vector<String> args = { mailbox };
+    if (flags.has_value()) {
+        StringBuilder flags_sb;
+        flags_sb.append('(');
+        flags_sb.join(" ", flags.value());
+        flags_sb.append(')');
+        args.append(flags_sb.build());
+    }
+    if (date_time.has_value())
+        args.append(date_time.value().to_string("\"%d-%b-%Y %H:%M:%S +0000\""));
+
+    args.append(String::formatted("{{{}}}", message.data.length()));
+
+    auto continue_req = send_command(Command { CommandType::Append, m_current_command, args });
+
+    auto response_promise = Promise<Optional<Response>>::construct();
+    m_pending_promises.append(response_promise);
+
+    continue_req->on_resolved = [this, message2 { move(message) }](auto& data) {
+        if (!data.has_value()) {
+            handle_parsed_response({ .successful = false, .response = {} });
+        } else {
+            send_raw(message2.data);
+            m_expecting_response = true;
+        }
+    };
+
+    return cast_promise<SolidResponse>(response_promise);
+}
 RefPtr<Promise<Optional<SolidResponse>>> Client::rename(StringView from, StringView to)
 {
     auto command = Command { CommandType::Rename, m_current_command, { from, to } };

@@ -34,6 +34,7 @@ public:
     RefPtr<Promise<Optional<ContinueRequest>>> idle();
     RefPtr<Promise<Optional<SolidResponse>>> finish_idle();
     RefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
+    RefPtr<Promise<Optional<SolidResponse>>> append(StringView mailbox, Message&& message, Optional<Vector<String>> flags = {}, Optional<Core::DateTime> date_time = {});
 
     void close();
 

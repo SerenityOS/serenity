@@ -17,6 +17,7 @@
 
 namespace IMAP {
 enum class CommandType {
+    Append,
     Capability,
     Copy,
     Create,
