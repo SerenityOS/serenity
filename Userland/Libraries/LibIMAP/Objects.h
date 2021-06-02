@@ -18,6 +18,7 @@
 namespace IMAP {
 enum class CommandType {
     Capability,
+    Idle,
     List,
     Login,
     Logout,
