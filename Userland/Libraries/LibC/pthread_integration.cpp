@@ -119,7 +119,7 @@ int __pthread_mutex_unlock(pthread_mutex_t* mutex)
         return 0;
     }
     mutex->owner = 0;
-    mutex->lock = 0;
+    AK::atomic_store(&mutex->lock, 0u, AK::memory_order_release);
     return 0;
 }
 
