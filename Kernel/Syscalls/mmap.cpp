@@ -536,7 +536,6 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
 
     if (old_region->vmobject().is_shared_inode() && params.flags & MAP_PRIVATE && !(params.flags & (MAP_ANONYMOUS | MAP_NORESERVE))) {
         auto range = old_region->range();
-        auto old_name = old_region->name();
         auto old_prot = region_access_flags_to_prot(old_region->access());
         auto old_offset = old_region->offset_in_vmobject();
         NonnullRefPtr inode = static_cast<SharedInodeVMObject&>(old_region->vmobject()).inode();
@@ -545,12 +544,14 @@ KResultOr<FlatPtr> Process::sys$mremap(Userspace<const Syscall::SC_mremap_params
         if (!new_vmobject)
             return ENOMEM;
 
+        auto old_name = old_region->take_name();
+
         // Unmap without deallocating the VM range since we're going to reuse it.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
         bool success = space().deallocate_region(*old_region);
         VERIFY(success);
 
-        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name, old_prot, false);
+        auto new_region_or_error = space().allocate_region_with_vmobject(range, new_vmobject.release_nonnull(), old_offset, old_name->view(), old_prot, false);
         if (new_region_or_error.is_error())
             return new_region_or_error.error().error();
         auto& new_region = *new_region_or_error.value();

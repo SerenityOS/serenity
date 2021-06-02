@@ -68,6 +68,7 @@ public:
 
     bool is_cacheable() const { return m_cacheable; }
     StringView name() const { return m_name ? m_name->view() : StringView {}; }
+    OwnPtr<KString> take_name() { return move(m_name); }
     Region::Access access() const { return static_cast<Region::Access>(m_access); }
 
     void set_name(OwnPtr<KString> name) { m_name = move(name); }
