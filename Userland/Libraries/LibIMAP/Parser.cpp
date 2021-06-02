@@ -182,6 +182,14 @@ void Parser::parse_untagged()
             parse_while([](u8 x) { return x != '\r'; });
             consume("\r\n");
         }
+    } else if (try_consume("SEARCH")) {
+        Vector<unsigned> ids;
+        while (!try_consume("\r\n")) {
+            consume(" ");
+            auto id = parse_number();
+            ids.append(id);
+        }
+        m_response.data().set_search_results(move(ids));
     } else if (try_consume("BYE")) {
         auto message = parse_while([](u8 x) { return x != '\r'; });
         consume("\r\n");

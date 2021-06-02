@@ -126,8 +126,12 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "SELECT"sv.bytes();
     case CommandType::Fetch:
         return "FETCH"sv.bytes();
+    case CommandType::Search:
+        return "SEARCH"sv.bytes();
     case CommandType::UIDFetch:
         return "UID FETCH"sv.bytes();
+    case CommandType::UIDSearch:
+        return "UID SEARCH"sv.bytes();
     }
     VERIFY_NOT_REACHED();
 }
@@ -244,6 +248,20 @@ void Client::send_next_command()
     send_raw(buffer);
     m_expecting_response = true;
 }
+RefPtr<Promise<Optional<SolidResponse>>> Client::search(Optional<String> charset, Vector<SearchKey>&& keys, bool uid)
+{
+    Vector<String> args;
+    if (charset.has_value()) {
+        args.append("CHARSET ");
+        args.append(charset.value());
+    }
+    for (const auto& item : keys) {
+        args.append(item.serialize());
+    }
+    auto command = Command { uid ? CommandType::UIDSearch : CommandType::Search, m_current_command, args };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
 RefPtr<Promise<Optional<ContinueRequest>>> Client::idle()
 {
     auto promise = send_simple_command(CommandType::Idle);

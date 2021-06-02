@@ -24,8 +24,10 @@ enum class CommandType {
     Login,
     Logout,
     Noop,
+    Search,
     Select,
     UIDFetch,
+    UIDSearch,
 };
 
 enum class MailboxFlag : unsigned {
@@ -56,6 +58,7 @@ enum class ResponseType : unsigned {
     Unseen = 1u << 7,
     PermanentFlags = 1u << 8,
     Fetch = 1u << 9,
+    Search = 1u << 10,
     Bye = 1u << 13,
 };
 
@@ -319,6 +322,77 @@ private:
     BodyStructure m_body_structure;
 };
 
+String serialize_astring(StringView string);
+
+struct SearchKey {
+public:
+    // clang-format off
+    struct All { };
+    struct Answered { };
+    struct Bcc { String bcc; };
+    struct Cc { String cc; };
+    struct Deleted { };
+    struct Draft { };
+    struct From { String from; };
+    struct Header { String header; String value; };
+    struct Keyword { String keyword; };
+    struct Larger { unsigned number; };
+    struct New { };
+    struct Not { OwnPtr<SearchKey> operand; };
+    struct Old { };
+    struct On { Core::DateTime date; };
+    struct Or { OwnPtr<SearchKey> lhs; OwnPtr<SearchKey> rhs; };
+    struct Recent { };
+    struct SearchKeys { Vector<OwnPtr<SearchKey>> keys; };
+    struct Seen { };
+    struct SentBefore { Core::DateTime date; };
+    struct SentOn { Core::DateTime date; };
+    struct SentSince { Core::DateTime date; };
+    struct SequenceSet { Sequence sequence; };
+    struct Since { Core::DateTime date; };
+    struct Smaller { unsigned number; };
+    struct Subject { String subject; };
+    struct Text { String text; };
+    struct To { String to; };
+    struct UID { unsigned  uid; };
+    struct Unanswered { };
+    struct Undeleted { };
+    struct Undraft { };
+    struct Unkeyword { String flag_keyword; };
+    struct Unseen { };
+    // clang-format on
+
+    Variant<Empty, All, Answered, Bcc, Cc, Deleted, Draft, From, Header, Keyword,
+        Larger, New, Not, Old, On, Or, Recent, SearchKeys, Seen, SentBefore, SentOn,
+        SentSince, SequenceSet, Since, Smaller, Subject, Text, To, UID, Unanswered,
+        Undeleted, Undraft, Unkeyword, Unseen>
+        data;
+
+    SearchKey(SearchKey&& other) noexcept
+        : data(move(other.data))
+    {
+    }
+
+    template<typename T>
+    explicit SearchKey(T&& t)
+        : data(std::forward<T>(t))
+    {
+    }
+
+    SearchKey& operator=(SearchKey&& other) noexcept
+    {
+        if (this == &other) {
+            return *this;
+        }
+
+        this->data = move(other.data);
+
+        return *this;
+    }
+
+    [[nodiscard]] String serialize() const;
+};
+
 class ResponseData {
 public:
     [[nodiscard]] unsigned response_type() const
@@ -466,6 +540,18 @@ public:
         return m_fetch_responses;
     }
 
+    void set_search_results(Vector<unsigned>&& results)
+    {
+        add_response_type(ResponseType::Search);
+        m_search_results = move(results);
+    }
+
+    Vector<unsigned>& search_results()
+    {
+        VERIFY(contains_response_type(ResponseType::Search));
+        return m_search_results;
+    }
+
     void set_bye(Optional<String> message)
     {
         add_response_type(ResponseType::Bye);
@@ -493,6 +579,7 @@ private:
     Vector<String> m_permanent_flags;
     Vector<String> m_flags;
     Vector<Tuple<unsigned, FetchResponseData>> m_fetch_responses;
+    Vector<unsigned> m_search_results;
     Optional<String> m_bye_message;
 };
 
