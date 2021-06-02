@@ -12,6 +12,9 @@
 namespace Kernel {
 
 class KString {
+    AK_MAKE_NONCOPYABLE(KString);
+    AK_MAKE_NONMOVABLE(KString);
+
 public:
     static OwnPtr<KString> try_create_uninitialized(size_t, char*&);
     static NonnullOwnPtr<KString> must_create_uninitialized(size_t, char*&);
