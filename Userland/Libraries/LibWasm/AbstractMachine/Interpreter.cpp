@@ -482,12 +482,12 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
             return;
         }
         auto element = table_instance->elements()[index.value()];
-        if (!element.has_value() || !element->ref().has<FunctionAddress>()) {
+        if (!element.has_value() || !element->ref().has<Reference::Func>()) {
             dbgln("LibWasm: call_indirect attempted with invalid address element (not a function)");
             m_do_trap = true;
             return;
         }
-        auto address = element->ref().get<FunctionAddress>();
+        auto address = element->ref().get<Reference::Func>().address;
         dbgln_if(WASM_TRACE_DEBUG, "call_indirect({} -> {})", index.value(), address.value());
         call_address(configuration, address);
         return;
