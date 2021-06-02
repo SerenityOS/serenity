@@ -201,6 +201,12 @@ private:
     static constexpr IndexType index_of() { return Detail::index_of<T, IndexType, Ts...>(); }
 
 public:
+    template<typename T>
+    static constexpr bool can_contain()
+    {
+        return index_of<T>() != invalid_index;
+    }
+
     template<typename... NewTs>
     friend struct Variant;
 
@@ -246,7 +252,7 @@ public:
     using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
     template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
-    void set(T&& t) requires(index_of<StrippedT>() != invalid_index)
+    void set(T&& t) requires(can_contain<StrippedT>())
     {
         constexpr auto new_index = index_of<StrippedT>();
         Helper::delete_(m_index, m_data);
@@ -255,7 +261,7 @@ public:
     }
 
     template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
-    void set(T&& t, Detail::VariantNoClearTag) requires(index_of<StrippedT>() != invalid_index)
+    void set(T&& t, Detail::VariantNoClearTag) requires(can_contain<StrippedT>())
     {
         constexpr auto new_index = index_of<StrippedT>();
         new (m_data) StrippedT(forward<T>(t));
@@ -263,7 +269,7 @@ public:
     }
 
     template<typename T>
-    T* get_pointer()
+    T* get_pointer() requires(can_contain<T>())
     {
         if (index_of<T>() == m_index)
             return bit_cast<T*>(&m_data);
@@ -271,14 +277,14 @@ public:
     }
 
     template<typename T>
-    T& get()
+    T& get() requires(can_contain<T>())
     {
         VERIFY(has<T>());
         return *bit_cast<T*>(&m_data);
     }
 
     template<typename T>
-    const T* get_pointer() const
+    const T* get_pointer() const requires(can_contain<T>())
     {
         if (index_of<T>() == m_index)
             return bit_cast<const T*>(&m_data);
@@ -286,14 +292,14 @@ public:
     }
 
     template<typename T>
-    const T& get() const
+    const T& get() const requires(can_contain<T>())
     {
         VERIFY(has<T>());
         return *bit_cast<const T*>(&m_data);
     }
 
     template<typename T>
-    [[nodiscard]] bool has() const
+    [[nodiscard]] bool has() const requires(can_contain<T>())
     {
         return index_of<T>() == m_index;
     }
@@ -334,12 +340,6 @@ public:
         });
         VERIFY(instance.m_index != instance.invalid_index);
         return instance;
-    }
-
-    template<typename T>
-    static constexpr bool can_contain()
-    {
-        return index_of<T>() != invalid_index;
     }
 
 private:
