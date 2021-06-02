@@ -73,7 +73,7 @@ void TimelineTrack::paint_event(GUI::PaintEvent& event)
         if (event.pid != m_process.pid)
             continue;
 
-        if (!m_process.valid_at(event.timestamp))
+        if (!m_process.valid_at(event.serial))
             continue;
 
         auto& histogram = event.in_kernel ? kernel_histogram : usermode_histogram;
