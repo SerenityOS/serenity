@@ -137,6 +137,9 @@ void Parser::parse_untagged()
         } else if (data_type.matches("RECENT")) {
             m_response.data().set_recent(number.value());
             consume("\r\n");
+        } else if (data_type.matches("FETCH")) {
+            auto fetch_response = parse_fetch_response();
+            m_response.data().add_fetch_response(number.value(), move(fetch_response));
         }
         return;
     }
@@ -212,6 +215,87 @@ Optional<StringView> Parser::parse_nstring()
         return {};
     else
         return { parse_string() };
+}
+
+FetchResponseData Parser::parse_fetch_response()
+{
+    consume(" (");
+    auto fetch_response = FetchResponseData();
+
+    while (!try_consume(")")) {
+        auto data_item = parse_fetch_data_item();
+        switch (data_item.type) {
+        case FetchCommand::DataItemType::Envelope: {
+            consume(" (");
+            auto date = parse_nstring();
+            consume(" ");
+            auto subject = parse_nstring();
+            consume(" ");
+            auto from = parse_address_list();
+            consume(" ");
+            auto sender = parse_address_list();
+            consume(" ");
+            auto reply_to = parse_address_list();
+            consume(" ");
+            auto to = parse_address_list();
+            consume(" ");
+            auto cc = parse_address_list();
+            consume(" ");
+            auto bcc = parse_address_list();
+            consume(" ");
+            auto in_reply_to = parse_nstring();
+            consume(" ");
+            auto message_id = parse_nstring();
+            consume(")");
+            Envelope envelope = {
+                date.has_value() ? Optional<String>(date.value()) : Optional<String>(),
+                subject.has_value() ? Optional<String>(subject.value()) : Optional<String>(),
+                from,
+                sender,
+                reply_to,
+                to,
+                cc,
+                bcc,
+                in_reply_to.has_value() ? Optional<String>(in_reply_to.value()) : Optional<String>(),
+                message_id.has_value() ? Optional<String>(message_id.value()) : Optional<String>(),
+            };
+            fetch_response.set_envelope(move(envelope));
+            break;
+        }
+        case FetchCommand::DataItemType::Flags: {
+            consume(" ");
+            auto flags = parse_list(+[](StringView x) { return String(x); });
+            fetch_response.set_flags(move(flags));
+            break;
+        }
+        case FetchCommand::DataItemType::InternalDate: {
+            consume(" \"");
+            auto date_view = parse_while([](u8 x) { return x != '"'; });
+            consume("\"");
+            auto date = Core::DateTime::parse("%d-%b-%Y %H:%M:%S %z", date_view).value();
+            fetch_response.set_internal_date(date);
+            break;
+        }
+        case FetchCommand::DataItemType::UID: {
+            consume(" ");
+            fetch_response.set_uid(parse_number());
+            break;
+        }
+        case FetchCommand::DataItemType::PeekBody:
+            // Spec doesn't allow for this in a response.
+            m_parsing_failed = true;
+            break;
+        case FetchCommand::DataItemType::BodySection: {
+            auto body = parse_nstring();
+            fetch_response.add_body_data(move(data_item), body.has_value() ? body.release_value() : Optional<String>());
+            break;
+        }
+        }
+        if (!at_end() && m_buffer[position] != ')')
+            consume(" ");
+    }
+    consume("\r\n");
+    return fetch_response;
 }
 
 StringView Parser::parse_literal_string()
@@ -351,4 +435,126 @@ StringView Parser::parse_while(Function<bool(u8)> should_consume)
     return StringView(m_buffer.data() + position - chars, chars);
 }
 
+FetchCommand::DataItem Parser::parse_fetch_data_item()
+{
+    auto msg_attr = parse_while([](u8 x) { return is_ascii_alpha(x) != 0; });
+    if (msg_attr.equals_ignoring_case("BODY") && try_consume("[")) {
+        auto data_item = FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::BodySection,
+            .section = { {} }
+        };
+        auto section_type = parse_while([](u8 x) { return x != ']' && x != ' '; });
+        if (section_type.equals_ignoring_case("HEADER.FIELDS")) {
+            data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFields;
+            data_item.section->headers = Vector<String>();
+            consume(" ");
+            auto headers = parse_list(+[](StringView x) { return x; });
+            for (auto& header : headers) {
+                data_item.section->headers->append(header);
+            }
+            consume("]");
+        } else if (section_type.equals_ignoring_case("HEADER.FIELDS.NOT")) {
+            data_item.section->type = FetchCommand::DataItem::SectionType::HeaderFieldsNot;
+            data_item.section->headers = Vector<String>();
+            consume(" (");
+            auto headers = parse_list(+[](StringView x) { return x; });
+            for (auto& header : headers) {
+                data_item.section->headers->append(header);
+            }
+            consume("]");
+        } else if (is_ascii_digit(section_type[0])) {
+            data_item.section->type = FetchCommand::DataItem::SectionType::Parts;
+            data_item.section->parts = Vector<int>();
+
+            while (!try_consume("]")) {
+                auto num = parse_number();
+                if (num != (unsigned)-1) {
+                    data_item.section->parts->append((int)num);
+                    continue;
+                }
+                auto atom = parse_atom();
+                if (atom.equals_ignoring_case("MIME")) {
+                    data_item.section->ends_with_mime = true;
+                    continue;
+                }
+            }
+        } else if (section_type.equals_ignoring_case("TEXT")) {
+            data_item.section->type = FetchCommand::DataItem::SectionType::Text;
+        } else if (section_type.equals_ignoring_case("HEADER")) {
+            data_item.section->type = FetchCommand::DataItem::SectionType::Header;
+        } else {
+            dbgln("Unmatched section type {}", section_type);
+            m_parsing_failed = true;
+        }
+        if (try_consume("<")) {
+            auto start = parse_number();
+            data_item.partial_fetch = true;
+            data_item.start = (int)start;
+            consume(">");
+        }
+        try_consume(" ");
+        return data_item;
+    } else if (msg_attr.equals_ignoring_case("FLAGS")) {
+        return FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::Flags
+        };
+    } else if (msg_attr.equals_ignoring_case("UID")) {
+        return FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::UID
+        };
+    } else if (msg_attr.equals_ignoring_case("INTERNALDATE")) {
+        return FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::InternalDate
+        };
+    } else if (msg_attr.equals_ignoring_case("ENVELOPE")) {
+        return FetchCommand::DataItem {
+            .type = FetchCommand::DataItemType::Envelope
+        };
+    } else {
+        dbgln("msg_attr not matched: {}", msg_attr);
+        m_parsing_failed = true;
+        return FetchCommand::DataItem {};
+    }
+}
+Optional<Vector<Address>> Parser::parse_address_list()
+{
+    if (try_consume("NIL"))
+        return {};
+
+    auto addresses = Vector<Address>();
+    consume("(");
+    while (!try_consume(")")) {
+        addresses.append(parse_address());
+        if (!at_end() && m_buffer[position] != ')')
+            consume(" ");
+    }
+    return { addresses };
+}
+
+Address Parser::parse_address()
+{
+    consume("(");
+    auto address = Address();
+    // I hate this so much. Why is there no Optional.map??
+    auto name = parse_nstring();
+    address.name = name.has_value() ? Optional<String>(name.value()) : Optional<String>();
+    consume(" ");
+    auto source_route = parse_nstring();
+    address.source_route = source_route.has_value() ? Optional<String>(source_route.value()) : Optional<String>();
+    consume(" ");
+    auto mailbox = parse_nstring();
+    address.mailbox = mailbox.has_value() ? Optional<String>(mailbox.value()) : Optional<String>();
+    consume(" ");
+    auto host = parse_nstring();
+    address.host = host.has_value() ? Optional<String>(host.value()) : Optional<String>();
+    consume(")");
+    return address;
+}
+StringView Parser::parse_astring()
+{
+    if (!at_end() && (m_buffer[position] == '{' || m_buffer[position] == '"'))
+        return parse_string();
+    else
+        return parse_atom();
+}
 }

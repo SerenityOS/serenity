@@ -124,6 +124,10 @@ static ReadonlyBytes command_byte_buffer(CommandType command)
         return "LIST"sv.bytes();
     case CommandType::Select:
         return "SELECT"sv.bytes();
+    case CommandType::Fetch:
+        return "FETCH"sv.bytes();
+    case CommandType::UIDFetch:
+        return "UID FETCH"sv.bytes();
     }
     VERIFY_NOT_REACHED();
 }
@@ -174,6 +178,12 @@ RefPtr<Promise<Optional<SolidResponse>>> Client::list(StringView reference_name,
     auto command = Command { CommandType::List, m_current_command,
         { String::formatted("\"{}\"", reference_name),
             String::formatted("\"{}\"", mailbox) } };
+    return cast_promise<SolidResponse>(send_command(move(command)));
+}
+
+RefPtr<Promise<Optional<SolidResponse>>> Client::fetch(FetchCommand request, bool uid)
+{
+    auto command = Command { uid ? CommandType::UIDFetch : CommandType::Fetch, m_current_command, { request.serialize() } };
     return cast_promise<SolidResponse>(send_command(move(command)));
 }
 

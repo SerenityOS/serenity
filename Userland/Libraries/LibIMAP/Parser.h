@@ -60,7 +60,13 @@ private:
 
     ListItem parse_list_item();
 
+    FetchCommand::DataItem parse_fetch_data_item();
+
+    FetchResponseData parse_fetch_response();
+
     StringView parse_literal_string();
+    Optional<Vector<Address>> parse_address_list();
+    Address parse_address();
     StringView parse_astring();
 };
 }
