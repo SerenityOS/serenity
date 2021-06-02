@@ -21,6 +21,8 @@ public:
     static OwnPtr<KString> try_create(StringView const&);
     static NonnullOwnPtr<KString> must_create(StringView const&);
 
+    void operator delete(void*);
+
     OwnPtr<KString> try_clone() const;
 
     bool is_empty() const { return m_length == 0; }
