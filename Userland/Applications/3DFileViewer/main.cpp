@@ -69,6 +69,7 @@ private:
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void timer_event(Core::TimerEvent&) override;
+    virtual void mousemove_event(GUI::MouseEvent&) override;
 
 private:
     RefPtr<Mesh> m_mesh;
@@ -79,6 +80,10 @@ private:
     bool m_rotate_x = true;
     bool m_rotate_y = false;
     bool m_rotate_z = true;
+    float m_angle_x = 0.0;
+    float m_angle_y = 0.0;
+    float m_angle_z = 0.0;
+    Gfx::IntPoint m_last_mouse;
     float m_rotation_speed = 1.f;
 };
 
@@ -91,18 +96,35 @@ void GLContextWidget::paint_event(GUI::PaintEvent& event)
     painter.draw_scaled_bitmap(frame_inner_rect(), *m_bitmap, m_bitmap->rect());
 }
 
+void GLContextWidget::mousemove_event(GUI::MouseEvent& event)
+{
+    if (event.buttons() == GUI::MouseButton::Left) {
+        int delta_x = m_last_mouse.x() - event.x();
+        int delta_y = m_last_mouse.y() - event.y();
+
+        m_angle_x -= delta_y / 100.0f;
+        m_angle_y -= delta_x / 100.0f;
+    }
+
+    m_last_mouse = event.position();
+}
+
 void GLContextWidget::timer_event(Core::TimerEvent&)
 {
-    static float angle = 0.0f;
     glCallList(m_init_list);
 
-    angle -= 0.01f;
+    if (m_rotate_x)
+        m_angle_x -= m_rotation_speed * 0.01f;
+    if (m_rotate_y)
+        m_angle_y -= m_rotation_speed * 0.01f;
+    if (m_rotate_z)
+        m_angle_z -= m_rotation_speed * 0.01f;
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glTranslatef(0, 0, -8.5);
-    glRotatef(m_rotate_x ? angle * m_rotation_speed : 0.f, 1, 0, 0);
-    glRotatef(m_rotate_y ? angle * m_rotation_speed : 0.f, 0, 1, 0);
-    glRotatef(m_rotate_z ? angle * m_rotation_speed : 0.f, 0, 0, 1);
+    glRotatef(m_angle_x, 1, 0, 0);
+    glRotatef(m_angle_y, 0, 1, 0);
+    glRotatef(m_angle_z, 0, 0, 1);
 
     if (!m_mesh.is_null())
         m_mesh->draw();
