@@ -56,19 +56,20 @@ void Game::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(rect(), Color::Black);
+    painter.fill_rect(rect(), m_sky_color);
 
-    painter.fill_rect(enclosing_int_rect(m_obstacle.top_rect()), Color::White);
-    painter.fill_rect(enclosing_int_rect(m_obstacle.bottom_rect()), Color::White);
-    painter.fill_ellipse(enclosing_int_rect(m_bug.rect()), Color::Red);
+    painter.fill_rect(enclosing_int_rect(m_obstacle.top_rect()), m_obstacle.color);
+    painter.fill_rect(enclosing_int_rect(m_obstacle.bottom_rect()), m_obstacle.color);
+
+    painter.draw_scaled_bitmap(enclosing_int_rect(m_bug.rect()), *m_bug.current_bitmap(), m_bug.flapping_bitmap->rect());
 
     if (m_active) {
-        painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::Green);
+        painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::White);
     } else if (m_highscore.has_value()) {
         auto message = String::formatted("Your score: {:.0}\nHighscore: {:.0}\n\n{}", m_last_score, m_highscore.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
-        painter.draw_text(rect(), message, Gfx::TextAlignment::Center, Color::Green);
+        painter.draw_text(rect(), message, Gfx::TextAlignment::Center, Color::White);
     } else {
-        painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::Green);
+        painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::White);
     }
 }
 
