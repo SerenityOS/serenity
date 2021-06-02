@@ -228,6 +228,8 @@ private:
     void flip(const Vector<Gfx::IntRect, 32>& dirty_rects);
     void force_update();
 
+    WeakPtr<Widget> m_previously_focused_widget;
+
     OwnPtr<WindowBackingStore> m_front_store;
     OwnPtr<WindowBackingStore> m_back_store;
 
