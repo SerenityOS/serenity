@@ -27,6 +27,10 @@ public:
     RefPtr<Promise<Optional<SolidResponse>>> search(Optional<String> charset, Vector<SearchKey>&& search_keys, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> fetch(FetchCommand request, bool uid);
     RefPtr<Promise<Optional<SolidResponse>>> store(StoreMethod, Sequence, bool silent, Vector<String> const& flags, bool uid);
+    RefPtr<Promise<Optional<SolidResponse>>> copy(Sequence sequence_set, StringView name, bool uid);
+    RefPtr<Promise<Optional<SolidResponse>>> create_mailbox(StringView name);
+    RefPtr<Promise<Optional<SolidResponse>>> delete_mailbox(StringView name);
+    RefPtr<Promise<Optional<SolidResponse>>> rename(StringView from, StringView to);
     RefPtr<Promise<Optional<ContinueRequest>>> idle();
     RefPtr<Promise<Optional<SolidResponse>>> finish_idle();
     RefPtr<Promise<Optional<SolidResponse>>> status(StringView mailbox, Vector<StatusItemType> const& types);
