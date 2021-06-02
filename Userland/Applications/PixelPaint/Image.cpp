@@ -22,7 +22,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)
+RefPtr<Image> Image::create_with_size(Gfx::IntSize const& size)
 {
     if (size.is_empty())
         return nullptr;
@@ -33,12 +33,12 @@ RefPtr<Image> Image::create_with_size(const Gfx::IntSize& size)
     return adopt_ref(*new Image(size));
 }
 
-Image::Image(const Gfx::IntSize& size)
+Image::Image(Gfx::IntSize const& size)
     : m_size(size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, const Gfx::IntRect& dest_rect)
+void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect)
 {
     float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
@@ -115,7 +115,7 @@ RefPtr<Image> Image::create_from_file(String const& file_path)
     return create_from_pixel_paint_file(file_path);
 }
 
-void Image::save(const String& file_path) const
+void Image::save(String const& file_path) const
 {
     // Build json file
     StringBuilder builder;
@@ -147,7 +147,7 @@ void Image::save(const String& file_path) const
     fclose(file);
 }
 
-void Image::export_bmp(const String& file_path)
+void Image::export_bmp(String const& file_path)
 {
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size);
     GUI::Painter painter(*bitmap);
@@ -160,7 +160,7 @@ void Image::export_bmp(const String& file_path)
     fclose(file);
 }
 
-void Image::export_png(const String& file_path)
+void Image::export_png(String const& file_path)
 {
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
     VERIFY(bitmap);
@@ -194,7 +194,7 @@ RefPtr<Image> Image::take_snapshot() const
     return snapshot;
 }
 
-void Image::restore_snapshot(const Image& snapshot)
+void Image::restore_snapshot(Image const& snapshot)
 {
     m_layers.clear();
     select_layer(nullptr);
@@ -208,7 +208,7 @@ void Image::restore_snapshot(const Image& snapshot)
     did_modify_layer_stack();
 }
 
-size_t Image::index_of(const Layer& layer) const
+size_t Image::index_of(Layer const& layer) const
 {
     for (size_t i = 0; i < m_layers.size(); ++i) {
         if (&m_layers.at(i) == &layer)
@@ -308,7 +308,7 @@ void Image::remove_client(ImageClient& client)
     m_clients.remove(&client);
 }
 
-void Image::layer_did_modify_bitmap(Badge<Layer>, const Layer& layer)
+void Image::layer_did_modify_bitmap(Badge<Layer>, Layer const& layer)
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
@@ -317,7 +317,7 @@ void Image::layer_did_modify_bitmap(Badge<Layer>, const Layer& layer)
     did_change();
 }
 
-void Image::layer_did_modify_properties(Badge<Layer>, const Layer& layer)
+void Image::layer_did_modify_properties(Badge<Layer>, Layer const& layer)
 {
     auto layer_index = index_of(layer);
     for (auto* client : m_clients)
