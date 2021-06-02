@@ -42,8 +42,8 @@ public:
     virtual bool is_contiguous() const { return false; }
 
     size_t page_count() const { return m_physical_pages.size(); }
-    const Vector<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
-    Vector<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
+    const Vector<RefPtr<PhysicalPage>, 16>& physical_pages() const { return m_physical_pages; }
+    Vector<RefPtr<PhysicalPage>, 16>& physical_pages() { return m_physical_pages; }
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
@@ -71,7 +71,7 @@ protected:
     void for_each_region(Callback);
 
     IntrusiveListNode<VMObject> m_list_node;
-    Vector<RefPtr<PhysicalPage>> m_physical_pages;
+    Vector<RefPtr<PhysicalPage>, 16> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
 
     mutable SpinLock<u8> m_lock;
