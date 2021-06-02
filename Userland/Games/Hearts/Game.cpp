@@ -392,6 +392,19 @@ size_t Game::pick_card(Player& player)
     return player.pick_max_points_card(move(ignore_card));
 }
 
+size_t Game::pick_first_card_ltr(Player& player)
+{
+    for (size_t i = 0; i < player.hand.size(); i++) {
+        auto& card = player.hand[i];
+        if (card.is_null())
+            continue;
+        if (is_valid_play(player, *card)) {
+            return i;
+        }
+    }
+    VERIFY_NOT_REACHED();
+}
+
 void Game::let_player_play_card()
 {
     auto& player = current_player();
@@ -567,6 +580,9 @@ void Game::keydown_event(GUI::KeyEvent& event)
             play_card(m_players[0], pick_card(m_players[0]));
         else if (m_state == State::PassingSelect)
             select_cards_for_passing();
+    } else if (event.key() == KeyCode::Key_Space) {
+        if (m_human_can_play && m_state == State::Play)
+            play_card(m_players[0], pick_first_card_ltr(m_players[0]));
     } else if (event.shift() && event.key() == KeyCode::Key_F11)
         dump_state();
 }
