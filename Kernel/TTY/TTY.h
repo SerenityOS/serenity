@@ -58,7 +58,7 @@ protected:
 
     TTY(unsigned major, unsigned minor);
     void emit(u8, bool do_evaluate_block_conditions = false);
-    virtual void echo(u8) = 0;
+    void echo_with_processing(u8);
 
     bool can_do_backspace() const;
     void do_backspace();
@@ -80,7 +80,8 @@ protected:
 private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
-    inline void echo_with_processing(u8);
+
+    virtual void echo(u8) = 0;
 
     template<typename Functor>
     void process_output(u8, Functor put_char);
