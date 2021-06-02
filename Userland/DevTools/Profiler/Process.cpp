@@ -8,19 +8,19 @@
 
 namespace Profiler {
 
-Thread* Process::find_thread(pid_t tid, u64 timestamp)
+Thread* Process::find_thread(pid_t tid, EventSerialNumber serial)
 {
     auto it = threads.find(tid);
     if (it == threads.end())
         return nullptr;
     for (auto& thread : it->value) {
-        if (thread.start_valid < timestamp && (thread.end_valid == 0 || thread.end_valid > timestamp))
+        if (thread.start_valid < serial && (thread.end_valid == EventSerialNumber {} || thread.end_valid > serial))
             return &thread;
     }
     return nullptr;
 }
 
-void Process::handle_thread_create(pid_t tid, u64 timestamp)
+void Process::handle_thread_create(pid_t tid, EventSerialNumber serial)
 {
     auto it = threads.find(tid);
     if (it == threads.end()) {
@@ -28,16 +28,16 @@ void Process::handle_thread_create(pid_t tid, u64 timestamp)
         it = threads.find(tid);
     }
 
-    auto thread = Thread { tid, timestamp, 0 };
+    auto thread = Thread { tid, serial, {} };
     it->value.append(move(thread));
 }
 
-void Process::handle_thread_exit(pid_t tid, u64 timestamp)
+void Process::handle_thread_exit(pid_t tid, EventSerialNumber serial)
 {
-    auto* thread = find_thread(tid, timestamp);
+    auto* thread = find_thread(tid, serial);
     if (!thread)
         return;
-    thread->end_valid = timestamp;
+    thread->end_valid = serial;
 }
 
 HashMap<String, OwnPtr<MappedObject>> g_mapped_object_cache;

@@ -126,8 +126,8 @@ private:
 
 struct ProcessFilter {
     pid_t pid { 0 };
-    u64 start_valid { 0 };
-    u64 end_valid { 0 };
+    EventSerialNumber start_valid;
+    EventSerialNumber end_valid;
 
     bool operator==(ProcessFilter const& rhs) const
     {
@@ -143,10 +143,10 @@ public:
     GUI::Model& samples_model();
     GUI::Model* disassembly_model();
 
-    const Process* find_process(pid_t pid, u64 timestamp) const
+    const Process* find_process(pid_t pid, EventSerialNumber serial) const
     {
-        auto it = m_processes.find_if([&](auto& entry) {
-            return entry.pid == pid && entry.valid_at(timestamp);
+        auto it = m_processes.find_if([&pid, &serial](auto& entry) {
+            return entry.pid == pid && entry.valid_at(serial);
         });
         return it.is_end() ? nullptr : &(*it);
     }
@@ -163,6 +163,7 @@ public:
     };
 
     struct Event {
+        EventSerialNumber serial;
         u64 timestamp { 0 };
         String type;
         FlatPtr ptr { 0 };
@@ -190,11 +191,11 @@ public:
     void clear_timestamp_filter_range();
     bool has_timestamp_filter_range() const { return m_has_timestamp_filter_range; }
 
-    void add_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
-    void remove_process_filter(pid_t pid, u64 start_valid, u64 end_valid);
+    void add_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid);
+    void remove_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid);
     void clear_process_filter();
     bool has_process_filter() const { return !m_process_filters.is_empty(); }
-    bool process_filter_contains(pid_t pid, u32 timestamp);
+    bool process_filter_contains(pid_t pid, EventSerialNumber serial);
 
     bool is_inverted() const { return m_inverted; }
     void set_inverted(bool);

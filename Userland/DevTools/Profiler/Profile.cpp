@@ -61,10 +61,10 @@ void Profile::rebuild_tree()
 {
     Vector<NonnullRefPtr<ProfileNode>> roots;
 
-    auto find_or_create_process_node = [this, &roots](pid_t pid, u64 timestamp) -> ProfileNode& {
-        auto* process = find_process(pid, timestamp);
+    auto find_or_create_process_node = [this, &roots](pid_t pid, EventSerialNumber serial) -> ProfileNode& {
+        auto* process = find_process(pid, serial);
         if (!process) {
-            dbgln("Profile contains event for unknown process with pid={}, timestamp={}", pid, timestamp);
+            dbgln("Profile contains event for unknown process with pid={}, serial={}", pid, serial.to_number());
             VERIFY_NOT_REACHED();
         }
         for (auto root : roots) {
@@ -96,7 +96,7 @@ void Profile::rebuild_tree()
                 continue;
         }
 
-        if (!process_filter_contains(event.pid, event.timestamp))
+        if (!process_filter_contains(event.pid, event.serial))
             continue;
 
         m_filtered_event_indices.append(event_index);
@@ -123,7 +123,7 @@ void Profile::rebuild_tree()
 
         if (!m_show_top_functions) {
             ProfileNode* node = nullptr;
-            auto& process_node = find_or_create_process_node(event.pid, event.timestamp);
+            auto& process_node = find_or_create_process_node(event.pid, event.serial);
             process_node.increment_event_count();
             for_each_frame([&](const Frame& frame, bool is_innermost_frame) {
                 auto& object_name = frame.object_name;
@@ -147,7 +147,7 @@ void Profile::rebuild_tree()
                 return IterationDecision::Continue;
             });
         } else {
-            auto& process_node = find_or_create_process_node(event.pid, event.timestamp);
+            auto& process_node = find_or_create_process_node(event.pid, event.serial);
             process_node.increment_event_count();
             for (size_t i = 0; i < event.frames.size(); ++i) {
                 ProfileNode* node = nullptr;
@@ -163,7 +163,7 @@ void Profile::rebuild_tree()
 
                     // FIXME: More PID/TID mixing cheats here:
                     if (!node) {
-                        node = &find_or_create_process_node(event.pid, event.timestamp);
+                        node = &find_or_create_process_node(event.pid, event.serial);
                         node = &node->find_or_create_child(object_name, symbol, address, offset, event.timestamp, event.pid);
                         root = node;
                         root->will_track_seen_events(m_events.size());
@@ -219,12 +219,15 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
     NonnullOwnPtrVector<Process> all_processes;
     HashMap<pid_t, Process*> current_processes;
     Vector<Event> events;
+    EventSerialNumber next_serial;
 
     for (auto& perf_event_value : perf_events.values()) {
         auto& perf_event = perf_event_value.as_object();
 
         Event event;
 
+        event.serial = next_serial;
+        next_serial.increment();
         event.timestamp = perf_event.get("timestamp").to_number<u64>();
         event.lost_samples = perf_event.get("lost_samples").to_number<u32>();
         event.type = perf_event.get("type").to_string();
@@ -257,7 +260,8 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                 .pid = event.pid,
                 .executable = event.executable,
                 .basename = LexicalPath(event.executable).basename(),
-                .start_valid = event.timestamp,
+                .start_valid = event.serial,
+                .end_valid = {},
             });
 
             current_processes.set(sampled_process->pid, sampled_process);
@@ -267,7 +271,7 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             event.executable = perf_event.get("executable").to_string();
 
             auto old_process = current_processes.get(event.pid).value();
-            old_process->end_valid = event.timestamp;
+            old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
 
@@ -275,14 +279,16 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
                 .pid = event.pid,
                 .executable = event.executable,
                 .basename = LexicalPath(event.executable).basename(),
-                .start_valid = event.timestamp });
+                .start_valid = event.serial,
+                .end_valid = {},
+            });
 
             current_processes.set(sampled_process->pid, sampled_process);
             all_processes.append(move(sampled_process));
             continue;
         } else if (event.type == "process_exit"sv) {
             auto old_process = current_processes.get(event.pid).value();
-            old_process->end_valid = event.timestamp;
+            old_process->end_valid = event.serial;
 
             current_processes.remove(event.pid);
             continue;
@@ -290,12 +296,12 @@ Result<NonnullOwnPtr<Profile>, String> Profile::load_from_perfcore_file(const St
             event.parent_tid = perf_event.get("parent_tid").to_i32();
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
-                it->value->handle_thread_create(event.tid, event.timestamp);
+                it->value->handle_thread_create(event.tid, event.serial);
             continue;
         } else if (event.type == "thread_exit"sv) {
             auto it = current_processes.find(event.pid);
             if (it != current_processes.end())
-                it->value->handle_thread_exit(event.tid, event.timestamp);
+                it->value->handle_thread_exit(event.tid, event.serial);
             continue;
         }
 
@@ -385,7 +391,7 @@ void Profile::clear_timestamp_filter_range()
     m_samples_model->update();
 }
 
-void Profile::add_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
+void Profile::add_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
 {
     auto filter = ProcessFilter { pid, start_valid, end_valid };
     if (m_process_filters.contains_slow(filter))
@@ -398,7 +404,7 @@ void Profile::add_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
     m_samples_model->update();
 }
 
-void Profile::remove_process_filter(pid_t pid, u64 start_valid, u64 end_valid)
+void Profile::remove_process_filter(pid_t pid, EventSerialNumber start_valid, EventSerialNumber end_valid)
 {
     auto filter = ProcessFilter { pid, start_valid, end_valid };
     if (!m_process_filters.contains_slow(filter))
@@ -424,13 +430,13 @@ void Profile::clear_process_filter()
     m_samples_model->update();
 }
 
-bool Profile::process_filter_contains(pid_t pid, u32 timestamp)
+bool Profile::process_filter_contains(pid_t pid, EventSerialNumber serial)
 {
     if (!has_process_filter())
         return true;
 
     for (auto const& process_filter : m_process_filters)
-        if (pid == process_filter.pid && timestamp >= process_filter.start_valid && timestamp <= process_filter.end_valid)
+        if (pid == process_filter.pid && serial >= process_filter.start_valid && serial <= process_filter.end_valid)
             return true;
 
     return false;
