@@ -6,7 +6,6 @@
 
 #include "ProjectFile.h"
 #include <LibCore/File.h>
-#include <string.h>
 
 namespace HackStudio {
 
