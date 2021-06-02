@@ -190,6 +190,10 @@ static RefPtr<GUI::Window> create_find_window(VT::TerminalWidget& terminal)
         find_backwards.click();
     };
 
+    find_textbox.on_shift_return_pressed = [&]() {
+        find_forwards.click();
+    };
+
     auto& match_case = search.add<GUI::CheckBox>("Case sensitive");
     auto& wrap_around = search.add<GUI::CheckBox>("Wrap around");
 

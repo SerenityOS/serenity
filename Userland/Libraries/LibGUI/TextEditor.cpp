@@ -731,6 +731,12 @@ void TextEditor::keydown_event(KeyEvent& event)
         if (event.key() == KeyCode::Key_Tab)
             return AbstractScrollableWidget::keydown_event(event);
 
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Return) {
+            if (on_shift_return_pressed)
+                on_shift_return_pressed();
+            return;
+        }
+
         if (event.key() == KeyCode::Key_Return) {
             if (on_return_pressed)
                 on_return_pressed();
