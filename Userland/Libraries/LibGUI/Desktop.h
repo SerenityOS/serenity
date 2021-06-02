@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibGUI/Forward.h>
 #include <LibGfx/Rect.h>
+#include <Services/Taskbar/TaskbarWindow.h>
 
 namespace GUI {
 
@@ -27,7 +28,7 @@ public:
 
     Gfx::IntRect rect() const { return m_rect; }
 
-    int taskbar_height() const { return 27; }
+    int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
 
     void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect&);
 
