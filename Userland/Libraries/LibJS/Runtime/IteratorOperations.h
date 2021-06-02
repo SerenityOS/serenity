@@ -14,7 +14,12 @@ namespace JS {
 // Common iterator operations defined in ECMA262 7.4
 // https://tc39.es/ecma262/#sec-operations-on-iterator-objects
 
-Object* get_iterator(GlobalObject&, Value value, String hint = "sync", Value method = {});
+enum class IteratorHint {
+    Sync,
+    Async,
+};
+
+Object* get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
 bool is_iterator_complete(Object& iterator_result);
 Value create_iterator_result_object(GlobalObject&, Value value, bool done);
 

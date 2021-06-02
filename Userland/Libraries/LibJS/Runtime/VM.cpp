@@ -180,7 +180,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 
     switch (binding.kind) {
     case BindingPattern::Kind::Array: {
-        auto iterator = get_iterator(global_object, value, "sync"sv, {});
+        auto iterator = get_iterator(global_object, value);
         if (!iterator)
             return;
 
