@@ -38,14 +38,21 @@ private:
 
     struct Bug {
         const float x { 50 };
-        const float radius { 10 };
+        const float radius { 16 };
         const float starting_y { 200 };
+        const RefPtr<Gfx::Bitmap> falling_bitmap { Gfx::Bitmap::load_from_file("/res/icons/flappybug/falling.png") };
+        const RefPtr<Gfx::Bitmap> flapping_bitmap { Gfx::Bitmap::load_from_file("/res/icons/flappybug/flapping.png") };
         float y {};
         float velocity {};
 
         void reset()
         {
             y = starting_y;
+        }
+
+        RefPtr<Gfx::Bitmap> current_bitmap() const
+        {
+            return velocity < 0 ? falling_bitmap : flapping_bitmap;
         }
 
         Gfx::FloatRect rect() const
@@ -73,6 +80,7 @@ private:
 
     struct Obstacle {
         const float width { 20 };
+        Color color { Color::DarkGray };
         float x;
         float gap_top_y { 200 };
         float gap_height { 175 };
@@ -101,6 +109,7 @@ private:
     float m_last_score;
     float m_difficulty;
     float m_restart_cooldown;
+    Color m_sky_color { 100, 100, 200 };
 };
 
 }
