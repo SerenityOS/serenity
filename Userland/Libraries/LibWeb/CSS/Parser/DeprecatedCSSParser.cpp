@@ -240,8 +240,12 @@ RefPtr<CSS::StyleValue> parse_css_value(const CSS::ParsingContext& context, cons
     }
 
     auto length = parse_length(context, string, is_bad_length);
-    if (is_bad_length)
+    if (is_bad_length) {
+        auto float_number = try_parse_float(string);
+        if (float_number.has_value())
+            return CSS::NumericStyleValue::create(float_number.value());
         return nullptr;
+    }
     if (!length.is_undefined())
         return CSS::LengthStyleValue::create(length);
 
