@@ -47,6 +47,4 @@ install() {
     )
 
     ln -sf /usr/local/games/openttd $DESTDIR/usr/local/bin/openttd
-
-    install_launcher
 }

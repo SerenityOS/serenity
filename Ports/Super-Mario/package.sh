@@ -18,5 +18,4 @@ configure() {
 install() {
     run mkdir -p "${SERENITY_INSTALL_ROOT}/opt/Super_Mario"
     run cp -r uMario app.ico icon2.ico files "${SERENITY_INSTALL_ROOT}/opt/Super_Mario" 
-    install_launcher
 }
