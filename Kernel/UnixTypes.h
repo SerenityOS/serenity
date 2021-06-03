@@ -37,6 +37,7 @@
 #define MS_REMOUNT (1 << 5)
 
 enum {
+    _SC_MONOTONIC_CLOCK,
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
     _SC_OPEN_MAX,
