@@ -83,6 +83,18 @@ public:
         return m_value.as_named;
     }
 
+    constexpr Color to_bright() const
+    {
+        if (is_named()) {
+            auto numeric_value = static_cast<u16>(as_named());
+            if (numeric_value < 8)
+                return Color::named(static_cast<ANSIColor>(numeric_value + 8));
+            return *this;
+        } else {
+            return *this;
+        }
+    }
+
     constexpr bool operator==(const Color& other) const
     {
         if (m_kind != other.kind())
