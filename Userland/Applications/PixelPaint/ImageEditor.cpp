@@ -19,7 +19,6 @@ REGISTER_WIDGET(PixelPaint, ImageEditor);
 namespace PixelPaint {
 
 ImageEditor::ImageEditor()
-    : m_undo_stack(make<GUI::UndoStack>())
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
@@ -37,8 +36,8 @@ void ImageEditor::set_image(RefPtr<Image> image)
 
     m_image = move(image);
     m_active_layer = nullptr;
-    m_undo_stack = make<GUI::UndoStack>();
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    store_snapshot();
+
     update();
     relayout();
 
@@ -50,31 +49,41 @@ void ImageEditor::did_complete_action()
 {
     if (!m_image)
         return;
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    store_snapshot();
+}
+
+void ImageEditor::store_snapshot()
+{
+    while (m_active_snapshot + 1 < m_snapshots.size())
+        m_snapshots.take_last();
+
+    RefPtr<Image> snapshot = m_image->take_snapshot();
+    if (!snapshot)
+        return;
+    m_snapshots.append(snapshot.release_nonnull());
+    m_active_snapshot = m_snapshots.size() - 1;
 }
 
 bool ImageEditor::undo()
 {
-    if (!m_image)
+    if (!m_image || m_active_snapshot == 0)
         return false;
-    if (m_undo_stack->can_undo()) {
-        m_undo_stack->undo();
-        layers_did_change();
-        return true;
-    }
-    return false;
+
+    --m_active_snapshot;
+    m_image->restore_snapshot(m_snapshots[m_active_snapshot]);
+    layers_did_change();
+    return true;
 }
 
 bool ImageEditor::redo()
 {
-    if (!m_image)
+    if (!m_image || (m_active_snapshot + 1 == m_snapshots.size()))
         return false;
-    if (m_undo_stack->can_redo()) {
-        m_undo_stack->redo();
-        layers_did_change();
-        return true;
-    }
-    return false;
+
+    ++m_active_snapshot;
+    m_image->restore_snapshot(m_snapshots[m_active_snapshot]);
+    layers_did_change();
+    return true;
 }
 
 void ImageEditor::paint_event(GUI::PaintEvent& event)

@@ -86,16 +86,4 @@ private:
     HashTable<ImageClient*> m_clients;
 };
 
-class ImageUndoCommand : public GUI::Command {
-public:
-    ImageUndoCommand(Image& image);
-
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    RefPtr<Image> m_snapshot;
-    Image& m_image;
-};
-
 }

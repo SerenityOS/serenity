@@ -36,6 +36,7 @@ public:
     void set_active_tool(Tool*);
 
     void did_complete_action();
+    void store_snapshot();
     bool undo();
     bool redo();
 
@@ -92,8 +93,9 @@ private:
     void relayout();
 
     RefPtr<Image> m_image;
+    size_t m_active_snapshot { 0 };
+    NonnullRefPtrVector<Image> m_snapshots;
     RefPtr<Layer> m_active_layer;
-    OwnPtr<GUI::UndoStack> m_undo_stack;
 
     Tool* m_active_tool { nullptr };
 
