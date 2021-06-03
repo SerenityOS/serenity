@@ -105,7 +105,6 @@ install_launcher() {
     cat >$DESTDIR/usr/local/libexec/$script_name <<SCRIPT
 #!/bin/sh
 set -e
-cd -- "\$(dirname -- "\$(which -- $(printf %q "${launcher_command%% *}"))")"
 exec $(printf '%q ' $launcher_command)
 SCRIPT
     chmod +x $DESTDIR/usr/local/libexec/$script_name
