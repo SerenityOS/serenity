@@ -23,7 +23,7 @@ Optional<Label> Configuration::nth_label(size_t i)
     return {};
 }
 
-void Configuration::unwind(Badge<CallFrameHandle>, const CallFrameHandle& frame_handle)
+void Configuration::unwind(Badge<CallFrameHandle>, CallFrameHandle const& frame_handle)
 {
     if (m_stack.size() == frame_handle.stack_size && frame_handle.frame_index == m_current_frame_index)
         return;
@@ -92,18 +92,18 @@ void Configuration::dump_stack()
         Printer { memory_stream }.print(vs...);
         dbgln(format.view(), StringView(memory_stream.copy_into_contiguous_buffer()).trim_whitespace());
     };
-    for (const auto& entry : stack().entries()) {
+    for (auto const& entry : stack().entries()) {
         entry.visit(
-            [&](const Value& v) {
+            [&](Value const& v) {
                 print_value("    {}", v);
             },
-            [&](const Frame& f) {
+            [&](Frame const& f) {
                 dbgln("    frame({})", f.arity());
                 for (auto& local : f.locals()) {
                     print_value("        {}", local);
                 }
             },
-            [](const Label& l) {
+            [](Label const& l) {
                 dbgln("    label({}) -> {}", l.arity(), l.continuation());
             });
     }

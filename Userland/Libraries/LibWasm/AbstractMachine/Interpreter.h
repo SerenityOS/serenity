@@ -37,11 +37,11 @@ struct BytecodeInterpreter : public Interpreter {
     };
 
 protected:
-    virtual void interpret(Configuration&, InstructionPointer&, const Instruction&);
+    virtual void interpret(Configuration&, InstructionPointer&, Instruction const&);
     void branch_to_label(Configuration&, LabelIndex);
     template<typename ReadT, typename PushT>
-    void load_and_push(Configuration&, const Instruction&);
-    void store_to_memory(Configuration&, const Instruction&, ReadonlyBytes data);
+    void load_and_push(Configuration&, Instruction const&);
+    void store_to_memory(Configuration&, Instruction const&, ReadonlyBytes data);
     void call_address(Configuration&, FunctionAddress);
 
     template<typename V, typename T>
@@ -66,11 +66,11 @@ protected:
 struct DebuggerBytecodeInterpreter : public BytecodeInterpreter {
     virtual ~DebuggerBytecodeInterpreter() override = default;
 
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&)> pre_interpret_hook;
-    Function<bool(Configuration&, InstructionPointer&, const Instruction&, const Interpreter&)> post_interpret_hook;
+    Function<bool(Configuration&, InstructionPointer&, Instruction const&)> pre_interpret_hook;
+    Function<bool(Configuration&, InstructionPointer&, Instruction const&, Interpreter const&)> post_interpret_hook;
 
 private:
-    virtual void interpret(Configuration&, InstructionPointer&, const Instruction&) override;
+    virtual void interpret(Configuration&, InstructionPointer&, Instruction const&) override;
 };
 
 }

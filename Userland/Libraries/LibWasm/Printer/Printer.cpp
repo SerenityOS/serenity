@@ -15,7 +15,7 @@ struct Names {
     static HashMap<OpCode, String> instruction_names;
 };
 
-String instruction_name(const OpCode& opcode)
+String instruction_name(OpCode const& opcode)
 {
     return Names::instruction_names.get(opcode).value_or("<unknown>");
 }
@@ -26,7 +26,7 @@ void Printer::print_indent()
         m_stream.write_or_error("  "sv.bytes());
 }
 
-void Printer::print(const Wasm::BlockType& type)
+void Printer::print(Wasm::BlockType const& type)
 {
     print_indent();
     print("(type block ");
@@ -51,7 +51,7 @@ void Printer::print(const Wasm::BlockType& type)
     VERIFY_NOT_REACHED();
 }
 
-void Printer::print(const Wasm::CodeSection& section)
+void Printer::print(Wasm::CodeSection const& section)
 {
     print_indent();
     print("(section code\n");
@@ -64,12 +64,12 @@ void Printer::print(const Wasm::CodeSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::CodeSection::Code& code)
+void Printer::print(Wasm::CodeSection::Code const& code)
 {
     print(code.func());
 }
 
-void Printer::print(const Wasm::CustomSection& section)
+void Printer::print(Wasm::CustomSection const& section)
 {
     print_indent();
     print("(section custom\n");
@@ -84,7 +84,7 @@ void Printer::print(const Wasm::CustomSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::DataCountSection& section)
+void Printer::print(Wasm::DataCountSection const& section)
 {
     print_indent();
     print("(section data count\n");
@@ -97,7 +97,7 @@ void Printer::print(const Wasm::DataCountSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::DataSection& section)
+void Printer::print(Wasm::DataSection const& section)
 {
     print_indent();
     print("(section data\n");
@@ -110,14 +110,14 @@ void Printer::print(const Wasm::DataSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::DataSection::Data& data)
+void Printer::print(Wasm::DataSection::Data const& data)
 {
     print_indent();
     print("(data with value\n");
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         data.value().visit(
-            [this](const DataSection::Data::Passive& value) {
+            [this](DataSection::Data::Passive const& value) {
                 print_indent();
                 print("(passive init {}xu8 (", value.init.size());
                 bool first = true;
@@ -130,7 +130,7 @@ void Printer::print(const Wasm::DataSection::Data& data)
                 }
                 print(")\n");
             },
-            [this](const DataSection::Data::Active& value) {
+            [this](DataSection::Data::Active const& value) {
                 print_indent();
                 print("(active init {}xu8 (", value.init.size());
                 bool first = true;
@@ -164,7 +164,7 @@ void Printer::print(const Wasm::DataSection::Data& data)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ElementSection& section)
+void Printer::print(Wasm::ElementSection const& section)
 {
     print_indent();
     print("(section element\n");
@@ -177,7 +177,7 @@ void Printer::print(const Wasm::ElementSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ElementSection::Element& element)
+void Printer::print(Wasm::ElementSection::Element const& element)
 {
     print_indent();
     print("(element ");
@@ -199,7 +199,7 @@ void Printer::print(const Wasm::ElementSection::Element& element)
         print_indent();
         print("(mode ");
         element.mode.visit(
-            [this](const ElementSection::Active& active) {
+            [this](ElementSection::Active const& active) {
                 print("\n");
                 {
                     TemporaryChange change { m_indent, m_indent + 1 };
@@ -213,13 +213,13 @@ void Printer::print(const Wasm::ElementSection::Element& element)
                 }
                 print_indent();
             },
-            [this](const ElementSection::Passive&) { print("passive"); },
-            [this](const ElementSection::Declarative&) { print("declarative"); });
+            [this](ElementSection::Passive const&) { print("passive"); },
+            [this](ElementSection::Declarative const&) { print("declarative"); });
         print(")\n");
     }
 }
 
-void Printer::print(const Wasm::ExportSection& section)
+void Printer::print(Wasm::ExportSection const& section)
 {
     print_indent();
     print("(section export\n");
@@ -232,7 +232,7 @@ void Printer::print(const Wasm::ExportSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ExportSection::Export& entry)
+void Printer::print(Wasm::ExportSection::Export const& entry)
 {
     print_indent();
     print("(export `{}' as\n", entry.name());
@@ -240,23 +240,23 @@ void Printer::print(const Wasm::ExportSection::Export& entry)
         TemporaryChange change { m_indent, m_indent + 1 };
         print_indent();
         entry.description().visit(
-            [this](const FunctionIndex& index) { print("(function index {})\n", index.value()); },
-            [this](const TableIndex& index) { print("(table index {})\n", index.value()); },
-            [this](const MemoryIndex& index) { print("(memory index {})\n", index.value()); },
-            [this](const GlobalIndex& index) { print("(global index {})\n", index.value()); });
+            [this](FunctionIndex const& index) { print("(function index {})\n", index.value()); },
+            [this](TableIndex const& index) { print("(table index {})\n", index.value()); },
+            [this](MemoryIndex const& index) { print("(memory index {})\n", index.value()); },
+            [this](GlobalIndex const& index) { print("(global index {})\n", index.value()); });
     }
     print_indent();
     print(")\n");
 }
 
-void Printer::print(const Wasm::Expression& expression)
+void Printer::print(Wasm::Expression const& expression)
 {
     TemporaryChange change { m_indent, m_indent + 1 };
     for (auto& instr : expression.instructions())
         print(instr);
 }
 
-void Printer::print(const Wasm::CodeSection::Func& func)
+void Printer::print(Wasm::CodeSection::Func const& func)
 {
     print_indent();
     print("(function\n");
@@ -283,7 +283,7 @@ void Printer::print(const Wasm::CodeSection::Func& func)
     print(")\n");
 }
 
-void Printer::print(const Wasm::FunctionSection& section)
+void Printer::print(Wasm::FunctionSection const& section)
 {
     print_indent();
     print("(section function\n");
@@ -298,7 +298,7 @@ void Printer::print(const Wasm::FunctionSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::FunctionType& type)
+void Printer::print(Wasm::FunctionType const& type)
 {
     print_indent();
     print("(type function\n");
@@ -330,7 +330,7 @@ void Printer::print(const Wasm::FunctionType& type)
     print(")\n");
 }
 
-void Printer::print(const Wasm::GlobalSection& section)
+void Printer::print(Wasm::GlobalSection const& section)
 {
     print_indent();
     print("(section global\n");
@@ -343,7 +343,7 @@ void Printer::print(const Wasm::GlobalSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::GlobalSection::Global& entry)
+void Printer::print(Wasm::GlobalSection::Global const& entry)
 {
     print_indent();
     print("(global\n");
@@ -373,7 +373,7 @@ void Printer::print(const Wasm::GlobalSection::Global& entry)
     print(")\n");
 }
 
-void Printer::print(const Wasm::GlobalType& type)
+void Printer::print(Wasm::GlobalType const& type)
 {
     print_indent();
     print("(type global {}mutable\n", type.is_mutable() ? "" : "im");
@@ -385,7 +385,7 @@ void Printer::print(const Wasm::GlobalType& type)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ImportSection& section)
+void Printer::print(Wasm::ImportSection const& section)
 {
     print_indent();
     print("(section import\n");
@@ -398,15 +398,15 @@ void Printer::print(const Wasm::ImportSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ImportSection::Import& import)
+void Printer::print(Wasm::ImportSection::Import const& import)
 {
     print_indent();
     print("(import `{}' from `{}' as\n", import.name(), import.module());
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         import.description().visit(
-            [this](const auto& type) { print(type); },
-            [this](const TypeIndex& index) {
+            [this](auto const& type) { print(type); },
+            [this](TypeIndex const& index) {
                 print_indent();
                 print("(type index {})\n", index.value());
             });
@@ -415,7 +415,7 @@ void Printer::print(const Wasm::ImportSection::Import& import)
     print(")\n");
 }
 
-void Printer::print(const Wasm::Instruction& instruction)
+void Printer::print(Wasm::Instruction const& instruction)
 {
     print_indent();
     print("({}", instruction_name(instruction.opcode()));
@@ -424,29 +424,29 @@ void Printer::print(const Wasm::Instruction& instruction)
     } else {
         print(" ");
         instruction.arguments().visit(
-            [&](const BlockType& type) { print(type); },
-            [&](const DataIndex& index) { print("(data index {})", index.value()); },
-            [&](const ElementIndex& index) { print("(element index {})", index.value()); },
-            [&](const FunctionIndex& index) { print("(function index {})", index.value()); },
-            [&](const GlobalIndex& index) { print("(global index {})", index.value()); },
-            [&](const LabelIndex& index) { print("(label index {})", index.value()); },
-            [&](const LocalIndex& index) { print("(local index {})", index.value()); },
-            [&](const TableIndex& index) { print("(table index {})", index.value()); },
-            [&](const Instruction::IndirectCallArgs& args) { print("(indirect (type index {}) (table index {}))", args.type.value(), args.table.value()); },
-            [&](const Instruction::MemoryArgument& args) { print("(memory (align {}) (offset {}))", args.align, args.offset); },
-            [&](const Instruction::StructuredInstructionArgs& args) { print("(structured (else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value()); },
-            [&](const Instruction::TableBranchArgs&) { print("(table_branch ...)"); },
-            [&](const Instruction::TableElementArgs& args) { print("(table_element (table index {}) (element index {}))", args.table_index.value(), args.element_index.value()); },
-            [&](const Instruction::TableTableArgs& args) { print("(table_table (table index {}) (table index {}))", args.lhs.value(), args.rhs.value()); },
-            [&](const ValueType& type) { print(type); },
-            [&](const Vector<ValueType>&) { print("(types...)"); },
-            [&](const auto& value) { print("{}", value); });
+            [&](BlockType const& type) { print(type); },
+            [&](DataIndex const& index) { print("(data index {})", index.value()); },
+            [&](ElementIndex const& index) { print("(element index {})", index.value()); },
+            [&](FunctionIndex const& index) { print("(function index {})", index.value()); },
+            [&](GlobalIndex const& index) { print("(global index {})", index.value()); },
+            [&](LabelIndex const& index) { print("(label index {})", index.value()); },
+            [&](LocalIndex const& index) { print("(local index {})", index.value()); },
+            [&](TableIndex const& index) { print("(table index {})", index.value()); },
+            [&](Instruction::IndirectCallArgs const& args) { print("(indirect (type index {}) (table index {}))", args.type.value(), args.table.value()); },
+            [&](Instruction::MemoryArgument const& args) { print("(memory (align {}) (offset {}))", args.align, args.offset); },
+            [&](Instruction::StructuredInstructionArgs const& args) { print("(structured (else {}) (end {}))", args.else_ip.has_value() ? String::number(args.else_ip->value()) : "(none)", args.end_ip.value()); },
+            [&](Instruction::TableBranchArgs const&) { print("(table_branch ...)"); },
+            [&](Instruction::TableElementArgs const& args) { print("(table_element (table index {}) (element index {}))", args.table_index.value(), args.element_index.value()); },
+            [&](Instruction::TableTableArgs const& args) { print("(table_table (table index {}) (table index {}))", args.lhs.value(), args.rhs.value()); },
+            [&](ValueType const& type) { print(type); },
+            [&](Vector<ValueType> const&) { print("(types...)"); },
+            [&](auto const& value) { print("{}", value); });
 
         print(")\n");
     }
 }
 
-void Printer::print(const Wasm::Limits& limits)
+void Printer::print(Wasm::Limits const& limits)
 {
     print_indent();
     print("(limits min={}", limits.min());
@@ -457,7 +457,7 @@ void Printer::print(const Wasm::Limits& limits)
     print(")\n");
 }
 
-void Printer::print(const Wasm::Locals& local)
+void Printer::print(Wasm::Locals const& local)
 {
     print_indent();
     print("(local x{} of type\n", local.n());
@@ -469,7 +469,7 @@ void Printer::print(const Wasm::Locals& local)
     print(")\n");
 }
 
-void Printer::print(const Wasm::MemorySection& section)
+void Printer::print(Wasm::MemorySection const& section)
 {
     print_indent();
     print("(section memory\n");
@@ -482,7 +482,7 @@ void Printer::print(const Wasm::MemorySection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::MemorySection::Memory& memory)
+void Printer::print(Wasm::MemorySection::Memory const& memory)
 {
     print_indent();
     print("(memory\n");
@@ -494,7 +494,7 @@ void Printer::print(const Wasm::MemorySection::Memory& memory)
     print(")\n");
 }
 
-void Printer::print(const Wasm::MemoryType& type)
+void Printer::print(Wasm::MemoryType const& type)
 {
     print_indent();
     print("(type memory\n");
@@ -506,20 +506,20 @@ void Printer::print(const Wasm::MemoryType& type)
     print(")\n");
 }
 
-void Printer::print(const Wasm::Module& module)
+void Printer::print(Wasm::Module const& module)
 {
     print_indent();
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         print("(module\n");
         for (auto& section : module.sections())
-            section.visit([this](const auto& value) { print(value); });
+            section.visit([this](auto const& value) { print(value); });
     }
     print_indent();
     print(")\n");
 }
 
-void Printer::print(const Wasm::Module::Function& func)
+void Printer::print(Wasm::Module::Function const& func)
 {
     print_indent();
     print("(function\n");
@@ -546,7 +546,7 @@ void Printer::print(const Wasm::Module::Function& func)
     print(")\n");
 }
 
-void Printer::print(const Wasm::StartSection& section)
+void Printer::print(Wasm::StartSection const& section)
 {
     print_indent();
     print("(section start\n");
@@ -558,13 +558,13 @@ void Printer::print(const Wasm::StartSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::StartSection::StartFunction& function)
+void Printer::print(Wasm::StartSection::StartFunction const& function)
 {
     print_indent();
     print("(start function index {})\n", function.index().value());
 }
 
-void Printer::print(const Wasm::TableSection& section)
+void Printer::print(Wasm::TableSection const& section)
 {
     print_indent();
     print("(section table\n");
@@ -577,7 +577,7 @@ void Printer::print(const Wasm::TableSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::TableSection::Table& table)
+void Printer::print(Wasm::TableSection::Table const& table)
 {
     print_indent();
     print("(table\n");
@@ -589,7 +589,7 @@ void Printer::print(const Wasm::TableSection::Table& table)
     print(")\n");
 }
 
-void Printer::print(const Wasm::TableType& type)
+void Printer::print(Wasm::TableType const& type)
 {
     print_indent();
     print("(type table min:{}", type.limits().min());
@@ -604,7 +604,7 @@ void Printer::print(const Wasm::TableType& type)
     print(")\n");
 }
 
-void Printer::print(const Wasm::TypeSection& section)
+void Printer::print(Wasm::TypeSection const& section)
 {
     print_indent();
     print("(section type\n");
@@ -617,22 +617,22 @@ void Printer::print(const Wasm::TypeSection& section)
     print(")\n");
 }
 
-void Printer::print(const Wasm::ValueType& type)
+void Printer::print(Wasm::ValueType const& type)
 {
     print_indent();
     print("(type {})\n", ValueType::kind_name(type.kind()));
 }
 
-void Printer::print(const Wasm::Value& value)
+void Printer::print(Wasm::Value const& value)
 {
     print_indent();
-    print("{} ", value.value().visit([&]<typename T>(const T& value) {
+    print("{} ", value.value().visit([&]<typename T>(T const& value) {
         if constexpr (IsSame<Wasm::Reference, T>)
             return String::formatted(
                 "addr({})",
                 value.ref().visit(
-                    [](const Wasm::Reference::Null&) { return String("null"); },
-                    [](const auto& ref) { return String::number(ref.address.value()); }));
+                    [](Wasm::Reference::Null const&) { return String("null"); },
+                    [](auto const& ref) { return String::number(ref.address.value()); }));
         else
             return String::formatted("{}", value);
     }));
@@ -640,14 +640,14 @@ void Printer::print(const Wasm::Value& value)
     print(value.type());
 }
 
-void Printer::print(const Wasm::Reference& value)
+void Printer::print(Wasm::Reference const& value)
 {
     print_indent();
     print(
         "addr({})\n",
         value.ref().visit(
-            [](const Wasm::Reference::Null&) { return String("null"); },
-            [](const auto& ref) { return String::number(ref.address.value()); }));
+            [](Wasm::Reference::Null const&) { return String("null"); },
+            [](auto const& ref) { return String::number(ref.address.value()); }));
 }
 
 }

@@ -11,7 +11,7 @@
 
 namespace Wasm {
 
-ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof)
+ParseError with_eof_check(InputStream const& stream, ParseError error_if_not_eof)
 {
     if (stream.unreliable_eof())
         return ParseError::UnexpectedEof;
@@ -1358,9 +1358,9 @@ ParseResult<Module> Module::parse(InputStream& stream)
 
 void Module::populate_sections()
 {
-    const FunctionSection* function_section { nullptr };
-    for_each_section_of_type<FunctionSection>([&](const FunctionSection& section) { function_section = &section; });
-    for_each_section_of_type<CodeSection>([&](const CodeSection& section) {
+    FunctionSection const* function_section { nullptr };
+    for_each_section_of_type<FunctionSection>([&](FunctionSection const& section) { function_section = &section; });
+    for_each_section_of_type<CodeSection>([&](CodeSection const& section) {
         // FIXME: This should be considered invalid once validation is implemented.
         if (!function_section)
             return;

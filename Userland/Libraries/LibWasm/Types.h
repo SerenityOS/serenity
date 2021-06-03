@@ -56,7 +56,7 @@ TYPEDEF_DISTINCT_ORDERED_ID(size_t, LabelIndex);
 TYPEDEF_DISTINCT_ORDERED_ID(size_t, DataIndex);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, true, false, true, InstructionPointer);
 
-ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof);
+ParseError with_eof_check(InputStream const& stream, ParseError error_if_not_eof);
 
 template<typename T>
 struct GenericIndexParser {
@@ -220,7 +220,7 @@ public:
     {
     }
 
-    const auto& types() const { return m_types; }
+    auto const& types() const { return m_types; }
 
     static ParseResult<ResultType> parse(InputStream& stream);
 
@@ -999,8 +999,8 @@ public:
     auto& functions() const { return m_functions; }
     auto& type(TypeIndex index) const
     {
-        const FunctionType* type = nullptr;
-        for_each_section_of_type<TypeSection>([&](const TypeSection& section) {
+        FunctionType const* type = nullptr;
+        for_each_section_of_type<TypeSection>([&](TypeSection const& section) {
             type = &section.types().at(index.value());
         });
 
