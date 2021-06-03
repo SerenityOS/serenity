@@ -1,0 +1,28 @@
+diff --git a/Makefile b/Makefile
+index 1153e0c..9c70190 100644
+--- a/Makefile
++++ b/Makefile
+@@ -3,8 +3,8 @@ OBJS = reciter.o sam.o render.o main.o debug.o processframes.o createtransitions
+ CC = gcc
+ 
+ # libsdl present
+-CFLAGS =  -Wall -O2 -DUSESDL `sdl-config --cflags`
+-LFLAGS = `sdl-config --libs`
++CFLAGS =  -Wall -O2 -DUSESDL -I../../SDL2/SDL-main-serenity/include -D_REENTRANT
++LFLAGS = -L../../SDL2 -lSDL2
+ 
+ # no libsdl present
+ #CFLAGS =  -Wall -O2
+diff --git a/src/main.c b/src/main.c
+index 3e8fdde..3432fe8 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -14,7 +14,7 @@
+ 
+ 
+ // Approximations of some Windows functions to ease portability
+-#if defined __GNU_LIBRARY__ || defined __GLIBC__
++#if defined __GNU_LIBRARY__ || defined __GLIBC__ || defined __serenity__
+ static int min(int l, int r) { return l < r ? l : r; }
+ static void strcat_s(char * dest, int size, char * str) {
+     unsigned int dlen = strlen(dest);
