@@ -662,7 +662,7 @@ bool AbstractView::is_highlighting_searching(const ModelIndex& index) const
     return index == m_highlighted_search_index;
 }
 
-void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision)
+void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index, bool is_selected, const Gfx::IntRect& text_rect, const StringView& item_text, const Gfx::Font& font, Gfx::TextAlignment alignment, Gfx::TextElision elision, size_t search_highlighting_offset)
 {
     Color text_color;
     if (is_selected)
@@ -672,22 +672,28 @@ void AbstractView::draw_item_text(Gfx::Painter& painter, const ModelIndex& index
     if (is_highlighting_searching(index)) {
         Utf8View searching_text(searching());
         auto searching_length = searching_text.length();
+        if (searching_length > search_highlighting_offset)
+            searching_length -= search_highlighting_offset;
+        else if (search_highlighting_offset > 0)
+            searching_length = 0;
 
         // Highlight the text background first
+        auto background_searching_length = searching_length;
         painter.draw_text([&](const Gfx::IntRect& rect, u32) {
-            if (searching_length > 0) {
-                searching_length--;
+            if (background_searching_length > 0) {
+                background_searching_length--;
                 painter.fill_rect(rect.inflated(0, 2), palette().highlight_searching());
             }
         },
             text_rect, item_text, font, alignment, elision);
 
         // Then draw the text
+        auto text_searching_length = searching_length;
         auto highlight_text_color = palette().highlight_searching_text();
         searching_length = searching_text.length();
         painter.draw_text([&](const Gfx::IntRect& rect, u32 code_point) {
-            if (searching_length > 0) {
-                searching_length--;
+            if (text_searching_length > 0) {
+                text_searching_length--;
                 painter.draw_glyph_or_emoji(rect.location(), code_point, font, highlight_text_color);
             } else {
                 painter.draw_glyph_or_emoji(rect.location(), code_point, font, text_color);
