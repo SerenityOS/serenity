@@ -10,6 +10,8 @@
 
 namespace Wasm {
 
+class Value;
+
 String instruction_name(const OpCode& opcode);
 
 struct Printer {
@@ -28,14 +30,7 @@ struct Printer {
     void print(const Wasm::DataSection&);
     void print(const Wasm::DataSection::Data&);
     void print(const Wasm::ElementSection&);
-    void print(const Wasm::ElementSection::SegmentType0&);
-    void print(const Wasm::ElementSection::SegmentType1&);
-    void print(const Wasm::ElementSection::SegmentType2&);
-    void print(const Wasm::ElementSection::SegmentType3&);
-    void print(const Wasm::ElementSection::SegmentType4&);
-    void print(const Wasm::ElementSection::SegmentType5&);
-    void print(const Wasm::ElementSection::SegmentType6&);
-    void print(const Wasm::ElementSection::SegmentType7&);
+    void print(const Wasm::ElementSection::Element&);
     void print(const Wasm::ExportSection&);
     void print(const Wasm::ExportSection::Export&);
     void print(const Wasm::Expression&);
@@ -54,6 +49,7 @@ struct Printer {
     void print(const Wasm::MemoryType&);
     void print(const Wasm::Module&);
     void print(const Wasm::Module::Function&);
+    void print(const Wasm::Reference&);
     void print(const Wasm::StartSection&);
     void print(const Wasm::StartSection::StartFunction&);
     void print(const Wasm::TableSection&);
@@ -61,6 +57,7 @@ struct Printer {
     void print(const Wasm::TableType&);
     void print(const Wasm::TypeSection&);
     void print(const Wasm::ValueType&);
+    void print(const Wasm::Value&);
 
 private:
     void print_indent();
