@@ -26,14 +26,14 @@ public:
     virtual ~Exception() override = default;
 
     Value value() const { return m_value; }
-    const Vector<TracebackFrame>& traceback() const { return m_traceback; }
+    const Vector<TracebackFrame, 32>& traceback() const { return m_traceback; }
 
 private:
     virtual const char* class_name() const override { return "Exception"; }
     virtual void visit_edges(Visitor&) override;
 
     Value m_value;
-    Vector<TracebackFrame> m_traceback;
+    Vector<TracebackFrame, 32> m_traceback;
 };
 
 }
