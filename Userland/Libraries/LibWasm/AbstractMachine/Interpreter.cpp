@@ -94,10 +94,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, const Inst
     }
     dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, sizeof(ReadType));
     auto slice = memory->data().bytes().slice(instance_address, sizeof(ReadType));
-    if constexpr (sizeof(ReadType) == 1)
-        configuration.stack().peek() = Value(static_cast<PushType>(slice[0]));
-    else
-        configuration.stack().peek() = Value(read_value<PushType>(slice));
+    configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
 
 void BytecodeInterpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
@@ -210,25 +207,26 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 #define LOAD_AND_PUSH(read_type, push_type)                                     \
     do {                                                                        \
         return load_and_push<read_type, push_type>(configuration, instruction); \
-        return;                                                                 \
     } while (false)
 
-#define POP_AND_STORE(pop_type, store_type)                                                               \
-    do {                                                                                                  \
-        auto value = ConvertToRaw<pop_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
-        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));             \
-        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                      \
-        return;                                                                                           \
+#define POP_AND_STORE(pop_type, store_type)                                                                 \
+    do {                                                                                                    \
+        auto value = ConvertToRaw<store_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
+        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));               \
+        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                        \
+        return;                                                                                             \
     } while (false)
 
 template<typename T>
 T BytecodeInterpreter::read_value(ReadonlyBytes data)
 {
-    T value;
+    LittleEndian<T> value;
     InputMemoryStream stream { data };
-    auto ok = IsSigned<T> ? LEB128::read_signed(stream, value) : LEB128::read_unsigned(stream, value);
-    if (stream.handle_any_error() || !ok)
+    stream >> value;
+    if (stream.handle_any_error()) {
+        dbgln("Read from {} failed", data.data());
         m_do_trap = true;
+    }
     return value;
 }
 
@@ -258,7 +256,7 @@ template<typename T>
 struct ConvertToRaw {
     T operator()(T value)
     {
-        return value;
+        return LittleEndian<T>(value);
     }
 };
 
