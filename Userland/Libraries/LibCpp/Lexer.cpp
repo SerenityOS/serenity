@@ -12,7 +12,7 @@
 
 namespace Cpp {
 
-Lexer::Lexer(const StringView& input)
+Lexer::Lexer(StringView const& input)
     : m_input(input)
 {
 }
@@ -48,7 +48,7 @@ static bool is_valid_nonfirst_character_of_identifier(char ch)
     return is_valid_first_character_of_identifier(ch) || isdigit(ch);
 }
 
-constexpr const char* s_known_keywords[] = {
+constexpr char const* s_known_keywords[] = {
     "alignas",
     "alignof",
     "and",
@@ -125,7 +125,7 @@ constexpr const char* s_known_keywords[] = {
     "xor_eq"
 };
 
-constexpr const char* s_known_types[] = {
+constexpr char const* s_known_types[] = {
     "ByteBuffer",
     "CircularDeque",
     "CircularQueue",
@@ -186,7 +186,7 @@ constexpr const char* s_known_types[] = {
     "wchar_t"
 };
 
-static bool is_keyword(const StringView& string)
+static bool is_keyword(StringView const& string)
 {
     static HashTable<String> keywords(array_size(s_known_keywords));
     if (keywords.is_empty()) {
@@ -195,7 +195,7 @@ static bool is_keyword(const StringView& string)
     return keywords.contains(string);
 }
 
-static bool is_known_type(const StringView& string)
+static bool is_known_type(StringView const& string)
 {
     static HashTable<String> types(array_size(s_known_types));
     if (types.is_empty()) {
