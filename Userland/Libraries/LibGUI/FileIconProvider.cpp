@@ -122,7 +122,7 @@ Icon FileIconProvider::icon_for_path(const String& path)
 {
     struct stat stat;
     if (::stat(path.characters(), &stat) < 0)
-        return {};
+        return s_file_icon;
     return icon_for_path(path, stat.st_mode);
 }
 
@@ -225,8 +225,6 @@ Icon FileIconProvider::icon_for_path(const String& path, mode_t mode)
             target_path = Core::File::real_path_for(String::formatted("{}/{}", LexicalPath(path).dirname(), raw_symlink_target));
         }
         auto target_icon = icon_for_path(target_path);
-        if (target_icon.sizes().is_empty())
-            return s_symlink_icon;
 
         Icon generated_icon;
         for (auto size : target_icon.sizes()) {
