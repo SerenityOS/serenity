@@ -107,7 +107,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     Vector<GUI::AutocompleteProvider::Entry> class_entries, identifier_entries;
     switch (state) {
     case Free:
-        if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
             // After some token, but with extra space, not on a new line.
             // Nothing to put here.
             break;
@@ -121,7 +121,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     case InClassName:
         if (class_names.is_empty())
             break;
-        if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
             // After a class name, but haven't seen braces.
             // TODO: Suggest braces?
             break;
@@ -136,7 +136,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     case InIdentifier: {
         if (class_names.is_empty())
             break;
-        if (last_seen_token && last_seen_token->m_end.column + 1 != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
+        if (last_seen_token && last_seen_token->m_end.column != cursor.column() && last_seen_token->m_end.line == cursor.line()) {
             // After an identifier, but with extra space
             // TODO: Maybe suggest a colon?
             break;
@@ -158,7 +158,7 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     }
     case AfterClassName: {
         if (last_seen_token && last_seen_token->m_end.line == cursor.line()) {
-            if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column + 1 != cursor.column()) {
+            if (last_seen_token->m_type != GUI::GMLToken::Type::Identifier || last_seen_token->m_end.column != cursor.column()) {
                 // Inside braces, but on the same line as some other stuff (and not the continuation of one!)
                 // The user expects nothing here.
                 break;

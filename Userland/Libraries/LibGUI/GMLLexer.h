@@ -63,7 +63,6 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    GMLPosition m_previous_position { 0, 0 };
     GMLPosition m_position { 0, 0 };
 };
 
