@@ -62,7 +62,6 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    IniPosition m_previous_position { 0, 0 };
     IniPosition m_position { 0, 0 };
 };
 

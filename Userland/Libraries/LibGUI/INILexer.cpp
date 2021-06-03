@@ -26,7 +26,6 @@ char IniLexer::consume()
 {
     VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
-    m_previous_position = m_position;
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
@@ -47,9 +46,9 @@ Vector<IniToken> IniLexer::lex()
         IniToken token;
         token.m_type = type;
         token.m_start = m_position;
+        consume();
         token.m_end = m_position;
         tokens.append(token);
-        consume();
     };
 
     auto begin_token = [&] {
