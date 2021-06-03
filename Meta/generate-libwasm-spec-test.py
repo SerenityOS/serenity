@@ -234,10 +234,7 @@ def gentest(entry, main_name):
 
 def gen_parse_module(name):
     return (
-        f'let content;\n    '
-        f'try {{\n        '
-        f'content = readBinaryWasmFile("Fixtures/SpecTests/{name}.wasm");\n    '
-        f'}} catch {{ read_okay = false; }}\n    '
+        f'let content = readBinaryWasmFile("Fixtures/SpecTests/{name}.wasm");\n    '
         f'const module = parseWebAssemblyModule(content)\n    '
     )
 
@@ -260,12 +257,10 @@ def main():
                 continue
 
         sep = ""
-        print(f'''{{
-let readOkay = true;
+        print(f'''describe({json.dumps(testname)}, () => {{
 {gen_parse_module(testname)}
-if (readOkay) {{
 {sep.join(gentest(x, testname) for x in description["tests"])}
-}}}}
+}});
 ''')
 
 
