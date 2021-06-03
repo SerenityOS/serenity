@@ -547,6 +547,7 @@ TEST_CASE(select)
     EXPECT(parse("SELECT * FROM table LIMIT 12").is_error());
     EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET;").is_error());
     EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET 15").is_error());
+    EXPECT(parse("SELECT * FROM table LIMIT 15, 16;").is_error());
 
     struct Type {
         SQL::ResultType type;

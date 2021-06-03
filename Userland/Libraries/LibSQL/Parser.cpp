@@ -321,11 +321,11 @@ NonnullRefPtr<Select> Parser::parse_select_statement(RefPtr<CommonTableExpressio
         RefPtr<Expression> offset_expression;
         if (consume_if(TokenType::Offset)) {
             offset_expression = parse_expression();
-        } else {
+        } else if (consume_if(TokenType::Comma)) {
             // Note: The limit clause may instead be defined as "offset-expression, limit-expression", effectively reversing the
             // order of the expressions. SQLite notes "this is counter-intuitive" and "to avoid confusion, programmers are strongly
             // encouraged to ... avoid using a LIMIT clause with a comma-separated offset."
-            VERIFY(!consume_if(TokenType::Comma));
+            syntax_error("LIMIT clauses of the form 'LIMIT <expr>, <expr>' are not supported");
         }
 
         limit_clause = create_ast_node<LimitClause>(move(limit_expression), move(offset_expression));
