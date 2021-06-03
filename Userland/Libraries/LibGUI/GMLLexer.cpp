@@ -5,8 +5,8 @@
  */
 
 #include "GMLLexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Vector.h>
-#include <ctype.h>
 
 namespace GUI {
 
@@ -36,19 +36,19 @@ char GMLLexer::consume()
     return ch;
 }
 
-static bool is_valid_identifier_start(char ch)
+constexpr bool is_valid_identifier_start(char ch)
 {
-    return isalpha(ch) || ch == '_';
+    return is_ascii_alpha(ch) || ch == '_';
 }
 
-static bool is_valid_identifier_character(char ch)
+constexpr bool is_valid_identifier_character(char ch)
 {
-    return isalnum(ch) || ch == '_';
+    return is_ascii_alphanumeric(ch) || ch == '_';
 }
 
-static bool is_valid_class_character(char ch)
+constexpr bool is_valid_class_character(char ch)
 {
-    return isalnum(ch) || ch == '_' || ch == ':';
+    return is_ascii_alphanumeric(ch) || ch == '_' || ch == ':';
 }
 
 Vector<GMLToken> GMLLexer::lex()
@@ -83,9 +83,9 @@ Vector<GMLToken> GMLLexer::lex()
     };
 
     while (m_index < m_input.length()) {
-        if (isspace(peek(0))) {
+        if (is_ascii_space(peek(0))) {
             begin_token();
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
             continue;
         }
@@ -132,7 +132,7 @@ Vector<GMLToken> GMLLexer::lex()
             consume();
             commit_token(GMLToken::Type::Colon);
 
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
 
             if (peek(0) == '@') {
