@@ -38,10 +38,10 @@ public:
         Fragment
     };
 
-    static URL parse(Badge<URL>, const StringView& input, const URL* base_url = nullptr);
+    static URL parse(Badge<URL>, StringView const& input, URL const* base_url = nullptr);
 
 private:
-    static Optional<URL> parse_data_url(const StringView& raw_input);
+    static Optional<URL> parse_data_url(StringView const& raw_input);
 };
 
 }
