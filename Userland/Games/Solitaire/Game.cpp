@@ -376,15 +376,20 @@ void Game::draw_cards()
         update(waste.bounding_box());
         update(play.bounding_box());
 
+        NonnullRefPtrVector<Card> moved_cards;
         while (!play.is_empty()) {
             auto card = play.pop();
             stock.push(card);
+            moved_cards.prepend(card);
         }
 
         while (!waste.is_empty()) {
             auto card = waste.pop();
             stock.push(card);
+            moved_cards.prepend(card);
         }
+
+        remember_move_for_undo(waste, stock, moved_cards);
 
         if (m_passes_left_before_punishment == 0)
             update_score(recycle_rules().punishment);
@@ -411,10 +416,14 @@ void Game::draw_cards()
 
         update(stock.bounding_box());
 
+        NonnullRefPtrVector<Card> cards_drawn;
         for (size_t i = 0; (i < cards_to_draw) && !stock.is_empty(); ++i) {
             auto card = stock.pop();
+            cards_drawn.append(card);
             play.push(move(card));
         }
+
+        remember_move_for_undo(stock, play, cards_drawn);
 
         if (play.bounding_box().size().width() > play_bounding_box.size().width())
             update(play.bounding_box());
@@ -621,6 +630,9 @@ void Game::perform_undo()
             play.push(move(card));
         }
     }
+
+    if (m_last_move.from->type() == CardStack::Type::Waste && m_last_move.to->type() == CardStack::Type::Stock)
+        pop_waste_to_play_stack();
 
     score_move(*m_last_move.from, *m_last_move.to, true);
 
