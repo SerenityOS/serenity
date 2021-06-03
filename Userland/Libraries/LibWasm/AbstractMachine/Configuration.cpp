@@ -66,6 +66,9 @@ Result Configuration::execute(Interpreter& interpreter)
     if (interpreter.did_trap())
         return Trap {};
 
+    if (stack().size() <= frame().arity() + 1)
+        return Trap {};
+
     Vector<Value> results;
     results.ensure_capacity(frame().arity());
     for (size_t i = 0; i < frame().arity(); ++i)

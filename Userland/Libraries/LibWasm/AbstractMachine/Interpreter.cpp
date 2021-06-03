@@ -122,6 +122,7 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
     const FunctionType* type { nullptr };
     instance->visit([&](const auto& function) { type = &function.type(); });
     TRAP_IF_NOT(type);
+    TRAP_IF_NOT(configuration.stack().entries().size() > type->parameters().size());
     Vector<Value> args;
     args.ensure_capacity(type->parameters().size());
     auto span = configuration.stack().entries().span().slice_from_end(type->parameters().size());
@@ -506,8 +507,18 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
             return;
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     }
-    case Instructions::br_table.value():
-        goto unimplemented;
+    case Instructions::br_table.value(): {
+        auto& arguments = instruction.arguments().get<Instruction::TableBranchArgs>();
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto maybe_i = entry.get<Value>().to<i32>();
+        TRAP_IF_NOT(maybe_i.has_value());
+        TRAP_IF_NOT(maybe_i.value() >= 0);
+        size_t i = *maybe_i;
+        if (i < arguments.labels.size())
+            return branch_to_label(configuration, arguments.labels[i]);
+        return branch_to_label(configuration, arguments.default_);
+    }
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
         TRAP_IF_NOT(index.value() < configuration.frame().module().functions().size());
