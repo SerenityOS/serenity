@@ -75,7 +75,7 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 
     for (auto& card : m_stack) {
         if (!card.is_moving())
-            card.clear_and_draw(painter, background_color);
+            card.clear_and_draw(painter, Gfx::Color::Transparent);
     }
 }
 
