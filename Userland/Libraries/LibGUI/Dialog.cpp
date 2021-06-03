@@ -5,6 +5,7 @@
  */
 
 #include <LibCore/EventLoop.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/Dialog.h>
 #include <LibGUI/Event.h>
 
@@ -29,6 +30,8 @@ int Dialog::exec()
         auto& parent_window = *static_cast<Window*>(parent());
         if (parent_window.is_visible()) {
             center_within(parent_window);
+            if (rect().intersects(Desktop::the().rect()))
+                center_on_screen();
         } else {
             center_on_screen();
         }
