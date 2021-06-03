@@ -107,6 +107,7 @@ namespace Kernel {
 #define CFG3_READY_TO_L23 0x2
 
 #define CFG5_ASPM_ENABLE 0x1
+#define CFG5_SPI_ENABLE 0x8
 
 #define PHY_LINK_STATUS 0x2
 
@@ -167,6 +168,7 @@ namespace Kernel {
 #define MTPS_JUMBO 0x3F
 
 #define MISC_RXDV_GATE_ENABLE 0x80000
+#define MISC_PWM_ENABLE 0x400000
 
 #define MISC2_PFM_D3COLD_ENABLE 0x40
 
@@ -197,7 +199,7 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::RTL8168NetworkAdapter(PCI::Address addre
 
     identify_chip_version();
     dmesgln("RTL8168: Version detected - {} ({}{})", possible_device_name(), (u8)m_version, m_version_uncertain ? "?" : "");
-    if (m_version == ChipVersion::Unknown || m_version >= ChipVersion::Version4) {
+    if (m_version == ChipVersion::Unknown || (m_version >= ChipVersion::Version4 && m_version <= ChipVersion::Version16) || m_version >= ChipVersion::Version18) {
         dmesgln("RTL8168: Aborting initialization! Support for your chip version ({}) is not implemented yet, please open a GH issue and include this message.", (u8)m_version);
         return; // Each ChipVersion requires a specific implementation of configure_phy and hardware_quirks
     }
@@ -384,8 +386,10 @@ void RTL8168NetworkAdapter::configure_phy()
         TODO();
     case ChipVersion::Version16:
         TODO();
-    case ChipVersion::Version17:
-        TODO();
+    case ChipVersion::Version17: {
+        configure_phy_e_2();
+        return;
+    }
     case ChipVersion::Version18:
         TODO();
     case ChipVersion::Version19:
@@ -443,6 +447,93 @@ void RTL8168NetworkAdapter::configure_phy_b_2()
     };
 
     phy_out_batch(phy_registers, 3);
+}
+
+void RTL8168NetworkAdapter::configure_phy_e_2()
+{
+    // FIXME: linux's driver writes a firmware blob to the device at this point, is this needed?
+
+    constexpr PhyRegister phy_registers[] = {
+        // Enable delay cap
+        { 0x1f, 0x4 },
+        { 0x1f, 0x7 },
+        { 0x1e, 0xac },
+        { 0x18, 0x6 },
+        { 0x1f, 0x2 },
+        { 0x1f, 0 },
+        { 0x1f, 0 },
+
+        // Channel estimation fine tune
+        { 0x1f, 0x3 },
+        { 0x9, 0xa20f },
+        { 0x1f, 0 },
+        { 0x1f, 0 },
+
+        // Green Setting
+        { 0x1f, 0x5 },
+        { 0x5, 0x8b5b },
+        { 0x6, 0x9222 },
+        { 0x5, 0x8b6d },
+        { 0x6, 0x8000 },
+        { 0x5, 0x8b76 },
+        { 0x6, 0x8000 },
+        { 0x1f, 0 },
+    };
+
+    phy_out_batch(phy_registers, 19);
+
+    // 4 corner performance improvement
+    phy_out(0x1f, 0x5);
+    phy_out(0x5, 0x8b80);
+    phy_update(0x17, 0x6, 0);
+    phy_out(0x1f, 0);
+
+    // PHY auto speed down
+    phy_out(0x1f, 0x4);
+    phy_out(0x1f, 0x7);
+    phy_out(0x1e, 0x2d);
+    phy_update(0x18, 0x10, 0);
+    phy_out(0x1f, 0x2);
+    phy_out(0x1f, 0);
+    phy_update(0x14, 0x8000, 0);
+
+    // Improve 10M EEE waveform
+    phy_out(0x1f, 0x5);
+    phy_out(0x5, 0x8b86);
+    phy_update(0x6, 0x1, 0);
+    phy_out(0x1f, 0);
+
+    // Improve 2-pair detection performance
+    phy_out(0x1f, 0x5);
+    phy_out(0x5, 0x8b85);
+    phy_update(0x6, 0x4000, 0);
+    phy_out(0x1f, 0);
+
+    // EEE Setting
+    eri_update(0x1b0, ERI_MASK_1111, 0, 0x3, ERI_EXGMAC);
+    phy_out(0x1f, 0x5);
+    phy_out(0x5, 0x8b85);
+    phy_update(0x6, 0, 0x2000);
+    phy_out(0x1f, 0x4);
+    phy_out(0x1f, 0x7);
+    phy_out(0x1e, 0x20);
+    phy_update(0x15, 0, 0x100);
+    phy_out(0x1f, 0x2);
+    phy_out(0x1f, 0);
+    phy_out(0xd, 0x7);
+    phy_out(0xe, 0x3c);
+    phy_out(0xd, 0x4007);
+    phy_out(0xe, 0);
+    phy_out(0xd, 0);
+
+    // Green feature
+    phy_out(0x1f, 0x3);
+    phy_update(0x19, 0, 0x1);
+    phy_update(0x10, 0, 0x400);
+    phy_out(0x1f, 0);
+
+    // Broken BIOS workaround: feed GigaMAC registers with MAC address.
+    rar_exgmac_set();
 }
 
 void RTL8168NetworkAdapter::configure_phy_h_1()
@@ -620,6 +711,25 @@ void RTL8168NetworkAdapter::configure_phy_h_2()
     phy_out(0x1f, 0);
 }
 
+void RTL8168NetworkAdapter::rar_exgmac_set()
+{
+    auto mac = mac_address();
+    const u16 w[] = {
+        (u16)(mac[0] | (mac[1] << 8)),
+        (u16)(mac[2] | (mac[3] << 8)),
+        (u16)(mac[4] | (mac[5] << 8)),
+    };
+
+    const ExgMacRegister exg_mac_registers[] = {
+        { 0xe0, ERI_MASK_1111, (u32)(w[0] | (w[1] << 16)) },
+        { 0xe4, ERI_MASK_1111, (u32)w[2] },
+        { 0xf0, ERI_MASK_1111, (u32)(w[0] << 16) },
+        { 0xf4, ERI_MASK_1111, (u32)(w[1] | (w[2] << 16)) },
+    };
+
+    exgmac_out_batch(exg_mac_registers, 4);
+}
+
 void RTL8168NetworkAdapter::start_hardware()
 {
 
@@ -709,7 +819,8 @@ void RTL8168NetworkAdapter::hardware_quirks()
     case ChipVersion::Version16:
         TODO();
     case ChipVersion::Version17:
-        TODO();
+        hardware_quirks_e_2();
+        return;
     case ChipVersion::Version18:
         TODO();
     case ChipVersion::Version19:
@@ -758,6 +869,46 @@ void RTL8168NetworkAdapter::hardware_quirks_b_2()
 
     // disable checked reserved bits
     out8(REG_CONFIG4, in8(REG_CONFIG4) & ~1);
+}
+
+void RTL8168NetworkAdapter::hardware_quirks_e_2()
+{
+    constexpr EPhyUpdate ephy_info[] = {
+        { 0x9, 0, 0x80 },
+        { 0x19, 0, 0x224 },
+    };
+
+    csi_enable(CSI_ACCESS_1);
+
+    extended_phy_initialize(ephy_info, 2);
+
+    // FIXME: MTU performance tweak
+
+    eri_out(0xc0, ERI_MASK_0011, 0, ERI_EXGMAC);
+    eri_out(0xb8, ERI_MASK_0011, 0, ERI_EXGMAC);
+    eri_out(0xc8, ERI_MASK_1111, 0x100002, ERI_EXGMAC);
+    eri_out(0xe8, ERI_MASK_1111, 0x100006, ERI_EXGMAC);
+    eri_out(0xcc, ERI_MASK_1111, 0x50, ERI_EXGMAC);
+    eri_out(0xd0, ERI_MASK_1111, 0x7ff0060, ERI_EXGMAC);
+    eri_update(0x1b0, ERI_MASK_0001, 0x10, 0, ERI_EXGMAC);
+    eri_update(0xd4, ERI_MASK_0011, 0xc00, 0xff00, ERI_EXGMAC);
+
+    // Set early TX
+    out8(REG_MTPS, 0x27);
+
+    // FIXME: Disable PCIe clock request
+
+    // enable tx auto fifo
+    out32(REG_TXCFG, in32(REG_TXCFG) | TXCFG_AUTO_FIFO);
+
+    out8(REG_MCU, in8(REG_MCU) & ~MCU_NOW_IS_OOB);
+
+    // Set EEE LED frequency
+    out8(REG_EEE_LED, in8(REG_EEE_LED) & ~0x7);
+
+    out8(REG_DLLPR, in8(REG_DLLPR) | DLLPR_PFM_ENABLE);
+    out32(REG_MISC, in32(REG_MISC) | MISC_PWM_ENABLE);
+    out8(REG_CONFIG5, in8(REG_CONFIG5) & ~CFG5_SPI_ENABLE);
 }
 
 void RTL8168NetworkAdapter::hardware_quirks_h()
@@ -1187,6 +1338,13 @@ void RTL8168NetworkAdapter::eri_update(u32 address, u32 mask, u32 set, u32 clear
 {
     auto value = eri_in(address, type);
     eri_out(address, mask, (value & ~clear) | set, type);
+}
+
+void RTL8168NetworkAdapter::exgmac_out_batch(const ExgMacRegister exgmac_registers[], size_t length)
+{
+    for (size_t i = 0; i < length; i++) {
+        eri_out(exgmac_registers[i].address, exgmac_registers[i].mask, exgmac_registers[i].value, ERI_EXGMAC);
+    }
 }
 
 void RTL8168NetworkAdapter::csi_out(u32 address, u32 data)

@@ -128,12 +128,16 @@ private:
     void configure_phy();
     void configure_phy_b_1();
     void configure_phy_b_2();
+    void configure_phy_e_2();
     void configure_phy_h_1();
     void configure_phy_h_2();
+
+    void rar_exgmac_set();
 
     void hardware_quirks();
     void hardware_quirks_b_1();
     void hardware_quirks_b_2();
+    void hardware_quirks_e_2();
     void hardware_quirks_h();
 
     void initialize_rx_descriptors();
@@ -170,6 +174,12 @@ private:
     void eri_out(u32 address, u32 mask, u32 data, u32 type);
     u32 eri_in(u32 address, u32 type);
     void eri_update(u32 address, u32 mask, u32 set, u32 clear, u32 type);
+    struct ExgMacRegister {
+        u16 address;
+        u16 mask;
+        u32 value;
+    };
+    void exgmac_out_batch(const ExgMacRegister[], size_t length);
 
     void csi_out(u32 address, u32 data);
     u32 csi_in(u32 address);
