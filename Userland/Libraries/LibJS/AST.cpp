@@ -1158,7 +1158,7 @@ void FunctionNode::dump(int indent, const String& class_name) const
     outln("{} '{}'", class_name, name());
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
-        outln("(Parameters)\n");
+        outln("(Parameters)");
 
         for (auto& parameter : m_parameters) {
             print_indent(indent + 2);
