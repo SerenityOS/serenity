@@ -53,6 +53,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
+    m_playback_progress_slider->set_jump_to_cursor(true);
     m_playback_progress_slider->set_min(0);
     m_playback_progress_slider->set_max(total_samples);
     m_playback_progress_slider->set_page_step(total_samples / 10);
