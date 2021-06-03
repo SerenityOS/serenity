@@ -235,11 +235,15 @@ void ComboBox::open()
         m_list_view->set_cursor(m_selected_index.value(), AbstractView::SelectionUpdate::Set);
     }
 
-    // Set the minimum minimum height of the list window to the height of three
-    // items or the row count, whichever is smaller, plus the frame thickness.
-    // This prevents the list from becoming infinitesimally small when pushed
-    // up against the screen edge.
-    m_list_window->set_minimum_size(1, min(3, model()->row_count()) * m_list_view->item_height() + m_list_view->frame_thickness() * 2);
+    // Change direction and go upwards to prevent the list from becoming
+    // infinitesimally small when pushed up against the screen edge.
+    auto minimum_height = min(3, model()->row_count()) * m_list_view->item_height() + m_list_view->frame_thickness() * 2;
+    bool go_upwards_instead = list_window_rect.height() <= minimum_height;
+    if (go_upwards_instead) {
+        auto origin_point = my_screen_rect.top_left();
+        list_window_rect = { Gfx::IntPoint { origin_point.x(), origin_point.y() - size.height() }, size };
+        list_window_rect.intersect(Desktop::the().rect());
+    }
 
     m_list_window->set_rect(list_window_rect);
     m_list_window->show();
