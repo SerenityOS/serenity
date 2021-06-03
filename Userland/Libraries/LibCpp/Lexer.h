@@ -14,7 +14,7 @@ namespace Cpp {
 
 class Lexer {
 public:
-    Lexer(const StringView&);
+    Lexer(StringView const&);
 
     Vector<Token> lex();
 
