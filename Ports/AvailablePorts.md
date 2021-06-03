@@ -112,6 +112,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`quake2`](quake2/)                    | QuakeII                                                    | 0.1                      | https://github.com/SerenityOS/SerenityQuakeII                                  |
 | [`readline`](readline/)                | GNU Readline Library                                       | 8.1                      | https://tiswww.case.edu/php/chet/readline/rltop.html                           |
 | [`rsync`](rsync/)                      | rsync                                                      | 3.1.3                    | https://rsync.samba.org/                                                       |
+| [`sam`](sam/)                          | Software Automatic Mouth (SAM)                             | c86ea39                  | https://github.com/vidarh/SAM                                                  |
 | [`scummvm`](scummvm/)                  | ScummVM                                                    | 2.2.0                    | https://www.scummvm.org/                                                       |
 | [`SDL2`](SDL2/)                        | Simple DirectMedia Layer (SDL2)                            |                          | https://github.com/SerenityOS/SDL                                              |
 | [`SDL2-GNUBoy`](SDL2-GNUBoy/)          | SDL2 GNUBoy                                                | 1.2                      | https://github.com/AlexOberhofer/SDL2-GNUBoy                                   |
