@@ -13,7 +13,7 @@
 
 namespace Cpp {
 
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::Token::Type type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Cpp::Token::Type type)
 {
     switch (type) {
     case Cpp::Token::Type::Keyword:
@@ -55,7 +55,7 @@ bool SyntaxHighlighter::is_navigatable(void* token) const
     return cpp_token == Cpp::Token::Type::IncludePath;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     Cpp::Lexer lexer(text);
