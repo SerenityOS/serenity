@@ -346,31 +346,31 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             };
 
             auto underline_style = UnderlineStyle::None;
+            auto underline_color = text_color;
 
             if (attribute.flags & VT::Attribute::Underline) {
                 // Content has specified underline
                 underline_style = UnderlineStyle::Solid;
             } else if (!attribute.href.is_empty()) {
                 // We're hovering a hyperlink
-                if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id)
+                if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id) {
                     underline_style = UnderlineStyle::Solid;
-                else
+                    underline_color = palette().active_link();
+                } else {
                     underline_style = UnderlineStyle::Dotted;
+                    underline_color = text_color.darkened(0.6f);
+                }
             }
 
             if (underline_style == UnderlineStyle::Solid) {
-                if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
-                    text_color = palette().active_link();
-
-                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
+                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), underline_color);
             } else if (underline_style == UnderlineStyle::Dotted) {
-                auto dotted_line_color = text_color.darkened(0.6f);
                 int x1 = cell_rect.bottom_left().x();
                 int x2 = cell_rect.bottom_right().x();
                 int y = cell_rect.bottom_left().y();
                 for (int x = x1; x <= x2; ++x) {
                     if ((x % 3) == 0)
-                        painter.set_pixel({ x, y }, dotted_line_color);
+                        painter.set_pixel({ x, y }, underline_color);
                 }
             }
         }
