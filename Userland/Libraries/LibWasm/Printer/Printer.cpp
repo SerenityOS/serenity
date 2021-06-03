@@ -6,6 +6,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/TemporaryChange.h>
+#include <LibWasm/AbstractMachine/AbstractMachine.h>
 #include <LibWasm/Printer/Printer.h>
 
 namespace Wasm {
@@ -170,53 +171,52 @@ void Printer::print(const Wasm::ElementSection& section)
     {
         TemporaryChange change { m_indent, m_indent + 1 };
         for (auto& entry : section.segments())
-            entry.visit([this](auto& segment) { print(segment); });
+            print(entry);
     }
     print_indent();
     print(")\n");
 }
 
-void Printer::print(const Wasm::ElementSection::SegmentType0&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType1& segment)
+void Printer::print(const Wasm::ElementSection::Element& element)
 {
     print_indent();
-    print("(element segment kind 1\n");
+    print("(element ");
+    {
+        TemporaryChange<size_t> change { m_indent, 0 };
+        print(element.type);
+    }
     {
         TemporaryChange change { m_indent, m_indent + 1 };
-        for (auto& index : segment.function_indices) {
-            print_indent();
-            print("(function index {})\n", index.value());
+        print_indent();
+        print("(init\n");
+        {
+            TemporaryChange change { m_indent, m_indent + 1 };
+            for (auto& entry : element.init)
+                print(entry);
         }
+        print_indent();
+        print(")\n");
+        print_indent();
+        print("(mode ");
+        element.mode.visit(
+            [this](const ElementSection::Active& active) {
+                print("\n");
+                {
+                    TemporaryChange change { m_indent, m_indent + 1 };
+                    print_indent();
+                    print("(active index {}\n", active.index.value());
+                    {
+                        print(active.expression);
+                    }
+                    print_indent();
+                    print(")\n");
+                }
+                print_indent();
+            },
+            [this](const ElementSection::Passive&) { print("passive"); },
+            [this](const ElementSection::Declarative&) { print("declarative"); });
+        print(")\n");
     }
-    print_indent();
-    print(")\n");
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType2&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType3&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType4&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType5&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType6&)
-{
-}
-
-void Printer::print(const Wasm::ElementSection::SegmentType7&)
-{
 }
 
 void Printer::print(const Wasm::ExportSection& section)
@@ -312,7 +312,7 @@ void Printer::print(const Wasm::FunctionType& type)
                 print(param);
         }
         print_indent();
-        print("\n");
+        print(")\n");
     }
     {
         TemporaryChange change { m_indent, m_indent + 1 };
@@ -622,6 +622,34 @@ void Printer::print(const Wasm::ValueType& type)
     print_indent();
     print("(type {})\n", ValueType::kind_name(type.kind()));
 }
+
+void Printer::print(const Wasm::Value& value)
+{
+    print_indent();
+    print("{} ", value.value().visit([&]<typename T>(const T& value) {
+        if constexpr (IsSame<Wasm::Reference, T>)
+            return String::formatted(
+                "addr({})",
+                value.ref().visit(
+                    [](const Wasm::Reference::Null&) { return String("null"); },
+                    [](const auto& ref) { return String::number(ref.address.value()); }));
+        else
+            return String::formatted("{}", value);
+    }));
+    TemporaryChange<size_t> change { m_indent, 0 };
+    print(value.type());
+}
+
+void Printer::print(const Wasm::Reference& value)
+{
+    print_indent();
+    print(
+        "addr({})\n",
+        value.ref().visit(
+            [](const Wasm::Reference::Null&) { return String("null"); },
+            [](const auto& ref) { return String::number(ref.address.value()); }));
+}
+
 }
 
 HashMap<Wasm::OpCode, String> Wasm::Names::instruction_names {

@@ -763,13 +763,12 @@ public:
         // FIXME: Implement me!
         static ParseResult<SegmentType0> parse(InputStream& stream);
 
-        ValueType type;
         Vector<FunctionIndex> function_indices;
         Active mode;
     };
     struct SegmentType1 {
         static ParseResult<SegmentType1> parse(InputStream& stream);
-        ValueType type;
+
         Vector<FunctionIndex> function_indices;
     };
     struct SegmentType2 {
@@ -797,23 +796,17 @@ public:
         static ParseResult<SegmentType7> parse(InputStream& stream);
     };
 
-    using AnyElementType = Variant<
-        SegmentType0,
-        SegmentType1,
-        SegmentType2,
-        SegmentType3,
-        SegmentType4,
-        SegmentType5,
-        SegmentType6,
-        SegmentType7>;
-
     struct Element {
-        static ParseResult<AnyElementType> parse(InputStream&);
+        static ParseResult<Element> parse(InputStream&);
+
+        ValueType type;
+        Vector<Expression> init;
+        Variant<Active, Passive, Declarative> mode;
     };
 
     static constexpr u8 section_id = 9;
 
-    explicit ElementSection(Vector<AnyElementType> segs)
+    explicit ElementSection(Vector<Element> segs)
         : m_segments(move(segs))
     {
     }
@@ -823,7 +816,7 @@ public:
     static ParseResult<ElementSection> parse(InputStream& stream);
 
 private:
-    Vector<AnyElementType> m_segments;
+    Vector<Element> m_segments;
 };
 
 class Locals {

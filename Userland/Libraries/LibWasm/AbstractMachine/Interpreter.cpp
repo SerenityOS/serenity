@@ -32,6 +32,7 @@ namespace Wasm {
 
 void BytecodeInterpreter::interpret(Configuration& configuration)
 {
+    m_do_trap = false;
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
@@ -534,17 +535,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto table_instance = configuration.store().get(table_address);
         auto index = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(index.has_value());
-        if (index.value() < 0 || static_cast<size_t>(index.value()) >= table_instance->elements().size()) {
-            dbgln("LibWasm: Element access out of bounds, expected {0} > 0 and {0} < {1}", index.value(), table_instance->elements().size());
-            m_do_trap = true;
-            return;
-        }
+        TRAP_IF_NOT(index.value() >= 0);
+        TRAP_IF_NOT(static_cast<size_t>(index.value()) < table_instance->elements().size());
         auto element = table_instance->elements()[index.value()];
-        if (!element.has_value() || !element->ref().has<Reference::Func>()) {
-            dbgln("LibWasm: call_indirect attempted with invalid address element (not a function)");
-            m_do_trap = true;
-            return;
-        }
+        TRAP_IF_NOT(element.has_value());
+        TRAP_IF_NOT(element->ref().has<Reference::Func>());
         auto address = element->ref().get<Reference::Func>().address;
         dbgln_if(WASM_TRACE_DEBUG, "call_indirect({} -> {})", index.value(), address.value());
         call_address(configuration, address);
@@ -652,7 +647,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::ref_null.value(): {
         auto type = instruction.arguments().get<ValueType>();
         TRAP_IF_NOT(type.is_reference());
-        configuration.stack().push(Value(Value::Null { type }));
+        configuration.stack().push(Value(Reference(Reference::Null { type })));
         return;
     };
     case Instructions::ref_func.value(): {
@@ -667,7 +662,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto top = configuration.stack().peek().get_pointer<Value>();
         TRAP_IF_NOT(top);
         TRAP_IF_NOT(top->type().is_reference());
-        auto is_null = top->to<Value::Null>().has_value();
+        auto is_null = top->to<Reference::Null>().has_value();
         configuration.stack().peek() = Value(ValueType(ValueType::I32), static_cast<u64>(is_null ? 1 : 0));
         return;
     }
