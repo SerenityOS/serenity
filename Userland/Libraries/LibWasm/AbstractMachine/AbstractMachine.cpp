@@ -52,6 +52,13 @@ Optional<GlobalAddress> Store::allocate(const GlobalType& type, Value value)
     return address;
 }
 
+Optional<ElementAddress> Store::allocate(const ValueType& type, Vector<Reference> references)
+{
+    ElementAddress address { m_elements.size() };
+    m_elements.append(ElementInstance { type, move(references) });
+    return address;
+}
+
 FunctionInstance* Store::get(FunctionAddress address)
 {
     auto value = address.value();
@@ -84,6 +91,14 @@ GlobalInstance* Store::get(GlobalAddress address)
     return &m_globals[value];
 }
 
+ElementInstance* Store::get(ElementAddress address)
+{
+    auto value = address.value();
+    if (m_elements.size() <= value)
+        return nullptr;
+    return &m_elements[value];
+}
+
 InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<ExternValue> externs)
 {
     auto main_module_instance_pointer = make<ModuleInstance>();
@@ -97,6 +112,7 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     // FIXME: Validate stuff
 
     Vector<Value> global_values;
+    Vector<Vector<Reference>> elements;
     ModuleInstance auxiliary_instance;
 
     // FIXME: Check that imports/extern match
@@ -118,7 +134,6 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                 1,
             });
             auto result = config.execute(interpreter);
-            // What if this traps?
             if (result.is_trap())
                 instantiation_result = InstantiationError { "Global value construction trapped" };
             else
@@ -126,15 +141,120 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
         }
     });
 
-    if (auto result = allocate_all(module, main_module_instance, externs, global_values); result.has_value()) {
-        return result.release_value();
-    }
+    if (instantiation_result.has_value())
+        return instantiation_result.release_value();
 
-    module.for_each_section_of_type<ElementSection>([&](const ElementSection&) {
-        // FIXME: Implement me
-        // https://webassembly.github.io/spec/core/bikeshed/#element-segments%E2%91%A0
-        // https://webassembly.github.io/spec/core/bikeshed/#instantiation%E2%91%A1 step 9
+    if (auto result = allocate_all_initial_phase(module, main_module_instance, externs, global_values); result.has_value())
+        return result.release_value();
+
+    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+        for (auto& segment : section.segments()) {
+            Vector<Reference> references;
+            for (auto& entry : segment.init) {
+                Configuration config { m_store };
+                config.set_frame(Frame {
+                    main_module_instance,
+                    Vector<Value> {},
+                    entry,
+                    entry.instructions().size(),
+                });
+                auto result = config.execute(interpreter);
+                if (result.is_trap()) {
+                    instantiation_result = InstantiationError { "Element construction trapped" };
+                    return IterationDecision::Continue;
+                }
+
+                for (auto& value : result.values()) {
+                    if (!value.type().is_reference()) {
+                        instantiation_result = InstantiationError { "Evaluated element entry is not a reference" };
+                        return IterationDecision::Continue;
+                    }
+                    auto reference = value.to<Reference>();
+                    if (!reference.has_value()) {
+                        instantiation_result = InstantiationError { "Evaluated element entry does not contain a reference" };
+                        return IterationDecision::Continue;
+                    }
+                    // FIXME: type-check the reference.
+                    references.prepend(reference.release_value());
+                }
+            }
+            elements.append(move(references));
+        }
+
+        return IterationDecision::Continue;
     });
+
+    if (instantiation_result.has_value())
+        return instantiation_result.release_value();
+
+    if (auto result = allocate_all_final_phase(module, main_module_instance, elements); result.has_value())
+        return result.release_value();
+
+    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+        size_t index = 0;
+        for (auto& segment : section.segments()) {
+            auto current_index = index;
+            ++index;
+            auto active_ptr = segment.mode.get_pointer<ElementSection::Active>();
+            if (!active_ptr)
+                continue;
+            if (active_ptr->index.value() != 0) {
+                instantiation_result = InstantiationError { "Non-zero table referenced by active element segment" };
+                return IterationDecision::Break;
+            }
+            Configuration config { m_store };
+            config.set_frame(Frame {
+                main_module_instance,
+                Vector<Value> {},
+                active_ptr->expression,
+                1,
+            });
+            auto result = config.execute(interpreter);
+            if (result.is_trap()) {
+                instantiation_result = InstantiationError { "Element section initialisation trapped" };
+                return IterationDecision::Break;
+            }
+            auto d = result.values().first().to<i32>();
+            if (!d.has_value()) {
+                instantiation_result = InstantiationError { "Element section initialisation returned invalid table initial offset" };
+                return IterationDecision::Break;
+            }
+            if (main_module_instance.tables().size() < 1) {
+                instantiation_result = InstantiationError { "Element section initialisation references nonexistent table" };
+                return IterationDecision::Break;
+            }
+            auto table_instance = m_store.get(main_module_instance.tables()[0]);
+            if (current_index >= main_module_instance.elements().size()) {
+                instantiation_result = InstantiationError { "Invalid element referenced by active element segment" };
+                return IterationDecision::Break;
+            }
+            auto elem_instance = m_store.get(main_module_instance.elements()[current_index]);
+            if (!table_instance || !elem_instance) {
+                instantiation_result = InstantiationError { "Invalid element referenced by active element segment" };
+                return IterationDecision::Break;
+            }
+
+            auto total_required_size = elem_instance->references().size() + d.value();
+
+            if (table_instance->type().limits().max().value_or(total_required_size) < total_required_size) {
+                instantiation_result = InstantiationError { "Table limit overflow in active element segment" };
+                return IterationDecision::Break;
+            }
+
+            if (table_instance->elements().size() < total_required_size)
+                table_instance->elements().resize(total_required_size);
+
+            size_t i = 0;
+            for (auto it = elem_instance->references().begin(); it < elem_instance->references().end(); ++i, ++it) {
+                table_instance->elements()[i + d.value()] = *it;
+            }
+        }
+
+        return IterationDecision::Continue;
+    });
+
+    if (instantiation_result.has_value())
+        return instantiation_result.release_value();
 
     module.for_each_section_of_type<DataSection>([&](const DataSection& data_section) {
         for (auto& segment : data_section.data()) {
@@ -148,12 +268,14 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                         1,
                     });
                     auto result = config.execute(interpreter);
+                    if (result.is_trap()) {
+                        instantiation_result = InstantiationError { "Data section initialisation trapped" };
+                        return;
+                    }
                     size_t offset = 0;
                     result.values().first().value().visit(
                         [&](const auto& value) { offset = value; },
-                        [&](const FunctionAddress&) { instantiation_result = InstantiationError { "Data segment offset returned an address" }; },
-                        [&](const ExternAddress&) { instantiation_result = InstantiationError { "Data segment offset returned an address" }; },
-                        [&](const Value::Null&) { instantiation_result = InstantiationError { "Data segment offset returned a null reference" }; });
+                        [&](const Reference&) { instantiation_result = InstantiationError { "Data segment offset returned a reference" }; });
                     if (instantiation_result.has_value() && instantiation_result->is_error())
                         return;
                     if (main_module_instance.memories().size() <= data.index.value()) {
@@ -193,7 +315,7 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     return InstantiationResult { move(main_module_instance_pointer) };
 }
 
-Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
+Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const Module& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
 {
     Optional<InstantiationError> result;
 
@@ -232,13 +354,12 @@ Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module,
     module.for_each_section_of_type<GlobalSection>([&](const GlobalSection& section) {
         size_t index = 0;
         for (auto& entry : section.entries()) {
-            auto address = m_store.allocate(entry.type(), global_values[index]);
+            auto address = m_store.allocate(entry.type(), move(global_values[index]));
             VERIFY(address.has_value());
             module_instance.globals().append(*address);
             index++;
         }
     });
-
     module.for_each_section_of_type<ExportSection>([&](const ExportSection& section) {
         for (auto& entry : section.entries()) {
             Variant<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress, Empty> address { Empty {} };
@@ -281,6 +402,21 @@ Optional<InstantiationError> AbstractMachine::allocate_all(const Module& module,
     });
 
     return result;
+}
+
+Optional<InstantiationError> AbstractMachine::allocate_all_final_phase(const Module& module, ModuleInstance& module_instance, Vector<Vector<Reference>>& elements)
+{
+    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+        size_t index = 0;
+        for (auto& segment : section.segments()) {
+            auto address = m_store.allocate(segment.type, move(elements[index]));
+            VERIFY(address.has_value());
+            module_instance.elements().append(*address);
+            index++;
+        }
+    });
+
+    return {};
 }
 
 Result AbstractMachine::invoke(FunctionAddress address, Vector<Value> arguments)

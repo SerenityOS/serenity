@@ -185,16 +185,16 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
             arguments.append(Wasm::Value(static_cast<double>(value)));
             break;
         case Wasm::ValueType::Kind::FunctionReference:
-            arguments.append(Wasm::Value(Wasm::FunctionAddress { static_cast<u64>(value) }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(value) } }));
             break;
         case Wasm::ValueType::Kind::ExternReference:
-            arguments.append(Wasm::Value(Wasm::ExternAddress { static_cast<u64>(value) }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Func { static_cast<u64>(value) } }));
             break;
         case Wasm::ValueType::Kind::NullFunctionReference:
-            arguments.append(Wasm::Value(Wasm::Value::Null { Wasm::ValueType(Wasm::ValueType::Kind::FunctionReference) }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Null { Wasm::ValueType(Wasm::ValueType::Kind::FunctionReference) } }));
             break;
         case Wasm::ValueType::Kind::NullExternReference:
-            arguments.append(Wasm::Value(Wasm::Value::Null { Wasm::ValueType(Wasm::ValueType::Kind::ExternReference) }));
+            arguments.append(Wasm::Value(Wasm::Reference { Wasm::Reference::Null { Wasm::ValueType(Wasm::ValueType::Kind::ExternReference) } }));
             break;
         }
     }
@@ -211,8 +211,10 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::wasm_invoke)
     JS::Value return_value;
     result.values().first().value().visit(
         [&](const auto& value) { return_value = JS::Value(static_cast<double>(value)); },
-        [&](const Wasm::FunctionAddress& index) { return_value = JS::Value(static_cast<double>(index.value())); },
-        [&](const Wasm::ExternAddress& index) { return_value = JS::Value(static_cast<double>(index.value())); },
-        [&](const Wasm::Value::Null&) { return_value = JS::js_null(); });
+        [&](const Wasm::Reference& reference) {
+            reference.ref().visit(
+                [&](const Wasm::Reference::Null&) { return_value = JS::js_null(); },
+                [&](const auto& ref) { return_value = JS::Value(static_cast<double>(ref.address.value())); });
+        });
     return return_value;
 }

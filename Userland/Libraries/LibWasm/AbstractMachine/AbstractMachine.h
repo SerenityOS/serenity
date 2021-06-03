@@ -33,10 +33,35 @@ TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, Fun
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, ExternAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, TableAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, GlobalAddress);
+TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, ElementAddress);
 TYPEDEF_DISTINCT_NUMERIC_GENERAL(u64, true, true, false, false, false, true, MemoryAddress);
 
 // FIXME: These should probably be made generic/virtual if/when we decide to do something more
 //        fancy than just a dumb interpreter.
+class Reference {
+public:
+    struct Null {
+        ValueType type;
+    };
+    struct Func {
+        FunctionAddress address;
+    };
+    struct Extern {
+        ExternAddress address;
+    };
+
+    using RefType = Variant<Null, Func, Extern>;
+    explicit Reference(RefType ref)
+        : m_ref(move(ref))
+    {
+    }
+
+    auto& ref() const { return m_ref; }
+
+private:
+    RefType m_ref;
+};
+
 class Value {
 public:
     Value()
@@ -45,11 +70,7 @@ public:
     {
     }
 
-    struct Null {
-        ValueType type;
-    };
-
-    using AnyValueType = Variant<i32, i64, float, double, FunctionAddress, ExternAddress, Null>;
+    using AnyValueType = Variant<i32, i64, float, double, Reference>;
     explicit Value(AnyValueType value)
         : m_value(move(value))
         , m_type(ValueType::I32)
@@ -62,12 +83,12 @@ public:
             m_type = ValueType { ValueType::F32 };
         else if (m_value.has<double>())
             m_type = ValueType { ValueType::F64 };
-        else if (m_value.has<FunctionAddress>())
+        else if (m_value.has<Reference>() && m_value.get<Reference>().ref().has<Reference::Func>())
             m_type = ValueType { ValueType::FunctionReference };
-        else if (m_value.has<ExternAddress>())
+        else if (m_value.has<Reference>() && m_value.get<Reference>().ref().has<Reference::Extern>())
             m_type = ValueType { ValueType::ExternReference };
-        else if (m_value.has<Null>())
-            m_type = ValueType { m_value.get<Null>().type.kind() == ValueType::ExternReference ? ValueType::NullExternReference : ValueType::NullFunctionReference };
+        else if (m_value.has<Reference>())
+            m_type = m_value.get<Reference>().ref().get<Reference::Null>().type;
         else
             VERIFY_NOT_REACHED();
     }
@@ -79,10 +100,10 @@ public:
     {
         switch (type.kind()) {
         case ValueType::Kind::ExternReference:
-            m_value = ExternAddress { bit_cast<u64>(raw_value) };
+            m_value = Reference { Reference::Extern { { bit_cast<u64>(raw_value) } } };
             break;
         case ValueType::Kind::FunctionReference:
-            m_value = FunctionAddress { bit_cast<u64>(raw_value) };
+            m_value = Reference { Reference::Func { { bit_cast<u64>(raw_value) } } };
             break;
         case ValueType::Kind::I32:
             m_value = static_cast<i32>(bit_cast<i64>(raw_value));
@@ -98,11 +119,11 @@ public:
             break;
         case ValueType::Kind::NullFunctionReference:
             VERIFY(raw_value == 0);
-            m_value = Null { ValueType(ValueType::Kind::FunctionReference) };
+            m_value = Reference { Reference::Null { ValueType(ValueType::Kind::FunctionReference) } };
             break;
         case ValueType::Kind::NullExternReference:
             VERIFY(raw_value == 0);
-            m_value = Null { ValueType(ValueType::Kind::ExternReference) };
+            m_value = Reference { Reference::Null { ValueType(ValueType::Kind::ExternReference) } };
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -146,17 +167,19 @@ public:
                 else if constexpr (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)
                     result = value;
             },
-            [&](const FunctionAddress& address) {
-                if constexpr (IsSame<T, FunctionAddress>)
-                    result = address;
-            },
-            [&](const ExternAddress& address) {
-                if constexpr (IsSame<T, ExternAddress>)
-                    result = address;
-            },
-            [&](const Null& null) {
-                if constexpr (IsSame<T, Null>)
-                    result = null;
+            [&](const Reference& value) {
+                if constexpr (IsSame<T, Reference>) {
+                    result = value;
+                } else if constexpr (IsSame<T, Reference::Func>) {
+                    if (auto ptr = value.ref().template get_pointer<Reference::Func>())
+                        result = *ptr;
+                } else if constexpr (IsSame<T, Reference::Extern>) {
+                    if (auto ptr = value.ref().template get_pointer<Reference::Extern>())
+                        result = *ptr;
+                } else if constexpr (IsSame<T, Reference::Null>) {
+                    if (auto ptr = value.ref().template get_pointer<Reference::Null>())
+                        result = *ptr;
+                }
             });
         return result;
     }
@@ -233,6 +256,7 @@ public:
     auto& tables() const { return m_tables; }
     auto& memories() const { return m_memories; }
     auto& globals() const { return m_globals; }
+    auto& elements() const { return m_elements; }
     auto& exports() const { return m_exports; }
 
     auto& types() { return m_types; }
@@ -240,6 +264,7 @@ public:
     auto& tables() { return m_tables; }
     auto& memories() { return m_memories; }
     auto& globals() { return m_globals; }
+    auto& elements() { return m_elements; }
     auto& exports() { return m_exports; }
 
 private:
@@ -248,6 +273,7 @@ private:
     Vector<TableAddress> m_tables;
     Vector<MemoryAddress> m_memories;
     Vector<GlobalAddress> m_globals;
+    Vector<ElementAddress> m_elements;
     Vector<ExportInstance> m_exports;
 };
 
@@ -287,30 +313,6 @@ private:
 };
 
 using FunctionInstance = Variant<WasmFunction, HostFunction>;
-
-class Reference {
-public:
-    struct Null {
-        ValueType type;
-    };
-    struct Func {
-        FunctionAddress address;
-    };
-    struct Extern {
-        ExternAddress address;
-    };
-
-    using RefType = Variant<Null, Func, Extern>;
-    explicit Reference(RefType ref)
-        : m_ref(move(ref))
-    {
-    }
-
-    auto& ref() const { return m_ref; }
-
-private:
-    RefType m_ref;
-};
 
 class TableInstance {
 public:
@@ -384,6 +386,22 @@ private:
     Value m_value;
 };
 
+class ElementInstance {
+public:
+    explicit ElementInstance(ValueType type, Vector<Reference> references)
+        : m_type(move(type))
+        , m_references(move(references))
+    {
+    }
+
+    auto& type() const { return m_type; }
+    auto& references() const { return m_references; }
+
+private:
+    ValueType m_type;
+    Vector<Reference> m_references;
+};
+
 class Store {
 public:
     Store() = default;
@@ -393,17 +411,20 @@ public:
     Optional<TableAddress> allocate(const TableType&);
     Optional<MemoryAddress> allocate(const MemoryType&);
     Optional<GlobalAddress> allocate(const GlobalType&, Value);
+    Optional<ElementAddress> allocate(const ValueType&, Vector<Reference>);
 
     FunctionInstance* get(FunctionAddress);
     TableInstance* get(TableAddress);
     MemoryInstance* get(MemoryAddress);
     GlobalInstance* get(GlobalAddress);
+    ElementInstance* get(ElementAddress);
 
 private:
     Vector<FunctionInstance> m_functions;
     Vector<TableInstance> m_tables;
     Vector<MemoryInstance> m_memories;
     Vector<GlobalInstance> m_globals;
+    Vector<ElementInstance> m_elements;
 };
 
 class Label {
@@ -479,7 +500,8 @@ public:
     auto& store() { return m_store; }
 
 private:
-    Optional<InstantiationError> allocate_all(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
+    Optional<InstantiationError> allocate_all_initial_phase(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
+    Optional<InstantiationError> allocate_all_final_phase(const Module&, ModuleInstance&, Vector<Vector<Reference>>& elements);
     Store m_store;
 };
 
