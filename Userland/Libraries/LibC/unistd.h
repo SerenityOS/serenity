@@ -49,6 +49,7 @@ int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvpe(const char* filename, char* const argv[], char* const envp[]);
 int execvp(const char* filename, char* const argv[]);
 int execl(const char* filename, const char* arg, ...);
+int execle(const char* filename, const char* arg, ...);
 int execlp(const char* filename, const char* arg, ...);
 int chroot(const char* path);
 int chroot_with_mount_flags(const char* path, int mount_flags);
