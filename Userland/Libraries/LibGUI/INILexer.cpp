@@ -5,8 +5,8 @@
  */
 
 #include "INILexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Vector.h>
-#include <ctype.h>
 
 namespace GUI {
 
@@ -61,16 +61,16 @@ Vector<IniToken> IniLexer::lex()
         IniToken token;
         token.m_type = type;
         token.m_start = token_start_position;
-        token.m_end = m_previous_position;
+        token.m_end = m_position;
         tokens.append(token);
     };
 
     while (m_index < m_input.length()) {
         auto ch = peek();
 
-        if (isspace(ch)) {
+        if (is_ascii_space(ch)) {
             begin_token();
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
             commit_token(IniToken::Type::Whitespace);
             continue;
