@@ -6,6 +6,7 @@
 
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Button.h>
+#include <LibGUI/Desktop.h>
 #include <LibGUI/ImageWidget.h>
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
@@ -136,8 +137,11 @@ void MessageBox::build()
         add_button("Cancel", Dialog::ExecCancel);
     button_container.layout()->add_spacer();
 
+    Gfx::IntRect desktop_rect = Desktop::the().rect();
     int width = (button_count * button_width) + ((button_count - 1) * button_container.layout()->spacing()) + 32;
     width = max(width, text_width + icon_width + 56);
+    if (width > desktop_rect.width() - 32)
+        width = desktop_rect.width() - 32;
 
     set_rect(x(), y(), width, 96);
     set_resizable(false);
