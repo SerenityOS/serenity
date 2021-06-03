@@ -261,8 +261,7 @@ for (auto it = children.begin(); it != children.end(); ++it)
 
 ### Pointers and References
 
-[](#pointers-cpp) **Pointer and reference types in C++ code**
-Both pointer types and reference types should be written with no space between the type name and the `*` or `&`.
+[](#pointers-cpp) Both pointer types and reference types should be written with no space between the type name and the `*` or `&`.
 
 [](#pointers-out-argument) An out argument of a function should be passed by reference except rare cases where it is optional in which case it should be passed by pointer.
 
