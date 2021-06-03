@@ -441,7 +441,15 @@ class ExpectationError extends Error {
 
     describe = (message, callback) => {
         suiteMessage = message;
-        callback();
+        if (!__TestResults__[suiteMessage]) __TestResults__[suiteMessage] = {};
+        try {
+            callback();
+        } catch (e) {
+            __TestResults__[suiteMessage][defaultSuiteMessage] = {
+                result: "fail",
+                details: String(e),
+            };
+        }
         suiteMessage = defaultSuiteMessage;
     };
 
