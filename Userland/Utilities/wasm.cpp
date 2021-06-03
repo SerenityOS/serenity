@@ -49,7 +49,7 @@ static void sigint_handler(int)
     g_continue = false;
 }
 
-static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, const Wasm::Instruction& instr, const Wasm::Interpreter& interpreter)
+static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, Wasm::Instruction const& instr, Wasm::Interpreter const& interpreter)
 {
     if (interpreter.did_trap()) {
         g_continue = false;
@@ -61,7 +61,7 @@ static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& 
     return true;
 }
 
-static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPointer& ip, const Wasm::Instruction& instr)
+static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPointer& ip, Wasm::Instruction const& instr)
 {
     static bool always_print_stack = false;
     static bool always_print_instruction = false;
@@ -235,7 +235,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     }
 }
 
-static Optional<Wasm::Module> parse(const StringView& filename)
+static Optional<Wasm::Module> parse(StringView const& filename)
 {
     auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (result.is_error()) {
@@ -253,15 +253,15 @@ static Optional<Wasm::Module> parse(const StringView& filename)
     return parse_result.release_value();
 }
 
-static void print_link_error(const Wasm::LinkError& error)
+static void print_link_error(Wasm::LinkError const& error)
 {
-    for (const auto& missing : error.missing_imports)
+    for (auto const& missing : error.missing_imports)
         warnln("Missing import '{}'", missing);
 }
 
 int main(int argc, char* argv[])
 {
-    const char* filename = nullptr;
+    char const* filename = nullptr;
     bool print = false;
     bool attempt_instantiate = false;
     bool debug = false;
@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
         .long_name = "link",
         .short_name = 'l',
         .value_name = "file",
-        .accept_value = [&](const char* str) {
+        .accept_value = [&](char const* str) {
             if (auto v = StringView { str }; !v.is_empty()) {
                 modules_to_link_in.append(v);
                 return true;
@@ -297,7 +297,7 @@ int main(int argc, char* argv[])
         .long_name = "arg",
         .short_name = 0,
         .value_name = "u64",
-        .accept_value = [&](const char* str) -> bool {
+        .accept_value = [&](char const* str) -> bool {
             if (auto v = StringView { str }.to_uint<u64>(); v.has_value()) {
                 values_to_push.append(v.value());
                 return true;
@@ -415,20 +415,20 @@ int main(int argc, char* argv[])
         auto module_instance = result.release_value();
 
         auto stream = Core::OutputFileStream::standard_output();
-        auto print_func = [&](const auto& address) {
+        auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
             stream.write(String::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes());
             if (fn) {
                 stream.write(String::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes());
                 fn->visit(
-                    [&](const Wasm::WasmFunction& func) {
+                    [&](Wasm::WasmFunction const& func) {
                         Wasm::Printer printer { stream, 3 };
                         stream.write("    type:\n"sv.bytes());
                         printer.print(func.type());
                         stream.write("    code:\n"sv.bytes());
                         printer.print(func.code());
                     },
-                    [](const Wasm::HostFunction&) {});
+                    [](Wasm::HostFunction const&) {});
             }
         };
         if (print) {
@@ -483,7 +483,7 @@ int main(int argc, char* argv[])
                     instance->get<Wasm::WasmFunction>().code().body(),
                     1,
                 });
-                const Wasm::Instruction instr { Wasm::Instructions::nop };
+                Wasm::Instruction instr { Wasm::Instructions::nop };
                 Wasm::InstructionPointer ip { 0 };
                 g_continue = false;
                 pre_interpret_hook(config, ip, instr);
