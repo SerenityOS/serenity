@@ -64,7 +64,7 @@ static RefPtr<Gfx::Bitmap> s_background_inverted;
 
 Card::Card(Type type, uint8_t value)
     : m_rect(Gfx::IntRect({}, { width, height }))
-    , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height }))
+    , m_front(*Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height }))
     , m_type(type)
     , m_value(value)
 {
@@ -72,20 +72,22 @@ Card::Card(Type type, uint8_t value)
     Gfx::IntRect paint_rect({ 0, 0 }, { width, height });
 
     if (s_background.is_null()) {
-        s_background = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, { width, height });
+        s_background = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { width, height });
         Gfx::Painter bg_painter(*s_background);
 
-        s_background->fill(Color::White);
         auto image = Gfx::Bitmap::load_from_file("/res/icons/cards/buggie-deck.png");
         VERIFY(!image.is_null());
 
         float aspect_ratio = image->width() / static_cast<float>(image->height());
         auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
 
+        bg_painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, 5, 5, 5, 5);
+        paint_rect.shrink(2, 2);
+        bg_painter.fill_rect_with_rounded_corners(paint_rect, Color::White, 4, 4, 4, 4);
+
         bg_painter.draw_scaled_bitmap(
             { { (width - target_size.width()) / 2, (height - target_size.height()) / 2 }, target_size },
             *image, image->rect());
-        bg_painter.draw_rect(paint_rect, Color::Black);
 
         s_background_inverted = invert_bitmap(*s_background);
     }
@@ -94,8 +96,10 @@ Card::Card(Type type, uint8_t value)
     auto& font = Gfx::FontDatabase::default_font().bold_variant();
 
     auto label = labels[value];
-    m_front->fill(Color::White);
-    painter.draw_rect(paint_rect, Color::Black);
+    painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, 5, 5, 5, 5);
+    paint_rect.shrink(2, 2);
+    painter.fill_rect_with_rounded_corners(paint_rect, Color::White, 4, 4, 4, 4);
+
     paint_rect.set_height(paint_rect.height() / 2);
     paint_rect.shrink(10, 6);
 
