@@ -253,6 +253,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
             return;
         }
         adapter->fill_in_ipv4_header(*packet, adapter->ipv4_address(), eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, icmp_packet_size, 64);
+        memset(packet->buffer.data() + ipv4_payload_offset, 0, sizeof(ICMPEchoPacket));
         auto& response = *(ICMPEchoPacket*)(packet->buffer.data() + ipv4_payload_offset);
         response.header.set_type(ICMPType::EchoReply);
         response.header.set_code(0);
