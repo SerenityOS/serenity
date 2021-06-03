@@ -666,6 +666,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     StringView value() const { return m_value; }
     bool is_use_strict_directive() const { return m_is_use_strict_directive; };
@@ -719,6 +720,7 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Reference to_reference(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     FlyString m_string;
@@ -896,6 +898,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     AssignmentOp m_op;

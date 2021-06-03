@@ -2282,4 +2282,31 @@ Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generat
     return dst;
 }
 
+Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto dst = generator.allocate_register();
+    generator.emit<Bytecode::Op::NewString>(dst, m_value);
+    return dst;
+}
+
+Optional<Bytecode::Register> Identifier::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::GetVariable>(reg, m_string);
+    return reg;
+}
+
+Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    if (is<Identifier>(*m_lhs)) {
+        auto& identifier = static_cast<Identifier const&>(*m_lhs);
+        auto rhs_reg = m_rhs->generate_bytecode(generator);
+        VERIFY(rhs_reg.has_value());
+        generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
+        return rhs_reg;
+    }
+
+    TODO();
+}
+
 }
