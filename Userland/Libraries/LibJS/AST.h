@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -37,6 +37,7 @@ class ASTNode : public RefCounted<ASTNode> {
 public:
     virtual ~ASTNode() { }
     virtual Value execute(Interpreter&, GlobalObject&) const = 0;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
 
     const SourceRange& source_range() const { return m_source_range; }
@@ -96,6 +97,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     const Expression& expression() const { return m_expression; };
 
@@ -120,6 +122,7 @@ public:
     const NonnullRefPtrVector<Statement>& children() const { return m_children; }
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     void add_variables(NonnullRefPtrVector<VariableDeclaration>);
     void add_functions(NonnullRefPtrVector<FunctionDeclaration>);
@@ -522,6 +525,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     BinaryOp m_op;
@@ -630,6 +634,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     Value m_value;

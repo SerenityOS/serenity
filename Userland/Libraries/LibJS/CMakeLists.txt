@@ -1,25 +1,30 @@
 set(SOURCES
-    AST.cpp
-    Console.cpp
-    Heap/CellAllocator.cpp
-    Heap/BlockAllocator.cpp
-    Heap/Handle.cpp
-    Heap/HeapBlock.cpp
-    Heap/Heap.cpp
-    Interpreter.cpp
-    Lexer.cpp
-    MarkupGenerator.cpp
-    Parser.cpp
-    Runtime/Array.cpp
-    Runtime/ArrayBuffer.cpp
-    Runtime/ArrayBufferConstructor.cpp
-    Runtime/ArrayBufferPrototype.cpp
-    Runtime/ArrayConstructor.cpp
-    Runtime/ArrayIterator.cpp
-    Runtime/ArrayIteratorPrototype.cpp
-    Runtime/ArrayPrototype.cpp
-    Runtime/BigInt.cpp
-    Runtime/BigIntConstructor.cpp
+        AST.cpp
+        Bytecode/Block.cpp
+        Bytecode/Generator.cpp
+        Bytecode/Instruction.cpp
+        Bytecode/Interpreter.cpp
+        Bytecode/Op.cpp
+        Console.cpp
+        Heap/CellAllocator.cpp
+        Heap/BlockAllocator.cpp
+        Heap/Handle.cpp
+        Heap/HeapBlock.cpp
+        Heap/Heap.cpp
+        Interpreter.cpp
+        Lexer.cpp
+        MarkupGenerator.cpp
+        Parser.cpp
+        Runtime/Array.cpp
+        Runtime/ArrayBuffer.cpp
+        Runtime/ArrayBufferConstructor.cpp
+        Runtime/ArrayBufferPrototype.cpp
+        Runtime/ArrayConstructor.cpp
+        Runtime/ArrayIterator.cpp
+        Runtime/ArrayIteratorPrototype.cpp
+        Runtime/ArrayPrototype.cpp
+        Runtime/BigInt.cpp
+        Runtime/BigIntConstructor.cpp
     Runtime/BigIntObject.cpp
     Runtime/BigIntPrototype.cpp
     Runtime/BooleanConstructor.cpp

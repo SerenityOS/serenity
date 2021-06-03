@@ -162,4 +162,12 @@ JS_ENUMERATE_TYPED_ARRAYS
 template<class T>
 class Handle;
 
+namespace Bytecode {
+class Block;
+class Generator;
+class Instruction;
+class Interpreter;
+class Register;
+}
+
 }

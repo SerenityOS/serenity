@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -14,6 +14,9 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Block.h>
+#include <LibJS/Bytecode/Generator.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -73,6 +76,8 @@ private:
 };
 
 static bool s_dump_ast = false;
+static bool s_dump_bytecode = false;
+static bool s_run_bytecode = false;
 static bool s_print_last_result = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
@@ -489,6 +494,19 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     if (s_dump_ast)
         program->dump(0);
 
+    if (s_dump_bytecode || s_run_bytecode) {
+        auto block = JS::Bytecode::Generator::generate(*program);
+        VERIFY(block);
+
+        if (s_dump_bytecode)
+            block->dump();
+
+        if (s_run_bytecode) {
+            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
+            bytecode_interpreter.run(*block);
+        }
+    }
+
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
         auto hint = error.source_location_hint(source);
@@ -744,6 +762,8 @@ int main(int argc, char** argv)
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
+    args_parser.add_option(s_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
+    args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
