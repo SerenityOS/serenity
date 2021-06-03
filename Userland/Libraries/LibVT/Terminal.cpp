@@ -267,9 +267,7 @@ void Terminal::SGR(Parameters params)
             case 36:
             case 37:
                 // Foreground color
-                if (m_current_state.attribute.flags & Attribute::Bold)
-                    param += 8;
-                m_current_state.attribute.foreground_color = Color::named((Color::ANSIColor)(param - 30));
+                m_current_state.attribute.foreground_color = Color::named(static_cast<Color::ANSIColor>(param - 30));
                 break;
             case 39:
                 // reset foreground
@@ -284,13 +282,33 @@ void Terminal::SGR(Parameters params)
             case 46:
             case 47:
                 // Background color
-                if (m_current_state.attribute.flags & Attribute::Bold)
-                    param += 8;
-                m_current_state.attribute.background_color = Color::named((Color::ANSIColor)(param - 40));
+                m_current_state.attribute.background_color = Color::named(static_cast<Color::ANSIColor>(param - 40));
                 break;
             case 49:
                 // reset background
                 m_current_state.attribute.background_color = Attribute::default_background_color;
+                break;
+            case 90:
+            case 91:
+            case 92:
+            case 93:
+            case 94:
+            case 95:
+            case 96:
+            case 97:
+                // Bright foreground color
+                m_current_state.attribute.foreground_color = Color::named(static_cast<Color::ANSIColor>(8 + param - 90));
+                break;
+            case 100:
+            case 101:
+            case 102:
+            case 103:
+            case 104:
+            case 105:
+            case 106:
+            case 107:
+                // Bright background color
+                m_current_state.attribute.background_color = Color::named(static_cast<Color::ANSIColor>(8 + param - 100));
                 break;
             default:
                 dbgln("FIXME: SGR: p: {}", param);

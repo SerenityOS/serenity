@@ -277,7 +277,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     if (visual_beep_active)
         painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
     else
-        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Black)).with_alpha(m_opacity));
+        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::DefaultBackground)).with_alpha(m_opacity));
     invalidate_cursor();
 
     int rows_from_history = 0;
@@ -334,7 +334,8 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto attribute = line.attribute_at(column);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
-            auto text_color = terminal_color_to_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
+            auto text_color_before_bold_change = should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color();
+            auto text_color = terminal_color_to_rgb(m_show_bold_text_as_bright ? text_color_before_bold_change.to_bright() : text_color_before_bold_change);
             if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection)
                 painter.clear_rect(cell_rect, terminal_color_to_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()));
 
@@ -360,6 +361,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             if (underline_style == UnderlineStyle::Solid) {
                 if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
                     text_color = palette().active_link();
+
                 painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
             } else if (underline_style == UnderlineStyle::Dotted) {
                 auto dotted_line_color = text_color.darkened(0.6f);
@@ -398,7 +400,8 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
-            auto text_color = terminal_color_to_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
+            auto text_color_before_bold_change = should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color();
+            auto text_color = terminal_color_to_rgb(m_show_bold_text_as_bright ? text_color_before_bold_change.to_bright() : text_color_before_bold_change);
             u32 code_point = line.code_point(column);
 
             if (code_point == ' ')
@@ -1162,6 +1165,8 @@ void TerminalWidget::set_color_scheme(const StringView& name)
 
     auto color_config = Core::ConfigFile::open(String::formatted("/res/terminal-colors/{}.ini", name));
 
+    m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
+
     auto default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
     if (default_background.has_value())
         m_default_background_color = default_background.value();
@@ -1196,7 +1201,7 @@ Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
     };
 }
 
-Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color)
+constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) const
 {
     switch (color.kind()) {
     case VT::Color::Kind::RGB:
@@ -1253,5 +1258,4 @@ void TerminalWidget::send_non_user_input(const ReadonlyBytes& bytes)
         VERIFY_NOT_REACHED();
     }
 }
-
 }

@@ -89,7 +89,7 @@ public:
 
     GUI::Menu& context_menu() { return *m_context_menu; }
 
-    Gfx::Color terminal_color_to_rgb(VT::Color);
+    constexpr Gfx::Color terminal_color_to_rgb(VT::Color) const;
 
     void set_font_and_resize_to_fit(const Gfx::Font&);
 
@@ -164,6 +164,7 @@ private:
     unsigned m_colors[256];
     Gfx::Color m_default_foreground_color;
     Gfx::Color m_default_background_color;
+    bool m_show_bold_text_as_bright { true };
 
     String m_color_scheme_name;
 
