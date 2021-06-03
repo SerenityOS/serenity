@@ -5,7 +5,6 @@
  */
 
 #include <AK/Debug.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibELF/AuxiliaryVector.h>
@@ -100,8 +99,8 @@ static ChunkedBlock* s_cold_empty_blocks[number_of_cold_chunked_blocks_to_keep_a
 struct Allocator {
     size_t size { 0 };
     size_t block_count { 0 };
-    InlineLinkedList<ChunkedBlock> usable_blocks;
-    InlineLinkedList<ChunkedBlock> full_blocks;
+    ChunkedBlock::List usable_blocks;
+    ChunkedBlock::List full_blocks;
 };
 
 struct BigAllocator {
@@ -221,10 +220,11 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
     }
 
     ChunkedBlock* block = nullptr;
-
-    for (block = allocator->usable_blocks.head(); block; block = block->next()) {
-        if (block->free_chunks())
+    for (auto& current : allocator->usable_blocks) {
+        if (current.free_chunks()) {
+            block = &current;
             break;
+        }
     }
 
     if (!block && s_hot_empty_block_count) {
@@ -237,7 +237,7 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
             snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
             set_mmap_name(block, ChunkedBlock::block_size, buffer);
         }
-        allocator->usable_blocks.append(block);
+        allocator->usable_blocks.append(*block);
     }
 
     if (!block && s_cold_empty_block_count) {
@@ -260,7 +260,7 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
             new (block) ChunkedBlock(good_size);
             ue_notify_chunk_size_changed(block, good_size);
         }
-        allocator->usable_blocks.append(block);
+        allocator->usable_blocks.append(*block);
     }
 
     if (!block) {
@@ -269,7 +269,7 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
         block = (ChunkedBlock*)os_alloc(ChunkedBlock::block_size, buffer);
         new (block) ChunkedBlock(good_size);
-        allocator->usable_blocks.append(block);
+        allocator->usable_blocks.append(*block);
         ++allocator->block_count;
     }
 
@@ -285,8 +285,8 @@ static void* malloc_impl(size_t size, CallerWillInitializeMemory caller_will_ini
     if (block->is_full()) {
         g_malloc_stats.number_of_blocks_full++;
         dbgln_if(MALLOC_DEBUG, "Block {:p} is now full in size class {}", block, good_size);
-        allocator->usable_blocks.remove(block);
-        allocator->full_blocks.append(block);
+        allocator->usable_blocks.remove(*block);
+        allocator->full_blocks.append(*block);
     }
     dbgln_if(MALLOC_DEBUG, "LibC: allocated {:p} (chunk in block {:p}, size {})", ptr, block, block->bytes_per_chunk());
 
@@ -353,8 +353,8 @@ static void free_impl(void* ptr)
         auto* allocator = allocator_for_size(block->m_size, good_size);
         dbgln_if(MALLOC_DEBUG, "Block {:p} no longer full in size class {}", block, good_size);
         g_malloc_stats.number_of_freed_full_blocks++;
-        allocator->full_blocks.remove(block);
-        allocator->usable_blocks.prepend(block);
+        allocator->full_blocks.remove(*block);
+        allocator->usable_blocks.prepend(*block);
     }
 
     ++block->m_free_chunks;
@@ -365,14 +365,14 @@ static void free_impl(void* ptr)
         if (s_hot_empty_block_count < number_of_hot_chunked_blocks_to_keep_around) {
             dbgln_if(MALLOC_DEBUG, "Keeping hot block {:p} around", block);
             g_malloc_stats.number_of_hot_keeps++;
-            allocator->usable_blocks.remove(block);
+            allocator->usable_blocks.remove(*block);
             s_hot_empty_blocks[s_hot_empty_block_count++] = block;
             return;
         }
         if (s_cold_empty_block_count < number_of_cold_chunked_blocks_to_keep_around) {
             dbgln_if(MALLOC_DEBUG, "Keeping cold block {:p} around", block);
             g_malloc_stats.number_of_cold_keeps++;
-            allocator->usable_blocks.remove(block);
+            allocator->usable_blocks.remove(*block);
             s_cold_empty_blocks[s_cold_empty_block_count++] = block;
             mprotect(block, ChunkedBlock::block_size, PROT_NONE);
             madvise(block, ChunkedBlock::block_size, MADV_SET_VOLATILE);
@@ -380,7 +380,7 @@ static void free_impl(void* ptr)
         }
         dbgln_if(MALLOC_DEBUG, "Releasing block {:p} for size class {}", block, good_size);
         g_malloc_stats.number_of_frees++;
-        allocator->usable_blocks.remove(block);
+        allocator->usable_blocks.remove(*block);
         --allocator->block_count;
         os_free(block, ChunkedBlock::block_size);
     }
