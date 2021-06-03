@@ -38,10 +38,10 @@ void current_test_case_did_fail();
     } while (false)
 
 #undef TODO
-#define TODO()                                                                                   \
-    do {                                                                                         \
-        ::AK::warnln(stderr, "\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
-        ::abort();                                                                               \
+#define TODO()                                                                           \
+    do {                                                                                 \
+        ::AK::warnln("\033[31;1mFAIL\033[0m: {}:{}: TODO() called", __FILE__, __LINE__); \
+        ::abort();                                                                       \
     } while (false)
 
 #define EXPECT_EQ(a, b)                                                                                                                                                                      \
