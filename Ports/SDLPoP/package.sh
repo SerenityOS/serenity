@@ -18,5 +18,4 @@ configure() {
 install() {
     mkdir -p "${SERENITY_INSTALL_ROOT}/opt/PrinceOfPersia"
     run cp -r prince data SDLPoP.ini "${SERENITY_INSTALL_ROOT}/opt/PrinceOfPersia" 
-    install_launcher
 }
