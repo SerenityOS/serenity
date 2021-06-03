@@ -14,6 +14,8 @@ namespace Kernel {
 KResultOr<long> Process::sys$sysconf(int name)
 {
     switch (name) {
+    case _SC_MONOTONIC_CLOCK:
+        return 1;
     case _SC_NPROCESSORS_CONF:
     case _SC_NPROCESSORS_ONLN:
         return Processor::processor_count();

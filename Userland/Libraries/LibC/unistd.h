@@ -141,7 +141,9 @@ enum {
 #define MS_RDONLY (1 << 4)
 #define MS_REMOUNT (1 << 5)
 
+#define _POSIX_MONOTONIC_CLOCK 200112L
 #define _POSIX_SAVED_IDS
+#define _POSIX_TIMERS 200809L
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide
@@ -151,6 +153,7 @@ enum {
 #define _POSIX_VDISABLE '\0'
 
 enum {
+    _SC_MONOTONIC_CLOCK,
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
     _SC_OPEN_MAX,
@@ -160,6 +163,7 @@ enum {
     _SC_CLK_TCK,
 };
 
+#define _SC_MONOTONIC_CLOCK _SC_MONOTONIC_CLOCK
 #define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
 #define _SC_NPROCESSORS_ONLN _SC_NPROCESSORS_ONLN
 #define _SC_OPEN_MAX _SC_OPEN_MAX
