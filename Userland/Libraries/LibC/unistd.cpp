@@ -160,6 +160,26 @@ int execl(const char* filename, const char* arg0, ...)
     return execve(filename, const_cast<char* const*>(args.data()), environ);
 }
 
+int execle(char const* filename, char const* arg0, ...)
+{
+    Vector<char const*> args;
+    args.append(arg0);
+
+    va_list ap;
+    va_start(ap, arg0);
+    char const* arg;
+    do {
+        arg = va_arg(ap, char const*);
+        args.append(arg);
+    } while (arg);
+
+    auto argv = const_cast<char* const*>(args.data());
+    auto envp = const_cast<char* const*>(va_arg(ap, char* const*));
+    va_end(ap);
+
+    return execve(filename, argv, envp);
+}
+
 int execlp(const char* filename, const char* arg0, ...)
 {
     Vector<const char*, 16> args;
