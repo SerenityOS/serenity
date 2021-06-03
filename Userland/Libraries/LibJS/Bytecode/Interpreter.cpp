@@ -7,11 +7,13 @@
 #include <LibJS/Bytecode/Block.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS::Bytecode {
 
 Interpreter::Interpreter(GlobalObject& global_object)
-    : m_global_object(global_object)
+    : m_vm(global_object.vm())
+    , m_global_object(global_object)
 {
 }
 

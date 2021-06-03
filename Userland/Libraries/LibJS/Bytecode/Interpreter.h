@@ -19,12 +19,14 @@ public:
     ~Interpreter();
 
     GlobalObject& global_object() { return m_global_object; }
+    VM& vm() { return m_vm; }
 
     void run(Bytecode::Block const&);
 
     Value& reg(Register const& r) { return m_registers[r.index()]; }
 
 private:
+    VM& m_vm;
     GlobalObject& m_global_object;
     Vector<Value> m_registers;
 };
