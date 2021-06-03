@@ -207,6 +207,7 @@ public:
         Image,
         Position,
         CustomProperty,
+        Numeric,
     };
 
     Type type() const { return m_type; }
@@ -220,6 +221,7 @@ public:
     bool is_length() const { return type() == Type::Length; }
     bool is_position() const { return type() == Type::Position; }
     bool is_custom_property() const { return type() == Type::CustomProperty; }
+    bool is_numeric() const { return type() == Type::Numeric; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return Length::make_auto(); }
@@ -264,6 +266,26 @@ private:
     }
 
     String m_custom_property_name {};
+};
+
+class NumericStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<NumericStyleValue> create(float value)
+    {
+        return adopt_ref(*new NumericStyleValue(value));
+    }
+
+    float value() const { return m_value; }
+    String to_string() const override { return String::formatted("{}", m_value); }
+
+private:
+    explicit NumericStyleValue(float value)
+        : StyleValue(Type::Numeric)
+        , m_value(value)
+    {
+    }
+
+    float m_value { 0 };
 };
 
 class StringStyleValue : public StyleValue {
