@@ -176,7 +176,7 @@ void WindowManager::add_window(Window& window)
 {
     bool is_first_window = m_windows_in_order.is_empty();
 
-    m_windows_in_order.append(&window);
+    m_windows_in_order.append(window);
 
     if (window.is_fullscreen()) {
         Core::EventLoop::current().post_event(window, make<ResizeEvent>(Screen::the().rect()));
@@ -228,10 +228,10 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
 {
-    if (m_windows_in_order.tail() != &window)
+    if (m_windows_in_order.last() != &window)
         window.invalidate();
-    m_windows_in_order.remove(&window);
-    m_windows_in_order.append(&window);
+    m_windows_in_order.remove(window);
+    m_windows_in_order.append(window);
 
     if (make_active)
         set_active_window(&window, make_input);
@@ -252,7 +252,7 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
 
 void WindowManager::remove_window(Window& window)
 {
-    m_windows_in_order.remove(&window);
+    m_windows_in_order.remove(window);
     auto* active = active_window();
     auto* active_input = active_input_window();
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
@@ -1092,13 +1092,15 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             set_active_window(nullptr);
     }
 
-    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (received_mouse_event == window)
+    auto reverse_iterator = m_windows_in_order.rbegin();
+    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
+        auto& window = *reverse_iterator;
+        if (received_mouse_event == &window)
             continue;
-        if (!window->global_cursor_tracking() || !window->is_visible() || window->is_minimized() || window->blocking_modal_window())
+        if (!window.global_cursor_tracking() || !window.is_visible() || window.is_minimized() || window.blocking_modal_window())
             continue;
-        auto translated_event = event.translated(-window->position());
-        deliver_mouse_event(*window, translated_event, false);
+        auto translated_event = event.translated(-window.position());
+        deliver_mouse_event(window, translated_event, false);
     }
 
     if (event_window_with_frame != m_resize_candidate.ptr())

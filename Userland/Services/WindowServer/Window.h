@@ -64,9 +64,7 @@ enum class WindowMenuDefaultAction {
     Restore
 };
 
-class Window final
-    : public Core::Object
-    , public InlineLinkedListNode<Window> {
+class Window final : public Core::Object {
     C_OBJECT(Window);
 
 public:
@@ -264,9 +262,7 @@ public:
     Gfx::IntRect tiled_rect(WindowTileType) const;
     void recalculate_rect();
 
-    // For InlineLinkedList.
-    Window* m_next { nullptr };
-    Window* m_prev { nullptr };
+    IntrusiveListNode<Window> m_list_node;
 
     void detach_client(Badge<ClientConnection>);
 
@@ -399,6 +395,9 @@ private:
     int m_minimize_animation_step { -1 };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
+
+public:
+    using List = IntrusiveList<Window, RawPtr<Window>, &Window::m_list_node>;
 };
 
 }
