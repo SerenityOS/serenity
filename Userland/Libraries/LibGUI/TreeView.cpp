@@ -480,6 +480,9 @@ void TreeView::move_cursor(CursorMovement movement, SelectionUpdate selection_up
 {
     auto& model = *this->model();
 
+    if (!cursor_index().is_valid())
+        set_cursor(model.index(0, model.tree_column(), cursor_index()), SelectionUpdate::Set);
+
     auto find_last_index_in_tree = [&](const ModelIndex tree_index) -> ModelIndex {
         auto last_index = tree_index;
         size_t row_count = model.row_count(last_index);
