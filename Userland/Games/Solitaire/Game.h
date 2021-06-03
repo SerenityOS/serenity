@@ -160,6 +160,10 @@ private:
     void remember_flip_for_undo(Card& card);
     void update_score(int to_add);
     void move_card(CardStack& from, CardStack& to);
+    void draw_cards();
+    void pop_waste_to_play_stack();
+    void auto_move_eligible_cards_to_stacks();
+    void start_timer_if_necessary();
     void start_game_over_animation();
     void stop_game_over_animation();
     void create_new_animation_card();
