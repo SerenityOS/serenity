@@ -62,7 +62,7 @@ UNMAP_AFTER_INIT void Process::initialize()
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
     g_processes = new InlineLinkedList<Process>;
-    g_process_groups = new InlineLinkedList<ProcessGroup>;
+    g_process_groups = new ProcessGroup::List();
     g_hostname = new String("courage");
     g_hostname_lock = new Lock;
 
