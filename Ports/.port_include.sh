@@ -95,29 +95,45 @@ ensure_build() {
     fi
 }
 
-install_launcher() {
-    if [ -z "$launcher_name" ] || [ -z "${launcher_category}" ] || [ -z "${launcher_command}" ]; then
-        return
+install_main_launcher() {
+    if [ -n "$launcher_name" ] && [ -n "$launcher_category" ] && [ -n "$launcher_command" ]; then
+        install_launcher "$launcher_name" "$launcher_category" "$launcher_command"
     fi
-    script_name="${launcher_name,,}"
-    script_name="${script_name// /}"
-    mkdir -p $DESTDIR/usr/local/libexec
-    cat >$DESTDIR/usr/local/libexec/$script_name <<SCRIPT
+}
+
+install_launcher() {
+    if [ "$#" -lt 3 ]; then
+        echo "Syntax: install_launcher <name> <category> <command>"
+        exit 1
+    fi
+    launcher_name="$1"
+    launcher_category="$2"
+    launcher_command="$3"
+    launcher_filename="${launcher_name,,}"
+    launcher_filename="${launcher_filename// /}"
+    case "$launcher_command" in
+        *\ *)
+            mkdir -p $DESTDIR/usr/local/libexec
+            launcher_executable="/usr/local/libexec/$launcher_filename"
+            cat >"$DESTDIR/$launcher_executable" <<SCRIPT
 #!/bin/sh
 set -e
 exec $(printf '%q ' $launcher_command)
 SCRIPT
-    chmod +x $DESTDIR/usr/local/libexec/$script_name
-
-    chmod +x $DESTDIR/usr/local/libexec
+            chmod +x "$DESTDIR/$launcher_executable"
+            ;;
+        *)
+            launcher_executable="$launcher_command"
+            ;;
+    esac
     mkdir -p $DESTDIR/res/apps
-    cat >$DESTDIR/res/apps/$script_name.af <<CONFIG
+    cat >$DESTDIR/res/apps/$launcher_filename.af <<CONFIG
 [App]
 Name=$launcher_name
-Executable=/usr/local/libexec/$script_name
+Executable=$launcher_executable
 Category=$launcher_category
 CONFIG
-    unset script_name
+    unset launcher_filename
 }
 # Checks if a function is defined. In this case, if the function is not defined in the port's script, then we will use our defaults. This way, ports don't need to include these functions every time, but they can override our defaults if needed.
 func_defined() {
@@ -285,7 +301,6 @@ func_defined build || build() {
 }
 func_defined install || install() {
     run make DESTDIR=$DESTDIR $installopts install
-    install_launcher
 }
 func_defined post_install || post_install() {
     echo
@@ -397,6 +412,7 @@ do_install() {
     ensure_build
     echo "Installing $port!"
     install
+    install_main_launcher
     post_install
     addtodb "${1:-}"
 }

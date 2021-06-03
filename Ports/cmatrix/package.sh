@@ -17,5 +17,4 @@ configure() {
 
 install() {
     run cp cmatrix "${SERENITY_INSTALL_ROOT}/bin"
-    install_launcher
 }
