@@ -217,6 +217,7 @@ elif [ "$SERENITY_RUN" = "ci" ]; then
     echo "Running QEMU in CI"
     "$SERENITY_QEMU_BIN" \
         $SERENITY_EXTRA_QEMU_ARGS \
+        $SERENITY_VIRT_TECH_ARG \
         -m $SERENITY_RAM_SIZE \
         -cpu $SERENITY_QEMU_CPU \
         -d guest_errors \
