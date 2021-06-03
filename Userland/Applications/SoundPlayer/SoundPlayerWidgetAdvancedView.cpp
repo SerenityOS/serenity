@@ -72,6 +72,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
         bool paused = this->manager().toggle_pause();
         set_paused(paused);
         m_play_button->set_icon(paused ? *m_play_icon : *m_pause_icon);
+        m_stop_button->set_enabled(has_loaded_file());
     };
 
     m_stop_button = menubar.add<GUI::Button>();
