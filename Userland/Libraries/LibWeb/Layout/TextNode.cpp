@@ -103,35 +103,63 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     context.painter().draw_rect(cursor_rect, computed_values().color());
 }
 
+// NOTE: This collapes whitespace into a single ASCII space if collapse is true. If previous_is_empty_or_ends_in_whitespace, it also strips leading whitespace.
 void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace)
 {
-    if (!collapse) {
-        m_text_for_rendering = dom_node().data();
+    auto& data = dom_node().data();
+    if (!collapse || data.is_empty()) {
+        m_text_for_rendering = data;
         return;
     }
 
-    // Collapse whitespace into single spaces
-    auto utf8_view = Utf8View(dom_node().data());
-    StringBuilder builder(dom_node().data().length());
-    auto it = utf8_view.begin();
-    auto skip_over_whitespace = [&] {
-        auto prev = it;
-        while (it != utf8_view.end() && is_ascii_space(*it)) {
-            prev = it;
-            ++it;
-        }
-        it = prev;
-    };
-    if (previous_is_empty_or_ends_in_whitespace)
-        skip_over_whitespace();
-    for (; it != utf8_view.end(); ++it) {
-        if (!is_ascii_space(*it)) {
-            builder.append(StringView { it.underlying_code_point_bytes() });
+    // NOTE: A couple fast returns to avoid unnecessarily allocating a StringBuilder.
+    if (data.length() == 1) {
+        if (is_ascii_space(data[0])) {
+            if (previous_is_empty_or_ends_in_whitespace)
+                m_text_for_rendering = String::empty();
+            else {
+                static String s_single_space_string = " ";
+                m_text_for_rendering = s_single_space_string;
+            }
         } else {
-            builder.append(' ');
-            skip_over_whitespace();
+            m_text_for_rendering = data;
+        }
+        return;
+    }
+
+    bool contains_space = false;
+    for (auto& c : data) {
+        if (is_ascii_space(c)) {
+            contains_space = true;
+            break;
         }
     }
+    if (!contains_space) {
+        m_text_for_rendering = data;
+        return;
+    }
+
+    StringBuilder builder(data.length());
+    size_t index = 0;
+
+    auto skip_over_whitespace = [&index, &data] {
+        while (index < data.length() && is_ascii_space(data[index]))
+            ++index;
+    };
+
+    if (previous_is_empty_or_ends_in_whitespace)
+        skip_over_whitespace();
+    while (index < data.length()) {
+        if (is_ascii_space(data[index])) {
+            builder.append(' ');
+            ++index;
+            skip_over_whitespace();
+        } else {
+            builder.append(data[index]);
+            ++index;
+        }
+    }
+
     m_text_for_rendering = builder.to_string();
 }
 
