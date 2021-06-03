@@ -130,7 +130,7 @@ public:
         }
     }
 
-    Value(const Value& value)
+    Value(Value const& value)
         : m_value(AnyValueType { value.m_value })
         , m_type(value.m_type)
     {
@@ -149,7 +149,7 @@ public:
         return *this;
     }
 
-    Value& operator=(const Value& value)
+    Value& operator=(Value const& value)
     {
         m_value = value.m_value;
         m_type = value.m_type;
@@ -167,7 +167,7 @@ public:
                 else if constexpr (!IsFloatingPoint<T> && IsSame<decltype(value), MakeSigned<T>>)
                     result = value;
             },
-            [&](const Reference& value) {
+            [&](Reference const& value) {
                 if constexpr (IsSame<T, Reference>) {
                     result = value;
                 } else if constexpr (IsSame<T, Reference::Func>) {
@@ -279,7 +279,7 @@ private:
 
 class WasmFunction {
 public:
-    explicit WasmFunction(const FunctionType& type, const ModuleInstance& module, const Module::Function& code)
+    explicit WasmFunction(FunctionType const& type, ModuleInstance const& module, Module::Function const& code)
         : m_type(type)
         , m_module(module)
         , m_code(code)
@@ -292,13 +292,13 @@ public:
 
 private:
     FunctionType m_type;
-    const ModuleInstance& m_module;
-    const Module::Function& m_code;
+    ModuleInstance const& m_module;
+    Module::Function const& m_code;
 };
 
 class HostFunction {
 public:
-    explicit HostFunction(AK::Function<Result(Configuration&, Vector<Value>&)> function, const FunctionType& type)
+    explicit HostFunction(AK::Function<Result(Configuration&, Vector<Value>&)> function, FunctionType const& type)
         : m_function(move(function))
         , m_type(type)
     {
@@ -316,7 +316,7 @@ using FunctionInstance = Variant<WasmFunction, HostFunction>;
 
 class TableInstance {
 public:
-    explicit TableInstance(const TableType& type, Vector<Optional<Reference>> elements)
+    explicit TableInstance(TableType const& type, Vector<Optional<Reference>> elements)
         : m_elements(move(elements))
         , m_type(type)
     {
@@ -328,12 +328,12 @@ public:
 
 private:
     Vector<Optional<Reference>> m_elements;
-    const TableType& m_type;
+    TableType const& m_type;
 };
 
 class MemoryInstance {
 public:
-    explicit MemoryInstance(const MemoryType& type)
+    explicit MemoryInstance(MemoryType const& type)
         : m_type(type)
     {
         grow(m_type.limits().min() * Constants::page_size);
@@ -360,7 +360,7 @@ public:
     }
 
 private:
-    const MemoryType& m_type;
+    MemoryType const& m_type;
     size_t m_size { 0 };
     ByteBuffer m_data;
 };
@@ -406,12 +406,12 @@ class Store {
 public:
     Store() = default;
 
-    Optional<FunctionAddress> allocate(ModuleInstance& module, const Module::Function& function);
+    Optional<FunctionAddress> allocate(ModuleInstance& module, Module::Function const& function);
     Optional<FunctionAddress> allocate(HostFunction&&);
-    Optional<TableAddress> allocate(const TableType&);
-    Optional<MemoryAddress> allocate(const MemoryType&);
-    Optional<GlobalAddress> allocate(const GlobalType&, Value);
-    Optional<ElementAddress> allocate(const ValueType&, Vector<Reference>);
+    Optional<TableAddress> allocate(TableType const&);
+    Optional<MemoryAddress> allocate(MemoryType const&);
+    Optional<GlobalAddress> allocate(GlobalType const&, Value);
+    Optional<ElementAddress> allocate(ValueType const&, Vector<Reference>);
 
     FunctionInstance* get(FunctionAddress);
     TableInstance* get(TableAddress);
@@ -445,7 +445,7 @@ private:
 
 class Frame {
 public:
-    explicit Frame(const ModuleInstance& module, Vector<Value> locals, const Expression& expression, size_t arity)
+    explicit Frame(ModuleInstance const& module, Vector<Value> locals, Expression const& expression, size_t arity)
         : m_module(module)
         , m_locals(move(locals))
         , m_expression(expression)
@@ -460,9 +460,9 @@ public:
     auto arity() const { return m_arity; }
 
 private:
-    const ModuleInstance& m_module;
+    ModuleInstance const& m_module;
     Vector<Value> m_locals;
-    const Expression& m_expression;
+    Expression const& m_expression;
     size_t m_arity { 0 };
 };
 
@@ -492,7 +492,7 @@ public:
     explicit AbstractMachine() = default;
 
     // Load and instantiate a module, and link it into this interpreter.
-    InstantiationResult instantiate(const Module&, Vector<ExternValue>);
+    InstantiationResult instantiate(Module const&, Vector<ExternValue>);
     Result invoke(FunctionAddress, Vector<Value>);
     Result invoke(Interpreter&, FunctionAddress, Vector<Value>);
 
@@ -500,8 +500,8 @@ public:
     auto& store() { return m_store; }
 
 private:
-    Optional<InstantiationError> allocate_all_initial_phase(const Module&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
-    Optional<InstantiationError> allocate_all_final_phase(const Module&, ModuleInstance&, Vector<Vector<Reference>>& elements);
+    Optional<InstantiationError> allocate_all_initial_phase(Module const&, ModuleInstance&, Vector<ExternValue>&, Vector<Value>& global_values);
+    Optional<InstantiationError> allocate_all_final_phase(Module const&, ModuleInstance&, Vector<Vector<Reference>>& elements);
     Store m_store;
 };
 
@@ -513,16 +513,16 @@ public:
         ImportSection::Import::ImportDesc type;
     };
 
-    explicit Linker(const Module& module)
+    explicit Linker(Module const& module)
         : m_module(module)
     {
     }
 
     // Link a module, the import 'module name' is ignored with this.
-    void link(const ModuleInstance&);
+    void link(ModuleInstance const&);
 
     // Link a bunch of qualified values, also matches 'module name'.
-    void link(const HashMap<Name, ExternValue>&);
+    void link(HashMap<Name, ExternValue> const&);
 
     auto& unresolved_imports()
     {
@@ -535,7 +535,7 @@ public:
 private:
     void populate();
 
-    const Module& m_module;
+    Module const& m_module;
     HashMap<Name, ExternValue> m_resolved_imports;
     HashTable<Name> m_unresolved_imports;
     Vector<Name> m_ordered_imports;
@@ -547,6 +547,6 @@ private:
 template<>
 struct AK::Traits<Wasm::Linker::Name> : public AK::GenericTraits<Wasm::Linker::Name> {
     static constexpr bool is_trivial() { return false; }
-    static unsigned hash(const Wasm::Linker::Name& entry) { return pair_int_hash(entry.module.hash(), entry.name.hash()); }
-    static bool equals(const Wasm::Linker::Name& a, const Wasm::Linker::Name& b) { return a.name == b.name && a.module == b.module; }
+    static unsigned hash(Wasm::Linker::Name const& entry) { return pair_int_hash(entry.module.hash(), entry.name.hash()); }
+    static bool equals(Wasm::Linker::Name const& a, Wasm::Linker::Name const& b) { return a.name == b.name && a.module == b.module; }
 };

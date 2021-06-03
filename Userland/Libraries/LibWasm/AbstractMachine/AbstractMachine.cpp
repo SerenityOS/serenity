@@ -11,7 +11,7 @@
 
 namespace Wasm {
 
-Optional<FunctionAddress> Store::allocate(ModuleInstance& module, const Module::Function& function)
+Optional<FunctionAddress> Store::allocate(ModuleInstance& module, Module::Function const& function)
 {
     FunctionAddress address { m_functions.size() };
     if (function.type().value() > module.types().size())
@@ -29,7 +29,7 @@ Optional<FunctionAddress> Store::allocate(HostFunction&& function)
     return address;
 }
 
-Optional<TableAddress> Store::allocate(const TableType& type)
+Optional<TableAddress> Store::allocate(TableType const& type)
 {
     TableAddress address { m_tables.size() };
     Vector<Optional<Reference>> elements;
@@ -38,21 +38,21 @@ Optional<TableAddress> Store::allocate(const TableType& type)
     return address;
 }
 
-Optional<MemoryAddress> Store::allocate(const MemoryType& type)
+Optional<MemoryAddress> Store::allocate(MemoryType const& type)
 {
     MemoryAddress address { m_memories.size() };
     m_memories.empend(MemoryInstance { type });
     return address;
 }
 
-Optional<GlobalAddress> Store::allocate(const GlobalType& type, Value value)
+Optional<GlobalAddress> Store::allocate(GlobalType const& type, Value value)
 {
     GlobalAddress address { m_globals.size() };
     m_globals.append(GlobalInstance { move(value), type.is_mutable() });
     return address;
 }
 
-Optional<ElementAddress> Store::allocate(const ValueType& type, Vector<Reference> references)
+Optional<ElementAddress> Store::allocate(ValueType const& type, Vector<Reference> references)
 {
     ElementAddress address { m_elements.size() };
     m_elements.append(ElementInstance { type, move(references) });
@@ -99,13 +99,13 @@ ElementInstance* Store::get(ElementAddress address)
     return &m_elements[value];
 }
 
-InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<ExternValue> externs)
+InstantiationResult AbstractMachine::instantiate(Module const& module, Vector<ExternValue> externs)
 {
     auto main_module_instance_pointer = make<ModuleInstance>();
     auto& main_module_instance = *main_module_instance_pointer;
     Optional<InstantiationResult> instantiation_result;
 
-    module.for_each_section_of_type<TypeSection>([&](const TypeSection& section) {
+    module.for_each_section_of_type<TypeSection>([&](TypeSection const& section) {
         main_module_instance.types() = section.types();
     });
 
@@ -147,7 +147,7 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     if (auto result = allocate_all_initial_phase(module, main_module_instance, externs, global_values); result.has_value())
         return result.release_value();
 
-    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+    module.for_each_section_of_type<ElementSection>([&](ElementSection const& section) {
         for (auto& segment : section.segments()) {
             Vector<Reference> references;
             for (auto& entry : segment.init) {
@@ -190,7 +190,7 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     if (auto result = allocate_all_final_phase(module, main_module_instance, elements); result.has_value())
         return result.release_value();
 
-    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+    module.for_each_section_of_type<ElementSection>([&](ElementSection const& section) {
         size_t index = 0;
         for (auto& segment : section.segments()) {
             auto current_index = index;
@@ -256,10 +256,10 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     if (instantiation_result.has_value())
         return instantiation_result.release_value();
 
-    module.for_each_section_of_type<DataSection>([&](const DataSection& data_section) {
+    module.for_each_section_of_type<DataSection>([&](DataSection const& data_section) {
         for (auto& segment : data_section.data()) {
             segment.value().visit(
-                [&](const DataSection::Data::Active& data) {
+                [&](DataSection::Data::Active const& data) {
                     Configuration config { m_store };
                     config.set_frame(Frame {
                         main_module_instance,
@@ -274,8 +274,8 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                     }
                     size_t offset = 0;
                     result.values().first().value().visit(
-                        [&](const auto& value) { offset = value; },
-                        [&](const Reference&) { instantiation_result = InstantiationError { "Data segment offset returned a reference" }; });
+                        [&](auto const& value) { offset = value; },
+                        [&](Reference const&) { instantiation_result = InstantiationError { "Data segment offset returned a reference" }; });
                     if (instantiation_result.has_value() && instantiation_result->is_error())
                         return;
                     if (main_module_instance.memories().size() <= data.index.value()) {
@@ -293,13 +293,13 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
                         instance->data().overwrite(offset, data.init.data(), data.init.size());
                     }
                 },
-                [&](const DataSection::Data::Passive&) {
+                [&](DataSection::Data::Passive const&) {
                     // FIXME: What do we do here?
                 });
         }
     });
 
-    module.for_each_section_of_type<StartSection>([&](const StartSection& section) {
+    module.for_each_section_of_type<StartSection>([&](StartSection const& section) {
         auto& functions = main_module_instance.functions();
         auto index = section.function().index();
         if (functions.size() <= index.value()) {
@@ -315,16 +315,16 @@ InstantiationResult AbstractMachine::instantiate(const Module& module, Vector<Ex
     return InstantiationResult { move(main_module_instance_pointer) };
 }
 
-Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const Module& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
+Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module const& module, ModuleInstance& module_instance, Vector<ExternValue>& externs, Vector<Value>& global_values)
 {
     Optional<InstantiationError> result;
 
     for (auto& entry : externs) {
         entry.visit(
-            [&](const FunctionAddress& address) { module_instance.functions().append(address); },
-            [&](const TableAddress& address) { module_instance.tables().append(address); },
-            [&](const MemoryAddress& address) { module_instance.memories().append(address); },
-            [&](const GlobalAddress& address) { module_instance.globals().append(address); });
+            [&](FunctionAddress const& address) { module_instance.functions().append(address); },
+            [&](TableAddress const& address) { module_instance.tables().append(address); },
+            [&](MemoryAddress const& address) { module_instance.memories().append(address); },
+            [&](GlobalAddress const& address) { module_instance.globals().append(address); });
     }
 
     // FIXME: What if this fails?
@@ -335,7 +335,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const M
         module_instance.functions().append(*address);
     }
 
-    module.for_each_section_of_type<TableSection>([&](const TableSection& section) {
+    module.for_each_section_of_type<TableSection>([&](TableSection const& section) {
         for (auto& table : section.tables()) {
             auto table_address = m_store.allocate(table.type());
             VERIFY(table_address.has_value());
@@ -343,7 +343,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const M
         }
     });
 
-    module.for_each_section_of_type<MemorySection>([&](const MemorySection& section) {
+    module.for_each_section_of_type<MemorySection>([&](MemorySection const& section) {
         for (auto& memory : section.memories()) {
             auto memory_address = m_store.allocate(memory.type());
             VERIFY(memory_address.has_value());
@@ -351,7 +351,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const M
         }
     });
 
-    module.for_each_section_of_type<GlobalSection>([&](const GlobalSection& section) {
+    module.for_each_section_of_type<GlobalSection>([&](GlobalSection const& section) {
         size_t index = 0;
         for (auto& entry : section.entries()) {
             auto address = m_store.allocate(entry.type(), move(global_values[index]));
@@ -360,29 +360,29 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const M
             index++;
         }
     });
-    module.for_each_section_of_type<ExportSection>([&](const ExportSection& section) {
+    module.for_each_section_of_type<ExportSection>([&](ExportSection const& section) {
         for (auto& entry : section.entries()) {
             Variant<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress, Empty> address { Empty {} };
             entry.description().visit(
-                [&](const FunctionIndex& index) {
+                [&](FunctionIndex const& index) {
                     if (module_instance.functions().size() > index.value())
                         address = FunctionAddress { module_instance.functions()[index.value()] };
                     else
                         dbgln("Failed to export '{}', the exported address ({}) was out of bounds (min: 0, max: {})", entry.name(), index.value(), module_instance.functions().size());
                 },
-                [&](const TableIndex& index) {
+                [&](TableIndex const& index) {
                     if (module_instance.tables().size() > index.value())
                         address = TableAddress { module_instance.tables()[index.value()] };
                     else
                         dbgln("Failed to export '{}', the exported address ({}) was out of bounds (min: 0, max: {})", entry.name(), index.value(), module_instance.tables().size());
                 },
-                [&](const MemoryIndex& index) {
+                [&](MemoryIndex const& index) {
                     if (module_instance.memories().size() > index.value())
                         address = MemoryAddress { module_instance.memories()[index.value()] };
                     else
                         dbgln("Failed to export '{}', the exported address ({}) was out of bounds (min: 0, max: {})", entry.name(), index.value(), module_instance.memories().size());
                 },
-                [&](const GlobalIndex& index) {
+                [&](GlobalIndex const& index) {
                     if (module_instance.globals().size() > index.value())
                         address = GlobalAddress { module_instance.globals()[index.value()] };
                     else
@@ -404,9 +404,9 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(const M
     return result;
 }
 
-Optional<InstantiationError> AbstractMachine::allocate_all_final_phase(const Module& module, ModuleInstance& module_instance, Vector<Vector<Reference>>& elements)
+Optional<InstantiationError> AbstractMachine::allocate_all_final_phase(Module const& module, ModuleInstance& module_instance, Vector<Vector<Reference>>& elements)
 {
-    module.for_each_section_of_type<ElementSection>([&](const ElementSection& section) {
+    module.for_each_section_of_type<ElementSection>([&](ElementSection const& section) {
         size_t index = 0;
         for (auto& segment : section.segments()) {
             auto address = m_store.allocate(segment.type, move(elements[index]));
@@ -431,7 +431,7 @@ Result AbstractMachine::invoke(Interpreter& interpreter, FunctionAddress address
     return configuration.call(interpreter, address, move(arguments));
 }
 
-void Linker::link(const ModuleInstance& instance)
+void Linker::link(ModuleInstance const& instance)
 {
     populate();
     if (m_unresolved_imports.is_empty())
@@ -450,7 +450,7 @@ void Linker::link(const ModuleInstance& instance)
         m_unresolved_imports.remove(entry);
 }
 
-void Linker::link(const HashMap<Linker::Name, ExternValue>& exports)
+void Linker::link(HashMap<Linker::Name, ExternValue> const& exports)
 {
     populate();
     if (m_unresolved_imports.is_empty())
@@ -498,7 +498,7 @@ void Linker::populate()
 
     // There better be at most one import section!
     bool already_seen_an_import_section = false;
-    m_module.for_each_section_of_type<ImportSection>([&](const ImportSection& section) {
+    m_module.for_each_section_of_type<ImportSection>([&](ImportSection const& section) {
         if (already_seen_an_import_section) {
             if (!m_error.has_value())
                 m_error = LinkError {};

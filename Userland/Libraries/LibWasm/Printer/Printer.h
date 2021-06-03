@@ -12,7 +12,7 @@ namespace Wasm {
 
 class Value;
 
-String instruction_name(const OpCode& opcode);
+String instruction_name(OpCode const& opcode);
 
 struct Printer {
     explicit Printer(OutputStream& stream, size_t initial_indent = 0)
@@ -21,43 +21,43 @@ struct Printer {
     {
     }
 
-    void print(const Wasm::BlockType&);
-    void print(const Wasm::CodeSection&);
-    void print(const Wasm::CodeSection::Code&);
-    void print(const Wasm::CodeSection::Func&);
-    void print(const Wasm::CustomSection&);
-    void print(const Wasm::DataCountSection&);
-    void print(const Wasm::DataSection&);
-    void print(const Wasm::DataSection::Data&);
-    void print(const Wasm::ElementSection&);
-    void print(const Wasm::ElementSection::Element&);
-    void print(const Wasm::ExportSection&);
-    void print(const Wasm::ExportSection::Export&);
-    void print(const Wasm::Expression&);
-    void print(const Wasm::FunctionSection&);
-    void print(const Wasm::FunctionType&);
-    void print(const Wasm::GlobalSection&);
-    void print(const Wasm::GlobalSection::Global&);
-    void print(const Wasm::GlobalType&);
-    void print(const Wasm::ImportSection&);
-    void print(const Wasm::ImportSection::Import&);
-    void print(const Wasm::Instruction&);
-    void print(const Wasm::Limits&);
-    void print(const Wasm::Locals&);
-    void print(const Wasm::MemorySection&);
-    void print(const Wasm::MemorySection::Memory&);
-    void print(const Wasm::MemoryType&);
-    void print(const Wasm::Module&);
-    void print(const Wasm::Module::Function&);
-    void print(const Wasm::Reference&);
-    void print(const Wasm::StartSection&);
-    void print(const Wasm::StartSection::StartFunction&);
-    void print(const Wasm::TableSection&);
-    void print(const Wasm::TableSection::Table&);
-    void print(const Wasm::TableType&);
-    void print(const Wasm::TypeSection&);
-    void print(const Wasm::ValueType&);
-    void print(const Wasm::Value&);
+    void print(Wasm::BlockType const&);
+    void print(Wasm::CodeSection const&);
+    void print(Wasm::CodeSection::Code const&);
+    void print(Wasm::CodeSection::Func const&);
+    void print(Wasm::CustomSection const&);
+    void print(Wasm::DataCountSection const&);
+    void print(Wasm::DataSection const&);
+    void print(Wasm::DataSection::Data const&);
+    void print(Wasm::ElementSection const&);
+    void print(Wasm::ElementSection::Element const&);
+    void print(Wasm::ExportSection const&);
+    void print(Wasm::ExportSection::Export const&);
+    void print(Wasm::Expression const&);
+    void print(Wasm::FunctionSection const&);
+    void print(Wasm::FunctionType const&);
+    void print(Wasm::GlobalSection const&);
+    void print(Wasm::GlobalSection::Global const&);
+    void print(Wasm::GlobalType const&);
+    void print(Wasm::ImportSection const&);
+    void print(Wasm::ImportSection::Import const&);
+    void print(Wasm::Instruction const&);
+    void print(Wasm::Limits const&);
+    void print(Wasm::Locals const&);
+    void print(Wasm::MemorySection const&);
+    void print(Wasm::MemorySection::Memory const&);
+    void print(Wasm::MemoryType const&);
+    void print(Wasm::Module const&);
+    void print(Wasm::Module::Function const&);
+    void print(Wasm::Reference const&);
+    void print(Wasm::StartSection const&);
+    void print(Wasm::StartSection::StartFunction const&);
+    void print(Wasm::TableSection const&);
+    void print(Wasm::TableSection::Table const&);
+    void print(Wasm::TableType const&);
+    void print(Wasm::TypeSection const&);
+    void print(Wasm::ValueType const&);
+    void print(Wasm::Value const&);
 
 private:
     void print_indent();

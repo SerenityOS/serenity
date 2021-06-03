@@ -57,7 +57,7 @@ public:
         Configuration& configuration;
     };
 
-    void unwind(Badge<CallFrameHandle>, const CallFrameHandle&);
+    void unwind(Badge<CallFrameHandle>, CallFrameHandle const&);
     Result call(Interpreter&, FunctionAddress, Vector<Value> arguments);
     Result execute(Interpreter&);
 

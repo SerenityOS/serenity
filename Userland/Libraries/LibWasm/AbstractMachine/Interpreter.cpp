@@ -73,7 +73,7 @@ void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelInd
 }
 
 template<typename ReadType, typename PushType>
-void BytecodeInterpreter::load_and_push(Configuration& configuration, const Instruction& instruction)
+void BytecodeInterpreter::load_and_push(Configuration& configuration, Instruction const& instruction)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -98,7 +98,7 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, const Inst
     configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
 
-void BytecodeInterpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
+void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -120,8 +120,8 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 {
     auto instance = configuration.store().get(address);
     TRAP_IF_NOT(instance);
-    const FunctionType* type { nullptr };
-    instance->visit([&](const auto& function) { type = &function.type(); });
+    FunctionType const* type { nullptr };
+    instance->visit([&](auto const& function) { type = &function.type(); });
     TRAP_IF_NOT(type);
     TRAP_IF_NOT(configuration.stack().entries().size() > type->parameters().size());
     Vector<Value> args;
@@ -396,7 +396,7 @@ ALWAYS_INLINE static i32 ctz(T value)
         VERIFY_NOT_REACHED();
 }
 
-void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
 
@@ -973,7 +973,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
 }
 
-void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     if (pre_interpret_hook) {
         auto result = pre_interpret_hook(configuration, ip, instruction);
