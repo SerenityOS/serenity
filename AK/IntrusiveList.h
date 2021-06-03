@@ -89,6 +89,34 @@ public:
     Iterator begin();
     Iterator end() { return Iterator {}; }
 
+    class ReverseIterator {
+    public:
+        ReverseIterator() = default;
+        ReverseIterator(T* value)
+            : m_value(move(value))
+        {
+        }
+
+        const T& operator*() const { return *m_value; }
+        auto operator->() const { return m_value; }
+        T& operator*() { return *m_value; }
+        auto operator->() { return m_value; }
+        bool operator==(const ReverseIterator& other) const { return other.m_value == m_value; }
+        bool operator!=(const ReverseIterator& other) const { return !(*this == other); }
+        ReverseIterator& operator++()
+        {
+            m_value = IntrusiveList<T, Container, member>::prev(m_value);
+            return *this;
+        }
+        ReverseIterator& erase();
+
+    private:
+        T* m_value { nullptr };
+    };
+
+    ReverseIterator rbegin();
+    ReverseIterator rend() { return ReverseIterator {}; }
+
     class ConstIterator {
     public:
         ConstIterator() = default;
@@ -116,7 +144,9 @@ public:
 
 private:
     static T* next(T* current);
+    static T* prev(T* current);
     static const T* next(const T* current);
+    static const T* prev(const T* current);
     static T* node_to_value(IntrusiveListNode<T, Container>& node);
     IntrusiveListStorage<T, Container> m_storage;
 };
@@ -279,6 +309,14 @@ inline const T* IntrusiveList<T, Container, member>::next(const T* current)
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
+inline const T* IntrusiveList<T, Container, member>::prev(const T* current)
+{
+    auto& prevnode = (current->*member).m_prev;
+    const T* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
+    return prevstruct;
+}
+
+template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline T* IntrusiveList<T, Container, member>::next(T* current)
 {
     auto& nextnode = (current->*member).m_next;
@@ -287,9 +325,23 @@ inline T* IntrusiveList<T, Container, member>::next(T* current)
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
+inline T* IntrusiveList<T, Container, member>::prev(T* current)
+{
+    auto& prevnode = (current->*member).m_prev;
+    T* prevstruct = prevnode ? node_to_value(*prevnode) : nullptr;
+    return prevstruct;
+}
+
+template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline typename IntrusiveList<T, Container, member>::Iterator IntrusiveList<T, Container, member>::begin()
 {
     return m_storage.m_first ? Iterator(node_to_value(*m_storage.m_first)) : Iterator();
+}
+
+template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
+inline typename IntrusiveList<T, Container, member>::ReverseIterator IntrusiveList<T, Container, member>::rbegin()
+{
+    return m_storage.m_last ? ReverseIterator(node_to_value(*m_storage.m_last)) : ReverseIterator();
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
