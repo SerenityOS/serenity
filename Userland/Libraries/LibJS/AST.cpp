@@ -2264,12 +2264,15 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     VERIFY(lhs_reg.has_value());
     VERIFY(rhs_reg.has_value());
 
+    auto dst_reg = generator.allocate_register();
+
     switch (m_op) {
-    case BinaryOp::Addition: {
-        auto dst_reg = generator.allocate_register();
+    case BinaryOp::Addition:
         generator.emit<Bytecode::Op::Add>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
-    }
+    case BinaryOp::Subtraction:
+        generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     default:
         TODO();
     }
