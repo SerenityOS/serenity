@@ -20,6 +20,7 @@ enum class WindowType {
     Desktop,
     ToolWindow,
     AppletArea,
+    _Count
 };
 
 }

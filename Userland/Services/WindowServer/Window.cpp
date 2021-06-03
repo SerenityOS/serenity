@@ -208,7 +208,8 @@ void Window::nudge_into_desktop(bool force_titlebar_visible)
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
 {
-    VERIFY(!size.is_empty());
+    if (size.is_null())
+        return;
 
     if (m_minimum_size == size)
         return;
