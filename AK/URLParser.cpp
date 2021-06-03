@@ -228,10 +228,12 @@ URL URLParser::parse(Badge<URL>, StringView const& raw_input, URL const* base_ur
             code_point = *iterator;
 
         if constexpr (URL_PARSER_DEBUG) {
-            if (code_point)
-                dbgln("URLParser::parse: State {:2d} with code point '{:c}' (U+{:04X}).", (int)state, code_point, code_point);
+            if (!code_point)
+                dbgln("URLParser::parse: {} state with EOF.", state_name(state));
+            else if (is_ascii_printable(code_point))
+                dbgln("URLParser::parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
             else
-                dbgln("URLParser::parse: State {:2d} with code point EOF (U+0000).", (int)state);
+                dbgln("URLParser::parse: {} state with code point U+{:04X}.", state_name(state), code_point);
         }
 
         switch (state) {
