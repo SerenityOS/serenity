@@ -65,44 +65,38 @@ int main(int argc, char** argv)
     int tty_column = -1;
     int cmd_column = -1;
 
-    auto add_column = [&](auto title, auto alignment, auto width) {
-        columns.append({ title, alignment, width, {} });
+    auto add_column = [&](auto title, auto alignment) {
+        columns.append({ title, alignment, 0, {} });
         return columns.size() - 1;
     };
 
     if (full_format_flag) {
-        uid_column = add_column("UID", Alignment::Left, 9);
-        pid_column = add_column("PID", Alignment::Right, 5);
-        ppid_column = add_column("PPID", Alignment::Right, 5);
-        state_column = add_column("STATE", Alignment::Left, 12);
-        tty_column = add_column("TTY", Alignment::Left, 6);
-        cmd_column = add_column("CMD", Alignment::Left, 0);
+        uid_column = add_column("UID", Alignment::Left);
+        pid_column = add_column("PID", Alignment::Right);
+        ppid_column = add_column("PPID", Alignment::Right);
+        state_column = add_column("STATE", Alignment::Left);
+        tty_column = add_column("TTY", Alignment::Left);
+        cmd_column = add_column("CMD", Alignment::Left);
     } else {
-        pid_column = add_column("PID", Alignment::Right, 5);
-        tty_column = add_column("TTY", Alignment::Left, 6);
-        cmd_column = add_column("CMD", Alignment::Left, 0);
+        pid_column = add_column("PID", Alignment::Right);
+        tty_column = add_column("TTY", Alignment::Left);
+        cmd_column = add_column("CMD", Alignment::Left);
     }
-
-    auto print_column = [](auto& column, auto& string) {
-        if (!column.width) {
-            out("{}", string);
-            return;
-        }
-        if (column.alignment == Alignment::Right)
-            out("{1:>{0}} ", column.width, string);
-        else
-            out("{1:{0}} ", column.width, string);
-    };
-
-    for (auto& column : columns)
-        print_column(column, column.title);
-    outln();
 
     auto processes = Core::ProcessStatisticsReader::get_all();
     if (!processes.has_value())
         return 1;
 
     quick_sort(processes.value(), [](auto& a, auto& b) { return a.pid < b.pid; });
+
+    Vector<Vector<String>> rows;
+    rows.ensure_capacity(1 + processes.value().size());
+
+    Vector<String> header;
+    header.ensure_capacity(columns.size());
+    for (auto& column : columns)
+        header.append(column.title);
+    rows.append(move(header));
 
     for (auto const& process : processes.value()) {
         auto tty = process.tty;
@@ -117,21 +111,46 @@ int main(int argc, char** argv)
 
         auto* state = process.threads.is_empty() ? "Zombie" : process.threads.first().state.characters();
 
-        if (uid_column != -1)
-            columns[uid_column].buffer = process.username;
-        if (pid_column != -1)
-            columns[pid_column].buffer = String::number(process.pid);
-        if (ppid_column != -1)
-            columns[ppid_column].buffer = String::number(process.ppid);
-        if (tty_column != -1)
-            columns[tty_column].buffer = tty;
-        if (state_column != -1)
-            columns[state_column].buffer = state;
-        if (cmd_column != -1)
-            columns[cmd_column].buffer = process.name;
+        Vector<String> row;
+        row.resize(columns.size());
 
-        for (auto& column : columns)
-            print_column(column, column.buffer);
+        if (uid_column != -1)
+            row[uid_column] = process.username;
+        if (pid_column != -1)
+            row[pid_column] = String::number(process.pid);
+        if (ppid_column != -1)
+            row[ppid_column] = String::number(process.ppid);
+        if (tty_column != -1)
+            row[tty_column] = tty;
+        if (state_column != -1)
+            row[state_column] = state;
+        if (cmd_column != -1)
+            row[cmd_column] = process.name;
+
+        rows.append(move(row));
+    }
+
+    for (size_t i = 0; i < columns.size(); i++) {
+        auto& column = columns[i];
+        for (auto& row : rows)
+            column.width = max(column.width, static_cast<int>(row[i].length()));
+    }
+
+    for (auto& row : rows) {
+        for (size_t i = 0; i < columns.size(); i++) {
+            auto& column = columns[i];
+            auto& cell_text = row[i];
+            if (!column.width) {
+                out("{}", cell_text);
+                continue;
+            }
+            if (column.alignment == Alignment::Right)
+                out("{1:>{0}} ", column.width, cell_text);
+            else
+                out("{1:{0}} ", column.width, cell_text);
+            if (i != columns.size() - 1)
+                out(" ");
+        }
         outln();
     }
 
