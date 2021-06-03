@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     int status;
     if (g_pid == -1) {
         if (child_argv.is_empty()) {
-            warnln("strace: Expected either a pid or some arguments");
+            outln(stderr, "strace: Expected either a pid or some arguments\n");
             return 1;
         }
 
