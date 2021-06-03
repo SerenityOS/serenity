@@ -181,11 +181,6 @@ JsonValue::JsonValue(const String& value)
     }
 }
 
-JsonValue::JsonValue(const IPv4Address& value)
-    : JsonValue(value.to_string())
-{
-}
-
 JsonValue::JsonValue(const JsonObject& value)
     : m_type(Type::Object)
 {

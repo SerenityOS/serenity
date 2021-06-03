@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Forward.h>
-#include <AK/IPv4Address.h>
 #include <AK/Optional.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -55,7 +54,6 @@ public:
     JsonValue(bool);
     JsonValue(const char*);
     JsonValue(const String&);
-    JsonValue(const IPv4Address&);
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
 
@@ -83,13 +81,6 @@ public:
         if (is_string())
             return as_string();
         return serialized<StringBuilder>();
-    }
-
-    Optional<IPv4Address> to_ipv4_address() const
-    {
-        if (!is_string())
-            return {};
-        return IPv4Address::from_string(as_string());
     }
 
     int to_int(int default_value = 0) const { return to_i32(default_value); }
