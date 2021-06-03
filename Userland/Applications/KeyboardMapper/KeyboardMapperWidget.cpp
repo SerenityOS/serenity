@@ -126,7 +126,10 @@ void KeyboardMapperWidget::create_frame()
 void KeyboardMapperWidget::load_from_file(String filename)
 {
     auto result = Keyboard::CharacterMapFile::load_from_file(filename);
-    VERIFY(result.has_value());
+    if (!result.has_value()) {
+        dbgln("Failed to load character map from file {}", filename);
+        return;
+    }
 
     m_filename = filename;
     m_character_map = result.value();
