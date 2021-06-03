@@ -50,6 +50,8 @@ void ImageEditor::did_complete_action()
     if (!m_image)
         return;
     store_snapshot();
+    if (on_undo_redo_change)
+        on_undo_redo_change(m_active_snapshot > 0, m_active_snapshot + 1 < m_snapshots.size());
 }
 
 void ImageEditor::store_snapshot()
@@ -307,6 +309,8 @@ void ImageEditor::set_active_tool(Tool* tool)
 void ImageEditor::layers_did_change()
 {
     update();
+    if (on_undo_redo_change)
+        on_undo_redo_change(m_active_snapshot > 0, m_active_snapshot + 1 < m_snapshots.size());
 }
 
 Color ImageEditor::color_for(GUI::MouseButton button) const

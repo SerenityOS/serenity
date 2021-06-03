@@ -62,6 +62,8 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
+    Function<void(bool, bool)> on_undo_redo_change;
+
     Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
     Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
     Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;

@@ -181,13 +181,20 @@ int main(int argc, char** argv)
         VERIFY(image_editor.image());
         image_editor.undo();
     });
+    undo_action->set_enabled(false);
     edit_menu.add_action(undo_action);
 
     auto redo_action = GUI::CommonActions::make_redo_action([&](auto&) {
         VERIFY(image_editor.image());
         image_editor.redo();
     });
+    redo_action->set_enabled(false);
     edit_menu.add_action(redo_action);
+
+    image_editor.on_undo_redo_change = [&undo_action, &redo_action](bool undo_enabled, bool redo_enabled) {
+        undo_action->set_enabled(undo_enabled);
+        redo_action->set_enabled(redo_enabled);
+    };
 
     auto& view_menu = menubar->add_menu("&View");
 
