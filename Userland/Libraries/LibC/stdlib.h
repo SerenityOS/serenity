@@ -59,6 +59,7 @@ char* mktemp(char*);
 int mkstemp(char*);
 char* mkdtemp(char*);
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
+int mblen(char const*, size_t);
 size_t mbstowcs(wchar_t*, const char*, size_t);
 int mbtowc(wchar_t*, const char*, size_t);
 int wctomb(char*, wchar_t);

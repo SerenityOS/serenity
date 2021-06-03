@@ -865,6 +865,14 @@ lldiv_t lldiv(long long numerator, long long denominator)
     return result;
 }
 
+int mblen(char const* s, size_t n)
+{
+    // FIXME: Implement locale support
+    if (!s)
+        return 0;
+    return (MB_CUR_MAX > n) ? n : MB_CUR_MAX;
+}
+
 size_t mbstowcs(wchar_t*, const char*, size_t)
 {
     dbgln("FIXME: Implement mbstowcs()");
