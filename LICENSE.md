@@ -1,4 +1,7 @@
-BSD 2-Clause License
+# Hearth OS License
+https://github.com/Hearth-OS/hearth-os.github.io/blob/main/LICENSE.md
+# SerenityOS License
+## BSD 2-Clause License
 
 Copyright (c) 2018-2021, the SerenityOS developers.
 All rights reserved.
