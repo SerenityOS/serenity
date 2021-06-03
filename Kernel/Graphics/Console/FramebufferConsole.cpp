@@ -294,12 +294,15 @@ void FramebufferConsole::disable()
     m_enabled.store(false);
 }
 
-void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground) const
+void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical) const
 {
     ScopedSpinLock lock(m_lock);
     if (!m_enabled.load())
         return;
-    if (ch == '\r' || ch == '\n') {
+
+    // If we are in critical printing mode, we need to handle new lines here
+    // because there's no other responsible object to do that in the print call path
+    if (critical && (ch == '\r' || ch == '\n')) {
         m_x = 0;
         m_y += 1;
         if (m_y >= max_row())
@@ -339,14 +342,14 @@ void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Co
     }
 }
 
-void FramebufferConsole::write(size_t x, size_t y, char ch) const
+void FramebufferConsole::write(size_t x, size_t y, char ch, bool critical) const
 {
-    write(x, y, ch, m_default_background_color, m_default_foreground_color);
+    write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void FramebufferConsole::write(char ch) const
+void FramebufferConsole::write(char ch, bool critical) const
 {
-    write(m_x, m_y, ch, m_default_background_color, m_default_foreground_color);
+    write(m_x, m_y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
 }
