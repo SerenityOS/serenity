@@ -5,7 +5,6 @@
  */
 
 #include "MainWidget.h"
-#include <AK/JsonValue.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
@@ -27,7 +26,6 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/RegularEditingEngine.h>
-#include <LibGUI/Splitter.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/TextEditor.h>
