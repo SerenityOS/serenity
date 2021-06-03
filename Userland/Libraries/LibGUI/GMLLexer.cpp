@@ -26,7 +26,6 @@ char GMLLexer::consume()
 {
     VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
-    m_previous_position = m_position;
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
@@ -68,7 +67,7 @@ Vector<GMLToken> GMLLexer::lex()
         token.m_view = m_input.substring_view(token_start_index, m_index - token_start_index);
         token.m_type = type;
         token.m_start = token_start_position;
-        token.m_end = m_previous_position;
+        token.m_end = m_position;
         tokens.append(token);
     };
 
