@@ -265,10 +265,10 @@ int main(int argc, char* argv[])
     bool print = false;
     bool attempt_instantiate = false;
     bool debug = false;
+    bool export_all_imports = false;
     String exported_function_to_execute;
     Vector<u64> values_to_push;
     Vector<String> modules_to_link_in;
-    HashMap<Wasm::Linker::Name, Wasm::HostFunction> exported_host_functions;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(filename, "File name to parse", "file");
@@ -276,6 +276,7 @@ int main(int argc, char* argv[])
     parser.add_option(print, "Print the parsed module", "print", 'p');
     parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
     parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
+    parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
     parser.add_option(Core::ArgsParser::Option {
         .requires_argument = true,
         .help_string = "Extra modules to link with, use to resolve imports",
@@ -304,71 +305,6 @@ int main(int argc, char* argv[])
             return false;
         },
     });
-    parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
-        .help_string = "Export a noop function that returns default-initialised values (module!name::t,t,t...:t,t,t...)",
-        .long_name = "export-noop",
-        .short_name = 0,
-        .value_name = "module!name:atypes:rtypes",
-        .accept_value = [&](const char* str) -> bool {
-            GenericLexer lexer { str };
-            auto name = lexer.consume_until("::");
-            auto parts = name.split_view('!');
-            if (parts.size() != 2) {
-                warnln("Expected a two-part name module!name, got '{}'", name);
-                return false;
-            }
-            auto module_name = parts[0];
-            auto export_name = parts[1];
-
-            auto arg_types = lexer.consume_until(":").split_view(',');
-            auto ret_types = lexer.consume_all().split_view(',');
-            Vector<Wasm::ValueType> argument_types, return_types;
-            for (auto& name : arg_types) {
-                if (name == "i32") {
-                    argument_types.empend(Wasm::ValueType::Kind::I32);
-                } else if (name == "i64") {
-                    argument_types.empend(Wasm::ValueType::Kind::I64);
-                } else if (name == "f32") {
-                    argument_types.empend(Wasm::ValueType::Kind::F32);
-                } else if (name == "f64") {
-                    argument_types.empend(Wasm::ValueType::Kind::F64);
-                } else {
-                    warnln("Unknown type '{}'", name);
-                    return false;
-                }
-            }
-            for (auto& name : ret_types) {
-                if (name == "i32") {
-                    return_types.empend(Wasm::ValueType::Kind::I32);
-                } else if (name == "i64") {
-                    return_types.empend(Wasm::ValueType::Kind::I64);
-                } else if (name == "f32") {
-                    return_types.empend(Wasm::ValueType::Kind::F32);
-                } else if (name == "f64") {
-                    return_types.empend(Wasm::ValueType::Kind::F64);
-                } else {
-                    warnln("Unknown type '{}'", name);
-                    return false;
-                }
-            }
-
-            Wasm::FunctionType function_type { argument_types, return_types };
-            exported_host_functions.set(
-                Wasm::Linker::Name { module_name, export_name, function_type },
-                Wasm::HostFunction {
-                    [&](auto&, auto&) -> Wasm::Result {
-                        Vector<Wasm::Value> values;
-                        values.ensure_capacity(return_types.size());
-                        for (auto& type : return_types)
-                            values.empend(type, 0ull);
-                        return Wasm::Result { move(values) };
-                    },
-                    function_type });
-
-            return true;
-        },
-    });
     parser.parse(argc, argv);
 
     if (debug && exported_function_to_execute.is_empty()) {
@@ -384,6 +320,9 @@ int main(int argc, char* argv[])
         attempt_instantiate = true;
 
     auto parse_result = parse(filename);
+    if (!parse_result.has_value())
+        return 1;
+
     if (print && !attempt_instantiate) {
         auto out_stream = Core::OutputFileStream::standard_output();
         Wasm::Printer printer(out_stream);
@@ -425,20 +364,43 @@ int main(int argc, char* argv[])
             linked_instances.append(instantiation_result.release_value());
         }
 
-        HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
-        for (auto& entry : exported_host_functions) {
-            auto address = machine.store().allocate(move(entry.value));
-            if (!address.has_value()) {
-                warnln("Could not export {}/{}", entry.key.module, entry.key.name);
-                return 1;
-            }
-            exports.set(entry.key, *address);
-        }
-
         Wasm::Linker linker { parse_result.value() };
         for (auto& instance : linked_instances)
             linker.link(instance);
-        linker.link(exports);
+
+        if (export_all_imports) {
+            HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
+            for (auto& entry : linker.unresolved_imports()) {
+                if (!entry.type.has<Wasm::TypeIndex>())
+                    continue;
+                auto type = parse_result.value().type(entry.type.get<Wasm::TypeIndex>());
+                auto address = machine.store().allocate(Wasm::HostFunction(
+                    [name = entry.name, type = type](auto&, auto& arguments) -> Wasm::Result {
+                        StringBuilder argument_builder;
+                        bool first = true;
+                        for (auto& argument : arguments) {
+                            DuplexMemoryStream stream;
+                            Wasm::Printer { stream }.print(argument);
+                            if (first)
+                                first = false;
+                            else
+                                argument_builder.append(", "sv);
+                            argument_builder.append(StringView(stream.copy_into_contiguous_buffer()).trim_whitespace());
+                        }
+                        dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_string());
+                        Vector<Wasm::Value> result;
+                        result.ensure_capacity(type.results().size());
+                        for (auto& result_type : type.results())
+                            result.append(Wasm::Value { result_type, 0ull });
+                        return Wasm::Result { move(result) };
+                    },
+                    type));
+                exports.set(entry, *address);
+            }
+
+            linker.link(exports);
+        }
+
         auto link_result = linker.finish();
         if (link_result.is_error()) {
             warnln("Linking main module failed");
