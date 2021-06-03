@@ -55,9 +55,9 @@ public:
     virtual void show_cursor() = 0;
 
     virtual void clear(size_t x, size_t y, size_t length) const = 0;
-    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground) const = 0;
-    virtual void write(size_t x, size_t y, char ch) const = 0;
-    virtual void write(char ch) const = 0;
+    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) const = 0;
+    virtual void write(size_t x, size_t y, char ch, bool critical = false) const = 0;
+    virtual void write(char ch, bool critical = false) const = 0;
 
     virtual ~Console() { }
 

@@ -119,26 +119,33 @@ void TextModeConsole::clear(size_t x, size_t y, size_t length) const
         buf[index] = 0x0720;
     }
 }
-void TextModeConsole::write(size_t x, size_t y, char ch) const
+void TextModeConsole::write(size_t x, size_t y, char ch, bool critical) const
 {
-    ScopedSpinLock lock(m_vga_lock);
-    auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
-    *buf = (m_default_foreground_color << 8) | (m_default_background_color << 12) | ch;
-    m_x = x + 1;
-    if (m_x >= max_column()) {
-        m_x = 0;
-        m_y = y + 1;
-        if (m_y >= max_row())
-            m_y = 0;
-    }
+    write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground) const
+void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical) const
 {
     ScopedSpinLock lock(m_vga_lock);
+    // If we are in critical printing mode, we need to handle new lines here
+    // because there's no other responsible object to do that in the print call path
+    if (critical && (ch == '\r' || ch == '\n')) {
+        // Disable hardware VGA cursor
+        ScopedSpinLock main_lock(GraphicsManagement::the().main_vga_lock());
+        IO::out8(0x3D4, 0xA);
+        IO::out8(0x3D5, 0x20);
+
+        m_x = 0;
+        m_y += 1;
+        if (m_y >= max_row())
+            m_y = 0;
+        return;
+    }
+
     auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
     *buf = foreground << 8 | background << 12 | ch;
     m_x = x + 1;
+
     if (m_x >= max_column()) {
         m_x = 0;
         m_y = y + 1;
@@ -164,9 +171,9 @@ void TextModeConsole::set_vga_start_row(u16 row)
     IO::out8(0x3d5, LSB(m_current_vga_start_address));
 }
 
-void TextModeConsole::write(char ch) const
+void TextModeConsole::write(char ch, bool critical) const
 {
-    write(m_x, m_y, ch);
+    write(m_x, m_y, ch, critical);
 }
 
 }

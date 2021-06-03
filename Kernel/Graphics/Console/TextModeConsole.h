@@ -25,9 +25,9 @@ public:
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
     virtual void clear(size_t x, size_t y, size_t length) const override;
-    virtual void write(size_t x, size_t y, char ch) const override;
-    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground) const override;
-    virtual void write(char ch) const override;
+    virtual void write(size_t x, size_t y, char ch, bool critical = false) const override;
+    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) const override;
+    virtual void write(char ch, bool critical = false) const override;
 
     virtual void enable() override { }
     virtual void disable() override { VERIFY_NOT_REACHED(); }
