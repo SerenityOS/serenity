@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
@@ -17,13 +17,10 @@ namespace Kernel {
 
 class ProcessGroup
     : public RefCounted<ProcessGroup>
-    , public Weakable<ProcessGroup>
-    , public InlineLinkedListNode<ProcessGroup> {
+    , public Weakable<ProcessGroup> {
 
     AK_MAKE_NONMOVABLE(ProcessGroup);
     AK_MAKE_NONCOPYABLE(ProcessGroup);
-
-    friend InlineLinkedListNode<ProcessGroup>;
 
 public:
     ~ProcessGroup();
@@ -40,13 +37,14 @@ private:
     {
     }
 
-    ProcessGroup* m_prev { nullptr };
-    ProcessGroup* m_next { nullptr };
-
+    IntrusiveListNode<ProcessGroup> m_list_node;
     ProcessGroupID m_pgid;
+
+public:
+    using List = IntrusiveList<ProcessGroup, RawPtr<ProcessGroup>, &ProcessGroup::m_list_node>;
 };
 
-extern InlineLinkedList<ProcessGroup>* g_process_groups;
+extern ProcessGroup::List* g_process_groups;
 extern RecursiveSpinLock g_process_groups_lock;
 
 }
