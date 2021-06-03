@@ -83,7 +83,7 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
 {
     auto ebp_val = regs.ebp;
     auto eip_val = regs.eip;
-    outln("Backtrace:\n");
+    outln("Backtrace:");
     while (g_debug_session->peek((u32*)eip_val).has_value() && g_debug_session->peek((u32*)ebp_val).has_value()) {
         auto eip_symbol = g_debug_session->symbolicate(eip_val);
         auto source_position = g_debug_session->get_source_position(eip_val);
