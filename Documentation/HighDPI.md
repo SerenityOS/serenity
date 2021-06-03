@@ -30,7 +30,7 @@ Resources such as icons, cursors, bitmap fonts are scale-dependent: In HighDPI m
 
 ### Art direction
 
-A 2x resource should look like a 1x resource, just with fewer jagged edges. A horizontal or vertical line that's 1 pixel wide in 1x should be 2 pixels wide in 2x.
+A 2x resource should look like a 1x resource, just with less-jagged edges. A horizontal or vertical line that's 1 pixel wide in 1x should be 2 pixels wide in 2x.
 
 A good guideline for black-and-white images: start with a 1x bitmap, resize it to 200% using nearest-neighbor filtering, and then move black pixels around to smooth diagonal edges -- but the number of black pixels shouldn't change relative to the 200% nearest-neighbor-resampled image. If that's not possible, err towards making the icon smaller instead of larger. A good technique is to use the Ctrl-Shift-Super-I shortcut in HighDPI mode to toggle between low-res and high-res icons in HighDPI mode.
 
