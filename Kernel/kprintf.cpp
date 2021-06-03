@@ -77,7 +77,7 @@ static void critical_console_out(char ch)
     // We emit chars directly to the string. this is necessary in few cases,
     // especially when we want to avoid any memory allocations...
     if (GraphicsManagement::is_initialized() && GraphicsManagement::the().console()) {
-        GraphicsManagement::the().console()->write(ch);
+        GraphicsManagement::the().console()->write(ch, true);
     }
 }
 
