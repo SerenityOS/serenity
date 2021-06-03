@@ -328,3 +328,12 @@ TEST_CASE(leading_and_trailing_whitespace)
     EXPECT(url.is_valid());
     EXPECT_EQ(url.to_string(), "https://foo.com/");
 }
+
+TEST_CASE(unicode)
+{
+    URL url { "http://example.com/_ünicöde_téxt_©" };
+    EXPECT(url.is_valid());
+    EXPECT_EQ(url.path(), "/_ünicöde_téxt_©");
+    EXPECT(url.query().is_null());
+    EXPECT(url.fragment().is_null());
+}
