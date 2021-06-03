@@ -38,27 +38,27 @@ void SetVariable::execute(Bytecode::Interpreter& interpreter) const
 
 String Load::to_string() const
 {
-    return String::formatted("Load dst:r{}, value:{}", m_dst.index(), m_value.to_string_without_side_effects());
+    return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
 }
 
 String Add::to_string() const
 {
-    return String::formatted("Add dst:r{}, src1:r{}, src2:r{}", m_dst.index(), m_src1.index(), m_src2.index());
+    return String::formatted("Add dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String NewString::to_string() const
 {
-    return String::formatted("NewString dst:r{}, string:\"{}\"", m_dst.index(), m_string);
+    return String::formatted("NewString dst:{}, string:\"{}\"", m_dst, m_string);
 }
 
 String GetVariable::to_string() const
 {
-    return String::formatted("GetVariable dst:r{}, identifier:{}", m_dst.index(), m_identifier);
+    return String::formatted("GetVariable dst:{}, identifier:{}", m_dst, m_identifier);
 }
 
 String SetVariable::to_string() const
 {
-    return String::formatted("SetVariable identifier:{}, src:r{}", m_identifier, m_src.index());
+    return String::formatted("SetVariable identifier:{}, src:{}", m_identifier, m_src);
 }
 
 }

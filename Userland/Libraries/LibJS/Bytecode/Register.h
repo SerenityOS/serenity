@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/Types.h>
+#include <AK/Format.h>
 
 namespace JS::Bytecode {
 
@@ -24,3 +24,11 @@ private:
 };
 
 }
+
+template<>
+struct AK::Formatter<JS::Bytecode::Register> : AK::Formatter<FormatString> {
+    void format(FormatBuilder& builder, JS::Bytecode::Register const& value)
+    {
+        return AK::Formatter<FormatString>::format(builder, "r{}", value.index());
+    }
+};
