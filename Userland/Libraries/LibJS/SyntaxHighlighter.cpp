@@ -72,7 +72,7 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
             return;
 
         start = position;
-        for (size_t i = 0; i < str.length() - 1; ++i)
+        for (size_t i = 0; i < str.length(); ++i)
             advance_position(str[i]);
 
         GUI::TextDocumentSpan span;
@@ -85,7 +85,6 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
         span.is_skippable = is_trivia;
         span.data = reinterpret_cast<void*>(static_cast<size_t>(type));
         spans.append(span);
-        advance_position(str[str.length() - 1]);
 
         dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{}{} @ '{}' {}:{} - {}:{}",
             token.name(),
