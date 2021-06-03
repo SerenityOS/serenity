@@ -21,6 +21,11 @@ void Add::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = add(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
+void Sub::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = sub(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = js_string(interpreter.vm(), m_string);
@@ -44,6 +49,11 @@ String Load::to_string() const
 String Add::to_string() const
 {
     return String::formatted("Add dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String Sub::to_string() const
+{
+    return String::formatted("Sub dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String NewString::to_string() const
