@@ -230,7 +230,7 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
             routing_decision.adapter->release_packet_buffer(*packet);
             return EFAULT;
         }
-        routing_decision.adapter->send_raw({ packet->buffer.data(), packet->buffer.size() });
+        routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
         routing_decision.adapter->release_packet_buffer(*packet);
         return data_length;
     }
