@@ -31,7 +31,11 @@ int main(int argc, char** argv)
             warnln("Hostname must be less than {} characters", HOST_NAME_MAX);
             return 1;
         }
-        sethostname(hostname, strlen(hostname));
+        int rc = sethostname(hostname, strlen(hostname));
+        if (rc < 0) {
+            perror("sethostname");
+            return 1;
+        }
     }
     return 0;
 }
