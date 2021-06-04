@@ -64,6 +64,7 @@ NetworkAdapter::~NetworkAdapter()
 void NetworkAdapter::send_packet(ReadonlyBytes packet)
 {
     m_packets_out++;
+    m_bytes_out += packet.size();
     send_raw(packet);
 }
 
