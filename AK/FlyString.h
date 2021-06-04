@@ -76,17 +76,13 @@ public:
 
     static void did_destroy_impl(Badge<StringImpl>, StringImpl&);
 
-    template<typename T, typename... Rest>
-    bool is_one_of(const T& string, Rest... rest) const
+    template<typename... Ts>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
     {
-        if (*this == string)
-            return true;
-        return is_one_of(rest...);
+        return (... || this->operator==(forward<Ts>(strings)));
     }
 
 private:
-    bool is_one_of() const { return false; }
-
     RefPtr<StringImpl> m_impl;
 };
 
