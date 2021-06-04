@@ -121,6 +121,7 @@ set(KERNEL_SOURCES
     Net/LoopbackAdapter.cpp
     Net/NE2000NetworkAdapter.cpp
     Net/NetworkAdapter.cpp
+    Net/NetworkingManagement.cpp
     Net/NetworkTask.cpp
     Net/RTL8139NetworkAdapter.cpp
     Net/Routing.cpp

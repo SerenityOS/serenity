@@ -10,6 +10,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
@@ -111,7 +112,7 @@ KResult Socket::setsockopt(int level, int option, Userspace<const void*> user_va
         auto ifname = copy_string_from_user(user_string, user_value_size);
         if (ifname.is_null())
             return EFAULT;
-        auto device = NetworkAdapter::lookup_by_name(ifname);
+        auto device = NetworkingManagement::the().lookup_by_name(ifname);
         if (!device)
             return ENODEV;
         m_bound_interface = device;

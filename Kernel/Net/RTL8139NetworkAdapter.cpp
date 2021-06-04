@@ -105,17 +105,14 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
+UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_initialize(PCI::Address address)
 {
     constexpr PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-        if (id != rtl8139_id)
-            return;
-        u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt_ref(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
-    });
+    auto id = PCI::get_id(address);
+    if (id != rtl8139_id)
+        return {};
+    u8 irq = PCI::get_interrupt_line(address);
+    return adopt_ref_if_nonnull(new RTL8139NetworkAdapter(address, irq));
 }
 
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)

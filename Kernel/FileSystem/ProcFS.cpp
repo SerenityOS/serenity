@@ -30,6 +30,7 @@
 #include <Kernel/Module.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
@@ -477,7 +478,7 @@ static bool procfs$pid_perf_events(InodeIdentifier identifier, KBufferBuilder& b
 static bool procfs$net_adapters(InodeIdentifier, KBufferBuilder& builder)
 {
     JsonArraySerializer array { builder };
-    NetworkAdapter::for_each([&array](auto& adapter) {
+    NetworkingManagement::the().for_each([&array](auto& adapter) {
         auto obj = array.add_object();
         obj.add("name", adapter.name());
         obj.add("class_name", adapter.class_name());
