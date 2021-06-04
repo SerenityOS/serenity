@@ -174,6 +174,25 @@ private:
     FlyString m_identifier;
 };
 
+class GetById final : public Instruction {
+public:
+    GetById(Register dst, Register base, FlyString property)
+        : m_dst(dst)
+        , m_base(base)
+        , m_property(move(property))
+    {
+    }
+
+    virtual ~GetById() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_dst;
+    Register m_base;
+    FlyString m_property;
+};
+
 class PutById final : public Instruction {
 public:
     PutById(Register base, FlyString property, Register src)
