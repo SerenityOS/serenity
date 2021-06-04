@@ -37,6 +37,7 @@
 #define MS_REMOUNT (1 << 5)
 
 enum {
+    _SC_MONOTONIC_CLOCK,
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
     _SC_OPEN_MAX,
@@ -501,6 +502,7 @@ struct pollfd {
 #define MSG_TRUNC 0x1
 #define MSG_CTRUNC 0x2
 #define MSG_PEEK 0x4
+#define MSG_OOB 0x8
 #define MSG_DONTWAIT 0x40
 
 #define SOL_SOCKET 1

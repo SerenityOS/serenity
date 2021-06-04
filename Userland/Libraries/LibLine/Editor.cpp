@@ -6,6 +6,7 @@
  */
 
 #include "Editor.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/GenericLexer.h>
 #include <AK/JsonObject.h>
@@ -19,7 +20,6 @@
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
-#include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -1338,7 +1338,7 @@ void Editor::refresh_display()
     auto print_character_at = [this](size_t i) {
         StringBuilder builder;
         auto c = m_buffer[i];
-        bool should_print_masked = isascii(c) && iscntrl(c) && c != '\n';
+        bool should_print_masked = is_ascii_control(c) && c != '\n';
         bool should_print_caret = c < 64 && should_print_masked;
         if (should_print_caret)
             builder.appendff("^{:c}", c + 64);
@@ -1722,7 +1722,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
             current_line.length = 0;
             return state;
         }
-        if (isascii(c) && iscntrl(c) && c != '\n')
+        if (is_ascii_control(c) && c != '\n')
             current_line.masked_chars.append({ index, 1, c < 64 ? 2u : 4u }); // if the character cannot be represented as ^c, represent it as \xbb.
         // FIXME: This will not support anything sophisticated
         ++current_line.length;
@@ -1740,7 +1740,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
         // FIXME: This does not support non-VT (aside from set-title) escapes
         return state;
     case Bracket:
-        if (isdigit(c)) {
+        if (is_ascii_digit(c)) {
             return BracketArgsSemi;
         }
         return state;
@@ -1748,7 +1748,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
         if (c == ';') {
             return Bracket;
         }
-        if (!isdigit(c))
+        if (!is_ascii_digit(c))
             state = Free;
         return state;
     case Title:
@@ -1848,7 +1848,7 @@ Vector<size_t, 2> Editor::vt_dsr()
             m_incomplete_data.append(c);
             continue;
         case SawBracket:
-            if (isdigit(c)) {
+            if (is_ascii_digit(c)) {
                 state = InFirstCoordinate;
                 coordinate_buffer.append(c);
                 continue;
@@ -1856,7 +1856,7 @@ Vector<size_t, 2> Editor::vt_dsr()
             m_incomplete_data.append(c);
             continue;
         case InFirstCoordinate:
-            if (isdigit(c)) {
+            if (is_ascii_digit(c)) {
                 coordinate_buffer.append(c);
                 continue;
             }
@@ -1872,7 +1872,7 @@ Vector<size_t, 2> Editor::vt_dsr()
             m_incomplete_data.append(c);
             continue;
         case SawSemicolon:
-            if (isdigit(c)) {
+            if (is_ascii_digit(c)) {
                 state = InSecondCoordinate;
                 coordinate_buffer.append(c);
                 continue;
@@ -1880,7 +1880,7 @@ Vector<size_t, 2> Editor::vt_dsr()
             m_incomplete_data.append(c);
             continue;
         case InSecondCoordinate:
-            if (isdigit(c)) {
+            if (is_ascii_digit(c)) {
                 coordinate_buffer.append(c);
                 continue;
             }

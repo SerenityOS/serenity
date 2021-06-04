@@ -32,6 +32,7 @@ namespace Wasm {
 
 void BytecodeInterpreter::interpret(Configuration& configuration)
 {
+    m_do_trap = false;
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
@@ -72,7 +73,7 @@ void BytecodeInterpreter::branch_to_label(Configuration& configuration, LabelInd
 }
 
 template<typename ReadType, typename PushType>
-void BytecodeInterpreter::load_and_push(Configuration& configuration, const Instruction& instruction)
+void BytecodeInterpreter::load_and_push(Configuration& configuration, Instruction const& instruction)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -94,13 +95,10 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, const Inst
     }
     dbgln_if(WASM_TRACE_DEBUG, "load({} : {}) -> stack", instance_address, sizeof(ReadType));
     auto slice = memory->data().bytes().slice(instance_address, sizeof(ReadType));
-    if constexpr (sizeof(ReadType) == 1)
-        configuration.stack().peek() = Value(static_cast<PushType>(slice[0]));
-    else
-        configuration.stack().peek() = Value(read_value<PushType>(slice));
+    configuration.stack().peek() = Value(static_cast<PushType>(read_value<ReadType>(slice)));
 }
 
-void BytecodeInterpreter::store_to_memory(Configuration& configuration, const Instruction& instruction, ReadonlyBytes data)
+void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruction const& instruction, ReadonlyBytes data)
 {
     auto& address = configuration.frame().module().memories().first();
     auto memory = configuration.store().get(address);
@@ -122,9 +120,10 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 {
     auto instance = configuration.store().get(address);
     TRAP_IF_NOT(instance);
-    const FunctionType* type { nullptr };
-    instance->visit([&](const auto& function) { type = &function.type(); });
+    FunctionType const* type { nullptr };
+    instance->visit([&](auto const& function) { type = &function.type(); });
     TRAP_IF_NOT(type);
+    TRAP_IF_NOT(configuration.stack().entries().size() > type->parameters().size());
     Vector<Value> args;
     args.ensure_capacity(type->parameters().size());
     auto span = configuration.stack().entries().span().slice_from_end(type->parameters().size());
@@ -210,25 +209,26 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 #define LOAD_AND_PUSH(read_type, push_type)                                     \
     do {                                                                        \
         return load_and_push<read_type, push_type>(configuration, instruction); \
-        return;                                                                 \
     } while (false)
 
-#define POP_AND_STORE(pop_type, store_type)                                                               \
-    do {                                                                                                  \
-        auto value = ConvertToRaw<pop_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
-        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));             \
-        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                      \
-        return;                                                                                           \
+#define POP_AND_STORE(pop_type, store_type)                                                                 \
+    do {                                                                                                    \
+        auto value = ConvertToRaw<store_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
+        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));               \
+        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                        \
+        return;                                                                                             \
     } while (false)
 
 template<typename T>
 T BytecodeInterpreter::read_value(ReadonlyBytes data)
 {
-    T value;
+    LittleEndian<T> value;
     InputMemoryStream stream { data };
-    auto ok = IsSigned<T> ? LEB128::read_signed(stream, value) : LEB128::read_unsigned(stream, value);
-    if (stream.handle_any_error() || !ok)
+    stream >> value;
+    if (stream.handle_any_error()) {
+        dbgln("Read from {} failed", data.data());
         m_do_trap = true;
+    }
     return value;
 }
 
@@ -258,7 +258,7 @@ template<typename T>
 struct ConvertToRaw {
     T operator()(T value)
     {
-        return value;
+        return LittleEndian<T>(value);
     }
 };
 
@@ -396,7 +396,7 @@ ALWAYS_INLINE static i32 ctz(T value)
         VERIFY_NOT_REACHED();
 }
 
-void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
 
@@ -508,8 +508,18 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
             return;
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     }
-    case Instructions::br_table.value():
-        goto unimplemented;
+    case Instructions::br_table.value(): {
+        auto& arguments = instruction.arguments().get<Instruction::TableBranchArgs>();
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto maybe_i = entry.get<Value>().to<i32>();
+        TRAP_IF_NOT(maybe_i.has_value());
+        TRAP_IF_NOT(maybe_i.value() >= 0);
+        size_t i = *maybe_i;
+        if (i < arguments.labels.size())
+            return branch_to_label(configuration, arguments.labels[i]);
+        return branch_to_label(configuration, arguments.default_);
+    }
     case Instructions::call.value(): {
         auto index = instruction.arguments().get<FunctionIndex>();
         TRAP_IF_NOT(index.value() < configuration.frame().module().functions().size());
@@ -525,17 +535,11 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto table_instance = configuration.store().get(table_address);
         auto index = configuration.stack().pop().get<Value>().to<i32>();
         TRAP_IF_NOT(index.has_value());
-        if (index.value() < 0 || static_cast<size_t>(index.value()) >= table_instance->elements().size()) {
-            dbgln("LibWasm: Element access out of bounds, expected {0} > 0 and {0} < {1}", index.value(), table_instance->elements().size());
-            m_do_trap = true;
-            return;
-        }
+        TRAP_IF_NOT(index.value() >= 0);
+        TRAP_IF_NOT(static_cast<size_t>(index.value()) < table_instance->elements().size());
         auto element = table_instance->elements()[index.value()];
-        if (!element.has_value() || !element->ref().has<Reference::Func>()) {
-            dbgln("LibWasm: call_indirect attempted with invalid address element (not a function)");
-            m_do_trap = true;
-            return;
-        }
+        TRAP_IF_NOT(element.has_value());
+        TRAP_IF_NOT(element->ref().has<Reference::Func>());
         auto address = element->ref().get<Reference::Func>().address;
         dbgln_if(WASM_TRACE_DEBUG, "call_indirect({} -> {})", index.value(), address.value());
         call_address(configuration, address);
@@ -643,7 +647,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::ref_null.value(): {
         auto type = instruction.arguments().get<ValueType>();
         TRAP_IF_NOT(type.is_reference());
-        configuration.stack().push(Value(Value::Null { type }));
+        configuration.stack().push(Value(Reference(Reference::Null { type })));
         return;
     };
     case Instructions::ref_func.value(): {
@@ -658,7 +662,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto top = configuration.stack().peek().get_pointer<Value>();
         TRAP_IF_NOT(top);
         TRAP_IF_NOT(top->type().is_reference());
-        auto is_null = top->to<Value::Null>().has_value();
+        auto is_null = top->to<Reference::Null>().has_value();
         configuration.stack().peek() = Value(ValueType(ValueType::I32), static_cast<u64>(is_null ? 1 : 0));
         return;
     }
@@ -969,7 +973,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     }
 }
 
-void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, const Instruction& instruction)
+void DebuggerBytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     if (pre_interpret_hook) {
         auto result = pre_interpret_hook(configuration, ip, instruction);

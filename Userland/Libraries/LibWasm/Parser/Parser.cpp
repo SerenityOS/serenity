@@ -11,7 +11,7 @@
 
 namespace Wasm {
 
-ParseError with_eof_check(const InputStream& stream, ParseError error_if_not_eof)
+ParseError with_eof_check(InputStream const& stream, ParseError error_if_not_eof)
 {
     if (stream.unreliable_eof())
         return ParseError::UnexpectedEof;
@@ -948,7 +948,7 @@ ParseResult<ElementSection::SegmentType0> ElementSection::SegmentType0::parse(In
     if (indices.is_error())
         return indices.error();
 
-    return SegmentType0 { ValueType(ValueType::FunctionReference), indices.release_value(), Active { 0, expression.release_value() } };
+    return SegmentType0 { indices.release_value(), Active { 0, expression.release_value() } };
 }
 
 ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(InputStream& stream)
@@ -963,7 +963,7 @@ ParseResult<ElementSection::SegmentType1> ElementSection::SegmentType1::parse(In
     if (indices.is_error())
         return indices.error();
 
-    return SegmentType1 { ValueType(ValueType::FunctionReference), indices.release_value() };
+    return SegmentType1 { indices.release_value() };
 }
 
 ParseResult<ElementSection::SegmentType2> ElementSection::SegmentType2::parse(InputStream& stream)
@@ -1008,7 +1008,7 @@ ParseResult<ElementSection::SegmentType7> ElementSection::SegmentType7::parse(In
     return ParseError::NotImplemented;
 }
 
-ParseResult<ElementSection::AnyElementType> ElementSection::Element::parse(InputStream& stream)
+ParseResult<ElementSection::Element> ElementSection::Element::parse(InputStream& stream)
 {
     ScopeLogger<WASM_BINPARSER_DEBUG> logger("Element");
     u8 tag;
@@ -1021,49 +1021,55 @@ ParseResult<ElementSection::AnyElementType> ElementSection::Element::parse(Input
         if (auto result = SegmentType0::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            Vector<Instruction> instructions;
+            for (auto& index : result.value().function_indices)
+                instructions.empend(Instructions::ref_func, index);
+            return Element { ValueType(ValueType::FunctionReference), { Expression { move(instructions) } }, move(result.value().mode) };
         }
     case 0x01:
         if (auto result = SegmentType1::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            Vector<Instruction> instructions;
+            for (auto& index : result.value().function_indices)
+                instructions.empend(Instructions::ref_func, index);
+            return Element { ValueType(ValueType::FunctionReference), { Expression { move(instructions) } }, Passive {} };
         }
     case 0x02:
         if (auto result = SegmentType2::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     case 0x03:
         if (auto result = SegmentType3::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     case 0x04:
         if (auto result = SegmentType4::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     case 0x05:
         if (auto result = SegmentType5::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     case 0x06:
         if (auto result = SegmentType6::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     case 0x07:
         if (auto result = SegmentType7::parse(stream); result.is_error()) {
             return result.error();
         } else {
-            return AnyElementType { result.release_value() };
+            return ParseError::NotImplemented;
         }
     default:
         return ParseError::InvalidTag;
@@ -1352,9 +1358,9 @@ ParseResult<Module> Module::parse(InputStream& stream)
 
 void Module::populate_sections()
 {
-    const FunctionSection* function_section { nullptr };
-    for_each_section_of_type<FunctionSection>([&](const FunctionSection& section) { function_section = &section; });
-    for_each_section_of_type<CodeSection>([&](const CodeSection& section) {
+    FunctionSection const* function_section { nullptr };
+    for_each_section_of_type<FunctionSection>([&](FunctionSection const& section) { function_section = &section; });
+    for_each_section_of_type<CodeSection>([&](CodeSection const& section) {
         // FIXME: This should be considered invalid once validation is implemented.
         if (!function_section)
             return;

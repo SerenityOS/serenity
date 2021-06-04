@@ -1,0 +1,11 @@
+--- php-8.0.6/build/config.sub	2021-05-04 19:26:18.000000000 +0200
++++ php-8.0.6-patched/build/config.sub	2021-06-03 22:49:12.463974784 +0200
+@@ -1366,7 +1366,7 @@
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+ 	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | wasi* \
+-	     | nsk* | powerunix)
++	     | nsk* | powerunix | serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	qnx*)

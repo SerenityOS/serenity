@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibGfx/Painter.h>
@@ -13,7 +14,6 @@
 #include <LibWeb/Layout/Label.h>
 #include <LibWeb/Layout/TextNode.h>
 #include <LibWeb/Page/BrowsingContext.h>
-#include <ctype.h>
 
 namespace Web::Layout {
 
@@ -30,7 +30,7 @@ TextNode::~TextNode()
 static bool is_all_whitespace(const StringView& string)
 {
     for (size_t i = 0; i < string.length(); ++i) {
-        if (!isspace(string[i]))
+        if (!is_ascii_space(string[i]))
             return false;
     }
     return true;
@@ -103,35 +103,63 @@ void TextNode::paint_cursor_if_needed(PaintContext& context, const LineBoxFragme
     context.painter().draw_rect(cursor_rect, computed_values().color());
 }
 
+// NOTE: This collapes whitespace into a single ASCII space if collapse is true. If previous_is_empty_or_ends_in_whitespace, it also strips leading whitespace.
 void TextNode::compute_text_for_rendering(bool collapse, bool previous_is_empty_or_ends_in_whitespace)
 {
-    if (!collapse) {
-        m_text_for_rendering = dom_node().data();
+    auto& data = dom_node().data();
+    if (!collapse || data.is_empty()) {
+        m_text_for_rendering = data;
         return;
     }
 
-    // Collapse whitespace into single spaces
-    auto utf8_view = Utf8View(dom_node().data());
-    StringBuilder builder(dom_node().data().length());
-    auto it = utf8_view.begin();
-    auto skip_over_whitespace = [&] {
-        auto prev = it;
-        while (it != utf8_view.end() && isspace(*it)) {
-            prev = it;
-            ++it;
-        }
-        it = prev;
-    };
-    if (previous_is_empty_or_ends_in_whitespace)
-        skip_over_whitespace();
-    for (; it != utf8_view.end(); ++it) {
-        if (!isspace(*it)) {
-            builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.code_point_length_in_bytes());
+    // NOTE: A couple fast returns to avoid unnecessarily allocating a StringBuilder.
+    if (data.length() == 1) {
+        if (is_ascii_space(data[0])) {
+            if (previous_is_empty_or_ends_in_whitespace)
+                m_text_for_rendering = String::empty();
+            else {
+                static String s_single_space_string = " ";
+                m_text_for_rendering = s_single_space_string;
+            }
         } else {
-            builder.append(' ');
-            skip_over_whitespace();
+            m_text_for_rendering = data;
+        }
+        return;
+    }
+
+    bool contains_space = false;
+    for (auto& c : data) {
+        if (is_ascii_space(c)) {
+            contains_space = true;
+            break;
         }
     }
+    if (!contains_space) {
+        m_text_for_rendering = data;
+        return;
+    }
+
+    StringBuilder builder(data.length());
+    size_t index = 0;
+
+    auto skip_over_whitespace = [&index, &data] {
+        while (index < data.length() && is_ascii_space(data[index]))
+            ++index;
+    };
+
+    if (previous_is_empty_or_ends_in_whitespace)
+        skip_over_whitespace();
+    while (index < data.length()) {
+        if (is_ascii_space(data[index])) {
+            builder.append(' ');
+            ++index;
+            skip_over_whitespace();
+        } else {
+            builder.append(data[index]);
+            ++index;
+        }
+    }
+
     m_text_for_rendering = builder.to_string();
 }
 
@@ -160,7 +188,7 @@ void TextNode::split_into_lines_by_rules(InlineFormattingContext& context, Layou
 
         float chunk_width;
         if (do_wrap_lines) {
-            if (do_collapse && isspace(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
+            if (do_collapse && is_ascii_space(*chunk.view.begin()) && line_boxes.last().is_empty_or_ends_in_whitespace()) {
                 // This is a non-empty chunk that starts with collapsible whitespace.
                 // We are at either at the start of a new line, or after something that ended in whitespace,
                 // so we don't need to contribute our own whitespace to the line. Skip over it instead!
@@ -264,7 +292,7 @@ TextNode::ChunkIterator::ChunkIterator(StringView const& text, LayoutMode layout
     , m_start_of_chunk(m_utf8_view.begin())
     , m_iterator(m_utf8_view.begin())
 {
-    m_last_was_space = !text.is_empty() && isspace(*m_utf8_view.begin());
+    m_last_was_space = !text.is_empty() && is_ascii_space(*m_utf8_view.begin());
 }
 
 Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
@@ -286,7 +314,7 @@ Optional<TextNode::Chunk> TextNode::ChunkIterator::next()
                 return result.release_value();
         }
         if (m_wrap_lines) {
-            bool is_space = isspace(*m_iterator);
+            bool is_space = is_ascii_space(*m_iterator);
             if (is_space != m_last_was_space) {
                 m_last_was_space = is_space;
                 if (auto result = try_commit_chunk(m_iterator, false); result.has_value())

@@ -6,6 +6,7 @@
 
 #include <LibWasm/AbstractMachine/Configuration.h>
 #include <LibWasm/AbstractMachine/Interpreter.h>
+#include <LibWasm/Printer/Printer.h>
 
 namespace Wasm {
 
@@ -22,8 +23,11 @@ Optional<Label> Configuration::nth_label(size_t i)
     return {};
 }
 
-void Configuration::unwind(Badge<CallFrameHandle>, const CallFrameHandle& frame_handle)
+void Configuration::unwind(Badge<CallFrameHandle>, CallFrameHandle const& frame_handle)
 {
+    if (m_stack.size() == frame_handle.stack_size && frame_handle.frame_index == m_current_frame_index)
+        return;
+
     VERIFY(m_stack.size() > frame_handle.stack_size);
     m_stack.entries().remove(frame_handle.stack_size, m_stack.size() - frame_handle.stack_size);
     m_current_frame_index = frame_handle.frame_index;
@@ -66,6 +70,9 @@ Result Configuration::execute(Interpreter& interpreter)
     if (interpreter.did_trap())
         return Trap {};
 
+    if (stack().size() <= frame().arity() + 1)
+        return Trap {};
+
     Vector<Value> results;
     results.ensure_capacity(frame().arity());
     for (size_t i = 0; i < frame().arity(); ++i)
@@ -79,32 +86,24 @@ Result Configuration::execute(Interpreter& interpreter)
 
 void Configuration::dump_stack()
 {
-    for (const auto& entry : stack().entries()) {
+    auto print_value = []<typename... Ts>(CheckedFormatString<Ts...> format, Ts... vs)
+    {
+        DuplexMemoryStream memory_stream;
+        Printer { memory_stream }.print(vs...);
+        dbgln(format.view(), StringView(memory_stream.copy_into_contiguous_buffer()).trim_whitespace());
+    };
+    for (auto const& entry : stack().entries()) {
         entry.visit(
-            [](const Value& v) {
-                v.value().visit([]<typename T>(const T& v) {
-                    if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
-                        dbgln("    {}", v);
-                    else if constexpr (IsSame<Value::Null, T>)
-                        dbgln("    *null");
-                    else
-                        dbgln("    *{}", v.value());
-                });
+            [&](Value const& v) {
+                print_value("    {}", v);
             },
-            [](const Frame& f) {
+            [&](Frame const& f) {
                 dbgln("    frame({})", f.arity());
                 for (auto& local : f.locals()) {
-                    local.value().visit([]<typename T>(const T& v) {
-                        if constexpr (IsIntegral<T> || IsFloatingPoint<T>)
-                            dbgln("        {}", v);
-                        else if constexpr (IsSame<Value::Null, T>)
-                            dbgln("    *null");
-                        else
-                            dbgln("        *{}", v.value());
-                    });
+                    print_value("        {}", local);
                 }
             },
-            [](const Label& l) {
+            [](Label const& l) {
                 dbgln("    label({}) -> {}", l.arity(), l.continuation());
             });
     }

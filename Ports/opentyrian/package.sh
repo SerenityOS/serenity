@@ -17,5 +17,4 @@ configure() {
 
 install() {
     run make install
-    install_launcher
 }

@@ -47,6 +47,13 @@ TEST_CASE(enumeration)
         actual_size++;
     }
     EXPECT_EQ(expected_size, actual_size);
+
+    size_t reverse_actual_size = 0;
+    for (auto it = list.rbegin(); it != list.rend(); ++it) {
+        reverse_actual_size++;
+    }
+    EXPECT_EQ(expected_size, reverse_actual_size);
+
     while (auto elem = list.take_first()) {
         delete elem;
     }

@@ -209,17 +209,13 @@ public:
 
     [[nodiscard]] bool is_whitespace() const { return StringUtils::is_whitespace(*this); }
 
-    template<typename T, typename... Rest>
-    [[nodiscard]] bool is_one_of(const T& string, Rest... rest) const
+    template<typename... Ts>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
     {
-        if (*this == string)
-            return true;
-        return is_one_of(rest...);
+        return (... || this->operator==(forward<Ts>(strings)));
     }
 
 private:
-    [[nodiscard]] bool is_one_of() const { return false; }
-
     friend class String;
     const char* m_characters { nullptr };
     size_t m_length { 0 };

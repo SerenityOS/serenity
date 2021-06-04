@@ -79,6 +79,9 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
     , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
+    static_assert(sizeof(m_colors) == sizeof(xterm_colors));
+    memcpy(m_colors, xterm_colors, sizeof(m_colors));
+
     set_override_cursor(Gfx::StandardCursor::IBeam);
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
     set_accepts_emoji_input(true);
@@ -147,15 +150,12 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<Co
 
     update_copy_action();
     update_paste_action();
+
+    set_color_scheme(m_config->read_entry("Window", "ColorScheme", "Default"));
 }
 
 TerminalWidget::~TerminalWidget()
 {
-}
-
-static inline Color color_from_rgb(unsigned color)
-{
-    return Color::from_rgb(color);
 }
 
 Gfx::IntRect TerminalWidget::glyph_rect(u16 row, u16 column)
@@ -275,9 +275,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
     painter.add_clip_rect(terminal_buffer_rect);
 
     if (visual_beep_active)
-        painter.clear_rect(frame_inner_rect(), Color::Red);
+        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
     else
-        painter.clear_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
+        painter.clear_rect(frame_inner_rect(), terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::DefaultBackground)).with_alpha(m_opacity));
     invalidate_cursor();
 
     int rows_from_history = 0;
@@ -320,9 +320,9 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         auto& line = m_terminal.line(first_row_from_history + visual_row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (visual_beep_active)
-            painter.clear_rect(row_rect, Color::Red);
+            painter.clear_rect(row_rect, terminal_color_to_rgb(VT::Color::named(VT::Color::ANSIColor::Red)));
         else if (has_only_one_background_color)
-            painter.clear_rect(row_rect, color_from_rgb(line.attribute_at(0).effective_background_color()).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, terminal_color_to_rgb(line.attribute_at(0).effective_background_color()).with_alpha(m_opacity));
 
         for (size_t column = 0; column < line.length(); ++column) {
             bool should_reverse_fill_for_cursor_or_selection = m_cursor_blink_state
@@ -334,9 +334,10 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             auto attribute = line.attribute_at(column);
             auto character_rect = glyph_rect(visual_row, column);
             auto cell_rect = character_rect.inflated(0, m_line_spacing);
-            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
+            auto text_color_before_bold_change = should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color();
+            auto text_color = terminal_color_to_rgb(m_show_bold_text_as_bright ? text_color_before_bold_change.to_bright() : text_color_before_bold_change);
             if ((!visual_beep_active && !has_only_one_background_color) || should_reverse_fill_for_cursor_or_selection)
-                painter.clear_rect(cell_rect, color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()));
+                painter.clear_rect(cell_rect, terminal_color_to_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_foreground_color() : attribute.effective_background_color()));
 
             enum class UnderlineStyle {
                 None,
@@ -345,30 +346,31 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
             };
 
             auto underline_style = UnderlineStyle::None;
+            auto underline_color = text_color;
 
             if (attribute.flags & VT::Attribute::Underline) {
                 // Content has specified underline
                 underline_style = UnderlineStyle::Solid;
             } else if (!attribute.href.is_empty()) {
                 // We're hovering a hyperlink
-                if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id)
+                if (m_hovered_href_id == attribute.href_id || m_active_href_id == attribute.href_id) {
                     underline_style = UnderlineStyle::Solid;
-                else
+                    underline_color = palette().active_link();
+                } else {
                     underline_style = UnderlineStyle::Dotted;
+                    underline_color = text_color.darkened(0.6f);
+                }
             }
 
             if (underline_style == UnderlineStyle::Solid) {
-                if (attribute.href_id == m_active_href_id && m_hovered_href_id == m_active_href_id)
-                    text_color = palette().active_link();
-                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), text_color);
+                painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), underline_color);
             } else if (underline_style == UnderlineStyle::Dotted) {
-                auto dotted_line_color = text_color.darkened(0.6f);
                 int x1 = cell_rect.bottom_left().x();
                 int x2 = cell_rect.bottom_right().x();
                 int y = cell_rect.bottom_left().y();
                 for (int x = x1; x <= x2; ++x) {
                     if ((x % 3) == 0)
-                        painter.set_pixel({ x, y }, dotted_line_color);
+                        painter.set_pixel({ x, y }, underline_color);
                 }
             }
         }
@@ -398,7 +400,8 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
                 && visual_row == row_with_cursor
                 && column == m_terminal.cursor_column();
             should_reverse_fill_for_cursor_or_selection |= selection_contains({ first_row_from_history + visual_row, (int)column });
-            auto text_color = color_from_rgb(should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color());
+            auto text_color_before_bold_change = should_reverse_fill_for_cursor_or_selection ? attribute.effective_background_color() : attribute.effective_foreground_color();
+            auto text_color = terminal_color_to_rgb(m_show_bold_text_as_bright ? text_color_before_bold_change.to_bright() : text_color_before_bold_change);
             u32 code_point = line.code_point(column);
 
             if (code_point == ' ')
@@ -427,7 +430,7 @@ void TerminalWidget::paint_event(GUI::PaintEvent& event)
         if (m_has_logical_focus && (m_cursor_style == VT::CursorStyle::BlinkingBlock || m_cursor_style == VT::CursorStyle::SteadyBlock))
             return; // This has already been handled by inverting the cell colors
 
-        auto cursor_color = color_from_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
+        auto cursor_color = terminal_color_to_rgb(cursor_line.attribute_at(m_terminal.cursor_column()).effective_foreground_color());
         auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
         if (m_cursor_style == VT::CursorStyle::BlinkingUnderline || m_cursor_style == VT::CursorStyle::SteadyUnderline) {
             auto x1 = cell_rect.bottom_left().x();
@@ -1140,6 +1143,56 @@ void TerminalWidget::update_paste_action()
     m_paste_action->set_enabled(GUI::Clipboard::the().mime_type().starts_with("text/") && !GUI::Clipboard::the().data().is_empty());
 }
 
+void TerminalWidget::set_color_scheme(const StringView& name)
+{
+    if (name.contains('/')) {
+        dbgln("Shenanigans! Color scheme names can't contain slashes.");
+        return;
+    }
+
+    m_color_scheme_name = name;
+
+    constexpr StringView color_names[] = {
+        "Black",
+        "Red",
+        "Green",
+        "Yellow",
+        "Blue",
+        "Magenta",
+        "Cyan",
+        "White"
+    };
+
+    auto color_config = Core::ConfigFile::open(String::formatted("/res/terminal-colors/{}.ini", name));
+
+    m_show_bold_text_as_bright = color_config->read_bool_entry("Options", "ShowBoldTextAsBright", true);
+
+    auto default_background = Gfx::Color::from_string(color_config->read_entry("Primary", "Background"));
+    if (default_background.has_value())
+        m_default_background_color = default_background.value();
+    else
+        m_default_background_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::Black]);
+
+    auto default_foreground = Gfx::Color::from_string(color_config->read_entry("Primary", "Foreground"));
+    if (default_foreground.has_value())
+        m_default_foreground_color = default_foreground.value();
+    else
+        m_default_foreground_color = Gfx::Color::from_rgb(m_colors[(u8)VT::Color::ANSIColor::White]);
+
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
+        auto rgb = Gfx::Color::from_string(color_config->read_entry("Normal", color_names[color_idx]));
+        if (rgb.has_value())
+            m_colors[color_idx] = rgb.value().value();
+    }
+
+    for (u8 color_idx = 0; color_idx < 8; ++color_idx) {
+        auto rgb = Gfx::Color::from_string(color_config->read_entry("Bright", color_names[color_idx]));
+        if (rgb.has_value())
+            m_colors[color_idx + 8] = rgb.value().value();
+    }
+    update();
+}
+
 Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
 {
     return {
@@ -1147,6 +1200,29 @@ Gfx::IntSize TerminalWidget::widget_size_for_font(const Gfx::Font& font) const
         (frame_thickness() * 2) + (m_inset * 2) + (m_terminal.rows() * (font.glyph_height() + m_line_spacing))
     };
 }
+
+constexpr Gfx::Color TerminalWidget::terminal_color_to_rgb(VT::Color color) const
+{
+    switch (color.kind()) {
+    case VT::Color::Kind::RGB:
+        return Gfx::Color::from_rgb(color.as_rgb());
+    case VT::Color::Kind::Indexed:
+        return Gfx::Color::from_rgb(m_colors[color.as_indexed()]);
+    case VT::Color::Kind::Named: {
+        auto ansi = color.as_named();
+        if ((u16)ansi < 256)
+            return Gfx::Color::from_rgb(m_colors[(u16)ansi]);
+        else if (ansi == VT::Color::ANSIColor::DefaultForeground)
+            return m_default_foreground_color;
+        else if (ansi == VT::Color::ANSIColor::DefaultBackground)
+            return m_default_background_color;
+        else
+            VERIFY_NOT_REACHED();
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+};
 
 void TerminalWidget::set_font_and_resize_to_fit(const Gfx::Font& font)
 {
@@ -1182,5 +1258,4 @@ void TerminalWidget::send_non_user_input(const ReadonlyBytes& bytes)
         VERIFY_NOT_REACHED();
     }
 }
-
 }

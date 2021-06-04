@@ -7,6 +7,7 @@
 #include "Shell.h"
 #include "Execution.h"
 #include "Formatter.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <AK/LexicalPath.h>
@@ -1188,10 +1189,8 @@ Shell::SpecialCharacterEscapeMode Shell::special_character_escape_mode(u32 code_
         return SpecialCharacterEscapeMode::QuotedAsEscape;
     default:
         // FIXME: Should instead use unicode's "graphic" property (categories L, M, N, P, S, Zs)
-        if (code_point < NumericLimits<i32>::max()) {
-            if (isascii(static_cast<i32>(code_point)))
-                return isprint(static_cast<i32>(code_point)) ? SpecialCharacterEscapeMode::Untouched : SpecialCharacterEscapeMode::QuotedAsHex;
-        }
+        if (is_ascii(code_point))
+            return is_ascii_printable(code_point) ? SpecialCharacterEscapeMode::Untouched : SpecialCharacterEscapeMode::QuotedAsHex;
         return SpecialCharacterEscapeMode::Untouched;
     }
 }

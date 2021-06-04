@@ -49,7 +49,7 @@ static void sigint_handler(int)
     g_continue = false;
 }
 
-static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, const Wasm::Instruction& instr, const Wasm::Interpreter& interpreter)
+static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& ip, Wasm::Instruction const& instr, Wasm::Interpreter const& interpreter)
 {
     if (interpreter.did_trap()) {
         g_continue = false;
@@ -61,7 +61,7 @@ static bool post_interpret_hook(Wasm::Configuration&, Wasm::InstructionPointer& 
     return true;
 }
 
-static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPointer& ip, const Wasm::Instruction& instr)
+static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPointer& ip, Wasm::Instruction const& instr)
 {
     static bool always_print_stack = false;
     static bool always_print_instruction = false;
@@ -204,17 +204,8 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
-                auto str = value.value().visit(
-                    [&]<typename T>(const T& value) {
-                        if constexpr (requires { value.value(); })
-                            return String::formatted("  -> addr{} ", value.value());
-                        else if constexpr (IsSame<Wasm::Value::Null, T>)
-                            return String::formatted("  ->addr(null)");
-                        else
-                            return String::formatted("  -> {} ", value);
-                    });
-                g_stdout.write(str.bytes());
-                g_printer.print(value.type());
+                g_stdout.write("  -> "sv.bytes());
+                g_printer.print(value);
             }
             continue;
         }
@@ -244,7 +235,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
     }
 }
 
-static Optional<Wasm::Module> parse(const StringView& filename)
+static Optional<Wasm::Module> parse(StringView const& filename)
 {
     auto result = Core::File::open(filename, Core::OpenMode::ReadOnly);
     if (result.is_error()) {
@@ -262,22 +253,22 @@ static Optional<Wasm::Module> parse(const StringView& filename)
     return parse_result.release_value();
 }
 
-static void print_link_error(const Wasm::LinkError& error)
+static void print_link_error(Wasm::LinkError const& error)
 {
-    for (const auto& missing : error.missing_imports)
+    for (auto const& missing : error.missing_imports)
         warnln("Missing import '{}'", missing);
 }
 
 int main(int argc, char* argv[])
 {
-    const char* filename = nullptr;
+    char const* filename = nullptr;
     bool print = false;
     bool attempt_instantiate = false;
     bool debug = false;
+    bool export_all_imports = false;
     String exported_function_to_execute;
     Vector<u64> values_to_push;
     Vector<String> modules_to_link_in;
-    HashMap<Wasm::Linker::Name, Wasm::HostFunction> exported_host_functions;
 
     Core::ArgsParser parser;
     parser.add_positional_argument(filename, "File name to parse", "file");
@@ -285,13 +276,14 @@ int main(int argc, char* argv[])
     parser.add_option(print, "Print the parsed module", "print", 'p');
     parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
     parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
+    parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
     parser.add_option(Core::ArgsParser::Option {
         .requires_argument = true,
         .help_string = "Extra modules to link with, use to resolve imports",
         .long_name = "link",
         .short_name = 'l',
         .value_name = "file",
-        .accept_value = [&](const char* str) {
+        .accept_value = [&](char const* str) {
             if (auto v = StringView { str }; !v.is_empty()) {
                 modules_to_link_in.append(v);
                 return true;
@@ -305,77 +297,12 @@ int main(int argc, char* argv[])
         .long_name = "arg",
         .short_name = 0,
         .value_name = "u64",
-        .accept_value = [&](const char* str) -> bool {
+        .accept_value = [&](char const* str) -> bool {
             if (auto v = StringView { str }.to_uint<u64>(); v.has_value()) {
                 values_to_push.append(v.value());
                 return true;
             }
             return false;
-        },
-    });
-    parser.add_option(Core::ArgsParser::Option {
-        .requires_argument = true,
-        .help_string = "Export a noop function that returns default-initialised values (module!name::t,t,t...:t,t,t...)",
-        .long_name = "export-noop",
-        .short_name = 0,
-        .value_name = "module!name:atypes:rtypes",
-        .accept_value = [&](const char* str) -> bool {
-            GenericLexer lexer { str };
-            auto name = lexer.consume_until("::");
-            auto parts = name.split_view('!');
-            if (parts.size() != 2) {
-                warnln("Expected a two-part name module!name, got '{}'", name);
-                return false;
-            }
-            auto module_name = parts[0];
-            auto export_name = parts[1];
-
-            auto arg_types = lexer.consume_until(":").split_view(',');
-            auto ret_types = lexer.consume_all().split_view(',');
-            Vector<Wasm::ValueType> argument_types, return_types;
-            for (auto& name : arg_types) {
-                if (name == "i32") {
-                    argument_types.empend(Wasm::ValueType::Kind::I32);
-                } else if (name == "i64") {
-                    argument_types.empend(Wasm::ValueType::Kind::I64);
-                } else if (name == "f32") {
-                    argument_types.empend(Wasm::ValueType::Kind::F32);
-                } else if (name == "f64") {
-                    argument_types.empend(Wasm::ValueType::Kind::F64);
-                } else {
-                    warnln("Unknown type '{}'", name);
-                    return false;
-                }
-            }
-            for (auto& name : ret_types) {
-                if (name == "i32") {
-                    return_types.empend(Wasm::ValueType::Kind::I32);
-                } else if (name == "i64") {
-                    return_types.empend(Wasm::ValueType::Kind::I64);
-                } else if (name == "f32") {
-                    return_types.empend(Wasm::ValueType::Kind::F32);
-                } else if (name == "f64") {
-                    return_types.empend(Wasm::ValueType::Kind::F64);
-                } else {
-                    warnln("Unknown type '{}'", name);
-                    return false;
-                }
-            }
-
-            Wasm::FunctionType function_type { argument_types, return_types };
-            exported_host_functions.set(
-                Wasm::Linker::Name { module_name, export_name, function_type },
-                Wasm::HostFunction {
-                    [&](auto&, auto&) -> Wasm::Result {
-                        Vector<Wasm::Value> values;
-                        values.ensure_capacity(return_types.size());
-                        for (auto& type : return_types)
-                            values.empend(type, 0ull);
-                        return Wasm::Result { move(values) };
-                    },
-                    function_type });
-
-            return true;
         },
     });
     parser.parse(argc, argv);
@@ -393,6 +320,9 @@ int main(int argc, char* argv[])
         attempt_instantiate = true;
 
     auto parse_result = parse(filename);
+    if (!parse_result.has_value())
+        return 1;
+
     if (print && !attempt_instantiate) {
         auto out_stream = Core::OutputFileStream::standard_output();
         Wasm::Printer printer(out_stream);
@@ -434,20 +364,43 @@ int main(int argc, char* argv[])
             linked_instances.append(instantiation_result.release_value());
         }
 
-        HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
-        for (auto& entry : exported_host_functions) {
-            auto address = machine.store().allocate(move(entry.value));
-            if (!address.has_value()) {
-                warnln("Could not export {}/{}", entry.key.module, entry.key.name);
-                return 1;
-            }
-            exports.set(entry.key, *address);
-        }
-
         Wasm::Linker linker { parse_result.value() };
         for (auto& instance : linked_instances)
             linker.link(instance);
-        linker.link(exports);
+
+        if (export_all_imports) {
+            HashMap<Wasm::Linker::Name, Wasm::ExternValue> exports;
+            for (auto& entry : linker.unresolved_imports()) {
+                if (!entry.type.has<Wasm::TypeIndex>())
+                    continue;
+                auto type = parse_result.value().type(entry.type.get<Wasm::TypeIndex>());
+                auto address = machine.store().allocate(Wasm::HostFunction(
+                    [name = entry.name, type = type](auto&, auto& arguments) -> Wasm::Result {
+                        StringBuilder argument_builder;
+                        bool first = true;
+                        for (auto& argument : arguments) {
+                            DuplexMemoryStream stream;
+                            Wasm::Printer { stream }.print(argument);
+                            if (first)
+                                first = false;
+                            else
+                                argument_builder.append(", "sv);
+                            argument_builder.append(StringView(stream.copy_into_contiguous_buffer()).trim_whitespace());
+                        }
+                        dbgln("[wasm runtime] Stub function {} was called with the following arguments: {}", name, argument_builder.to_string());
+                        Vector<Wasm::Value> result;
+                        result.ensure_capacity(type.results().size());
+                        for (auto& result_type : type.results())
+                            result.append(Wasm::Value { result_type, 0ull });
+                        return Wasm::Result { move(result) };
+                    },
+                    type));
+                exports.set(entry, *address);
+            }
+
+            linker.link(exports);
+        }
+
         auto link_result = linker.finish();
         if (link_result.is_error()) {
             warnln("Linking main module failed");
@@ -462,20 +415,20 @@ int main(int argc, char* argv[])
         auto module_instance = result.release_value();
 
         auto stream = Core::OutputFileStream::standard_output();
-        auto print_func = [&](const auto& address) {
+        auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
             stream.write(String::formatted("- Function with address {}, ptr = {}\n", address.value(), fn).bytes());
             if (fn) {
                 stream.write(String::formatted("    wasm function? {}\n", fn->has<Wasm::WasmFunction>()).bytes());
                 fn->visit(
-                    [&](const Wasm::WasmFunction& func) {
+                    [&](Wasm::WasmFunction const& func) {
                         Wasm::Printer printer { stream, 3 };
                         stream.write("    type:\n"sv.bytes());
                         printer.print(func.type());
                         stream.write("    code:\n"sv.bytes());
                         printer.print(func.code());
                     },
-                    [](const Wasm::HostFunction&) {});
+                    [](Wasm::HostFunction const&) {});
             }
         };
         if (print) {
@@ -530,7 +483,7 @@ int main(int argc, char* argv[])
                     instance->get<Wasm::WasmFunction>().code().body(),
                     1,
                 });
-                const Wasm::Instruction instr { Wasm::Instructions::nop };
+                Wasm::Instruction instr { Wasm::Instructions::nop };
                 Wasm::InstructionPointer ip { 0 };
                 g_continue = false;
                 pre_interpret_hook(config, ip, instr);
@@ -541,17 +494,9 @@ int main(int argc, char* argv[])
             if (!result.values().is_empty())
                 warnln("Returned:");
             for (auto& value : result.values()) {
-                value.value().visit(
-                    [&]<typename T>(const T& value) {
-                        if constexpr (requires { value.value(); })
-                            out("  -> addr{} ", value.value());
-                        else if constexpr (IsSame<Wasm::Value::Null, T>)
-                            out("  ->addr(null)");
-                        else
-                            out("  -> {} ", value);
-                    });
                 Wasm::Printer printer { stream };
-                printer.print(value.type());
+                g_stdout.write("  -> "sv.bytes());
+                g_printer.print(value);
             }
         }
     }

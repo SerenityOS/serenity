@@ -1,0 +1,10 @@
+--- php-8.0.6/main/php_network.h	2021-05-04 19:26:18.000000000 +0200
++++ php-8.0.6-patched/main/php_network.h	2021-06-04 01:54:05.976580933 +0200
+@@ -63,6 +63,7 @@
+ PHPAPI zend_string *php_socket_error_str(long err);
+ END_EXTERN_C()
+ 
++#include <arpa/inet.h>
+ #ifdef HAVE_NETINET_IN_H
+ # include <netinet/in.h>
+ #endif

@@ -42,7 +42,11 @@ public:
     ~String() = default;
 
     String() = default;
-    String(const StringView&);
+
+    String(const StringView& view)
+    {
+        m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
+    }
 
     String(const String& other)
         : m_impl(const_cast<String&>(other).m_impl)
@@ -203,7 +207,10 @@ public:
 
     [[nodiscard]] String isolated_copy() const;
 
-    [[nodiscard]] static String empty();
+    [[nodiscard]] static String empty()
+    {
+        return StringImpl::the_empty_stringimpl();
+    }
 
     [[nodiscard]] StringImpl* impl() { return m_impl.ptr(); }
     [[nodiscard]] const StringImpl* impl() const { return m_impl.ptr(); }
@@ -265,24 +272,23 @@ public:
         return formatted("{}", value);
     }
 
-    [[nodiscard]] StringView view() const;
+    [[nodiscard]] StringView view() const
+    {
+        return { characters(), length() };
+    }
 
     int replace(const String& needle, const String& replacement, bool all_occurrences = false);
     size_t count(const String& needle) const;
     Vector<size_t> find_all(const String& needle) const;
     [[nodiscard]] String reverse() const;
 
-    template<typename T, typename... Rest>
-    [[nodiscard]] bool is_one_of(const T& string, Rest... rest) const
+    template<typename... Ts>
+    [[nodiscard]] ALWAYS_INLINE constexpr bool is_one_of(Ts... strings) const
     {
-        if (*this == string)
-            return true;
-        return is_one_of(rest...);
+        return (... || this->operator==(forward<Ts>(strings)));
     }
 
 private:
-    [[nodiscard]] bool is_one_of() const { return false; }
-
     RefPtr<StringImpl> m_impl;
 };
 

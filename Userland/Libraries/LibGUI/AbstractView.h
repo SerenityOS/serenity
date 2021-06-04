@@ -150,7 +150,7 @@ protected:
     virtual void did_change_hovered_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
     virtual void did_change_cursor_index([[maybe_unused]] const ModelIndex& old_index, [[maybe_unused]] const ModelIndex& new_index) { }
 
-    void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision);
+    void draw_item_text(Gfx::Painter&, const ModelIndex&, bool, const Gfx::IntRect&, const StringView&, const Gfx::Font&, Gfx::TextAlignment, Gfx::TextElision, size_t search_highlighting_offset = 0);
 
     void set_suppress_update_on_selection_change(bool value) { m_suppress_update_on_selection_change = value; }
 

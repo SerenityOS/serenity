@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/Types.h>
 
 #define MAGIC_PAGE_HEADER 0x42657274     // 'Bert'
@@ -45,9 +45,7 @@ struct FreelistEntry {
     FreelistEntry* next;
 };
 
-struct ChunkedBlock
-    : public CommonHeader
-    , public InlineLinkedListNode<ChunkedBlock> {
+struct ChunkedBlock : public CommonHeader {
 
     static constexpr size_t block_size = 64 * KiB;
     static constexpr size_t block_mask = ~(block_size - 1);
@@ -59,8 +57,7 @@ struct ChunkedBlock
         m_free_chunks = chunk_capacity();
     }
 
-    ChunkedBlock* m_prev { nullptr };
-    ChunkedBlock* m_next { nullptr };
+    IntrusiveListNode<ChunkedBlock> m_list_node;
     size_t m_next_lazy_freelist_index { 0 };
     FreelistEntry* m_freelist { nullptr };
     size_t m_free_chunks { 0 };
@@ -75,4 +72,6 @@ struct ChunkedBlock
     size_t free_chunks() const { return m_free_chunks; }
     size_t used_chunks() const { return chunk_capacity() - m_free_chunks; }
     size_t chunk_capacity() const { return (block_size - sizeof(ChunkedBlock)) / m_size; }
+
+    using List = IntrusiveList<ChunkedBlock, RawPtr<ChunkedBlock>, &ChunkedBlock::m_list_node>;
 };

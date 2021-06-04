@@ -49,6 +49,7 @@ int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvpe(const char* filename, char* const argv[], char* const envp[]);
 int execvp(const char* filename, char* const argv[]);
 int execl(const char* filename, const char* arg, ...);
+int execle(const char* filename, const char* arg, ...);
 int execlp(const char* filename, const char* arg, ...);
 int chroot(const char* path);
 int chroot_with_mount_flags(const char* path, int mount_flags);
@@ -141,7 +142,9 @@ enum {
 #define MS_RDONLY (1 << 4)
 #define MS_REMOUNT (1 << 5)
 
+#define _POSIX_MONOTONIC_CLOCK 200112L
 #define _POSIX_SAVED_IDS
+#define _POSIX_TIMERS 200809L
 
 /*
  * We aren't fully compliant (don't support policies, and don't have a wide
@@ -151,6 +154,7 @@ enum {
 #define _POSIX_VDISABLE '\0'
 
 enum {
+    _SC_MONOTONIC_CLOCK,
     _SC_NPROCESSORS_CONF,
     _SC_NPROCESSORS_ONLN,
     _SC_OPEN_MAX,
@@ -160,6 +164,7 @@ enum {
     _SC_CLK_TCK,
 };
 
+#define _SC_MONOTONIC_CLOCK _SC_MONOTONIC_CLOCK
 #define _SC_NPROCESSORS_CONF _SC_NPROCESSORS_CONF
 #define _SC_NPROCESSORS_ONLN _SC_NPROCESSORS_ONLN
 #define _SC_OPEN_MAX _SC_OPEN_MAX

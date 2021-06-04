@@ -13,8 +13,8 @@
 #include "Screen.h"
 #include "WindowManager.h"
 #include <AK/Badge.h>
+#include <AK/CharacterTypes.h>
 #include <WindowServer/WindowClientEndpoint.h>
-#include <ctype.h>
 
 namespace WindowServer {
 
@@ -208,7 +208,8 @@ void Window::nudge_into_desktop(bool force_titlebar_visible)
 
 void Window::set_minimum_size(const Gfx::IntSize& size)
 {
-    VERIFY(!size.is_empty());
+    if (size.is_null())
+        return;
 
     if (m_minimum_size == size)
         return;
@@ -460,7 +461,7 @@ void Window::handle_keydown_event(const KeyEvent& event)
     if (event.modifiers() == Mod_Alt && event.code_point() && menubar()) {
         Menu* menu_to_open = nullptr;
         menubar()->for_each_menu([&](Menu& menu) {
-            if (tolower(menu.alt_shortcut_character()) == tolower(event.code_point())) {
+            if (to_ascii_lowercase(menu.alt_shortcut_character()) == to_ascii_lowercase(event.code_point())) {
                 menu_to_open = &menu;
                 return IterationDecision::Break;
             }
