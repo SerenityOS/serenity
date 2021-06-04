@@ -193,4 +193,23 @@ private:
     Optional<Label> m_target;
 };
 
+class JumpIfTrue final : public Instruction {
+public:
+    explicit JumpIfTrue(Register result, Optional<Label> target = {})
+        : m_result(result)
+        , m_target(move(target))
+    {
+    }
+
+    void set_target(Optional<Label> target) { m_target = move(target); }
+
+    virtual ~JumpIfTrue() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_result;
+    Optional<Label> m_target;
+};
+
 }
