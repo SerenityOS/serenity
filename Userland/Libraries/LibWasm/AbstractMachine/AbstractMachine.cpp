@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Interpreter.h"
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
+#include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/AbstractMachine/Configuration.h>
+#include <LibWasm/AbstractMachine/Interpreter.h>
 #include <LibWasm/Types.h>
 
 namespace Wasm {

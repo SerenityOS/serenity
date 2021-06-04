@@ -6,7 +6,7 @@
 
 #include <LibCore/File.h>
 #include <LibTest/JavaScriptTestRunner.h>
-#include <LibWasm/AbstractMachine/Interpreter.h>
+#include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Types.h>
 
 TEST_ROOT("Userland/Libraries/LibWasm/Tests");

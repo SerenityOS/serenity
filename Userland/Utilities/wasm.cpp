@@ -9,7 +9,7 @@
 #include <LibCore/FileStream.h>
 #include <LibLine/Editor.h>
 #include <LibWasm/AbstractMachine/AbstractMachine.h>
-#include <LibWasm/AbstractMachine/Interpreter.h>
+#include <LibWasm/AbstractMachine/BytecodeInterpreter.h>
 #include <LibWasm/Printer/Printer.h>
 #include <LibWasm/Types.h>
 #include <signal.h>
