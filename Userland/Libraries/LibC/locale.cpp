@@ -7,6 +7,7 @@
 #include <assert.h>
 #include <locale.h>
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 
@@ -46,7 +47,9 @@ static struct lconv default_locale = {
 
 char* setlocale(int, const char*)
 {
-    return nullptr;
+    static char locale[2];
+    memcpy(locale, "C", 2);
+    return locale;
 }
 
 struct lconv* localeconv()
