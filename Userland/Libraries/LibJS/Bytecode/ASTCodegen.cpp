@@ -115,4 +115,16 @@ Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Gener
     return body_result_reg;
 }
 
+Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::NewObject>(reg);
+
+    if (!m_properties.is_empty()) {
+        TODO();
+    }
+
+    return reg;
+}
+
 }

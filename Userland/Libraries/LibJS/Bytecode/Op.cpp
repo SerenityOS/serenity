@@ -41,6 +41,11 @@ void NewString::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = js_string(interpreter.vm(), m_string);
 }
 
+void NewObject::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Object::create_empty(interpreter.global_object());
+}
+
 void GetVariable::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = interpreter.vm().get_variable(m_identifier, interpreter.global_object());
@@ -100,6 +105,11 @@ String AbstractInequals::to_string() const
 String NewString::to_string() const
 {
     return String::formatted("NewString dst:{}, string:\"{}\"", m_dst, m_string);
+}
+
+String NewObject::to_string() const
+{
+    return String::formatted("NewObject dst:{}", m_dst);
 }
 
 String GetVariable::to_string() const

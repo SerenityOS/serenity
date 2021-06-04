@@ -1040,6 +1040,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtrVector<ObjectProperty> m_properties;

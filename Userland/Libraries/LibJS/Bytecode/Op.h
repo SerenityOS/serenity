@@ -125,6 +125,21 @@ private:
     String m_string;
 };
 
+class NewObject final : public Instruction {
+public:
+    explicit NewObject(Register dst)
+        : m_dst(dst)
+    {
+    }
+
+    virtual ~NewObject() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_dst;
+};
+
 class SetVariable final : public Instruction {
 public:
     SetVariable(FlyString identifier, Register src)
