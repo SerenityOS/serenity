@@ -158,6 +158,12 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
 
         return { this_value, callee };
     }
+
+    if (interpreter.vm().in_strict_mode()) {
+        // If we are in strict mode, |this| should never be bound to global object by default.
+        return { js_undefined(), m_callee->execute(interpreter, global_object) };
+    }
+
     return { &global_object, m_callee->execute(interpreter, global_object) };
 }
 
