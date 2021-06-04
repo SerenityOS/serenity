@@ -117,6 +117,7 @@ static ClassViewNode& add_child_node(NonnullOwnPtrVector<ClassViewNode>& childre
 
     size_t inserted_index = 0;
     ClassViewNode& node = *node_ptr;
+    // Insert into parent's children list, sorted lexicographically by name.
     children.insert_before_matching(
         move(node_ptr), [&node](auto& other_node) {
             return strncmp(node.name.characters_without_null_termination(), other_node->name.characters_without_null_termination(), min(node.name.length(), other_node->name.length())) < 0;
