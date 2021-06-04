@@ -827,6 +827,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     auto description = file_or_error.release_value();
     auto metadata = description->metadata();
 
+    if (!metadata.is_regular_file())
+        return EACCES;
+
     // Always gonna need at least 3 bytes. these are for #!X
     if (metadata.size < 3)
         return ENOEXEC;
