@@ -18,7 +18,7 @@ public:
     virtual bool is_identifier(void*) const override;
 
     virtual Syntax::Language language() const override { return Syntax::Language::SQL; }
-    virtual void rehighlight(const Palette&) override;
+    virtual void rehighlight(Palette const&) override;
 
 protected:
     virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
