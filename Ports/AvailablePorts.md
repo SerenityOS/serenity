@@ -96,6 +96,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`opentyrian`](opentyrian/)            | OpenTyrian                                                 | 84b820f                  | https://github.com/opentyrian/opentyrian                                       |
 | [`opentyrian-data`](opentyrian-data/)  | OpenTyrian graphics and audio                              | 1.0.0                    | http://camanis.net/tyrian/tyrian21.zip                                         |
 | [`oksh`](oksh/)                        | oksh                                                       | 6.8.1                    | https://github.com/ibara/oksh                                                  |
+| [`p7zip`](p7zip/)                      | p7zip                                                      | 17.04                    | https://github.com/jinfeihan57/p7zip                                           |
 | [`patch`](patch/)                      | patch (OpenBSD)                                            | 6.6                      | https://github.com/ibara/libpuffy                                              |
 | [`pcre`](pcre/)                        | Perl-compatible Regular Expressions (PCRE)                 | 8.44                     | https://www.pcre.org/                                                          |
 | [`pcre2`](pcre2/)                      | Perl-compatible Regular Expressions (PCRE2)                | 10.34                    | https://www.pcre.org/                                                          |
