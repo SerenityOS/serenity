@@ -9,6 +9,7 @@ configopts="
     --disable-opcache
     --prefix=${SERENITY_INSTALL_ROOT}/usr/local
     --with-iconv=${SERENITY_INSTALL_ROOT}/usr/local
+    --with-zlib
 "
 
 export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2/"
