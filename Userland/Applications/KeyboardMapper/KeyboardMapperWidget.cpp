@@ -127,7 +127,8 @@ void KeyboardMapperWidget::load_from_file(String filename)
 {
     auto result = Keyboard::CharacterMapFile::load_from_file(filename);
     if (!result.has_value()) {
-        dbgln("Failed to load character map from file {}", filename);
+        auto error_message = String::formatted("Failed to load character map from file {}", filename);
+        GUI::MessageBox::show(window(), error_message, "Error", GUI::MessageBox::Type::Error);
         return;
     }
 
