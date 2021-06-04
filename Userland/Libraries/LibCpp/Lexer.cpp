@@ -534,10 +534,13 @@ Vector<Token> Lexer::lex()
             if (directive == "#include") {
                 commit_token(Token::Type::IncludeStatement);
 
-                begin_token();
-                while (is_ascii_space(peek()))
-                    consume();
-                commit_token(Token::Type::Whitespace);
+                if (is_ascii_space(peek())) {
+                    begin_token();
+                    do {
+                        consume();
+                    } while (is_ascii_space(peek()));
+                    commit_token(Token::Type::Whitespace);
+                }
 
                 begin_token();
                 if (peek() == '<' || peek() == '"') {
