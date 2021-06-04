@@ -40,6 +40,8 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.prototype, global_object.number_prototype(), 0);
     define_property(vm.names.length, Value(1), Attribute::Configurable);
     define_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
+    define_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
+    define_property(vm.names.MIN_VALUE, Value(NumericLimits<double>::min()), 0);
     define_property(vm.names.MAX_SAFE_INTEGER, Value(MAX_SAFE_INTEGER_VALUE), 0);
     define_property(vm.names.MIN_SAFE_INTEGER, Value(MIN_SAFE_INTEGER_VALUE), 0);
     define_property(vm.names.NEGATIVE_INFINITY, js_negative_infinity(), 0);
