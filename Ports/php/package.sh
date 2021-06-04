@@ -10,6 +10,7 @@ configopts="
     --prefix=${SERENITY_INSTALL_ROOT}/usr/local
     --with-iconv=${SERENITY_INSTALL_ROOT}/usr/local
     --with-zlib
+    --without-pcre-jit
 "
 
 export CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/libxml2/"
