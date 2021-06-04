@@ -45,9 +45,13 @@ void CardStack::clear()
 void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 {
     auto draw_background_if_empty = [&]() {
+        size_t number_of_moving_cards = 0;
+        for (const auto& card : m_stack)
+            number_of_moving_cards += card.is_moving();
+
         if (m_associated_stack && !m_associated_stack->is_empty())
             return false;
-        if (!is_empty() && !(m_stack.size() == 1 && peek().is_moving()))
+        if (!is_empty() && (m_stack.size() != number_of_moving_cards))
             return false;
         painter.fill_rect_with_rounded_corners(m_base, background_color.darkened(0.5), Card::card_radius);
         painter.fill_rect_with_rounded_corners(m_base.shrunken(2, 2), background_color, Card::card_radius - 1);
