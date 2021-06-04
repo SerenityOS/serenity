@@ -9,6 +9,7 @@ RUN apt-get update -y \
         curl \
         genext2fs \
         git \
+        imagemagick \
         libmpfr-dev \
         libmpc-dev \
         libgmp-dev \
