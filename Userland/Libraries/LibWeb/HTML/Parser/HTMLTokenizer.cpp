@@ -276,6 +276,7 @@ _StartOfFunction:
                 {
                     log_parse_error();
                     create_new_token(HTMLToken::Type::Comment);
+                    m_current_token.m_start_position = nth_last_position(2);
                     RECONSUME_IN(BogusComment);
                 }
                 ON_EOF
@@ -301,7 +302,7 @@ _StartOfFunction:
                 }
                 ON('/')
                 {
-                    m_current_token.m_end_position = nth_last_position(1);
+                    m_current_token.m_end_position = nth_last_position(0);
                     SWITCH_TO(SelfClosingStartTag);
                 }
                 ON('>')
@@ -325,7 +326,7 @@ _StartOfFunction:
                 ON_EOF
                 {
                     log_parse_error();
-                    m_current_token.m_end_position = nth_last_position(1);
+                    m_current_token.m_end_position = nth_last_position(0);
                     EMIT_EOF;
                 }
                 ANYTHING_ELSE
@@ -370,6 +371,7 @@ _StartOfFunction:
                 DONT_CONSUME_NEXT_INPUT_CHARACTER;
                 if (consume_next_if_match("--")) {
                     create_new_token(HTMLToken::Type::Comment);
+                    m_current_token.m_start_position = nth_last_position(4);
                     SWITCH_TO(CommentStart);
                 }
                 if (consume_next_if_match("DOCTYPE", CaseSensitivity::CaseInsensitive)) {
@@ -1053,6 +1055,7 @@ _StartOfFunction:
                 }
                 ON('=')
                 {
+                    m_current_token.m_tag.attributes.last().name_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeValue);
                 }
                 ON_ASCII_UPPER_ALPHA
@@ -1214,7 +1217,7 @@ _StartOfFunction:
             {
                 ON_WHITESPACE
                 {
-                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(2);
+                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
                     SWITCH_TO(BeforeAttributeName);
                 }
                 ON('&')
@@ -1224,7 +1227,7 @@ _StartOfFunction:
                 }
                 ON('>')
                 {
-                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(2);
+                    m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
                     SWITCH_TO_AND_EMIT_CURRENT_TOKEN(Data);
                 }
                 ON(0)
@@ -1274,7 +1277,7 @@ _StartOfFunction:
 
             BEGIN_STATE(AfterAttributeValueQuoted)
             {
-                m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(2);
+                m_current_token.m_tag.attributes.last().value_end_position = nth_last_position(1);
                 ON_WHITESPACE
                 {
                     SWITCH_TO(BeforeAttributeName);
