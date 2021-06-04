@@ -48,7 +48,7 @@ public:
 
     ~Function()
     {
-        clear();
+        clear(false);
     }
 
     template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType> && IsFunction<RemovePointer<CallableType>>)&&IsRvalueReference<CallableType&&>>::Type>
@@ -74,7 +74,8 @@ public:
         VERIFY(wrapper);
         ++m_call_nesting_level;
         ScopeGuard guard([this] {
-            --m_call_nesting_level;
+            if (--m_call_nesting_level == 0 && m_deferred_clear)
+                const_cast<Function*>(this)->clear(false);
         });
         return wrapper->call(forward<In>(in)...);
     }
@@ -181,8 +182,15 @@ private:
         }
     }
 
-    void clear()
+    void clear(bool may_defer = true)
     {
+        bool called_from_inside_function = m_call_nesting_level > 0;
+        VERIFY(may_defer || !called_from_inside_function);
+        if (called_from_inside_function && may_defer) {
+            m_deferred_clear = true;
+            return;
+        }
+        m_deferred_clear = false;
         auto* wrapper = callable_wrapper();
         if (m_kind == FunctionKind::Inline) {
             VERIFY(wrapper);
@@ -229,6 +237,7 @@ private:
     }
 
     FunctionKind m_kind { FunctionKind::NullPointer };
+    bool m_deferred_clear { false };
     mutable Atomic<u16> m_call_nesting_level { 0 };
     // Empirically determined to fit most lambdas and functions.
     static constexpr size_t inline_capacity = 4 * sizeof(void*);
