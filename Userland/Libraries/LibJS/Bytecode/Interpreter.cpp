@@ -27,8 +27,16 @@ void Interpreter::run(Bytecode::Block const& block)
 
     m_registers.resize(block.register_count());
 
-    for (auto& instruction : block.instructions())
+    size_t pc = 0;
+    while (pc < block.instructions().size()) {
+        auto& instruction = block.instructions()[pc];
         instruction.execute(*this);
+        if (m_pending_jump.has_value()) {
+            pc = m_pending_jump.release_value();
+            continue;
+        }
+        ++pc;
+    }
 
     dbgln("Bytecode::Interpreter did run block {:p}", &block);
     for (size_t i = 0; i < m_registers.size(); ++i) {

@@ -42,4 +42,9 @@ Register Generator::allocate_register()
     return Register { m_next_register++ };
 }
 
+Label Generator::make_label() const
+{
+    return Label { m_block->instructions().size() };
+}
+
 }

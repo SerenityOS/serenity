@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <LibJS/Bytecode/Label.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -25,6 +26,8 @@ public:
         append(move(instruction));
         return *ptr;
     }
+
+    Label make_label() const;
 
 private:
     Generator();

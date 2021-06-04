@@ -8,6 +8,7 @@
 
 #include <AK/FlyString.h>
 #include <LibJS/Bytecode/Instruction.h>
+#include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Value.h>
@@ -137,6 +138,40 @@ public:
 private:
     Register m_dst;
     FlyString m_identifier;
+};
+
+class Jump final : public Instruction {
+public:
+    explicit Jump(Label target)
+        : m_target(target)
+    {
+    }
+
+    virtual ~Jump() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Label m_target;
+};
+
+class JumpIfFalse final : public Instruction {
+public:
+    explicit JumpIfFalse(Register result, Optional<Label> target = {})
+        : m_result(result)
+        , m_target(move(target))
+    {
+    }
+
+    void set_target(Optional<Label> target) { m_target = move(target); }
+
+    virtual ~JumpIfFalse() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_result;
+    Optional<Label> m_target;
 };
 
 }
