@@ -80,6 +80,7 @@ int main(int argc, char** argv)
 #else
         false;
 #endif
+    bool print_json = false;
     const char* specified_test_root = nullptr;
     String common_path;
 
@@ -100,6 +101,7 @@ int main(int argc, char** argv)
             return true;
         },
     });
+    args_parser.add_option(print_json, "Show results as JSON", "json", 'j');
     args_parser.add_option(g_collect_on_every_allocation, "Collect garbage after every allocation", "collect-often", 'g');
     args_parser.add_option(g_test_glob, "Only run tests matching the given glob", "filter", 'f', "glob");
     for (auto& entry : g_extra_args)
@@ -164,7 +166,7 @@ int main(int argc, char** argv)
     if (!g_vm)
         g_vm = JS::VM::create();
 
-    TestRunner test_runner(test_root, common_path, print_times, print_progress);
+    TestRunner test_runner(test_root, common_path, print_times, print_progress, print_json);
     test_runner.run();
 
     g_vm = nullptr;
