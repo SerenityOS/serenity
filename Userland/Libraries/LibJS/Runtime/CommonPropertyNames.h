@@ -24,7 +24,9 @@ namespace JS {
     P(LOG10E)                                \
     P(LOG2E)                                 \
     P(MAX_SAFE_INTEGER)                      \
+    P(MAX_VALUE)                             \
     P(MIN_SAFE_INTEGER)                      \
+    P(MIN_VALUE)                             \
     P(Math)                                  \
     P(NEGATIVE_INFINITY)                     \
     P(NaN)                                   \
