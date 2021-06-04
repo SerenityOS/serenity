@@ -29,6 +29,6 @@ template<>
 struct AK::Formatter<JS::Bytecode::Register> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, JS::Bytecode::Register const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "r{}", value.index());
+        return AK::Formatter<FormatString>::format(builder, "${}", value.index());
     }
 };
