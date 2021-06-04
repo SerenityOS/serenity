@@ -90,6 +90,20 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
         return rhs_reg;
     }
 
+    if (is<MemberExpression>(*m_lhs)) {
+        auto& expression = static_cast<MemberExpression const&>(*m_lhs);
+        auto object_reg = expression.object().generate_bytecode(generator);
+
+        if (expression.is_computed()) {
+            TODO();
+        } else {
+            VERIFY(is<Identifier>(expression.property()));
+            auto rhs_reg = m_rhs->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::PutById>(*object_reg, static_cast<Identifier const&>(expression.property()).string(), *rhs_reg);
+            return rhs_reg;
+        }
+    }
+
     TODO();
 }
 
