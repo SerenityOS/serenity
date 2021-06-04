@@ -82,7 +82,11 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
         return {};
     if (number.is_nan())
         return js_nan();
-    return Value(number.as_double() >= 0 ? number.as_double() : -number.as_double());
+    if (number.is_negative_zero())
+        return Value(0);
+    if (number.is_negative_infinity())
+        return js_infinity();
+    return Value(number.as_double() < 0 ? -number.as_double() : number.as_double());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
