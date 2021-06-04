@@ -64,6 +64,14 @@ void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_target.value());
 }
 
+void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
+{
+    VERIFY(m_target.has_value());
+    auto result = interpreter.reg(m_result);
+    if (result.as_bool())
+        interpreter.jump(m_target.value());
+}
+
 String Load::to_string() const
 {
     return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
@@ -114,6 +122,13 @@ String JumpIfFalse::to_string() const
     if (m_target.has_value())
         return String::formatted("JumpIfFalse result:{}, target:{}", m_result, m_target.value());
     return String::formatted("JumpIfFalse result:{}, target:<empty>", m_result);
+}
+
+String JumpIfTrue::to_string() const
+{
+    if (m_target.has_value())
+        return String::formatted("JumpIfTrue result:{}, target:{}", m_result, m_target.value());
+    return String::formatted("JumpIfTrue result:{}, target:<empty>", m_result);
 }
 
 }

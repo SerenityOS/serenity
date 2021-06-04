@@ -105,4 +105,14 @@ Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generat
     return body_result_reg;
 }
 
+Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto head_label = generator.make_label();
+    auto body_result_reg = m_body->generate_bytecode(generator);
+    auto test_result_reg = m_test->generate_bytecode(generator);
+    VERIFY(test_result_reg.has_value());
+    generator.emit<Bytecode::Op::JumpIfTrue>(*test_result_reg, head_label);
+    return body_result_reg;
+}
+
 }
