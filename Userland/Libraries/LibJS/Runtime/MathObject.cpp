@@ -51,6 +51,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.atan2, atan2, 2, attr);
     define_native_function(vm.names.fround, fround, 1, attr);
     define_native_function(vm.names.hypot, hypot, 2, attr);
+    define_native_function(vm.names.imul, imul, 2, attr);
     define_native_function(vm.names.log, log, 1, attr);
     define_native_function(vm.names.log2, log2, 1, attr);
     define_native_function(vm.names.log10, log10, 1, attr);
@@ -426,6 +427,17 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
         hypot = Value(hypot.as_double() + cur.as_double() * cur.as_double());
     }
     return Value(::sqrt(hypot.as_double()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
+{
+    auto a = vm.argument(0).to_u32(global_object);
+    if (vm.exception())
+        return {};
+    auto b = vm.argument(1).to_u32(global_object);
+    if (vm.exception())
+        return {};
+    return Value(static_cast<i32>(a * b));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
