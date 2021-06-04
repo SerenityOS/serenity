@@ -15,7 +15,8 @@ post_fetch() {
 
 pre_configure() {
     patch_internal
-    run sed -i 's@-fno-exceptions @@' gcc/config/serenity.h
+    run sed -i.bak 's@-fno-exceptions @@' gcc/config/serenity.h
+    run rm -f gcc/config/serenity.h.bak
 }
 
 build() {
