@@ -147,8 +147,7 @@ void ClassViewModel::add_declaration(const GUI::AutocompleteProvider::Declaratio
             auto& scope = scope_parts[i];
             ClassViewNode* next { nullptr };
             for (auto& child : parent->children) {
-                VERIFY(child.declaration);
-                if (child.declaration->name == scope) {
+                if (child.name == scope) {
                     next = &child;
                     break;
                 }
