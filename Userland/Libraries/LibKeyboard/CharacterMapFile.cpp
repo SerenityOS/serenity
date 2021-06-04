@@ -25,14 +25,16 @@ Optional<CharacterMapData> CharacterMapFile::load_from_file(const String& filena
     auto file = Core::File::construct(path);
     file->open(Core::OpenMode::ReadOnly);
     if (!file->is_open()) {
-        dbgln("Failed to open {}: {}", filename, file->error_string());
+        dbgln("Failed to open {}: {}", path, file->error_string());
         return {};
     }
 
     auto file_contents = file->read_all();
     auto json_result = JsonValue::from_string(file_contents);
-    if (!json_result.has_value())
+    if (!json_result.has_value()) {
+        dbgln("Failed to load character map from file {}", path);
         return {};
+    }
     auto json = json_result.value().as_object();
 
     Vector<u32> map = read_map(json, "map");
