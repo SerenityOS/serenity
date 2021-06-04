@@ -115,6 +115,7 @@ set(KERNEL_SOURCES
     KString.cpp
     KSyms.cpp
     Lock.cpp
+    Net/E1000ENetworkAdapter.cpp
     Net/E1000NetworkAdapter.cpp
     Net/IPv4Socket.cpp
     Net/LocalSocket.cpp
