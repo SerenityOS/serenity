@@ -148,11 +148,12 @@ public:
         return s_the;
     }
 
-    TestRunner(String test_root, String common_path, bool print_times, bool print_progress)
+    TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json)
         : m_common_path(move(common_path))
         , m_test_root(move(test_root))
         , m_print_times(print_times)
         , m_print_progress(print_progress)
+        , m_print_json(print_json)
     {
         VERIFY(!s_the);
         s_the = this;
@@ -174,11 +175,13 @@ protected:
     virtual JSFileResult run_file_test(const String& test_path);
     void print_file_result(const JSFileResult& file_result) const;
     void print_test_results() const;
+    void print_test_results_as_json() const;
 
     String m_common_path;
     String m_test_root;
     bool m_print_times;
     bool m_print_progress;
+    bool m_print_json;
 
     double m_total_elapsed_time_in_ms { 0 };
     Test::Counts m_counts;
@@ -271,7 +274,9 @@ inline void TestRunner::run()
         if (!path.matches(g_test_glob))
             continue;
         ++progress_counter;
-        print_file_result(run_file_test(path));
+        auto file_result = run_file_test(path);
+        if (!m_print_json)
+            print_file_result(file_result);
         if (m_print_progress)
             warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
     }
@@ -279,7 +284,10 @@ inline void TestRunner::run()
     if (m_print_progress)
         warn("\033]9;-1;\033\\");
 
-    print_test_results();
+    if (!m_print_json)
+        print_test_results();
+    else
+        print_test_results_as_json();
 }
 
 inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
@@ -662,4 +670,30 @@ inline void TestRunner::print_test_results() const
     }
     outln();
 }
+
+inline void TestRunner::print_test_results_as_json() const
+{
+    JsonObject suites;
+    suites.set("failed", m_counts.suites_failed);
+    suites.set("passed", m_counts.suites_passed);
+    suites.set("total", m_counts.suites_failed + m_counts.suites_passed);
+
+    JsonObject tests;
+    tests.set("failed", m_counts.tests_failed);
+    tests.set("passed", m_counts.tests_passed);
+    tests.set("skipped", m_counts.tests_skipped);
+    tests.set("total", m_counts.tests_failed + m_counts.tests_passed + m_counts.tests_skipped);
+
+    JsonObject results;
+    results.set("suites", suites);
+    results.set("tests", tests);
+
+    JsonObject root;
+    root.set("results", results);
+    root.set("files_total", m_counts.files_total);
+    root.set("duration", m_total_elapsed_time_in_ms / 1000.0);
+
+    outln("{}", root.to_string());
+}
+
 }
