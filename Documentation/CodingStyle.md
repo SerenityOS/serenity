@@ -118,7 +118,7 @@ bool convert_to_ascii(short*, size_t);
 bool to_ascii(short*, size_t);
 ```
 
-[](#names-if-exists) When there are two getters for a variable, and one of them automatically makes sure the requested object is instantiated, prefix that getter function which with `ensure_`. As it ensures that an object is created, it should consequently also return a reference, not a pointer.
+[](#names-if-exists) When there are two getters for a variable, and one of them automatically makes sure the requested object is instantiated, prefix that getter function with `ensure_`. As it ensures that an object is created, it should consequently also return a reference, not a pointer.
 
 ###### Right:
 
