@@ -52,8 +52,8 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
             return;
 
         GUI::TextPosition position { token.line_number() - 1, token.line_column() - 1 };
-        for (size_t i = 0; i < str.length() - 1; ++i) {
-            if (str[i] == '\n') {
+        for (char c : str) {
+            if (c == '\n') {
                 position.set_line(position.line() + 1);
                 position.set_column(0);
             } else
