@@ -10,6 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Net/E1000ENetworkAdapter.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NE2000NetworkAdapter.h>
@@ -75,6 +76,8 @@ RefPtr<NetworkAdapter> NetworkingManagement::lookup_by_name(const StringView& na
 UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_device(PCI::Address address) const
 {
     if (auto candidate = E1000NetworkAdapter::try_to_initialize(address); !candidate.is_null())
+        return candidate;
+    if (auto candidate = E1000ENetworkAdapter::try_to_initialize(address); !candidate.is_null())
         return candidate;
     if (auto candidate = RTL8139NetworkAdapter::try_to_initialize(address); !candidate.is_null())
         return candidate;
