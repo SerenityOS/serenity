@@ -14,6 +14,7 @@
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
@@ -55,7 +56,7 @@ void NetworkTask_main(void*)
 
     WaitQueue packet_wait_queue;
     int pending_packets = 0;
-    NetworkAdapter::for_each([&](auto& adapter) {
+    NetworkingManagement::the().for_each([&](auto& adapter) {
         dmesgln("NetworkTask: {} network adapter found: hw={}", adapter.class_name(), adapter.mac_address().to_string());
 
         if (String(adapter.class_name()) == "LoopbackAdapter") {
@@ -74,7 +75,7 @@ void NetworkTask_main(void*)
         if (pending_packets == 0)
             return 0;
         size_t packet_size = 0;
-        NetworkAdapter::for_each([&](auto& adapter) {
+        NetworkingManagement::the().for_each([&](auto& adapter) {
             if (packet_size || !adapter.has_queued_packets())
                 return;
             packet_size = adapter.dequeue_packet(buffer, buffer_size, packet_timestamp);
@@ -155,7 +156,7 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
 
     if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
-        if (auto adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
+        if (auto adapter = NetworkingManagement::the().from_ipv4_address(packet.target_protocol_address())) {
             // We do!
             dbgln("handle_arp: Responding to ARP request for my IPv4 address ({})", adapter->ipv4_address());
             ARPPacket response;
@@ -193,7 +194,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size, const Time& 
 
     dbgln_if(IPV4_DEBUG, "handle_ipv4: source={}, destination={}", packet.source(), packet.destination());
 
-    NetworkAdapter::for_each([&](auto& adapter) {
+    NetworkingManagement::the().for_each([&](auto& adapter) {
         if (adapter.link_up()) {
             auto my_net = adapter.ipv4_address().to_u32() & adapter.ipv4_netmask().to_u32();
             auto their_net = packet.source().to_u32() & adapter.ipv4_netmask().to_u32();
@@ -234,7 +235,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet, 
             socket.did_receive(ipv4_packet.source(), 0, { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
     }
 
-    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
     if (!adapter)
         return;
 
@@ -292,7 +293,7 @@ void handle_udp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
 
     auto& destination = ipv4_packet.destination();
 
-    if (destination == IPv4Address(255, 255, 255, 255) || NetworkAdapter::from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
+    if (destination == IPv4Address(255, 255, 255, 255) || NetworkingManagement::the().from_ipv4_address(destination) || socket->multicast_memberships().contains_slow(destination))
         socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), { &ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size() }, packet_timestamp);
 }
 
@@ -365,7 +366,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet, const Time& packet_timestamp)
         tcp_packet.window_size(),
         payload_size);
 
-    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    auto adapter = NetworkingManagement::the().from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
         dbgln("handle_tcp: this packet is not for me, it's for {}", ipv4_packet.destination());
         return;

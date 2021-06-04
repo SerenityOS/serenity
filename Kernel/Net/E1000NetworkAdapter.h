@@ -20,9 +20,8 @@ namespace Kernel {
 class E1000NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
 public:
-    static void detect();
+    static RefPtr<E1000NetworkAdapter> try_to_initialize(PCI::Address);
 
-    E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
@@ -31,6 +30,7 @@ public:
     virtual const char* purpose() const override { return class_name(); }
 
 private:
+    E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 

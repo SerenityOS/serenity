@@ -12,10 +12,12 @@ namespace Kernel {
 
 class LoopbackAdapter final : public NetworkAdapter {
     AK_MAKE_ETERNAL
-public:
-    LoopbackAdapter();
-    static LoopbackAdapter& the();
 
+private:
+    LoopbackAdapter();
+
+public:
+    static NonnullRefPtr<LoopbackAdapter> create();
     virtual ~LoopbackAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;

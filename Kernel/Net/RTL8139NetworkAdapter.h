@@ -20,9 +20,8 @@ namespace Kernel {
 class RTL8139NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
 public:
-    static void detect();
+    static RefPtr<RTL8139NetworkAdapter> try_to_initialize(PCI::Address);
 
-    RTL8139NetworkAdapter(PCI::Address, u8 irq);
     virtual ~RTL8139NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
@@ -31,6 +30,7 @@ public:
     virtual const char* purpose() const override { return class_name(); }
 
 private:
+    RTL8139NetworkAdapter(PCI::Address, u8 irq);
     virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "RTL8139NetworkAdapter"; }
 

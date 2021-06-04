@@ -135,7 +135,7 @@ struct [[gnu::packed]] received_packet_header {
     u16 length;
 };
 
-UNMAP_AFTER_INIT void NE2000NetworkAdapter::detect()
+UNMAP_AFTER_INIT RefPtr<NE2000NetworkAdapter> NE2000NetworkAdapter::try_to_initialize(PCI::Address address)
 {
     constexpr auto ne2k_ids = Array {
         PCI::ID { 0x10EC, 0x8029 }, // RealTek RTL-8029(AS)
@@ -152,14 +152,11 @@ UNMAP_AFTER_INIT void NE2000NetworkAdapter::detect()
         PCI::ID { 0x12c3, 0x5598 }, // Holtek HT80229
         PCI::ID { 0x8c4a, 0x1980 }, // Winbond W89C940 (misprogrammed)
     };
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-        if (!ne2k_ids.span().contains_slow(id))
-            return;
-        u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt_ref(*new NE2000NetworkAdapter(address, irq)).leak_ref();
-    });
+    auto id = PCI::get_id(address);
+    if (!ne2k_ids.span().contains_slow(id))
+        return {};
+    u8 irq = PCI::get_interrupt_line(address);
+    return adopt_ref_if_nonnull(new NE2000NetworkAdapter(address, irq));
 }
 
 UNMAP_AFTER_INIT NE2000NetworkAdapter::NE2000NetworkAdapter(PCI::Address address, u8 irq)
