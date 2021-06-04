@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
 
@@ -142,9 +143,9 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     };
 
     if (target[0] == 0 && target[1] == 0 && target[2] == 0 && target[3] == 0)
-        return if_matches(LoopbackAdapter::the(), LoopbackAdapter::the().mac_address());
+        return if_matches(*NetworkingManagement::the().loopback_adapter(), NetworkingManagement::the().loopback_adapter()->mac_address());
     if (target[0] == 127)
-        return if_matches(LoopbackAdapter::the(), LoopbackAdapter::the().mac_address());
+        return if_matches(*NetworkingManagement::the().loopback_adapter(), NetworkingManagement::the().loopback_adapter()->mac_address());
 
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
@@ -152,12 +153,12 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     RefPtr<NetworkAdapter> local_adapter = nullptr;
     RefPtr<NetworkAdapter> gateway_adapter = nullptr;
 
-    NetworkAdapter::for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter, &matches, &through](auto& adapter) {
+    NetworkingManagement::the().for_each([source_addr, &target_addr, &local_adapter, &gateway_adapter, &matches, &through](NetworkAdapter& adapter) {
         auto adapter_addr = adapter.ipv4_address().to_u32();
         auto adapter_mask = adapter.ipv4_netmask().to_u32();
 
         if (target_addr == adapter_addr) {
-            local_adapter = LoopbackAdapter::the();
+            local_adapter = NetworkingManagement::the().loopback_adapter();
             return;
         }
 
@@ -213,7 +214,7 @@ RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source, c
     if (target_addr == 0xffffffff && matches(adapter))
         return { adapter, { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff } };
 
-    if (adapter == LoopbackAdapter::the())
+    if (adapter == NetworkingManagement::the().loopback_adapter())
         return { adapter, adapter->mac_address() };
 
     if ((target_addr & IPv4Address { 240, 0, 0, 0 }.to_u32()) == IPv4Address { 224, 0, 0, 0 }.to_u32())

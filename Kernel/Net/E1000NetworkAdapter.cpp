@@ -156,18 +156,15 @@ UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
+UNMAP_AFTER_INIT RefPtr<E1000NetworkAdapter> E1000NetworkAdapter::try_to_initialize(PCI::Address address)
 {
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-        if (id.vendor_id != (u16)PCIVendorID::Intel)
-            return;
-        if (!is_valid_device_id(id.device_id))
-            return;
-        u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt_ref(*new E1000NetworkAdapter(address, irq)).leak_ref();
-    });
+    auto id = PCI::get_id(address);
+    if (id.vendor_id != (u16)PCIVendorID::Intel)
+        return {};
+    if (!is_valid_device_id(id.device_id))
+        return {};
+    u8 irq = PCI::get_interrupt_line(address);
+    return adopt_ref_if_nonnull(new E1000NetworkAdapter(address, irq));
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)

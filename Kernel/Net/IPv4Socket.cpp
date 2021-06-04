@@ -13,6 +13,7 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
@@ -582,7 +583,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         if (copied_ifname.is_null())
             return -EFAULT;
 
-        auto adapter = NetworkAdapter::lookup_by_name(copied_ifname);
+        auto adapter = NetworkingManagement::the().lookup_by_name(copied_ifname);
         if (!adapter)
             return -ENODEV;
 
@@ -615,7 +616,7 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         memcpy(namebuf, ifr.ifr_name, IFNAMSIZ);
         namebuf[sizeof(namebuf) - 1] = '\0';
 
-        auto adapter = NetworkAdapter::lookup_by_name(namebuf);
+        auto adapter = NetworkingManagement::the().lookup_by_name(namebuf);
         if (!adapter)
             return -ENODEV;
 

@@ -18,9 +18,8 @@ namespace Kernel {
 class NE2000NetworkAdapter final : public NetworkAdapter
     , public PCI::Device {
 public:
-    static void detect();
+    static RefPtr<NE2000NetworkAdapter> try_to_initialize(PCI::Address);
 
-    NE2000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~NE2000NetworkAdapter() override;
 
     virtual void send_raw(ReadonlyBytes) override;
@@ -29,6 +28,7 @@ public:
     virtual const char* purpose() const override { return class_name(); }
 
 private:
+    NE2000NetworkAdapter(PCI::Address, u8 irq);
     virtual void handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "NE2000NetworkAdapter"; }
 

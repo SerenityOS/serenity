@@ -33,11 +33,8 @@
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
-#include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/NE2000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/Panic.h>
@@ -243,12 +240,7 @@ void init_stage2(void*)
 
     VirtIO::detect();
 
-    E1000NetworkAdapter::detect();
-    NE2000NetworkAdapter::detect();
-    RTL8139NetworkAdapter::detect();
-
-    LoopbackAdapter::the();
-
+    NetworkingManagement::the().initialize();
     Syscall::initialize();
 
     new MemoryDevice;

@@ -9,15 +9,17 @@
 
 namespace Kernel {
 
-static AK::Singleton<LoopbackAdapter> s_loopback;
+static bool s_loopback_initialized = false;
 
-LoopbackAdapter& LoopbackAdapter::the()
+NonnullRefPtr<LoopbackAdapter> LoopbackAdapter::create()
 {
-    return *s_loopback;
+    return adopt_ref(*new LoopbackAdapter());
 }
 
 LoopbackAdapter::LoopbackAdapter()
 {
+    VERIFY(!s_loopback_initialized);
+    s_loopback_initialized = true;
     set_loopback_name();
     set_mtu(65536);
     set_mac_address({ 19, 85, 2, 9, 0x55, 0xaa });
