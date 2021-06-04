@@ -13,9 +13,6 @@
 #include <AK/TemporaryChange.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/Generator.h>
-#include <LibJS/Bytecode/Op.h>
-#include <LibJS/Bytecode/Register.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
@@ -2235,81 +2232,6 @@ void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables
 void ScopeNode::add_functions(NonnullRefPtrVector<FunctionDeclaration> functions)
 {
     m_functions.append(move(functions));
-}
-
-Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) const
-{
-    dbgln("Missing generate_bytecode()");
-    TODO();
-}
-
-Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
-{
-    for (auto& child : children()) {
-        [[maybe_unused]] auto reg = child.generate_bytecode(generator);
-    }
-    return {};
-}
-
-Optional<Bytecode::Register> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
-{
-    return m_expression->generate_bytecode(generator);
-}
-
-Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
-{
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
-    auto rhs_reg = m_rhs->generate_bytecode(generator);
-
-    VERIFY(lhs_reg.has_value());
-    VERIFY(rhs_reg.has_value());
-
-    auto dst_reg = generator.allocate_register();
-
-    switch (m_op) {
-    case BinaryOp::Addition:
-        generator.emit<Bytecode::Op::Add>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
-    case BinaryOp::Subtraction:
-        generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
-    default:
-        TODO();
-    }
-}
-
-Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
-{
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::Load>(dst, m_value);
-    return dst;
-}
-
-Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
-{
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::NewString>(dst, m_value);
-    return dst;
-}
-
-Optional<Bytecode::Register> Identifier::generate_bytecode(Bytecode::Generator& generator) const
-{
-    auto reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::GetVariable>(reg, m_string);
-    return reg;
-}
-
-Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
-{
-    if (is<Identifier>(*m_lhs)) {
-        auto& identifier = static_cast<Identifier const&>(*m_lhs);
-        auto rhs_reg = m_rhs->generate_bytecode(generator);
-        VERIFY(rhs_reg.has_value());
-        generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
-        return rhs_reg;
-    }
-
-    TODO();
 }
 
 }
