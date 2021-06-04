@@ -186,6 +186,7 @@ int main(int argc, char** argv)
             auto start = normalized_start_time - start_of_trace;
             auto end = normalized_end_time - start_of_trace;
             builder.appendff(", Selection: {} - {} ms", start, end);
+            builder.appendff(", Duration: {} ms", end - start);
         }
         statusbar.set_text(builder.to_string());
     };
