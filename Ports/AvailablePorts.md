@@ -68,6 +68,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libtiff`](libtiff/)                  | libtiff                                                    | 4.2.0                    | http://www.libtiff.org/                                                        |
 | [`libtool`](libtool/)                  | libtool                                                    | 2.4                      | https://www.gnu.org/software/libtool/                                          |
 | [`libvorbis`](libvorbis/)              | libvorbis                                                  | 1.3.7                    | https://github.com/xiph/vorbis                                                 |
+| [`libxml2`](libxml2/)                  | libxml2                                                    | 2.9.12                   | http://www.xmlsoft.org/                                                        |
 | [`libzip`](libzip/)                    | libzip                                                     | 1.7.3                    | https://libzip.org/                                                            |
 | [`links`](links/)                      | Links web browser                                          | 2.22                     | http://links.twibright.com/                                                    |
 | [`lua`](lua/)                          | Lua                                                        | 5.3.5                    | https://www.lua.org/                                                           |
