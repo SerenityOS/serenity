@@ -7,7 +7,6 @@ auth_type=sha256
 depends="libiconv libxml2 sqlite zlib"
 configopts="
     --disable-opcache
-    --disable-phar
     --prefix=${SERENITY_INSTALL_ROOT}/usr/local
     --with-iconv=${SERENITY_INSTALL_ROOT}/usr/local
 "
