@@ -207,6 +207,15 @@ Optional<u32> HTMLTokenizer::peek_code_point(size_t offset) const
     return *it;
 }
 
+HTMLToken::Position HTMLTokenizer::nth_last_position(size_t n)
+{
+    if (n + 1 > m_source_positions.size()) {
+        dbgln_if(TOKENIZER_TRACE_DEBUG, "(Tokenizer::nth_last_position) Invalid position requested: {}th-last of {}. Returning (0-0).", n, m_source_positions.size());
+        return HTMLToken::Position { 0, 0 };
+    };
+    return m_source_positions.at(m_source_positions.size() - 1 - n);
+}
+
 Optional<HTMLToken> HTMLTokenizer::next_token()
 {
     {
@@ -2639,7 +2648,7 @@ void HTMLTokenizer::will_emit(HTMLToken& token)
 {
     if (token.is_start_tag())
         m_last_emitted_start_tag = token;
-    token.m_end_position = m_source_positions.last();
+    token.m_end_position = nth_last_position(0);
 }
 
 bool HTMLTokenizer::current_end_tag_token_is_appropriate() const
