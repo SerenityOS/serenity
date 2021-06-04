@@ -85,13 +85,15 @@ UNMAP_AFTER_INIT RefPtr<NetworkAdapter> NetworkingManagement::determine_network_
 
 bool NetworkingManagement::initialize()
 {
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
-        // Note: PCI class 2 is the class of Network devices
-        if (PCI::get_class(address) != 0x02)
-            return;
-        if (auto adapter = determine_network_device(address); !adapter.is_null())
-            m_adapters.append(adapter.release_nonnull());
-    });
+    if (!kernel_command_line().is_physical_networking_disabled()) {
+        PCI::enumerate([&](const PCI::Address& address, PCI::ID) {
+            // Note: PCI class 2 is the class of Network devices
+            if (PCI::get_class(address) != 0x02)
+                return;
+            if (auto adapter = determine_network_device(address); !adapter.is_null())
+                m_adapters.append(adapter.release_nonnull());
+        });
+    }
     auto loopback = LoopbackAdapter::create();
     m_adapters.append(loopback);
     m_loopback_adapter = loopback;

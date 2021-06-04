@@ -154,6 +154,11 @@ UNMAP_AFTER_INIT HPETMode CommandLine::hpet_mode() const
     PANIC("Unknown HPETMode: {}", hpet_mode);
 }
 
+UNMAP_AFTER_INIT bool CommandLine::is_physical_networking_disabled() const
+{
+    return contains("disable_physical_networking"sv);
+}
+
 UNMAP_AFTER_INIT bool CommandLine::disable_ps2_controller() const
 {
     return contains("disable_ps2_controller"sv);
