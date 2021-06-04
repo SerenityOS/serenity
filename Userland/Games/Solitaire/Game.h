@@ -188,7 +188,7 @@ private:
     LastMove m_last_move;
     NonnullRefPtrVector<Card> m_focused_cards;
     NonnullRefPtrVector<Card> m_new_deck;
-    CardStack m_stacks[StackLocation::__Count];
+    NonnullRefPtrVector<CardStack> m_stacks;
     CardStack* m_focused_stack { nullptr };
     Gfx::IntPoint m_mouse_down_location;
 
