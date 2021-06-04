@@ -29,6 +29,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`flatbuffers`](flatbuffers/)          | Flatbuffers                                                | 1.12.0                   | https://github.com/google/flatbuffers                                          |
 | [`flex`](flex/)                        | flex                                                       | 2.6.4                    | https://github.com/westes/flex                                                 |
 | [`ffmpeg`](ffmpeg/)                    | ffmpeg                                                     | 4.4                      | https://ffmpeg.org                                                             |
+| [`freeciv`](freeciv/)                  | Freeciv                                                    | 3.0.0-beta2              | http://freeciv.org/                                                            |
 | [`freetype`](freetype/)                | FreeType                                                   | 2.10.4                   | https://www.freetype.org/                                                      |
 | [`frotz`](frotz/)                      | Frotz                                                      | 2.53                     | https://gitlab.com/DavidGriffith/frotz                                         |
 | [`gcc`](gcc/)                          | GNU Compiler Collection                                    | 11.1.0                   | https://gcc.gnu.org/                                                           |
