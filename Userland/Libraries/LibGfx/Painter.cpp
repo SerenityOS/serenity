@@ -247,6 +247,11 @@ void Painter::fill_rect_with_gradient(const IntRect& a_rect, Color gradient_star
     return fill_rect_with_gradient(Orientation::Horizontal, a_rect, gradient_start, gradient_end);
 }
 
+void Painter::fill_rect_with_rounded_corners(const IntRect& a_rect, Color color, int radius)
+{
+    return fill_rect_with_rounded_corners(a_rect, color, radius, radius, radius, radius);
+}
+
 void Painter::fill_rect_with_rounded_corners(const IntRect& a_rect, Color color, int top_left_radius, int top_right_radius, int bottom_right_radius, int bottom_left_radius)
 {
     // Fasttrack for rects without any border radii
