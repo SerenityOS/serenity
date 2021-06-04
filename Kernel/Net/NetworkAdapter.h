@@ -89,15 +89,16 @@ public:
     constexpr size_t layer3_payload_offset() const { return sizeof(EthernetFrameHeader); }
     constexpr size_t ipv4_payload_offset() const { return layer3_payload_offset() + sizeof(IPv4Packet); }
 
-    virtual void send_raw(ReadonlyBytes) = 0;
-
     Function<void()> on_receive;
+
+    void send_packet(ReadonlyBytes);
 
 protected:
     NetworkAdapter();
     void set_interface_name(const PCI::Address&);
     void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
     void did_receive(ReadonlyBytes);
+    virtual void send_raw(ReadonlyBytes) = 0;
 
     void set_loopback_name();
 

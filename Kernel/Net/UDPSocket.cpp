@@ -94,7 +94,7 @@ KResultOr<size_t> UDPSocket::protocol_send(const UserOrKernelBuffer& data, size_
 
     routing_decision.adapter->fill_in_ipv4_header(*packet, local_address(), routing_decision.next_hop,
         peer_address(), IPv4Protocol::UDP, udp_buffer_size, ttl());
-    routing_decision.adapter->send_raw({ packet->buffer.data(), packet->buffer.size() });
+    routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
     return data_length;
 }
 

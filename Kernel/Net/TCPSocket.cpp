@@ -240,7 +240,7 @@ KResult TCPSocket::send_tcp_packet(u16 flags, const UserOrKernelBuffer* payload,
 
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
-    routing_decision.adapter->send_raw({ packet->buffer.data(), packet->buffer.size() });
+    routing_decision.adapter->send_packet({ packet->buffer.data(), packet->buffer.size() });
 
     m_packets_out++;
     m_bytes_out += buffer_size;
@@ -572,7 +572,7 @@ void TCPSocket::retransmit_packets()
         routing_decision.adapter->fill_in_ipv4_header(*packet.buffer,
             local_address(), routing_decision.next_hop, peer_address(),
             IPv4Protocol::TCP, packet.buffer->buffer.size() - ipv4_payload_offset, ttl());
-        routing_decision.adapter->send_raw({ packet.buffer->buffer.data(), packet.buffer->buffer.size() });
+        routing_decision.adapter->send_packet({ packet.buffer->buffer.data(), packet.buffer->buffer.size() });
         m_packets_out++;
         m_bytes_out += packet.buffer->buffer.size();
     }

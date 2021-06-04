@@ -61,6 +61,12 @@ NetworkAdapter::~NetworkAdapter()
     all_adapters().resource().remove(this);
 }
 
+void NetworkAdapter::send_packet(ReadonlyBytes packet)
+{
+    m_packets_out++;
+    send_raw(packet);
+}
+
 void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet)
 {
     size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
@@ -69,10 +75,9 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
-    m_packets_out++;
     m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
-    send_raw({ (const u8*)eth, size_in_bytes });
+    send_packet({ (const u8*)eth, size_in_bytes });
 }
 
 void NetworkAdapter::fill_in_ipv4_header(PacketWithTimestamp& packet, IPv4Address const& source_ipv4, MACAddress const& destination_mac, IPv4Address const& destination_ipv4, IPv4Protocol protocol, size_t payload_size, u8 ttl)
