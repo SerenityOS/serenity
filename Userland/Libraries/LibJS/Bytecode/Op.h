@@ -174,6 +174,25 @@ private:
     FlyString m_identifier;
 };
 
+class PutById final : public Instruction {
+public:
+    PutById(Register base, FlyString property, Register src)
+        : m_base(base)
+        , m_property(move(property))
+        , m_src(src)
+    {
+    }
+
+    virtual ~PutById() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_base;
+    FlyString m_property;
+    Register m_src;
+};
+
 class Jump final : public Instruction {
 public:
     explicit Jump(Label target)

@@ -56,6 +56,12 @@ void SetVariable::execute(Bytecode::Interpreter& interpreter) const
     interpreter.vm().set_variable(m_identifier, interpreter.reg(m_src), interpreter.global_object());
 }
 
+void PutById::execute(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
+        object->put(m_property, interpreter.reg(m_src));
+}
+
 void Jump::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.jump(m_target);
@@ -120,6 +126,11 @@ String GetVariable::to_string() const
 String SetVariable::to_string() const
 {
     return String::formatted("SetVariable identifier:{}, src:{}", m_identifier, m_src);
+}
+
+String PutById::to_string() const
+{
+    return String::formatted("PutById base:{}, property:{}, src:{}", m_base, m_property, m_src);
 }
 
 String Jump::to_string() const
