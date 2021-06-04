@@ -205,6 +205,7 @@ private:
     template<typename Callable>
     void init_with_callable(Callable&& callable)
     {
+        VERIFY(m_call_nesting_level == 0);
         using WrapperType = CallableWrapper<Callable>;
         if constexpr (sizeof(WrapperType) > inline_capacity) {
             *bit_cast<CallableWrapperBase**>(&m_storage) = new WrapperType(move(callable));
