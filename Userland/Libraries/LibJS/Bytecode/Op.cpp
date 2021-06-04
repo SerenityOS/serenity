@@ -31,6 +31,11 @@ void LessThan::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = less_than(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
+void AbstractInequals::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(!abstract_eq(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = js_string(interpreter.vm(), m_string);
@@ -77,6 +82,11 @@ String Sub::to_string() const
 String LessThan::to_string() const
 {
     return String::formatted("LessThan dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String AbstractInequals::to_string() const
+{
+    return String::formatted("AbstractInequals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String NewString::to_string() const

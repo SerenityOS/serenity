@@ -51,6 +51,9 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::LessThan:
         generator.emit<Bytecode::Op::LessThan>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::AbstractInequals:
+        generator.emit<Bytecode::Op::AbstractInequals>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     default:
         TODO();
     }
