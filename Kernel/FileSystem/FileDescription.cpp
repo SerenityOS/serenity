@@ -136,7 +136,9 @@ KResultOr<off_t> FileDescription::seek(off_t offset, int whence)
     case SEEK_END:
         if (!metadata().is_valid())
             return EIO;
-        new_offset = metadata().size;
+        if (Checked<off_t>::addition_would_overflow(metadata().size, offset))
+            return EOVERFLOW;
+        new_offset = metadata().size + offset;
         break;
     default:
         return EINVAL;
