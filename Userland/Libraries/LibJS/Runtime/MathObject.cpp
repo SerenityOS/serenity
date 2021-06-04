@@ -153,38 +153,42 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
-    if (!vm.argument_count())
-        return js_negative_infinity();
-
-    auto max = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        if ((max.is_negative_zero() && cur.is_positive_zero()) || cur.as_double() > max.as_double())
-            max = cur;
+        coerced.append(number);
     }
-    return max;
+
+    auto highest = js_negative_infinity();
+    for (auto& number : coerced) {
+        if (number.is_nan())
+            return js_nan();
+        if ((number.is_positive_zero() && highest.is_negative_zero()) || number.as_double() > highest.as_double())
+            highest = number;
+    }
+    return highest;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
-    if (!vm.argument_count())
-        return js_infinity();
-
-    auto min = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        if ((min.is_positive_zero() && cur.is_negative_zero()) || cur.as_double() < min.as_double())
-            min = cur;
+        coerced.append(number);
     }
-    return min;
+
+    auto lowest = js_infinity();
+    for (auto& number : coerced) {
+        if (number.is_nan())
+            return js_nan();
+        if ((number.is_negative_zero() && lowest.is_positive_zero()) || number.as_double() < lowest.as_double())
+            lowest = number;
+    }
+    return lowest;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
