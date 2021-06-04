@@ -90,4 +90,16 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
     TODO();
 }
 
+Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto test_label = generator.make_label();
+    auto test_result_reg = m_test->generate_bytecode(generator);
+    VERIFY(test_result_reg.has_value());
+    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
+    auto body_result_reg = m_body->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::Jump>(test_label);
+    test_jump.set_target(generator.make_label());
+    return body_result_reg;
+}
+
 }

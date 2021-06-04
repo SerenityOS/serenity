@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
@@ -25,10 +26,13 @@ public:
 
     Value& reg(Register const& r) { return m_registers[r.index()]; }
 
+    void jump(Label const& label) { m_pending_jump = label.address(); }
+
 private:
     VM& m_vm;
     GlobalObject& m_global_object;
     Vector<Value> m_registers;
+    Optional<size_t> m_pending_jump;
 };
 
 }
