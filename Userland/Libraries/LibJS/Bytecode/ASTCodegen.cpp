@@ -141,4 +141,18 @@ Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Gener
     return reg;
 }
 
+Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto object_reg = object().generate_bytecode(generator);
+
+    if (is_computed()) {
+        TODO();
+    } else {
+        VERIFY(is<Identifier>(property()));
+        auto dst_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::GetById>(dst_reg, *object_reg, static_cast<Identifier const&>(property()).string());
+        return dst_reg;
+    }
+}
+
 }

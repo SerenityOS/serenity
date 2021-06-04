@@ -1119,6 +1119,7 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Reference to_reference(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     bool is_computed() const { return m_computed; }
     const Expression& object() const { return *m_object; }
