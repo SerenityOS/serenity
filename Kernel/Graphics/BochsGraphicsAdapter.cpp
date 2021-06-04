@@ -56,6 +56,11 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     m_framebuffer_console = Graphics::FramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
+
+    // Note: If we use VirtualBox graphics adapter (which is based on Bochs one), we need to use IO ports
+    auto id = PCI::get_id(pci_address);
+    if (id.vendor_id == 0x80ee && id.device_id == 0xbeef)
+        m_io_required = true;
     set_safe_resolution();
 }
 
@@ -78,6 +83,32 @@ void BochsGraphicsAdapter::set_safe_resolution()
     VERIFY(m_framebuffer_console);
     auto result = try_to_set_resolution(0, 1024, 768);
     VERIFY(result);
+}
+
+static void set_register_with_io(u16 index, u16 data)
+{
+    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+    IO::out16(VBE_DISPI_IOPORT_DATA, data);
+}
+
+static u16 get_register_with_io(u16 index)
+{
+    IO::out16(VBE_DISPI_IOPORT_INDEX, index);
+    return IO::in16(VBE_DISPI_IOPORT_DATA);
+}
+
+void BochsGraphicsAdapter::set_resolution_registers_via_io(size_t width, size_t height)
+{
+    dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution registers set to - {}x{}", width, height);
+
+    set_register_with_io(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
+    set_register_with_io(VBE_DISPI_INDEX_XRES, (u16)width);
+    set_register_with_io(VBE_DISPI_INDEX_YRES, (u16)height);
+    set_register_with_io(VBE_DISPI_INDEX_VIRT_WIDTH, (u16)width);
+    set_register_with_io(VBE_DISPI_INDEX_VIRT_HEIGHT, (u16)height * 2);
+    set_register_with_io(VBE_DISPI_INDEX_BPP, 32);
+    set_register_with_io(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
+    set_register_with_io(VBE_DISPI_INDEX_BANK, 0);
 }
 
 void BochsGraphicsAdapter::set_resolution_registers(size_t width, size_t height)
@@ -105,13 +136,29 @@ bool BochsGraphicsAdapter::try_to_set_resolution(size_t output_port_index, size_
     if (Checked<size_t>::multiplication_would_overflow(width, height, sizeof(u32)))
         return false;
 
-    set_resolution_registers(width, height);
+    if (m_io_required)
+        set_resolution_registers_via_io(width, height);
+    else
+        set_resolution_registers(width, height);
     dbgln_if(BXVGA_DEBUG, "BochsGraphicsAdapter resolution test - {}x{}", width, height);
-    if (!validate_setup_resolution(width, height))
-        return false;
+    if (m_io_required) {
+        if (!validate_setup_resolution_with_io(width, height))
+            return false;
+    } else {
+        if (!validate_setup_resolution(width, height))
+            return false;
+    }
 
     dbgln("BochsGraphicsAdapter: resolution set to {}x{}", width, height);
     m_framebuffer_console->set_resolution(width, height, width * sizeof(u32));
+    return true;
+}
+
+bool BochsGraphicsAdapter::validate_setup_resolution_with_io(size_t width, size_t height)
+{
+    if ((u16)width != get_register_with_io(VBE_DISPI_INDEX_XRES) || (u16)height != get_register_with_io(VBE_DISPI_INDEX_YRES)) {
+        return false;
+    }
     return true;
 }
 

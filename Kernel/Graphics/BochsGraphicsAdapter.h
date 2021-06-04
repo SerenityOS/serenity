@@ -50,6 +50,8 @@ private:
     bool validate_setup_resolution(size_t width, size_t height);
     u32 find_framebuffer_address();
     void set_resolution_registers(size_t width, size_t height);
+    void set_resolution_registers_via_io(size_t width, size_t height);
+    bool validate_setup_resolution_with_io(size_t width, size_t height);
     void set_y_offset(size_t);
 
     PhysicalAddress m_mmio_registers;
@@ -57,6 +59,7 @@ private:
     RefPtr<Graphics::FramebufferConsole> m_framebuffer_console;
     SpinLock<u8> m_console_mode_switch_lock;
     bool m_console_enabled { false };
+    bool m_io_required { false };
 };
 
 }
