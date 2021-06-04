@@ -25,6 +25,17 @@ CardStack::CardStack(const Gfx::IntPoint& position, Type type)
     calculate_bounding_box();
 }
 
+CardStack::CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<CardStack> associated_stack)
+    : m_associated_stack(move(associated_stack))
+    , m_position(position)
+    , m_type(type)
+    , m_rules(rules_for_type(type))
+    , m_base(m_position, { Card::width, Card::height })
+{
+    VERIFY(type != Invalid);
+    calculate_bounding_box();
+}
+
 void CardStack::clear()
 {
     m_stack.clear();
@@ -33,17 +44,25 @@ void CardStack::clear()
 
 void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
 {
+    auto draw_background_if_empty = [&]() {
+        if (m_associated_stack && !m_associated_stack->is_empty())
+            return false;
+        if (!is_empty() && !(m_stack.size() == 1 && peek().is_moving()))
+            return false;
+        painter.fill_rect_with_rounded_corners(m_base, background_color.darkened(0.5), Card::card_radius);
+        painter.fill_rect_with_rounded_corners(m_base.shrunken(2, 2), background_color, Card::card_radius - 1);
+        return true;
+    };
+
     switch (m_type) {
     case Stock:
-        if (is_empty()) {
+        if (draw_background_if_empty()) {
             painter.fill_rect(m_base.shrunken(Card::width / 4, Card::height / 4), background_color.lightened(1.5));
             painter.fill_rect(m_base.shrunken(Card::width / 2, Card::height / 2), background_color);
-            painter.draw_rect(m_base, background_color.darkened(0.5));
         }
         break;
     case Foundation:
-        if (is_empty() || (m_stack.size() == 1 && peek().is_moving())) {
-            painter.draw_rect(m_base, background_color.darkened(0.5));
+        if (draw_background_if_empty()) {
             for (int y = 0; y < (m_base.height() - 4) / 8; ++y) {
                 for (int x = 0; x < (m_base.width() - 4) / 5; ++x) {
                     painter.draw_rect({ 4 + m_base.x() + x * 5, 4 + m_base.y() + y * 8, 1, 1 }, background_color.darkened(0.5));
@@ -51,14 +70,11 @@ void CardStack::draw(GUI::Painter& painter, const Gfx::Color& background_color)
             }
         }
         break;
-    case Waste:
-        break;
     case Play:
-        if (is_empty() || (m_stack.size() == 1 && peek().is_moving()))
-            painter.draw_rect(m_base, background_color.darkened(0.5));
-        break;
     case Normal:
-        painter.draw_rect(m_base, background_color.darkened(0.5));
+        draw_background_if_empty();
+        break;
+    case Waste:
         break;
     default:
         VERIFY_NOT_REACHED();

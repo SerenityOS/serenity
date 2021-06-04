@@ -81,9 +81,9 @@ Card::Card(Type type, uint8_t value)
         float aspect_ratio = image->width() / static_cast<float>(image->height());
         auto target_size = Gfx::IntSize(static_cast<int>(aspect_ratio * (height - 5)), height - 5);
 
-        bg_painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, 5, 5, 5, 5);
+        bg_painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, card_radius);
         auto inner_paint_rect = paint_rect.shrunken(2, 2);
-        bg_painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, 4, 4, 4, 4);
+        bg_painter.fill_rect_with_rounded_corners(inner_paint_rect, Color::White, card_radius - 1);
 
         bg_painter.draw_scaled_bitmap(
             { { (width - target_size.width()) / 2, (height - target_size.height()) / 2 }, target_size },
@@ -96,9 +96,9 @@ Card::Card(Type type, uint8_t value)
     auto& font = Gfx::FontDatabase::default_font().bold_variant();
 
     auto label = labels[value];
-    painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, 5, 5, 5, 5);
+    painter.fill_rect_with_rounded_corners(paint_rect, Color::Black, card_radius);
     paint_rect.shrink(2, 2);
-    painter.fill_rect_with_rounded_corners(paint_rect, Color::White, 4, 4, 4, 4);
+    painter.fill_rect_with_rounded_corners(paint_rect, Color::White, card_radius - 1);
 
     paint_rect.set_height(paint_rect.height() / 2);
     paint_rect.shrink(10, 6);

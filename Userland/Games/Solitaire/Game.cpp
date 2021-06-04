@@ -21,20 +21,20 @@ Game::Game()
 {
     srand(time(nullptr));
 
-    m_stacks[Stock] = CardStack({ 10, 10 }, CardStack::Type::Stock);
-    m_stacks[Waste] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste);
-    m_stacks[Play] = CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play);
-    m_stacks[Foundation4] = CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation3] = CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation2] = CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation);
-    m_stacks[Foundation1] = CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation);
-    m_stacks[Pile1] = CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile2] = CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile3] = CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile4] = CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile5] = CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile6] = CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal);
-    m_stacks[Pile7] = CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal);
+    m_stacks.append(adopt_ref(*new CardStack({ 10, 10 }, CardStack::Type::Stock)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Waste)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 }, CardStack::Type::Play, m_stacks.ptr_at(Waste))));
+    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 4 * Card::width - 40, 10 }, CardStack::Type::Foundation)));
+    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 3 * Card::width - 30, 10 }, CardStack::Type::Foundation)));
+    m_stacks.append(adopt_ref(*new CardStack({ Game::width - 2 * Card::width - 20, 10 }, CardStack::Type::Foundation)));
+    m_stacks.append(adopt_ref(*new CardStack({ Game::width - Card::width - 10, 10 }, CardStack::Type::Foundation)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + Card::width + 10, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + 2 * Card::width + 20, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + 3 * Card::width + 30, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + 4 * Card::width + 40, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + 5 * Card::width + 50, 10 + Card::height + 10 }, CardStack::Type::Normal)));
+    m_stacks.append(adopt_ref(*new CardStack({ 10 + 6 * Card::width + 60, 10 + Card::height + 10 }, CardStack::Type::Normal)));
 }
 
 Game::~Game()
