@@ -18,10 +18,12 @@ public:
     Register allocate_register();
 
     template<typename OpType, typename... Args>
-    void emit(Args&&... args)
+    OpType& emit(Args&&... args)
     {
         auto instruction = make<OpType>(forward<Args>(args)...);
+        auto* ptr = instruction.ptr();
         append(move(instruction));
+        return *ptr;
     }
 
 private:
