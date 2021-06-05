@@ -14,6 +14,11 @@
 
 namespace SQL {
 
+namespace Limits {
+// https://www.sqlite.org/limits.html
+constexpr size_t maximum_expression_tree_depth = 1000;
+}
+
 class Parser {
     struct Position {
         size_t line { 0 };
@@ -48,6 +53,7 @@ private:
         Lexer m_lexer;
         Token m_token;
         Vector<Error> m_errors;
+        size_t m_current_expression_depth { 0 };
     };
 
     NonnullRefPtr<Statement> parse_statement();
