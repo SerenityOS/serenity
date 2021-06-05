@@ -90,22 +90,17 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
     constexpr size_t num_chars = 256;
     return buffer.read_buffered<num_chars>(size, [&](u8 const* data, size_t buffer_bytes) {
         u8 modified_data[num_chars * 2];
-        size_t extra_chars = 0;
+        size_t modified_data_size = 0;
         for (size_t i = 0; i < buffer_bytes; ++i) {
-            auto ch = data[i];
-            if (m_termios.c_oflag & OPOST) {
-                if (ch == '\n' && (m_termios.c_oflag & ONLCR)) {
-                    modified_data[i + extra_chars] = '\r';
-                    extra_chars++;
-                }
-            }
-            modified_data[i + extra_chars] = ch;
+            process_output(data[i], [this, &modified_data, &modified_data_size](u8 out_ch) {
+                modified_data[modified_data_size++] = out_ch;
+            });
         }
-        ssize_t bytes_written = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), buffer_bytes + extra_chars);
+        ssize_t bytes_written = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), modified_data_size);
         VERIFY(bytes_written != 0);
         if (bytes_written < 0 || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
             return bytes_written;
-        if ((size_t)bytes_written == buffer_bytes + extra_chars)
+        if ((size_t)bytes_written == modified_data_size)
             return (ssize_t)buffer_bytes;
 
         // Degenerate case where we converted some newlines and encountered a partial write
@@ -125,6 +120,23 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
         }
         return (ssize_t)pos_data;
     });
+}
+
+void TTY::echo_with_processing(u8 ch)
+{
+    process_output(ch, [this](u8 out_ch) { echo(out_ch); });
+}
+
+template<typename Functor>
+void TTY::process_output(u8 ch, Functor put_char)
+{
+    if (m_termios.c_oflag & OPOST) {
+        if (ch == '\n' && (m_termios.c_oflag & ONLCR))
+            put_char('\r');
+        put_char(ch);
+    } else {
+        put_char(ch);
+    }
 }
 
 bool TTY::can_read(const FileDescription&, size_t) const
@@ -239,7 +251,8 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
         if (ch == '\n') {
             if (m_termios.c_lflag & ECHO || m_termios.c_lflag & ECHONL)
-                echo('\n');
+                echo_with_processing('\n');
+
             set_special_bit();
             m_input_buffer.enqueue('\n');
             m_available_lines++;
@@ -254,7 +267,7 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
     m_input_buffer.enqueue(ch);
     if (m_termios.c_lflag & ECHO)
-        echo(ch);
+        echo_with_processing(ch);
 }
 
 bool TTY::can_do_backspace() const
@@ -271,6 +284,7 @@ void TTY::do_backspace()
 {
     if (can_do_backspace()) {
         m_input_buffer.dequeue_end();
+        // We deliberately don't process the output here.
         echo(8);
         echo(' ');
         echo(8);
@@ -318,6 +332,7 @@ void TTY::kill_line()
 
 void TTY::erase_character()
 {
+    // We deliberately don't process the output here.
     echo(m_termios.c_cc[VERASE]);
     echo(' ');
     echo(m_termios.c_cc[VERASE]);
