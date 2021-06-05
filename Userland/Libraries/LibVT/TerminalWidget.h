@@ -119,7 +119,7 @@ private:
     virtual void set_window_title(const StringView&) override;
     virtual void set_window_progress(int value, int max) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
-    virtual void terminal_history_changed() override;
+    virtual void terminal_history_changed(int delta) override;
     virtual void emit(const u8*, size_t) override;
     virtual void set_cursor_style(CursorStyle) override;
 
