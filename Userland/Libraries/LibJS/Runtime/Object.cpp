@@ -637,6 +637,8 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
         dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
+        if (throw_exceptions && vm().in_strict_mode())
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescWriteNonWritable, property_name.to_display_string());
         return false;
     }
 
