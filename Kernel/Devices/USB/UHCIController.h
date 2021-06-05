@@ -28,6 +28,8 @@ public:
     static UHCIController& the();
     virtual ~UHCIController() override;
 
+    virtual const char* purpose() const override { return "UHCI"; }
+
     void reset();
     void stop();
     void start();

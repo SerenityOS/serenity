@@ -25,6 +25,8 @@ public:
     VirtIOConsole(PCI::Address);
     virtual ~VirtIOConsole() override;
 
+    virtual const char* purpose() const override { return class_name(); }
+
 private:
     constexpr static size_t RINGBUFFER_SIZE = 2 * PAGE_SIZE;
     virtual const char* class_name() const override { return m_class_name.characters(); }
