@@ -947,13 +947,16 @@ int TerminalWidget::last_selection_column_on_row(int row) const
     return row == normalized_selection_end.row() || m_rectangle_selection ? normalized_selection_end.column() : m_terminal.columns() - 1;
 }
 
-void TerminalWidget::terminal_history_changed()
+void TerminalWidget::terminal_history_changed(int delta)
 {
     bool was_max = m_scrollbar->value() == m_scrollbar->max();
     m_scrollbar->set_max(m_terminal.history_size());
     if (was_max)
         m_scrollbar->set_value(m_scrollbar->max());
     m_scrollbar->update();
+    // If the history buffer wrapped around, the selection needs to be offset accordingly.
+    if (m_selection.is_valid() && delta < 0)
+        m_selection.offset_row(delta);
 }
 
 void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)

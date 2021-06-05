@@ -42,6 +42,12 @@ public:
         m_end = end;
     }
 
+    void offset_row(int delta)
+    {
+        m_start = Position(m_start.row() + delta, m_start.column());
+        m_end = Position(m_end.row() + delta, m_end.column());
+    }
+
     bool operator==(const Range& other) const
     {
         return m_start == other.m_start && m_end == other.m_end;
