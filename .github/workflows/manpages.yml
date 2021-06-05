@@ -60,7 +60,7 @@ jobs:
       - name: Copy pre-made files
         run: |
           cp -R Meta/Websites/man.serenityos.org/* output/
-      - name: Deploy to github pages
+      - name: Deploy to GitHub pages
         uses: JamesIves/github-pages-deploy-action@4.1.1
         with:
           git-config-name: BuggieBot
