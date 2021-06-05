@@ -170,7 +170,7 @@ bool IPv4Socket::can_read(const FileDescription&, size_t) const
 
 bool IPv4Socket::can_write(const FileDescription&, size_t) const
 {
-    return is_connected();
+    return true;
 }
 
 PortAllocationResult IPv4Socket::allocate_local_port_if_needed()
@@ -205,6 +205,9 @@ KResultOr<size_t> IPv4Socket::sendto(FileDescription&, const UserOrKernelBuffer&
         m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
         m_peer_port = ntohs(ia.sin_port);
     }
+
+    if (!is_connected() && m_peer_address.is_zero())
+        return EPIPE;
 
     auto routing_decision = route_to(m_peer_address, m_local_address, bound_interface());
     if (routing_decision.is_zero())
