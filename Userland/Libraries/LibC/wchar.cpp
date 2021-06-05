@@ -154,10 +154,18 @@ long long wcstoll(const wchar_t*, wchar_t**, int)
     TODO();
 }
 
-wint_t btowc(int)
+wint_t btowc(int c)
 {
-    dbgln("FIXME: Implement btowc()");
-    TODO();
+    if (c == EOF) {
+        return WEOF;
+    }
+
+    // Multi-byte sequences in UTF-8 have their highest bit set
+    if (c & (1 << 7)) {
+        return WEOF;
+    }
+
+    return c;
 }
 
 size_t mbrtowc(wchar_t*, const char*, size_t, mbstate_t*)
