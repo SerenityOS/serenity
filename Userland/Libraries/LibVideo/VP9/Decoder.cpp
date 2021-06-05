@@ -38,6 +38,16 @@ bool Decoder::parse_frame(const ByteBuffer& frame_data)
     m_probability_tables->load_probs(m_frame_context_idx);
     m_probability_tables->load_probs2(m_frame_context_idx);
     m_syntax_element_counter->clear_counts();
+
+    if (!m_bit_stream->init_bool(m_header_size_in_bytes))
+        return false;
+    dbgln("Reading compressed header");
+    if (!compressed_header())
+        return false;
+    dbgln("Finished reading compressed header");
+    if (!m_bit_stream->exit_bool())
+        return false;
+    dbgln("Finished reading frame!");
     return true;
 }
 
@@ -400,6 +410,306 @@ bool Decoder::trailing_bits()
 {
     while (m_bit_stream->get_position() & 7u)
         RESERVED_ZERO;
+    return true;
+}
+
+bool Decoder::compressed_header()
+{
+    read_tx_mode();
+    if (m_tx_mode == TXModeSelect) {
+        tx_mode_probs();
+    }
+    read_coef_probs();
+    read_skip_prob();
+    if (!m_frame_is_intra) {
+        read_inter_mode_probs();
+        if (m_interpolation_filter == Switchable) {
+            read_interp_filter_probs();
+        }
+        read_is_inter_probs();
+        frame_reference_mode();
+        frame_reference_mode_probs();
+        read_y_mode_probs();
+        read_partition_probs();
+        mv_probs();
+    }
+    return true;
+}
+
+bool Decoder::read_tx_mode()
+{
+    if (m_lossless) {
+        m_tx_mode = Only4x4;
+    } else {
+        auto tx_mode = m_bit_stream->read_literal(2);
+        if (tx_mode == Allow32x32) {
+            tx_mode += m_bit_stream->read_literal(1);
+        }
+        m_tx_mode = static_cast<TXMode>(tx_mode);
+    }
+    return true;
+}
+
+bool Decoder::tx_mode_probs()
+{
+    auto& tx_probs = m_probability_tables->tx_probs();
+    for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
+        for (auto j = 0; j < TX_SIZES - 3; j++) {
+            tx_probs[TX8x8][i][j] = diff_update_prob(tx_probs[TX8x8][i][j]);
+        }
+    }
+    for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
+        for (auto j = 0; j < TX_SIZES - 2; j++) {
+            tx_probs[TX16x16][i][j] = diff_update_prob(tx_probs[TX16x16][i][j]);
+        }
+    }
+    for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
+        for (auto j = 0; j < TX_SIZES - 1; j++) {
+            tx_probs[TX32x32][i][j] = diff_update_prob(tx_probs[TX32x32][i][j]);
+        }
+    }
+    return true;
+}
+
+u8 Decoder::diff_update_prob(u8 prob)
+{
+    if (m_bit_stream->read_bool(252)) {
+        auto delta_prob = decode_term_subexp();
+        prob = inv_remap_prob(delta_prob, prob);
+    }
+    return prob;
+}
+
+u8 Decoder::decode_term_subexp()
+{
+    if (m_bit_stream->read_literal(1) == 0)
+        return m_bit_stream->read_literal(4);
+    if (m_bit_stream->read_literal(1) == 0)
+        return m_bit_stream->read_literal(4) + 16;
+    if (m_bit_stream->read_literal(1) == 0)
+        return m_bit_stream->read_literal(4) + 32;
+
+    auto v = m_bit_stream->read_literal(7);
+    if (v < 65)
+        return v + 64;
+    return (v << 1u) - 1 + m_bit_stream->read_literal(1);
+}
+
+u8 Decoder::inv_remap_prob(u8 delta_prob, u8 prob)
+{
+    u8 m = prob - 1;
+    auto v = inv_map_table[delta_prob];
+    if ((m << 1u) <= 255)
+        return 1 + inv_recenter_nonneg(v, m);
+    return 255 - inv_recenter_nonneg(v, 254 - m);
+}
+
+u8 Decoder::inv_recenter_nonneg(u8 v, u8 m)
+{
+    if (v > 2 * m)
+        return v;
+    if (v & 1u)
+        return m - ((v + 1u) >> 1u);
+    return m + (v >> 1u);
+}
+
+bool Decoder::read_coef_probs()
+{
+    auto max_tx_size = tx_mode_to_biggest_tx_size[m_tx_mode];
+    for (auto tx_size = TX4x4; tx_size <= max_tx_size; tx_size = static_cast<TXSize>(static_cast<int>(tx_size) + 1)) {
+        auto update_probs = m_bit_stream->read_literal(1);
+        if (update_probs == 1) {
+            for (auto i = 0; i < 2; i++) {
+                for (auto j = 0; j < 2; j++) {
+                    for (auto k = 0; k < 6; k++) {
+                        auto max_l = (k == 0) ? 3 : 6;
+                        for (auto l = 0; l < max_l; l++) {
+                            for (auto m = 0; m < 3; m++) {
+                                auto& coef_probs = m_probability_tables->coef_probs()[tx_size];
+                                coef_probs[i][j][k][l][m] = diff_update_prob(coef_probs[i][j][k][l][m]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+bool Decoder::read_skip_prob()
+{
+    for (auto i = 0; i < SKIP_CONTEXTS; i++)
+        m_probability_tables->skip_prob()[i] = diff_update_prob(m_probability_tables->skip_prob()[i]);
+    return true;
+}
+
+bool Decoder::read_inter_mode_probs()
+{
+    for (auto i = 0; i < INTER_MODE_CONTEXTS; i++) {
+        for (auto j = 0; j < INTER_MODES - 1; j++)
+            m_probability_tables->inter_mode_probs()[i][j] = diff_update_prob(m_probability_tables->inter_mode_probs()[i][j]);
+    }
+    return true;
+}
+
+bool Decoder::read_interp_filter_probs()
+{
+    for (auto i = 0; i < INTERP_FILTER_CONTEXTS; i++) {
+        for (auto j = 0; j < SWITCHABLE_FILTERS - 1; j++)
+            m_probability_tables->interp_filter_probs()[i][j] = diff_update_prob(m_probability_tables->interp_filter_probs()[i][j]);
+    }
+    return true;
+}
+
+bool Decoder::read_is_inter_probs()
+{
+    for (auto i = 0; i < IS_INTER_CONTEXTS; i++)
+        m_probability_tables->is_inter_prob()[i] = diff_update_prob(m_probability_tables->is_inter_prob()[i]);
+    return true;
+}
+
+bool Decoder::frame_reference_mode()
+{
+    auto compound_reference_allowed = false;
+    for (size_t i = 2; i <= REFS_PER_FRAME; i++) {
+        if (m_ref_frame_sign_bias[i] != m_ref_frame_sign_bias[1])
+            compound_reference_allowed = true;
+    }
+    if (compound_reference_allowed) {
+        auto non_single_reference = m_bit_stream->read_literal(1);
+        if (non_single_reference == 0) {
+            m_reference_mode = SingleReference;
+        } else {
+            auto reference_select = m_bit_stream->read_literal(1);
+            if (reference_select == 0)
+                m_reference_mode = CompoundReference;
+            else
+                m_reference_mode = ReferenceModeSelect;
+            setup_compound_reference_mode();
+        }
+    } else {
+        m_reference_mode = SingleReference;
+    }
+    return true;
+}
+
+bool Decoder::frame_reference_mode_probs()
+{
+    if (m_reference_mode == ReferenceModeSelect) {
+        for (auto i = 0; i < COMP_MODE_CONTEXTS; i++) {
+            auto& comp_mode_prob = m_probability_tables->comp_mode_prob();
+            comp_mode_prob[i] = diff_update_prob(comp_mode_prob[i]);
+        }
+    }
+    if (m_reference_mode != CompoundReference) {
+        for (auto i = 0; i < REF_CONTEXTS; i++) {
+            auto& single_ref_prob = m_probability_tables->single_ref_prob();
+            single_ref_prob[i][0] = diff_update_prob(single_ref_prob[i][0]);
+            single_ref_prob[i][1] = diff_update_prob(single_ref_prob[i][1]);
+        }
+    }
+    if (m_reference_mode != SingleReference) {
+        for (auto i = 0; i < REF_CONTEXTS; i++) {
+            auto& comp_ref_prob = m_probability_tables->comp_ref_prob();
+            comp_ref_prob[i] = diff_update_prob(comp_ref_prob[i]);
+        }
+    }
+    return true;
+}
+
+bool Decoder::read_y_mode_probs()
+{
+    for (auto i = 0; i < BLOCK_SIZE_GROUPS; i++) {
+        for (auto j = 0; j < INTRA_MODES - 1; j++) {
+            auto& y_mode_probs = m_probability_tables->y_mode_probs();
+            y_mode_probs[i][j] = diff_update_prob(y_mode_probs[i][j]);
+        }
+    }
+    return true;
+}
+
+bool Decoder::read_partition_probs()
+{
+    for (auto i = 0; i < PARTITION_CONTEXTS; i++) {
+        for (auto j = 0; j < PARTITION_TYPES - 1; j++) {
+            auto& partition_probs = m_probability_tables->partition_probs();
+            partition_probs[i][j] = diff_update_prob(partition_probs[i][j]);
+        }
+    }
+    return true;
+}
+
+bool Decoder::mv_probs()
+{
+    for (auto j = 0; j < MV_JOINTS - 1; j++) {
+        auto& mv_joint_probs = m_probability_tables->mv_joint_probs();
+        mv_joint_probs[j] = update_mv_prob(mv_joint_probs[j]);
+    }
+
+    for (auto i = 0; i < 2; i++) {
+        auto& mv_sign_prob = m_probability_tables->mv_sign_prob();
+        mv_sign_prob[i] = update_mv_prob(mv_sign_prob[i]);
+        for (auto j = 0; j < MV_CLASSES - 1; j++) {
+            auto& mv_class_probs = m_probability_tables->mv_class_probs();
+            mv_class_probs[i][j] = update_mv_prob(mv_class_probs[i][j]);
+        }
+        auto& mv_class0_bit_prob = m_probability_tables->mv_class0_bit_prob();
+        mv_class0_bit_prob[i] = update_mv_prob(mv_class0_bit_prob[i]);
+        for (auto j = 0; j < MV_OFFSET_BITS; j++) {
+            auto& mv_bits_prob = m_probability_tables->mv_bits_prob();
+            mv_bits_prob[i][j] = update_mv_prob(mv_bits_prob[i][j]);
+        }
+    }
+
+    for (auto i = 0; i < 2; i++) {
+        for (auto j = 0; j < CLASS0_SIZE; j++) {
+            for (auto k = 0; k < MV_FR_SIZE - 1; k++) {
+                auto& mv_class0_fr_probs = m_probability_tables->mv_class0_fr_probs();
+                mv_class0_fr_probs[i][j][k] = update_mv_prob(mv_class0_fr_probs[i][j][k]);
+            }
+        }
+        for (auto k = 0; k < MV_FR_SIZE - 1; k++) {
+            auto& mv_fr_probs = m_probability_tables->mv_fr_probs();
+            mv_fr_probs[i][k] = update_mv_prob(mv_fr_probs[i][k]);
+        }
+    }
+
+    if (m_allow_high_precision_mv) {
+        for (auto i = 0; i < 2; i++) {
+            auto& mv_class0_hp_prob = m_probability_tables->mv_class0_hp_prob();
+            auto& mv_hp_prob = m_probability_tables->mv_hp_prob();
+            mv_class0_hp_prob[i] = update_mv_prob(mv_class0_hp_prob[i]);
+            mv_hp_prob[i] = update_mv_prob(mv_hp_prob[i]);
+        }
+    }
+
+    return true;
+}
+
+u8 Decoder::update_mv_prob(u8 prob)
+{
+    if (m_bit_stream->read_bool(252)) {
+        return (m_bit_stream->read_literal(7) << 1u) | 1u;
+    }
+    return prob;
+}
+
+bool Decoder::setup_compound_reference_mode()
+{
+    if (m_ref_frame_sign_bias[LastFrame] == m_ref_frame_sign_bias[GoldenFrame]) {
+        m_comp_fixed_ref = AltRefFrame;
+        m_comp_var_ref[0] = LastFrame;
+        m_comp_var_ref[1] = GoldenFrame;
+    } else if (m_ref_frame_sign_bias[LastFrame] == m_ref_frame_sign_bias[AltRefFrame]) {
+        m_comp_fixed_ref = GoldenFrame;
+        m_comp_var_ref[0] = LastFrame;
+        m_comp_var_ref[1] = AltRefFrame;
+    } else {
+        m_comp_fixed_ref = LastFrame;
+        m_comp_var_ref[0] = GoldenFrame;
+        m_comp_var_ref[1] = AltRefFrame;
+    }
     return true;
 }
 
