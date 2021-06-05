@@ -74,12 +74,18 @@ public:
 
     void set_cursor(unsigned row, unsigned column, bool skip_debug = false);
 
+    void clear_including_history()
+    {
+        clear_history();
+        clear();
+    }
+
 #ifndef KERNEL
     void clear();
-    void clear_including_history();
+    void clear_history();
 #else
     virtual void clear() = 0;
-    virtual void clear_including_history() = 0;
+    virtual void clear_history() = 0;
 #endif
 
 #ifndef KERNEL

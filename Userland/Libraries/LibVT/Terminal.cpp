@@ -32,17 +32,15 @@ void Terminal::clear()
 {
     dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
-        active_buffer()[i].clear(m_current_state.attribute);
+        active_buffer()[i].clear(Attribute());
     set_cursor(0, 0);
 }
 
-void Terminal::clear_including_history()
+void Terminal::clear_history()
 {
+    dbgln_if(TERMINAL_DEBUG, "Clear history");
     m_history.clear();
     m_history_start = 0;
-
-    clear();
-
     m_client.terminal_history_changed();
 }
 #endif
@@ -626,8 +624,7 @@ void Terminal::ED(Parameters params)
         clear();
         break;
     case 3:
-        // FIXME: <esc>[3J should also clear the scrollback buffer.
-        clear();
+        clear_history();
         break;
     default:
         unimplemented_csi_sequence(params, {}, 'J');
