@@ -506,22 +506,6 @@ public:
     Vector<StringView> m_entries;
 };
 
-class MemberDeclaration : public Declaration {
-public:
-    virtual ~MemberDeclaration() override = default;
-    virtual const char* class_name() const override { return "MemberDeclaration"; }
-    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
-    virtual bool is_member() const override { return true; }
-
-    MemberDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
-        : Declaration(parent, start, end, filename)
-    {
-    }
-
-    RefPtr<Type> m_type;
-    RefPtr<Expression> m_initial_value;
-};
-
 class StructOrClassDeclaration : public Declaration {
 public:
     virtual ~StructOrClassDeclaration() override = default;
@@ -544,7 +528,7 @@ public:
     }
 
     StructOrClassDeclaration::Type m_type;
-    NonnullRefPtrVector<MemberDeclaration> m_members;
+    NonnullRefPtrVector<Declaration> m_members;
 };
 
 enum class UnaryOp {

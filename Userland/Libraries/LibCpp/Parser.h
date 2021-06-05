@@ -47,12 +47,12 @@ private:
         Function,
         Variable,
         Enum,
-        Struct,
-        Namespace,
         Class,
+        Namespace,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
+    Optional<Parser::DeclarationType> match_class_member();
     bool match_function_declaration();
     bool match_comment();
     bool match_preprocessor();
@@ -62,7 +62,6 @@ private:
     bool match_secondary_expression();
     bool match_enum_declaration();
     bool match_class_declaration();
-    bool match_struct_declaration();
     bool match_literal();
     bool match_unary_expression();
     bool match_boolean_literal();
@@ -93,8 +92,7 @@ private:
     NonnullRefPtr<StringLiteral> parse_string_literal(ASTNode& parent);
     NonnullRefPtr<ReturnStatement> parse_return_statement(ASTNode& parent);
     NonnullRefPtr<EnumDeclaration> parse_enum_declaration(ASTNode& parent);
-    NonnullRefPtr<StructOrClassDeclaration> parse_struct_or_class_declaration(ASTNode& parent, StructOrClassDeclaration::Type);
-    NonnullRefPtr<MemberDeclaration> parse_member_declaration(ASTNode& parent);
+    NonnullRefPtr<StructOrClassDeclaration> parse_class_declaration(ASTNode& parent);
     NonnullRefPtr<Expression> parse_literal(ASTNode& parent);
     NonnullRefPtr<UnaryExpression> parse_unary_expression(ASTNode& parent);
     NonnullRefPtr<BooleanLiteral> parse_boolean_literal(ASTNode& parent);
@@ -114,6 +112,7 @@ private:
     NonnullRefPtr<SizeofExpression> parse_sizeof_expression(ASTNode& parent);
     NonnullRefPtr<BracedInitList> parse_braced_init_list(ASTNode& parent);
     NonnullRefPtr<CStyleCastExpression> parse_c_style_cast_expression(ASTNode& parent);
+    NonnullRefPtrVector<Declaration> parse_class_members(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
