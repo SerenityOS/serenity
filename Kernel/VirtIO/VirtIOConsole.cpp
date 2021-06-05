@@ -51,6 +51,7 @@ VirtIOConsole::VirtIOConsole(PCI::Address address)
 
 VirtIOConsole::~VirtIOConsole()
 {
+    VERIFY_NOT_REACHED();
 }
 
 bool VirtIOConsole::handle_device_config_change()
