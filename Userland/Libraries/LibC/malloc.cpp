@@ -24,8 +24,6 @@
 
 #define RECYCLE_BIG_ALLOCATIONS
 
-#define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
-
 static Threading::Lock& malloc_lock()
 {
     static u32 lock_storage[sizeof(Threading::Lock) / sizeof(u32)];
