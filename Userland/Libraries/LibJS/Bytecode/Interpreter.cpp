@@ -25,6 +25,17 @@ void Interpreter::run(Bytecode::Block const& block)
 {
     dbgln("Bytecode::Interpreter will run block {:p}", &block);
 
+    CallFrame global_call_frame;
+    global_call_frame.this_value = &global_object();
+    static FlyString global_execution_context_name = "(*BC* global execution context)";
+    global_call_frame.function_name = global_execution_context_name;
+    global_call_frame.scope = &global_object();
+    VERIFY(!vm().exception());
+    // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
+    // global_call_frame.is_strict_mode = ???;
+    vm().push_call_frame(global_call_frame, global_object());
+    VERIFY(!vm().exception());
+
     m_registers.resize(block.register_count());
 
     size_t pc = 0;
