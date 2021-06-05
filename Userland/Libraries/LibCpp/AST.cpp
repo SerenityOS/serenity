@@ -308,17 +308,6 @@ NonnullRefPtrVector<Declaration> StructOrClassDeclaration::declarations() const
     return declarations;
 }
 
-void MemberDeclaration::dump(FILE* output, size_t indent) const
-{
-    ASTNode::dump(output, indent);
-    m_type->dump(output, indent + 1);
-    print_indent(output, indent + 1);
-    outln(output, "{}", m_name);
-    if (m_initial_value) {
-        m_initial_value->dump(output, indent + 2);
-    }
-}
-
 void UnaryExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
