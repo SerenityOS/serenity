@@ -22,6 +22,13 @@ public:
         No
     };
 
+    enum class FailureBehavior {
+        PrintUsageAndExit,
+        PrintUsage,
+        Exit,
+        Ignore,
+    };
+
     struct Option {
         bool requires_argument { true };
         const char* help_string { nullptr };
@@ -46,7 +53,7 @@ public:
         Function<bool(const char*)> accept_value;
     };
 
-    bool parse(int argc, char** argv, bool exit_on_failure = true);
+    bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
     // *Without* trailing newline!
     void set_general_help(const char* help_string) { m_general_help = help_string; };
     void print_usage(FILE*, const char* argv0);

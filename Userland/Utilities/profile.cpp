@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         outln("Event type can be one of: sample, context_switch, page_fault, kmalloc and kfree.");
     };
 
-    if (!args_parser.parse(argc, argv, false)) {
+    if (!args_parser.parse(argc, argv, Core::ArgsParser::FailureBehavior::PrintUsage)) {
         print_types();
         exit(1);
     }

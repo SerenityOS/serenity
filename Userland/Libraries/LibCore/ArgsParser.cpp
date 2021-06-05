@@ -30,11 +30,12 @@ ArgsParser::ArgsParser()
     add_option(m_show_help, "Display this message", "help", 0);
 }
 
-bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
+bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_behavior)
 {
-    auto print_usage_and_exit = [this, argv, exit_on_failure] {
-        print_usage(stderr, argv[0]);
-        if (exit_on_failure)
+    auto fail = [this, argv, failure_behavior] {
+        if (failure_behavior == FailureBehavior::PrintUsage || failure_behavior == FailureBehavior::PrintUsageAndExit)
+            print_usage(stderr, argv[0]);
+        if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(1);
     };
 
@@ -76,7 +77,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
         } else if (c == '?') {
             // There was an error, and getopt() has already
             // printed its error message.
-            print_usage_and_exit();
+            fail();
             return false;
         }
 
@@ -98,7 +99,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
         const char* arg = found_option->requires_argument ? optarg : nullptr;
         if (!found_option->accept_value(arg)) {
             warnln("\033[31mInvalid value for option \033[1m{}\033[22m, dude\033[0m", found_option->name_for_display());
-            print_usage_and_exit();
+            fail();
             return false;
         }
     }
@@ -116,7 +117,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
     }
 
     if (total_values_required > values_left) {
-        print_usage_and_exit();
+        fail();
         return false;
     }
     int extra_values_to_distribute = values_left - total_values_required;
@@ -132,7 +133,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
 
     if (extra_values_to_distribute > 0) {
         // We still have too many values :(
-        print_usage_and_exit();
+        fail();
         return false;
     }
 
@@ -142,7 +143,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
             const char* value = argv[optind++];
             if (!arg.accept_value(value)) {
                 warnln("Invalid value for argument {}", arg.name);
-                print_usage_and_exit();
+                fail();
                 return false;
             }
         }
@@ -152,7 +153,7 @@ bool ArgsParser::parse(int argc, char** argv, bool exit_on_failure)
     // Now let's show help if requested.
     if (m_show_help) {
         print_usage(stdout, argv[0]);
-        if (exit_on_failure)
+        if (failure_behavior == FailureBehavior::Exit || failure_behavior == FailureBehavior::PrintUsageAndExit)
             exit(0);
         return false;
     }
