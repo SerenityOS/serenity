@@ -99,6 +99,7 @@ namespace JS {
     P(entries)                               \
     P(enumerable)                            \
     P(error)                                 \
+    P(escape)                                \
     P(eval)                                  \
     P(every)                                 \
     P(exec)                                  \
@@ -263,6 +264,7 @@ namespace JS {
     P(trimStart)                             \
     P(trunc)                                 \
     P(undefined)                             \
+    P(unescape)                              \
     P(unicode)                               \
     P(unshift)                               \
     P(value)                                 \
