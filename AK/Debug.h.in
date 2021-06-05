@@ -258,6 +258,14 @@
 #cmakedefine01 MARKDOWN_DEBUG
 #endif
 
+#ifndef MATROSKA_DEBUG
+#cmakedefine01 MATROSKA_DEBUG
+#endif
+
+#ifndef MATROSKA_TRACE_DEBUG
+#cmakedefine01 MATROSKA_TRACE_DEBUG
+#endif
+
 #ifndef MEMORY_DEBUG
 #cmakedefine01 MEMORY_DEBUG
 #endif
