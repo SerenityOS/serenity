@@ -165,7 +165,7 @@ void siglongjmp(jmp_buf env, int val)
 int sigsuspend(const sigset_t*)
 {
     dbgln("FIXME: Implement sigsuspend()");
-    TODO();
+    return -1;
 }
 
 static const char* signal_names[] = {
