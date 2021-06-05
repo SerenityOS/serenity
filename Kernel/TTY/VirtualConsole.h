@@ -35,7 +35,7 @@ public:
 private:
     virtual void invalidate_cursor() override;
     virtual void clear() override;
-    virtual void clear_including_history() override;
+    virtual void clear_history() override;
 
     virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) override;
     virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) override;
