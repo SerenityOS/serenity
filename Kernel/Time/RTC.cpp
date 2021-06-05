@@ -27,10 +27,11 @@ RealTimeClock::RealTimeClock(Function<void(const RegisterState&)> callback)
     CMOS::write(0x8B, CMOS::read(0xB) | 0x40);
     reset_to_default_ticks_per_second();
 }
-void RealTimeClock::handle_irq(const RegisterState& regs)
+bool RealTimeClock::handle_irq(const RegisterState& regs)
 {
-    HardwareTimer::handle_irq(regs);
+    auto result = HardwareTimer::handle_irq(regs);
     CMOS::read(0x8C);
+    return result;
 }
 
 size_t RealTimeClock::ticks_per_second() const

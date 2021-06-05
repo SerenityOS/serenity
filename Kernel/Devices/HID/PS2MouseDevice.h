@@ -35,7 +35,7 @@ public:
 protected:
     explicit PS2MouseDevice(const I8042Controller&);
     // ^IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     struct RawPacket {
         union {

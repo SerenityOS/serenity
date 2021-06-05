@@ -205,8 +205,10 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
-void SB16::handle_irq(const RegisterState&)
+bool SB16::handle_irq(const RegisterState&)
 {
+    // FIXME: Check if the interrupt was actually for us or not... (shared IRQs)
+
     // Stop sound output ready for the next block.
     dsp_write(0xd5);
 
@@ -215,6 +217,7 @@ void SB16::handle_irq(const RegisterState&)
         IO::in8(DSP_R_ACK); // 16 bit interrupt
 
     m_irq_queue.wake_all();
+    return true;
 }
 
 void SB16::wait_for_irq()

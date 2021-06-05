@@ -39,7 +39,7 @@ private:
     void complete_current_request(AsyncDeviceRequest::RequestResult);
 
     //^ IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     //* IDEChannel
     virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;

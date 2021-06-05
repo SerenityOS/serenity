@@ -36,7 +36,7 @@ protected:
 private:
     void build_namespace();
     // ^IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     OwnPtr<Region> m_acpi_namespace;
 };

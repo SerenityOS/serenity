@@ -70,7 +70,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual void handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(const RegisterState&) override;
 
     virtual bool eoi() override;
 
@@ -101,7 +101,7 @@ public:
         handler->register_interrupt_handler();
     }
 
-    virtual void handle_interrupt(const RegisterState&) override;
+    virtual bool handle_interrupt(const RegisterState&) override;
 
     virtual bool eoi() override;
 
@@ -555,9 +555,10 @@ u32 APIC::get_timer_divisor()
     return 16;
 }
 
-void APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICIPIInterruptHandler::handle_interrupt(const RegisterState&)
 {
     dbgln_if(APIC_SMP_DEBUG, "APIC IPI on CPU #{}", Processor::id());
+    return true;
 }
 
 bool APICIPIInterruptHandler::eoi()
@@ -567,9 +568,10 @@ bool APICIPIInterruptHandler::eoi()
     return true;
 }
 
-void APICErrInterruptHandler::handle_interrupt(const RegisterState&)
+bool APICErrInterruptHandler::handle_interrupt(const RegisterState&)
 {
     dbgln("APIC: SMP error on CPU #{}", Processor::id());
+    return true;
 }
 
 bool APICErrInterruptHandler::eoi()

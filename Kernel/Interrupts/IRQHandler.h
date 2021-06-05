@@ -19,8 +19,8 @@ class IRQHandler : public GenericInterruptHandler {
 public:
     virtual ~IRQHandler();
 
-    virtual void handle_interrupt(const RegisterState& regs) { handle_irq(regs); }
-    virtual void handle_irq(const RegisterState&) = 0;
+    virtual bool handle_interrupt(const RegisterState& regs) { return handle_irq(regs); }
+    virtual bool handle_irq(const RegisterState&) = 0;
 
     void enable_irq();
     void disable_irq();

@@ -92,10 +92,14 @@ protected:
     {
     }
 
-    virtual void handle_irq(const RegisterState& regs) override
+    virtual bool handle_irq(const RegisterState& regs) override
     {
-        if (m_callback)
+        // Note: if we have an IRQ on this line, it's going to be the timer always
+        if (m_callback) {
             m_callback(regs);
+            return true;
+        }
+        return false;
     }
 
     u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };
@@ -142,10 +146,14 @@ protected:
     {
     }
 
-    virtual void handle_interrupt(const RegisterState& regs) override
+    virtual bool handle_interrupt(const RegisterState& regs) override
     {
-        if (m_callback)
+        // Note: if we have an IRQ on this line, it's going to be the timer always
+        if (m_callback) {
             m_callback(regs);
+            return true;
+        }
+        return false;
     }
 
     u64 m_frequency { OPTIMAL_TICKS_PER_SECOND_RATE };

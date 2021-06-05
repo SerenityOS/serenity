@@ -129,25 +129,26 @@ UNMAP_AFTER_INIT void I8042Controller::detect_devices()
         m_mouse_device->enable_interrupts();
 }
 
-void I8042Controller::irq_process_input_buffer(HIDDevice::Type)
+bool I8042Controller::irq_process_input_buffer(HIDDevice::Type)
 {
     VERIFY(Processor::current().in_irq());
 
     u8 status = IO::in8(I8042_STATUS);
     if (!(status & I8042_BUFFER_FULL))
-        return;
+        return false;
     HIDDevice::Type data_for_device = ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) ? HIDDevice::Type::Mouse : HIDDevice::Type::Keyboard;
     u8 byte = IO::in8(I8042_BUFFER);
     if (data_for_device == HIDDevice::Type::Mouse) {
         VERIFY(m_mouse_device);
         static_cast<PS2MouseDevice&>(*m_mouse_device).irq_handle_byte_read(byte);
-        return;
+        return true;
     }
     if (data_for_device == HIDDevice::Type::Keyboard) {
         VERIFY(m_keyboard_device);
         static_cast<PS2KeyboardDevice&>(*m_keyboard_device).irq_handle_byte_read(byte);
-        return;
+        return true;
     }
+    return false;
 }
 
 void I8042Controller::do_drain()

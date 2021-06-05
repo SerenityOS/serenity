@@ -222,7 +222,7 @@ private:
     void reset_device();
 
     u8 isr_status();
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     NonnullOwnPtrVector<VirtIOQueue> m_queues;
     NonnullOwnPtrVector<Configuration> m_configs;

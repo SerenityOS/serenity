@@ -230,11 +230,14 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq(const RegisterState&)
+bool E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
     m_entropy_source.add_random_event(status);
+
+    if (status == 0)
+        return false;
 
     if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
@@ -253,6 +256,7 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
     m_wait_queue.wake_all();
 
     out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
+    return true;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()

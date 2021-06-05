@@ -89,7 +89,7 @@ public:
     void prepare_for_output();
     void prepare_for_input(HIDDevice::Type);
 
-    void irq_process_input_buffer(HIDDevice::Type);
+    bool irq_process_input_buffer(HIDDevice::Type);
 
     RefPtr<MouseDevice> mouse() const;
     RefPtr<KeyboardDevice> keyboard() const;
