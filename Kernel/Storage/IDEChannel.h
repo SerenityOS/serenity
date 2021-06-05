@@ -122,7 +122,7 @@ protected:
     IDEChannel(const IDEController&, IOAddressGroup, ChannelType type);
     IDEChannel(const IDEController&, u8 irq, IOAddressGroup, ChannelType type);
     //^ IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;
 
