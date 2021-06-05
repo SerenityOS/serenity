@@ -775,20 +775,28 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
 
-    if (!m_use_alternate_screen_buffer && max_history_size() != 0)
+    bool should_move_to_scrollback = !m_use_alternate_screen_buffer && max_history_size() != 0;
+    if (should_move_to_scrollback) {
         for (size_t i = 0; i < count; ++i)
             add_line_to_history(move(active_buffer().ptr_at(region_top + i)));
-
-    if (count == region_size) {
-        for (u16 row = region_top; row <= region_bottom; ++row)
-            active_buffer()[row].clear(Attribute());
-        return;
     }
 
-    active_buffer().remove(region_top, count);
-    for (size_t i = 0; i < count; ++i)
-        active_buffer().insert(region_bottom - count + i + 1, make<Line>(m_columns));
-    for (u16 row = region_top; row <= region_bottom; ++row)
+    // Move lines into their new place.
+    for (u16 row = region_top; row + count <= region_bottom; ++row)
+        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row + count));
+    // Clear 'new' lines at the bottom.
+    if (should_move_to_scrollback) {
+        // Since we moved the previous lines into history, we can't just clear them.
+        for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
+            active_buffer().ptr_at(row) = make<Line>(columns());
+    } else {
+        // The new lines haven't been moved and we don't want to leak memory.
+        for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
+            active_buffer()[row].clear(Attribute());
+    }
+    // Set dirty flag on swapped lines.
+    // The other lines have implicitly been set dirty by being cleared.
+    for (u16 row = region_top; row <= region_bottom - count; ++row)
         active_buffer()[row].set_dirty(true);
     if (!m_use_alternate_screen_buffer && max_history_size() != 0)
         m_client.terminal_history_changed();
@@ -806,16 +814,15 @@ void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
 
-    if (count == region_size) {
-        for (u16 row = region_top; row <= region_bottom; ++row)
-            active_buffer()[row].set_dirty(true);
-        return;
-    }
-
-    active_buffer().remove(region_bottom - count + 1, count);
-    for (size_t i = 0; i < count; ++i)
-        active_buffer().insert(region_top, make<Line>(m_columns));
-    for (u16 row = region_top; row <= region_bottom; ++row)
+    // Move lines into their new place.
+    for (int row = region_bottom; row >= static_cast<int>(region_top + count); --row)
+        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row - count));
+    // Clear the 'new' lines at the top.
+    for (u16 row = region_top; row < region_top + count; ++row)
+        active_buffer()[row].clear(Attribute());
+    // Set dirty flag on swapped lines.
+    // The other lines have implicitly been set dirty by being cleared.
+    for (u16 row = region_top + count; row <= region_bottom; ++row)
         active_buffer()[row].set_dirty(true);
 }
 
