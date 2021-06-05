@@ -6,7 +6,52 @@
 
 #include <AK/Assertions.h>
 #include <AK/Format.h>
+#include <errno.h>
 #include <wchar.h>
+
+static void mbstate_reset(mbstate_t* state)
+{
+    *state = { 0 };
+}
+
+static unsigned int mbstate_stored_bytes(mbstate_t* state)
+{
+    for (unsigned int i = 0; i < sizeof(state->bytes); i++) {
+        if (!state->bytes[i]) {
+            return i;
+        }
+    }
+
+    return sizeof(state->bytes);
+}
+
+static unsigned int mbstate_expected_bytes(mbstate_t* state)
+{
+    unsigned char first = state->bytes[0];
+
+    // Single-byte sequences have their first bit unset
+    if ((first & 0b10000000) == 0) {
+        return 1;
+    }
+
+    // Two-byte sequences start with 0b110xxxxx
+    if ((first & 0b11100000) == 0b11000000) {
+        return 2;
+    }
+
+    // Three-byte sequences start with 0b1110xxxx
+    if ((first & 0b11110000) == 0b11100000) {
+        return 3;
+    }
+
+    // Four-byte sequences start with 0b11110xxx
+    if ((first & 0b11111000) == 0b11110000) {
+        return 4;
+    }
+
+    // Everything else is invalid
+    return 0;
+}
 
 extern "C" {
 
@@ -168,10 +213,96 @@ wint_t btowc(int c)
     return c;
 }
 
-size_t mbrtowc(wchar_t*, const char*, size_t, mbstate_t*)
+size_t mbrtowc(wchar_t* pwc, const char* s, size_t n, mbstate_t* state)
 {
-    dbgln("FIXME: Implement mbrtowc()");
-    TODO();
+    static mbstate_t _anonymous_state = { 0 };
+
+    if (state == nullptr) {
+        state = &_anonymous_state;
+    }
+
+    // If s is nullptr, check if the state contains a complete multibyte character
+    if (s == nullptr) {
+        if (mbstate_expected_bytes(state) == mbstate_stored_bytes(state)) {
+            mbstate_reset(state);
+            return 0;
+        } else {
+            mbstate_reset(state);
+            errno = EILSEQ;
+            return -1;
+        }
+    }
+
+    // Stop early if we can't read anything
+    if (n == 0) {
+        return 0;
+    }
+
+    size_t consumed_bytes = 0;
+    size_t stored_bytes = mbstate_stored_bytes(state);
+
+    // Fill the first byte if we haven't done that yet
+    if (state->bytes[0] == 0) {
+        state->bytes[0] = s[0];
+        consumed_bytes++;
+    }
+
+    size_t expected_bytes = mbstate_expected_bytes(state);
+
+    // Check if the first byte is invalid
+    if (expected_bytes == 0) {
+        mbstate_reset(state);
+        errno = EILSEQ;
+        return -1;
+    }
+
+    size_t needed_bytes = expected_bytes - stored_bytes;
+
+    while (consumed_bytes < needed_bytes) {
+        if (consumed_bytes == n) {
+            // No complete multibyte character
+            return -2;
+        }
+
+        unsigned char c = s[consumed_bytes];
+
+        // Continuation bytes have to start with 0b10xxxxxx
+        if ((c & 0b11000000) != 0b10000000) {
+            // Invalid multibyte character
+            mbstate_reset(state);
+            errno = EILSEQ;
+            return -1;
+        }
+
+        state->bytes[mbstate_stored_bytes(state)] = c;
+        consumed_bytes++;
+    }
+
+    wchar_t codepoint = state->bytes[0];
+
+    // Mask out the "length" bits if necessary
+    if (expected_bytes > 1) {
+        codepoint &= (1 << (7 - expected_bytes)) - 1;
+    }
+
+    for (unsigned int i = 1; i < expected_bytes; i++) {
+        // Each continuation byte contains 6 bits of data
+        codepoint = codepoint << 6;
+        codepoint |= state->bytes[i] & 0b111111;
+    }
+
+    if (pwc) {
+        *pwc = codepoint;
+    }
+
+    // We don't have a shift state that we need to keep, so just clear the entire state
+    mbstate_reset(state);
+
+    if (codepoint == 0) {
+        return 0;
+    }
+
+    return consumed_bytes;
 }
 
 size_t mbrlen(const char*, size_t, mbstate_t*)
@@ -198,9 +329,18 @@ int wctob(wint_t)
     TODO();
 }
 
-int mbsinit(const mbstate_t*)
+int mbsinit(const mbstate_t* state)
 {
-    dbgln("FIXME: Implement mbsinit()");
-    TODO();
+    if (!state) {
+        return 1;
+    }
+
+    for (unsigned char byte : state->bytes) {
+        if (byte) {
+            return 0;
+        }
+    }
+
+    return 1;
 }
 }
