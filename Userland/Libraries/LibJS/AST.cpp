@@ -824,15 +824,15 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
         switch (method.kind()) {
         case ClassMethod::Kind::Method:
-            target.define_property(StringOrSymbol::from_value(global_object, key), method_value);
+            target.define_property(key.to_property_key(global_object), method_value);
             break;
         case ClassMethod::Kind::Getter:
             update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
-            target.define_accessor(StringOrSymbol::from_value(global_object, key), &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(key.to_property_key(global_object), &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ClassMethod::Kind::Setter:
             update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
-            target.define_accessor(StringOrSymbol::from_value(global_object, key), nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(key.to_property_key(global_object), nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
             break;
         default:
             VERIFY_NOT_REACHED();

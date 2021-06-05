@@ -130,6 +130,7 @@ class ScopeNode;
 class ScopeObject;
 class Shape;
 class Statement;
+class StringOrSymbol;
 class Symbol;
 class Token;
 class VM;

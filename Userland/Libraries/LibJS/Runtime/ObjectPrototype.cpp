@@ -43,13 +43,13 @@ ObjectPrototype::~ObjectPrototype()
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
+    auto property_key = vm.argument(0).to_property_key(global_object);
+    if (vm.exception())
+        return {};
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto string_or_symbol = StringOrSymbol::from_value(global_object, vm.argument(0));
-    if (vm.exception())
-        return {};
-    return Value(this_object->has_own_property(string_or_symbol));
+    return Value(this_object->has_own_property(property_key));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
