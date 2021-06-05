@@ -20,6 +20,7 @@ Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) co
 
 Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.emit<Bytecode::Op::EnterScope>(*this);
     for (auto& child : children()) {
         [[maybe_unused]] auto reg = child.generate_bytecode(generator);
     }

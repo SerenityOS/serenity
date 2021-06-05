@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -89,6 +91,23 @@ void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_target.value());
 }
 
+void EnterScope::execute(Bytecode::Interpreter& interpreter) const
+{
+    auto& vm = interpreter.vm();
+    auto& global_object = interpreter.global_object();
+
+    for (auto& declaration : m_scope_node.functions())
+        vm.current_scope()->put_to_scope(declaration.name(), { js_undefined(), DeclarationKind::Var });
+
+    for (auto& declaration : m_scope_node.functions()) {
+        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), vm.current_scope(), declaration.is_strict_mode());
+        vm.set_variable(declaration.name(), function, global_object);
+    }
+
+    // FIXME: Process variable declarations.
+    // FIXME: Whatever else JS::Interpreter::enter_scope() does.
+}
+
 String Load::to_string() const
 {
     return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
@@ -161,6 +180,11 @@ String JumpIfTrue::to_string() const
     if (m_target.has_value())
         return String::formatted("JumpIfTrue result:{}, target:{}", m_result, m_target.value());
     return String::formatted("JumpIfTrue result:{}, target:<empty>", m_result);
+}
+
+String EnterScope::to_string() const
+{
+    return "EnterScope";
 }
 
 }
