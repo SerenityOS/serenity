@@ -18,15 +18,13 @@
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
-#include <inttypes.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 
 namespace WebServer {
 
-Client::Client(NonnullRefPtr<Core::TCPSocket> socket, const String& root, Core::Object* parent)
+Client::Client(NonnullRefPtr<Core::TCPSocket> socket, String const& root, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(socket)
     , m_root_path(root)
@@ -119,7 +117,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path));
 }
 
-void Client::send_response(InputStream& response, const HTTP::HttpRequest& request, const String& content_type)
+void Client::send_response(InputStream& response, HTTP::HttpRequest const& request, String const& content_type)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
@@ -145,7 +143,7 @@ void Client::send_response(InputStream& response, const HTTP::HttpRequest& reque
     } while (true);
 }
 
-void Client::send_redirect(StringView redirect_path, const HTTP::HttpRequest& request)
+void Client::send_redirect(StringView redirect_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 301 Moved Permanently\r\n");
@@ -181,7 +179,7 @@ static String file_image_data()
     return cache;
 }
 
-void Client::handle_directory_listing(const String& requested_path, const String& real_path, const HTTP::HttpRequest& request)
+void Client::handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
 
@@ -246,7 +244,7 @@ void Client::handle_directory_listing(const String& requested_path, const String
     send_response(stream, request, "text/html");
 }
 
-void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
+void Client::send_error_response(unsigned code, StringView const& message, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
     builder.appendff("HTTP/1.0 {} ", code);
@@ -261,7 +259,7 @@ void Client::send_error_response(unsigned code, const StringView& message, const
     log_response(code, request);
 }
 
-void Client::log_response(unsigned code, const HTTP::HttpRequest& request)
+void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
     printf("%s :: %03u :: %s %s\n",
         Core::DateTime::now().to_string().characters(),
