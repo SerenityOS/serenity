@@ -21,7 +21,10 @@ public:
     }
 
     int code() const { return m_code; }
-    const HashMap<String, String, CaseInsensitiveStringTraits>& headers() const { return m_headers; }
+    StringView reason_phrase() const { return reason_phrase_for_code(m_code); }
+    HashMap<String, String, CaseInsensitiveStringTraits> const& headers() const { return m_headers; }
+
+    static StringView reason_phrase_for_code(int code);
 
 private:
     HttpResponse(int code, HashMap<String, String, CaseInsensitiveStringTraits>&&);
