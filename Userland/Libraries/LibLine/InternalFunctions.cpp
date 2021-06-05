@@ -253,9 +253,16 @@ void Editor::enter_search()
             search_editor.m_refresh_needed = true;
         };
 
-        // Whenever the search editor gets a ^R, cycle between history entries.
+        // Whenever the search editor gets a ^R, backward cycle between history entries.
         m_search_editor->register_key_input_callback(ctrl('R'), [this](Editor& search_editor) {
             ++m_search_offset;
+            search_editor.m_refresh_needed = true;
+            return false; // Do not process this key event
+        });
+
+        // Whenever the search editor gets a ^S, forward cycle between history entries.
+        m_search_editor->register_key_input_callback(ctrl('S'), [this](Editor& search_editor) {
+            --m_search_offset;
             search_editor.m_refresh_needed = true;
             return false; // Do not process this key event
         });
