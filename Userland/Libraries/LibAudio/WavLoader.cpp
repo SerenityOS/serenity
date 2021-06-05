@@ -11,7 +11,7 @@
 #include <LibAudio/Buffer.h>
 #include <LibAudio/WavLoader.h>
 #include <LibCore/File.h>
-#include <LibCore/IODeviceStreamReader.h>
+#include <LibCore/FileStream.h>
 
 namespace Audio {
 
@@ -45,11 +45,6 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
         return;
 
     m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
-}
-
-bool WavLoaderPlugin::sniff()
-{
-    return valid;
 }
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
@@ -89,58 +84,40 @@ void WavLoaderPlugin::seek(const int position)
         m_stream->seek(byte_position);
 }
 
-void WavLoaderPlugin::reset()
-{
-    seek(0);
-}
-
 bool WavLoaderPlugin::parse_header()
 {
-    OwnPtr<Core::IODeviceStreamReader> file_stream;
-    bool ok = true;
-
+    OwnPtr<Core::InputFileStream> file_stream;
     if (m_file)
-        file_stream = make<Core::IODeviceStreamReader>(*m_file);
+        file_stream = make<Core::InputFileStream>(*m_file);
+
+    AK::InputStream* const stream =
+        (m_file ?
+            file_stream.ptr() :
+            dynamic_cast<AK::InputStream*>(m_stream.ptr()));
+
+    bool ok = true;
 
     auto read_u8 = [&]() -> u8 {
         u8 value;
-        if (m_file) {
-            *file_stream >> value;
-            if (file_stream->handle_read_failure())
-                ok = false;
-        } else {
-            *m_stream >> value;
-            if (m_stream->handle_any_error())
-                ok = false;
-        }
+        *stream >> value;
+        if (stream->handle_any_error())
+            ok = false;
         return value;
     };
 
     auto read_u16 = [&]() -> u16 {
         u16 value;
-        if (m_file) {
-            *file_stream >> value;
-            if (file_stream->handle_read_failure())
-                ok = false;
-        } else {
-            *m_stream >> value;
-            if (m_stream->handle_any_error())
-                ok = false;
-        }
+        *stream >> value;
+        if (stream->handle_any_error())
+            ok = false;
         return value;
     };
 
     auto read_u32 = [&]() -> u32 {
         u32 value;
-        if (m_file) {
-            *file_stream >> value;
-            if (file_stream->handle_read_failure())
-                ok = false;
-        } else {
-            *m_stream >> value;
-            if (m_stream->handle_any_error())
-                ok = false;
-        }
+        *stream >> value;
+        if (stream->handle_any_error())
+            ok = false;
         return value;
     };
 
