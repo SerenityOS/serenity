@@ -33,7 +33,7 @@ void ConsoleImpl::clear()
 {
     m_client.clear();
 }
-void ConsoleImpl::clear_including_history()
+void ConsoleImpl::clear_history()
 {
 }
 
