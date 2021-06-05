@@ -20,6 +20,7 @@
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
+#include <LibHTTP/HttpResponse.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -75,7 +76,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     }
 
     if (request.method() != HTTP::HttpRequest::Method::GET) {
-        send_error_response(403, "Forbidden!", request);
+        send_error_response(501, request);
         return;
     }
 
@@ -113,7 +114,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
 
     auto file = Core::File::construct(real_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        send_error_response(404, "Not found!", request);
+        send_error_response(404, request);
         return;
     }
 
@@ -267,15 +268,16 @@ void Client::handle_directory_listing(String const& requested_path, String const
     send_response(stream, request, "text/html");
 }
 
-void Client::send_error_response(unsigned code, StringView const& message, HTTP::HttpRequest const& request)
+void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request)
 {
+    auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
     StringBuilder builder;
     builder.appendff("HTTP/1.0 {} ", code);
-    builder.append(message);
+    builder.append(reason_phrase);
     builder.append("\r\n\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
     builder.appendff("{} ", code);
-    builder.append(message);
+    builder.append(reason_phrase);
     builder.append("</h1></body></html>");
     m_socket->write(builder.to_string());
 
