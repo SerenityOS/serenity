@@ -6,6 +6,9 @@
 
 #include <AK/Function.h>
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Block.h>
+#include <LibJS/Bytecode/Generator.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
@@ -110,45 +113,65 @@ Value ScriptFunction::execute_function_body()
 {
     auto& vm = this->vm();
 
-    OwnPtr<Interpreter> local_interpreter;
-    Interpreter* interpreter = vm.interpreter_if_exists();
+    Interpreter* ast_interpreter = nullptr;
+    auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
-    if (!interpreter) {
-        local_interpreter = Interpreter::create_with_existing_global_object(global_object());
-        interpreter = local_interpreter.ptr();
-    }
+    auto prepare_arguments = [&] {
+        auto& call_frame_args = vm.call_frame().arguments;
+        for (size_t i = 0; i < m_parameters.size(); ++i) {
+            auto& parameter = m_parameters[i];
+            parameter.binding.visit(
+                [&](const auto& param) {
+                    Value argument_value;
+                    if (parameter.is_rest) {
+                        auto* array = Array::create(global_object());
+                        for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
+                            array->indexed_properties().append(call_frame_args[rest_index]);
+                        argument_value = move(array);
+                    } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
+                        argument_value = call_frame_args[i];
+                    } else if (parameter.default_value) {
+                        // FIXME: Support default arguments in the bytecode world!
+                        if (!bytecode_interpreter)
+                            argument_value = parameter.default_value->execute(*ast_interpreter, global_object());
+                        if (vm.exception())
+                            return;
+                    } else {
+                        argument_value = js_undefined();
+                    }
 
-    VM::InterpreterExecutionScope scope(*interpreter);
+                    vm.assign(param, argument_value, global_object(), true, vm.current_scope());
+                });
 
-    auto& call_frame_args = vm.call_frame().arguments;
-    for (size_t i = 0; i < m_parameters.size(); ++i) {
-        auto& parameter = m_parameters[i];
-        parameter.binding.visit(
-            [&](const auto& param) {
-                Value argument_value;
-                if (parameter.is_rest) {
-                    auto* array = Array::create(global_object());
-                    for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
-                        array->indexed_properties().append(call_frame_args[rest_index]);
-                    argument_value = move(array);
-                } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
-                    argument_value = call_frame_args[i];
-                } else if (parameter.default_value) {
-                    argument_value = parameter.default_value->execute(*interpreter, global_object());
-                    if (vm.exception())
-                        return;
-                } else {
-                    argument_value = js_undefined();
-                }
+            if (vm.exception())
+                return;
+        }
+    };
 
-                vm.assign(param, argument_value, global_object(), true, vm.current_scope());
-            });
+    if (bytecode_interpreter) {
+        prepare_arguments();
+        auto block = Bytecode::Generator::generate(m_body);
+        VERIFY(block);
+        dbgln("Compiled Bytecode::Block for function '{}':", m_name);
+        block->dump();
+        return bytecode_interpreter->run(*block);
+    } else {
+        OwnPtr<Interpreter> local_interpreter;
+        ast_interpreter = vm.interpreter_if_exists();
 
+        if (!ast_interpreter) {
+            local_interpreter = Interpreter::create_with_existing_global_object(global_object());
+            ast_interpreter = local_interpreter.ptr();
+        }
+
+        VM::InterpreterExecutionScope scope(*ast_interpreter);
+
+        prepare_arguments();
         if (vm.exception())
             return {};
-    }
 
-    return interpreter->execute_statement(global_object(), m_body, ScopeType::Function);
+        return ast_interpreter->execute_statement(global_object(), m_body, ScopeType::Function);
+    }
 }
 
 Value ScriptFunction::call()
