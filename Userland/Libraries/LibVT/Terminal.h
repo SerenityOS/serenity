@@ -304,6 +304,12 @@ protected:
     // RI - Reverse Index (move up)
     void RI();
 
+    // DECBI - Back Index
+    void DECBI();
+
+    // DECFI - Forward Index
+    void DECFI();
+
     // DSR - Device Status Reports
     void DSR(Parameters);
 
