@@ -566,7 +566,8 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     auto int_val = floor(abs);
     if (signbit(value))
         int_val = -int_val;
-    auto int32bit = fmod(int_val, 4294967296.0);
+    auto remainder = fmod(int_val, 4294967296.0);
+    auto int32bit = remainder >= 0.0 ? remainder : remainder + 4294967296.0; // The notation “x modulo y” computes a value k of the same sign as y
     if (int32bit >= 2147483648.0)
         int32bit -= 4294967296.0;
     return static_cast<i32>(int32bit);
