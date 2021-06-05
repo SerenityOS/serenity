@@ -30,6 +30,7 @@ Terminal::Terminal(Kernel::VirtualConsole& client)
 #ifndef KERNEL
 void Terminal::clear()
 {
+    dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
         active_buffer()[i].clear(m_current_state.attribute);
     set_cursor(0, 0);
@@ -557,8 +558,10 @@ void Terminal::ECH(Parameters params)
     unsigned num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
-    // Clear from cursor to end of line.
-    for (unsigned i = cursor_column(); i < num; ++i) {
+    // Clear num characters from the right of the cursor.
+    auto clear_end = min<unsigned>(m_columns, cursor_column() + num - 1);
+    dbgln_if(TERMINAL_DEBUG, "Erase characters {}-{} on line {}", cursor_column(), clear_end, cursor_row());
+    for (unsigned i = cursor_column(); i <= clear_end; ++i) {
         put_character_at(cursor_row(), i, ' ');
     }
 }
@@ -570,19 +573,19 @@ void Terminal::EL(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        // Clear from cursor to end of line.
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} from cursor column ({}) to the end", cursor_row(), cursor_column());
         for (int i = cursor_column(); i < m_columns; ++i) {
             put_character_at(cursor_row(), i, ' ');
         }
         break;
     case 1:
-        // Clear from cursor to beginning of line.
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} from the start to cursor column ({})", cursor_row(), cursor_column());
         for (int i = 0; i <= cursor_column(); ++i) {
             put_character_at(cursor_row(), i, ' ');
         }
         break;
     case 2:
-        // Clear the complete line
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} completely", cursor_row());
         for (int i = 0; i < m_columns; ++i) {
             put_character_at(cursor_row(), i, ' ');
         }
@@ -600,7 +603,7 @@ void Terminal::ED(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        // Clear from cursor to end of screen.
+        dbgln_if(TERMINAL_DEBUG, "Clear from cursor ({},{}) to end of screen", cursor_row(), cursor_column());
         for (int i = cursor_column(); i < m_columns; ++i)
             put_character_at(cursor_row(), i, ' ');
         for (int row = cursor_row() + 1; row < m_rows; ++row) {
@@ -610,7 +613,7 @@ void Terminal::ED(Parameters params)
         }
         break;
     case 1:
-        // Clear from cursor to beginning of screen.
+        dbgln_if(TERMINAL_DEBUG, "Clear from beginning of screen to cursor ({},{})", cursor_row(), cursor_column());
         for (int i = cursor_column(); i >= 0; --i)
             put_character_at(cursor_row(), i, ' ');
         for (int row = cursor_row() - 1; row >= 0; --row) {
