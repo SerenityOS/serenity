@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,7 +34,10 @@ Client::Client(NonnullRefPtr<Core::TCPSocket> socket, String const& root, Core::
 
 void Client::die()
 {
-    remove_from_parent();
+    deferred_invoke([this](auto& object) {
+        NonnullRefPtr protector { object };
+        remove_from_parent();
+    });
 }
 
 void Client::start()
