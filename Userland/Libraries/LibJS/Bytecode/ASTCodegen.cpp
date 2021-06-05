@@ -177,4 +177,14 @@ Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generat
     return dst_reg;
 }
 
+Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Optional<Bytecode::Register> argument_reg;
+    if (m_argument)
+        argument_reg = m_argument->generate_bytecode(generator);
+
+    generator.emit<Bytecode::Op::Return>(argument_reg);
+    return argument_reg;
+}
+
 }

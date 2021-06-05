@@ -133,6 +133,12 @@ void EnterScope::execute(Bytecode::Interpreter& interpreter) const
     // FIXME: Whatever else JS::Interpreter::enter_scope() does.
 }
 
+void Return::execute(Bytecode::Interpreter& interpreter) const
+{
+    auto return_value = m_argument.has_value() ? interpreter.reg(m_argument.value()) : js_undefined();
+    interpreter.do_return(return_value);
+}
+
 String Load::to_string() const
 {
     return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
@@ -226,6 +232,13 @@ String Call::to_string() const
 String EnterScope::to_string() const
 {
     return "EnterScope";
+}
+
+String Return::to_string() const
+{
+    if (m_argument.has_value())
+        return String::formatted("Return {}", m_argument.value());
+    return "Return";
 }
 
 }

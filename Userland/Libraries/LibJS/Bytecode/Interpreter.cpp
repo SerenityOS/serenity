@@ -11,32 +11,46 @@
 
 namespace JS::Bytecode {
 
+static Interpreter* s_current;
+
+Interpreter* Interpreter::current()
+{
+    return s_current;
+}
+
 Interpreter::Interpreter(GlobalObject& global_object)
     : m_vm(global_object.vm())
     , m_global_object(global_object)
 {
+    VERIFY(!s_current);
+    s_current = this;
 }
 
 Interpreter::~Interpreter()
 {
+    VERIFY(s_current == this);
+    s_current = nullptr;
 }
 
-void Interpreter::run(Bytecode::Block const& block)
+Value Interpreter::run(Bytecode::Block const& block)
 {
     dbgln("Bytecode::Interpreter will run block {:p}", &block);
 
-    CallFrame global_call_frame;
-    global_call_frame.this_value = &global_object();
-    static FlyString global_execution_context_name = "(*BC* global execution context)";
-    global_call_frame.function_name = global_execution_context_name;
-    global_call_frame.scope = &global_object();
-    VERIFY(!vm().exception());
-    // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
-    // global_call_frame.is_strict_mode = ???;
-    vm().push_call_frame(global_call_frame, global_object());
-    VERIFY(!vm().exception());
+    if (vm().call_stack().is_empty()) {
+        CallFrame global_call_frame;
+        global_call_frame.this_value = &global_object();
+        static FlyString global_execution_context_name = "(*BC* global execution context)";
+        global_call_frame.function_name = global_execution_context_name;
+        global_call_frame.scope = &global_object();
+        VERIFY(!vm().exception());
+        // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
+        // global_call_frame.is_strict_mode = ???;
+        vm().push_call_frame(global_call_frame, global_object());
+        VERIFY(!vm().exception());
+    }
 
-    m_registers.resize(block.register_count());
+    m_register_windows.append(make<RegisterWindow>());
+    registers().resize(block.register_count());
 
     size_t pc = 0;
     while (pc < block.instructions().size()) {
@@ -46,18 +60,33 @@ void Interpreter::run(Bytecode::Block const& block)
             pc = m_pending_jump.release_value();
             continue;
         }
+        if (!m_return_value.is_empty())
+            break;
         ++pc;
     }
 
     dbgln("Bytecode::Interpreter did run block {:p}", &block);
-    for (size_t i = 0; i < m_registers.size(); ++i) {
+    for (size_t i = 0; i < registers().size(); ++i) {
         String value_string;
-        if (m_registers[i].is_empty())
+        if (registers()[i].is_empty())
             value_string = "(empty)";
         else
-            value_string = m_registers[i].to_string_without_side_effects();
+            value_string = registers()[i].to_string_without_side_effects();
         dbgln("[{:3}] {}", i, value_string);
     }
+
+    m_register_windows.take_last();
+
+    m_return_value = m_return_value.value_or(js_undefined());
+
+    // NOTE: The return value from a called function is put into $0 in the caller context.
+    if (!m_register_windows.is_empty())
+        m_register_windows.last()[0] = m_return_value;
+
+    if (vm().call_stack().size() == 1)
+        vm().pop_call_frame();
+
+    return m_return_value;
 }
 
 }

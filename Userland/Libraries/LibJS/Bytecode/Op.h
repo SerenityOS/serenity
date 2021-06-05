@@ -301,4 +301,19 @@ private:
     ScopeNode const& m_scope_node;
 };
 
+class Return final : public Instruction {
+public:
+    explicit Return(Optional<Register> argument)
+        : m_argument(move(argument))
+    {
+    }
+
+    virtual ~Return() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Optional<Register> m_argument;
+};
+
 }
