@@ -329,32 +329,30 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
 
         auto parts = split_on_whitespace(value.to_string());
         if (parts.size() == 1) {
-            // FIXME: Parse float value here.
-            // FIXME: Maybe add NumericStyleValue or sth for that.
-            //        Also extend parse_css_value.
-            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
             return;
         }
 
         if (parts.size() == 2) {
-            // FIXME: Parse float value from parts[0] here.
-            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
 
             auto second_value = parse_css_value(context, parts[1]);
             if (second_value->is_length() || (second_value->is_identifier() && second_value->to_identifier() == CSS::ValueID::Content)) {
                 style.set_property(CSS::PropertyID::FlexBasis, *second_value);
             } else {
-                // FIXME: Parse float value from parts[1] here.
-                style.set_property(CSS::PropertyID::FlexShrink, ""sv);
+                auto flex_shrink = parse_css_value(context, parts[1]);
+                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
             }
             return;
         }
 
         if (parts.size() == 3) {
-            // FIXME: Parse float value from parts[0] here.
-            style.set_property(CSS::PropertyID::FlexGrow, ""sv);
-            // FIXME: Parse float value from parts[1] here.
-            style.set_property(CSS::PropertyID::FlexShrink, ""sv);
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+            auto flex_shrink = parse_css_value(context, parts[1]);
+            style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
 
             auto third_value = parse_css_value(context, parts[2]);
             if (third_value->is_length() || (third_value->is_identifier() && third_value->to_identifier() == CSS::ValueID::Content))
