@@ -543,6 +543,16 @@ double Value::to_double(GlobalObject& global_object) const
     return number.as_double();
 }
 
+StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
+{
+    auto key = to_primitive(global_object, PreferredType::String);
+    if (global_object.vm().exception())
+        return {};
+    if (key.is_symbol())
+        return &key.as_symbol();
+    return to_string(global_object);
+}
+
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 {
     VERIFY(type() != Type::Int32);
@@ -1008,10 +1018,10 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string_or_symbol = StringOrSymbol::from_value(global_object, lhs);
+    auto lhs_property_key = lhs.to_property_key(global_object);
     if (global_object.vm().exception())
         return {};
-    return Value(rhs.as_object().has_property(lhs_string_or_symbol));
+    return Value(rhs.as_object().has_property(lhs_property_key));
 }
 
 Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
