@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Custom Properties</title>
+    <style>
+        :root {
+            --my-color: purple;
+        }
+
+        div {
+            margin: 20px;
+        }
+
+        .test {
+            background: var(--my-color);
+        }
+
+        .test-parent {
+            --my-color: pink;
+            border: 1px solid black;
+        }
+
+        .box {
+            width: 150px;
+            height: 150px;
+            border: 1px solid black;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>CSS Custom Properties</h1>
+    <pre>
+        :root {
+            --my-color: purple;
+        }
+
+        .test {
+            background: var(--my-color);
+        }
+
+        .test-parent {
+            --my-color: pink;
+        }
+
+    </pre>
+    <div class="box test">
+        <pre>
+            .test
+        </pre>
+        This should be purple
+    </div>
+
+    <div class="test-parent">
+        <pre>
+            .test-parent
+        </pre>
+        <div class="box test">
+            <pre>
+                .test
+            </pre>
+            This should be pink
+        </div>
+    </div>
+</body>
+
+</html>
