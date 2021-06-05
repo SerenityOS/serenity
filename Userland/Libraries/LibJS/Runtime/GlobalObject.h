@@ -68,6 +68,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(decode_uri);
     JS_DECLARE_NATIVE_FUNCTION(encode_uri_component);
     JS_DECLARE_NATIVE_FUNCTION(decode_uri_component);
+    JS_DECLARE_NATIVE_FUNCTION(escape);
+    JS_DECLARE_NATIVE_FUNCTION(unescape);
 
     NonnullOwnPtr<Console> m_console;
 
