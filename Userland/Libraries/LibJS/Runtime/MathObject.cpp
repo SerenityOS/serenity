@@ -473,20 +473,33 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 {
-    if (!vm.argument_count())
-        return Value(0);
-
-    auto hypot = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    hypot = Value(hypot.as_double() * hypot.as_double());
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        hypot = Value(hypot.as_double() + cur.as_double() * cur.as_double());
+        coerced.append(number);
     }
-    return Value(::sqrt(hypot.as_double()));
+
+    for (auto& number : coerced) {
+        if (number.is_positive_infinity() || number.is_negative_infinity())
+            return js_infinity();
+    }
+
+    auto only_zero = true;
+    double sum_of_squares = 0;
+    for (auto& number : coerced) {
+        if (number.is_nan() || number.is_positive_infinity())
+            return number;
+        if (number.is_negative_infinity())
+            return js_infinity();
+        if (!number.is_positive_zero() && !number.is_negative_zero())
+            only_zero = false;
+        sum_of_squares += number.as_double() * number.as_double();
+    }
+    if (only_zero)
+        return Value(0);
+    return Value(::sqrt(sum_of_squares));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
