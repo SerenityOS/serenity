@@ -251,9 +251,9 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     }
 
     auto parse_digit = [&](u32 code_point, i32 radix) -> Optional<i32> {
-        if (!is_ascii_hex_digit(code_point) || radix <= 0)
+        if (!is_ascii_alphanumeric(code_point) || radix <= 0)
             return {};
-        auto digit = parse_ascii_hex_digit(code_point);
+        auto digit = parse_ascii_base36_digit(code_point);
         if (digit >= (u32)radix)
             return {};
         return digit;
