@@ -505,6 +505,8 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
             JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
             bytecode_interpreter.run(*block);
         }
+
+        return true;
     }
 
     if (parser.has_errors()) {
