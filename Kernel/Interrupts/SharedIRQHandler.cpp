@@ -42,6 +42,14 @@ bool SharedIRQHandler::eoi()
     return true;
 }
 
+void SharedIRQHandler::enumerate_handlers(Function<void(GenericInterruptHandler&)>& callback)
+{
+    for (auto* handler : m_handlers) {
+        VERIFY(handler);
+        callback(*handler);
+    }
+}
+
 SharedIRQHandler::SharedIRQHandler(u8 irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
