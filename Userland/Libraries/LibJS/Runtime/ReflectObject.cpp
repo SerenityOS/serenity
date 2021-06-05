@@ -124,13 +124,13 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     auto* target = get_target_object_from(global_object, "defineProperty");
     if (!target)
         return {};
+    auto property_key = vm.argument(1).to_property_key(global_object);
+    if (vm.exception())
+        return {};
     if (!vm.argument(2).is_object()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ReflectBadDescriptorArgument);
         return {};
     }
-    auto property_key = StringOrSymbol::from_value(global_object, vm.argument(1));
-    if (vm.exception())
-        return {};
     auto& descriptor = vm.argument(2).as_object();
     auto success = target->define_property(property_key, descriptor, false);
     if (vm.exception())

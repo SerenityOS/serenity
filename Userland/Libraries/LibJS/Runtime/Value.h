@@ -260,6 +260,7 @@ public:
     Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
     double to_double(GlobalObject&) const;
+    StringOrSymbol to_property_key(GlobalObject&) const;
     i32 to_i32(GlobalObject& global_object) const
     {
         if (m_type == Type::Int32)
