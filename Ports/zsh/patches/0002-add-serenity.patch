@@ -1,0 +1,11 @@
+--- zsh-zsh-5.8/Src/original-zsh_system.h	2021-06-05 08:17:15.364000000 -0300
++++ zsh-zsh-5.8/Src/zsh_system.h	2021-06-04 23:05:07.793197002 -0300
+@@ -556,7 +556,7 @@
+ 
+ #ifdef HAVE_SYS_RESOURCE_H
+ # include <sys/resource.h>
+-# if defined(__hpux) && !defined(RLIMIT_CPU)
++# if (defined(__hpux) && !defined(RLIMIT_CPU)) || defined(__serenity__)
+ /* HPUX does have the BSD rlimits in the kernel.  Officially they are *
+  * unsupported but quite a few of them like RLIMIT_CORE seem to work. *
+  * All the following are in the <sys/resource.h> but made visible     *
