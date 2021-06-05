@@ -106,7 +106,7 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
-    define_native_function(vm.names.parseInt, parse_int, 1, attr);
+    define_native_function(vm.names.parseInt, parse_int, 2, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
