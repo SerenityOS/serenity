@@ -1,0 +1,92 @@
+name: Run test262 with LibJS and push results to the website repo
+
+on: [push]
+
+env:
+  SERENITY_SOURCE_DIR: ${{ github.workspace }}
+
+jobs:
+  run_and_update_results:
+    runs-on: ubuntu-20.04
+    if: always() && github.repository == 'SerenityOS/serenity' && github.ref == 'refs/heads/master'
+
+    concurrency: libjs-test262
+
+    steps:
+      - name: Checkout SerenityOS/serenity
+        uses: actions/checkout@v2
+
+      - name: Checkout linusg/libjs-test262
+        uses: actions/checkout@v2
+        with:
+          repository: linusg/libjs-test262
+          path: libjs-test262
+
+      - name: Checkout linusg/libjs-website
+        uses: actions/checkout@v2
+        with:
+          repository: linusg/libjs-website
+          path: libjs-website
+
+      - name: Checkout tc39/test262
+        uses: actions/checkout@v2
+        with:
+          repository: tc39/test262
+          path: test262
+
+      - name: Checkout tc39/test262-parser-tests
+        uses: actions/checkout@v2
+        with:
+          repository: tc39/test262-parser-tests
+          path: test262-parser-tests
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install ninja-build
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+
+      - name: Install Python dependencies
+        # The setup-python action set default python to python3.x. Note that we are not using system python here.
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r libjs-test262/requirements.txt
+
+      - name: Check versions
+        run: set +e; g++ --version; g++-10 --version; python --version; python3 --version; ninja --version
+
+      - name: Build libLagom.a and test-js
+        run: |
+          mkdir -p Build/lagom
+          cd Build/lagom
+          cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 -DBUILD_LAGOM=ON ../../Meta/Lagom
+          ninja libLagom.a test-js
+
+      - name: Build libjs-test262-runner
+        working-directory: libjs-test262
+        run: |
+          mkdir -p Build
+          cd Build
+          cmake -GNinja -DCMAKE_C_COMPILER=gcc-10 -DCMAKE_CXX_COMPILER=g++-10 ..
+          ninja libjs-test262-runner
+
+      - name: Run test262 and test262-parser-tests
+        working-directory: libjs-test262
+        run: |
+          python3 run_all_and_update_results.py \
+            --serenity .. \
+            --test262 ../test262 \
+            --test262-parser-tests ../test262-parser-tests \
+            --results-json ../libjs-website/test262/data/results.json
+
+      - name: Deploy to GitHub pages
+        uses: JamesIves/github-pages-deploy-action@4.1.1
+        with:
+          git-config-name: BuggieBot
+          git-config-email: buggiebot@serenityos.org
+          branch: main
+          repository-name: linusg/libjs-website
+          token: ${{ secrets.BUGGIEBOT }}
+          folder: libjs-website
