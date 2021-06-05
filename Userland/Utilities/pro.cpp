@@ -186,7 +186,7 @@ int main(int argc, char** argv)
     Core::EventLoop loop;
     auto protocol_client = Protocol::RequestClient::construct();
 
-    auto request = protocol_client->start_request(method, url.to_string(), request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
+    auto request = protocol_client->start_request(method, url, request_headers, data ? StringView { data }.bytes() : ReadonlyBytes {});
     if (!request) {
         warnln("Failed to start request for '{}'", url_str);
         return 1;
