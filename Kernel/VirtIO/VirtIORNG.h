@@ -17,6 +17,7 @@ namespace Kernel {
 class VirtIORNG final : public CharacterDevice
     , public VirtIODevice {
 public:
+    virtual const char* purpose() const override { return class_name(); }
     virtual const char* class_name() const override { return m_class_name.characters(); }
 
     virtual bool can_read(const FileDescription&, size_t) const override { return false; }
