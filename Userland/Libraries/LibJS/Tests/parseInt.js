@@ -29,15 +29,15 @@ test("basic parseInt() functionality", () => {
     expect(parseInt(4.7, 10)).toBe(4);
     expect(parseInt("0e0", 16)).toBe(224);
     expect(parseInt("123_456")).toBe(123);
-
-    // FIXME: expect(parseInt(4.7 * 1e22, 10)).toBe(4);
-    // FIXME: expect(parseInt(0.00000000000434, 10)).toBe(4);
-    // FIXME: expect(parseInt(0.0000001,11)).toBe(1);
-    // FIXME: expect(parseInt(0.000000124,10)).toBe(1);
-    // FIXME: expect(parseInt(1e-7,10)).toBe(1);
-    // FIXME: expect(parseInt(1000000000000100000000,10)).toBe(1);
-    // FIXME: expect(parseInt(123000000000010000000000,10)).toBe(1);
-    // FIXME: expect(parseInt(1e+21,10)).toBe(1);
+    expect(parseInt("UVWXYZ", 36)).toBe(1867590395);
+    expect(parseInt(4.7 * 1e22, 10)).toBe(4);
+    expect(parseInt(0.00000000000434, 10)).toBe(4);
+    expect(parseInt(0.0000001, 11)).toBe(1);
+    expect(parseInt(0.000000124, 10)).toBe(1);
+    expect(parseInt(1e-7, 10)).toBe(1);
+    expect(parseInt(1000000000000100000000, 10)).toBe(1);
+    expect(parseInt(123000000000010000000000, 10)).toBe(1);
+    expect(parseInt(1e21, 10)).toBe(1);
     // FIXME: expect(parseInt('900719925474099267n')).toBe(900719925474099300)
 });
 
