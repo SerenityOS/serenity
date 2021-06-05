@@ -155,8 +155,9 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
+bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 {
+    bool was_handled = false;
     for (;;) {
         int status = in16(REG_ISR);
         out16(REG_ISR, status);
@@ -168,6 +169,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_BUFFER_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_LENGTH_CHANGE | INT_SYSTEM_ERROR)) == 0)
             break;
 
+        was_handled = true;
         if (status & INT_RXOK) {
             dbgln_if(RTL8139_DEBUG, "RTL8139: RX ready");
             receive();
@@ -201,6 +203,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
             reset();
         }
     }
+    return was_handled;
 }
 
 void RTL8139NetworkAdapter::reset()

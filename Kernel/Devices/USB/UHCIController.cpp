@@ -586,13 +586,13 @@ void UHCIController::spawn_port_proc()
     });
 }
 
-void UHCIController::handle_irq(const RegisterState&)
+bool UHCIController::handle_irq(const RegisterState&)
 {
     u32 status = read_usbsts();
 
     // Shared IRQ. Not ours!
     if (!status)
-        return;
+        return false;
 
     if constexpr (UHCI_DEBUG) {
         dbgln("UHCI: Interrupt happened!");
@@ -601,6 +601,7 @@ void UHCIController::handle_irq(const RegisterState&)
 
     // Write back USBSTS to clear bits
     write_usbsts(status);
+    return true;
 }
 
 }

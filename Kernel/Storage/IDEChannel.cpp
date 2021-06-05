@@ -190,7 +190,7 @@ void IDEChannel::try_disambiguate_error()
     }
 }
 
-void IDEChannel::handle_irq(const RegisterState&)
+bool IDEChannel::handle_irq(const RegisterState&)
 {
     u8 status = m_io_group.io_base().offset(ATA_REG_STATUS).in<u8>();
 
@@ -204,7 +204,7 @@ void IDEChannel::handle_irq(const RegisterState&)
 
     if (!m_current_request) {
         dbgln("IDEChannel: IRQ but no pending request!");
-        return;
+        return false;
     }
 
     if (status & ATA_SR_ERR) {
@@ -213,7 +213,7 @@ void IDEChannel::handle_irq(const RegisterState&)
         dbgln("IDEChannel: Error {:#02x}!", (u8)m_device_error);
         try_disambiguate_error();
         complete_current_request(AsyncDeviceRequest::Failure);
-        return;
+        return true;
     }
     m_device_error = 0;
 
@@ -251,6 +251,7 @@ void IDEChannel::handle_irq(const RegisterState&)
             }
         }
     });
+    return true;
 }
 
 static void io_delay()

@@ -82,9 +82,11 @@ AHCIPortHandler::~AHCIPortHandler()
 {
 }
 
-void AHCIPortHandler::handle_irq(const RegisterState&)
+bool AHCIPortHandler::handle_irq(const RegisterState&)
 {
     dbgln_if(AHCI_DEBUG, "AHCI Port Handler: IRQ received");
+    if (m_pending_ports_interrupts.is_zeroed())
+        return false;
     for (auto port_index : m_pending_ports_interrupts.to_vector()) {
         auto port = m_handled_ports.get(port_index);
         VERIFY(port.has_value());
@@ -93,6 +95,7 @@ void AHCIPortHandler::handle_irq(const RegisterState&)
         // We do this to clear the pending interrupt after we handled it.
         m_pending_ports_interrupts.set_at(port_index);
     }
+    return true;
 }
 
 }

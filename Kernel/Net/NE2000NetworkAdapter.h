@@ -29,7 +29,7 @@ public:
 
 private:
     NE2000NetworkAdapter(PCI::Address, u8 irq);
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "NE2000NetworkAdapter"; }
 
     int ram_test();
