@@ -39,11 +39,10 @@ private:
 
     virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) override;
     virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) override;
+    virtual void scroll_left(u16 row, u16 column, size_t count) override;
+    virtual void scroll_right(u16 row, u16 column, size_t count) override;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
     virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) override;
-
-    virtual void ICH(Parameters) override;
-    virtual void DCH(Parameters) override;
 };
 
 class VirtualConsole final : public TTY
@@ -138,6 +137,8 @@ private:
 
     void scroll_down(u16 region_top, u16 region_bottom, size_t count);
     void scroll_up(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_left(u16 row, u16 column, size_t count);
+    void scroll_right(u16 row, u16 column, size_t count);
     void clear_line(size_t index)
     {
         clear_in_line(index, 0, m_console_impl.columns() - 1);
