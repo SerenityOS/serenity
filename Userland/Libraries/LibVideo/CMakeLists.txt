@@ -2,6 +2,7 @@ set(SOURCES
     MatroskaDocument.h
     MatroskaReader.cpp
     VP9/Enums.h
+    VP9/ProbabilityTables.cpp
     VP9/Symbols.h
 )
 
