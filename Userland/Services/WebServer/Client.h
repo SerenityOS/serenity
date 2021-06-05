@@ -24,7 +24,7 @@ private:
     void handle_request(ReadonlyBytes);
     void send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
     void send_redirect(StringView redirect, HTTP::HttpRequest const&);
-    void send_error_response(unsigned code, StringView const& message, HTTP::HttpRequest const&);
+    void send_error_response(unsigned code, HTTP::HttpRequest const&);
     void die();
     void log_response(unsigned code, HTTP::HttpRequest const&);
     void handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
