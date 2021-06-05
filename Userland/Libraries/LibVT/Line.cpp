@@ -25,15 +25,12 @@ void Line::set_length(size_t new_length)
     m_cells.resize(new_length);
 }
 
-void Line::clear(const Attribute& attribute)
+void Line::clear_range(size_t first_column, size_t last_column, const Attribute& attribute)
 {
-    if (m_dirty) {
-        for (auto& cell : m_cells) {
-            cell = Cell { .code_point = ' ', .attribute = attribute };
-        }
-        return;
-    }
-    for (auto& cell : m_cells) {
+    VERIFY(first_column <= last_column);
+    VERIFY(last_column < m_cells.size());
+    for (size_t i = first_column; i <= last_column; ++i) {
+        auto& cell = m_cells[i];
         if (!m_dirty)
             m_dirty = cell.code_point != ' ' || cell.attribute != attribute;
         cell = Cell { .code_point = ' ', .attribute = attribute };

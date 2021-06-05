@@ -32,7 +32,7 @@ void Terminal::clear()
 {
     dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
-        active_buffer()[i].clear(Attribute());
+        active_buffer()[i].clear();
     set_cursor(0, 0);
 }
 
@@ -559,9 +559,7 @@ void Terminal::ECH(Parameters params)
     // Clear num characters from the right of the cursor.
     auto clear_end = min<unsigned>(m_columns, cursor_column() + num - 1);
     dbgln_if(TERMINAL_DEBUG, "Erase characters {}-{} on line {}", cursor_column(), clear_end, cursor_row());
-    for (unsigned i = cursor_column(); i <= clear_end; ++i) {
-        put_character_at(cursor_row(), i, ' ');
-    }
+    clear_in_line(cursor_row(), cursor_column(), clear_end);
 }
 
 void Terminal::EL(Parameters params)
@@ -572,21 +570,15 @@ void Terminal::EL(Parameters params)
     switch (mode) {
     case 0:
         dbgln_if(TERMINAL_DEBUG, "Clear line {} from cursor column ({}) to the end", cursor_row(), cursor_column());
-        for (int i = cursor_column(); i < m_columns; ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
         break;
     case 1:
         dbgln_if(TERMINAL_DEBUG, "Clear line {} from the start to cursor column ({})", cursor_row(), cursor_column());
-        for (int i = 0; i <= cursor_column(); ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        clear_in_line(cursor_row(), 0, cursor_column());
         break;
     case 2:
         dbgln_if(TERMINAL_DEBUG, "Clear line {} completely", cursor_row());
-        for (int i = 0; i < m_columns; ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        clear_in_line(cursor_row(), 0, m_columns - 1);
         break;
     default:
         unimplemented_csi_sequence(params, {}, 'K');
@@ -602,23 +594,15 @@ void Terminal::ED(Parameters params)
     switch (mode) {
     case 0:
         dbgln_if(TERMINAL_DEBUG, "Clear from cursor ({},{}) to end of screen", cursor_row(), cursor_column());
-        for (int i = cursor_column(); i < m_columns; ++i)
-            put_character_at(cursor_row(), i, ' ');
-        for (int row = cursor_row() + 1; row < m_rows; ++row) {
-            for (int column = 0; column < m_columns; ++column) {
-                put_character_at(row, column, ' ');
-            }
-        }
+        clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
+        for (int row = cursor_row() + 1; row < m_rows; ++row)
+            clear_in_line(row, 0, m_columns - 1);
         break;
     case 1:
         dbgln_if(TERMINAL_DEBUG, "Clear from beginning of screen to cursor ({},{})", cursor_row(), cursor_column());
-        for (int i = cursor_column(); i >= 0; --i)
-            put_character_at(cursor_row(), i, ' ');
-        for (int row = cursor_row() - 1; row >= 0; --row) {
-            for (int column = 0; column < m_columns; ++column) {
-                put_character_at(row, column, ' ');
-            }
-        }
+        clear_in_line(cursor_row(), 0, cursor_column());
+        for (int row = cursor_row() - 1; row >= 0; --row)
+            clear_in_line(row, 0, m_columns - 1);
         break;
     case 2:
         clear();
@@ -789,7 +773,7 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     } else {
         // The new lines haven't been moved and we don't want to leak memory.
         for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
-            active_buffer()[row].clear(Attribute());
+            active_buffer()[row].clear();
     }
     // Set dirty flag on swapped lines.
     // The other lines have implicitly been set dirty by being cleared.
@@ -816,7 +800,7 @@ void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
         swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row - count));
     // Clear the 'new' lines at the top.
     for (u16 row = region_top; row < region_top + count; ++row)
-        active_buffer()[row].clear(Attribute());
+        active_buffer()[row].clear();
     // Set dirty flag on swapped lines.
     // The other lines have implicitly been set dirty by being cleared.
     for (u16 row = region_top + count; row <= region_bottom; ++row)
@@ -834,6 +818,12 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
     line.set_dirty(true);
 
     m_last_code_point = code_point;
+}
+
+void Terminal::clear_in_line(u16 row, u16 first_column, u16 last_column)
+{
+    VERIFY(row < rows());
+    active_buffer()[row].clear_range(first_column, last_column);
 }
 #endif
 
