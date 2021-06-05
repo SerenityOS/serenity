@@ -692,27 +692,15 @@ void Terminal::DL(Parameters params)
     scroll_up(cursor_row(), m_scroll_region_bottom, count);
 }
 
-#ifndef KERNEL
 void Terminal::DCH(Parameters params)
 {
     int num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
 
-    auto& line = active_buffer()[cursor_row()];
-    num = min(num, static_cast<int>(line.length()) - cursor_column());
-
-    // Move n characters of line to the left
-    for (size_t i = cursor_column(); i < line.length() - num; i++)
-        line.cell_at(i) = line.cell_at(i + num);
-
-    // Fill remainder of line with blanks
-    for (size_t i = line.length() - num; i < line.length(); i++)
-        line.set_code_point(i, ' ');
-
-    line.set_dirty(true);
+    num = min<int>(num, columns() - cursor_column());
+    scroll_left(cursor_row(), cursor_column(), num);
 }
-#endif
 
 void Terminal::linefeed()
 {
@@ -807,6 +795,36 @@ void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
         active_buffer()[row].set_dirty(true);
 }
 
+// Insert `count` blank cells at the end of the line. Text moves left.
+void Terminal::scroll_left(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    dbgln_if(TERMINAL_DEBUG, "Scroll left {} columns from line {} column {}", count, row, column);
+
+    auto& line = active_buffer()[row];
+    for (size_t i = column; i < columns() - count; ++i)
+        swap(line.cell_at(i), line.cell_at(i + count));
+    clear_in_line(row, columns() - count, columns() - 1);
+    line.set_dirty(true);
+}
+
+// Insert `count` blank cells after `row`. Text moves right.
+void Terminal::scroll_right(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    dbgln_if(TERMINAL_DEBUG, "Scroll right {} columns from line {} column {}", count, row, column);
+
+    auto& line = active_buffer()[row];
+    for (int i = columns() - 1; i >= static_cast<int>(column + count); --i)
+        swap(line.cell_at(i), line.cell_at(i - count));
+    clear_in_line(row, column, column + count - 1);
+    line.set_dirty(true);
+}
+
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
 {
     VERIFY(row < rows());
@@ -883,27 +901,15 @@ void Terminal::DSR(Parameters params)
     }
 }
 
-#ifndef KERNEL
 void Terminal::ICH(Parameters params)
 {
     unsigned num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
-    auto& line = active_buffer()[cursor_row()];
 
-    auto max_insert = static_cast<unsigned>(line.length()) - cursor_column();
-    num = min(num, max_insert);
-    // Move characters after cursor to the right
-    for (int i = line.length() - num - 1; i >= cursor_column(); --i)
-        line.cell_at(i + num) = line.cell_at(i);
-
-    // Fill n characters after cursor with blanks
-    for (unsigned i = 0; i < num; ++i)
-        line.set_code_point(cursor_column() + i, ' ');
-
-    line.set_dirty(true);
+    num = min<unsigned>(num, columns() - cursor_column());
+    scroll_right(cursor_row(), cursor_column(), num);
 }
-#endif
 
 void Terminal::on_input(u8 byte)
 {
