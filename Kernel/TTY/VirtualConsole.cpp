@@ -377,6 +377,8 @@ String VirtualConsole::device_name() const
 void VirtualConsole::echo(u8 ch)
 {
     m_console_impl.on_input(ch);
+    if (m_active)
+        flush_dirty_lines();
 }
 
 VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)
