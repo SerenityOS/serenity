@@ -156,7 +156,7 @@ public:
         }
         m_max_history_lines = value;
     }
-    size_t history_size() const { return m_history.size(); }
+    size_t history_size() const { return m_use_alternate_screen_buffer ? 0 : m_history.size(); }
 #endif
 
     void inject_string(const StringView&);
