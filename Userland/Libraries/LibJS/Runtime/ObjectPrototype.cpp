@@ -111,13 +111,13 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
-    auto name = vm.argument(0).to_string(global_object);
+    auto property_key = vm.argument(0).to_property_key(global_object);
     if (vm.exception())
         return {};
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
         return {};
-    auto property_descriptor = this_object->get_own_property_descriptor(name);
+    auto property_descriptor = this_object->get_own_property_descriptor(property_key);
     if (!property_descriptor.has_value())
         return Value(false);
     return Value(property_descriptor.value().attributes.is_enumerable());
