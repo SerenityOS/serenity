@@ -67,7 +67,6 @@ int main(int argc, char** argv)
     window->set_title("Chess");
     window->set_base_size({ 4, 4 });
     window->set_size_increment({ 8, 8 });
-    window->set_resize_aspect_ratio(1, 1);
     window->resize(size - 4, size - 4);
 
     window->set_icon(app_icon.bitmap_for_size(16));
