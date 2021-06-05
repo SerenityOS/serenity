@@ -76,20 +76,20 @@ MainWidget::MainWidget()
     m_replace_textbox->set_placeholder("Replace");
 
     m_match_case_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("match_case_checkbox");
-    m_match_case_checkbox->on_checked = [this] {
-        m_match_case = m_match_case_checkbox->is_checked();
+    m_match_case_checkbox->on_checked = [this](auto is_checked) {
+        m_match_case = is_checked;
     };
     m_match_case_checkbox->set_checked(true);
 
     m_regex_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("regex_checkbox");
-    m_regex_checkbox->on_checked = [this] {
-        m_use_regex = m_regex_checkbox->is_checked();
+    m_regex_checkbox->on_checked = [this](auto is_checked) {
+        m_use_regex = is_checked;
     };
     m_regex_checkbox->set_checked(false);
 
     m_wrap_around_checkbox = *find_descendant_of_type_named<GUI::CheckBox>("wrap_around_checkbox");
-    m_wrap_around_checkbox->on_checked = [this] {
-        m_should_wrap = m_wrap_around_checkbox->is_checked();
+    m_wrap_around_checkbox->on_checked = [this](auto is_checked) {
+        m_should_wrap = is_checked;
     };
     m_wrap_around_checkbox->set_checked(true);
 

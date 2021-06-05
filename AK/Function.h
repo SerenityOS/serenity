@@ -39,26 +39,36 @@ namespace AK {
 template<typename>
 class Function;
 
+template<typename F>
+inline constexpr bool IsFunctionPointer = (IsPointer<F> && IsFunction<RemovePointer<F>>);
+
+// Not a function pointer, and not an lvalue reference.
+template<typename F>
+inline constexpr bool IsFunctionObject = (!IsFunctionPointer<F> && IsRvalueReference<F&&>);
+
 template<typename Out, typename... In>
 class Function<Out(In...)> {
     AK_MAKE_NONCOPYABLE(Function);
 
 public:
     Function() = default;
+    Function(std::nullptr_t)
+    {
+    }
 
     ~Function()
     {
         clear(false);
     }
 
-    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType> && IsFunction<RemovePointer<CallableType>>)&&IsRvalueReference<CallableType&&>>::Type>
-    Function(CallableType&& callable)
+    template<typename CallableType>
+    Function(CallableType&& callable) requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...>))
     {
-        init_with_callable(move(callable));
+        init_with_callable(forward<CallableType>(callable));
     }
 
-    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType> && IsFunction<RemovePointer<FunctionType>>>::Type>
-    Function(FunctionType f)
+    template<typename FunctionType>
+    Function(FunctionType f) requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...>))
     {
         init_with_callable(move(f));
     }
@@ -68,6 +78,7 @@ public:
         move_from(move(other));
     }
 
+    // Note: Despite this method being const, a mutable lambda _may_ modify its own captures.
     Out operator()(In... in) const
     {
         auto* wrapper = callable_wrapper();
@@ -82,16 +93,16 @@ public:
 
     explicit operator bool() const { return !!callable_wrapper(); }
 
-    template<typename CallableType, class = typename EnableIf<!(IsPointer<CallableType> && IsFunction<RemovePointer<CallableType>>)&&IsRvalueReference<CallableType&&>>::Type>
-    Function& operator=(CallableType&& callable)
+    template<typename CallableType>
+    Function& operator=(CallableType&& callable) requires((IsFunctionObject<CallableType> && IsCallableWithArguments<CallableType, In...>))
     {
         clear();
-        init_with_callable(move(callable));
+        init_with_callable(forward<CallableType>(callable));
         return *this;
     }
 
-    template<typename FunctionType, class = typename EnableIf<IsPointer<FunctionType> && IsFunction<RemovePointer<FunctionType>>>::Type>
-    Function& operator=(FunctionType f)
+    template<typename FunctionType>
+    Function& operator=(FunctionType f) requires((IsFunctionPointer<FunctionType> && IsCallableWithArguments<RemovePointer<FunctionType>, In...>))
     {
         clear();
         if (f)
@@ -118,7 +129,8 @@ private:
     class CallableWrapperBase {
     public:
         virtual ~CallableWrapperBase() = default;
-        virtual Out call(In...) const = 0;
+        // Note: This is not const to allow storing mutable lambdas.
+        virtual Out call(In...) = 0;
         virtual void destroy() = 0;
         virtual void init_and_swap(u8*, size_t) = 0;
     };
@@ -134,17 +146,9 @@ private:
         {
         }
 
-        Out call(In... in) const final override
+        Out call(In... in) final override
         {
-            if constexpr (requires { m_callable(forward<In>(in)...); }) {
-                return m_callable(forward<In>(in)...);
-            } else if constexpr (requires { m_callable(); }) {
-                return m_callable();
-            } else if constexpr (IsVoid<Out>) {
-                return;
-            } else {
-                return {};
-            }
+            return m_callable(forward<In>(in)...);
         }
 
         void destroy() final override
@@ -208,10 +212,10 @@ private:
         VERIFY(m_call_nesting_level == 0);
         using WrapperType = CallableWrapper<Callable>;
         if constexpr (sizeof(WrapperType) > inline_capacity) {
-            *bit_cast<CallableWrapperBase**>(&m_storage) = new WrapperType(move(callable));
+            *bit_cast<CallableWrapperBase**>(&m_storage) = new WrapperType(forward<Callable>(callable));
             m_kind = FunctionKind::Outline;
         } else {
-            new (m_storage) WrapperType(move(callable));
+            new (m_storage) WrapperType(forward<Callable>(callable));
             m_kind = FunctionKind::Inline;
         }
     }

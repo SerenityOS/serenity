@@ -39,9 +39,6 @@ struct _RawPtr {
 
 namespace AK {
 
-template<typename T>
-auto declval() -> T;
-
 template<class T>
 constexpr T&& forward(RemoveReference<T>& param)
 {
@@ -118,7 +115,6 @@ using RawPtr = typename Detail::_RawPtr<T>::Type;
 using AK::array_size;
 using AK::ceil_div;
 using AK::clamp;
-using AK::declval;
 using AK::exchange;
 using AK::forward;
 using AK::max;
