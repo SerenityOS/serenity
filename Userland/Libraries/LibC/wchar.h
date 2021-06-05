@@ -19,6 +19,7 @@ typedef __WINT_TYPE__ wint_t;
 typedef unsigned long int wctype_t;
 
 typedef struct {
+    unsigned char bytes[4];
 } mbstate_t;
 
 size_t wcslen(const wchar_t*);
