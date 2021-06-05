@@ -16,7 +16,7 @@ RequestClient::RequestClient()
 }
 
 template<typename RequestHashMapTraits>
-RefPtr<Request> RequestClient::start_request(String const& method, String const& url, HashMap<String, String, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body)
+RefPtr<Request> RequestClient::start_request(String const& method, URL const& url, HashMap<String, String, RequestHashMapTraits> const& request_headers, ReadonlyBytes request_body)
 {
     IPC::Dictionary header_dictionary;
     for (auto& it : request_headers)
@@ -82,5 +82,5 @@ void RequestClient::certificate_requested(i32 request_id)
 
 }
 
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(String const& method, String const& url, HashMap<String, String> const& request_headers, ReadonlyBytes request_body);
-template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(String const& method, String const& url, HashMap<String, String, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(String const& method, URL const&, HashMap<String, String> const& request_headers, ReadonlyBytes request_body);
+template RefPtr<Protocol::Request> Protocol::RequestClient::start_request(String const& method, URL const&, HashMap<String, String, CaseInsensitiveStringTraits> const& request_headers, ReadonlyBytes request_body);
