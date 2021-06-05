@@ -24,6 +24,7 @@ WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
         m_error_string = String::formatted("Can't open file: {}", m_file->error_string());
         return;
     }
+    m_stream = make<Core::InputFileStream>(*m_file);
 
     valid = parse_header();
     if (!valid)
@@ -39,6 +40,7 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
         m_error_string = String::formatted("Can't open memory stream");
         return;
     }
+    m_memory_stream = static_cast<InputMemoryStream*>(m_stream.ptr());
 
     valid = parse_header();
     if (!valid)
@@ -49,22 +51,33 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
 {
-    dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes WAV with num_channels {} sample rate {}, "
+    if (!m_stream)
+        return nullptr;
+
+    size_t bytes_per_sample = (m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
+
+    // Might truncate if not evenly divisible
+    size_t samples_to_read = static_cast<int>(max_bytes_to_read_from_input) / bytes_per_sample;
+    size_t bytes_to_read = samples_to_read * bytes_per_sample;
+
+    dbgln_if(AWAVLOADER_DEBUG, "Read {} bytes ({} samples) WAV with num_channels {} sample rate {}, "
                                "bits per sample {}, sample format {}",
-        max_bytes_to_read_from_input, m_num_channels,
-        m_sample_rate, pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
-    size_t samples_to_read = static_cast<int>(max_bytes_to_read_from_input) / (m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8));
-    RefPtr<Buffer> buffer;
-    if (m_file) {
-        auto raw_samples = m_file->read(max_bytes_to_read_from_input);
-        if (raw_samples.is_empty()) {
-            return nullptr;
-        }
-        buffer = Buffer::from_pcm_data(raw_samples, *m_resampler, m_num_channels, m_sample_format);
-    } else {
-        buffer = Buffer::from_pcm_stream(*m_stream, *m_resampler, m_num_channels, m_sample_format, samples_to_read);
+        bytes_to_read, samples_to_read, m_num_channels, m_sample_rate,
+        pcm_bits_per_sample(m_sample_format), sample_format_name(m_sample_format));
+
+    ByteBuffer sample_data = ByteBuffer::create_zeroed(bytes_to_read);
+    m_stream->read_or_error(sample_data.bytes());
+    if (m_stream->handle_any_error()) {
+        return nullptr;
     }
-    //Buffer contains normalized samples, but m_loaded_samples should contain the amount of actually loaded samples
+
+    RefPtr<Buffer> buffer = Buffer::from_pcm_data(
+        sample_data.bytes(),
+        *m_resampler,
+        m_num_channels,
+        m_sample_format);
+
+    // m_loaded_samples should contain the amount of actually loaded samples
     m_loaded_samples += samples_to_read;
     m_loaded_samples = min(m_total_samples, m_loaded_samples);
     return buffer;
@@ -78,45 +91,41 @@ void WavLoaderPlugin::seek(const int position)
     m_loaded_samples = position;
     size_t byte_position = position * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8);
 
-    if (m_file)
+    // AK::InputStream does not define seek.
+    if (m_file) {
         m_file->seek(byte_position);
-    else
-        m_stream->seek(byte_position);
+    } else {
+        m_memory_stream->seek(byte_position);
+    }
 }
 
 bool WavLoaderPlugin::parse_header()
 {
-    OwnPtr<Core::InputFileStream> file_stream;
-    if (m_file)
-        file_stream = make<Core::InputFileStream>(*m_file);
-
-    AK::InputStream* const stream =
-        (m_file ?
-            file_stream.ptr() :
-            dynamic_cast<AK::InputStream*>(m_stream.ptr()));
+    if (!m_stream)
+        return false;
 
     bool ok = true;
 
     auto read_u8 = [&]() -> u8 {
         u8 value;
-        *stream >> value;
-        if (stream->handle_any_error())
+        *m_stream >> value;
+        if (m_stream->handle_any_error())
             ok = false;
         return value;
     };
 
     auto read_u16 = [&]() -> u16 {
         u16 value;
-        *stream >> value;
-        if (stream->handle_any_error())
+        *m_stream >> value;
+        if (m_stream->handle_any_error())
             ok = false;
         return value;
     };
 
     auto read_u32 = [&]() -> u32 {
         u32 value;
-        *stream >> value;
-        if (stream->handle_any_error())
+        *m_stream >> value;
+        if (m_stream->handle_any_error())
             ok = false;
         return value;
     };
@@ -125,6 +134,7 @@ bool WavLoaderPlugin::parse_header()
     do {                                                                   \
         if (!ok) {                                                         \
             m_error_string = String::formatted("Parsing failed: {}", msg); \
+            dbgln_if(AWAVLOADER_DEBUG, m_error_string);                    \
             return {};                                                     \
         }                                                                  \
     } while (0)
@@ -229,6 +239,11 @@ bool WavLoaderPlugin::parse_header()
 
     int bytes_per_sample = (bits_per_sample / 8) * m_num_channels;
     m_total_samples = data_sz / bytes_per_sample;
+
+    dbgln_if(AWAVLOADER_DEBUG, "WAV data size {}, bytes per sample {}, total samples {}",
+        data_sz,
+        bytes_per_sample,
+        m_total_samples);
 
     return true;
 }
