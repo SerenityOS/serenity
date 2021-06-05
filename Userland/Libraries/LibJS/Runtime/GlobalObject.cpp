@@ -202,12 +202,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (vm.argument(0).is_number())
         return vm.argument(0);
-    auto string = vm.argument(0).to_string(global_object);
+    auto input_string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    for (size_t length = string.length(); length > 0; --length) {
+    auto trimmed_string = input_string.trim_whitespace(TrimMode::Left);
+    for (size_t length = trimmed_string.length(); length > 0; --length) {
         // This can't throw, so no exception check is fine.
-        auto number = Value(js_string(vm, string.substring(0, length))).to_number(global_object);
+        auto number = Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object);
         if (!number.is_nan())
             return number;
     }
