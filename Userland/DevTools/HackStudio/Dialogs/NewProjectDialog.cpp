@@ -62,7 +62,7 @@ NewProjectDialog::NewProjectDialog(GUI::Window* parent)
     m_icon_view->on_selection_change = [&]() {
         update_dialog();
     };
-    m_icon_view->on_activation = [&]() {
+    m_icon_view->on_activation = [&](auto&) {
         if (m_input_valid)
             do_create_project();
     };

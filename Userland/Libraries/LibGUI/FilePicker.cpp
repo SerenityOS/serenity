@@ -226,7 +226,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
         button.set_fixed_height(22);
         button.set_checkable(true);
         button.set_exclusive(true);
-        button.on_click = [this, path] {
+        button.on_click = [this, path](auto) {
             set_path(path);
         };
         m_common_location_buttons.append({ path, button });

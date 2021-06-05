@@ -525,7 +525,7 @@ NonnullRefPtr<HTMLCollection> Document::applets()
 {
     // FIXME: This should return the same HTMLCollection object every time,
     //        but that would cause a reference cycle since HTMLCollection refs the root.
-    return HTMLCollection::create(*this, [] { return false; });
+    return HTMLCollection::create(*this, [](auto&) { return false; });
 }
 
 // https://html.spec.whatwg.org/multipage/obsolete.html#dom-document-anchors
