@@ -345,6 +345,8 @@ u8 VirtIODevice::isr_status()
 void VirtIODevice::handle_irq(const RegisterState&)
 {
     u8 isr_type = isr_status();
+    if ((isr_type & (QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT)) == 0)
+        dbgln_if(VIRTIO_DEBUG, "{}: Handling interrupt with unknown type: {}", m_class_name, isr_type);
     if (isr_type & DEVICE_CONFIG_INTERRUPT) {
         dbgln_if(VIRTIO_DEBUG, "{}: VirtIO Device config interrupt!", m_class_name);
         if (!handle_device_config_change()) {
@@ -360,8 +362,6 @@ void VirtIODevice::handle_irq(const RegisterState&)
         }
         dbgln_if(VIRTIO_DEBUG, "{}: Got queue interrupt but all queues are up to date!", m_class_name);
     }
-    if (isr_type & ~(QUEUE_INTERRUPT | DEVICE_CONFIG_INTERRUPT))
-        dbgln("{}: Handling interrupt with unknown type: {}", m_class_name, isr_type);
 }
 
 void VirtIODevice::supply_chain_and_notify(u16 queue_index, VirtIOQueueChain& chain)
