@@ -15,8 +15,6 @@
 namespace VT {
 
 struct Attribute {
-    Attribute() { reset(); }
-
     static constexpr Color default_foreground_color = Color::named(Color::ANSIColor::DefaultForeground);
     static constexpr Color default_background_color = Color::named(Color::ANSIColor::DefaultBackground);
 
@@ -25,12 +23,17 @@ struct Attribute {
         foreground_color = default_foreground_color;
         background_color = default_background_color;
         flags = Flags::NoAttributes;
+#ifndef KERNEL
+        href = {};
+        href_id = {};
+#endif
     }
+
     Color foreground_color { default_foreground_color };
     Color background_color { default_background_color };
 
-    Color effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
-    Color effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
+    constexpr Color effective_background_color() const { return flags & Negative ? foreground_color : background_color; }
+    constexpr Color effective_foreground_color() const { return flags & Negative ? background_color : foreground_color; }
 
 #ifndef KERNEL
     String href;
@@ -47,17 +50,17 @@ struct Attribute {
         Touched = 0x20,
     };
 
-    bool is_untouched() const { return !(flags & Touched); }
+    constexpr bool is_untouched() const { return !(flags & Touched); }
 
     // TODO: it would be really nice if we had a helper for enums that
     // exposed bit ops for class enums...
-    u8 flags = Flags::NoAttributes;
+    u8 flags { Flags::NoAttributes };
 
-    bool operator==(const Attribute& other) const
+    constexpr bool operator==(const Attribute& other) const
     {
         return foreground_color == other.foreground_color && background_color == other.background_color && flags == other.flags;
     }
-    bool operator!=(const Attribute& other) const
+    constexpr bool operator!=(const Attribute& other) const
     {
         return !(*this == other);
     }
