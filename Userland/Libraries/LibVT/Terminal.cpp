@@ -888,6 +888,22 @@ void Terminal::RI()
         set_cursor(cursor_row() - 1, cursor_column());
 }
 
+void Terminal::DECFI()
+{
+    if (cursor_column() == columns() - 1)
+        scroll_left(cursor_row(), 0, 1);
+    else
+        set_cursor(cursor_row(), cursor_column() + 1);
+}
+
+void Terminal::DECBI()
+{
+    if (cursor_column() == 0)
+        scroll_right(cursor_row(), 0, 1);
+    else
+        set_cursor(cursor_row(), cursor_column() - 1);
+}
+
 void Terminal::DSR(Parameters params)
 {
     if (params.size() == 1 && params[0] == 5) {
@@ -991,11 +1007,17 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
         case '\\':
             // ST (string terminator) -- do nothing
             return;
+        case '6':
+            DECBI();
+            return;
         case '7':
             DECSC();
             return;
         case '8':
             DECRC();
+            return;
+        case '9':
+            DECFI();
             return;
         }
     } else if (intermediates[0] == '#') {
