@@ -765,7 +765,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
         return get_by_index(property_name.as_number());
 
     if (property_name.is_string()) {
-        auto property_string = property_name.to_string();
+        auto& property_string = property_name.as_string();
         i32 property_index = property_string.to_int().value_or(-1);
         if (property_index >= 0)
             return get_by_index(property_index);
