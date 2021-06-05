@@ -156,4 +156,25 @@ Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Gener
     }
 }
 
+Optional<Bytecode::Register> FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
+{
+    return {};
+}
+
+Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto callee_reg = m_callee->generate_bytecode(generator);
+
+    // FIXME: Load the correct 'this' value into 'this_reg'.
+    auto this_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(this_reg, js_undefined());
+
+    Vector<Bytecode::Register> argument_registers;
+    for (auto& arg : m_arguments)
+        argument_registers.append(*arg.value->generate_bytecode(generator));
+    auto dst_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Call>(dst_reg, *callee_reg, this_reg, argument_registers);
+    return dst_reg;
+}
+
 }

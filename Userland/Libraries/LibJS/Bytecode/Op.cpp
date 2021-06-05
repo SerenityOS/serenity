@@ -91,6 +91,31 @@ void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_target.value());
 }
 
+void Call::execute(Bytecode::Interpreter& interpreter) const
+{
+    auto callee = interpreter.reg(m_callee);
+    if (!callee.is_function()) {
+        TODO();
+    }
+    auto& function = callee.as_function();
+
+    auto this_value = interpreter.reg(m_this_value);
+
+    Value return_value;
+
+    if (m_arguments.is_empty()) {
+        return_value = interpreter.vm().call(function, this_value);
+    } else {
+        MarkedValueList argument_values { interpreter.vm().heap() };
+        for (auto& arg : m_arguments) {
+            argument_values.append(interpreter.reg(arg));
+        }
+        return_value = interpreter.vm().call(function, this_value, move(argument_values));
+    }
+
+    interpreter.reg(m_dst) = return_value;
+}
+
 void EnterScope::execute(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
@@ -180,6 +205,22 @@ String JumpIfTrue::to_string() const
     if (m_target.has_value())
         return String::formatted("JumpIfTrue result:{}, target:{}", m_result, m_target.value());
     return String::formatted("JumpIfTrue result:{}, target:<empty>", m_result);
+}
+
+String Call::to_string() const
+{
+    StringBuilder builder;
+    builder.appendff("Call dst:{}, callee:{}, this:{}", m_dst, m_callee, m_this_value);
+    if (!m_arguments.is_empty()) {
+        builder.append(", arguments:[");
+        for (size_t i = 0; i < m_arguments.size(); ++i) {
+            builder.appendff("{}", m_arguments[i]);
+            if (i != m_arguments.size() - 1)
+                builder.append(',');
+        }
+        builder.append(']');
+    }
+    return builder.to_string();
 }
 
 String EnterScope::to_string() const

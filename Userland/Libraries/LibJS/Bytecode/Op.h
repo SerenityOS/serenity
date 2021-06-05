@@ -265,6 +265,27 @@ private:
     Optional<Label> m_target;
 };
 
+class Call final : public Instruction {
+public:
+    Call(Register dst, Register callee, Register this_value, Vector<Register> arguments)
+        : m_dst(dst)
+        , m_callee(callee)
+        , m_this_value(this_value)
+        , m_arguments(move(arguments))
+    {
+    }
+
+    virtual ~Call() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_dst;
+    Register m_callee;
+    Register m_this_value;
+    Vector<Register> m_arguments;
+};
+
 class EnterScope final : public Instruction {
 public:
     explicit EnterScope(ScopeNode const& scope_node)
