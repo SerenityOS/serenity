@@ -39,9 +39,10 @@ void Terminal::clear()
 void Terminal::clear_history()
 {
     dbgln_if(TERMINAL_DEBUG, "Clear history");
+    auto previous_history_size = m_history.size();
     m_history.clear();
     m_history_start = 0;
-    m_client.terminal_history_changed();
+    m_client.terminal_history_changed(-previous_history_size);
 }
 #endif
 
@@ -744,8 +745,11 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
 
+    int history_delta = -count;
     bool should_move_to_scrollback = !m_use_alternate_screen_buffer && max_history_size() != 0;
     if (should_move_to_scrollback) {
+        auto remaining_lines = max_history_size() - history_size();
+        history_delta = (count > remaining_lines) ? remaining_lines - count : 0;
         for (size_t i = 0; i < count; ++i)
             add_line_to_history(move(active_buffer().ptr_at(region_top + i)));
     }
@@ -767,8 +771,7 @@ void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
     // The other lines have implicitly been set dirty by being cleared.
     for (u16 row = region_top; row <= region_bottom - count; ++row)
         active_buffer()[row].set_dirty(true);
-    if (!m_use_alternate_screen_buffer && max_history_size() != 0)
-        m_client.terminal_history_changed();
+    m_client.terminal_history_changed(history_delta);
 }
 
 // Insert `count` blank lines at the top of the region. Text moves down. Does not affect the scrollback buffer.
