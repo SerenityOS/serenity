@@ -55,6 +55,26 @@ private:
     bool setup_past_independence();
     bool trailing_bits();
 
+    bool compressed_header();
+    bool read_tx_mode();
+    bool tx_mode_probs();
+    u8 diff_update_prob(u8 prob);
+    u8 decode_term_subexp();
+    u8 inv_remap_prob(u8 delta_prob, u8 prob);
+    u8 inv_recenter_nonneg(u8 v, u8 m);
+    bool read_coef_probs();
+    bool read_skip_prob();
+    bool read_inter_mode_probs();
+    bool read_interp_filter_probs();
+    bool read_is_inter_probs();
+    bool frame_reference_mode();
+    bool frame_reference_mode_probs();
+    bool read_y_mode_probs();
+    bool read_partition_probs();
+    bool mv_probs();
+    u8 update_mv_prob(u8 prob);
+    bool setup_compound_reference_mode();
+
     u64 m_start_bit_pos { 0 };
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -84,6 +104,7 @@ private:
     u16 m_frame_height { 0 };
     u16 m_render_width { 0 };
     u16 m_render_height { 0 };
+    bool m_render_and_frame_size_different { false };
     u16 m_mi_cols { 0 };
     u16 m_mi_rows { 0 };
     u16 m_sb64_cols { 0 };
@@ -99,6 +120,11 @@ private:
     u16 m_tile_rows_log2 { 0 };
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
+
+    TXMode m_tx_mode;
+    ReferenceMode m_reference_mode;
+    ReferenceFrame m_comp_fixed_ref;
+    ReferenceFrame m_comp_var_ref[2];
 
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;
