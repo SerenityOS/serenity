@@ -216,11 +216,15 @@ protected:
 #ifndef KERNEL
     void scroll_up(u16 region_top, u16 region_bottom, size_t count);
     void scroll_down(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_left(u16 row, u16 column, size_t count);
+    void scroll_right(u16 row, u16 column, size_t count);
     void put_character_at(unsigned row, unsigned column, u32 ch);
     void clear_in_line(u16 row, u16 first_column, u16 last_column);
 #else
     virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) = 0;
     virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) = 0;
+    virtual void scroll_left(u16 row, u16 column, size_t count) = 0;
+    virtual void scroll_right(u16 row, u16 column, size_t count) = 0;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) = 0;
     virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) = 0;
 #endif
@@ -306,12 +310,8 @@ protected:
     // DECSCUSR - Set Cursor Style
     void DECSCUSR(Parameters);
 
-#ifndef KERNEL
     // ICH - Insert Character
     void ICH(Parameters);
-#else
-    virtual void ICH(Parameters) = 0;
-#endif
 
     // SU - Scroll Up (called "Pan Down" in VT510)
     void SU(Parameters);
@@ -322,12 +322,8 @@ protected:
     // IL - Insert Line
     void IL(Parameters);
 
-#ifndef KERNEL
     // DCH - Delete Character
     void DCH(Parameters);
-#else
-    virtual void DCH(Parameters) = 0;
-#endif
 
     // DL - Delete Line
     void DL(Parameters);

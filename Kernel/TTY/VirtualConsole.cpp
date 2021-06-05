@@ -86,14 +86,14 @@ void ConsoleImpl::clear_in_line(u16 row, u16 first_column, u16 last_column)
     m_client.clear_in_line(row, first_column, last_column);
 }
 
-void ConsoleImpl::ICH(Parameters)
+void ConsoleImpl::scroll_left(u16 row, u16 column, size_t count)
 {
-    // FIXME: Implement this
+    m_client.scroll_left(row, column, count);
 }
 
-void ConsoleImpl::DCH(Parameters)
+void ConsoleImpl::scroll_right(u16 row, u16 column, size_t count)
 {
-    // FIXME: Implement this
+    m_client.scroll_right(row, column, count);
 }
 
 void VirtualConsole::set_graphical(bool graphical)
@@ -423,6 +423,28 @@ void VirtualConsole::scroll_down(u16 region_top, u16 region_bottom, size_t count
         clear_line(region_top + i);
     for (u16 row = region_top; row <= region_bottom; ++row)
         m_lines[row].dirty = true;
+}
+
+void VirtualConsole::scroll_left(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    memmove(&cell_at(column, row), &cell_at(column + count, row), sizeof(Cell) * (columns() - column - count));
+    for (size_t i = column + count; i < columns(); ++i)
+        cell_at(i, row).clear();
+    m_lines[row].dirty = true;
+}
+
+void VirtualConsole::scroll_right(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    memmove(&cell_at(column + count, row), &cell_at(column, row), sizeof(Cell) * (columns() - column - count));
+    for (size_t i = column; i < column + count; ++i)
+        cell_at(i, row).clear();
+    m_lines[row].dirty = true;
 }
 
 void VirtualConsole::clear_in_line(u16 row, u16 first_column, u16 last_column)
