@@ -45,7 +45,7 @@ public:
     virtual void set_window_title(const StringView&) = 0;
     virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
-    virtual void terminal_history_changed() = 0;
+    virtual void terminal_history_changed(int delta) = 0;
     virtual void emit(const u8*, size_t) = 0;
     virtual void set_cursor_style(CursorStyle) = 0;
 };
@@ -141,10 +141,11 @@ public:
     void set_max_history_size(size_t value)
     {
         if (value == 0) {
+            auto previous_size = m_history.size();
             m_max_history_lines = 0;
             m_history_start = 0;
             m_history.clear();
-            m_client.terminal_history_changed();
+            m_client.terminal_history_changed(-previous_size);
             return;
         }
 
@@ -158,7 +159,7 @@ public:
             }
             m_history = move(new_history);
             m_history_start = 0;
-            m_client.terminal_history_changed();
+            m_client.terminal_history_changed(value - existing_line_count);
         }
         m_max_history_lines = value;
     }

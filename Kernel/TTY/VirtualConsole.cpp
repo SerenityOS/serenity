@@ -353,7 +353,7 @@ void VirtualConsole::terminal_did_resize(u16 columns, u16 rows)
     dbgln("VC {}: Resized to {} x {}", index(), columns, rows);
 }
 
-void VirtualConsole::terminal_history_changed()
+void VirtualConsole::terminal_history_changed(int)
 {
     // Do nothing, I guess?
 }
