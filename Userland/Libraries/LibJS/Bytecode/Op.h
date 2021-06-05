@@ -265,4 +265,19 @@ private:
     Optional<Label> m_target;
 };
 
+class EnterScope final : public Instruction {
+public:
+    explicit EnterScope(ScopeNode const& scope_node)
+        : m_scope_node(scope_node)
+    {
+    }
+
+    virtual ~EnterScope() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    ScopeNode const& m_scope_node;
+};
+
 }
