@@ -33,7 +33,11 @@ public:
     Cell& cell_at(size_t index) { return m_cells[index]; }
     const Cell& cell_at(size_t index) const { return m_cells[index]; }
 
-    void clear(const Attribute&);
+    void clear(const Attribute& attribute = Attribute())
+    {
+        clear_range(0, m_cells.size() - 1, attribute);
+    }
+    void clear_range(size_t first_column, size_t last_column, const Attribute& attribute = Attribute());
     bool has_only_one_background_color() const;
 
     size_t length() const { return m_cells.size(); }

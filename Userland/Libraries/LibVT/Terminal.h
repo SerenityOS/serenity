@@ -217,10 +217,12 @@ protected:
     void scroll_up(u16 region_top, u16 region_bottom, size_t count);
     void scroll_down(u16 region_top, u16 region_bottom, size_t count);
     void put_character_at(unsigned row, unsigned column, u32 ch);
+    void clear_in_line(u16 row, u16 first_column, u16 last_column);
 #else
     virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) = 0;
     virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) = 0;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) = 0;
+    virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) = 0;
 #endif
 
     void unimplemented_control_code(u8);

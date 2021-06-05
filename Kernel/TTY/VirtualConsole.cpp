@@ -81,6 +81,11 @@ void ConsoleImpl::put_character_at(unsigned row, unsigned column, u32 ch)
     m_last_code_point = ch;
 }
 
+void ConsoleImpl::clear_in_line(u16 row, u16 first_column, u16 last_column)
+{
+    m_client.clear_in_line(row, first_column, last_column);
+}
+
 void ConsoleImpl::ICH(Parameters)
 {
     // FIXME: Implement this
@@ -420,13 +425,14 @@ void VirtualConsole::scroll_down(u16 region_top, u16 region_bottom, size_t count
         m_lines[row].dirty = true;
 }
 
-void VirtualConsole::clear_line(size_t y_index)
+void VirtualConsole::clear_in_line(u16 row, u16 first_column, u16 last_column)
 {
-    m_lines[y_index].dirty = true;
-    for (size_t x = 0; x < columns(); x++) {
-        auto& cell = cell_at(x, y_index);
-        cell.clear();
-    }
+    VERIFY(row < rows());
+    VERIFY(first_column <= last_column);
+    VERIFY(last_column < columns());
+    m_lines[row].dirty = true;
+    for (size_t x = first_column; x <= last_column; x++)
+        cell_at(x, row).clear();
 }
 
 void VirtualConsole::put_character_at(unsigned row, unsigned column, u32 code_point, const VT::Attribute& attribute)

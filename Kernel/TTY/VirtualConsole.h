@@ -40,6 +40,7 @@ private:
     virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) override;
     virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) override;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
+    virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) override;
 
     virtual void ICH(Parameters) override;
     virtual void DCH(Parameters) override;
@@ -137,7 +138,11 @@ private:
 
     void scroll_down(u16 region_top, u16 region_bottom, size_t count);
     void scroll_up(u16 region_top, u16 region_bottom, size_t count);
-    void clear_line(size_t index);
+    void clear_line(size_t index)
+    {
+        clear_in_line(index, 0, m_console_impl.columns() - 1);
+    }
+    void clear_in_line(u16 row, u16 first_column, u16 last_column);
     void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
 
     OwnPtr<Region> m_cells;
