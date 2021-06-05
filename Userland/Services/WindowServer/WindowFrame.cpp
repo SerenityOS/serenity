@@ -196,10 +196,8 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
     }
 }
 
-bool WindowFrame::frame_has_alpha() const
+bool WindowFrame::has_shadow() const
 {
-    if (m_has_alpha_channel)
-        return true;
     if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::BGRA8888)
         return true;
     return false;
@@ -512,6 +510,39 @@ Gfx::IntRect WindowFrame::rect() const
 Gfx::IntRect WindowFrame::render_rect() const
 {
     return inflated_for_shadow(rect());
+}
+
+Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
+{
+    if (has_alpha_channel()) {
+        if (m_window.is_opaque())
+            return m_window.rect();
+        return {};
+    }
+    if (m_window.is_opaque())
+        return rect();
+    Gfx::DisjointRectSet opaque_rects;
+    opaque_rects.add_many(rect().shatter(m_window.rect()));
+    return opaque_rects;
+}
+
+Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
+{
+    if (has_alpha_channel()) {
+        if (m_window.is_opaque()) {
+            Gfx::DisjointRectSet transparent_rects;
+            transparent_rects.add_many(render_rect().shatter(m_window.rect()));
+            return transparent_rects;
+        }
+        return render_rect();
+    }
+
+    Gfx::DisjointRectSet transparent_rects;
+    if (has_shadow())
+        transparent_rects.add_many(render_rect().shatter(rect()));
+    if (!m_window.is_opaque())
+        transparent_rects.add(m_window.rect());
+    return transparent_rects;
 }
 
 void WindowFrame::invalidate_titlebar()

@@ -29,6 +29,8 @@ public:
 
     Gfx::IntRect rect() const;
     Gfx::IntRect render_rect() const;
+    Gfx::DisjointRectSet opaque_render_rects() const;
+    Gfx::DisjointRectSet transparent_render_rects() const;
     void paint(Gfx::Painter&, const Gfx::IntRect&);
     void render(Gfx::Painter&);
     void render_to_cache();
@@ -52,8 +54,9 @@ public:
 
     void start_flash_animation();
 
-    bool has_alpha_channel() const { return m_has_alpha_channel || frame_has_alpha(); }
+    bool has_alpha_channel() const { return m_has_alpha_channel; }
     void set_has_alpha_channel(bool value) { m_has_alpha_channel = value; }
+    bool has_shadow() const;
 
     void set_opacity(float);
     float opacity() const { return m_opacity; }
@@ -86,7 +89,6 @@ private:
     void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
     Gfx::Bitmap* window_shadow() const;
-    bool frame_has_alpha() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
     Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
 
