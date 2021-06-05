@@ -4,6 +4,7 @@ set(SOURCES
     VP9/Enums.h
     VP9/ProbabilityTables.cpp
     VP9/Symbols.h
+    VP9/SyntaxElementCounter.cpp
 )
 
 serenity_lib(LibVideo video)
