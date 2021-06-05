@@ -13,6 +13,7 @@
 #include <Kernel/Interrupts/IOAPIC.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
+#include <Kernel/Interrupts/SharedIRQHandler.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
 #include <Kernel/Interrupts/UnhandledInterruptHandler.h>
 #include <Kernel/VM/TypedMapping.h>
@@ -49,6 +50,10 @@ void InterruptManagement::enumerate_interrupt_handlers(Function<void(GenericInte
 {
     for (int i = 0; i < GENERIC_INTERRUPT_HANDLERS_COUNT; i++) {
         auto& handler = get_interrupt_handler(i);
+        if (handler.type() == HandlerType::SharedIRQHandler) {
+            static_cast<SharedIRQHandler&>(handler).enumerate_handlers(callback);
+            continue;
+        }
         if (handler.type() != HandlerType::UnhandledInterruptHandler)
             callback(handler);
     }
