@@ -846,14 +846,11 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     // 1) #! interpreted file
     auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread_or_error.value());
     if (!shebang_result.is_error()) {
-        Vector<String> new_arguments(shebang_result.value());
-
-        new_arguments.append(path);
-
-        arguments.remove(0);
-        new_arguments.append(move(arguments));
-
-        return exec(shebang_result.value().first(), move(new_arguments), move(environment), ++recursion_depth);
+        auto shebang_words = shebang_result.release_value();
+        auto shebang_path = shebang_words.first();
+        if (!arguments.try_prepend(move(shebang_words)))
+            return ENOMEM;
+        return exec(shebang_path, move(arguments), move(environment), ++recursion_depth);
     }
 
     // #2) ELF32 for i386
