@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -420,44 +421,63 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
-    auto y = vm.argument(0).to_number(global_object), x = vm.argument(1).to_number(global_object);
-    auto pi_4 = M_PI_2 / 2;
-    auto three_pi_4 = pi_4 + M_PI_2;
+    auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
+
+    auto y = vm.argument(0).to_number(global_object);
     if (vm.exception())
         return {};
-    if (x.is_positive_zero()) {
-        if (y.is_positive_zero() || y.is_negative_zero())
-            return y;
-        else
-            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
-    }
-    if (x.is_negative_zero()) {
-        if (y.is_positive_zero())
-            return Value(M_PI);
-        else if (y.is_negative_zero())
-            return Value(-M_PI);
-        else
-            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
-    }
-    if (x.is_positive_infinity()) {
-        if (y.is_infinity())
-            return (y.is_positive_infinity()) ? Value(pi_4) : Value(-pi_4);
-        else
-            return (y.as_double() > 0) ? Value(+0.0) : Value(-0.0);
-    }
-    if (x.is_negative_infinity()) {
-        if (y.is_infinity())
-            return (y.is_positive_infinity()) ? Value(three_pi_4) : Value(-three_pi_4);
-        else
-            return (y.as_double() > 0) ? Value(M_PI) : Value(-M_PI);
-    }
-    if (y.is_infinity())
-        return (y.is_positive_infinity()) ? Value(M_PI_2) : Value(-M_PI_2);
-    if (y.is_positive_zero())
-        return (x.as_double() > 0) ? Value(+0.0) : Value(M_PI);
-    if (y.is_negative_zero())
-        return (x.as_double() > 0) ? Value(-0.0) : Value(-M_PI);
+    auto x = vm.argument(1).to_number(global_object);
+    if (vm.exception())
+        return {};
 
+    if (y.is_nan() || x.is_nan())
+        return js_nan();
+    if (y.is_positive_infinity()) {
+        if (x.is_positive_infinity())
+            return Value(M_PI_4);
+        else if (x.is_negative_infinity())
+            return Value(three_quarters_pi);
+        else
+            return Value(M_PI_2);
+    }
+    if (y.is_negative_infinity()) {
+        if (x.is_positive_infinity())
+            return Value(-M_PI_4);
+        else if (x.is_negative_infinity())
+            return Value(-three_quarters_pi);
+        else
+            return Value(-M_PI_2);
+    }
+    if (y.is_positive_zero()) {
+        if (x.as_double() > 0 || x.is_positive_zero())
+            return Value(0.0);
+        else
+            return Value(M_PI);
+    }
+    if (y.is_negative_zero()) {
+        if (x.as_double() > 0 || x.is_positive_zero())
+            return Value(-0.0);
+        else
+            return Value(-M_PI);
+    }
+    VERIFY(y.is_finite_number() && !y.is_positive_zero() && !y.is_negative_zero());
+    if (y.as_double() > 0) {
+        if (x.is_positive_infinity())
+            return Value(0);
+        else if (x.is_negative_infinity())
+            return Value(M_PI);
+        else if (x.is_positive_zero() || x.is_negative_zero())
+            return Value(M_PI_2);
+    }
+    if (y.as_double() < 0) {
+        if (x.is_positive_infinity())
+            return Value(-0.0);
+        else if (x.is_negative_infinity())
+            return Value(-M_PI);
+        else if (x.is_positive_zero() || x.is_negative_zero())
+            return Value(-M_PI_2);
+    }
+    VERIFY(x.is_finite_number() && !x.is_positive_zero() && !x.is_negative_zero());
     return Value(::atan2(y.as_double(), x.as_double()));
 }
 
