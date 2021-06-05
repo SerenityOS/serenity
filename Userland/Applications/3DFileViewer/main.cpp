@@ -203,23 +203,23 @@ int main(int argc, char** argv)
         load_model(open_path.value());
     }));
     file_menu.add_separator();
-    file_menu.add_action(GUI::CommonActions::make_quit_action([&] {
+    file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
         app->quit();
     }));
 
     auto& view_menu = menubar->add_menu("&View");
-    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&] {
+    view_menu.add_action(GUI::CommonActions::make_fullscreen_action([&](auto&) {
         window->set_fullscreen(!window->is_fullscreen());
     }));
 
     auto& rotation_axis_menu = view_menu.add_submenu("Rotation &Axis");
-    auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget] {
+    auto rotation_x_action = GUI::Action::create_checkable("&X", [&widget](auto&) {
         widget.toggle_rotate_x();
     });
-    auto rotation_y_action = GUI::Action::create_checkable("&Y", [&widget] {
+    auto rotation_y_action = GUI::Action::create_checkable("&Y", [&widget](auto&) {
         widget.toggle_rotate_y();
     });
-    auto rotation_z_action = GUI::Action::create_checkable("&Z", [&widget] {
+    auto rotation_z_action = GUI::Action::create_checkable("&Z", [&widget](auto&) {
         widget.toggle_rotate_z();
     });
 
@@ -234,16 +234,16 @@ int main(int argc, char** argv)
     GUI::ActionGroup rotation_speed_actions;
     rotation_speed_actions.set_exclusive(true);
 
-    auto no_rotation_action = GUI::Action::create_checkable("N&o Rotation", [&widget] {
+    auto no_rotation_action = GUI::Action::create_checkable("N&o Rotation", [&widget](auto&) {
         widget.set_rotation_speed(0.f);
     });
-    auto slow_rotation_action = GUI::Action::create_checkable("&Slow", [&widget] {
+    auto slow_rotation_action = GUI::Action::create_checkable("&Slow", [&widget](auto&) {
         widget.set_rotation_speed(0.5f);
     });
-    auto normal_rotation_action = GUI::Action::create_checkable("&Normal", [&widget] {
+    auto normal_rotation_action = GUI::Action::create_checkable("&Normal", [&widget](auto&) {
         widget.set_rotation_speed(1.f);
     });
-    auto fast_rotation_action = GUI::Action::create_checkable("&Fast", [&widget] {
+    auto fast_rotation_action = GUI::Action::create_checkable("&Fast", [&widget](auto&) {
         widget.set_rotation_speed(1.5f);
     });
 

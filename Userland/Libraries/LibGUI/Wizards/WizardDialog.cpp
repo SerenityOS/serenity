@@ -47,13 +47,13 @@ WizardDialog::WizardDialog(Window* parent_window)
 
     m_back_button = nav_container_widget.add<Button>("< Back");
     m_back_button->set_fixed_width(75);
-    m_back_button->on_click = [&]() {
+    m_back_button->on_click = [&](auto) {
         pop_page();
     };
 
     m_next_button = nav_container_widget.add<Button>("Next >");
     m_next_button->set_fixed_width(75);
-    m_next_button->on_click = [&]() {
+    m_next_button->on_click = [&](auto) {
         VERIFY(has_pages());
 
         if (!current_page().can_go_next())
@@ -71,7 +71,7 @@ WizardDialog::WizardDialog(Window* parent_window)
 
     m_cancel_button = nav_container_widget.add<Button>("Cancel");
     m_cancel_button->set_fixed_width(75);
-    m_cancel_button->on_click = [&]() {
+    m_cancel_button->on_click = [&](auto) {
         handle_cancel();
     };
 

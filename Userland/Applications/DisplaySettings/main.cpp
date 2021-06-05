@@ -61,7 +61,7 @@ int main(int argc, char** argv)
 
     auto& ok_button = button_container.add<GUI::Button>("OK");
     ok_button.set_fixed_width(75);
-    ok_button.on_click = [&] {
+    ok_button.on_click = [&](auto) {
         background_settings_widget.apply_settings();
         monitor_settings_widget.apply_settings();
         font_settings_widget.apply_settings();
@@ -70,13 +70,13 @@ int main(int argc, char** argv)
 
     auto& cancel_button = button_container.add<GUI::Button>("Cancel");
     cancel_button.set_fixed_width(75);
-    cancel_button.on_click = [&] {
+    cancel_button.on_click = [&](auto) {
         app->quit();
     };
 
     auto& apply_button = button_container.add<GUI::Button>("Apply");
     apply_button.set_fixed_width(75);
-    apply_button.on_click = [&] {
+    apply_button.on_click = [&](auto) {
         background_settings_widget.apply_settings();
         monitor_settings_widget.apply_settings();
         font_settings_widget.apply_settings();

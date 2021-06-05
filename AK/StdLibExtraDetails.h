@@ -435,10 +435,16 @@ inline constexpr bool IsTrivial = __is_trivial(T);
 template<typename T>
 inline constexpr bool IsTriviallyCopyable = __is_trivially_copyable(T);
 
+template<typename T>
+auto declval() -> T;
+
+template<typename T, typename... Args>
+inline constexpr bool IsCallableWithArguments = requires(T t) { t(declval<Args>()...); };
 }
 using AK::Detail::AddConst;
 using AK::Detail::Conditional;
 using AK::Detail::CopyConst;
+using AK::Detail::declval;
 using AK::Detail::DependentFalse;
 using AK::Detail::EnableIf;
 using AK::Detail::FalseType;
@@ -447,6 +453,7 @@ using AK::Detail::IndexSequence;
 using AK::Detail::IntegerSequence;
 using AK::Detail::IsArithmetic;
 using AK::Detail::IsBaseOf;
+using AK::Detail::IsCallableWithArguments;
 using AK::Detail::IsClass;
 using AK::Detail::IsConst;
 using AK::Detail::IsEnum;

@@ -15,7 +15,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     if (!zip_file.has_value())
         return 0;
 
-    zip_file->for_each_member([]() {
+    zip_file->for_each_member([](auto&) {
         return IterationDecision::Continue;
     });
 

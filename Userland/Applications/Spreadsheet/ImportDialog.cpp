@@ -67,18 +67,18 @@ CSVImportDialogPage::CSVImportDialogPage(StringView csv)
     m_delimiter_tab_radio->on_checked = [&](auto) { update_preview(); };
     m_delimiter_space_radio->on_checked = [&](auto) { update_preview(); };
     m_delimiter_other_radio->on_checked = [&](auto) { update_preview(); };
-    m_delimiter_other_text_box->on_change = [&](auto&) {
+    m_delimiter_other_text_box->on_change = [&] {
         if (m_delimiter_other_radio->is_checked())
             update_preview();
     };
     m_quote_single_radio->on_checked = [&](auto) { update_preview(); };
     m_quote_double_radio->on_checked = [&](auto) { update_preview(); };
     m_quote_other_radio->on_checked = [&](auto) { update_preview(); };
-    m_quote_other_text_box->on_change = [&](auto&) {
+    m_quote_other_text_box->on_change = [&] {
         if (m_quote_other_radio->is_checked())
             update_preview();
     };
-    m_quote_escape_combo_box->on_change = [&](auto&) { update_preview(); };
+    m_quote_escape_combo_box->on_change = [&](auto&, auto&) { update_preview(); };
     m_read_header_check_box->on_checked = [&](auto) { update_preview(); };
     m_trim_leading_field_spaces_check_box->on_checked = [&](auto) { update_preview(); };
     m_trim_trailing_field_spaces_check_box->on_checked = [&](auto) { update_preview(); };

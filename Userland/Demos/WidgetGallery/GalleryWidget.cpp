@@ -82,7 +82,7 @@ GalleryWidget::GalleryWidget()
     m_disabled_icon_button = basics_tab.find_descendant_of_type_named<GUI::Button>("disabled_icon_button");
     m_disabled_icon_button->set_icon(*m_button_icons[2]);
 
-    m_icon_button->on_click = [&]() {
+    m_icon_button->on_click = [&](auto) {
         static size_t i;
         if (i >= m_button_icons.size())
             i = 0;
@@ -96,7 +96,7 @@ GalleryWidget::GalleryWidget()
     m_font_button = basics_tab.find_descendant_of_type_named<GUI::Button>("font_button");
     m_font_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/app-font-editor.png"));
 
-    m_font_button->on_click = [&]() {
+    m_font_button->on_click = [&](auto) {
         auto picker = GUI::FontPicker::construct(window(), &m_text_editor->font(), false);
         if (picker->exec() == GUI::Dialog::ExecOK) {
             m_text_editor->set_font(picker->font());
@@ -106,7 +106,7 @@ GalleryWidget::GalleryWidget()
     m_file_button = basics_tab.find_descendant_of_type_named<GUI::Button>("file_button");
     m_file_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/open.png"));
 
-    m_file_button->on_click = [&]() {
+    m_file_button->on_click = [&](auto) {
         Optional<String> open_path = GUI::FilePicker::get_open_filepath(window());
         if (!open_path.has_value())
             return;
@@ -116,7 +116,7 @@ GalleryWidget::GalleryWidget()
     m_input_button = basics_tab.find_descendant_of_type_named<GUI::Button>("input_button");
     m_input_button->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/properties.png"));
 
-    m_input_button->on_click = [&]() {
+    m_input_button->on_click = [&](auto) {
         String value;
         if (GUI::InputBox::show(window(), value, "Enter input:", "Input") == GUI::InputBox::ExecOK && !value.is_empty())
             m_text_editor->set_text(value);
@@ -164,7 +164,7 @@ GalleryWidget::GalleryWidget()
         m_msgbox_input_type = static_cast<GUI::MessageBox::InputType>(index.row());
     };
 
-    m_msgbox_button->on_click = [&]() {
+    m_msgbox_button->on_click = [&](auto) {
         GUI::MessageBox::show(window(), m_text_editor->text(), "Message", m_msgbox_type, m_msgbox_input_type);
     };
 
@@ -261,7 +261,7 @@ GalleryWidget::GalleryWidget()
 
     m_wizard_output->set_text(String::formatted("{}{}", serenityos_ascii, wizard_ascii));
 
-    m_wizard_button->on_click = [&]() {
+    m_wizard_button->on_click = [&](auto) {
         StringBuilder sb;
         sb.append(m_wizard_output->get_text());
         sb.append("\nWizard started.");

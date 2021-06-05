@@ -119,9 +119,9 @@ TESTJS_GLOBAL_FUNCTION(wait_for_page_to_load, waitForPageToLoad)
                     break;
             }
         },
-        [&](auto) {
+        [&](auto&, auto) {
             dbgln("Load of resource {} failed", next_page_to_load.value());
-            vm.throw_exception<Web::DOM::NetworkError>(global_object);
+            vm.throw_exception<JS::TypeError>(global_object, "Resource load failed");
         });
 
     return JS::js_undefined();

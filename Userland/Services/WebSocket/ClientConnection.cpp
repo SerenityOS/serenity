@@ -127,7 +127,7 @@ void ClientConnection::did_error(i32 connection_id, i32 message)
 void ClientConnection::did_close(i32 connection_id, u16 code, String reason, bool was_clean)
 {
     async_closed(connection_id, code, reason, was_clean);
-    deferred_invoke([this, connection_id] {
+    deferred_invoke([this, connection_id](auto&) {
         m_connections.remove(connection_id);
     });
 }

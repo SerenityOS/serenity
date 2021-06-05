@@ -34,7 +34,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
     auto& destination_folder_icon = *find_descendant_of_type_named<GUI::ImageWidget>("destination_folder_icon");
     destination_folder_icon.load_from_file("/res/icons/32x32/filetype-folder-open.png");
 
-    button.on_click = [this] {
+    button.on_click = [this](auto) {
         close_pipe();
         window()->close();
     };

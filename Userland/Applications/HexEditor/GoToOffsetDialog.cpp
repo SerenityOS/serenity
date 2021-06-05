@@ -137,11 +137,11 @@ GoToOffsetDialog::GoToOffsetDialog()
         update_statusbar();
     };
 
-    m_offset_type_box->on_change = [this]() {
+    m_offset_type_box->on_change = [this](auto&, auto&) {
         update_statusbar();
     };
 
-    m_offset_from_box->on_change = [this]() {
+    m_offset_from_box->on_change = [this](auto&, auto&) {
         update_statusbar();
     };
 
