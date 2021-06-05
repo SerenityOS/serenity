@@ -80,6 +80,10 @@ protected:
 private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
+    inline void echo_with_processing(u8);
+
+    template<typename Functor>
+    void process_output(u8, Functor put_char);
 
     CircularDeque<u8, TTY_BUFFER_SIZE> m_input_buffer;
     // FIXME: use something like AK::Bitmap but which takes a size template parameter
