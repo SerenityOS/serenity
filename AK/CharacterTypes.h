@@ -140,6 +140,17 @@ constexpr u32 parse_ascii_hex_digit(u32 code_point)
     VERIFY_NOT_REACHED();
 }
 
+constexpr u32 parse_ascii_base36_digit(u32 code_point)
+{
+    if (is_ascii_digit(code_point))
+        return parse_ascii_digit(code_point);
+    if (code_point >= 'A' && code_point <= 'Z')
+        return code_point - 'A' + 10;
+    if (code_point >= 'a' && code_point <= 'z')
+        return code_point - 'a' + 10;
+    VERIFY_NOT_REACHED();
+}
+
 }
 
 using AK::is_ascii;
@@ -161,6 +172,7 @@ using AK::is_unicode_control;
 using AK::is_unicode_noncharacter;
 using AK::is_unicode_scalar_value;
 using AK::is_unicode_surrogate;
+using AK::parse_ascii_base36_digit;
 using AK::parse_ascii_digit;
 using AK::parse_ascii_hex_digit;
 using AK::to_ascii_lowercase;
