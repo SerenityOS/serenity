@@ -29,6 +29,11 @@ public:
 
     Label make_label() const;
 
+    void begin_continuable_scope();
+    void end_continuable_scope();
+
+    Label nearest_continuable_scope() const;
+
 private:
     Generator();
     ~Generator();
@@ -37,6 +42,7 @@ private:
 
     OwnPtr<Block> m_block;
     u32 m_next_register { 1 };
+    Vector<Label> m_continuable_scopes;
 };
 
 }
