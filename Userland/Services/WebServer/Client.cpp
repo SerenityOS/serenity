@@ -5,7 +5,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Client.h"
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
@@ -21,16 +20,17 @@
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
 #include <LibHTTP/HttpResponse.h>
+#include <WebServer/Client.h>
+#include <WebServer/Configuration.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 namespace WebServer {
 
-Client::Client(NonnullRefPtr<Core::TCPSocket> socket, String const& root, Core::Object* parent)
+Client::Client(NonnullRefPtr<Core::TCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(socket)
-    , m_root_path(root)
 {
 }
 
@@ -84,8 +84,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
-    path_builder.append(m_root_path);
-    path_builder.append('/');
+    path_builder.append(Configuration::the().root_path());
     path_builder.append(requested_path);
     auto real_path = path_builder.to_string();
 

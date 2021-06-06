@@ -1,5 +1,6 @@
 set(SOURCES
     Client.cpp
+    Configuration.cpp
     main.cpp
 )
 
