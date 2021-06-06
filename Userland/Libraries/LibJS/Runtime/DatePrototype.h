@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(get_date);
+    JS_DECLARE_NATIVE_FUNCTION(set_date);
     JS_DECLARE_NATIVE_FUNCTION(get_day);
     JS_DECLARE_NATIVE_FUNCTION(get_full_year);
     JS_DECLARE_NATIVE_FUNCTION(set_full_year);

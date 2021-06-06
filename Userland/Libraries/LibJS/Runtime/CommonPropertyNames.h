@@ -215,6 +215,7 @@ namespace JS {
     P(round)                                 \
     P(seal)                                  \
     P(set)                                   \
+    P(setDate)                               \
     P(setFullYear)                           \
     P(setHours)                              \
     P(setMilliseconds)                       \

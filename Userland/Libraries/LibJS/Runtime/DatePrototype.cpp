@@ -39,6 +39,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.getDate, get_date, 0, attr);
+    define_native_function(vm.names.setDate, set_date, 1, attr);
     define_native_function(vm.names.getDay, get_day, 0, attr);
     define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
     define_native_function(vm.names.setFullYear, set_full_year, 3, attr);
@@ -100,6 +101,29 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
         return js_nan();
 
     return Value(this_object->date());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto& datetime = this_object->datetime();
+
+    auto new_date_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_date_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_date = new_date_value.as_i32();
+
+    this_object->set_is_invalid(false);
+
+    datetime.set_time(datetime.year(), datetime.month(), new_date, datetime.hour(), datetime.minute(), datetime.second());
+    return Value(this_object->time());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
