@@ -179,6 +179,9 @@ public:
         return insert(it, end);
     }
 
+    HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits>& children() { return m_children; }
+    HashMap<ValueType, NonnullOwnPtr<Trie>, ValueTraits> const& children() const { return m_children; }
+
     ConstIterator begin() const { return ConstIterator(*this); }
     ConstIterator end() const { return ConstIterator::end(); }
 
