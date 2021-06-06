@@ -599,7 +599,6 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
         if (!m_waitee || m_waitee->ppid() != Process::current()->pid()) {
             m_result = ECHILD;
             m_error = true;
-            return;
         }
         break;
     }
@@ -608,7 +607,6 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, idtype_t id_type, pid_t id, K
         if (!m_waitee_group) {
             m_result = ECHILD;
             m_error = true;
-            return;
         }
         break;
     }
