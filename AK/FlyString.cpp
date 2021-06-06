@@ -115,11 +115,6 @@ FlyString FlyString::to_lowercase() const
     return String(*m_impl).to_lowercase();
 }
 
-StringView FlyString::view() const
-{
-    return { characters(), length() };
-}
-
 bool FlyString::operator==(const String& other) const
 {
     if (m_impl == other.impl())
