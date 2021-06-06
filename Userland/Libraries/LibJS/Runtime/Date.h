@@ -15,10 +15,10 @@ class Date final : public Object {
     JS_OBJECT(Date, Object);
 
 public:
-    static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds, bool is_invalid = false);
+    static Date* create(GlobalObject&, Core::DateTime, i16 milliseconds, bool is_invalid = false);
     static Date* now(GlobalObject&);
 
-    Date(Core::DateTime datetime, u16 milliseconds, bool is_invalid, Object& prototype);
+    Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype);
     virtual ~Date() override;
 
     Core::DateTime& datetime() { return m_datetime; }
@@ -27,7 +27,7 @@ public:
     int date() const { return datetime().day(); }
     int day() const { return datetime().weekday(); }
     int hours() const { return datetime().hour(); }
-    u16 milliseconds() const { return m_milliseconds; }
+    i16 milliseconds() const { return m_milliseconds; }
     int minutes() const { return datetime().minute(); }
     int month() const { return datetime().month() - 1; }
     int seconds() const { return datetime().second(); }
@@ -46,7 +46,7 @@ public:
     int utc_month() const;
     int utc_seconds() const;
 
-    void set_milliseconds(u16 milliseconds)
+    void set_milliseconds(i16 milliseconds)
     {
         m_milliseconds = milliseconds;
     }
@@ -79,7 +79,7 @@ private:
     tm to_utc_tm() const;
 
     Core::DateTime m_datetime;
-    u16 m_milliseconds;
+    i16 m_milliseconds;
     bool m_is_invalid { false };
 };
 

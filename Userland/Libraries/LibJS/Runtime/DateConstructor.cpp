@@ -152,7 +152,7 @@ Value DateConstructor::construct(Function&)
 
     auto create_invalid_date = [this]() {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
-        auto milliseconds = static_cast<u16>(0);
+        auto milliseconds = static_cast<i16>(0);
         return Date::create(global_object(), datetime, milliseconds, true);
     };
 
@@ -173,7 +173,7 @@ Value DateConstructor::construct(Function&)
         // A timestamp since the epoch, in UTC.
         double value_as_double = value.as_double();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
-        auto milliseconds = static_cast<u16>(fmod(value_as_double, 1000));
+        auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
     }
 
