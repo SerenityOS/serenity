@@ -544,4 +544,10 @@ void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOpe
     }
 }
 
+void VM::dump_backtrace() const
+{
+    for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i)
+        dbgln("-> {}", m_call_stack[i]->function_name);
+}
+
 }
