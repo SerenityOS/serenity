@@ -40,6 +40,7 @@ public:
     void set_fullscreen(bool);
 
     bool is_maximized() const;
+    void set_maximized(bool);
 
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool);
