@@ -29,28 +29,35 @@ public:
         String value;
     };
 
+    struct BasicAuthenticationCredentials {
+        String username;
+        String password;
+    };
+
     HttpRequest();
     ~HttpRequest();
 
-    const String& resource() const { return m_resource; }
-    const Vector<Header>& headers() const { return m_headers; }
+    String const& resource() const { return m_resource; }
+    Vector<Header> const& headers() const { return m_headers; }
 
-    const URL& url() const { return m_url; }
-    void set_url(const URL& url) { m_url = url; }
+    URL const& url() const { return m_url; }
+    void set_url(URL const& url) { m_url = url; }
 
     Method method() const { return m_method; }
     void set_method(Method method) { m_method = method; }
 
-    const ByteBuffer& body() const { return m_body; }
+    ByteBuffer const& body() const { return m_body; }
     void set_body(ReadonlyBytes body) { m_body = ByteBuffer::copy(body); }
     void set_body(ByteBuffer&& body) { m_body = move(body); }
 
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
-    void set_headers(const HashMap<String, String>&);
+    void set_headers(HashMap<String, String> const&);
 
     static Optional<HttpRequest> from_raw_request(ReadonlyBytes);
+    static Optional<Header> get_http_basic_authentication_header(URL const&);
+    static Optional<BasicAuthenticationCredentials> parse_http_basic_authentication_header(String const&);
 
 private:
     URL m_url;
