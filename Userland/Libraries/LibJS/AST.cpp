@@ -2075,6 +2075,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
         return {};
 
     bool falling_through = false;
+    auto last_value = js_undefined();
 
     for (auto& switch_case : m_cases) {
         if (!falling_through && switch_case.test()) {
@@ -2087,24 +2088,25 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
         falling_through = true;
 
         for (auto& statement : switch_case.consequent()) {
-            auto last_value = statement.execute(interpreter, global_object);
+            auto value = statement.execute(interpreter, global_object);
+            if (!value.is_empty())
+                last_value = value;
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
                 if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
                     // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
-                    return {};
+                    return last_value;
                 } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.vm().stop_unwind();
-                    return {};
+                    return last_value;
                 } else {
                     return last_value;
                 }
             }
         }
     }
-
-    return js_undefined();
+    return last_value;
 }
 
 Value SwitchCase::execute(Interpreter& interpreter, GlobalObject&) const
