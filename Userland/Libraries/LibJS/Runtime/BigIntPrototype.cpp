@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,24 +33,25 @@ BigIntPrototype::~BigIntPrototype()
 {
 }
 
-static BigIntObject* bigint_object_from(VM& vm, GlobalObject& global_object)
+// thisBigIntValue, https://tc39.es/ecma262/#thisbigintvalue
+static Value this_bigint_value(GlobalObject& global_object, Value value)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<BigIntObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "BigInt");
-        return nullptr;
-    }
-    return static_cast<BigIntObject*>(this_object);
+    if (value.is_bigint())
+        return value;
+    if (value.is_object() && is<BigIntObject>(value.as_object()))
+        return static_cast<BigIntObject&>(value.as_object()).value_of();
+    auto& vm = global_object.vm();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "BigInt");
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
-    auto* bigint_object = bigint_object_from(vm, global_object);
-    if (!bigint_object)
+    auto bigint_value = this_bigint_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    return js_string(vm, bigint_object->bigint().big_integer().to_base10());
+    // FIXME: Support radix argument
+    return js_string(vm, bigint_value.as_bigint().big_integer().to_base10());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
@@ -60,10 +61,7 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
-    auto* bigint_object = bigint_object_from(vm, global_object);
-    if (!bigint_object)
-        return {};
-    return bigint_object->value_of();
+    return this_bigint_value(global_object, vm.this_value(global_object));
 }
 
 }
