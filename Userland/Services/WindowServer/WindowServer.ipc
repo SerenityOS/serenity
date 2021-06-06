@@ -126,4 +126,6 @@ endpoint WindowServer
 
     set_double_click_speed(int speed) => ()
     get_double_click_speed() => (int speed)
+
+    get_desktop_display_scale() => (int desktop_display_scale)
 }
