@@ -75,7 +75,10 @@ describe("correct behavior", () => {
 test("errors", () => {
     test("must be called with numeric |this|", () => {
         [true, [], {}, Symbol("foo"), "bar", 1n].forEach(value => {
-            expect(() => Number.prototype.toString.call(value)).toThrow(TypeError);
+            expect(() => Number.prototype.toString.call(value)).toThrowWithMessage(
+                TypeError,
+                "Number.prototype.toString() called with incompatible this target"
+            );
         });
     });
 

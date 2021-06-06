@@ -53,7 +53,7 @@
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotIterable, "{} is not iterable")                                                                                                \
     M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
-    M(NumberIncompatibleThis, "Number.prototype.{} method called with incompatible this target")                                        \
+    M(NumberIncompatibleThis, "Number.prototype.{}() called with incompatible this target")                                             \
     M(ObjectDefinePropertyReturnedFalse, "Object's [[DefineProperty]] method returned false")                                           \
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
     M(ObjectSealFailed, "Could not seal object")                                                                                        \

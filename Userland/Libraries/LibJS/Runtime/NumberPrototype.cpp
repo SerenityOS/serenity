@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,26 +33,33 @@ void NumberPrototype::initialize(GlobalObject& object)
 {
     auto& vm = this->vm();
     Object::initialize(object);
-    define_native_function(vm.names.toString, to_string, 1, Attribute::Configurable | Attribute::Writable);
+    u8 attr = Attribute::Configurable | Attribute::Writable;
+    define_native_function(vm.names.toString, to_string, 1, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 NumberPrototype::~NumberPrototype()
 {
 }
 
+// https://tc39.es/ecma262/#thisnumbervalue
+static Value this_number_value(GlobalObject& global_object, StringView const& name)
+{
+    auto& vm = global_object.vm();
+    auto this_value = vm.this_value(global_object);
+    if (this_value.is_number())
+        return this_value;
+    if (this_value.is_object() && is<NumberObject>(this_value.as_object()))
+        return static_cast<NumberObject&>(this_value.as_object()).value_of();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, name);
+    return {};
+}
+
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
-    Value number_value;
-
-    auto this_value = vm.this_value(global_object);
-    if (this_value.is_number()) {
-        number_value = this_value;
-    } else if (this_value.is_object() && is<NumberObject>(this_value.as_object())) {
-        number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
-    } else {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
+    auto number_value = this_number_value(global_object, "toString");
+    if (vm.exception())
         return {};
-    }
 
     int radix;
     auto argument = vm.argument(0);
@@ -121,6 +129,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     }
 
     return js_string(vm, String(characters.data(), characters.size()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
+{
+    return this_number_value(global_object, "valueOf");
 }
 
 }
