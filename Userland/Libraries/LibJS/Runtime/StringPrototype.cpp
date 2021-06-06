@@ -61,6 +61,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLowerCase, to_lowercase, 0, attr);
     define_native_function(vm.names.toUpperCase, to_uppercase, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.padStart, pad_start, 1, attr);
     define_native_function(vm.names.padEnd, pad_end, 1, attr);
     define_native_function(vm.names.trim, trim, 0, attr);
@@ -274,6 +275,11 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
+{
+    return this_string_value(global_object, vm.this_value(global_object));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::value_of)
 {
     return this_string_value(global_object, vm.this_value(global_object));
 }
