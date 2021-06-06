@@ -59,13 +59,20 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.setTime, set_time, 1, attr);
     define_native_function(vm.names.getTimezoneOffset, get_timezone_offset, 0, attr);
     define_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
+    define_native_function(vm.names.setUTCDate, set_date, 1, attr); // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
     define_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
     define_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
+    define_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr); // FIXME: see above
     define_native_function(vm.names.getUTCHours, get_utc_hours, 0, attr);
+    define_native_function(vm.names.setUTCHours, set_hours, 4, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMilliseconds, get_utc_milliseconds, 0, attr);
+    define_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMinutes, get_utc_minutes, 0, attr);
+    define_native_function(vm.names.setUTCMinutes, set_minutes, 3, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
+    define_native_function(vm.names.setUTCMonth, set_month, 2, attr); // FIXME: see above
     define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
+    define_native_function(vm.names.setUTCSeconds, set_seconds, 2, attr); // FIXME: see above
     define_native_function(vm.names.toDateString, to_date_string, 0, attr);
     define_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
     define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
