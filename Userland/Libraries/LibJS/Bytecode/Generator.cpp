@@ -47,4 +47,19 @@ Label Generator::make_label() const
     return Label { m_block->instructions().size() };
 }
 
+Label Generator::nearest_continuable_scope() const
+{
+    return m_continuable_scopes.last();
+}
+
+void Generator::begin_continuable_scope()
+{
+    m_continuable_scopes.append(make_label());
+}
+
+void Generator::end_continuable_scope()
+{
+    m_continuable_scopes.take_last();
+}
+
 }

@@ -110,6 +110,7 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
 
 Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.begin_continuable_scope();
     auto test_label = generator.make_label();
     auto test_result_reg = m_test->generate_bytecode(generator);
     VERIFY(test_result_reg.has_value());
@@ -117,13 +118,16 @@ Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generat
     auto body_result_reg = m_body->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Jump>(test_label);
     test_jump.set_target(generator.make_label());
+    generator.end_continuable_scope();
     return body_result_reg;
 }
 
 Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.begin_continuable_scope();
     auto head_label = generator.make_label();
     auto body_result_reg = m_body->generate_bytecode(generator);
+    generator.end_continuable_scope();
     auto test_result_reg = m_test->generate_bytecode(generator);
     VERIFY(test_result_reg.has_value());
     generator.emit<Bytecode::Op::JumpIfTrue>(*test_result_reg, head_label);
@@ -206,6 +210,12 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
 
     // FIXME: Do we need IfStatement to return the consequent/alternate result value?
     //        (That's what the AST interpreter currently does)
+    return {};
+}
+
+Optional<Bytecode::Register> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::Jump>(generator.nearest_continuable_scope());
     return {};
 }
 
