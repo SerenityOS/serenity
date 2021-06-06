@@ -27,7 +27,6 @@ export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 This is due to a bug in WSL2. For more information, [microsoft/WSL#4106](https://github.com/microsoft/WSL/issues/4106).
 - Connect to the window server from WSL.
 
-
 Now you can finally, **ninja run**.
 
 ### Using native QEMU install with WSL:
