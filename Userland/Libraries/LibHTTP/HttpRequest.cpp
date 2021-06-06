@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Base64.h>
 #include <AK/StringBuilder.h>
 #include <LibHTTP/HttpJob.h>
 #include <LibHTTP/HttpRequest.h>
@@ -57,7 +58,7 @@ ByteBuffer HttpRequest::to_raw_request() const
     builder.append("Connection: close\r\n");
     if (!m_body.is_empty()) {
         builder.appendff("Content-Length: {}\r\n\r\n", m_body.size());
-        builder.append((const char*)m_body.data(), m_body.size());
+        builder.append((char const*)m_body.data(), m_body.size());
     }
     builder.append("\r\n");
     return builder.to_byte_buffer();
@@ -169,10 +170,41 @@ Optional<HttpRequest> HttpRequest::from_raw_request(ReadonlyBytes raw_request)
     return request;
 }
 
-void HttpRequest::set_headers(const HashMap<String, String>& headers)
+void HttpRequest::set_headers(HashMap<String, String> const& headers)
 {
     for (auto& it : headers)
         m_headers.append({ it.key, it.value });
+}
+
+Optional<HttpRequest::Header> HttpRequest::get_http_basic_authentication_header(URL const& url)
+{
+    if (!url.includes_credentials())
+        return {};
+    StringBuilder builder;
+    builder.append(url.username());
+    builder.append(':');
+    builder.append(url.password());
+    auto token = encode_base64(builder.to_string().bytes());
+    builder.clear();
+    builder.append("Basic ");
+    builder.append(token);
+    return Header { "Authorization", builder.to_string() };
+}
+
+Optional<HttpRequest::BasicAuthenticationCredentials> HttpRequest::parse_http_basic_authentication_header(String const& value)
+{
+    if (!value.starts_with("Basic ", AK::CaseSensitivity::CaseInsensitive))
+        return {};
+    auto token = value.substring_view(6);
+    if (token.is_empty())
+        return {};
+    auto decoded_token = String::copy(decode_base64(token));
+    auto colon_index = decoded_token.find(':');
+    if (!colon_index.has_value())
+        return {};
+    auto username = decoded_token.substring_view(0, colon_index.value());
+    auto password = decoded_token.substring_view(colon_index.value() + 1);
+    return BasicAuthenticationCredentials { username, password };
 }
 
 }
