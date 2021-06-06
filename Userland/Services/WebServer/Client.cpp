@@ -217,7 +217,13 @@ void Client::handle_directory_listing(String const& requested_path, String const
         StringBuilder path_builder;
         path_builder.append(real_path);
         path_builder.append('/');
-        path_builder.append(name);
+        // NOTE: In the root directory of the webserver, ".." should be equal to ".", since we don't want
+        //       the user to see e.g. the size of the parent directory (and it isn't unveiled, so stat fails).
+        if (requested_path == "/" && name == "..")
+            path_builder.append(".");
+        else
+            path_builder.append(name);
+
         struct stat st;
         memset(&st, 0, sizeof(st));
         int rc = stat(path_builder.to_string().characters(), &st);
@@ -225,7 +231,7 @@ void Client::handle_directory_listing(String const& requested_path, String const
             perror("stat");
         }
 
-        bool is_directory = S_ISDIR(st.st_mode) || name.is_one_of(".", "..");
+        bool is_directory = S_ISDIR(st.st_mode);
 
         builder.append("<tr>");
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
