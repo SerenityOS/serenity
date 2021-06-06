@@ -62,6 +62,7 @@ describe("normal behavior", () => {
     });
 
     test("native getter function", () => {
-        expect(Reflect.get(String.prototype, "length", "foo")).toBe(3);
+        const typedArray = new Uint8Array(3);
+        expect(Reflect.get(Uint8Array.prototype, "length", typedArray)).toBe(3);
     });
 });
