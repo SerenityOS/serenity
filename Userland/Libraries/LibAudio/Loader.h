@@ -27,7 +27,8 @@ public:
     virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) = 0;
 
     virtual void reset() = 0;
-    virtual void seek(const int position) = 0;
+
+    virtual void seek(const int sample_index) = 0;
 
     virtual int loaded_samples() = 0;
     virtual int total_samples() = 0;

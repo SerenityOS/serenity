@@ -44,7 +44,10 @@ public:
     virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
     virtual void reset() override { return seek(0); }
-    virtual void seek(const int position) override;
+
+    // sample_index 0 is the start of the raw audio sample data
+    // within the file/stream.
+    virtual void seek(const int sample_index) override;
 
     virtual int loaded_samples() override { return m_loaded_samples; }
     virtual int total_samples() override { return m_total_samples; }
@@ -66,6 +69,7 @@ private:
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
     PcmSampleFormat m_sample_format;
+    size_t m_byte_offset_of_data_samples { 0 };
 
     int m_loaded_samples { 0 };
     int m_total_samples { 0 };
