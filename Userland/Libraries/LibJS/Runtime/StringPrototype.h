@@ -28,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_lowercase);
     JS_DECLARE_NATIVE_FUNCTION(to_uppercase);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(pad_start);
     JS_DECLARE_NATIVE_FUNCTION(pad_end);
     JS_DECLARE_NATIVE_FUNCTION(substring);
