@@ -5,6 +5,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | Port                                   | Name                                                       | Version                  | Website                                                                        |
 |----------------------------------------|------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
 | [`bash`](bash/)                        | GNU Bash                                                   | 5.0                      | https://www.gnu.org/software/bash/                                             |
+| [`bass`](bass/)                        | Beneath a Steel Sky                                        | cd-1.2                   | https://www.scummvm.org/games                                                  |
 | [`bc`](bc/)                            | bc                                                         | 2.5.1                    | https://github.com/gavinhoward/bc                                              |
 | [`binutils`](binutils/)                | GNU Binutils                                               | 2.36.1                   | https://www.gnu.org/software/binutils/                                         |
 | [`bison`](bison/)                      | GNU Bison                                                  | 1.25                     | https://www.gnu.org/software/bison/                                            |
