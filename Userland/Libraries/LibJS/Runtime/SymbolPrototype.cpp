@@ -38,40 +38,36 @@ SymbolPrototype::~SymbolPrototype()
 {
 }
 
-static SymbolObject* typed_this(VM& vm, GlobalObject& global_object)
+// thisSymbolValue, https://tc39.es/ecma262/#thissymbolvalue
+static Value this_symbol_value(GlobalObject& global_object, Value value)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<SymbolObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
-        return nullptr;
-    }
-    return static_cast<SymbolObject*>(this_object);
+    if (value.is_symbol())
+        return value;
+    if (value.is_object() && is<SymbolObject>(value.as_object()))
+        return static_cast<SymbolObject&>(value.as_object()).value_of();
+    auto& vm = global_object.vm();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Symbol");
+    return {};
 }
 
 JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
 {
-    auto* this_object = typed_this(vm, global_object);
-    if (!this_object)
+    auto symbol_value = this_symbol_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    return js_string(vm, this_object->description());
+    return js_string(vm, symbol_value.as_symbol().description());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
-    auto* this_object = typed_this(vm, global_object);
-    if (!this_object)
+    auto symbol_value = this_symbol_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    auto string = this_object->primitive_symbol().to_string();
-    return js_string(vm, move(string));
+    return js_string(vm, symbol_value.as_symbol().to_string());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
 {
-    auto* this_object = typed_this(vm, global_object);
-    if (!this_object)
-        return {};
-    return this_object->value_of();
+    return this_symbol_value(global_object, vm.this_value(global_object));
 }
 }
