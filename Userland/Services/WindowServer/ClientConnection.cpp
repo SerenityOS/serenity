@@ -915,6 +915,11 @@ Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_mod
     return window.is_modified();
 }
 
+Messages::WindowServer::GetDesktopDisplayScaleResponse ClientConnection::get_desktop_display_scale()
+{
+    return WindowManager::the().scale_factor();
+}
+
 void ClientConnection::set_window_modified(i32 window_id, bool modified)
 {
     auto it = m_windows.find(window_id);
