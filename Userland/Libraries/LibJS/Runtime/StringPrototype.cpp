@@ -52,7 +52,6 @@ void StringPrototype::initialize(GlobalObject& global_object)
     StringObject::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
-    define_native_property(vm.names.length, length_getter, nullptr, 0);
     define_native_function(vm.names.charAt, char_at, 1, attr);
     define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
     define_native_function(vm.names.repeat, repeat, 1, attr);
@@ -272,14 +271,6 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     if (string.is_null())
         return {};
     return js_string(vm, string.to_uppercase());
-}
-
-JS_DEFINE_NATIVE_FUNCTION(StringPrototype::length_getter)
-{
-    auto string_value = this_string_value(global_object, vm.this_value(global_object));
-    if (vm.exception())
-        return {};
-    return Value((i32)string_value.as_string().string().length());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)

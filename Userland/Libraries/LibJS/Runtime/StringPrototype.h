@@ -19,8 +19,6 @@ public:
     virtual ~StringPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-
     JS_DECLARE_NATIVE_FUNCTION(char_at);
     JS_DECLARE_NATIVE_FUNCTION(char_code_at);
     JS_DECLARE_NATIVE_FUNCTION(repeat);

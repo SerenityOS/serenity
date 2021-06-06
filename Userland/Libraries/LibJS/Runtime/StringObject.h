@@ -17,6 +17,7 @@ public:
     static StringObject* create(GlobalObject&, PrimitiveString&);
 
     StringObject(PrimitiveString&, Object& prototype);
+    virtual void initialize(GlobalObject&) override;
     virtual ~StringObject() override;
 
     const PrimitiveString& primitive_string() const { return m_string; }
