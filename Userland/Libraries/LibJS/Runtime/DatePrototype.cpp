@@ -54,6 +54,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getSeconds, get_seconds, 0, attr);
     define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
     define_native_function(vm.names.getTime, get_time, 0, attr);
+    define_native_function(vm.names.getTimezoneOffset, get_timezone_offset, 0, attr);
     define_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
     define_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
     define_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
@@ -443,6 +444,19 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
         return js_nan();
 
     return Value(this_object->time());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    if (this_object->is_invalid())
+        return js_nan();
+
+    // FIXME: Make this actually do something once we support timezones instead of just UTC
+    return Value(0);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
