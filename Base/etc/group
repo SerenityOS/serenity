@@ -6,5 +6,4 @@ audio:x:4:anon
 utmp:x:5:
 lookup:x:10:anon
 window:x:13:anon
-clipboard:x:14:anon
 users:x:100:anon
