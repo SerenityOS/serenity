@@ -73,7 +73,7 @@ Vector<ProcessID> Process::all_pids()
 {
     Vector<ProcessID> pids;
     ScopedSpinLock lock(g_processes_lock);
-    pids.ensure_capacity((int)g_processes->size_slow());
+    pids.ensure_capacity(g_processes->size_slow());
     for (auto& process : *g_processes)
         pids.append(process.pid());
     return pids;
@@ -83,7 +83,7 @@ NonnullRefPtrVector<Process> Process::all_processes()
 {
     NonnullRefPtrVector<Process> processes;
     ScopedSpinLock lock(g_processes_lock);
-    processes.ensure_capacity((int)g_processes->size_slow());
+    processes.ensure_capacity(g_processes->size_slow());
     for (auto& process : *g_processes)
         processes.append(NonnullRefPtr<Process>(process));
     return processes;
