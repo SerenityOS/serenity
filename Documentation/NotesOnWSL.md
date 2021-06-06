@@ -17,14 +17,16 @@ You can either install QEMU natively on windows and allow WSL to talk to it, or 
 ### Setting up an X server with WSL:
 
 - Install [Vcxsrv](https://sourceforge.net/projects/vcxsrv/) on Windows.
+- Make sure your firewall is not blocking connections by allowing and checking both public and private boxes of "VcXsrv Windows x server" in your windows firewall.
 - When you start up Vcxsrv, make sure to set the Display number to 0, and to Disable access control.
 - Before actually doing **ninja run**, you need to set the DISPLAY environmental variable as such:
 
 ```bash
 export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 ```
-This is due to a bug in WSL2. For more information, microsoft/WSL#4106.
+This is due to a bug in WSL2. For more information, [microsoft/WSL#4106](https://github.com/microsoft/WSL/issues/4106).
 - Connect to the window server from WSL.
+
 
 Now you can finally, **ninja run**.
 
