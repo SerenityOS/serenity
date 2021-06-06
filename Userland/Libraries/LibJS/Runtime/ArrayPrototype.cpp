@@ -150,8 +150,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
-    auto* new_array = Array::create(global_object);
-    new_array->indexed_properties().set_array_like_size(initial_length);
+    auto* new_array = Array::create(global_object, initial_length);
+    if (vm.exception())
+        return {};
     for_each_item(vm, global_object, "map", [&](auto index, auto, auto callback_result) {
         if (vm.exception())
             return IterationDecision::Break;
