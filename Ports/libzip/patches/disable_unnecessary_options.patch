@@ -12,7 +12,7 @@ index 017f7cf0..125900e2 100644
 -option(ENABLE_OPENSSL "Enable use of OpenSSL" ON)
 -option(ENABLE_WINDOWS_CRYPTO "Enable use of Windows cryptography libraries" ON)
 +set(ZLIB_LIBRARY ${SERENITY_INSTALL_ROOT}/usr/local/lib/libz.a)
-+set(ZLIB_INCLUDE_DIR ${SERENITY_INSTALL_ROOT}/usr/local/include/zlib.h)
++set(ZLIB_INCLUDE_DIRS ${SERENITY_INSTALL_ROOT}/usr/local/include/zlib.h)
 +add_compile_definitions(HAVE_STRINGS_H)
  
 -option(ENABLE_BZIP2 "Enable use of BZip2" ON)
