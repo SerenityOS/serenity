@@ -12,7 +12,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio recvfd sendfd accept unix", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -25,11 +25,6 @@ int main(int, char**)
     auto server = Core::LocalServer::construct();
     bool ok = server->take_over_from_system_server();
     VERIFY(ok);
-
-    if (pledge("stdio recvfd sendfd accept", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
