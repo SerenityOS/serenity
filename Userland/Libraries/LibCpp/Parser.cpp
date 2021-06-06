@@ -656,6 +656,7 @@ bool Parser::match_class_declaration()
 
     if (!match_keyword("struct") && !match_keyword("class"))
         return false;
+
     consume(Token::Type::Keyword);
 
     if (!match(Token::Type::Identifier))
@@ -1439,6 +1440,8 @@ NonnullRefPtrVector<Declaration> Parser::parse_class_members(ASTNode& parent)
 {
     NonnullRefPtrVector<Declaration> members;
     while (!eof() && peek().type() != Token::Type::RightCurly) {
+        if (match_access_specifier())
+            consume_access_specifier(); // FIXME: Do not ignore access specifiers
         auto member_type = match_class_member();
         if (member_type.has_value()) {
             members.append(parse_declaration(parent, member_type.value()));
@@ -1448,6 +1451,20 @@ NonnullRefPtrVector<Declaration> Parser::parse_class_members(ASTNode& parent)
         }
     }
     return members;
+}
+
+bool Parser::match_access_specifier()
+{
+    if (peek(1).type() != Token::Type::Colon)
+        return false;
+
+    return match_keyword("private") || match_keyword("protected") || match_keyword("public");
+}
+
+void Parser::consume_access_specifier()
+{
+    consume(Token::Type::Keyword);
+    consume(Token::Type::Colon);
 }
 
 }
