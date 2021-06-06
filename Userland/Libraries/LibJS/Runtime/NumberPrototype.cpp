@@ -61,13 +61,14 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     if (vm.exception())
         return {};
 
-    int radix;
+    double radix_argument = 10;
     auto argument = vm.argument(0);
-    if (argument.is_undefined()) {
-        radix = 10;
-    } else {
-        radix = argument.to_i32(global_object);
+    if (!vm.argument(0).is_undefined()) {
+        radix_argument = argument.to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
     }
+    int radix = (int)radix_argument;
 
     if (vm.exception() || radix < 2 || radix > 36) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
