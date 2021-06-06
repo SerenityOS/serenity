@@ -553,6 +553,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
+    m_unveiled_paths.set_metadata({ "/", UnveilAccess::None, false });
 
     m_coredump_metadata.clear();
 
