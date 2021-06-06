@@ -1423,7 +1423,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
     auto read_class_atom_no_dash = [&]() -> Optional<CharClassRangeElement> {
         if (match(TokenType::EscapeSequence)) {
             auto token = consume().value();
-            return { { .code_point = (u32)token[1], .is_character_class = false } };
+            return { CharClassRangeElement { .code_point = (u32)token[1], .is_character_class = false } };
         }
 
         if (try_skip("\\")) {
@@ -1433,50 +1433,50 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("f"))
-                return { { .code_point = '\f', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\f', .is_character_class = false } };
             if (try_skip("n"))
-                return { { .code_point = '\n', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\n', .is_character_class = false } };
             if (try_skip("r"))
-                return { { .code_point = '\r', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\r', .is_character_class = false } };
             if (try_skip("t"))
-                return { { .code_point = '\t', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\t', .is_character_class = false } };
             if (try_skip("v"))
-                return { { .code_point = '\v', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\v', .is_character_class = false } };
             if (try_skip("b"))
-                return { { .code_point = '\b', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '\b', .is_character_class = false } };
             if (try_skip("/"))
-                return { { .code_point = '/', .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = '/', .is_character_class = false } };
 
             // CharacterEscape > ControlLetter
             if (try_skip("c")) {
                 for (auto c = 'A'; c <= 'z'; ++c) {
                     if (try_skip({ &c, 1 }))
-                        return { { .code_point = (u32)(c % 32), .is_character_class = false } };
+                        return { CharClassRangeElement { .code_point = (u32)(c % 32), .is_character_class = false } };
                 }
                 if (m_should_use_browser_extended_grammar) {
                     for (auto c = '0'; c <= '9'; ++c) {
                         if (try_skip({ &c, 1 }))
-                            return { { .code_point = (u32)(c % 32), .is_character_class = false } };
+                            return { CharClassRangeElement { .code_point = (u32)(c % 32), .is_character_class = false } };
                     }
                     if (try_skip("_"))
-                        return { { .code_point = (u32)('_' % 32), .is_character_class = false } };
+                        return { CharClassRangeElement { .code_point = (u32)('_' % 32), .is_character_class = false } };
 
                     back(2);
-                    return { { .code_point = '\\', .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = '\\', .is_character_class = false } };
                 }
             }
 
             // '\0'
             if (try_skip("0"))
-                return { { .code_point = 0, .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = 0, .is_character_class = false } };
 
             // HexEscape
             if (try_skip("x")) {
                 if (auto hex_escape = read_digits(ReadDigitsInitialZeroState::Allow, true, 2); hex_escape.has_value()) {
-                    return { { .code_point = hex_escape.value(), .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = hex_escape.value(), .is_character_class = false } };
                 } else if (!unicode) {
                     // '\x' is allowed in non-unicode mode, just matches 'x'.
-                    return { { .code_point = 'x', .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = 'x', .is_character_class = false } };
                 } else {
                     set_error(Error::InvalidPattern);
                     return {};
@@ -1486,10 +1486,10 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             if (try_skip("u")) {
                 if (auto code_point = read_digits(ReadDigitsInitialZeroState::Allow, true, 4); code_point.has_value()) {
                     // FIXME: While code point ranges are supported, code point matches as "Char" are not!
-                    return { { .code_point = code_point.value(), .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = code_point.value(), .is_character_class = false } };
                 } else if (!unicode) {
                     // '\u' is allowed in non-unicode mode, just matches 'u'.
-                    return { { .code_point = 'u', .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = 'u', .is_character_class = false } };
                 } else {
                     set_error(Error::InvalidPattern);
                     return {};
@@ -1498,7 +1498,7 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
 
             if (unicode) {
                 if (try_skip("-"))
-                    return { { .code_point = '-', .is_character_class = false } };
+                    return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
             }
 
             if (try_skip("p{") || try_skip("P{")) {
@@ -1507,21 +1507,21 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             }
 
             if (try_skip("d"))
-                return { { .character_class = CharClass::Digit, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Digit, .is_character_class = true } };
             if (try_skip("s"))
-                return { { .character_class = CharClass::Space, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Space, .is_character_class = true } };
             if (try_skip("w"))
-                return { { .character_class = CharClass::Word, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Word, .is_character_class = true } };
             if (try_skip("D"))
-                return { { .character_class = CharClass::Digit, .is_negated = true, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Digit, .is_negated = true, .is_character_class = true } };
             if (try_skip("S"))
-                return { { .character_class = CharClass::Space, .is_negated = true, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Space, .is_negated = true, .is_character_class = true } };
             if (try_skip("W"))
-                return { { .character_class = CharClass::Word, .is_negated = true, .is_character_class = true } };
+                return { CharClassRangeElement { .character_class = CharClass::Word, .is_negated = true, .is_character_class = true } };
 
             if (!unicode) {
                 // Any unrecognised escape is allowed in non-unicode mode.
-                return { { .code_point = (u32)skip(), .is_character_class = false } };
+                return { CharClassRangeElement { .code_point = (u32)skip(), .is_character_class = false } };
             }
         }
 
@@ -1529,12 +1529,12 @@ bool ECMA262Parser::parse_nonempty_class_ranges(Vector<CompareTypeAndValuePair>&
             return {};
 
         // Allow any (other) SourceCharacter.
-        return { { .code_point = (u32)skip(), .is_character_class = false } };
+        return { CharClassRangeElement { .code_point = (u32)skip(), .is_character_class = false } };
     };
     auto read_class_atom = [&]() -> Optional<CharClassRangeElement> {
         if (match(TokenType::HyphenMinus)) {
             consume();
-            return { { .code_point = '-', .is_character_class = false } };
+            return { CharClassRangeElement { .code_point = '-', .is_character_class = false } };
         }
 
         return read_class_atom_no_dash();
