@@ -223,6 +223,7 @@ namespace JS {
     P(setMonth)                              \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
+    P(setTime)                               \
     P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \
