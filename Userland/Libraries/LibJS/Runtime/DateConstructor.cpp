@@ -159,7 +159,7 @@ Value DateConstructor::construct(Function&)
     }
 
     auto create_invalid_date = [this]() {
-        auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(0));
+        auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
         auto milliseconds = static_cast<u16>(0);
         return Date::create(global_object(), datetime, milliseconds, true);
     };
