@@ -100,6 +100,7 @@ void WavLoaderPlugin::seek(const int sample_index)
     }
 }
 
+// Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 bool WavLoaderPlugin::parse_header()
 {
     if (!m_stream)
@@ -149,7 +150,7 @@ bool WavLoaderPlugin::parse_header()
     CHECK_OK("RIFF header");
 
     u32 sz = read_u32();
-    ok = ok && sz < 1024 * 1024 * 1024; // arbitrary
+    ok = ok && sz < maximum_wav_size;
     CHECK_OK("File size");
 
     u32 wave = read_u32();
@@ -157,16 +158,16 @@ bool WavLoaderPlugin::parse_header()
     CHECK_OK("WAVE header");
 
     u32 fmt_id = read_u32();
-    ok = ok && fmt_id == 0x20746D66; // "FMT"
+    ok = ok && fmt_id == 0x20746D66; // "fmt "
     CHECK_OK("FMT header");
 
     u32 fmt_size = read_u32();
-    ok = ok && fmt_size == 16;
+    ok = ok && (fmt_size == 16 || fmt_size == 18 || fmt_size == 40);
     CHECK_OK("FMT size");
 
     u16 audio_format = read_u16();
     CHECK_OK("Audio format"); // incomplete read check
-    ok = ok && (audio_format == WAVE_FORMAT_PCM || audio_format == WAVE_FORMAT_IEEE_FLOAT);
+    ok = ok && (audio_format == WAVE_FORMAT_PCM || audio_format == WAVE_FORMAT_IEEE_FLOAT || audio_format == WAVE_FORMAT_EXTENSIBLE);
     CHECK_OK("Audio format PCM/Float"); // value check
 
     m_num_channels = read_u16();
@@ -184,6 +185,25 @@ bool WavLoaderPlugin::parse_header()
 
     u16 bits_per_sample = read_u16();
     CHECK_OK("Bits per sample"); // incomplete read check
+
+    if (audio_format == WAVE_FORMAT_EXTENSIBLE) {
+        ok = ok && (fmt_size == 40);
+        CHECK_OK("Extensible fmt size"); // value check
+
+        // Discard everything until the GUID.
+        // We've already read 16 bytes from the stream. The GUID starts in another 8 bytes.
+        read_u32();
+        read_u32();
+        CHECK_OK("Discard until GUID");
+
+        // Get the underlying audio format from the first two bytes of GUID
+        u16 guid_subformat = read_u16();
+        ok = ok && (guid_subformat == WAVE_FORMAT_PCM || guid_subformat == WAVE_FORMAT_IEEE_FLOAT);
+        CHECK_OK("GUID SubFormat");
+
+        audio_format = guid_subformat;
+    }
+
     if (audio_format == WAVE_FORMAT_PCM) {
         ok = ok && (bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
         CHECK_OK("Bits per sample (PCM)"); // value check
