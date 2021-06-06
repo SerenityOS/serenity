@@ -56,6 +56,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_locale_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(symbol_to_primitive);
 };
 
 }
