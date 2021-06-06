@@ -815,9 +815,9 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_code_points = 0;
 
-    Vector<u8, 4> csi_parameter_bytes;
+    static Vector<u8, 4> csi_parameter_bytes;
+    static Vector<u8> csi_intermediate_bytes;
     Vector<unsigned, 4> csi_parameters;
-    Vector<u8> csi_intermediate_bytes;
     u8 csi_final;
     enum CSIMod {
         Shift = 1,
