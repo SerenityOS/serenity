@@ -81,6 +81,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleTimeString, to_locale_time_string, 0, attr);
     define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 1, attr);
 
     define_native_function(vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
@@ -91,11 +92,6 @@ void DatePrototype::initialize(GlobalObject& global_object)
     // The function object that is the initial value of Date.prototype.toGMTString
     // is the same function object that is the initial value of Date.prototype.toUTCString.
     define_property(vm.names.toGMTString, get(vm.names.toUTCString), attr);
-
-    // toJSON() isn't quite an alias for toISOString():
-    // - it returns null instead of throwing RangeError
-    // - its .length is 1, not 0
-    // - it can be transferred to other prototypes
 }
 
 DatePrototype::~DatePrototype()
@@ -762,6 +758,19 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 
     auto string = this_object->string();
     return js_string(vm, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto time_value = Value(this_object).to_primitive(global_object, Value::PreferredType::Number);
+    if (time_value.is_number() && !time_value.is_finite_number())
+        return js_null();
+
+    return this_object->invoke(vm.names.toISOString);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
