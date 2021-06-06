@@ -186,6 +186,11 @@ compressed file, it will be extracted.
 If a file is an `.asc` file (PGP signature) it will be imported into `gpg`'s
 keyring and can later be used for verification using [`auth_opts`](#auth_opts).
 
+#### `icon_file`
+
+The file to use for the port launcher icon. The icon file is assumed to have a
+16x16 as well as a 32x32 layer.
+
 #### `installopts`
 
 Options passed to `make install` in the default `install` function.
