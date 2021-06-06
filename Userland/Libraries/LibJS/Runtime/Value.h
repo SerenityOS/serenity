@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -366,6 +367,7 @@ TriState abstract_relation(GlobalObject&, bool left_first, Value lhs, Value rhs)
 Function* get_method(GlobalObject& global_object, Value, const PropertyName&);
 size_t length_of_array_like(GlobalObject&, const Object&);
 Object* species_constructor(GlobalObject&, const Object&, Object& default_constructor);
+Value require_object_coercible(GlobalObject&, Value);
 
 }
 

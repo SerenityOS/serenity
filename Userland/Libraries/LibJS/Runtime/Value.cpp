@@ -1390,4 +1390,16 @@ Object* species_constructor(GlobalObject& global_object, const Object& object, O
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
     return nullptr;
 }
+
+// 7.2.1 RequireObjectCoercible, https://tc39.es/ecma262/#sec-requireobjectcoercible
+Value require_object_coercible(GlobalObject& global_object, Value value)
+{
+    auto& vm = global_object.vm();
+    if (value.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
+        return {};
+    }
+    return value;
+}
+
 }

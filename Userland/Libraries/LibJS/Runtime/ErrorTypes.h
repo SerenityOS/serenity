@@ -44,6 +44,7 @@
     M(JsonCircular, "Cannot stringify circular object")                                                                                 \
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
     M(NegativeExponent, "Exponent must be positive")                                                                                    \
+    M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
     M(NotA, "Not a {} object")                                                                                                          \
     M(NotAConstructor, "{} is not a constructor")                                                                                       \
     M(NotAFunction, "{} is not a function")                                                                                             \
@@ -52,7 +53,7 @@
     M(NotAnObject, "{} is not an object")                                                                                               \
     M(NotASymbol, "{} is not a symbol")                                                                                                 \
     M(NotIterable, "{} is not iterable")                                                                                                \
-    M(NonExtensibleDefine, "Cannot define property {} on non-extensible object")                                                        \
+    M(NotObjectCoercible, "{} cannot be converted to an object")                                                                        \
     M(NumberIncompatibleThis, "Number.prototype.{}() called with incompatible this target")                                             \
     M(ObjectDefinePropertyReturnedFalse, "Object's [[DefineProperty]] method returned false")                                           \
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
