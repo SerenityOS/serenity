@@ -82,6 +82,8 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
 
+    define_native_function(vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
+
     // Aliases.
     define_native_function(vm.names.valueOf, get_time, 0, attr);
 
@@ -760,6 +762,28 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 
     auto string = this_object->string();
     return js_string(vm, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
+{
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject);
+        return {};
+    }
+    auto hint = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    Value::PreferredType try_first;
+    if (hint == "string" || hint == "default") {
+        try_first = Value::PreferredType::String;
+    } else if (hint == "number") {
+        try_first = Value::PreferredType::Number;
+    } else {
+        vm.throw_exception<TypeError>(global_object, ErrorType::InvalidHint, hint);
+        return {};
+    }
+    return this_value.as_object().ordinary_to_primitive(try_first);
 }
 
 }
