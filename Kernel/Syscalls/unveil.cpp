@@ -13,6 +13,17 @@
 
 namespace Kernel {
 
+static void update_intermediate_node_permissions(UnveilNode& root_node, UnveilAccess new_permissions)
+{
+    for (auto& entry : root_node.children()) {
+        auto& node = static_cast<UnveilNode&>(*entry.value);
+        if (node.was_explicitly_unveiled())
+            continue;
+        node.set_metadata({ node.path(), new_permissions, node.was_explicitly_unveiled() });
+        update_intermediate_node_permissions(node, new_permissions);
+    }
+}
+
 KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> user_params)
 {
     Syscall::SC_unveil_params params;
@@ -96,6 +107,14 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
             if (new_permissions & ~matching_node.permissions())
                 return EPERM;
         }
+
+        // It is possible that nodes that are "grandchildren" of the matching node have already been unveiled.
+        // This means that there may be intermediate nodes between this one and the unveiled "grandchildren"
+        // that inherited the current node's previous permissions. Those nodes now need their permissions
+        // updated to match the current node.
+        if (matching_node.permissions() != new_permissions)
+            update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
+
         matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
         return 0;
     }
