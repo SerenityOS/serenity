@@ -1875,4 +1875,9 @@ void TextEditor::redo()
     document().redo();
 }
 
+void TextEditor::allow_undo(bool allow)
+{
+    m_undo_action->set_enabled(allow);
+}
+
 }
