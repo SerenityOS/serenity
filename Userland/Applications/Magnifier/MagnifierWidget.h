@@ -24,4 +24,5 @@ private:
 
     Gfx::IntPoint m_mouse_position;
     int m_scale_factor { 2 };
+    int m_desktop_display_scale { 1 };
 };
