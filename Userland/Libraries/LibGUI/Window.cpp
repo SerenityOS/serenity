@@ -915,6 +915,11 @@ bool Window::is_maximized() const
     return WindowServerConnection::the().is_maximized(m_window_id);
 }
 
+void Window::set_maximized(bool maximized)
+{
+    WindowServerConnection::the().async_set_maximized(m_window_id, maximized);
+}
+
 void Window::schedule_relayout()
 {
     if (m_layout_pending)

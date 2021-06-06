@@ -332,6 +332,16 @@ Messages::WindowServer::IsMaximizedResponse ClientConnection::is_maximized(i32 w
     return it->value->is_maximized();
 }
 
+void ClientConnection::set_maximized(i32 window_id, bool maximized)
+{
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        did_misbehave("SetMaximized: Bad window ID");
+        return;
+    }
+    it->value->set_maximized(maximized);
+}
+
 void ClientConnection::set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap const& icon)
 {
     auto it = m_windows.find(window_id);
