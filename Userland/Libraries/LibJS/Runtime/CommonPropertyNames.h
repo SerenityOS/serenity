@@ -135,6 +135,7 @@ namespace JS {
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
+    P(getTimezoneOffset)                     \
     P(getUTCDate)                            \
     P(getUTCDay)                             \
     P(getUTCFullYear)                        \
