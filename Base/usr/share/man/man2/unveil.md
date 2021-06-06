@@ -32,15 +32,23 @@ include the following characters:
 
 A single `unveil()` call may specify multiple permission characters at once.
 Subsequent `unveil()` calls may take away permissions from the ones allowed
-earlier for the same file. Note that unveiling a path with any set of
-permissions does not turn off the regular permission checks: access to a file
-which the process has unveiled for itself, but has otherwise no appropriate
-permissions for, will still be rejected. Unveiling a directory allows the
-process to access any files inside the directory.
+earlier for the same file or directory. Note that it remains possible to unveil
+subdirectories with any permissions.
+
+Note that unveiling a path with any set of permissions does not turn off the
+regular permission checks: access to a file which the process has unveiled for
+itself, but has otherwise no appropriate permissions for, will still be rejected.
+Unveiling a directory allows the process to access any files inside the
+directory.
 
 Calling `unveil()` with both `path` and `permissions` set to null locks the
-veil; no further `unveil()` calls are allowed after that.
+veil; no further `unveil()` calls are allowed after that. Although `unveil()`
+calls start to take effect the moment they are made, until the veil is locked,
+it remains possible to sometimes circumvent the restrictions set by unveiling
+files and directories contained inside a restricted directory with different
+permissions.
 
+When a process calls `fork()`, the unveil state is copied to the new process.
 The veil state is reset after the program successfully performs an `execve()`
 call.
 
