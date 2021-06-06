@@ -31,10 +31,10 @@ int main(int, char**)
         outln("\tTrack has CodecID \"{}\"", track.codec_id().characters());
 
         if (track.track_type() == Video::TrackEntry::TrackType::Video) {
-            const auto& video_track = track.video_track().value();
+            const auto video_track = track.video_track().value();
             outln("\t\tVideo is {} pixels wide by {} pixels tall", video_track.pixel_width, video_track.pixel_height);
         } else if (track.track_type() == Video::TrackEntry::TrackType::Audio) {
-            const auto& audio_track = track.audio_track().value();
+            const auto audio_track = track.audio_track().value();
             outln("\t\tAudio has {} channels with a bit depth of {}", audio_track.channels, audio_track.bit_depth);
         }
     }
