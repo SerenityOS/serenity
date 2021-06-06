@@ -35,6 +35,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_seconds);
     JS_DECLARE_NATIVE_FUNCTION(set_seconds);
     JS_DECLARE_NATIVE_FUNCTION(get_time);
+    JS_DECLARE_NATIVE_FUNCTION(get_timezone_offset);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_date);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_day);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_full_year);
