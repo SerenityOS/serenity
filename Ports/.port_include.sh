@@ -69,6 +69,7 @@ shift
 : "${launcher_name:=}"
 : "${launcher_category:=}"
 : "${launcher_command:=}"
+: "${icon_file:=}"
 
 run_nocd() {
     echo "+ $@ (nocd)"
@@ -92,6 +93,36 @@ ensure_build() {
         echo "- has been installed in an unexpected location"
         echo "The currently configured build directory is ${SERENITY_BUILD_DIR}. Resolve this issue and try again."
         exit 1
+    fi
+}
+
+install_main_icon() {
+    if [ -n "$icon_file" ] && [ -n "$launcher_command" ]; then
+        install_icon "$icon_file" "$launcher_command"
+    fi
+}
+
+install_icon() {
+    if [ "$#" -lt 2 ]; then
+        echo "Syntax: install_icon <icon> <launcher>"
+        exit 1
+    fi
+    icon="$1"
+    launcher="$2"
+
+    command -v convert >/dev/null 2>&1
+    convert_exists=$?
+
+    command -v identify >/dev/null 2>&1
+    identify_exists=$?
+
+    if [ "$convert_exists" == "0" ] && [ "$identify_exists" == "0" ]; then
+        for icon_size in "16x16" "32x32"; do
+            index=$(run identify "$icon" | grep "$icon_size" | grep -oE "\[[0-9]+\]" | tr -d "[]" | head -n1)
+            run convert "${icon}[${index}]" "app-${icon_size}.png"
+        done
+        run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
+        run objcopy --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"
     fi
 }
 
@@ -413,6 +444,7 @@ do_install() {
     echo "Installing $port!"
     install
     install_main_launcher
+    install_main_icon
     post_install
     addtodb "${1:-}"
 }
