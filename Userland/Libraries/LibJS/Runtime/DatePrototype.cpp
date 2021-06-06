@@ -63,7 +63,6 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
     define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
     define_native_function(vm.names.toDateString, to_date_string, 0, attr);
-    define_native_function(vm.names.toGMTString, to_gmt_string, 0, attr);
     define_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
     define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
     define_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
@@ -74,6 +73,12 @@ void DatePrototype::initialize(GlobalObject& global_object)
 
     // Aliases.
     define_native_function(vm.names.valueOf, get_time, 0, attr);
+
+    // https://tc39.es/ecma262/#sec-date.prototype.togmtstring
+    // The function object that is the initial value of Date.prototype.toGMTString
+    // is the same function object that is the initial value of Date.prototype.toUTCString.
+    define_property(vm.names.toGMTString, get(vm.names.toUTCString), attr);
+
     // toJSON() isn't quite an alias for toISOString():
     // - it returns null instead of throwing RangeError
     // - its .length is 1, not 0
