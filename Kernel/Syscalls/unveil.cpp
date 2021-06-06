@@ -116,6 +116,7 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
             update_intermediate_node_permissions(matching_node, (UnveilAccess)new_permissions);
 
         matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
+        m_veil_state = VeilState::Dropped;
         return 0;
     }
 
