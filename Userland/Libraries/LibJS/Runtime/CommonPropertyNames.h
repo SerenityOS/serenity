@@ -220,6 +220,7 @@ namespace JS {
     P(setHours)                              \
     P(setMilliseconds)                       \
     P(setMinutes)                            \
+    P(setMonth)                              \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
     P(setYear)                               \
