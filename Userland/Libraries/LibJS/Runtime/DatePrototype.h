@@ -33,6 +33,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_minutes);
     JS_DECLARE_NATIVE_FUNCTION(set_minutes);
     JS_DECLARE_NATIVE_FUNCTION(get_month);
+    JS_DECLARE_NATIVE_FUNCTION(set_month);
     JS_DECLARE_NATIVE_FUNCTION(get_seconds);
     JS_DECLARE_NATIVE_FUNCTION(set_seconds);
     JS_DECLARE_NATIVE_FUNCTION(get_time);
