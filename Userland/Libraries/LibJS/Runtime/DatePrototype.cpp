@@ -52,6 +52,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getMinutes, get_minutes, 0, attr);
     define_native_function(vm.names.setMinutes, set_minutes, 3, attr);
     define_native_function(vm.names.getMonth, get_month, 0, attr);
+    define_native_function(vm.names.setMonth, set_month, 2, attr);
     define_native_function(vm.names.getSeconds, get_seconds, 0, attr);
     define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
     define_native_function(vm.names.getTime, get_time, 0, attr);
@@ -407,6 +408,40 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
         return js_nan();
 
     return Value(this_object->month());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+
+    auto& datetime = this_object->datetime();
+
+    auto new_month_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_month_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
+
+    auto new_date_value = arg_or(1, this_object->date());
+    if (vm.exception())
+        return {};
+    if (!new_date_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_date = new_date_value.as_i32();
+
+    this_object->set_is_invalid(false);
+
+    datetime.set_time(datetime.year(), new_month, new_date, datetime.hour(), datetime.minute(), datetime.second());
+    return Value(this_object->time());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
