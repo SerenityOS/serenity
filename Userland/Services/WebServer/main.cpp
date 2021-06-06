@@ -1,15 +1,17 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Client.h"
 #include <AK/MappedFile.h>
 #include <LibCore/ArgsParser.h>
 #include <LibCore/EventLoop.h>
 #include <LibCore/File.h>
 #include <LibCore/TCPServer.h>
+#include <WebServer/Client.h>
+#include <WebServer/Configuration.h>
 #include <stdio.h>
 #include <unistd.h>
 
@@ -51,6 +53,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    WebServer::Configuration configuration(real_root_path);
+
     Core::EventLoop loop;
 
     auto server = Core::TCPServer::construct();
@@ -58,7 +62,7 @@ int main(int argc, char** argv)
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         VERIFY(client_socket);
-        auto client = WebServer::Client::construct(client_socket.release_nonnull(), real_root_path, server);
+        auto client = WebServer::Client::construct(client_socket.release_nonnull(), server);
         client->start();
     };
 

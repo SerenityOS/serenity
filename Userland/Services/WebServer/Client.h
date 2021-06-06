@@ -19,7 +19,7 @@ public:
     void start();
 
 private:
-    Client(NonnullRefPtr<Core::TCPSocket>, String const&, Core::Object* parent);
+    Client(NonnullRefPtr<Core::TCPSocket>, Core::Object* parent);
 
     void handle_request(ReadonlyBytes);
     void send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
@@ -30,7 +30,6 @@ private:
     void handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
 
     NonnullRefPtr<Core::TCPSocket> m_socket;
-    String m_root_path;
 };
 
 }
