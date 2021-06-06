@@ -36,10 +36,10 @@ static StringObject* typed_this(VM& vm, GlobalObject& global_object)
 
 static String ak_string_from(VM& vm, GlobalObject& global_object)
 {
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
+    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    return Value(this_object).to_string(global_object);
+    return this_value.to_string(global_object);
 }
 
 static Optional<size_t> split_match(const String& haystack, size_t start, const String& needle)
@@ -650,12 +650,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
-    auto this_object = vm.this_value(global_object);
-    if (this_object.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    }
-
     auto string = this_object.to_string(global_object);
     if (vm.exception())
         return {};
@@ -665,11 +662,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 {
     // https://tc39.es/ecma262/#sec-string.prototype.match
-    auto this_object = vm.this_value(global_object);
-    if (this_object.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    }
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
         if (auto* matcher = get_method(global_object, regexp, vm.well_known_symbol_match()))
@@ -687,12 +682,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 {
     // https://tc39.es/ecma262/#sec-string.prototype.replace
-    auto this_object = vm.this_value(global_object);
-    if (this_object.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    }
-
     auto search_value = vm.argument(0);
     auto replace_value = vm.argument(1);
 
@@ -741,10 +733,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
 {
     auto& vm = global_object.vm();
-    if (string.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ToObjectNullOrUndefined);
+    require_object_coercible(global_object, string);
+    if (vm.exception())
         return {};
-    }
     auto str = string.to_string(global_object);
     if (vm.exception())
         return {};

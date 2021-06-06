@@ -30,10 +30,10 @@ test("casts |this| to string", () => {
 
     expect(() => {
         String.prototype[Symbol.iterator].call(null);
-    }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+    }).toThrowWithMessage(TypeError, "null cannot be converted to an object");
     expect(() => {
         String.prototype[Symbol.iterator].call(undefined);
-    }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
+    }).toThrowWithMessage(TypeError, "undefined cannot be converted to an object");
 });
 
 test("utf8 compatible", () => {
