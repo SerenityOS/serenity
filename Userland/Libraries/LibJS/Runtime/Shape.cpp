@@ -117,7 +117,7 @@ Optional<PropertyMetadata> Shape::lookup(const StringOrSymbol& property_name) co
     return property;
 }
 
-const HashMap<StringOrSymbol, PropertyMetadata>& Shape::property_table() const
+FLATTEN HashMap<StringOrSymbol, PropertyMetadata> const& Shape::property_table() const
 {
     ensure_property_table();
     return *m_property_table;
