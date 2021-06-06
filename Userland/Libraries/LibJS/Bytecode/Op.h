@@ -108,6 +108,25 @@ private:
     Register m_src2;
 };
 
+class AbstractEquals final : public Instruction {
+public:
+    AbstractEquals(Register dst, Register src1, Register src2)
+        : m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    virtual ~AbstractEquals() override { }
+    virtual void execute(Bytecode::Interpreter&) const override;
+    virtual String to_string() const override;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class NewString final : public Instruction {
 public:
     NewString(Register dst, String string)
