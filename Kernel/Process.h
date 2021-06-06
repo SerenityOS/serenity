@@ -629,7 +629,7 @@ private:
     RefPtr<Timer> m_alarm_timer;
 
     VeilState m_veil_state { VeilState::None };
-    UnveilNode m_unveiled_paths { "/", { .full_path = "/", .unveil_inherited_from_root = true } };
+    UnveilNode m_unveiled_paths { "/", { .full_path = "/" } };
 
     OwnPtr<PerformanceEventBuffer> m_perf_event_buffer;
 

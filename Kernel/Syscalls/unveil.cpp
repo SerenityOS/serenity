@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -90,14 +91,12 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
     auto it = lexical_path.parts().begin();
     auto& matching_node = m_unveiled_paths.traverse_until_last_accessible_node(it, lexical_path.parts().end());
     if (it.is_end()) {
-        auto old_permissions = matching_node.permissions();
-        // Allow "elevating" the permissions when the permissions are inherited from root (/),
-        // as that would be the first time this path is unveiled.
-        if (old_permissions != UnveilAccess::None || !matching_node.permissions_inherited_from_root()) {
-            if (new_permissions & ~old_permissions)
+        // If the path has already been explicitly unveiled, do not allow elevating its permissions.
+        if (matching_node.was_explicitly_unveiled()) {
+            if (new_permissions & ~matching_node.permissions())
                 return EPERM;
         }
-        matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true, false });
+        matching_node.set_metadata({ matching_node.path(), (UnveilAccess)new_permissions, true });
         return 0;
     }
 
@@ -107,8 +106,9 @@ KResultOr<int> Process::sys$unveil(Userspace<const Syscall::SC_unveil_params*> u
         { new_unveiled_path, (UnveilAccess)new_permissions, true },
         [](auto& parent, auto& it) -> Optional<UnveilMetadata> {
             auto path = LexicalPath::join(parent.path(), *it).string();
-            return UnveilMetadata { path, parent.permissions(), false, parent.permissions_inherited_from_root() };
+            return UnveilMetadata { path, parent.permissions(), false };
         });
+
     VERIFY(m_veil_state != VeilState::Locked);
     m_veil_state = VeilState::Dropped;
     return 0;
