@@ -175,8 +175,6 @@ bool Scheduler::pick_next()
 {
     VERIFY_INTERRUPTS_DISABLED();
 
-    auto current_thread = Thread::current();
-
     // Set the m_in_scheduler flag before acquiring the spinlock. This
     // prevents a recursive call into Scheduler::invoke_async upon
     // leaving the scheduler lock.
@@ -193,22 +191,6 @@ bool Scheduler::pick_next()
         });
 
     ScopedSpinLock lock(g_scheduler_lock);
-
-    if (current_thread->should_die() && current_thread->state() == Thread::Running) {
-        // Rather than immediately killing threads, yanking the kernel stack
-        // away from them (which can lead to e.g. reference leaks), we always
-        // allow Thread::wait_on to return. This allows the kernel stack to
-        // clean up and eventually we'll get here shortly before transitioning
-        // back to user mode (from Processor::exit_trap). At this point we
-        // no longer want to schedule this thread. We can't wait until
-        // Scheduler::enter_current because we don't want to allow it to
-        // transition back to user mode.
-
-        if constexpr (SCHEDULER_DEBUG)
-            dbgln("Scheduler[{}]: Thread {} is dying", Processor::id(), *current_thread);
-
-        current_thread->set_state(Thread::Dying);
-    }
 
     if constexpr (SCHEDULER_RUNNABLE_DEBUG) {
         dump_thread_list();
