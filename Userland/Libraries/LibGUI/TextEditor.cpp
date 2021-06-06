@@ -765,6 +765,12 @@ void TextEditor::keydown_event(KeyEvent& event)
             return;
         }
 
+        if (event.modifiers() == KeyModifier::Mod_Ctrl && event.key() == KeyCode::Key_Return) {
+            if (on_ctrl_return_pressed)
+                on_ctrl_return_pressed();
+            return;
+        }
+
         if (event.key() == KeyCode::Key_Return) {
             if (on_return_pressed)
                 on_return_pressed();
