@@ -42,22 +42,21 @@ NumberPrototype::~NumberPrototype()
 {
 }
 
-// https://tc39.es/ecma262/#thisnumbervalue
-static Value this_number_value(GlobalObject& global_object, StringView const& name)
+// thisNumberValue, https://tc39.es/ecma262/#thisnumbervalue
+static Value this_number_value(GlobalObject& global_object, Value value)
 {
+    if (value.is_number())
+        return value;
+    if (value.is_object() && is<NumberObject>(value.as_object()))
+        return static_cast<NumberObject&>(value.as_object()).value_of();
     auto& vm = global_object.vm();
-    auto this_value = vm.this_value(global_object);
-    if (this_value.is_number())
-        return this_value;
-    if (this_value.is_object() && is<NumberObject>(this_value.as_object()))
-        return static_cast<NumberObject&>(this_value.as_object()).value_of();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, name);
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Number");
     return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
-    auto number_value = this_number_value(global_object, "toString");
+    auto number_value = this_number_value(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
 
@@ -134,7 +133,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
-    return this_number_value(global_object, "valueOf");
+    return this_number_value(global_object, vm.this_value(global_object));
 }
 
 }

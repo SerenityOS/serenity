@@ -14,7 +14,7 @@ test("errors", () => {
         [true, [], {}, Symbol("foo"), "bar", 1n].forEach(value => {
             expect(() => Number.prototype.valueOf.call(value)).toThrowWithMessage(
                 TypeError,
-                "Number.prototype.valueOf() called with incompatible this target"
+                "Not a Number object"
             );
         });
     });

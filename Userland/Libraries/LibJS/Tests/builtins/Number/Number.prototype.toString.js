@@ -77,7 +77,7 @@ test("errors", () => {
         [true, [], {}, Symbol("foo"), "bar", 1n].forEach(value => {
             expect(() => Number.prototype.toString.call(value)).toThrowWithMessage(
                 TypeError,
-                "Number.prototype.toString() called with incompatible this target"
+                "Not a Number object"
             );
         });
     });
