@@ -81,6 +81,9 @@ enum IOCtlNumber {
     SIOCDELRT,
     FIBMAP,
     FIONBIO,
+    KCOV_SETBUFSIZE,
+    KCOV_ENABLE,
+    KCOV_DISABLE,
 };
 
 #define TIOCGPGRP TIOCGPGRP

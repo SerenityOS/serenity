@@ -25,6 +25,7 @@ set(SERENITY_ARCH "i686" CACHE STRING "Target architecture for SerenityOS.")
 # Central location for all custom options used in the Serenity build.
 option(ENABLE_ADDRESS_SANITIZER "Enable address sanitizer testing in gcc/clang" OFF)
 option(ENABLE_KERNEL_ADDRESS_SANITIZER "Enable kernel address sanitizer testing in gcc/clang" OFF)
+option(ENABLE_KERNEL_COVERAGE_COLLECTION "Enable KCOV and kernel coverage instrumentation in gcc/clang" OFF)
 option(ENABLE_MEMORY_SANITIZER "Enable memory sanitizer testing in gcc/clang" OFF)
 option(ENABLE_UNDEFINED_SANITIZER "Enable undefined behavior sanitizer testing in gcc/clang" OFF)
 option(ENABLE_FUZZER_SANITIZER "Enable fuzzer sanitizer testing in clang" OFF)
@@ -115,6 +116,11 @@ if (ENABLE_ALL_DEBUG_FACILITIES)
     # sure this code continues to build instead of all_debug_macros to avoid
     # people filing bugs.
     set(KMALLOC_VERIFY_NO_SPINLOCK_HELD ON)
+
+    # Enables KCOV API and injects kernel coverage instrumentation via
+    # -fsanitize-coverage=trace-pc. Mostly here to ensure that the CI catches
+    # commits breaking this flag.
+    set(ENABLE_KERNEL_COVERAGE_COLLECTION ON)
 endif()
 
 if (ENABLE_ALL_THE_DEBUG_MACROS)
