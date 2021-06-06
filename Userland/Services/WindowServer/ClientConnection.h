@@ -151,6 +151,7 @@ private:
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_window_modified(i32, bool) override;
     virtual Messages::WindowServer::IsWindowModifiedResponse is_window_modified(i32) override;
+    virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale() override;
 
     Window* window_from_id(i32 window_id);
 
