@@ -588,11 +588,8 @@ void Editor::interrupted()
     m_is_editing = false;
     restore();
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        remove_child(*m_notifier);
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Retry);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Retry);
 }
 
 void Editor::resized()
@@ -626,82 +623,81 @@ void Editor::really_quit_event_loop()
     m_returned_line = string;
 
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        remove_child(*m_notifier);
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Exit);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Exit);
 }
 
 auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
 {
-    initialize();
-    m_is_editing = true;
+    OwnPtr<Core::EventLoop> event_loop;
+    do {
+        initialize();
+        m_is_editing = true;
 
-    if (m_configuration.operation_mode == Configuration::NoEscapeSequences || m_configuration.operation_mode == Configuration::NonInteractive) {
-        // Do not use escape sequences, instead, use LibC's getline.
-        size_t size = 0;
-        char* line = nullptr;
-        // Show the prompt only on interactive mode (NoEscapeSequences in this case).
-        if (m_configuration.operation_mode != Configuration::NonInteractive)
-            fputs(prompt.characters(), stderr);
-        auto line_length = getline(&line, &size, stdin);
-        // getline() returns -1 and sets errno=0 on EOF.
-        if (line_length == -1) {
-            if (line)
+        if (m_configuration.operation_mode == Configuration::NoEscapeSequences || m_configuration.operation_mode == Configuration::NonInteractive) {
+            // Do not use escape sequences, instead, use LibC's getline.
+            size_t size = 0;
+            char* line = nullptr;
+            // Show the prompt only on interactive mode (NoEscapeSequences in this case).
+            if (m_configuration.operation_mode != Configuration::NonInteractive)
+                fputs(prompt.characters(), stderr);
+            auto line_length = getline(&line, &size, stdin);
+            // getline() returns -1 and sets errno=0 on EOF.
+            if (line_length == -1) {
+                if (line)
+                    free(line);
+                if (errno == 0)
+                    return Error::Eof;
+
+                return Error::ReadFailure;
+            }
+            restore();
+            if (line) {
+                String result { line, (size_t)line_length, Chomp };
                 free(line);
-            if (errno == 0)
-                return Error::Eof;
+                return result;
+            }
 
             return Error::ReadFailure;
         }
-        restore();
-        if (line) {
-            String result { line, (size_t)line_length, Chomp };
-            free(line);
-            return result;
+
+        auto old_cols = m_num_columns;
+        auto old_lines = m_num_lines;
+        get_terminal_size();
+
+        if (m_configuration.enable_bracketed_paste)
+            fprintf(stderr, "\x1b[?2004h");
+
+        if (m_num_columns != old_cols || m_num_lines != old_lines)
+            m_refresh_needed = true;
+
+        set_prompt(prompt);
+        reset();
+        strip_styles(true);
+
+        auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
+        for (size_t i = 0; i < prompt_lines; ++i)
+            putc('\n', stderr);
+
+        VT::move_relative(-prompt_lines, 0);
+
+        set_origin();
+
+        m_history_cursor = m_history.size();
+
+        refresh_display();
+
+        if (!event_loop)
+            event_loop = make<Core::EventLoop>();
+
+        if (!m_notifier) {
+            m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
         }
 
-        return Error::ReadFailure;
-    }
-
-    auto old_cols = m_num_columns;
-    auto old_lines = m_num_lines;
-    get_terminal_size();
-
-    if (m_configuration.enable_bracketed_paste)
-        fprintf(stderr, "\x1b[?2004h");
-
-    if (m_num_columns != old_cols || m_num_lines != old_lines)
-        m_refresh_needed = true;
-
-    set_prompt(prompt);
-    reset();
-    strip_styles(true);
-
-    auto prompt_lines = max(current_prompt_metrics().line_metrics.size(), 1ul) - 1;
-    for (size_t i = 0; i < prompt_lines; ++i)
-        putc('\n', stderr);
-
-    VT::move_relative(-prompt_lines, 0);
-
-    set_origin();
-
-    m_history_cursor = m_history.size();
-
-    refresh_display();
-
-    Core::EventLoop loop;
-
-    m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
-    add_child(*m_notifier);
-
-    m_notifier->on_ready_to_read = [&] { try_update_once(); };
-    if (!m_incomplete_data.is_empty())
-        deferred_invoke([&](auto&) { try_update_once(); });
-
-    if (loop.exec() == Retry)
-        return get_line(prompt);
+        m_notifier->on_ready_to_read = [&] { try_update_once(); };
+        if (!m_incomplete_data.is_empty())
+            deferred_invoke([&](auto&) { try_update_once(); });
+    } while (event_loop->exec() == Retry);
 
     return m_input_error.has_value() ? Result<String, Editor::Error> { m_input_error.value() } : Result<String, Editor::Error> { m_returned_line };
 }
