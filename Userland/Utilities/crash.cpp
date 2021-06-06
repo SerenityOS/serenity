@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <Kernel/IO.h>
 #include <LibCore/ArgsParser.h>
+#include <LibCore/Object.h>
 #include <LibTest/CrashTest.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,6 +44,7 @@ int main(int argc, char** argv)
     bool do_read_cpu_counter = false;
     bool do_pledge_violation = false;
     bool do_failing_assertion = false;
+    bool do_deref_null_refptr = false;
 
     auto args_parser = Core::ArgsParser();
     args_parser.set_general_help(
@@ -67,6 +69,7 @@ int main(int argc, char** argv)
     args_parser.add_option(do_read_cpu_counter, "Read the x86 TSC (Time Stamp Counter) directly", nullptr, 'c');
     args_parser.add_option(do_pledge_violation, "Violate pledge()'d promises", nullptr, 'p');
     args_parser.add_option(do_failing_assertion, "Perform a failing assertion", nullptr, 'n');
+    args_parser.add_option(do_deref_null_refptr, "Dereference a null RefPtr", nullptr, 'R');
 
     if (argc != 2) {
         args_parser.print_usage(stderr, argv[0]);
@@ -275,6 +278,14 @@ int main(int argc, char** argv)
     if (do_failing_assertion || do_all_crash_types) {
         Crash("Perform a failing assertion", [] {
             VERIFY(1 == 2);
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
+    if (do_deref_null_refptr || do_all_crash_types) {
+        Crash("Dereference a null RefPtr", [] {
+            RefPtr<Core::Object> p;
+            *p;
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
