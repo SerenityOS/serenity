@@ -141,22 +141,14 @@ DateConstructor::~DateConstructor()
 
 Value DateConstructor::call()
 {
-    auto date = construct(*this);
-    if (!date.is_object())
-        return {};
-    return js_string(heap(), static_cast<Date&>(date.as_object()).string());
+    return js_string(heap(), Date::now(global_object())->string());
 }
 
 Value DateConstructor::construct(Function&)
 {
     auto& vm = this->vm();
-    if (vm.argument_count() == 0) {
-        struct timeval tv;
-        gettimeofday(&tv, nullptr);
-        auto datetime = Core::DateTime::now();
-        auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
-        return Date::create(global_object(), datetime, milliseconds);
-    }
+    if (vm.argument_count() == 0)
+        return Date::now(global_object());
 
     auto create_invalid_date = [this]() {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
