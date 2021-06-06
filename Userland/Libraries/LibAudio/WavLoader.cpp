@@ -83,13 +83,14 @@ RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     return buffer;
 }
 
-void WavLoaderPlugin::seek(const int position)
+void WavLoaderPlugin::seek(const int sample_index)
 {
-    if (position < 0 || position > m_total_samples)
+    dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
+    if (sample_index < 0 || sample_index >= m_total_samples)
         return;
 
-    m_loaded_samples = position;
-    size_t byte_position = position * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8);
+    m_loaded_samples = sample_index;
+    size_t byte_position = m_byte_offset_of_data_samples + sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8);
 
     // AK::InputStream does not define seek.
     if (m_file) {
@@ -105,12 +106,14 @@ bool WavLoaderPlugin::parse_header()
         return false;
 
     bool ok = true;
+    size_t bytes_read = 0;
 
     auto read_u8 = [&]() -> u8 {
         u8 value;
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 1;
         return value;
     };
 
@@ -119,6 +122,7 @@ bool WavLoaderPlugin::parse_header()
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 2;
         return value;
     };
 
@@ -127,6 +131,7 @@ bool WavLoaderPlugin::parse_header()
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 4;
         return value;
     };
 
@@ -245,6 +250,7 @@ bool WavLoaderPlugin::parse_header()
         bytes_per_sample,
         m_total_samples);
 
+    m_byte_offset_of_data_samples = bytes_read;
     return true;
 }
 
