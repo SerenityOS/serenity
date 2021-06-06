@@ -22,18 +22,6 @@
 
 namespace JS {
 
-static StringObject* typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return nullptr;
-    if (!is<StringObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
-        return nullptr;
-    }
-    return static_cast<StringObject*>(this_object);
-}
-
 static String ak_string_from(VM& vm, GlobalObject& global_object)
 {
     auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
@@ -109,6 +97,18 @@ void StringPrototype::initialize(GlobalObject& global_object)
 
 StringPrototype::~StringPrototype()
 {
+}
+
+// thisStringValue, https://tc39.es/ecma262/#thisstringvalue
+static Value this_string_value(GlobalObject& global_object, Value value)
+{
+    if (value.is_string())
+        return value;
+    if (value.is_object() && is<StringObject>(value.as_object()))
+        return static_cast<StringObject&>(value.as_object()).value_of();
+    auto& vm = global_object.vm();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "String");
+    return {};
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
@@ -274,20 +274,17 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     return js_string(vm, string.to_uppercase());
 }
 
-JS_DEFINE_NATIVE_GETTER(StringPrototype::length_getter)
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::length_getter)
 {
-    auto* string_object = typed_this(vm, global_object);
-    if (!string_object)
+    auto string_value = this_string_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    return Value((i32)string_object->primitive_string().string().length());
+    return Value((i32)string_value.as_string().string().length());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
-    auto* string_object = typed_this(vm, global_object);
-    if (!string_object)
-        return {};
-    return js_string(vm, string_object->primitive_string().string());
+    return this_string_value(global_object, vm.this_value(global_object));
 }
 
 enum class PadPlacement {
