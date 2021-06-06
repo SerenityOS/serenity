@@ -187,4 +187,26 @@ Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Genera
     return argument_reg;
 }
 
+Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto predicate_reg = m_predicate->generate_bytecode(generator);
+    auto& if_jump = generator.emit<Bytecode::Op::JumpIfTrue>(*predicate_reg);
+    auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*predicate_reg);
+
+    if_jump.set_target(generator.make_label());
+    (void)m_consequent->generate_bytecode(generator);
+    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
+
+    else_jump.set_target(generator.make_label());
+    if (m_alternate) {
+        (void)m_alternate->generate_bytecode(generator);
+    }
+
+    end_jump.set_target(generator.make_label());
+
+    // FIXME: Do we need IfStatement to return the consequent/alternate result value?
+    //        (That's what the AST interpreter currently does)
+    return {};
+}
+
 }
