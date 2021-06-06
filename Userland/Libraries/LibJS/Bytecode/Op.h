@@ -214,17 +214,19 @@ private:
 
 class Jump final : public Instruction {
 public:
-    explicit Jump(Label target)
-        : m_target(target)
+    explicit Jump(Optional<Label> target = {})
+        : m_target(move(target))
     {
     }
+
+    void set_target(Optional<Label> target) { m_target = move(target); }
 
     virtual ~Jump() override { }
     virtual void execute(Bytecode::Interpreter&) const override;
     virtual String to_string() const override;
 
 private:
-    Label m_target;
+    Optional<Label> m_target;
 };
 
 class JumpIfFalse final : public Instruction {

@@ -72,7 +72,7 @@ void PutById::execute(Bytecode::Interpreter& interpreter) const
 
 void Jump::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.jump(m_target);
+    interpreter.jump(*m_target);
 }
 
 void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
@@ -196,7 +196,7 @@ String GetById::to_string() const
 
 String Jump::to_string() const
 {
-    return String::formatted("Jump {}", m_target);
+    return String::formatted("Jump {}", *m_target);
 }
 
 String JumpIfFalse::to_string() const
