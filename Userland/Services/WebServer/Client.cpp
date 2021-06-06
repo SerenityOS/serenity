@@ -80,6 +80,15 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     }
 
+    // Check for credentials if they are required
+    if (Configuration::the().credentials().has_value()) {
+        bool has_authenticated = verify_credentials(request.headers());
+        if (!has_authenticated) {
+            send_error_response(401, request, { "WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\"" });
+            return;
+        }
+    }
+
     auto requested_path = LexicalPath::join("/", request.resource()).string();
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
@@ -267,13 +276,20 @@ void Client::handle_directory_listing(String const& requested_path, String const
     send_response(stream, request, "text/html");
 }
 
-void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request)
+void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)
 {
     auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
     StringBuilder builder;
     builder.appendff("HTTP/1.0 {} ", code);
     builder.append(reason_phrase);
-    builder.append("\r\n\r\n");
+    builder.append("\r\n");
+
+    for (auto& header : headers) {
+        builder.append(header);
+        builder.append("\r\n");
+    }
+
+    builder.append("\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
     builder.appendff("{} ", code);
     builder.append(reason_phrase);
@@ -286,6 +302,20 @@ void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request
 void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
     outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.resource());
+}
+
+bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)
+{
+    VERIFY(Configuration::the().credentials().has_value());
+    auto& configured_credentials = Configuration::the().credentials().value();
+    for (auto& header : headers) {
+        if (header.name.equals_ignoring_case("Authorization")) {
+            auto provided_credentials = HTTP::HttpRequest::parse_http_basic_authentication_header(header.value);
+            if (provided_credentials.has_value() && configured_credentials.username == provided_credentials->username && configured_credentials.password == provided_credentials->password)
+                return true;
+        }
+    }
+    return false;
 }
 
 }
