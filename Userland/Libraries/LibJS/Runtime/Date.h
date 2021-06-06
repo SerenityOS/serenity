@@ -15,6 +15,8 @@ class Date final : public Object {
     JS_OBJECT(Date, Object);
 
 public:
+    static constexpr double time_clip = 8.64e15;
+
     static Date* create(GlobalObject&, Core::DateTime, i16 milliseconds, bool is_invalid = false);
     static Date* now(GlobalObject&);
 

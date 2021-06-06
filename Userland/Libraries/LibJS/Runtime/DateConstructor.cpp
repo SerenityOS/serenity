@@ -172,6 +172,8 @@ Value DateConstructor::construct(Function&)
 
         // A timestamp since the epoch, in UTC.
         double value_as_double = value.as_double();
+        if (value_as_double > Date::time_clip)
+            return create_invalid_date();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
         return Date::create(global_object(), datetime, milliseconds);
@@ -247,7 +249,10 @@ Value DateConstructor::construct(Function&)
         year += 1900;
     int month = month_index + 1;
     auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
-    return Date::create(global_object(), datetime, milliseconds);
+    auto* date = Date::create(global_object(), datetime, milliseconds);
+    if (date->time() > Date::time_clip)
+        return create_invalid_date();
+    return date;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)

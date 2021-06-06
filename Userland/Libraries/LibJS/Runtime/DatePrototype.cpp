@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -127,9 +128,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
     }
     auto new_date = new_date_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     datetime.set_time(datetime.year(), datetime.month(), new_date, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -195,6 +200,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto new_day = new_day_value.as_i32();
 
     datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
     this_object->set_is_invalid(false);
 
     return Value(this_object->time());
@@ -232,6 +242,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
         new_year += 1900;
 
     datetime.set_time(new_year, datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
     this_object->set_is_invalid(false);
 
     return Value(this_object->time());
@@ -295,12 +310,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), new_hours, new_minutes, new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -339,6 +358,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     if (added_seconds > 0) {
         auto& datetime = this_object->datetime();
         datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), datetime.second() + added_seconds);
+    }
+
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
     }
 
     this_object->set_is_invalid(false);
@@ -395,12 +419,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), new_minutes, new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -444,9 +472,13 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     }
     auto new_date = new_date_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     datetime.set_time(datetime.year(), new_month, new_date, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -490,12 +522,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -526,11 +562,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
     }
     auto new_time = new_time_value.as_double();
 
-    this_object->set_is_invalid(false);
+    if (new_time > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
 
     auto new_date_time = Core::DateTime::from_timestamp(static_cast<time_t>(new_time / 1000));
     this_object->datetime().set_time(new_date_time.year(), new_date_time.month(), new_date_time.day(), new_date_time.hour(), new_date_time.minute(), new_date_time.second());
     this_object->set_milliseconds(static_cast<i16>(fmod(new_time, 1000)));
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
