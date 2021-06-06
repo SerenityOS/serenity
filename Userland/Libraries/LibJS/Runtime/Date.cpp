@@ -9,12 +9,23 @@
 #include <LibJS/Heap/Heap.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <sys/time.h>
+#include <time.h>
 
 namespace JS {
 
 Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, u16 milliseconds, bool is_invalid)
 {
     return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, is_invalid, *global_object.date_prototype());
+}
+
+Date* Date::now(GlobalObject& global_object)
+{
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    auto datetime = Core::DateTime::now();
+    auto milliseconds = static_cast<u16>(tv.tv_usec / 1000);
+    return create(global_object, datetime, milliseconds);
 }
 
 Date::Date(Core::DateTime datetime, u16 milliseconds, bool is_invalid, Object& prototype)

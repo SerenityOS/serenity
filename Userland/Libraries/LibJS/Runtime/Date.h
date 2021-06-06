@@ -16,6 +16,7 @@ class Date final : public Object {
 
 public:
     static Date* create(GlobalObject&, Core::DateTime, u16 milliseconds, bool is_invalid = false);
+    static Date* now(GlobalObject&);
 
     Date(Core::DateTime datetime, u16 milliseconds, bool is_invalid, Object& prototype);
     virtual ~Date() override;
