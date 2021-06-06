@@ -10,6 +10,7 @@
 #include <Kernel/Arch/x86/SmapDisabler.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
+#include <Kernel/Devices/KCOVDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
@@ -409,6 +410,9 @@ void Thread::exit(void* exit_value)
         auto* region = process().space().find_region_from_range(m_thread_specific_range.value());
         process().space().deallocate_region(*region);
     }
+#ifdef ENABLE_KERNEL_COVERAGE_COLLECTION
+    KCOVDevice::free_thread();
+#endif
     die_if_needed();
 }
 

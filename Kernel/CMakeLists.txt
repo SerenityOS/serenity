@@ -46,6 +46,8 @@ set(KERNEL_SOURCES
     Devices/CharacterDevice.cpp
     Devices/Device.cpp
     Devices/FullDevice.cpp
+    Devices/KCOVDevice.cpp
+    Devices/KCOVInstance.cpp
     Devices/MemoryDevice.cpp
     Devices/NullDevice.cpp
     Devices/PCISerialDevice.cpp
@@ -76,6 +78,7 @@ set(KERNEL_SOURCES
     Graphics/VirtIOGPU/GPU.cpp
     Graphics/VirtIOGPU/GraphicsAdapter.cpp
     Graphics/VGACompatibleAdapter.cpp
+    SanCov.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
     Storage/Partition/EBRPartitionTable.cpp
@@ -363,6 +366,36 @@ else()
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -Wl,--no-dynamic-linker")
+
+# Kernel Coverage (KCOV) is an API to collect and expose program counters of
+# kernel code that has been run to user space. It's rather slow and likely not
+# secure to run in production builds. Useful for coverage guided fuzzing.
+if (ENABLE_KERNEL_COVERAGE_COLLECTION)
+    add_definitions(-DENABLE_KERNEL_COVERAGE_COLLECTION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize-coverage=trace-pc")
+    set(KCOV_EXCLUDED_SOURCES
+        # Make sure we don't instrument any code called from __sanitizer_cov_trace_pc
+        # otherwise we'll end up with recursive calls to that function.
+        ../AK/Format.cpp
+        ../AK/StringBuilder.cpp
+        ../Kernel/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+        ../Kernel/Devices/KCOVDevice.cpp
+        ../Kernel/Devices/KCOVInstance.cpp
+        ../Kernel/FileSystem/File.cpp
+        ../Kernel/FileSystem/FileDescription.cpp
+        ../Kernel/Heap/SlabAllocator.cpp
+        ../Kernel/init.cpp
+        ../Kernel/SanCov.cpp
+        # GCC assumes that the caller saves registers for functions according
+        # to the System V ABI and happily inserts coverage calls into the
+        # function prologue for all functions. This assumption is not true for
+        # interrupt handlers because their calling convention is not compatible
+        # with the System V ABI.
+        ../Kernel/Arch/x86/common/Interrupts.cpp
+        ../Kernel/Syscall.cpp
+    )
+    set_source_files_properties(${KCOV_EXCLUDED_SOURCES} PROPERTIES COMPILE_FLAGS "-fno-sanitize-coverage=trace-pc")
+endif()
 
 # Kernel Undefined Behavior Sanitizer (KUBSAN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
