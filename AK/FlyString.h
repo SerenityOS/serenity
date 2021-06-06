@@ -60,7 +60,8 @@ public:
     size_t length() const { return m_impl ? m_impl->length() : 0; }
 
     ALWAYS_INLINE u32 hash() const { return m_impl ? m_impl->existing_hash() : 0; }
-    ALWAYS_INLINE StringView view() const { return m_impl ? m_impl->view() : StringView {}; }
+
+    StringView view() const;
 
     FlyString to_lowercase() const;
 
