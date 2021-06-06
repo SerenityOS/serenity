@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,9 +12,17 @@
 
 namespace JS {
 
-Array* Array::create(GlobalObject& global_object)
+// 10.4.2.2 ArrayCreate, https://tc39.es/ecma262/#sec-arraycreate
+Array* Array::create(GlobalObject& global_object, size_t length)
 {
-    return global_object.heap().allocate<Array>(global_object, *global_object.array_prototype());
+    if (length > NumericLimits<u32>::max()) {
+        auto& vm = global_object.vm();
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
+        return nullptr;
+    }
+    auto* array = global_object.heap().allocate<Array>(global_object, *global_object.array_prototype());
+    array->indexed_properties().set_array_like_size(length);
+    return array;
 }
 
 // 7.3.17 CreateArrayFromList, https://tc39.es/ecma262/#sec-createarrayfromlist
