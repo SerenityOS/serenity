@@ -51,6 +51,7 @@ public:
 
     void clear();
     [[nodiscard]] bool is_empty() const;
+    [[nodiscard]] size_t size_slow() const;
     void append(T& n);
     void prepend(T& n);
     void remove(T& n);
@@ -212,6 +213,17 @@ template<class T, typename Container, IntrusiveListNode<T, Container> T::*member
 inline bool IntrusiveList<T, Container, member>::is_empty() const
 {
     return m_storage.m_first == nullptr;
+}
+
+template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
+inline size_t IntrusiveList<T, Container, member>::size_slow() const
+{
+    size_t size = 0;
+    auto it_end = end();
+    for (auto it = begin(); it != it_end; ++it) {
+        ++size;
+    }
+    return size;
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
