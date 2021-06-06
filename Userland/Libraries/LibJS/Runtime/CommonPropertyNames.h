@@ -224,6 +224,13 @@ namespace JS {
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
     P(setTime)                               \
+    P(setUTCDate)                            \
+    P(setUTCFullYear)                        \
+    P(setUTCHours)                           \
+    P(setUTCMilliseconds)                    \
+    P(setUTCMinutes)                         \
+    P(setUTCMonth)                           \
+    P(setUTCSeconds)                         \
     P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \
