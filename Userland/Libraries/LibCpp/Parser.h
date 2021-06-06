@@ -75,6 +75,7 @@ private:
     bool match_sizeof_expression();
     bool match_braced_init_list();
     bool match_type();
+    bool match_access_specifier();
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -162,6 +163,7 @@ private:
 
     bool match_attribute_specification();
     void consume_attribute_specification();
+    void consume_access_specifier();
     bool match_ellipsis();
     void initialize_program_tokens(const StringView& program);
     void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
