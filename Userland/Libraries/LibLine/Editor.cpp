@@ -588,10 +588,8 @@ void Editor::interrupted()
     m_is_editing = false;
     restore();
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Retry);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Retry);
 }
 
 void Editor::resized()
@@ -623,12 +621,9 @@ void Editor::really_quit_event_loop()
         restore();
 
     m_returned_line = string;
-
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Exit);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Exit);
 }
 
 auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
