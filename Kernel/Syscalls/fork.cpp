@@ -82,7 +82,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
         }
 
         ScopedSpinLock processes_lock(g_processes_lock);
-        g_processes->prepend(child);
+        g_processes->prepend(*child);
     }
 
     PerformanceManager::add_process_created_event(*child);

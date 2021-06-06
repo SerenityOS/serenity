@@ -40,7 +40,7 @@ static void create_signal_trampoline();
 
 RecursiveSpinLock g_processes_lock;
 static Atomic<pid_t> next_pid;
-READONLY_AFTER_INIT InlineLinkedList<Process>* g_processes;
+READONLY_AFTER_INIT Process::List* g_processes;
 READONLY_AFTER_INIT String* g_hostname;
 READONLY_AFTER_INIT Lock* g_hostname_lock;
 READONLY_AFTER_INIT HashMap<String, OwnPtr<Module>>* g_modules;
@@ -61,7 +61,7 @@ UNMAP_AFTER_INIT void Process::initialize()
     g_modules = new HashMap<String, OwnPtr<Module>>;
 
     next_pid.store(0, AK::MemoryOrder::memory_order_release);
-    g_processes = new InlineLinkedList<Process>;
+    g_processes = new Process::List();
     g_process_groups = new ProcessGroup::List();
     g_hostname = new String("courage");
     g_hostname_lock = new Lock;
@@ -165,9 +165,9 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     }
 
     {
-        ScopedSpinLock lock(g_processes_lock);
-        g_processes->prepend(process);
         process->ref();
+        ScopedSpinLock lock(g_processes_lock);
+        g_processes->prepend(*process);
     }
     error = 0;
     return process;
@@ -182,9 +182,9 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
 
     if (process->pid() != 0) {
-        ScopedSpinLock lock(g_processes_lock);
-        g_processes->prepend(process);
         process->ref();
+        ScopedSpinLock lock(g_processes_lock);
+        g_processes->prepend(*process);
     }
 
     ScopedSpinLock lock(g_scheduler_lock);
@@ -270,8 +270,8 @@ Process::~Process()
 
     {
         ScopedSpinLock processes_lock(g_processes_lock);
-        if (prev() || next())
-            g_processes->remove(this);
+        if (m_list_node.is_in_list())
+            g_processes->remove(*this);
     }
 }
 
@@ -571,17 +571,16 @@ void Process::die()
 
     {
         ScopedSpinLock lock(g_processes_lock);
-        for (auto* process = g_processes->head(); process;) {
-            auto* next_process = process->next();
-            if (process->has_tracee_thread(pid())) {
-                dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process->name(), process->pid(), name(), pid());
-                process->stop_tracing();
-                auto err = process->send_signal(SIGSTOP, this);
+        for (auto it = g_processes->begin(); it != g_processes->end();) {
+            auto& process = *it;
+            ++it;
+            if (process.has_tracee_thread(pid())) {
+                dbgln_if(PROCESS_DEBUG, "Process {} ({}) is attached by {} ({}) which will exit", process.name(), process.pid(), name(), pid());
+                process.stop_tracing();
+                auto err = process.send_signal(SIGSTOP, this);
                 if (err.is_error())
-                    dbgln("Failed to send the SIGSTOP signal to {} ({})", process->name(), process->pid());
+                    dbgln("Failed to send the SIGSTOP signal to {} ({})", process.name(), process.pid());
             }
-
-            process = next_process;
         }
     }
 

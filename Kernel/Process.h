@@ -9,7 +9,7 @@
 #include <AK/Checked.h>
 #include <AK/Concepts.h>
 #include <AK/HashMap.h>
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
@@ -117,7 +117,6 @@ static_assert(sizeof(ProcessBase) == PAGE_SIZE);
 class Process
     : public ProcessBase
     , public RefCounted<Process>
-    , public InlineLinkedListNode<Process>
     , public Weakable<Process> {
 
     AK_MAKE_NONCOPYABLE(Process);
@@ -125,7 +124,6 @@ class Process
 
     MAKE_ALIGNED_ALLOCATED(Process, PAGE_SIZE);
 
-    friend class InlineLinkedListNode<Process>;
     friend class Thread;
     friend class CoreDump;
 
@@ -569,8 +567,7 @@ private:
             return nullptr;
     }
 
-    Process* m_prev { nullptr };
-    Process* m_next { nullptr };
+    IntrusiveListNode<Process> m_list_node;
 
     String m_name;
 
@@ -649,9 +646,12 @@ private:
     HashMap<String, String> m_coredump_metadata;
 
     NonnullRefPtrVector<Thread> m_threads_for_coredump;
+
+public:
+    using List = IntrusiveList<Process, RawPtr<Process>, &Process::m_list_node>;
 };
 
-extern InlineLinkedList<Process>* g_processes;
+extern Process::List* g_processes;
 extern RecursiveSpinLock g_processes_lock;
 
 template<IteratorFunction<Process&> Callback>
@@ -659,11 +659,11 @@ inline void Process::for_each(Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (callback(*process) == IterationDecision::Break)
+    for (auto it = g_processes->begin(); it != g_processes->end();) {
+        auto& process = *it;
+        ++it;
+        if (callback(process) == IterationDecision::Break)
             break;
-        process = next_process;
     }
 }
 
@@ -673,13 +673,13 @@ inline void Process::for_each_child(Callback callback)
     VERIFY_INTERRUPTS_DISABLED();
     ProcessID my_pid = pid();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (process->ppid() == my_pid || process->has_tracee_thread(pid())) {
-            if (callback(*process) == IterationDecision::Break)
+    for (auto it = g_processes->begin(); it != g_processes->end();) {
+        auto& process = *it;
+        ++it;
+        if (process.ppid() == my_pid || process.has_tracee_thread(pid())) {
+            if (callback(process) == IterationDecision::Break)
                 break;
         }
-        process = next_process;
     }
 }
 
@@ -712,13 +712,13 @@ inline void Process::for_each_in_pgrp(ProcessGroupID pgid, Callback callback)
 {
     VERIFY_INTERRUPTS_DISABLED();
     ScopedSpinLock lock(g_processes_lock);
-    for (auto* process = g_processes->head(); process;) {
-        auto* next_process = process->next();
-        if (!process->is_dead() && process->pgid() == pgid) {
-            if (callback(*process) == IterationDecision::Break)
+    for (auto it = g_processes->begin(); it != g_processes->end();) {
+        auto& process = *it;
+        ++it;
+        if (!process.is_dead() && process.pgid() == pgid) {
+            if (callback(process) == IterationDecision::Break)
                 break;
         }
-        process = next_process;
     }
 }
 
