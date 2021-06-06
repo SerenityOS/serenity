@@ -169,14 +169,14 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     }
     auto new_year = new_year_value.as_i32();
 
-    auto new_month_value = arg_or(1, datetime.month());
+    auto new_month_value = arg_or(1, datetime.month() - 1);
     if (vm.exception())
         return {};
     if (!new_month_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
-    auto new_month = new_month_value.as_i32();
+    auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
 
     auto new_day_value = arg_or(2, datetime.day());
     if (vm.exception())
