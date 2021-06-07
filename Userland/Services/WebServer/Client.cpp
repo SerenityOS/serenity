@@ -265,11 +265,7 @@ void Client::send_error_response(unsigned code, StringView const& message, HTTP:
 
 void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
-    printf("%s :: %03u :: %s %s\n",
-        Core::DateTime::now().to_string().characters(),
-        code,
-        request.method_name().characters(),
-        request.resource().characters());
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.resource());
 }
 
 }
