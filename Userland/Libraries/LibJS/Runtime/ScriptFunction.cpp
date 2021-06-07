@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Block.h>
@@ -152,8 +153,10 @@ Value ScriptFunction::execute_function_body()
         prepare_arguments();
         auto block = Bytecode::Generator::generate(m_body);
         VERIFY(block);
-        dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-        block->dump();
+        if constexpr (JS_BYTECODE_DEBUG) {
+            dbgln("Compiled Bytecode::Block for function '{}':", m_name);
+            block->dump();
+        }
         return bytecode_interpreter->run(*block);
     } else {
         OwnPtr<Interpreter> local_interpreter;

@@ -226,6 +226,10 @@
 #cmakedefine01 JPG_DEBUG
 #endif
 
+#ifndef JS_BYTECODE_DEBUG
+#cmakedefine01 JS_BYTECODE_DEBUG
+#endif
+
 #ifndef KEYBOARD_SHORTCUTS_DEBUG
 #cmakedefine01 KEYBOARD_SHORTCUTS_DEBUG
 #endif
