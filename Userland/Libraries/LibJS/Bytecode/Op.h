@@ -260,6 +260,44 @@ private:
     Register m_src2;
 };
 
+class TypedInequals final : public Instruction {
+public:
+    TypedInequals(Register dst, Register src1, Register src2)
+        : Instruction(Type::TypedInequals)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class TypedEquals final : public Instruction {
+public:
+    TypedEquals(Register dst, Register src1, Register src2)
+        : Instruction(Type::TypedEquals)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class BitwiseAnd final : public Instruction {
 public:
     BitwiseAnd(Register dst, Register src1, Register src2)
