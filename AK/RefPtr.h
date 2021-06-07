@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Atomic.h>
 #include <AK/Format.h>
 #include <AK/NonnullRefPtr.h>

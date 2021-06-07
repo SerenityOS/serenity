@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
