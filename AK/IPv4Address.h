@@ -57,6 +57,15 @@ public:
             octet(SubnetClass::D));
     }
 
+    String to_string_reversed() const
+    {
+        return String::formatted("{}.{}.{}.{}",
+            octet(SubnetClass::D),
+            octet(SubnetClass::C),
+            octet(SubnetClass::B),
+            octet(SubnetClass::A));
+    }
+
     static Optional<IPv4Address> from_string(const StringView& string)
     {
         if (string.is_null())
