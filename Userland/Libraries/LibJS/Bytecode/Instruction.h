@@ -42,7 +42,10 @@
     O(Not)                        \
     O(UnaryPlus)                  \
     O(UnaryMinus)                 \
-    O(Typeof)
+    O(Typeof)                     \
+    O(LeftShift)                  \
+    O(RightShift)                 \
+    O(UnsignedRightShift)
 
 namespace JS::Bytecode {
 
