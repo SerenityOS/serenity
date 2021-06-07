@@ -72,6 +72,16 @@ void Div::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = div(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
+void Mod::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = mod(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
+void Exp::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = exp(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
 void LessThan::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = less_than(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
@@ -211,6 +221,16 @@ String Mul::to_string() const
 String Div::to_string() const
 {
     return String::formatted("Div dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String Mod::to_string() const
+{
+    return String::formatted("Mod dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String Exp::to_string() const
+{
+    return String::formatted("Exp dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String LessThan::to_string() const
