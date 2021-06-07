@@ -116,6 +116,11 @@ void Client::handle_request(ReadonlyBytes raw_request)
         return;
     }
 
+    if (file->is_device()) {
+        send_error_response(403, request);
+        return;
+    }
+
     Core::InputFileStream stream { file };
 
     send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path));
