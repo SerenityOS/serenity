@@ -177,8 +177,50 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
         auto& identifier = static_cast<Identifier const&>(*m_lhs);
         auto rhs_reg = m_rhs->generate_bytecode(generator);
         VERIFY(rhs_reg.has_value());
-        generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
-        return rhs_reg;
+
+        if (m_op == AssignmentOp::Assignment) {
+            generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
+            return rhs_reg;
+        }
+        
+        auto lhs_reg = m_lhs->generate_bytecode(generator);
+        auto dst_reg = generator.allocate_register();
+
+        switch (m_op) {
+        case AssignmentOp::AdditionAssignment:
+            generator.emit<Bytecode::Op::Add>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::SubtractionAssignment:
+            generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::MultiplicationAssignment:
+            generator.emit<Bytecode::Op::Mul>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::DivisionAssignment:
+            generator.emit<Bytecode::Op::Div>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::ModuloAssignment:
+            generator.emit<Bytecode::Op::Mod>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::ExponentiationAssignment:
+            generator.emit<Bytecode::Op::Exp>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::BitwiseAndAssignment:
+            generator.emit<Bytecode::Op::BitwiseAnd>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::BitwiseOrAssignment:
+            generator.emit<Bytecode::Op::BitwiseOr>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::BitwiseXorAssignment:
+            generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        default:
+            TODO();        
+        }
+
+        generator.emit<Bytecode::Op::SetVariable>(identifier.string(), dst_reg);
+
+        return dst_reg;
     }
 
     if (is<MemberExpression>(*m_lhs)) {
