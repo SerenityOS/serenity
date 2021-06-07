@@ -34,7 +34,10 @@
     O(JumpIfTrue)                 \
     O(Call)                       \
     O(EnterScope)                 \
-    O(Return)
+    O(Return)                     \
+    O(BitwiseAnd)                 \
+    O(BitwiseOr)                  \
+    O(BitwiseXor)
 
 namespace JS::Bytecode {
 
