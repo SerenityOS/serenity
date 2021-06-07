@@ -50,508 +50,80 @@ private:
     Register m_src;
 };
 
-class Add final : public Instruction {
-public:
-    Add(Register dst, Register src1, Register src2)
-        : Instruction(Type::Add)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class Sub final : public Instruction {
-public:
-    Sub(Register dst, Register src1, Register src2)
-        : Instruction(Type::Sub)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class Mul final : public Instruction {
-public:
-    Mul(Register dst, Register src1, Register src2)
-        : Instruction(Type::Mul)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class Div final : public Instruction {
-public:
-    Div(Register dst, Register src1, Register src2)
-        : Instruction(Type::Div)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class Mod final : public Instruction {
-public:
-    Mod(Register dst, Register src1, Register src2)
-        : Instruction(Type::Mod)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class Exp final : public Instruction {
-public:
-    Exp(Register dst, Register src1, Register src2)
-        : Instruction(Type::Exp)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class GreaterThan final : public Instruction {
-public:
-    GreaterThan(Register dst, Register src1, Register src2)
-        : Instruction(Type::GreaterThan)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class GreaterThanEquals final : public Instruction {
-public:
-    GreaterThanEquals(Register dst, Register src1, Register src2)
-        : Instruction(Type::GreaterThanEquals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class LessThan final : public Instruction {
-public:
-    LessThan(Register dst, Register src1, Register src2)
-        : Instruction(Type::LessThan)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class LessThanEquals final : public Instruction {
-public:
-    LessThanEquals(Register dst, Register src1, Register src2)
-        : Instruction(Type::LessThanEquals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class AbstractInequals final : public Instruction {
-public:
-    AbstractInequals(Register dst, Register src1, Register src2)
-        : Instruction(Type::AbstractInequals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class AbstractEquals final : public Instruction {
-public:
-    AbstractEquals(Register dst, Register src1, Register src2)
-        : Instruction(Type::AbstractEquals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class TypedInequals final : public Instruction {
-public:
-    TypedInequals(Register dst, Register src1, Register src2)
-        : Instruction(Type::TypedInequals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class TypedEquals final : public Instruction {
-public:
-    TypedEquals(Register dst, Register src1, Register src2)
-        : Instruction(Type::TypedEquals)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class BitwiseAnd final : public Instruction {
-public:
-    BitwiseAnd(Register dst, Register src1, Register src2)
-        : Instruction(Type::BitwiseAnd)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class BitwiseOr final : public Instruction {
-public:
-    BitwiseOr(Register dst, Register src1, Register src2)
-        : Instruction(Type::BitwiseOr)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class BitwiseXor final : public Instruction {
-public:
-    BitwiseXor(Register dst, Register src1, Register src2)
-        : Instruction(Type::BitwiseXor)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class LeftShift final : public Instruction {
-public:
-    LeftShift(Register dst, Register src1, Register src2)
-        : Instruction(Type::LeftShift)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class RightShift final : public Instruction {
-public:
-    RightShift(Register dst, Register src1, Register src2)
-        : Instruction(Type::RightShift)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class UnsignedRightShift final : public Instruction {
-public:
-    UnsignedRightShift(Register dst, Register src1, Register src2)
-        : Instruction(Type::UnsignedRightShift)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class In final : public Instruction {
-public:
-    In(Register dst, Register src1, Register src2)
-        : Instruction(Type::In)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class InstanceOf final : public Instruction {
-public:
-    InstanceOf(Register dst, Register src1, Register src2)
-        : Instruction(Type::InstanceOf)
-        , m_dst(dst)
-        , m_src1(src1)
-        , m_src2(src2)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src1;
-    Register m_src2;
-};
-
-class BitwiseNot final : public Instruction {
-public:
-    BitwiseNot(Register dst, Register src)
-        : Instruction(Type::BitwiseNot)
-        , m_dst(dst)
-        , m_src(src)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src;
-};
-
-class Not final : public Instruction {
-public:
-    Not(Register dst, Register src)
-        : Instruction(Type::Not)
-        , m_dst(dst)
-        , m_src(src)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src;
-};
-
-class UnaryPlus final : public Instruction {
-public:
-    UnaryPlus(Register dst, Register src)
-        : Instruction(Type::UnaryPlus)
-        , m_dst(dst)
-        , m_src(src)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src;
-};
-
-class UnaryMinus final : public Instruction {
-public:
-    UnaryMinus(Register dst, Register src)
-        : Instruction(Type::UnaryMinus)
-        , m_dst(dst)
-        , m_src(src)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src;
-};
-
-class Typeof final : public Instruction {
-public:
-    Typeof(Register dst, Register src)
-        : Instruction(Type::Typeof)
-        , m_dst(dst)
-        , m_src(src)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Register m_src;
-};
+#define JS_ENUMERATE_COMMON_BINARY_OPS(O)     \
+    O(Add, add)                               \
+    O(Sub, sub)                               \
+    O(Mul, mul)                               \
+    O(Div, div)                               \
+    O(Exp, exp)                               \
+    O(Mod, mod)                               \
+    O(In, in)                                 \
+    O(InstanceOf, instance_of)                \
+    O(GreaterThan, greater_than)              \
+    O(GreaterThanEquals, greater_than_equals) \
+    O(LessThan, less_than)                    \
+    O(LessThanEquals, less_than_equals)       \
+    O(AbstractInequals, abstract_inequals)    \
+    O(AbstractEquals, abstract_equals)        \
+    O(TypedInequals, typed_inequals)          \
+    O(TypedEquals, typed_equals)              \
+    O(BitwiseAnd, bitwise_and)                \
+    O(BitwiseOr, bitwise_or)                  \
+    O(BitwiseXor, bitwise_xor)                \
+    O(LeftShift, left_shift)                  \
+    O(RightShift, right_shift)                \
+    O(UnsignedRightShift, unsigned_right_shift)
+
+#define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
+    class OpTitleCase final : public Instruction {              \
+    public:                                                     \
+        OpTitleCase(Register dst, Register src1, Register src2) \
+            : Instruction(Type::OpTitleCase)                    \
+            , m_dst(dst)                                        \
+            , m_src1(src1)                                      \
+            , m_src2(src2)                                      \
+        {                                                       \
+        }                                                       \
+                                                                \
+        void execute(Bytecode::Interpreter&) const;             \
+        String to_string() const;                               \
+                                                                \
+    private:                                                    \
+        Register m_dst;                                         \
+        Register m_src1;                                        \
+        Register m_src2;                                        \
+    };
+
+JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
+#undef JS_DECLARE_COMMON_BINARY_OP
+
+#define JS_ENUMERATE_COMMON_UNARY_OPS(O) \
+    O(BitwiseNot, bitwise_not)           \
+    O(Not, not_)                         \
+    O(UnaryPlus, unary_plus)             \
+    O(UnaryMinus, unary_minus)           \
+    O(Typeof, typeof_)
+
+#define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
+    class OpTitleCase final : public Instruction {             \
+    public:                                                    \
+        OpTitleCase(Register dst, Register src)                \
+            : Instruction(Type::OpTitleCase)                   \
+            , m_dst(dst)                                       \
+            , m_src(src)                                       \
+        {                                                      \
+        }                                                      \
+                                                               \
+        void execute(Bytecode::Interpreter&) const;            \
+        String to_string() const;                              \
+                                                               \
+    private:                                                   \
+        Register m_dst;                                        \
+        Register m_src;                                        \
+    };
+
+JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
+#undef JS_DECLARE_COMMON_UNARY_OP
 
 class NewString final : public Instruction {
 public:
