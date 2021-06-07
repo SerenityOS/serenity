@@ -48,6 +48,7 @@ private:
     virtual void remove_backing_store(i32) override;
     virtual void debug_request(String const&, String const&) override;
     virtual void get_source() override;
+    virtual void inspect_dom_tree() override;
     virtual void js_console_initialize() override;
     virtual void js_console_input(String const&) override;
 
