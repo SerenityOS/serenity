@@ -1,0 +1,15 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 38f6ba8..d56ca64 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -24,8 +24,7 @@ add_executable(raw
+         src/vm.cpp
+ )
+ 
+-find_package(SDL2 REQUIRED)
+-include_directories(${SDL2_INCLUDE_DIRS})
+-target_link_libraries(raw ${SDL2_LIBRARIES})
++include_directories(${SDL2_INCLUDE_DIR})
++target_link_libraries(raw SDL2)
+ target_link_libraries(raw z)
+ 
