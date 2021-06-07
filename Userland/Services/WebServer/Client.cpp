@@ -237,6 +237,10 @@ void Client::handle_directory_listing(String const& requested_path, String const
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
         builder.append("<td><a href=\"");
         builder.append(URL::percent_encode(name));
+        // NOTE: For directories, we append a slash so we don't always hit the redirect case,
+        //       which adds a slash anyways.
+        if (is_directory)
+            builder.append('/');
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
