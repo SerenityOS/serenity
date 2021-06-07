@@ -5,8 +5,17 @@
  */
 
 #include "SpeechBubble.h"
+#include <AK/Array.h>
+#include <AK/Random.h>
+#include <AK/StringView.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/Palette.h>
+
+static Array<StringView, 3> messages = {
+    "It looks like you're trying to debug\na program. Would you like some help?"sv,
+    "It looks like you're trying to shave\na yak. Would you like some help?"sv,
+    "Well Hello Friend!"sv,
+};
 
 void SpeechBubble::paint_event(GUI::PaintEvent&)
 {
@@ -28,7 +37,8 @@ void SpeechBubble::paint_event(GUI::PaintEvent&)
     painter.draw_line(connector_top_left, Gfx::IntPoint { connector_bottom.x() - 1, connector_bottom.y() }, palette().active_window_border1());
     painter.draw_line(connector_top_right, connector_bottom, palette().active_window_border1());
 
-    painter.draw_text(text_area, "It looks like you're trying to debug\na program. Would you like some help?", Gfx::TextAlignment::Center);
+    auto message = messages[get_random<u8>() % messages.size()];
+    painter.draw_text(text_area, message, Gfx::TextAlignment::Center);
 }
 
 void SpeechBubble::mousedown_event(GUI::MouseEvent& event)
