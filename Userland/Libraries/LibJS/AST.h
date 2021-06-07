@@ -76,6 +76,7 @@ public:
     {
     }
     Value execute(Interpreter&, GlobalObject&) const override { return {}; }
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 };
 
 class ErrorStatement final : public Statement {
