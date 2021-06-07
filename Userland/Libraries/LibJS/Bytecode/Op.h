@@ -32,6 +32,23 @@ private:
     Value m_value;
 };
 
+class LoadRegister final : public Instruction {
+public:
+    LoadRegister(Register dst, Register src)
+        : Instruction(Type::LoadRegister)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
 class Add final : public Instruction {
 public:
     Add(Register dst, Register src1, Register src2)
