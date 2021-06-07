@@ -25,6 +25,8 @@ void ArrayBufferConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.prototype, global_object.array_buffer_prototype(), 0);
     define_property(vm.names.length, Value(1), Attribute::Configurable);
     define_native_function(vm.names.isView, is_view, 1, attr);
+
+    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 ArrayBufferConstructor::~ArrayBufferConstructor()
@@ -60,6 +62,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferConstructor::is_view)
         return Value(true);
     // FIXME: Check for DataView as well
     return Value(false);
+}
+
+JS_DEFINE_NATIVE_GETTER(ArrayBufferConstructor::symbol_species_getter)
+{
+    return vm.this_value(global_object);
 }
 
 }

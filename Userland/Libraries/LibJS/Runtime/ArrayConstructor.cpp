@@ -37,6 +37,8 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.from, from, 1, attr);
     define_native_function(vm.names.isArray, is_array, 1, attr);
     define_native_function(vm.names.of, of, 0, attr);
+
+    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 Value ArrayConstructor::call()
@@ -149,6 +151,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
     for (size_t i = 0; i < vm.argument_count(); ++i)
         array->indexed_properties().append(vm.argument(i));
     return array;
+}
+
+JS_DEFINE_NATIVE_GETTER(ArrayConstructor::symbol_species_getter)
+{
+    return vm.this_value(global_object);
 }
 
 }

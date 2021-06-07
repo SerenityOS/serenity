@@ -22,6 +22,8 @@ void RegExpConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
     define_property(vm.names.prototype, global_object.regexp_prototype(), 0);
     define_property(vm.names.length, Value(2), Attribute::Configurable);
+
+    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 RegExpConstructor::~RegExpConstructor()
@@ -49,6 +51,11 @@ Value RegExpConstructor::construct(Function&)
             return {};
     }
     return RegExpObject::create(global_object(), pattern, flags);
+}
+
+JS_DEFINE_NATIVE_GETTER(RegExpConstructor::symbol_species_getter)
+{
+    return vm.this_value(global_object);
 }
 
 }
