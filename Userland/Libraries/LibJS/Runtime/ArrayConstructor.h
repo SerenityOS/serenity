@@ -27,6 +27,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(from);
     JS_DECLARE_NATIVE_FUNCTION(is_array);
     JS_DECLARE_NATIVE_FUNCTION(of);
+
+    JS_DECLARE_NATIVE_GETTER(symbol_species_getter);
 };
 
 }

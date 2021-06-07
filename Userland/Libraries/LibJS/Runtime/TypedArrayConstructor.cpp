@@ -25,6 +25,8 @@ void TypedArrayConstructor::initialize(GlobalObject& global_object)
     NativeFunction::initialize(global_object);
     define_property(vm.names.prototype, global_object.typed_array_prototype(), 0);
     define_property(vm.names.length, Value(0), Attribute::Configurable);
+
+    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 TypedArrayConstructor::~TypedArrayConstructor()
@@ -40,6 +42,11 @@ Value TypedArrayConstructor::construct(Function&)
 {
     vm().throw_exception<TypeError>(global_object(), ErrorType::ClassIsAbstract, "TypedArray");
     return {};
+}
+
+JS_DEFINE_NATIVE_GETTER(TypedArrayConstructor::symbol_species_getter)
+{
+    return vm.this_value(global_object);
 }
 
 }
