@@ -5,6 +5,7 @@
  */
 
 #include "MagnifierWidget.h"
+#include <LibGUI/DisplayLink.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Window.h>
 #include <LibGUI/WindowServerConnection.h>
@@ -12,6 +13,7 @@
 
 MagnifierWidget::MagnifierWidget()
 {
+    GUI::DisplayLink::register_callback([this](auto) { sync(); });
 }
 
 MagnifierWidget::~MagnifierWidget()
@@ -35,10 +37,15 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
     update();
 }
 
-void MagnifierWidget::timer_event(Core::TimerEvent&)
+void MagnifierWidget::sync()
 {
     m_mouse_position = GUI::WindowServerConnection::the().get_global_cursor_position();
     m_desktop_display_scale = GUI::WindowServerConnection::the().get_desktop_display_scale();
+
+    // Grab and paint our screenshot.
+    Gfx::IntSize region_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
+    Gfx::Rect region { (m_mouse_position.x() * m_desktop_display_scale) - (region_size.width() / 2), (m_mouse_position.y() * m_desktop_display_scale) - (region_size.height() / 2), region_size.width(), region_size.height() };
+    m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap(region).bitmap();
     update();
 }
 
@@ -46,9 +53,6 @@ void MagnifierWidget::paint_event(GUI::PaintEvent&)
 {
     GUI::Painter painter(*this);
 
-    // Grab and paint our screenshot.
-    Gfx::IntSize region_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
-    Gfx::Rect region { (m_mouse_position.x() * m_desktop_display_scale) - (region_size.width() / 2), (m_mouse_position.y() * m_desktop_display_scale) - (region_size.height() / 2), region_size.width(), region_size.height() };
-    auto map = GUI::WindowServerConnection::the().get_screen_bitmap(region);
-    painter.draw_scaled_bitmap(rect(), *map.bitmap(), map.bitmap()->rect());
+    if (m_grabbed_bitmap)
+        painter.draw_scaled_bitmap(rect(), *m_grabbed_bitmap, m_grabbed_bitmap->rect());
 }
