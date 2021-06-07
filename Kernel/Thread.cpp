@@ -326,8 +326,6 @@ LockMode Thread::unlock_process_if_locked(u32& lock_count_to_restore)
 
 void Thread::relock_process(LockMode previous_locked, u32 lock_count_to_restore)
 {
-    VERIFY(state() == Thread::Running);
-
     // Clearing the critical section may trigger the context switch
     // flagged by calling Scheduler::donate_to or Scheduler::yield
     // above. We have to do it this way because we intentionally
