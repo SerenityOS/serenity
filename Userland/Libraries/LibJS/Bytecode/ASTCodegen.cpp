@@ -223,6 +223,15 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
         case AssignmentOp::BitwiseXorAssignment:
             generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
             break;
+        case AssignmentOp::LeftShiftAssignment:
+            generator.emit<Bytecode::Op::LeftShift>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::RightShiftAssignment:
+            generator.emit<Bytecode::Op::RightShift>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
+        case AssignmentOp::UnsignedRightShiftAssignment:
+            generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
+            break;
         default:
             TODO();        
         }
