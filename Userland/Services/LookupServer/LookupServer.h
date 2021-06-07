@@ -10,6 +10,7 @@
 #include "DNSPacket.h"
 #include "DNSServer.h"
 #include "MulticastDNS.h"
+#include <LibCore/FileWatcher.h>
 #include <LibCore/Object.h>
 
 namespace LookupServer {
@@ -35,6 +36,7 @@ private:
     RefPtr<DNSServer> m_dns_server;
     RefPtr<MulticastDNS> m_mdns;
     Vector<String> m_nameservers;
+    RefPtr<Core::FileWatcher> m_file_watcher;
     HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_etc_hosts;
     HashMap<DNSName, Vector<DNSAnswer>, DNSName::Traits> m_lookup_cache;
 };
