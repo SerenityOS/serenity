@@ -112,6 +112,21 @@ void AbstractEquals::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = Value(abstract_eq(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
 }
 
+void BitwiseAnd::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(bitwise_and(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
+void BitwiseOr::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(bitwise_or(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
+void BitwiseXor::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(bitwise_xor(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = js_string(interpreter.vm(), m_string);
@@ -276,6 +291,21 @@ String AbstractInequals::to_string() const
 String AbstractEquals::to_string() const
 {
     return String::formatted("AbstractEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String BitwiseAnd::to_string() const
+{
+    return String::formatted("BitwiseAnd dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String BitwiseOr::to_string() const
+{
+    return String::formatted("BitwiseOr dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String BitwiseXor::to_string() const
+{
+    return String::formatted("BitwiseXor dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String NewString::to_string() const
