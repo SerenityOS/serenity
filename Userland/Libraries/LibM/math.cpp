@@ -1413,4 +1413,19 @@ float fminf(float x, float y) NOEXCEPT
 
     return x < y ? x : y;
 }
+
+long double nearbyintl(long double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+double nearbyint(double value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
+
+float nearbyintf(float value) NOEXCEPT
+{
+    return internal_to_integer(value, RoundingMode { fegetround() });
+}
 }
