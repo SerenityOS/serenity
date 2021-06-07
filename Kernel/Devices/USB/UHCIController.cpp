@@ -103,6 +103,27 @@ UNMAP_AFTER_INIT UHCIController::~UHCIController()
 {
 }
 
+RefPtr<USB::Device> const UHCIController::get_device_at_port(USB::Device::PortNumber port)
+{
+    if (!m_devices.at(to_underlying(port)))
+        return nullptr;
+
+    return m_devices.at(to_underlying(port));
+}
+
+RefPtr<USB::Device> const UHCIController::get_device_from_address(u8 device_address)
+{
+    for (auto const& device : m_devices) {
+        if (!device)
+            continue;
+
+        if (device->address() == device_address)
+            return device;
+    }
+
+    return nullptr;
+}
+
 void UHCIController::reset()
 {
     stop();
@@ -545,6 +566,8 @@ void UHCIController::spawn_port_proc()
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
+
+                            m_devices.at(0) = device.value();
                         } else {
                             dmesgln("UHCI: Device detach detected on Root Port 1");
                         }
@@ -575,6 +598,8 @@ void UHCIController::spawn_port_proc()
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());
+
+                            m_devices.at(1) = device.value();
                         } else {
                             dmesgln("UHCI: Device detach detected on Root Port 2");
                         }
