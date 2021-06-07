@@ -100,6 +100,20 @@ Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generat
     return dst;
 }
 
+Optional<Bytecode::Register> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto dst = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(dst, Value(m_value));
+    return dst;
+}
+
+Optional<Bytecode::Register> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto dst = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(dst, js_null());
+    return dst;
+}
+
 Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
