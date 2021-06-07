@@ -26,7 +26,7 @@ namespace GUI {
 struct TextDocumentSpan {
     TextRange range;
     Gfx::TextAttributes attributes;
-    void* data { nullptr };
+    u64 data { 0 };
     bool is_skippable { false };
 };
 
