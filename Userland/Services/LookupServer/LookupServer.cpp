@@ -25,6 +25,8 @@
 namespace LookupServer {
 
 static LookupServer* s_the;
+// NOTE: This is the TTL we return for the hostname or answers from /etc/hosts.
+static constexpr u32 s_static_ttl = 86400;
 
 LookupServer& LookupServer::the()
 {
@@ -66,48 +68,51 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
-    // The TTL we return for static data from /etc/hosts.
-    // The value here is 1 day.
-    static constexpr u32 static_ttl = 86400;
-
     auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
         auto it = m_etc_hosts.find(name);
         if (it == m_etc_hosts.end()) {
             m_etc_hosts.set(name, {});
             it = m_etc_hosts.find(name);
         }
-        it->value.empend(name, record_type, DNSRecordClass::IN, static_ttl, data, false);
+        it->value.empend(name, record_type, DNSRecordClass::IN, s_static_ttl, data, false);
     };
 
     auto file = Core::File::construct("/etc/hosts");
-    if (!file->open(Core::OpenMode::ReadOnly))
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        dbgln("Failed to open '/etc/hosts'");
         return;
+    }
+
+    u32 line_number = 0;
     while (!file->eof()) {
-        auto line = file->read_line(1024);
-        if (line.is_empty())
+        auto original_line = file->read_line(1024);
+        ++line_number;
+        if (original_line.is_empty())
             break;
-        auto fields = line.split('\t');
+        auto trimmed_line = original_line.view().trim_whitespace();
+        auto fields = trimmed_line.split_view('\t', false);
 
-        auto sections = fields[0].split('.');
-        IPv4Address addr {
-            (u8)atoi(sections[0].characters()),
-            (u8)atoi(sections[1].characters()),
-            (u8)atoi(sections[2].characters()),
-            (u8)atoi(sections[3].characters()),
-        };
-        auto raw_addr = addr.to_in_addr_t();
+        if (fields.size() < 2) {
+            dbgln("Failed to parse line {} from '/etc/hosts': '{}'", line_number, original_line);
+            continue;
+        }
 
-        DNSName name = fields[1];
+        if (fields.size() > 2)
+            dbgln("Line {} from '/etc/hosts' ('{}') has more than two parts, only the first two are used.", line_number, original_line);
+
+        auto maybe_address = IPv4Address::from_string(fields[0]);
+        if (!maybe_address.has_value()) {
+            dbgln("Failed to parse line {} from '/etc/hosts': '{}'", line_number, original_line);
+            continue;
+        }
+
+        auto raw_addr = maybe_address->to_in_addr_t();
+
+        DNSName name { fields[1] };
         add_answer(name, DNSRecordType::A, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
-        IPv4Address reverse_addr {
-            (u8)atoi(sections[3].characters()),
-            (u8)atoi(sections[2].characters()),
-            (u8)atoi(sections[1].characters()),
-            (u8)atoi(sections[0].characters()),
-        };
         StringBuilder builder;
-        builder.append(reverse_addr.to_string());
+        builder.append(maybe_address->to_string_reversed());
         builder.append(".in-addr.arpa");
         add_answer(builder.to_string(), DNSRecordType::PTR, name.as_string());
     }
