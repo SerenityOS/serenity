@@ -934,4 +934,14 @@ void Document::set_cookie(String cookie_string, Cookie::Source source)
         page->client().page_did_set_cookie(m_url, cookie.value(), source);
 }
 
+String Document::dump_dom_tree_as_json() const
+{
+    StringBuilder builder;
+    JsonObjectSerializer json(builder);
+    serialize_tree_as_json(json);
+
+    json.finish();
+    return builder.to_string();
+}
+
 }
