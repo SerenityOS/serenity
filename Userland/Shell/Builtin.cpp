@@ -878,6 +878,7 @@ int Shell::builtin_time(int argc, const char** argv)
     Vector<const char*> args;
 
     Core::ArgsParser parser;
+    parser.set_stop_on_first_non_option(true);
     parser.add_positional_argument(args, "Command to execute with arguments", "command", Core::ArgsParser::Required::Yes);
 
     if (!parser.parse(argc, const_cast<char**>(argv), Core::ArgsParser::FailureBehavior::PrintUsage))
