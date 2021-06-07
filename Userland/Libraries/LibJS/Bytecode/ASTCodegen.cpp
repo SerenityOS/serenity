@@ -88,6 +88,12 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::BitwiseXor:
         generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::TypedInequals:
+        generator.emit<Bytecode::Op::TypedInequals>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::TypedEquals:
+        generator.emit<Bytecode::Op::TypedEquals>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     default:
         TODO();
     }
