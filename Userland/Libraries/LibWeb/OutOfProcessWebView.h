@@ -31,6 +31,7 @@ public:
 
     void debug_request(const String& request, const String& argument = {});
     void get_source();
+    void inspect_dom_tree();
     void js_console_initialize();
     void js_console_input(const String& js_source);
 
@@ -57,6 +58,7 @@ public:
     bool notify_server_did_request_confirm(Badge<WebContentClient>, const String& message);
     String notify_server_did_request_prompt(Badge<WebContentClient>, const String& message, const String& default_);
     void notify_server_did_get_source(const URL& url, const String& source);
+    void notify_server_did_get_dom_tree(const String& dom_tree);
     void notify_server_did_js_console_output(const String& method, const String& line);
     void notify_server_did_change_favicon(const Gfx::Bitmap& favicon);
     String notify_server_did_request_cookie(Badge<WebContentClient>, const URL& url, Cookie::Source source);
