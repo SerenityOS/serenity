@@ -113,8 +113,11 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::In:
         generator.emit<Bytecode::Op::In>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::InstanceOf:
+        generator.emit<Bytecode::Op::InstanceOf>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     default:
-        TODO();
+        VERIFY_NOT_REACHED();
     }
 }
 

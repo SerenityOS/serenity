@@ -163,6 +163,11 @@ void In::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = in(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
+void InstanceOf::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = instance_of(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
 void BitwiseNot::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = bitwise_not(interpreter.global_object(), interpreter.reg(m_src));
@@ -401,6 +406,11 @@ String UnsignedRightShift::to_string() const
 }
 
 String In::to_string() const
+{
+    return String::formatted("In dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String InstanceOf::to_string() const
 {
     return String::formatted("In dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }

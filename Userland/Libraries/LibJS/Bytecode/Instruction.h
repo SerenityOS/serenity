@@ -49,7 +49,8 @@
     O(LeftShift)                  \
     O(RightShift)                 \
     O(UnsignedRightShift)         \
-    O(In)
+    O(In)                         \
+    O(InstanceOf)
 
 namespace JS::Bytecode {
 
