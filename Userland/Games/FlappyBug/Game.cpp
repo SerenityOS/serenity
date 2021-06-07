@@ -56,7 +56,9 @@ void Game::paint_event(GUI::PaintEvent& event)
     GUI::Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(rect(), m_sky_color);
+    painter.draw_tiled_bitmap(rect(), *m_background_bitmap);
+
+    painter.draw_scaled_bitmap(m_cloud.rect(), *m_cloud.bitmap(), m_cloud.bitmap()->rect(), 0.2f);
 
     painter.fill_rect(enclosing_int_rect(m_obstacle.top_rect()), m_obstacle.color);
     painter.fill_rect(enclosing_int_rect(m_obstacle.bottom_rect()), m_obstacle.color);
@@ -98,6 +100,7 @@ void Game::tick()
         m_bug.fall();
         m_bug.apply_velocity();
         m_obstacle.x -= 4 + m_difficulty / 16.0f;
+        m_cloud.x -= m_difficulty / 16.0f;
 
         if (m_bug.y > game_height || m_bug.y < 0) {
             game_over();
@@ -109,6 +112,10 @@ void Game::tick()
 
         if (m_obstacle.x < 0) {
             m_obstacle.reset();
+        }
+
+        if (m_cloud.x < 0) {
+            m_cloud.reset();
         }
     }
 
