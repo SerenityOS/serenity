@@ -31,7 +31,7 @@ void CellSyntaxHighlighter::rehighlight(const Palette& palette)
             false,
             false,
         },
-        nullptr,
+        (u64)-1,
         false);
 
     if (m_cell && m_cell->exception()) {
@@ -47,7 +47,7 @@ void CellSyntaxHighlighter::rehighlight(const Palette& palette)
                     false,
                     false,
                 },
-                nullptr,
+                (u64)-1,
                 false });
     }
     m_client->do_update();

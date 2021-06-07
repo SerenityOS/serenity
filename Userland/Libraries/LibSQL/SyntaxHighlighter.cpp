@@ -33,9 +33,9 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token
     }
 }
 
-bool SyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto sql_token = static_cast<SQL::TokenType>(reinterpret_cast<size_t>(token));
+    auto sql_token = static_cast<SQL::TokenType>(static_cast<size_t>(token));
     return sql_token == SQL::TokenType::Identifier;
 }
 
@@ -66,7 +66,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
         auto style = style_for_token_type(palette, token.type());
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
-        span.data = reinterpret_cast<void*>(static_cast<size_t>(token.type()));
+        span.data = static_cast<u64>(token.type());
         spans.append(span);
 
         dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ '{}' {}:{} - {}:{}",
@@ -91,18 +91,18 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     m_client->do_update();
 }
 
-Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
+Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs_impl() const
 {
     static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ reinterpret_cast<void*>(TokenType::ParenOpen), reinterpret_cast<void*>(TokenType::ParenClose) });
+        pairs.append({ static_cast<u64>(TokenType::ParenOpen), static_cast<u64>(TokenType::ParenClose) });
     }
     return pairs;
 }
 
-bool SyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
-    return static_cast<TokenType>(reinterpret_cast<size_t>(token1)) == static_cast<TokenType>(reinterpret_cast<size_t>(token2));
+    return static_cast<TokenType>(token1) == static_cast<TokenType>(token2);
 }
 
 SyntaxHighlighter::~SyntaxHighlighter()
