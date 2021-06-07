@@ -14,7 +14,9 @@
 
 namespace JS::Bytecode {
 
-Generator::Generator()
+Generator::Generator(JS::Interpreter& interpreter, GlobalObject& global_object)
+    : m_interpreter(interpreter)
+    , m_global_object(global_object)
 {
     m_block = Block::create();
 }
@@ -23,9 +25,9 @@ Generator::~Generator()
 {
 }
 
-OwnPtr<Block> Generator::generate(ASTNode const& node)
+OwnPtr<Block> Generator::generate(JS::Interpreter& interpreter, GlobalObject& global_object, ASTNode const& node)
 {
-    Generator generator;
+    Generator generator { interpreter, global_object };
     [[maybe_unused]] auto dummy = node.generate_bytecode(generator);
     generator.m_block->set_register_count({}, generator.m_next_register);
     generator.m_block->seal();

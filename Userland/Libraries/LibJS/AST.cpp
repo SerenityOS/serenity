@@ -109,6 +109,11 @@ Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& globa
     return m_expression->execute(interpreter, global_object);
 }
 
+Optional<Value> ExpressionStatement::constant_execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    return m_expression->constant_execute(interpreter, global_object);
+}
+
 CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interpreter& interpreter, GlobalObject& global_object) const
 {
     auto& vm = interpreter.vm();
@@ -568,6 +573,11 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
+    return evaluate_expression(global_object, move(lhs_result), move(rhs_result));
+}
+
+Value BinaryExpression::evaluate_expression(GlobalObject& global_object, Value lhs_result, Value rhs_result) const
+{
     switch (m_op) {
     case BinaryOp::Addition:
         return add(global_object, lhs_result, rhs_result);
@@ -618,6 +628,17 @@ Value BinaryExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     VERIFY_NOT_REACHED();
 }
 
+Optional<Value> BinaryExpression::constant_execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    auto lhs_result = m_lhs->constant_execute(interpreter, global_object);
+    if (!lhs_result.has_value())
+        return {};
+    auto rhs_result = m_rhs->constant_execute(interpreter, global_object);
+    if (!rhs_result.has_value())
+        return {};
+    return evaluate_expression(global_object, lhs_result.release_value(), rhs_result.release_value());
+}
+
 Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -654,6 +675,40 @@ Value LogicalExpression::execute(Interpreter& interpreter, GlobalObject& global_
     }
 
     VERIFY_NOT_REACHED();
+}
+
+Optional<Value> LogicalExpression::constant_execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    auto lhs_result = m_lhs->constant_execute(interpreter, global_object);
+    if (!lhs_result.has_value())
+        return {};
+    auto rhs_result = m_rhs->constant_execute(interpreter, global_object);
+    switch (m_op) {
+    case LogicalOp::And:
+        if (lhs_result->to_boolean()) {
+            if (!rhs_result.has_value())
+                return {};
+            return rhs_result;
+        } else
+            return lhs_result;
+    case LogicalOp::Or:
+        if (lhs_result->to_boolean())
+            return lhs_result;
+        else {
+            if (!rhs_result.has_value())
+                return {};
+            return rhs_result;
+        }
+    case LogicalOp::NullishCoalescing:
+        if (lhs_result->is_nullish()) {
+            if (!rhs_result.has_value())
+                return {};
+            return rhs_result;
+        } else
+            return lhs_result;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 }
 
 Reference Expression::to_reference(Interpreter&, GlobalObject&) const
@@ -717,6 +772,11 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             return {};
     }
 
+    return evaluate_expression(vm, global_object, move(lhs_result));
+}
+
+Value UnaryExpression::evaluate_expression(VM& vm, GlobalObject& global_object, Value lhs_result) const
+{
     switch (m_op) {
     case UnaryOp::BitwiseNot:
         return bitwise_not(global_object, lhs_result);
@@ -735,6 +795,14 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
     }
 
     VERIFY_NOT_REACHED();
+}
+
+Optional<Value> UnaryExpression::constant_execute(Interpreter& interpreter, GlobalObject& global_object) const
+{
+    auto lhs_result = m_lhs->constant_execute(interpreter, global_object);
+    if (!lhs_result.has_value())
+        return {};
+    return evaluate_expression(interpreter.vm(), global_object, lhs_result.release_value());
 }
 
 Value SuperExpression::execute(Interpreter& interpreter, GlobalObject&) const
@@ -1813,33 +1881,58 @@ Value MetaProperty::execute(Interpreter& interpreter, GlobalObject&) const
     VERIFY_NOT_REACHED();
 }
 
-Value StringLiteral::execute(Interpreter& interpreter, GlobalObject&) const
+Value StringLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    return constant_execute(interpreter, global_object).value();
+}
+
+Optional<Value> StringLiteral::constant_execute(Interpreter& interpreter, GlobalObject&) const
+{
     return js_string(interpreter.heap(), m_value);
 }
 
-Value NumericLiteral::execute(Interpreter& interpreter, GlobalObject&) const
+Value NumericLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    return constant_execute(interpreter, global_object).value();
+}
+
+Optional<Value> NumericLiteral::constant_execute(Interpreter&, GlobalObject&) const
+{
     return Value(m_value);
 }
 
-Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
+Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    return constant_execute(interpreter, global_object).value();
+}
+
+Optional<Value> BigIntLiteral::constant_execute(Interpreter& interpreter, GlobalObject&) const
+{
     return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
-Value BooleanLiteral::execute(Interpreter& interpreter, GlobalObject&) const
+Value BooleanLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    return constant_execute(interpreter, global_object).value();
+}
+
+Optional<Value> BooleanLiteral::constant_execute(Interpreter&, GlobalObject&) const
+{
     return Value(m_value);
 }
 
-Value NullLiteral::execute(Interpreter& interpreter, GlobalObject&) const
+Value NullLiteral::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    return constant_execute(interpreter, global_object).value();
+}
+
+Optional<Value> NullLiteral::constant_execute(Interpreter&, GlobalObject&) const
+{
     return js_null();
 }
 

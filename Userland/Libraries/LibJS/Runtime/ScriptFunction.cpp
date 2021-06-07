@@ -152,7 +152,7 @@ Value ScriptFunction::execute_function_body()
     if (bytecode_interpreter) {
         prepare_arguments();
         if (!m_bytecode_block) {
-            m_bytecode_block = Bytecode::Generator::generate(m_body);
+            m_bytecode_block = Bytecode::Generator::generate(vm.interpreter(), global_object(), m_body);
             VERIFY(m_bytecode_block);
             if constexpr (JS_BYTECODE_DEBUG) {
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);

@@ -10,8 +10,17 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Bytecode/VirtualRegister.h>
+#include <LibJS/Runtime/BigInt.h>
 
 namespace JS {
+
+static Bytecode::Register emit_undefined(Bytecode::Generator& generator)
+{
+    auto result_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(result_reg, js_undefined());
+    return result_reg;
+}
 
 Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) const
 {
@@ -23,8 +32,12 @@ Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& g
 {
     generator.emit<Bytecode::Op::EnterScope>(*this);
     Optional<Bytecode::Register> last_value_reg;
-    for (auto& child : children()) {
-        last_value_reg = child.generate_bytecode(generator);
+    for (size_t i = 0; i < children().size(); i++) {
+        auto& child = children()[i];
+        auto child_value = Bytecode::VirtualRegister { generator, child };
+        if (i != children().size() - 1 && child_value.is_constant())
+            continue;
+        last_value_reg = child_value.materialize();
     }
     return last_value_reg;
 }
@@ -41,8 +54,10 @@ Optional<Bytecode::Register> ExpressionStatement::generate_bytecode(Bytecode::Ge
 
 Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
-    auto rhs_reg = m_rhs->generate_bytecode(generator);
+    auto lhs_value = Bytecode::VirtualRegister { generator, *m_lhs };
+    auto lhs_reg = lhs_value.materialize();
+    auto rhs_value = Bytecode::VirtualRegister { generator, *m_rhs };
+    auto rhs_reg = rhs_value.materialize();
 
     VERIFY(lhs_reg.has_value());
     VERIFY(rhs_reg.has_value());
@@ -123,8 +138,34 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
 
 Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    auto lhs_value = Bytecode::VirtualRegister { generator, *m_lhs };
+    auto rhs_value = Bytecode::VirtualRegister { generator, *m_rhs };
+    if (lhs_value.is_constant()) {
+        switch (m_op) {
+        case LogicalOp::And:
+            if (lhs_value->to_boolean())
+                return rhs_value.materialize();
+            else
+                return lhs_value.materialize();
+        case LogicalOp::Or:
+            if (lhs_value->to_boolean())
+                return lhs_value.materialize();
+            else
+                return rhs_value.materialize();
+            break;
+        case LogicalOp::NullishCoalescing:
+            if (lhs_value->is_nullish())
+                return rhs_value.materialize();
+            else
+                return lhs_value.materialize();
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
+
     auto result_reg = generator.allocate_register();
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
+    auto lhs_reg = lhs_value.materialize();
 
     Bytecode::Instruction* test_instr;
     switch (m_op) {
@@ -160,7 +201,7 @@ Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Gene
         VERIFY_NOT_REACHED();
     }
 
-    auto rhs_reg = m_rhs->generate_bytecode(generator);
+    auto rhs_reg = rhs_value.materialize();
     generator.emit<Bytecode::Op::LoadRegister>(result_reg, *rhs_reg);
 
     end_jump.set_target(generator.make_label());
@@ -170,7 +211,8 @@ Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Gene
 
 Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
+    auto lhs_value = Bytecode::VirtualRegister { generator, *m_lhs };
+    auto lhs_reg = lhs_value.materialize();
 
     VERIFY(lhs_reg.has_value());
 
@@ -246,7 +288,8 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
 {
     if (is<Identifier>(*m_lhs)) {
         auto& identifier = static_cast<Identifier const&>(*m_lhs);
-        auto rhs_reg = m_rhs->generate_bytecode(generator);
+        auto rhs_value = Bytecode::VirtualRegister { generator, *m_rhs };
+        auto rhs_reg = rhs_value.materialize();
         VERIFY(rhs_reg.has_value());
 
         if (m_op == AssignmentOp::Assignment) {
@@ -254,7 +297,8 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
             return rhs_reg;
         }
 
-        auto lhs_reg = m_lhs->generate_bytecode(generator);
+        auto lhs_value = Bytecode::VirtualRegister { generator, *m_lhs };
+        auto lhs_reg = lhs_value.materialize();
         auto dst_reg = generator.allocate_register();
 
         switch (m_op) {
@@ -305,13 +349,15 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
 
     if (is<MemberExpression>(*m_lhs)) {
         auto& expression = static_cast<MemberExpression const&>(*m_lhs);
-        auto object_reg = expression.object().generate_bytecode(generator);
+        auto object_value = Bytecode::VirtualRegister { generator, expression.object() };
+        auto object_reg = object_value.materialize();
 
         if (expression.is_computed()) {
             TODO();
         } else {
             VERIFY(is<Identifier>(expression.property()));
-            auto rhs_reg = m_rhs->generate_bytecode(generator);
+            auto rhs_value = Bytecode::VirtualRegister { generator, *m_rhs };
+            auto rhs_reg = rhs_value.materialize();
             generator.emit<Bytecode::Op::PutById>(*object_reg, static_cast<Identifier const&>(expression.property()).string(), *rhs_reg);
             return rhs_reg;
         }
@@ -324,12 +370,19 @@ Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generat
 {
     generator.begin_continuable_scope();
     auto test_label = generator.make_label();
-    auto test_result_reg = m_test->generate_bytecode(generator);
-    VERIFY(test_result_reg.has_value());
-    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
-    auto body_result_reg = m_body->generate_bytecode(generator);
+    auto test_result_value = Bytecode::VirtualRegister { generator, *m_test };
+    Bytecode::Op::JumpIfFalse* test_jump { nullptr };
+    if (!test_result_value.is_constant()) {
+        auto test_result_reg = test_result_value.materialize();
+        VERIFY(test_result_reg.has_value());
+        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
+    } else if (!test_result_value->to_boolean())
+        return emit_undefined(generator);
+    auto body_result_value = Bytecode::VirtualRegister { generator, *m_body };
+    auto body_result_reg = body_result_value.materialize();
     generator.emit<Bytecode::Op::Jump>(test_label);
-    test_jump.set_target(generator.make_label());
+    if (test_jump)
+        test_jump->set_target(generator.make_label());
     generator.end_continuable_scope();
     return body_result_reg;
 }
@@ -338,11 +391,16 @@ Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Gener
 {
     generator.begin_continuable_scope();
     auto head_label = generator.make_label();
-    auto body_result_reg = m_body->generate_bytecode(generator);
+    auto body_result_value = Bytecode::VirtualRegister { generator, *m_body };
+    auto body_result_reg = body_result_value.materialize();
     generator.end_continuable_scope();
-    auto test_result_reg = m_test->generate_bytecode(generator);
-    VERIFY(test_result_reg.has_value());
-    generator.emit<Bytecode::Op::JumpIfTrue>(*test_result_reg, head_label);
+    auto test_result_value = Bytecode::VirtualRegister { generator, *m_test };
+    if (!test_result_value.is_constant()) {
+        auto test_result_reg = test_result_value.materialize();
+        VERIFY(test_result_reg.has_value());
+        generator.emit<Bytecode::Op::JumpIfTrue>(*test_result_reg, head_label);
+    } else if (test_result_value->to_boolean())
+        generator.emit<Bytecode::Op::Jump>(head_label);
     return body_result_reg;
 }
 
@@ -360,7 +418,8 @@ Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Gener
 
 Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto object_reg = object().generate_bytecode(generator);
+    auto object_value = Bytecode::VirtualRegister { generator, object() };
+    auto object_reg = object_value.materialize();
 
     if (is_computed()) {
         TODO();
@@ -379,15 +438,18 @@ Optional<Bytecode::Register> FunctionDeclaration::generate_bytecode(Bytecode::Ge
 
 Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto callee_reg = m_callee->generate_bytecode(generator);
+    auto callee_value = Bytecode::VirtualRegister { generator, *m_callee };
+    auto callee_reg = callee_value.materialize();
 
     // FIXME: Load the correct 'this' value into 'this_reg'.
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(this_reg, js_undefined());
 
     Vector<Bytecode::Register> argument_registers;
-    for (auto& arg : m_arguments)
-        argument_registers.append(*arg.value->generate_bytecode(generator));
+    for (auto& arg : m_arguments) {
+        auto arg_value = Bytecode::VirtualRegister { generator, *arg.value };
+        argument_registers.append(*arg_value.materialize());
+    }
     auto dst_reg = generator.allocate_register();
     generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), dst_reg, *callee_reg, this_reg, argument_registers);
     return dst_reg;
@@ -396,8 +458,10 @@ Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generat
 Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     Optional<Bytecode::Register> argument_reg;
-    if (m_argument)
-        argument_reg = m_argument->generate_bytecode(generator);
+    if (m_argument) {
+        auto argument_value = Bytecode::VirtualRegister { generator, *m_argument };
+        argument_reg = argument_value.materialize();
+    }
 
     generator.emit<Bytecode::Op::Return>(argument_reg);
     return argument_reg;
@@ -405,21 +469,34 @@ Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Genera
 
 Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    auto predicate_value = Bytecode::VirtualRegister { generator, *m_predicate };
+    auto consequent_value = Bytecode::VirtualRegister { generator, *m_consequent };
+    if (predicate_value.is_constant()) {
+        if (predicate_value->to_boolean())
+            return consequent_value.materialize();
+        else if (m_alternate) {
+            auto alternate_value = Bytecode::VirtualRegister { generator, *m_alternate };
+            return alternate_value.materialize();
+        }
+        return emit_undefined(generator);
+    }
     auto result_reg = generator.allocate_register();
-    auto predicate_reg = m_predicate->generate_bytecode(generator);
+    auto predicate_reg = predicate_value.materialize();
     auto& if_jump = generator.emit<Bytecode::Op::JumpIfTrue>(*predicate_reg);
     auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*predicate_reg);
 
     if_jump.set_target(generator.make_label());
-    auto consequent_reg = m_consequent->generate_bytecode(generator);
+    auto consequent_reg = consequent_value.materialize();
     generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
     auto& end_jump = generator.emit<Bytecode::Op::Jump>();
 
     else_jump.set_target(generator.make_label());
     if (m_alternate) {
-        auto alternative_reg = m_alternate->generate_bytecode(generator);
+        auto alternate_value = Bytecode::VirtualRegister { generator, *m_alternate };
+        auto alternative_reg = alternate_value.materialize();
         generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
-    }
+    } else
+        generator.emit<Bytecode::Op::Load>(result_reg, js_undefined());
 
     end_jump.set_target(generator.make_label());
 

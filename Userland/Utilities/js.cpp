@@ -495,7 +495,7 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         program->dump(0);
 
     if (s_dump_bytecode || s_run_bytecode) {
-        auto block = JS::Bytecode::Generator::generate(*program);
+        auto block = JS::Bytecode::Generator::generate(interpreter, interpreter.global_object(), *program);
         VERIFY(block);
 
         if (s_dump_bytecode)

@@ -37,6 +37,7 @@ class ASTNode : public RefCounted<ASTNode> {
 public:
     virtual ~ASTNode() { }
     virtual Value execute(Interpreter&, GlobalObject&) const = 0;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const { return {}; };
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const;
     virtual void dump(int indent) const;
 
@@ -97,6 +98,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -530,6 +532,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -537,6 +540,8 @@ private:
     BinaryOp m_op;
     NonnullRefPtr<Expression> m_lhs;
     NonnullRefPtr<Expression> m_rhs;
+
+    Value evaluate_expression(GlobalObject&, Value, Value) const;
 };
 
 enum class LogicalOp {
@@ -556,6 +561,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -585,12 +591,15 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     UnaryOp m_op;
     NonnullRefPtr<Expression> m_lhs;
+
+    Value evaluate_expression(VM&, GlobalObject&, Value) const;
 };
 
 class SequenceExpression final : public Expression {
@@ -626,6 +635,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -642,6 +652,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -658,6 +669,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -675,6 +687,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
@@ -694,6 +707,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Value> constant_execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
     virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 };
