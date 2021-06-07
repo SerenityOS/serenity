@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibC/assert.h>
+#include <AK/Assertions.h>
 #include <LibC/bits/pthread_forward.h>
 
 static PthreadFunctions s_pthread_functions;

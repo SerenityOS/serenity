@@ -10,9 +10,7 @@
 #    include <Kernel/Assertions.h>
 #else
 #    include <assert.h>
-#    ifndef __serenity__
-#        define VERIFY assert
-#        define VERIFY_NOT_REACHED() assert(false)
-#        define TODO VERIFY_NOT_REACHED
-#    endif
+#    define VERIFY assert
+#    define VERIFY_NOT_REACHED() assert(false)
+#    define TODO VERIFY_NOT_REACHED
 #endif
