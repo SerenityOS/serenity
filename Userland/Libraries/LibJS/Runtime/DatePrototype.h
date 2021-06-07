@@ -20,6 +20,7 @@ public:
 
 private:
     JS_DECLARE_NATIVE_FUNCTION(get_date);
+    JS_DECLARE_NATIVE_FUNCTION(set_date);
     JS_DECLARE_NATIVE_FUNCTION(get_day);
     JS_DECLARE_NATIVE_FUNCTION(get_full_year);
     JS_DECLARE_NATIVE_FUNCTION(set_full_year);
@@ -32,9 +33,12 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_minutes);
     JS_DECLARE_NATIVE_FUNCTION(set_minutes);
     JS_DECLARE_NATIVE_FUNCTION(get_month);
+    JS_DECLARE_NATIVE_FUNCTION(set_month);
     JS_DECLARE_NATIVE_FUNCTION(get_seconds);
     JS_DECLARE_NATIVE_FUNCTION(set_seconds);
     JS_DECLARE_NATIVE_FUNCTION(get_time);
+    JS_DECLARE_NATIVE_FUNCTION(set_time);
+    JS_DECLARE_NATIVE_FUNCTION(get_timezone_offset);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_date);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_day);
     JS_DECLARE_NATIVE_FUNCTION(get_utc_full_year);
@@ -52,6 +56,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_locale_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_time_string);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(to_json);
+    JS_DECLARE_NATIVE_FUNCTION(symbol_to_primitive);
 };
 
 }

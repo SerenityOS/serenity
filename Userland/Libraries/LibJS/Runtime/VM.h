@@ -71,6 +71,8 @@ public:
     void set_exception(Exception& exception) { m_exception = &exception; }
     void clear_exception() { m_exception = nullptr; }
 
+    void dump_backtrace() const;
+
     class InterpreterExecutionScope {
     public:
         InterpreterExecutionScope(Interpreter&);

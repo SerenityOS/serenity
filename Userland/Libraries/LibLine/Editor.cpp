@@ -588,11 +588,8 @@ void Editor::interrupted()
     m_is_editing = false;
     restore();
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        remove_child(*m_notifier);
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Retry);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Retry);
 }
 
 void Editor::resized()
@@ -624,13 +621,9 @@ void Editor::really_quit_event_loop()
         restore();
 
     m_returned_line = string;
-
     m_notifier->set_enabled(false);
-    deferred_invoke([this](auto&) {
-        remove_child(*m_notifier);
-        m_notifier = nullptr;
-        Core::EventLoop::current().quit(Exit);
-    });
+    m_notifier = nullptr;
+    Core::EventLoop::current().quit(Exit);
 }
 
 auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
@@ -694,7 +687,6 @@ auto Editor::get_line(const String& prompt) -> Result<String, Editor::Error>
     Core::EventLoop loop;
 
     m_notifier = Core::Notifier::construct(STDIN_FILENO, Core::Notifier::Read);
-    add_child(*m_notifier);
 
     m_notifier->on_ready_to_read = [&] { try_update_once(); };
     if (!m_incomplete_data.is_empty())
@@ -819,9 +811,9 @@ void Editor::handle_read_event()
     Utf8View input_view { StringView { m_incomplete_data.data(), valid_bytes } };
     size_t consumed_code_points = 0;
 
-    Vector<u8, 4> csi_parameter_bytes;
+    static Vector<u8, 4> csi_parameter_bytes;
+    static Vector<u8> csi_intermediate_bytes;
     Vector<unsigned, 4> csi_parameters;
-    Vector<u8> csi_intermediate_bytes;
     u8 csi_final;
     enum CSIMod {
         Shift = 1,

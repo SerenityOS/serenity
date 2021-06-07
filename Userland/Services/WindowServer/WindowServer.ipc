@@ -121,9 +121,12 @@ endpoint WindowServer
     get_scroll_step_size() => (u32 step_size)
 
     get_screen_bitmap(Optional<Gfx::IntRect> rect) => (Gfx::ShareableBitmap bitmap)
+    get_screen_bitmap_around_cursor(Gfx::IntSize size) => (Gfx::ShareableBitmap bitmap)
 
     pong() =|
 
     set_double_click_speed(int speed) => ()
     get_double_click_speed() => (int speed)
+
+    get_desktop_display_scale() => (int desktop_display_scale)
 }

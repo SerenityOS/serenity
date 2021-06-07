@@ -135,6 +135,7 @@ namespace JS {
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
+    P(getTimezoneOffset)                     \
     P(getUTCDate)                            \
     P(getUTCDay)                             \
     P(getUTCFullYear)                        \
@@ -214,12 +215,22 @@ namespace JS {
     P(round)                                 \
     P(seal)                                  \
     P(set)                                   \
+    P(setDate)                               \
     P(setFullYear)                           \
     P(setHours)                              \
     P(setMilliseconds)                       \
     P(setMinutes)                            \
+    P(setMonth)                              \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
+    P(setTime)                               \
+    P(setUTCDate)                            \
+    P(setUTCFullYear)                        \
+    P(setUTCHours)                           \
+    P(setUTCMilliseconds)                    \
+    P(setUTCMinutes)                         \
+    P(setUTCMonth)                           \
+    P(setUTCSeconds)                         \
     P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \

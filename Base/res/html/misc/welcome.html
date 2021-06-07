@@ -1,36 +1,44 @@
 <!DOCTYPE html>
 <html contenteditable="true">
+
 <head>
-<title>Welcome!</title>
-<!-- this is a comment -->
-<style type="text/css">
-/* css comment */
-body {
-    background-color: #000;
-    color: #fff; /* another css comment */
-}
-/* lol
+    <title>Welcome!</title>
+    <!-- this is a comment -->
+    <style type="text/css">
+        /* css comment */
+        body {
+            background-color: #000;
+            color: #fff;
+            /* another css comment */
+        }
+
+        /* lol
    a
    css
    comment */
-h1 {
-    color: #a00;
-}
-a {
-    color: #ae7250;
-}
-a:hover {
-    color: #f4cca0;
-}
-span#ua {
-    color: red;
-}
-span#loadtime {
-    color: yellow;
-}
-</style>
-<script src="welcome.js"></script>
+        h1 {
+            color: #a00;
+        }
+
+        a {
+            color: #ae7250;
+        }
+
+        a:hover {
+            color: #f4cca0;
+        }
+
+        span#ua {
+            color: red;
+        }
+
+        span#loadtime {
+            color: yellow;
+        }
+    </style>
+    <script src="welcome.js"></script>
 </head>
+
 <body link="#44f" vlink="#c4c" background="90s-bg.png">
     <h1>Welcome to the Serenity Browser!</h1>
     <p>This is a very simple browser built on the LibWeb and LibJS engines.</p>
@@ -38,6 +46,9 @@ span#loadtime {
     <p>This page loaded in <b><span id="loadtime"></span></b> ms</p>
     <p>Some small test pages:</p>
     <ul>
+        <li><a href="border-radius.html">Border-Radius</a></li>
+        <li><a href="custom-properties.html">Custom Properties</a></li>
+        <li><a href="flex.html">Flexboxes</a></li>
         <li><a href="mandelbrot-wasm.html">WebAssembly Mandelbrot Rendering Demo</a></li>
         <li><a href="ddssuite.html">DDS test suite</a></li>
         <li><a href="websocket.html">WebSocket API Test</a></li>
@@ -123,4 +134,5 @@ span#loadtime {
         document.getElementById("loadtime").innerHTML = performance.now();
     </script>
 </body>
+
 </html>

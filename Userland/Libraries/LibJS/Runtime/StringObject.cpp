@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,6 +24,13 @@ StringObject::StringObject(PrimitiveString& string, Object& prototype)
 
 StringObject::~StringObject()
 {
+}
+
+void StringObject::initialize(GlobalObject& global_object)
+{
+    auto& vm = this->vm();
+    Object::initialize(global_object);
+    define_property(vm.names.length, Value(m_string.string().length()), 0);
 }
 
 void StringObject::visit_edges(Cell::Visitor& visitor)

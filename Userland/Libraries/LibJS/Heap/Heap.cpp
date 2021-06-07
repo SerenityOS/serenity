@@ -47,6 +47,7 @@ ALWAYS_INLINE CellAllocator& Heap::allocator_for_size(size_t cell_size)
         if (allocator->cell_size() >= cell_size)
             return *allocator;
     }
+    dbgln("Cannot get CellAllocator for cell size {}, largest available is {}!", cell_size, m_allocators.last()->cell_size());
     VERIFY_NOT_REACHED();
 }
 
