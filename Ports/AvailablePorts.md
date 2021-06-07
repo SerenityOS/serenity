@@ -4,6 +4,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 
 | Port                                   | Name                                                       | Version                  | Website                                                                        |
 |----------------------------------------|------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
+| [`Another-World`](Another-World/)      | Another World Bytecode Interpreter                         |                          | https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter           |
 | [`bash`](bash/)                        | GNU Bash                                                   | 5.0                      | https://www.gnu.org/software/bash/                                             |
 | [`bc`](bc/)                            | bc                                                         | 2.5.1                    | https://github.com/gavinhoward/bc                                              |
 | [`binutils`](binutils/)                | GNU Binutils                                               | 2.36.1                   | https://www.gnu.org/software/binutils/                                         |
