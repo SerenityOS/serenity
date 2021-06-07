@@ -40,31 +40,31 @@ Make sure you have all the dependencies installed (`ninja` is optional, but is f
 #### Debian / Ubuntu
 
 ```console
-sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync
 ```
 
 #### Fedora
 
 ```console
-sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch @"C Development Tools and Libraries" @Virtualization
+sudo dnf install binutils-devel curl cmake mpfr-devel libmpc-devel gmp-devel e2fsprogs ninja-build patch ccache rsync @"C Development Tools and Libraries" @Virtualization
 ```
 
 #### openSUSE
 
 ```console
-sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ patterns-devel-C-C++-devel_C_C++
+sudo zypper install curl cmake mpfr-devel mpc-devel ninja gmp-devel e2fsprogs patch qemu-x86 qemu-audio-pa gcc gcc-c++ ccache rsync patterns-devel-C-C++-devel_C_C++
 ```
 
 #### Arch Linux / Manjaro
 
 ```console
-sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra
+sudo pacman -S --needed base-devel cmake curl mpfr libmpc gmp e2fsprogs ninja qemu qemu-arch-extra ccache rsync
 ```
 
 #### ALT Linux
 
 ```console
-apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-build patch gcc
+apt-get install curl cmake libmpc-devel gmp-devel e2fsprogs libmpfr-devel ninja-build patch gcc ccache rsync
 ```
 
 #### NixOS
@@ -88,6 +88,8 @@ stdenv.mkDerivation {
     libmpc
     e2fsprogs
     patch
+    ccache
+    rsync
 
     # Example Build-time Additional Dependencies
     pkgconfig
@@ -121,7 +123,7 @@ apk add build-base
 apk add qemu qemu-system-i386 qemu-img qemu-ui-gtk
 
 # build tools (samurai is a drop-in replacement for ninja)
-apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev
+apk add cmake e2fsprogs grub-bios samurai mpc1-dev mpfr-dev gmp-dev ccache rsync
 ```
 
 ### macOS prerequisites
@@ -130,7 +132,7 @@ Make sure you have all the dependencies installed:
 
 ```console
 # core
-brew install coreutils qemu bash gcc@10 ninja cmake
+brew install coreutils qemu bash gcc@10 ninja cmake ccache rsync
 
 # (option 1) fuse + ext2
 brew install e2fsprogs m4 autoconf automake libtool
@@ -174,7 +176,7 @@ Notes:
 ### OpenBSD prerequisites
 
 ```console
-$ doas pkg_add bash cmake g++ gcc git gmake gmp ninja
+$ doas pkg_add bash cmake g++ gcc git gmake gmp ninja ccache rsync
 ```
 
 To use `ninja image` and `ninja run`, you'll need Qemu and other utilities:
@@ -186,7 +188,7 @@ $ doas pkg_add coreutils qemu sudo
 ### FreeBSD prerequisites
 
 ```console
-$ pkg install bash coreutils git gmake ninja sudo
+$ pkg install bash coreutils git gmake ninja sudo gmp mpc mpfr ccache rsync
 ```
 
 ### Windows prerequisites
