@@ -64,3 +64,29 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Include commented-out code.
 * Write in C. (Instead, take advantage of C++'s amenities, and don't limit yourself to the standard C library.)
 * Attempt large architectural changes until you are familiar with the system and have worked on it for a while.
+
+## Pull Request Q&A
+
+### I've submitted a PR and it passes CI. When can I expect to get first reviewer feedback?
+
+While unadvertised PR's may get randomly merged by curious reviewers, you will have a much smoother time if you engage with the community on Discord.
+
+### If my PR isn't getting attention, how long should I wait before pinging one of the project reviewers?
+
+Ping them right away if it's something urgent! If it's less urgent, advertise your PR on Discord and ask if someone could review it.
+
+### Who are the project reviewers?
+
+The project reviewers at this time are @awesomekling, @linusg and @alimpfard.
+
+### Is there a policy for branches/PRs that haven't been touched in X days? Should they be closed?
+
+Yes, we have a "stalebot" that will mark untouched PR's as "stale" after 21 days, and close them after another 7 days if nothing happens.
+
+### Are there specific people to reach out to for different subsystems (e.g. Kernel, Browser, GUI, etc)?
+
+In theory, the best person to speak with is whoever wrote most code adjacent to what you're working on. In practice, asking in one of the development channels on Discord is usually easier/better, since that allows many people to join the discussion.
+
+### Is Discord the place to ask for review help, or is Github preferred?
+
+It's definitely better to ask on Discord. Due to the volume of GitHub notifications, many of us turn them off and rely on Discord for learning about review requests.
