@@ -68,7 +68,7 @@ private:
         GUI::TextDocumentSpan span;
         set_offset_range_start(span.range, node->position().start_line);
         set_offset_range_end(span.range, node->position().end_line);
-        span.data = (void*)static_cast<size_t>(node->kind());
+        span.data = static_cast<u64>(node->kind());
         span.is_skippable = false;
         m_spans.append(move(span));
 
@@ -143,12 +143,12 @@ private:
         auto& start_span = span_for_node(node);
         start_span.attributes.color = m_palette.syntax_punctuation();
         start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 2 });
-        start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
+        start_span.data = static_cast<u64>(AugmentedTokenKind::OpenParen);
 
         auto& end_span = span_for_node(node);
         end_span.attributes.color = m_palette.syntax_punctuation();
         set_offset_range_start(end_span.range, node->position().end_line, 1);
-        end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
+        end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
     }
     virtual void visit(const AST::CloseFdRedirection* node) override
     {
@@ -289,12 +289,12 @@ private:
             auto& start_span = span_for_node(node);
             start_span.attributes.color = m_palette.syntax_punctuation();
             start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 2 });
-            start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
+            start_span.data = static_cast<u64>(AugmentedTokenKind::OpenParen);
 
             auto& end_span = span_for_node(node);
             end_span.attributes.color = m_palette.syntax_punctuation();
             set_offset_range_start(end_span.range, node->position().end_line, 1);
-            end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
+            end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
         }
     }
     virtual void visit(const AST::IfCond* node) override
@@ -328,7 +328,7 @@ private:
         auto& start_span = span_for_node(node);
         start_span.attributes.color = m_palette.syntax_punctuation();
         start_span.range.set_end({ node->position().start_line.line_number, node->position().start_line.line_column + 2 });
-        start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
+        start_span.data = static_cast<u64>(AugmentedTokenKind::OpenParen);
 
         // Function name
         auto& name_span = span_for_node(node);
@@ -340,7 +340,7 @@ private:
         auto& end_span = span_for_node(node);
         end_span.attributes.color = m_palette.syntax_punctuation();
         set_offset_range_start(end_span.range, node->position().end_line, 1);
-        end_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen);
+        end_span.data = static_cast<u64>(AugmentedTokenKind::CloseParen);
     }
 
     virtual void visit(const AST::Join* node) override
@@ -500,7 +500,7 @@ private:
             start_span.range.set_start({ decl.name->position().end_line.line_number, decl.name->position().end_line.line_column });
             start_span.range.set_end({ decl.value->position().start_line.line_number, decl.value->position().start_line.line_column + 1 });
             start_span.attributes.color = m_palette.syntax_punctuation();
-            start_span.data = (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen);
+            start_span.data = static_cast<u64>(AugmentedTokenKind::OpenParen);
         }
     }
     virtual void visit(const AST::WriteAppendRedirection* node) override
@@ -518,7 +518,7 @@ private:
     bool m_is_first_in_command { false };
 };
 
-bool SyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(u64 token) const
 {
     if (!token)
         return false;
@@ -529,7 +529,7 @@ bool SyntaxHighlighter::is_identifier(void* token) const
         || kind == (size_t)AST::Node::Kind::Tilde;
 }
 
-bool SyntaxHighlighter::is_navigatable(void*) const
+bool SyntaxHighlighter::is_navigatable(u64) const
 {
     return false;
 }
@@ -551,7 +551,7 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
 
     if constexpr (SYNTAX_HIGHLIGHTING_DEBUG) {
         for (auto& span : spans) {
-            dbgln("Kind {}, range {}.", reinterpret_cast<size_t>(span.data), span.range);
+            dbgln("Kind {}, range {}.", span.data, span.range);
         }
     }
 
@@ -561,19 +561,19 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
     m_client->do_update();
 }
 
-Vector<Syntax::Highlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
+Vector<Syntax::Highlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs_impl() const
 {
     static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
         pairs.append({
-            (void*)static_cast<size_t>(AugmentedTokenKind::OpenParen),
-            (void*)static_cast<size_t>(AugmentedTokenKind::CloseParen),
+            static_cast<u64>(AugmentedTokenKind::OpenParen),
+            static_cast<u64>(AugmentedTokenKind::CloseParen),
         });
     }
     return pairs;
 }
 
-bool SyntaxHighlighter::token_types_equal(void* token0, void* token1) const
+bool SyntaxHighlighter::token_types_equal(u64 token0, u64 token1) const
 {
     return token0 == token1;
 }
