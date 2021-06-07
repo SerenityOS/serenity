@@ -414,6 +414,8 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
     return descriptor;
 }
 
+// Equivalent to:
+// 6.2.5.4 FromPropertyDescriptor, https://tc39.es/ecma262/#sec-frompropertydescriptor
 Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
     VERIFY(property_name.is_valid());
@@ -425,12 +427,6 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
     auto descriptor = descriptor_opt.value();
 
     auto* descriptor_object = Object::create_empty(global_object());
-    descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
-    if (vm.exception())
-        return {};
-    descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
-    if (vm.exception())
-        return {};
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property(vm.names.value, descriptor.value.value_or(js_undefined()));
         if (vm.exception())
@@ -450,6 +446,12 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
                 return {};
         }
     }
+    descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
+    if (vm.exception())
+        return {};
+    descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
+    if (vm.exception())
+        return {};
     return descriptor_object;
 }
 
