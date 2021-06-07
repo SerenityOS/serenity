@@ -60,8 +60,6 @@ private:
     u8* m_buffer { nullptr };
     size_t m_buffer_capacity { 0 };
     size_t m_buffer_size { 0 };
-
-    u8 const* m_buffer_end { nullptr };
 };
 
 }
