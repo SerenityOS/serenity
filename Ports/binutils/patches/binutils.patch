@@ -133,3 +133,15 @@ diff -Naur binutils-2.36.1/ld/Makefile.in binutils-2.36.1.serenity/ld/Makefile.i
  	ehppa64linux.c \
  	ei386pep.c \
  	emmo.c
+diff -Naur binutils-2.36.1/binutils/objcopy.c binutils-2.36.1.serenity/binutils/objcopy.c
+--- binutils-2.36.1/binutils/objcopy.c	2021-02-05 15:13:40.000000000 +0100
++++ binutils-2.36.1.serenity/binutils/objcopy.c	2021-06-07 08:28:08.961581287 +0200
+@@ -3769,7 +3769,7 @@
+   /* To allow us to do "strip *" without dying on the first
+      non-object file, failures are nonfatal.  */
+   ibfd = bfd_openr (input_filename, input_target);
+-  if (ibfd == NULL || fstat (fileno (ibfd->iostream), in_stat) != 0)
++  if (ibfd == NULL || bfd_stat (ibfd, in_stat) != 0)
+     {
+       bfd_nonfatal_message (input_filename, NULL, NULL, NULL);
+       status = 1;
