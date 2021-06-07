@@ -317,6 +317,91 @@ private:
     Register m_src2;
 };
 
+class BitwiseNot final : public Instruction {
+public:
+    BitwiseNot(Register dst, Register src)
+        : Instruction(Type::BitwiseNot)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
+class Not final : public Instruction {
+public:
+    Not(Register dst, Register src)
+        : Instruction(Type::Not)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
+class UnaryPlus final : public Instruction {
+public:
+    UnaryPlus(Register dst, Register src)
+        : Instruction(Type::UnaryPlus)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
+class UnaryMinus final : public Instruction {
+public:
+    UnaryMinus(Register dst, Register src)
+        : Instruction(Type::UnaryMinus)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
+class Typeof final : public Instruction {
+public:
+    Typeof(Register dst, Register src)
+        : Instruction(Type::Typeof)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
 class NewString final : public Instruction {
 public:
     NewString(Register dst, String string)
