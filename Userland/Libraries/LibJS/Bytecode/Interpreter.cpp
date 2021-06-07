@@ -36,8 +36,8 @@ Value Interpreter::run(Bytecode::Block const& block)
 {
     dbgln("Bytecode::Interpreter will run block {:p}", &block);
 
+    CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {
-        CallFrame global_call_frame;
         global_call_frame.this_value = &global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";
         global_call_frame.function_name = global_execution_context_name;
