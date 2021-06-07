@@ -45,6 +45,29 @@ LookupServer::LookupServer()
 
     load_etc_hosts();
 
+    auto maybe_file_watcher = Core::FileWatcher::create();
+    // NOTE: If this happens during startup, something is very wrong.
+    if (maybe_file_watcher.is_error()) {
+        dbgln("Core::FileWatcher::create(): {}", maybe_file_watcher.error());
+        VERIFY_NOT_REACHED();
+    }
+    m_file_watcher = maybe_file_watcher.release_value();
+
+    m_file_watcher->on_change = [this](auto&) {
+        dbgln("Reloading '/etc/hosts' because it was changed.");
+        load_etc_hosts();
+    };
+
+    auto result = m_file_watcher->add_watch("/etc/hosts", Core::FileWatcherEvent::Type::ContentModified | Core::FileWatcherEvent::Type::Deleted);
+    // NOTE: If this happens during startup, something is very wrong.
+    if (result.is_error()) {
+        dbgln("Core::FileWatcher::add_watch(): {}", result.error());
+        VERIFY_NOT_REACHED();
+    } else if (!result.value()) {
+        dbgln("Core::FileWatcher::add_watch(): {}", result.value());
+        VERIFY_NOT_REACHED();
+    }
+
     if (config->read_bool_entry("DNS", "EnableServer")) {
         m_dns_server = DNSServer::construct(this);
         // TODO: drop root privileges here.
@@ -68,6 +91,7 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
+    m_etc_hosts.clear();
     auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
         auto it = m_etc_hosts.find(name);
         if (it == m_etc_hosts.end()) {
