@@ -11,6 +11,7 @@
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
@@ -211,9 +212,12 @@ void Client::handle_directory_listing(String const& requested_path, String const
     builder.append("<code><table>\n");
 
     Core::DirIterator dt(real_path);
-    while (dt.has_next()) {
-        auto name = dt.next_path();
+    Vector<String> names;
+    while (dt.has_next())
+        names.append(dt.next_path());
+    quick_sort(names);
 
+    for (auto& name : names) {
         StringBuilder path_builder;
         path_builder.append(real_path);
         path_builder.append('/');
