@@ -75,11 +75,6 @@ void DNSName::randomize_case()
     m_name = builder.to_string();
 }
 
-bool DNSName::operator==(const DNSName& other) const
-{
-    return as_string() == other.as_string();
-}
-
 OutputStream& operator<<(OutputStream& stream, const DNSName& name)
 {
     auto parts = name.as_string().split_view('.');
