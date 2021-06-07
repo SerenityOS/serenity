@@ -434,17 +434,14 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
         descriptor_object->define_property(vm.names.writable, Value(descriptor.attributes.is_writable()));
         if (vm.exception())
             return {};
-    } else if (descriptor.is_accessor_descriptor()) {
-        if (descriptor.getter) {
-            descriptor_object->define_property(vm.names.get, Value(descriptor.getter));
-            if (vm.exception())
-                return {};
-        }
-        if (descriptor.setter) {
-            descriptor_object->define_property(vm.names.set, Value(descriptor.setter));
-            if (vm.exception())
-                return {};
-        }
+    } else {
+        VERIFY(descriptor.is_accessor_descriptor());
+        descriptor_object->define_property(vm.names.get, descriptor.getter ? Value(descriptor.getter) : js_undefined());
+        if (vm.exception())
+            return {};
+        descriptor_object->define_property(vm.names.set, descriptor.setter ? Value(descriptor.setter) : js_undefined());
+        if (vm.exception())
+            return {};
     }
     descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
     if (vm.exception())
