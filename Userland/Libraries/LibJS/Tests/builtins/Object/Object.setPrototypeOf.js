@@ -40,4 +40,14 @@ describe("errors", () => {
 
         expect(Object.setPrototypeOf(o, p)).toBe(o);
     });
+
+    test("cyclic prototype chain", () => {
+        let o = {};
+        let p = {};
+        Object.setPrototypeOf(o, p);
+
+        expect(() => {
+            Object.setPrototypeOf(p, o);
+        }).toThrowWithMessage(TypeError, "Object's [[SetPrototypeOf]] method returned false");
+    });
 });

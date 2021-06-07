@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/TemporaryClearException.h>
@@ -110,17 +111,32 @@ const Object* Object::prototype() const
     return shape().prototype();
 }
 
+// 10.1.2.1 OrdinarySetPrototypeOf, https://tc39.es/ecma262/#sec-ordinarysetprototypeof
 bool Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
         return true;
     if (!m_is_extensible)
         return false;
-    if (shape().is_unique()) {
-        shape().set_prototype_without_transition(new_prototype);
-        return true;
+    auto* prototype = new_prototype;
+    while (prototype) {
+        if (prototype == this)
+            return false;
+        // NOTE: This is a best-effort implementation of the following step:
+        // "If p.[[GetPrototypeOf]] is not the ordinary object internal method defined in 10.1.1,
+        // set done to true."
+        // We don't have a good way of detecting whether certain virtual Object methods have been
+        // overridden by a given object, but as ProxyObject is the only one doing that, this check
+        // does the trick.
+        if (is<ProxyObject>(prototype))
+            break;
+        prototype = prototype->prototype();
     }
-    m_shape = m_shape->create_prototype_transition(new_prototype);
+    auto& shape = this->shape();
+    if (shape.is_unique())
+        shape.set_prototype_without_transition(new_prototype);
+    else
+        m_shape = shape.create_prototype_transition(new_prototype);
     return true;
 }
 
