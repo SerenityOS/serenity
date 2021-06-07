@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -143,20 +143,10 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
     auto* target = get_target_object_from(global_object, "deleteProperty");
     if (!target)
         return {};
-
-    auto property_key = vm.argument(1);
-    auto property_name = PropertyName::from_value(global_object, property_key);
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
-    auto property_key_number = property_key.to_number(global_object);
-    if (vm.exception())
-        return {};
-    if (property_key_number.is_finite_number()) {
-        auto property_key_as_double = property_key_number.as_double();
-        if (property_key_as_double >= 0 && (i32)property_key_as_double == property_key_as_double)
-            property_name = PropertyName(property_key_as_double);
-    }
-    return Value(target->delete_property(property_name));
+    return Value(target->delete_property(property_key));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
@@ -164,7 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
     auto* target = get_target_object_from(global_object, "get");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
     Value receiver = {};
@@ -178,7 +168,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
     auto* target = get_target_object_from(global_object, "getOwnPropertyDescriptor");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
     return target->get_own_property_descriptor_object(property_key);
@@ -197,7 +187,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
     auto* target = get_target_object_from(global_object, "has");
     if (!target)
         return {};
-    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
     return Value(target->has_property(property_key));
@@ -232,7 +222,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
     auto* target = get_target_object_from(global_object, "set");
     if (!target)
         return {};
-    auto property_key = vm.argument(1).to_string(global_object);
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
     auto value = vm.argument(2);
