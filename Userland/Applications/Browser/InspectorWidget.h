@@ -17,17 +17,22 @@ public:
     virtual ~InspectorWidget();
 
     void set_document(Web::DOM::Document*);
+    void set_dom_json(String);
 
 private:
     InspectorWidget();
 
-    void set_inspected_node(Web::DOM::Node*);
+    void set_inspected_node(GUI::ModelIndex);
 
     RefPtr<GUI::TreeView> m_dom_tree_view;
     RefPtr<GUI::TreeView> m_layout_tree_view;
     RefPtr<GUI::TableView> m_style_table_view;
     RefPtr<GUI::TableView> m_computed_style_table_view;
+
+    // One of these will be available, depending on if we're
+    // in-process (m_document) or out-of-process (m_dom_json)
     RefPtr<Web::DOM::Document> m_document;
+    Optional<String> m_dom_json;
 };
 
 }

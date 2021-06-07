@@ -79,6 +79,7 @@ private:
     void update_bookmark_button(const String& url);
     void start_download(const URL& url);
     void view_source(const URL& url, const String& source);
+    void view_dom_tree(const String&);
 
     Type m_type;
 
