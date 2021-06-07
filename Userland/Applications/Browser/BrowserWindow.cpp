@@ -205,7 +205,7 @@ void BrowserWindow::build_menus()
                 tab.m_dom_inspector_window->show();
                 tab.m_dom_inspector_window->move_to_front();
             } else {
-                TODO();
+                tab.m_web_content_view->inspect_dom_tree();
             }
         },
         this);
