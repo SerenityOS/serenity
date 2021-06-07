@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibJS/Bytecode/Block.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -34,7 +35,7 @@ Interpreter::~Interpreter()
 
 Value Interpreter::run(Bytecode::Block const& block)
 {
-    dbgln("Bytecode::Interpreter will run block {:p}", &block);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run block {:p}", &block);
 
     CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {
@@ -65,14 +66,17 @@ Value Interpreter::run(Bytecode::Block const& block)
         ++pc;
     }
 
-    dbgln("Bytecode::Interpreter did run block {:p}", &block);
-    for (size_t i = 0; i < registers().size(); ++i) {
-        String value_string;
-        if (registers()[i].is_empty())
-            value_string = "(empty)";
-        else
-            value_string = registers()[i].to_string_without_side_effects();
-        dbgln("[{:3}] {}", i, value_string);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run block {:p}", &block);
+
+    if constexpr (JS_BYTECODE_DEBUG) {
+        for (size_t i = 0; i < registers().size(); ++i) {
+            String value_string;
+            if (registers()[i].is_empty())
+                value_string = "(empty)";
+            else
+                value_string = registers()[i].to_string_without_side_effects();
+            dbgln("[{:3}] {}", i, value_string);
+        }
     }
 
     m_register_windows.take_last();
