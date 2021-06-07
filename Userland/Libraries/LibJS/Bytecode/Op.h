@@ -449,6 +449,25 @@ private:
     Register m_src2;
 };
 
+class InstanceOf final : public Instruction {
+public:
+    InstanceOf(Register dst, Register src1, Register src2)
+        : Instruction(Type::InstanceOf)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class BitwiseNot final : public Instruction {
 public:
     BitwiseNot(Register dst, Register src)
