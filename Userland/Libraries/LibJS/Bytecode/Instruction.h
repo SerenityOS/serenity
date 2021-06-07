@@ -37,7 +37,8 @@
     O(Return)                     \
     O(BitwiseAnd)                 \
     O(BitwiseOr)                  \
-    O(BitwiseXor)
+    O(BitwiseXor)                 \
+    O(BitwiseNot)
 
 namespace JS::Bytecode {
 

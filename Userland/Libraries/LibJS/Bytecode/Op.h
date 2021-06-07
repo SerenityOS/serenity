@@ -317,6 +317,23 @@ private:
     Register m_src2;
 };
 
+class BitwiseNot final : public Instruction {
+public:
+    BitwiseNot(Register dst, Register src)
+        : Instruction(Type::BitwiseNot)
+        , m_dst(dst)
+        , m_src(src)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src;
+};
+
 class NewString final : public Instruction {
 public:
     NewString(Register dst, String string)
