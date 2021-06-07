@@ -17,7 +17,10 @@
     O(Div)                        \
     O(Mod)                        \
     O(Exp)                        \
+    O(GreaterThan)                \
+    O(GreaterThanEquals)          \
     O(LessThan)                   \
+    O(LessThanEquals)             \
     O(AbstractInequals)           \
     O(AbstractEquals)             \
     O(NewString)                  \
