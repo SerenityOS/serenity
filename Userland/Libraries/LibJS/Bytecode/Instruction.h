@@ -15,6 +15,8 @@
     O(Sub)                        \
     O(Mul)                        \
     O(Div)                        \
+    O(Mod)                        \
+    O(Exp)                        \
     O(LessThan)                   \
     O(AbstractInequals)           \
     O(AbstractEquals)             \
