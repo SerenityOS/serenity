@@ -147,6 +147,7 @@ private:
     virtual void set_scroll_step_size(u32) override;
     virtual Messages::WindowServer::GetScrollStepSizeResponse get_scroll_step_size() override;
     virtual Messages::WindowServer::GetScreenBitmapResponse get_screen_bitmap(Optional<Gfx::IntRect> const&) override;
+    virtual Messages::WindowServer::GetScreenBitmapAroundCursorResponse get_screen_bitmap_around_cursor(Gfx::IntSize const&) override;
     virtual void set_double_click_speed(i32) override;
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_window_modified(i32, bool) override;
