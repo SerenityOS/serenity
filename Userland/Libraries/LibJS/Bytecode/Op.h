@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -414,6 +415,25 @@ class UnsignedRightShift final : public Instruction {
 public:
     UnsignedRightShift(Register dst, Register src1, Register src2)
         : Instruction(Type::UnsignedRightShift)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class In final : public Instruction {
+public:
+    In(Register dst, Register src1, Register src2)
+        : Instruction(Type::In)
         , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)

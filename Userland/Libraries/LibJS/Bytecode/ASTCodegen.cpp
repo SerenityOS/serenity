@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -108,6 +109,9 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
         return dst_reg;
     case BinaryOp::UnsignedRightShift:
         generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::In:
+        generator.emit<Bytecode::Op::In>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
     default:
         TODO();

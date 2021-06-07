@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -142,11 +143,6 @@ void BitwiseXor::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = bitwise_xor(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
-void BitwiseNot::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = bitwise_not(interpreter.global_object(), interpreter.reg(m_src));
-}
-
 void LeftShift::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = left_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
@@ -160,6 +156,16 @@ void RightShift::execute(Bytecode::Interpreter& interpreter) const
 void UnsignedRightShift::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = unsigned_right_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
+void In::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = in(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
+void BitwiseNot::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = bitwise_not(interpreter.global_object(), interpreter.reg(m_src));
 }
 
 void Not::execute(Bytecode::Interpreter& interpreter) const
@@ -392,6 +398,11 @@ String RightShift::to_string() const
 String UnsignedRightShift::to_string() const
 {
     return String::formatted("UnsignedRightShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String In::to_string() const
+{
+    return String::formatted("In dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String BitwiseNot::to_string() const
