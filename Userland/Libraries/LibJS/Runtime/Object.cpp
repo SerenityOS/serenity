@@ -429,26 +429,14 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
     auto* descriptor_object = Object::create_empty(global_object());
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property(vm.names.value, descriptor.value.value_or(js_undefined()));
-        if (vm.exception())
-            return {};
         descriptor_object->define_property(vm.names.writable, Value(descriptor.attributes.is_writable()));
-        if (vm.exception())
-            return {};
     } else {
         VERIFY(descriptor.is_accessor_descriptor());
         descriptor_object->define_property(vm.names.get, descriptor.getter ? Value(descriptor.getter) : js_undefined());
-        if (vm.exception())
-            return {};
         descriptor_object->define_property(vm.names.set, descriptor.setter ? Value(descriptor.setter) : js_undefined());
-        if (vm.exception())
-            return {};
     }
     descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
-    if (vm.exception())
-        return {};
     descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
-    if (vm.exception())
-        return {};
     return descriptor_object;
 }
 
