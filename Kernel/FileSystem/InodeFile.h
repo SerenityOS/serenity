@@ -34,6 +34,7 @@ public:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;
+    virtual KResult stat(::stat& buffer) const override { return inode().metadata().stat(buffer); }
 
     virtual String absolute_path(const FileDescription&) const override;
 

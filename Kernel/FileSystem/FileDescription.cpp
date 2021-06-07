@@ -110,9 +110,6 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
 KResult FileDescription::stat(::stat& buffer)
 {
     Locker locker(m_lock);
-    // FIXME: This is a little awkward, why can't we always forward to File::stat()?
-    if (m_inode)
-        return metadata().stat(buffer);
     return m_file->stat(buffer);
 }
 
