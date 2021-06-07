@@ -42,6 +42,9 @@ bool ArgsParser::parse(int argc, char* const* argv, FailureBehavior failure_beha
     Vector<option> long_options;
     StringBuilder short_options_builder;
 
+    if (m_stop_on_first_non_option)
+        short_options_builder.append('+');
+
     int index_of_found_long_option = -1;
 
     // Tell getopt() to reset its internal state, and start scanning from optind = 1.
