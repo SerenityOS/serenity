@@ -77,16 +77,17 @@ Value Interpreter::run(Bytecode::Block const& block)
 
     m_register_windows.take_last();
 
-    m_return_value = m_return_value.value_or(js_undefined());
+    auto return_value = m_return_value.value_or(js_undefined());
+    m_return_value = {};
 
     // NOTE: The return value from a called function is put into $0 in the caller context.
     if (!m_register_windows.is_empty())
-        m_register_windows.last()[0] = m_return_value;
+        m_register_windows.last()[0] = return_value;
 
     if (vm().call_stack().size() == 1)
         vm().pop_call_frame();
 
-    return m_return_value;
+    return return_value;
 }
 
 }
