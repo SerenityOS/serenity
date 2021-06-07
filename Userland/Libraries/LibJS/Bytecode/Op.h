@@ -355,6 +355,63 @@ private:
     Register m_src2;
 };
 
+class LeftShift final : public Instruction {
+public:
+    LeftShift(Register dst, Register src1, Register src2)
+        : Instruction(Type::LeftShift)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class RightShift final : public Instruction {
+public:
+    RightShift(Register dst, Register src1, Register src2)
+        : Instruction(Type::RightShift)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class UnsignedRightShift final : public Instruction {
+public:
+    UnsignedRightShift(Register dst, Register src1, Register src2)
+        : Instruction(Type::UnsignedRightShift)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class BitwiseNot final : public Instruction {
 public:
     BitwiseNot(Register dst, Register src)

@@ -142,6 +142,21 @@ void BitwiseNot::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = bitwise_not(interpreter.global_object(), interpreter.reg(m_src));
 }
 
+void LeftShift::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = left_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
+void RightShift::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = right_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
+void UnsignedRightShift::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = unsigned_right_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+}
+
 void Not::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = Value(!interpreter.reg(m_src).to_boolean());
@@ -352,6 +367,21 @@ String BitwiseOr::to_string() const
 String BitwiseXor::to_string() const
 {
     return String::formatted("BitwiseXor dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String LeftShift::to_string() const
+{
+    return String::formatted("LeftShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String RightShift::to_string() const
+{
+    return String::formatted("RightShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String UnsignedRightShift::to_string() const
+{
+    return String::formatted("UnsignedRightShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String BitwiseNot::to_string() const

@@ -99,6 +99,15 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::BitwiseXor:
         generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::LeftShift:
+        generator.emit<Bytecode::Op::LeftShift>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::RightShift:
+        generator.emit<Bytecode::Op::RightShift>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::UnsignedRightShift:
+        generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     default:
         TODO();
     }
