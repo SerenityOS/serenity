@@ -225,7 +225,7 @@ private:
 class AbstractInequals final : public Instruction {
 public:
     AbstractInequals(Register dst, Register src1, Register src2)
-        : Instruction(Type::AbstractEquals)
+        : Instruction(Type::AbstractInequals)
         , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
