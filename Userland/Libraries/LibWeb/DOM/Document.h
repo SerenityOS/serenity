@@ -267,6 +267,8 @@ public:
 
     virtual EventTarget* get_parent(const Event&) override;
 
+    String dump_dom_tree_as_json() const;
+
 private:
     explicit Document(const URL&);
 
