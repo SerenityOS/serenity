@@ -93,6 +93,38 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     }
 }
 
+Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto lhs_reg = m_lhs->generate_bytecode(generator);
+
+    VERIFY(lhs_reg.has_value());
+
+    auto dst_reg = generator.allocate_register();
+
+    switch (m_op) {
+    case UnaryOp::BitwiseNot:
+        generator.emit<Bytecode::Op::BitwiseNot>(dst_reg, *lhs_reg);
+        return dst_reg;
+    case UnaryOp::Not:
+        generator.emit<Bytecode::Op::Not>(dst_reg, *lhs_reg);
+        return dst_reg;
+    case UnaryOp::Plus:
+        generator.emit<Bytecode::Op::UnaryPlus>(dst_reg, *lhs_reg);
+        return dst_reg;
+    case UnaryOp::Minus:
+        generator.emit<Bytecode::Op::UnaryMinus>(dst_reg, *lhs_reg);
+        return dst_reg;
+    case UnaryOp::Typeof:
+        generator.emit<Bytecode::Op::Typeof>(dst_reg, *lhs_reg);
+        return dst_reg;
+    case UnaryOp::Void:
+        generator.emit<Bytecode::Op::Load>(dst_reg, js_undefined());
+        return dst_reg;
+    default:
+        TODO();
+    }
+}
+
 Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
