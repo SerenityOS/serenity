@@ -22,6 +22,7 @@ int main(int argc, char** argv, char** env)
     Vector<String> arguments;
 
     Core::ArgsParser parser;
+    parser.set_stop_on_first_non_option(true);
     parser.add_option(g_report_to_debug, "Write reports to the debug log", "report-to-debug", 0);
     parser.add_positional_argument(arguments, "Command to emulate", "command");
     parser.parse(argc, argv);
