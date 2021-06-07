@@ -10,7 +10,7 @@ configopts="
     --enable-release-mode
     --enable-optimizations
     --opengl-mode=none
-    --with-sdl-prefix=${SERENITY_BUILD_DIR}/Root/usr/local
+    --with-sdl-prefix=${SERENITY_INSTALL_ROOT}/usr/local
 "
 launcher_name=ScummVM
 launcher_category=Games
