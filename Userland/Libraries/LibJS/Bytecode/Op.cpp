@@ -58,141 +58,59 @@ void LoadRegister::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = interpreter.reg(m_src);
 }
 
-void Add::execute(Bytecode::Interpreter& interpreter) const
+static Value abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
 {
-    interpreter.reg(m_dst) = add(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return Value(!abstract_eq(global_object, src1, src2));
 }
 
-void Sub::execute(Bytecode::Interpreter& interpreter) const
+static Value abstract_equals(GlobalObject& global_object, Value src1, Value src2)
 {
-    interpreter.reg(m_dst) = sub(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return Value(abstract_eq(global_object, src1, src2));
 }
 
-void Mul::execute(Bytecode::Interpreter& interpreter) const
+static Value typed_inequals(GlobalObject&, Value src1, Value src2)
 {
-    interpreter.reg(m_dst) = mul(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return Value(!strict_eq(src1, src2));
 }
 
-void Div::execute(Bytecode::Interpreter& interpreter) const
+static Value typed_equals(GlobalObject&, Value src1, Value src2)
 {
-    interpreter.reg(m_dst) = div(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return Value(strict_eq(src1, src2));
 }
 
-void Mod::execute(Bytecode::Interpreter& interpreter) const
+#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                                                                 \
+    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                                                        \
+    {                                                                                                                          \
+        interpreter.reg(m_dst) = op_snake_case(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)); \
+    }                                                                                                                          \
+    String OpTitleCase::to_string() const                                                                                      \
+    {                                                                                                                          \
+        return String::formatted(#OpTitleCase " dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);                             \
+    }
+
+JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
+
+static Value not_(GlobalObject&, Value value)
 {
-    interpreter.reg(m_dst) = mod(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return Value(!value.to_boolean());
 }
 
-void Exp::execute(Bytecode::Interpreter& interpreter) const
+static Value typeof_(GlobalObject& global_object, Value value)
 {
-    interpreter.reg(m_dst) = exp(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
+    return js_string(global_object.vm(), value.typeof());
 }
 
-void GreaterThan::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = greater_than(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
+#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                        \
+    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                              \
+    {                                                                                                \
+        interpreter.reg(m_dst) = op_snake_case(interpreter.global_object(), interpreter.reg(m_src)); \
+    }                                                                                                \
+    String OpTitleCase::to_string() const                                                            \
+    {                                                                                                \
+        return String::formatted(#OpTitleCase " dst:{}, src:{}", m_dst, m_src);                      \
+    }
 
-void GreaterThanEquals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = greater_than_equals(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void LessThan::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = less_than(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void LessThanEquals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = less_than_equals(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void AbstractInequals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(!abstract_eq(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
-}
-
-void AbstractEquals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(abstract_eq(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
-}
-
-void TypedInequals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(!strict_eq(interpreter.reg(m_src1), interpreter.reg(m_src2)));
-}
-
-void TypedEquals::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(strict_eq(interpreter.reg(m_src1), interpreter.reg(m_src2)));
-}
-
-void BitwiseAnd::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = bitwise_and(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void BitwiseOr::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = bitwise_or(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void BitwiseXor::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = bitwise_xor(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void LeftShift::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = left_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void RightShift::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = right_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void UnsignedRightShift::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = unsigned_right_shift(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void In::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = in(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void InstanceOf::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = instance_of(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
-}
-
-void BitwiseNot::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = bitwise_not(interpreter.global_object(), interpreter.reg(m_src));
-}
-
-void Not::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(!interpreter.reg(m_src).to_boolean());
-}
-
-void UnaryPlus::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(unary_plus(interpreter.global_object(), interpreter.reg(m_src)));
-}
-
-void UnaryMinus::execute(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.reg(m_dst) = Value(unary_minus(interpreter.global_object(), interpreter.reg(m_src)));
-}
-
-void Typeof::execute(Bytecode::Interpreter& interpreter) const
-{
-    auto& vm = interpreter.global_object().vm();
-    interpreter.reg(m_dst) = Value(js_string(vm, interpreter.reg(m_src).typeof()));
-}
+JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
@@ -303,141 +221,6 @@ String Load::to_string() const
 String LoadRegister::to_string() const
 {
     return String::formatted("LoadRegister dst:{}, src:{}", m_dst, m_src);
-}
-
-String Add::to_string() const
-{
-    return String::formatted("Add dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String Sub::to_string() const
-{
-    return String::formatted("Sub dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String Mul::to_string() const
-{
-    return String::formatted("Mul dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String Div::to_string() const
-{
-    return String::formatted("Div dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String Mod::to_string() const
-{
-    return String::formatted("Mod dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String Exp::to_string() const
-{
-    return String::formatted("Exp dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String GreaterThan::to_string() const
-{
-    return String::formatted("GreaterThan dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String GreaterThanEquals::to_string() const
-{
-    return String::formatted("GreaterThanEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String LessThan::to_string() const
-{
-    return String::formatted("LessThan dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String LessThanEquals::to_string() const
-{
-    return String::formatted("LessThanEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String AbstractInequals::to_string() const
-{
-    return String::formatted("AbstractInequals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String AbstractEquals::to_string() const
-{
-    return String::formatted("AbstractEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String TypedInequals::to_string() const
-{
-    return String::formatted("TypedInequals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String TypedEquals::to_string() const
-{
-    return String::formatted("TypedEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String BitwiseAnd::to_string() const
-{
-    return String::formatted("BitwiseAnd dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String BitwiseOr::to_string() const
-{
-    return String::formatted("BitwiseOr dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String BitwiseXor::to_string() const
-{
-    return String::formatted("BitwiseXor dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String LeftShift::to_string() const
-{
-    return String::formatted("LeftShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String RightShift::to_string() const
-{
-    return String::formatted("RightShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String UnsignedRightShift::to_string() const
-{
-    return String::formatted("UnsignedRightShift dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String In::to_string() const
-{
-    return String::formatted("In dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String InstanceOf::to_string() const
-{
-    return String::formatted("In dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
-}
-
-String BitwiseNot::to_string() const
-{
-    return String::formatted("BitwiseNot dst:{}, src:{}", m_dst, m_src);
-}
-
-String Not::to_string() const
-{
-    return String::formatted("Not dst:{}, src:{}", m_dst, m_src);
-}
-
-String UnaryPlus::to_string() const
-{
-    return String::formatted("UnaryPlus dst:{}, src:{}", m_dst, m_src);
-}
-
-String UnaryMinus::to_string() const
-{
-    return String::formatted("UnaryMinus dst:{}, src:{}", m_dst, m_src);
-}
-
-String Typeof::to_string() const
-{
-    return String::formatted("Typeof dst:{}, src:{}", m_dst, m_src);
 }
 
 String NewString::to_string() const
