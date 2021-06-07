@@ -43,6 +43,7 @@ int main(int argc, char** argv)
     auto trace_file = Core::File::standard_error();
 
     Core::ArgsParser parser;
+    parser.set_stop_on_first_non_option(true);
     parser.set_general_help(
         "Trace all syscalls and their result.");
     parser.add_option(g_pid, "Trace the given PID", "pid", 'p', "pid");
