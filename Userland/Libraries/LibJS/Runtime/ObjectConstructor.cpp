@@ -190,7 +190,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_descriptor)
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
-    auto property_key = PropertyName::from_value(global_object, vm.argument(1));
+    auto property_key = vm.argument(1).to_property_key(global_object);
     if (vm.exception())
         return {};
     return object->get_own_property_descriptor_object(property_key);
