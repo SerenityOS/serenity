@@ -70,6 +70,44 @@ private:
     Register m_src2;
 };
 
+class Mul final : public Instruction {
+public:
+    Mul(Register dst, Register src1, Register src2)
+        : Instruction(Type::Mul)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class Div final : public Instruction {
+public:
+    Div(Register dst, Register src1, Register src2)
+        : Instruction(Type::Div)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class LessThan final : public Instruction {
 public:
     LessThan(Register dst, Register src1, Register src2)

@@ -49,6 +49,12 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::Subtraction:
         generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::Multiplication:
+        generator.emit<Bytecode::Op::Mul>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::Division:
+        generator.emit<Bytecode::Op::Div>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     case BinaryOp::LessThan:
         generator.emit<Bytecode::Op::LessThan>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
