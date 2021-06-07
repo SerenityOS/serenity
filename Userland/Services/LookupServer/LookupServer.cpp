@@ -118,6 +118,13 @@ void LookupServer::load_etc_hosts()
     }
 }
 
+static String get_hostname()
+{
+    char buffer[HOST_NAME_MAX];
+    VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
+    return buffer;
+}
+
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record_type)
 {
     dbgln_if(LOOKUPSERVER_DEBUG, "Got request for '{}'", name.as_string());
@@ -135,7 +142,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
         answers.append(answer_with_original_case);
     };
 
-    // First, try local data.
+    // First, try /etc/hosts.
     if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
         for (auto& answer : local_answers.value()) {
             if (answer.type() == record_type)
@@ -145,7 +152,17 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
             return answers;
     }
 
-    // Second, try our cache.
+    // Second, try the hostname.
+    // NOTE: We don't cache the hostname since it could change during runtime.
+    if (record_type == DNSRecordType::A && get_hostname() == name) {
+        IPv4Address address = { 127, 0, 0, 1 };
+        auto raw_address = address.to_in_addr_t();
+        DNSAnswer answer { name, DNSRecordType::A, DNSRecordClass::IN, s_static_ttl, String { (const char*)&raw_address, sizeof(raw_address) }, false };
+        answers.append(move(answer));
+        return answers;
+    }
+
+    // Third, try our cache.
     if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
         for (auto& answer : cached_answers.value()) {
             // TODO: Actually remove expired answers from the cache.
@@ -158,7 +175,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
             return answers;
     }
 
-    // Look up .local names using mDNS instead of DNS nameservers.
+    // Fourth, look up .local names using mDNS instead of DNS nameservers.
     if (name.as_string().ends_with(".local")) {
         answers = m_mdns->lookup(name, record_type);
         for (auto& answer : answers)
@@ -166,7 +183,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
         return answers;
     }
 
-    // Third, ask the upstream nameservers.
+    // Fifth, ask the upstream nameservers.
     for (auto& nameserver : m_nameservers) {
         dbgln_if(LOOKUPSERVER_DEBUG, "Doing lookup using nameserver '{}'", nameserver);
         bool did_get_response = false;
@@ -188,6 +205,8 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
                 dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
         }
     }
+
+    // Sixth, fail.
     if (answers.is_empty()) {
         dbgln("Tried all nameservers but never got a response :(");
         return {};
