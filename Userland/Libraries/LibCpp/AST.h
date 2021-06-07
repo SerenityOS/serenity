@@ -146,6 +146,8 @@ public:
     virtual const char* class_name() const override { return "FunctionDeclaration"; }
     virtual void dump(FILE* = stdout, size_t indent = 0) const override;
     virtual bool is_function() const override { return true; }
+    virtual bool is_constructor() const { return false; }
+    virtual bool is_destructor() const { return false; }
     RefPtr<FunctionDefinition> definition() { return m_definition; }
 
     FunctionDeclaration(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
@@ -721,4 +723,31 @@ public:
     virtual const char* class_name() const override { return "DummyAstNode"; }
     virtual void dump(FILE* = stdout, size_t = 0) const override { }
 };
+
+class Constructor : public FunctionDeclaration {
+public:
+    virtual ~Constructor() override = default;
+    virtual const char* class_name() const override { return "Constructor"; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual bool is_constructor() const override { return true; }
+
+    Constructor(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : FunctionDeclaration(parent, start, end, filename)
+    {
+    }
+};
+
+class Destructor : public FunctionDeclaration {
+public:
+    virtual ~Destructor() override = default;
+    virtual const char* class_name() const override { return "Destructor"; }
+    virtual void dump(FILE* = stdout, size_t indent = 0) const override;
+    virtual bool is_destructor() const override { return true; }
+
+    Destructor(ASTNode* parent, Optional<Position> start, Optional<Position> end, const String& filename)
+        : FunctionDeclaration(parent, start, end, filename)
+    {
+    }
+};
+
 }

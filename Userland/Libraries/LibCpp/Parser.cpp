@@ -103,6 +103,10 @@ NonnullRefPtr<Declaration> Parser::parse_declaration(ASTNode& parent, Declaratio
         return parse_class_declaration(parent);
     case DeclarationType::Namespace:
         return parse_namespace_declaration(parent);
+    case DeclarationType::Constructor:
+        return parse_constructor(parent);
+    case DeclarationType::Destructor:
+        return parse_destructor(parent);
     default:
         error("unexpected declaration type");
         return create_ast_node<InvalidDeclaration>(parent, position(), position());
@@ -631,7 +635,7 @@ Optional<Parser::DeclarationType> Parser::match_declaration_in_translation_unit(
     return {};
 }
 
-Optional<Parser::DeclarationType> Parser::match_class_member()
+Optional<Parser::DeclarationType> Parser::match_class_member(const StringView& class_name)
 {
     if (match_function_declaration())
         return DeclarationType::Function;
@@ -641,6 +645,10 @@ Optional<Parser::DeclarationType> Parser::match_class_member()
         return DeclarationType::Class;
     if (match_variable_declaration())
         return DeclarationType::Variable;
+    if (match_constructor(class_name))
+        return DeclarationType::Constructor;
+    if (match_destructor(class_name))
+        return DeclarationType::Destructor;
     return {};
 }
 
@@ -1436,13 +1444,15 @@ NonnullRefPtr<BracedInitList> Parser::parse_braced_init_list(ASTNode& parent)
     init_list->set_end(position());
     return init_list;
 }
-NonnullRefPtrVector<Declaration> Parser::parse_class_members(ASTNode& parent)
+NonnullRefPtrVector<Declaration> Parser::parse_class_members(StructOrClassDeclaration& parent)
 {
+    auto& class_name = parent.name();
+
     NonnullRefPtrVector<Declaration> members;
     while (!eof() && peek().type() != Token::Type::RightCurly) {
         if (match_access_specifier())
             consume_access_specifier(); // FIXME: Do not ignore access specifiers
-        auto member_type = match_class_member();
+        auto member_type = match_class_member(class_name);
         if (member_type.has_value()) {
             members.append(parse_declaration(parent, member_type.value()));
         } else {
@@ -1465,6 +1475,102 @@ void Parser::consume_access_specifier()
 {
     consume(Token::Type::Keyword);
     consume(Token::Type::Colon);
+}
+
+bool Parser::match_constructor(const StringView& class_name)
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    auto token = consume();
+    if (token.text() != class_name)
+        return false;
+
+    if (!peek(Token::Type::LeftParen).has_value())
+        return false;
+    consume();
+
+    while (consume().type() != Token::Type::RightParen && !eof()) { };
+
+    return (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value());
+}
+
+bool Parser::match_destructor(const StringView& class_name)
+{
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match(Token::Type::Tilde))
+        return false;
+    consume();
+
+    auto token = peek();
+
+    if (token.text() != class_name)
+        return false;
+    consume();
+
+    if (!peek(Token::Type::LeftParen).has_value())
+        return false;
+    consume();
+
+    while (consume().type() != Token::Type::RightParen && !eof()) { };
+
+    return (peek(Token::Type::Semicolon).has_value() || peek(Token::Type::LeftCurly).has_value());
+}
+
+void Parser::parse_constructor_or_destructor_impl(FunctionDeclaration& func, CtorOrDtor type)
+{
+    if (type == CtorOrDtor::Dtor)
+        consume(Token::Type::Tilde);
+
+    auto name_token = consume();
+    if (name_token.type() != Token::Type::Identifier && name_token.type() != Token::Type::KnownType) {
+        error("Unexpected constructor name");
+    }
+    func.m_name = name_token.text();
+
+    consume(Token::Type::LeftParen);
+    auto parameters = parse_parameter_list(func);
+    if (parameters.has_value()) {
+        if (type == CtorOrDtor::Dtor && !parameters->is_empty())
+            error("Destructor declaration that takes parameters");
+        else
+            func.m_parameters = move(parameters.value());
+    }
+
+    consume(Token::Type::RightParen);
+
+    // TODO: Parse =default, =delete.
+
+    RefPtr<FunctionDefinition> body;
+    Position ctor_end {};
+    if (peek(Token::Type::LeftCurly).has_value()) {
+        body = parse_function_definition(func);
+        ctor_end = body->end();
+    } else {
+        ctor_end = position();
+        if (match_attribute_specification())
+            consume_attribute_specification(); // we don't use the value of __attribute__
+        consume(Token::Type::Semicolon);
+    }
+
+    func.m_definition = move(body);
+    func.set_end(ctor_end);
+}
+
+NonnullRefPtr<Constructor> Parser::parse_constructor(ASTNode& parent)
+{
+    auto ctor = create_ast_node<Constructor>(parent, position(), {});
+    parse_constructor_or_destructor_impl(*ctor, CtorOrDtor::Ctor);
+    return ctor;
+}
+
+NonnullRefPtr<Destructor> Parser::parse_destructor(ASTNode& parent)
+{
+    auto ctor = create_ast_node<Destructor>(parent, position(), {});
+    parse_constructor_or_destructor_impl(*ctor, CtorOrDtor::Dtor);
+    return ctor;
 }
 
 }

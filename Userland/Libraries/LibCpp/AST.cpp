@@ -533,4 +533,36 @@ void CStyleCastExpression::dump(FILE* output, size_t indent) const
         m_expression->dump(output, indent + 1);
 }
 
+void Constructor::dump(FILE* output, size_t indent) const
+{
+    print_indent(output, indent);
+    outln(output, "C'tor");
+    print_indent(output, indent + 1);
+    outln(output, "(");
+    for (const auto& arg : m_parameters) {
+        arg.dump(output, indent + 1);
+    }
+    print_indent(output, indent + 1);
+    outln(output, ")");
+    if (!m_definition.is_null()) {
+        m_definition->dump(output, indent + 1);
+    }
+}
+
+void Destructor::dump(FILE* output, size_t indent) const
+{
+    print_indent(output, indent);
+    outln(output, "D'tor");
+    print_indent(output, indent + 1);
+    outln(output, "(");
+    for (const auto& arg : m_parameters) {
+        arg.dump(output, indent + 1);
+    }
+    print_indent(output, indent + 1);
+    outln(output, ")");
+    if (!m_definition.is_null()) {
+        m_definition->dump(output, indent + 1);
+    }
+}
+
 }
