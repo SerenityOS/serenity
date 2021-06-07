@@ -28,6 +28,7 @@ OwnPtr<Block> Generator::generate(ASTNode const& node)
     Generator generator;
     [[maybe_unused]] auto dummy = node.generate_bytecode(generator);
     generator.m_block->set_register_count({}, generator.m_next_register);
+    generator.m_block->seal();
     return move(generator.m_block);
 }
 
