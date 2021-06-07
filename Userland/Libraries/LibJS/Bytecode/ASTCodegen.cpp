@@ -199,7 +199,7 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
             generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
             return rhs_reg;
         }
-        
+
         auto lhs_reg = m_lhs->generate_bytecode(generator);
         auto dst_reg = generator.allocate_register();
 
@@ -241,7 +241,7 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
             generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
             break;
         default:
-            TODO();        
+            TODO();
         }
 
         generator.emit<Bytecode::Op::SetVariable>(identifier.string(), dst_reg);
