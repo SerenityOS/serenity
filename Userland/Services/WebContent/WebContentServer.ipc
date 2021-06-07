@@ -22,6 +22,7 @@ endpoint WebContentServer
 
     debug_request(String request, String argument) =|
     get_source() =|
+    inspect_dom_tree() =|
     js_console_initialize() =|
     js_console_input(String js_source) =|
 }
