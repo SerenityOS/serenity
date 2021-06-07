@@ -21,10 +21,11 @@ Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) co
 Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::EnterScope>(*this);
+    Optional<Bytecode::Register> last_value_reg;
     for (auto& child : children()) {
-        [[maybe_unused]] auto reg = child.generate_bytecode(generator);
+        last_value_reg = child.generate_bytecode(generator);
     }
-    return {};
+    return last_value_reg;
 }
 
 Optional<Bytecode::Register> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
