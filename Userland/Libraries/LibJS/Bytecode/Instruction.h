@@ -23,6 +23,8 @@
     O(LessThanEquals)             \
     O(AbstractInequals)           \
     O(AbstractEquals)             \
+    O(TypedInequals)              \
+    O(TypedEquals)                \
     O(NewString)                  \
     O(NewObject)                  \
     O(GetVariable)                \

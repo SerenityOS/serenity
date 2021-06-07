@@ -112,6 +112,16 @@ void AbstractEquals::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = Value(abstract_eq(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
 }
 
+void TypedInequals::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(!strict_eq(interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
+void TypedEquals::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = Value(strict_eq(interpreter.reg(m_src1), interpreter.reg(m_src2)));
+}
+
 void BitwiseAnd::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = bitwise_and(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
@@ -317,6 +327,16 @@ String AbstractInequals::to_string() const
 String AbstractEquals::to_string() const
 {
     return String::formatted("AbstractEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String TypedInequals::to_string() const
+{
+    return String::formatted("TypedInequals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
+}
+
+String TypedEquals::to_string() const
+{
+    return String::formatted("TypedEquals dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);
 }
 
 String BitwiseAnd::to_string() const
