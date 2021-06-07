@@ -17,8 +17,14 @@ bool AffineTransform::is_identity() const
 
 static float hypotenuse(float x, float y)
 {
-    // FIXME: This won't handle overflow :(
-    return sqrt(x * x + y * y);
+    Checked<float> hypotenuse_equation = sqrtf(x * x + y * y);
+
+    if(hypotenuse_equation.has_overflow())
+    {
+        dbgln("Overflow while computing hypotenuse");
+        return NumericLimits<float>::max();
+    }
+    else{return hypotenuse_equation.value();}
 }
 
 float AffineTransform::x_scale() const
