@@ -153,7 +153,7 @@ void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_target.has_value());
     auto result = interpreter.reg(m_result);
-    if (!result.as_bool())
+    if (!result.to_boolean())
         interpreter.jump(m_target.value());
 }
 
@@ -161,7 +161,7 @@ void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_target.has_value());
     auto result = interpreter.reg(m_result);
-    if (result.as_bool())
+    if (result.to_boolean())
         interpreter.jump(m_target.value());
 }
 
