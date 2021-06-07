@@ -23,7 +23,7 @@ public:
 
     void randomize_case();
 
-    bool operator==(const DNSName&) const;
+    bool operator==(const DNSName& other) const { return Traits::equals(*this, other); }
 
     class Traits : public AK::Traits<DNSName> {
     public:
