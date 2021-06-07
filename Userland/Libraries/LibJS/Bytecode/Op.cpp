@@ -52,6 +52,11 @@ void Load::execute(Bytecode::Interpreter& interpreter) const
     interpreter.reg(m_dst) = m_value;
 }
 
+void LoadRegister::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = interpreter.reg(m_src);
+}
+
 void Add::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.reg(m_dst) = add(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
@@ -282,6 +287,11 @@ void Return::execute(Bytecode::Interpreter& interpreter) const
 String Load::to_string() const
 {
     return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
+}
+
+String LoadRegister::to_string() const
+{
+    return String::formatted("LoadRegister dst:{}, src:{}", m_dst, m_src);
 }
 
 String Add::to_string() const

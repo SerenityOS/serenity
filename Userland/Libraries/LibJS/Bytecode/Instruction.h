@@ -11,6 +11,7 @@
 
 #define ENUMERATE_BYTECODE_OPS(O) \
     O(Load)                       \
+    O(LoadRegister)               \
     O(Add)                        \
     O(Sub)                        \
     O(Mul)                        \
