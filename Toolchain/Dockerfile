@@ -9,6 +9,7 @@ RUN apt-get update -y \
         cmake \
         curl \
         genext2fs \
+        gettext \
         git \
         imagemagick \
         libmpfr-dev \
