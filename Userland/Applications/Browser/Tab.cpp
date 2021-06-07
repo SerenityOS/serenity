@@ -11,6 +11,7 @@
 #include "BrowserWindow.h"
 #include "ConsoleWidget.h"
 #include "DownloadWidget.h"
+#include "InspectorWidget.h"
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <Applications/Browser/TabGML.h>
@@ -76,6 +77,20 @@ void Tab::view_source(const URL& url, const String& source)
     window->set_title(url.to_string());
     window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/filetype-text.png"));
     window->show();
+}
+
+void Tab::view_dom_tree(const String& dom_tree)
+{
+    auto window = GUI::Window::construct(&this->window());
+    window->resize(300, 500);
+    window->set_title("DOM inspector");
+    window->set_icon(Gfx::Bitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    window->set_main_widget<InspectorWidget>();
+
+    auto* inspector_widget = static_cast<InspectorWidget*>(window->main_widget());
+    inspector_widget->set_dom_json(dom_tree);
+    window->show();
+    window->move_to_front();
 }
 
 Tab::Tab(BrowserWindow& window, Type type)
@@ -262,6 +277,10 @@ Tab::Tab(BrowserWindow& window, Type type)
 
     hooks().on_get_source = [this](auto& url, auto& source) {
         view_source(url, source);
+    };
+
+    hooks().on_get_dom_tree = [this](auto& dom_tree) {
+        view_dom_tree(dom_tree);
     };
 
     hooks().on_js_console_output = [this](auto& method, auto& line) {

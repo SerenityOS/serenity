@@ -64,6 +64,7 @@ set(SOURCES
     DOM/Timer.cpp
     DOM/Window.cpp
     DOMTreeModel.cpp
+    DOMTreeJSONModel.cpp
     Dump.cpp
     FontCache.cpp
     HTML/AttributeNames.cpp
