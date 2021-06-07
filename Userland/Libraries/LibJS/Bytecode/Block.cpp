@@ -36,6 +36,13 @@ Block::~Block()
     }
 }
 
+void Block::seal()
+{
+    // FIXME: mprotect the instruction stream as PROT_READ
+    // This is currently not possible because instructions can have destructors (that clean up strings)
+    // Instructions should instead be destructor-less and refer to strings in a string table on the Bytecode::Block.
+}
+
 void Block::dump() const
 {
     Bytecode::InstructionStreamIterator it(instruction_stream());
