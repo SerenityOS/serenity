@@ -47,7 +47,7 @@ void endpwent()
         s_stream = nullptr;
     }
 
-    memset(&s_passwd_entry, 0, sizeof(s_passwd_entry));
+    explicit_bzero(&s_passwd_entry, sizeof(s_passwd_entry));
 
     s_name = {};
     s_passwd = {};
