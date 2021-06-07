@@ -39,13 +39,8 @@ void MagnifierWidget::set_scale_factor(int scale_factor)
 
 void MagnifierWidget::sync()
 {
-    m_mouse_position = GUI::WindowServerConnection::the().get_global_cursor_position();
-    m_desktop_display_scale = GUI::WindowServerConnection::the().get_desktop_display_scale();
-
-    // Grab and paint our screenshot.
-    Gfx::IntSize region_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
-    Gfx::Rect region { (m_mouse_position.x() * m_desktop_display_scale) - (region_size.width() / 2), (m_mouse_position.y() * m_desktop_display_scale) - (region_size.height() / 2), region_size.width(), region_size.height() };
-    m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap(region).bitmap();
+    Gfx::IntSize grab_size { size().width() / m_scale_factor, size().height() / m_scale_factor };
+    m_grabbed_bitmap = GUI::WindowServerConnection::the().get_screen_bitmap_around_cursor(grab_size).bitmap();
     update();
 }
 

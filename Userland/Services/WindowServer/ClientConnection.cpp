@@ -904,6 +904,20 @@ Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bit
     return bitmap.to_shareable_bitmap();
 }
 
+Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::get_screen_bitmap_around_cursor(Gfx::IntSize const& size)
+{
+    auto scale_factor = WindowManager::the().scale_factor();
+    auto cursor_location = Screen::the().cursor_location();
+    Gfx::Rect rect { (cursor_location.x() * scale_factor) - (size.width() / 2), (cursor_location.y() * scale_factor) - (size.height() / 2), size.width(), size.height() };
+
+    // Recompose the screen to make sure the cursor is painted in the location we think it is.
+    // FIXME: This is rather wasteful. We can probably think of a way to avoid this.
+    Compositor::the().compose();
+
+    auto bitmap = Compositor::the().front_bitmap_for_screenshot({}).cropped(rect);
+    return bitmap->to_shareable_bitmap();
+}
+
 Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_modified(i32 window_id)
 {
     auto it = m_windows.find(window_id);
