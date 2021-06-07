@@ -26,6 +26,7 @@ class UHCIController final : public PCI::Device {
 public:
     static void detect();
     static UHCIController& the();
+
     virtual ~UHCIController() override;
 
     virtual const char* purpose() const override { return "UHCI"; }
@@ -38,6 +39,9 @@ public:
     void do_debug_transfer();
 
     KResultOr<size_t> submit_control_transfer(Transfer& transfer);
+
+    RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber);
+    RefPtr<USB::Device> const get_device_from_address(u8 device_address);
 
 private:
     UHCIController(PCI::Address, PCI::ID);
@@ -89,6 +93,8 @@ private:
     OwnPtr<Region> m_framelist;
     OwnPtr<Region> m_qh_pool;
     OwnPtr<Region> m_td_pool;
+
+    Array<RefPtr<USB::Device>, 2> m_devices; // Devices connected to the root ports (of which there are two)
 };
 
 }
