@@ -27,6 +27,11 @@ Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& g
     return {};
 }
 
+Optional<Bytecode::Register> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
+{
+    return {};
+}
+
 Optional<Bytecode::Register> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     return m_expression->generate_bytecode(generator);
