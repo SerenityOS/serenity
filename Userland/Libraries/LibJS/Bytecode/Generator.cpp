@@ -31,9 +31,14 @@ OwnPtr<Block> Generator::generate(ASTNode const& node)
     return move(generator.m_block);
 }
 
-void Generator::append(NonnullOwnPtr<Instruction> instruction)
+void Generator::grow(size_t additional_size)
 {
-    m_block->append({}, move(instruction));
+    m_block->grow(additional_size);
+}
+
+void* Generator::next_slot()
+{
+    return m_block->next_slot();
 }
 
 Register Generator::allocate_register()
@@ -44,7 +49,7 @@ Register Generator::allocate_register()
 
 Label Generator::make_label() const
 {
-    return Label { m_block->instructions().size() };
+    return Label { m_block->instruction_stream().size() };
 }
 
 Label Generator::nearest_continuable_scope() const

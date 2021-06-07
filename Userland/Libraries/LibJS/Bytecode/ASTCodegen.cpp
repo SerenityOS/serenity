@@ -180,7 +180,7 @@ Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generat
     for (auto& arg : m_arguments)
         argument_registers.append(*arg.value->generate_bytecode(generator));
     auto dst_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Call>(dst_reg, *callee_reg, this_reg, argument_registers);
+    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), dst_reg, *callee_reg, this_reg, argument_registers);
     return dst_reg;
 }
 

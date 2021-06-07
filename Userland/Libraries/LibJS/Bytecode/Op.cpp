@@ -11,6 +11,40 @@
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
+namespace JS::Bytecode {
+
+void Instruction::execute(Bytecode::Interpreter& interpreter) const
+{
+#define __BYTECODE_OP(op)       \
+    case Instruction::Type::op: \
+        return static_cast<Bytecode::Op::op const&>(*this).execute(interpreter);
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+#undef __BYTECODE_OP
+}
+
+String Instruction::to_string() const
+{
+#define __BYTECODE_OP(op)       \
+    case Instruction::Type::op: \
+        return static_cast<Bytecode::Op::op const&>(*this).to_string();
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+#undef __BYTECODE_OP
+}
+
+}
+
 namespace JS::Bytecode::Op {
 
 void Load::execute(Bytecode::Interpreter& interpreter) const
@@ -108,12 +142,12 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
 
     Value return_value;
 
-    if (m_arguments.is_empty()) {
+    if (m_argument_count == 0) {
         return_value = interpreter.vm().call(function, this_value);
     } else {
         MarkedValueList argument_values { interpreter.vm().heap() };
-        for (auto& arg : m_arguments) {
-            argument_values.append(interpreter.reg(arg));
+        for (size_t i = 0; i < m_argument_count; ++i) {
+            argument_values.append(interpreter.reg(m_arguments[i]));
         }
         return_value = interpreter.vm().call(function, this_value, move(argument_values));
     }
@@ -227,11 +261,11 @@ String Call::to_string() const
 {
     StringBuilder builder;
     builder.appendff("Call dst:{}, callee:{}, this:{}", m_dst, m_callee, m_this_value);
-    if (!m_arguments.is_empty()) {
+    if (m_argument_count != 0) {
         builder.append(", arguments:[");
-        for (size_t i = 0; i < m_arguments.size(); ++i) {
+        for (size_t i = 0; i < m_argument_count; ++i) {
             builder.appendff("{}", m_arguments[i]);
-            if (i != m_arguments.size() - 1)
+            if (i != m_argument_count - 1)
                 builder.append(',');
         }
         builder.append(']');

@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibJS/Bytecode/Label.h>
+#include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -21,10 +22,19 @@ public:
     template<typename OpType, typename... Args>
     OpType& emit(Args&&... args)
     {
-        auto instruction = make<OpType>(forward<Args>(args)...);
-        auto* ptr = instruction.ptr();
-        append(move(instruction));
-        return *ptr;
+        void* slot = next_slot();
+        grow(sizeof(OpType));
+        new (slot) OpType(forward<Args>(args)...);
+        return *static_cast<OpType*>(slot);
+    }
+
+    template<typename OpType, typename... Args>
+    OpType& emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
+    {
+        void* slot = next_slot();
+        grow(sizeof(OpType) + extra_register_slots * sizeof(Register));
+        new (slot) OpType(forward<Args>(args)...);
+        return *static_cast<OpType*>(slot);
     }
 
     Label make_label() const;
@@ -38,7 +48,8 @@ private:
     Generator();
     ~Generator();
 
-    void append(NonnullOwnPtr<Instruction>);
+    void grow(size_t);
+    void* next_slot();
 
     OwnPtr<Block> m_block;
     u32 m_next_register { 1 };

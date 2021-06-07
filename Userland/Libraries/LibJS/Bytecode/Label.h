@@ -29,6 +29,6 @@ template<>
 struct AK::Formatter<JS::Bytecode::Label> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, JS::Bytecode::Label const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "@{}", value.address());
+        return AK::Formatter<FormatString>::format(builder, "@{:x}", value.address());
     }
 };

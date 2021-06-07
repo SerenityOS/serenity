@@ -18,14 +18,14 @@ namespace JS::Bytecode::Op {
 class Load final : public Instruction {
 public:
     Load(Register dst, Value value)
-        : m_dst(dst)
+        : Instruction(Type::Load)
+        , m_dst(dst)
         , m_value(value)
     {
     }
 
-    virtual ~Load() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -35,15 +35,15 @@ private:
 class Add final : public Instruction {
 public:
     Add(Register dst, Register src1, Register src2)
-        : m_dst(dst)
+        : Instruction(Type::Add)
+        , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
     {
     }
 
-    virtual ~Add() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -54,15 +54,15 @@ private:
 class Sub final : public Instruction {
 public:
     Sub(Register dst, Register src1, Register src2)
-        : m_dst(dst)
+        : Instruction(Type::Sub)
+        , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
     {
     }
 
-    virtual ~Sub() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -73,15 +73,15 @@ private:
 class LessThan final : public Instruction {
 public:
     LessThan(Register dst, Register src1, Register src2)
-        : m_dst(dst)
+        : Instruction(Type::LessThan)
+        , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
     {
     }
 
-    virtual ~LessThan() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -92,15 +92,15 @@ private:
 class AbstractInequals final : public Instruction {
 public:
     AbstractInequals(Register dst, Register src1, Register src2)
-        : m_dst(dst)
+        : Instruction(Type::AbstractEquals)
+        , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
     {
     }
 
-    virtual ~AbstractInequals() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -111,15 +111,15 @@ private:
 class AbstractEquals final : public Instruction {
 public:
     AbstractEquals(Register dst, Register src1, Register src2)
-        : m_dst(dst)
+        : Instruction(Type::AbstractEquals)
+        , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)
     {
     }
 
-    virtual ~AbstractEquals() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -130,14 +130,14 @@ private:
 class NewString final : public Instruction {
 public:
     NewString(Register dst, String string)
-        : m_dst(dst)
+        : Instruction(Type::NewString)
+        , m_dst(dst)
         , m_string(move(string))
     {
     }
 
-    virtual ~NewString() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -147,13 +147,13 @@ private:
 class NewObject final : public Instruction {
 public:
     explicit NewObject(Register dst)
-        : m_dst(dst)
+        : Instruction(Type::NewObject)
+        , m_dst(dst)
     {
     }
 
-    virtual ~NewObject() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -162,14 +162,14 @@ private:
 class SetVariable final : public Instruction {
 public:
     SetVariable(FlyString identifier, Register src)
-        : m_identifier(move(identifier))
+        : Instruction(Type::SetVariable)
+        , m_identifier(move(identifier))
         , m_src(src)
     {
     }
 
-    virtual ~SetVariable() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     FlyString m_identifier;
@@ -179,14 +179,14 @@ private:
 class GetVariable final : public Instruction {
 public:
     GetVariable(Register dst, FlyString identifier)
-        : m_dst(dst)
+        : Instruction(Type::GetVariable)
+        , m_dst(dst)
         , m_identifier(move(identifier))
     {
     }
 
-    virtual ~GetVariable() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -196,15 +196,15 @@ private:
 class GetById final : public Instruction {
 public:
     GetById(Register dst, Register base, FlyString property)
-        : m_dst(dst)
+        : Instruction(Type::GetById)
+        , m_dst(dst)
         , m_base(base)
         , m_property(move(property))
     {
     }
 
-    virtual ~GetById() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_dst;
@@ -215,15 +215,15 @@ private:
 class PutById final : public Instruction {
 public:
     PutById(Register base, FlyString property, Register src)
-        : m_base(base)
+        : Instruction(Type::PutById)
+        , m_base(base)
         , m_property(move(property))
         , m_src(src)
     {
     }
 
-    virtual ~PutById() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_base;
@@ -234,15 +234,15 @@ private:
 class Jump final : public Instruction {
 public:
     explicit Jump(Optional<Label> target = {})
-        : m_target(move(target))
+        : Instruction(Type::Jump)
+        , m_target(move(target))
     {
     }
 
     void set_target(Optional<Label> target) { m_target = move(target); }
 
-    virtual ~Jump() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Optional<Label> m_target;
@@ -251,16 +251,16 @@ private:
 class JumpIfFalse final : public Instruction {
 public:
     explicit JumpIfFalse(Register result, Optional<Label> target = {})
-        : m_result(result)
+        : Instruction(Type::JumpIfFalse)
+        , m_result(result)
         , m_target(move(target))
     {
     }
 
     void set_target(Optional<Label> target) { m_target = move(target); }
 
-    virtual ~JumpIfFalse() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_result;
@@ -270,53 +270,59 @@ private:
 class JumpIfTrue final : public Instruction {
 public:
     explicit JumpIfTrue(Register result, Optional<Label> target = {})
-        : m_result(result)
+        : Instruction(Type::JumpIfTrue)
+        , m_result(result)
         , m_target(move(target))
     {
     }
 
     void set_target(Optional<Label> target) { m_target = move(target); }
 
-    virtual ~JumpIfTrue() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Register m_result;
     Optional<Label> m_target;
 };
 
+// NOTE: This instruction is variable-width depending on the number of arguments!
 class Call final : public Instruction {
 public:
-    Call(Register dst, Register callee, Register this_value, Vector<Register> arguments)
-        : m_dst(dst)
+    Call(Register dst, Register callee, Register this_value, Vector<Register> const& arguments)
+        : Instruction(Type::Call)
+        , m_dst(dst)
         , m_callee(callee)
         , m_this_value(this_value)
-        , m_arguments(move(arguments))
+        , m_argument_count(arguments.size())
     {
+        for (size_t i = 0; i < m_argument_count; ++i)
+            m_arguments[i] = arguments[i];
     }
 
-    virtual ~Call() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+    size_t length() const { return sizeof(*this) + sizeof(Register) * m_argument_count; }
 
 private:
     Register m_dst;
     Register m_callee;
     Register m_this_value;
-    Vector<Register> m_arguments;
+    size_t m_argument_count { 0 };
+    Register m_arguments[];
 };
 
 class EnterScope final : public Instruction {
 public:
     explicit EnterScope(ScopeNode const& scope_node)
-        : m_scope_node(scope_node)
+        : Instruction(Type::EnterScope)
+        , m_scope_node(scope_node)
     {
     }
 
-    virtual ~EnterScope() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     ScopeNode const& m_scope_node;
@@ -325,13 +331,13 @@ private:
 class Return final : public Instruction {
 public:
     explicit Return(Optional<Register> argument)
-        : m_argument(move(argument))
+        : Instruction(Type::Return)
+        , m_argument(move(argument))
     {
     }
 
-    virtual ~Return() override { }
-    virtual void execute(Bytecode::Interpreter&) const override;
-    virtual String to_string() const override;
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
 
 private:
     Optional<Register> m_argument;
