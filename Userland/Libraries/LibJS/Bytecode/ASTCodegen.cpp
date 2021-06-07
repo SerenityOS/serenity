@@ -298,4 +298,9 @@ Optional<Bytecode::Register> ContinueStatement::generate_bytecode(Bytecode::Gene
     return {};
 }
 
+Optional<Bytecode::Register> DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
+{
+    return {};
+}
+
 }
