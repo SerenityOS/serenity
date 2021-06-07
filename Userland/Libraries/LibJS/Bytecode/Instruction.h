@@ -13,6 +13,8 @@
     O(Load)                       \
     O(Add)                        \
     O(Sub)                        \
+    O(Mul)                        \
+    O(Div)                        \
     O(LessThan)                   \
     O(AbstractInequals)           \
     O(AbstractEquals)             \
