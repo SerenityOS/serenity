@@ -15,10 +15,8 @@
 #include <errno.h>
 #include <grp.h>
 #include <pwd.h>
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
 #    include <shadow.h>
-#else
-#    include <LibC/shadow.h>
 #endif
 #include <stdio.h>
 #include <string.h>
@@ -62,7 +60,7 @@ Result<Account, String> Account::from_passwd(const passwd& pwd, const spwd& spwd
 {
     Account account(pwd, spwd, get_extra_gids(pwd));
     endpwent();
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     endspent();
 #endif
     return account;
@@ -81,7 +79,7 @@ Result<Account, String> Account::from_name(const char* username)
     spwd spwd_dummy = {};
     spwd_dummy.sp_namp = const_cast<char*>(username);
     spwd_dummy.sp_pwdp = const_cast<char*>("");
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     auto* spwd = getspnam(username);
     if (!spwd)
         spwd = &spwd_dummy;
@@ -104,7 +102,7 @@ Result<Account, String> Account::from_uid(uid_t uid)
     spwd spwd_dummy = {};
     spwd_dummy.sp_namp = pwd->pw_name;
     spwd_dummy.sp_pwdp = const_cast<char*>("");
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     auto* spwd = getspnam(pwd->pw_name);
     if (!spwd)
         spwd = &spwd_dummy;
@@ -211,7 +209,7 @@ String Account::generate_passwd_file() const
     return builder.to_string();
 }
 
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
 String Account::generate_shadow_file() const
 {
     StringBuilder builder;
@@ -259,13 +257,13 @@ bool Account::sync()
 {
     auto new_passwd_file_content = generate_passwd_file();
     VERIFY(!new_passwd_file_content.is_null());
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     auto new_shadow_file_content = generate_shadow_file();
     VERIFY(!new_shadow_file_content.is_null());
 #endif
 
     char new_passwd_name[] = "/etc/passwd.XXXXXX";
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     char new_shadow_name[] = "/etc/shadow.XXXXXX";
 #endif
 
@@ -276,7 +274,7 @@ bool Account::sync()
             VERIFY_NOT_REACHED();
         }
         ScopeGuard new_passwd_fd_guard = [new_passwd_fd] { close(new_passwd_fd); };
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
         auto new_shadow_fd = mkstemp(new_shadow_name);
         if (new_shadow_fd < 0) {
             perror("mkstemp");
@@ -297,7 +295,7 @@ bool Account::sync()
         }
         VERIFY(static_cast<size_t>(nwritten) == new_passwd_file_content.length());
 
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
         nwritten = write(new_shadow_fd, new_shadow_file_content.characters(), new_shadow_file_content.length());
         if (nwritten < 0) {
             perror("write");
@@ -312,7 +310,7 @@ bool Account::sync()
         return false;
     }
 
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     if (rename(new_shadow_name, "/etc/shadow") < 0) {
         perror("Failed to install new /etc/shadow");
         return false;

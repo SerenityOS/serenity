@@ -11,14 +11,19 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <pwd.h>
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
 #    include <shadow.h>
-#else
-#    include <LibC/shadow.h>
 #endif
 #include <sys/types.h>
 
 namespace Core {
+
+#ifdef AK_OS_BSD_GENERIC
+struct spwd {
+    char* sp_namp;
+    char* sp_pwdp;
+};
+#endif
 
 class Account {
 public:
@@ -56,7 +61,7 @@ private:
     Account(const passwd& pwd, const spwd& spwd, Vector<gid_t> extra_gids);
 
     String generate_passwd_file() const;
-#ifndef AK_OS_MACOS
+#ifndef AK_OS_BSD_GENERIC
     String generate_shadow_file() const;
 #endif
 
