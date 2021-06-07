@@ -114,17 +114,17 @@ void AbstractEquals::execute(Bytecode::Interpreter& interpreter) const
 
 void BitwiseAnd::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = Value(bitwise_and(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+    interpreter.reg(m_dst) = bitwise_and(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
 void BitwiseOr::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = Value(bitwise_or(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+    interpreter.reg(m_dst) = bitwise_or(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
 void BitwiseXor::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = Value(bitwise_xor(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)));
+    interpreter.reg(m_dst) = bitwise_xor(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2));
 }
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
