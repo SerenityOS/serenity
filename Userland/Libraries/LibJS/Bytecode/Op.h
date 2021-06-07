@@ -146,10 +146,67 @@ private:
     Register m_src2;
 };
 
+class GreaterThan final : public Instruction {
+public:
+    GreaterThan(Register dst, Register src1, Register src2)
+        : Instruction(Type::GreaterThan)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class GreaterThanEquals final : public Instruction {
+public:
+    GreaterThanEquals(Register dst, Register src1, Register src2)
+        : Instruction(Type::GreaterThanEquals)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
 class LessThan final : public Instruction {
 public:
     LessThan(Register dst, Register src1, Register src2)
         : Instruction(Type::LessThan)
+        , m_dst(dst)
+        , m_src1(src1)
+        , m_src2(src2)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Register m_src1;
+    Register m_src2;
+};
+
+class LessThanEquals final : public Instruction {
+public:
+    LessThanEquals(Register dst, Register src1, Register src2)
+        : Instruction(Type::LessThanEquals)
         , m_dst(dst)
         , m_src1(src1)
         , m_src2(src2)

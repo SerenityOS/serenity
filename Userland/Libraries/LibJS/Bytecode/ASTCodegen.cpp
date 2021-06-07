@@ -61,8 +61,17 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     case BinaryOp::Exponentiation:
         generator.emit<Bytecode::Op::Exp>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
+    case BinaryOp::GreaterThan:
+        generator.emit<Bytecode::Op::GreaterThan>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::GreaterThanEquals:
+        generator.emit<Bytecode::Op::GreaterThanEquals>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
     case BinaryOp::LessThan:
         generator.emit<Bytecode::Op::LessThan>(dst_reg, *lhs_reg, *rhs_reg);
+        return dst_reg;
+    case BinaryOp::LessThanEquals:
+        generator.emit<Bytecode::Op::LessThanEquals>(dst_reg, *lhs_reg, *rhs_reg);
         return dst_reg;
     case BinaryOp::AbstractInequals:
         generator.emit<Bytecode::Op::AbstractInequals>(dst_reg, *lhs_reg, *rhs_reg);
