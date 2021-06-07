@@ -8,6 +8,7 @@
 
 #include <AK/Optional.h>
 #include <AK/Random.h>
+#include <AK/Vector.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/Widget.h>
@@ -81,7 +82,7 @@ private:
     struct Obstacle {
         const float width { 20 };
         Color color { Color::DarkGray };
-        float x;
+        float x {};
         float gap_top_y { 200 };
         float gap_height { 175 };
 
@@ -102,14 +103,49 @@ private:
         }
     };
 
+    struct Cloud {
+        const Vector<RefPtr<Gfx::Bitmap>> cloud_bitmaps {
+            Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_0.png"),
+            Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_1.png"),
+            Gfx::Bitmap::load_from_file("/res/icons/flappybug/cloud_2.png"),
+        };
+        float x {};
+        float y {};
+        int bitmap_id {};
+
+        Cloud()
+        {
+            reset();
+            x = get_random_uniform(game_width);
+        }
+
+        void reset()
+        {
+            bitmap_id = get_random_uniform(cloud_bitmaps.size());
+            x = game_width + bitmap()->width();
+            y = get_random_uniform(game_height / 2) + bitmap()->height();
+        }
+
+        RefPtr<Gfx::Bitmap> bitmap() const
+        {
+            return cloud_bitmaps[bitmap_id];
+        }
+
+        Gfx::IntRect rect() const
+        {
+            return { (int)x - bitmap()->width(), (int)y - bitmap()->height(), bitmap()->width(), bitmap()->height() };
+        }
+    };
+
     Bug m_bug;
     Obstacle m_obstacle;
+    Cloud m_cloud;
     bool m_active;
-    Optional<float> m_highscore;
-    float m_last_score;
-    float m_difficulty;
-    float m_restart_cooldown;
-    Color m_sky_color { 100, 100, 200 };
+    Optional<float> m_highscore {};
+    float m_last_score {};
+    float m_difficulty {};
+    float m_restart_cooldown {};
+    const RefPtr<Gfx::Bitmap> m_background_bitmap { Gfx::Bitmap::load_from_file("/res/icons/flappybug/background.png") };
 };
 
 }
