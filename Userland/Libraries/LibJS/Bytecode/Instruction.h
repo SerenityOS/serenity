@@ -9,14 +9,51 @@
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
 
+#define ENUMERATE_BYTECODE_OPS(O) \
+    O(Load)                       \
+    O(Add)                        \
+    O(Sub)                        \
+    O(LessThan)                   \
+    O(AbstractInequals)           \
+    O(AbstractEquals)             \
+    O(NewString)                  \
+    O(NewObject)                  \
+    O(GetVariable)                \
+    O(SetVariable)                \
+    O(PutById)                    \
+    O(GetById)                    \
+    O(Jump)                       \
+    O(JumpIfFalse)                \
+    O(JumpIfTrue)                 \
+    O(Call)                       \
+    O(EnterScope)                 \
+    O(Return)
+
 namespace JS::Bytecode {
 
 class Instruction {
 public:
-    virtual ~Instruction();
+    enum class Type {
+#define __BYTECODE_OP(op) \
+    op,
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+#undef __BYTECODE_OP
+    };
 
-    virtual String to_string() const = 0;
-    virtual void execute(Bytecode::Interpreter&) const = 0;
+    Type type() const { return m_type; }
+    size_t length() const;
+    String to_string() const;
+    void execute(Bytecode::Interpreter&) const;
+    static void destroy(Instruction&);
+
+protected:
+    explicit Instruction(Type type)
+        : m_type(type)
+    {
+    }
+
+private:
+    Type m_type {};
 };
 
 }

@@ -52,12 +52,12 @@ Value Interpreter::run(Bytecode::Block const& block)
     m_register_windows.append(make<RegisterWindow>());
     registers().resize(block.register_count());
 
-    size_t pc = 0;
-    while (pc < block.instructions().size()) {
-        auto& instruction = block.instructions()[pc];
+    Bytecode::InstructionStreamIterator pc(block.instruction_stream());
+    while (!pc.at_end()) {
+        auto& instruction = *pc;
         instruction.execute(*this);
         if (m_pending_jump.has_value()) {
-            pc = m_pending_jump.release_value();
+            pc.jump(m_pending_jump.release_value());
             continue;
         }
         if (!m_return_value.is_empty())
