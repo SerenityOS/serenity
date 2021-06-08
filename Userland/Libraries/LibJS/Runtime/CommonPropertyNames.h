@@ -202,6 +202,7 @@ namespace JS {
     P(preventExtensions)                     \
     P(propertyIsEnumerable)                  \
     P(prototype)                             \
+    P(proxy)                                 \
     P(push)                                  \
     P(race)                                  \
     P(random)                                \
@@ -212,6 +213,8 @@ namespace JS {
     P(repeat)                                \
     P(resolve)                               \
     P(reverse)                               \
+    P(revocable)                             \
+    P(revoke)                                \
     P(round)                                 \
     P(seal)                                  \
     P(set)                                   \
