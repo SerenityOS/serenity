@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibJS/Bytecode/Block.h>
 #include <LibJS/Forward.h>
 
 #define ENUMERATE_BYTECODE_OPS(O) \
@@ -81,6 +82,47 @@ protected:
 
 private:
     Type m_type {};
+};
+
+template<typename OpType>
+class InstructionHandle {
+public:
+    InstructionHandle() = default;
+
+    InstructionHandle(size_t offset, Block* block)
+        : m_offset(offset)
+        , m_block(block)
+    {
+    }
+
+    OpType* operator->() const
+    {
+        VERIFY(m_block);
+        return reinterpret_cast<OpType*>(m_block->buffer().data() + m_offset);
+    }
+
+    OpType& operator*() const
+    {
+        VERIFY(m_block);
+        return *reinterpret_cast<OpType*>(m_block->buffer().data() + m_offset);
+    }
+
+    template<typename T>
+    InstructionHandle<OpType>& operator=(InstructionHandle<T> const& other) requires(IsBaseOf<OpType, T>)
+    {
+        m_offset = other.offset();
+        m_block = other.block();
+        return *this;
+    }
+
+    size_t offset() const { return m_offset; }
+    Block* block() const { return m_block; }
+
+private:
+    friend class Block;
+
+    size_t m_offset { 0 };
+    Block* m_block { nullptr };
 };
 
 }

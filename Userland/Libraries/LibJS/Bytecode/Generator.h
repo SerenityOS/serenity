@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <LibJS/Bytecode/Block.h>
 #include <LibJS/Bytecode/Label.h>
-#include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -20,21 +20,15 @@ public:
     Register allocate_register();
 
     template<typename OpType, typename... Args>
-    OpType& emit(Args&&... args)
+    InstructionHandle<OpType> emit(Args&&... args)
     {
-        void* slot = next_slot();
-        grow(sizeof(OpType));
-        new (slot) OpType(forward<Args>(args)...);
-        return *static_cast<OpType*>(slot);
+        return make_instruction<OpType>(0, forward<Args>(args)...);
     }
 
     template<typename OpType, typename... Args>
-    OpType& emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
+    InstructionHandle<OpType> emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
     {
-        void* slot = next_slot();
-        grow(sizeof(OpType) + extra_register_slots * sizeof(Register));
-        new (slot) OpType(forward<Args>(args)...);
-        return *static_cast<OpType*>(slot);
+        return make_instruction<OpType>(extra_register_slots, forward<Args>(args)...);
     }
 
     Label make_label() const;
@@ -48,8 +42,15 @@ private:
     Generator();
     ~Generator();
 
-    void grow(size_t);
-    void* next_slot();
+    template<typename OpType, typename... Args>
+    InstructionHandle<OpType> make_instruction(size_t extra_register_slots, Args&&... args)
+    {
+        auto& buffer = m_block->buffer();
+        auto offset = buffer.size();
+        buffer.resize(buffer.size() + sizeof(OpType) + extra_register_slots * sizeof(Register));
+        new (buffer.data() + offset) OpType(forward<Args>(args)...);
+        return InstructionHandle<OpType>(offset, m_block);
+    }
 
     OwnPtr<Block> m_block;
     u32 m_next_register { 1 };
