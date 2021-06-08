@@ -165,6 +165,14 @@ void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_target.value());
 }
 
+void JumpIfNullish::execute(Bytecode::Interpreter& interpreter) const
+{
+    VERIFY(m_target.has_value());
+    auto result = interpreter.reg(m_result);
+    if (result.is_nullish())
+        interpreter.jump(m_target.value());
+}
+
 void Call::execute(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
@@ -270,6 +278,13 @@ String JumpIfTrue::to_string() const
     if (m_target.has_value())
         return String::formatted("JumpIfTrue result:{}, target:{}", m_result, m_target.value());
     return String::formatted("JumpIfTrue result:{}, target:<empty>", m_result);
+}
+
+String JumpIfNullish::to_string() const
+{
+    if (m_target.has_value())
+        return String::formatted("JumpIfNullish result:{}, target:{}", m_result, m_target.value());
+    return String::formatted("JumpIfNullish result:{}, target:<empty>", m_result);
 }
 
 String Call::to_string() const

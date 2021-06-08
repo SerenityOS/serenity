@@ -35,6 +35,7 @@
     O(Jump)                       \
     O(JumpIfFalse)                \
     O(JumpIfTrue)                 \
+    O(JumpIfNullish)              \
     O(Call)                       \
     O(EnterScope)                 \
     O(Return)                     \
