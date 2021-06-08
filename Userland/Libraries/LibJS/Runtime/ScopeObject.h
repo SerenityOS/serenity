@@ -21,6 +21,7 @@ class ScopeObject : public Object {
 public:
     virtual Optional<Variable> get_from_scope(const FlyString&) const = 0;
     virtual void put_to_scope(const FlyString&, Variable) = 0;
+    virtual bool delete_from_scope(FlyString const&) = 0;
     virtual bool has_this_binding() const = 0;
     virtual Value get_this_binding(GlobalObject&) const = 0;
 

@@ -161,6 +161,29 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
     global_object.put(name, value);
 }
 
+bool VM::delete_variable(FlyString const& name)
+{
+    ScopeObject* specific_scope = nullptr;
+    Optional<Variable> possible_match;
+    if (!m_call_stack.is_empty()) {
+        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+            possible_match = scope->get_from_scope(name);
+            if (possible_match.has_value()) {
+                specific_scope = scope;
+                break;
+            }
+        }
+    }
+
+    if (!possible_match.has_value())
+        return false;
+    if (possible_match.value().declaration_kind == DeclarationKind::Const)
+        return false;
+
+    VERIFY(specific_scope);
+    return specific_scope->delete_from_scope(name);
+}
+
 void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
 {
     set_variable(target, move(value), global_object, first_assignment, specific_scope);

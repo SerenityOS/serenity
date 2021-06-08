@@ -62,6 +62,11 @@ void LexicalEnvironment::put_to_scope(const FlyString& name, Variable variable)
     m_variables.set(name, variable);
 }
 
+bool LexicalEnvironment::delete_from_scope(FlyString const& name)
+{
+    return m_variables.remove(name);
+}
+
 bool LexicalEnvironment::has_super_binding() const
 {
     return m_environment_record_type == EnvironmentRecordType::Function && this_binding_status() != ThisBindingStatus::Lexical && m_home_object.is_object();

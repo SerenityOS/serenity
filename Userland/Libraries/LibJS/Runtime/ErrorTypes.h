@@ -130,6 +130,7 @@
                                         "target is non-extensible")                                                                     \
     M(ProxyTwoArguments, "Proxy constructor requires at least two arguments")                                                           \
     M(ReduceNoInitial, "Reduce of empty array with no initial value")                                                                   \
+    M(ReferenceNullishDeleteProperty, "Cannot delete property '{}' of {}")                                                              \
     M(ReferenceNullishGetProperty, "Cannot get property '{}' of {}")                                                                    \
     M(ReferenceNullishSetProperty, "Cannot set property '{}' of {}")                                                                    \
     M(ReferencePrimitiveSetProperty, "Cannot set property '{}' of {} '{}'")                                                             \

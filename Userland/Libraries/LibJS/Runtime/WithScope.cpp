@@ -34,6 +34,11 @@ void WithScope::put_to_scope(const FlyString& name, Variable variable)
     m_object.put(name, variable.value);
 }
 
+bool WithScope::delete_from_scope(FlyString const& name)
+{
+    return m_object.delete_property(name);
+}
+
 bool WithScope::has_this_binding() const
 {
     return parent()->has_this_binding();
