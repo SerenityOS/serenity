@@ -42,7 +42,9 @@ public:
     static NonnullOwnPtr<Block> create();
     ~Block();
 
-    void seal();
+    void seal() const;
+    void unseal();
+
     void dump() const;
     ReadonlyBytes instruction_stream() const { return ReadonlyBytes { m_buffer, m_buffer_size }; }
 
