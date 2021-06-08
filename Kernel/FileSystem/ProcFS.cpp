@@ -18,6 +18,8 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
+#include <Kernel/Devices/USB/UHCIController.h>
+#include <Kernel/Devices/USB/USBDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -49,6 +51,8 @@ namespace Kernel {
 enum ProcParentDirectory {
     PDI_AbstractRoot = 0,
     PDI_Root,
+    PDI_Root_bus,
+    PDI_Root_bus_usb,
     PDI_Root_sys,
     PDI_Root_net,
     PDI_PID,
@@ -81,6 +85,7 @@ enum ProcFileType {
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
     FI_Root_net,  // directory
+    FI_Root_bus,  // directory
     __FI_Root_End,
 
     FI_Root_sys_variable,
@@ -90,6 +95,9 @@ enum ProcFileType {
     FI_Root_net_tcp,
     FI_Root_net_udp,
     FI_Root_net_local,
+
+    FI_Root_bus_usb,
+    FI_Root_bus_usb_device,
 
     FI_PID,
 
@@ -142,6 +150,13 @@ static inline size_t to_sys_index(const InodeIdentifier& identifier)
     return identifier.index().value() >> 16u;
 }
 
+static inline u8 to_usb_device_address(const InodeIdentifier& identifier)
+{
+    VERIFY(to_proc_parent_directory(identifier) == PDI_Root_bus_usb);
+    VERIFY(to_proc_file_type(identifier) == FI_Root_bus_usb_device);
+    return (identifier.index().value() >> 16u) & 0xff;
+}
+
 static inline InodeIdentifier to_identifier(unsigned fsid, ProcParentDirectory parent, ProcessID pid, ProcFileType proc_file_type)
 {
     return { fsid, ((unsigned)parent << 12u) | ((unsigned)pid.value() << 16u) | (unsigned)proc_file_type };
@@ -163,6 +178,12 @@ static inline InodeIdentifier sys_var_to_identifier(unsigned fsid, unsigned inde
     return { fsid, (PDI_Root_sys << 12u) | (index << 16u) | FI_Root_sys_variable };
 }
 
+static inline InodeIdentifier usb_device_address_to_identifier(unsigned fsid, unsigned device_address)
+{
+    VERIFY(device_address < 127);
+    return { fsid, (PDI_Root_bus_usb << 12u) | (device_address << 16u) | FI_Root_bus_usb_device };
+}
+
 static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
 {
     switch (to_proc_parent_directory(identifier)) {
@@ -173,6 +194,10 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
         return { identifier.fsid(), FI_Root_sys };
     case PDI_Root_net:
         return { identifier.fsid(), FI_Root_net };
+    case PDI_Root_bus:
+        return { identifier.fsid(), FI_Root_bus };
+    case PDI_Root_bus_usb:
+        return to_identifier(identifier.fsid(), PDI_Root_bus, to_pid(identifier), FI_Root_bus_usb);
     case PDI_PID:
         return to_identifier(identifier.fsid(), PDI_Root, to_pid(identifier), FI_PID);
     case PDI_PID_fd:
@@ -217,6 +242,8 @@ static inline bool is_directory(const InodeIdentifier& identifier)
     case FI_Root:
     case FI_Root_sys:
     case FI_Root_net:
+    case FI_Root_bus:
+    case FI_Root_bus_usb:
     case FI_PID:
     case FI_PID_fd:
     case FI_PID_stacks:
@@ -531,6 +558,33 @@ static bool procfs$net_tcp(InodeIdentifier, KBufferBuilder& builder)
         obj.add("bytes_out", socket.bytes_out());
     });
     array.finish();
+    return true;
+}
+
+static bool procfs$usb_entry(InodeIdentifier identifier, KBufferBuilder& builder)
+{
+    u8 dev_id = to_usb_device_address(identifier);
+    auto const& device = USB::UHCIController::the().get_device_from_address(dev_id);
+    VERIFY(device); // Something has gone very wrong if this isn't true
+
+    JsonArraySerializer array { builder };
+
+    auto obj = array.add_object();
+    obj.add("usb_spec_compliance_bcd", device->device_descriptor().usb_spec_compliance_bcd);
+    obj.add("device_class", device->device_descriptor().device_class);
+    obj.add("device_sub_class", device->device_descriptor().device_sub_class);
+    obj.add("device_protocol", device->device_descriptor().device_protocol);
+    obj.add("max_packet_size", device->device_descriptor().max_packet_size);
+    obj.add("vendor_id", device->device_descriptor().vendor_id);
+    obj.add("product_id", device->device_descriptor().product_id);
+    obj.add("device_release_bcd", device->device_descriptor().device_release_bcd);
+    obj.add("manufacturer_id_descriptor_index", device->device_descriptor().manufacturer_id_descriptor_index);
+    obj.add("product_string_descriptor_index", device->device_descriptor().product_string_descriptor_index);
+    obj.add("serial_number_descriptor_index", device->device_descriptor().serial_number_descriptor_index);
+    obj.add("num_configurations", device->device_descriptor().num_configurations);
+    obj.finish();
+    array.finish();
+
     return true;
 }
 
@@ -1074,6 +1128,7 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
     auto* directory_entry = fs().get_directory_entry(identifier());
 
     bool (*read_callback)(InodeIdentifier, KBufferBuilder&) = nullptr;
+
     if (directory_entry) {
         read_callback = directory_entry->read_callback;
         VERIFY(read_callback);
@@ -1096,6 +1151,9 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
                 read_callback = read_sys_string;
                 break;
             }
+            break;
+        case PDI_Root_bus_usb:
+            read_callback = procfs$usb_entry;
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1181,6 +1239,11 @@ InodeMetadata ProcFSInode::metadata() const
         return metadata;
     }
 
+    if (proc_parent_directory == PDI_Root_bus_usb) {
+        metadata.mode = S_IFREG | S_IRUSR | S_IRGRP | S_IROTH;
+        return metadata;
+    }
+
     switch (proc_file_type) {
     case FI_Root_self:
         metadata.mode = S_IFLNK | S_IRUSR | S_IRGRP | S_IROTH;
@@ -1193,6 +1256,8 @@ InodeMetadata ProcFSInode::metadata() const
     case FI_Root:
     case FI_Root_sys:
     case FI_Root_net:
+    case FI_Root_bus:
+    case FI_Root_bus_usb:
         metadata.mode = S_IFDIR | S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
         break;
     case FI_PID:
@@ -1335,6 +1400,24 @@ KResult ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntr
         });
     } break;
 
+    case FI_Root_bus: {
+        callback({ "usb", to_identifier(fsid(), PDI_Root_bus, 0, FI_Root_bus_usb), 0 });
+        break;
+    }
+
+    case FI_Root_bus_usb: {
+        // FIXME: We currently only support 2 USB devices due to UHCI only... The controller stack should be modified
+        // to support any number of devices (this is a gross hack....)
+        for (auto port = 0; port < 2; port++) {
+            auto const& device = USB::UHCIController::the().get_device_at_port(static_cast<USB::Device::PortNumber>(port));
+            if (device == nullptr)
+                continue;
+
+            callback({ String::number(device->address()), usb_device_address_to_identifier(fsid(), device->address()), 0 });
+        }
+        break;
+    }
+
     default:
         return KSuccess;
     }
@@ -1414,6 +1497,16 @@ RefPtr<Inode> ProcFSInode::lookup(StringView name)
             }
         }
         return {};
+    }
+
+    if (proc_file_type == FI_Root_bus) {
+        if (name == "usb")
+            return fs().get_inode(to_identifier(fsid(), PDI_Root_bus, 0, FI_Root_bus_usb));
+    }
+
+    if (proc_file_type == FI_Root_bus_usb) {
+        u8 device_address = name.to_uint().value();
+        return fs().get_inode(usb_device_address_to_identifier(fsid(), device_address));
     }
 
     if (proc_file_type == FI_PID_fd) {
@@ -1705,6 +1798,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_profile] = { "profile", FI_Root_profile, true, procfs$profile };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys, true };
     m_entries[FI_Root_net] = { "net", FI_Root_net, false };
+    m_entries[FI_Root_bus] = { "bus", FI_Root_bus, false };
 
     m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, false, procfs$net_adapters };
     m_entries[FI_Root_net_arp] = { "arp", FI_Root_net_arp, true, procfs$net_arp };
@@ -1726,7 +1820,7 @@ ProcFS::ProcFS()
 ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identifier) const
 {
     auto proc_file_type = to_proc_file_type(identifier);
-    if (proc_file_type != FI_Invalid && proc_file_type != FI_Root_sys_variable && proc_file_type < FI_MaxStaticFileIndex)
+    if (proc_file_type != FI_Invalid && proc_file_type != FI_Root_sys_variable && proc_file_type != FI_Root_bus_usb_device && proc_file_type < FI_MaxStaticFileIndex)
         return const_cast<ProcFSDirectoryEntry*>(&m_entries[proc_file_type]);
     return nullptr;
 }
