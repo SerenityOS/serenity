@@ -19,6 +19,12 @@ public:
     virtual ~SetPrototype() override;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(add);
+    JS_DECLARE_NATIVE_FUNCTION(clear);
+    JS_DECLARE_NATIVE_FUNCTION(delete_);
+    JS_DECLARE_NATIVE_FUNCTION(for_each);
+    JS_DECLARE_NATIVE_FUNCTION(has);
+
     JS_DECLARE_NATIVE_GETTER(size_getter);
 };
 
