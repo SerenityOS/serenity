@@ -126,7 +126,7 @@ Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Gene
     auto result_reg = generator.allocate_register();
     auto lhs_reg = m_lhs->generate_bytecode(generator);
 
-    Bytecode::Instruction* test_instr;
+    Bytecode::Op::Jump* test_instr;
     switch (m_op) {
     case LogicalOp::And:
         test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>(*lhs_reg);
@@ -145,20 +145,7 @@ Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Gene
     auto& end_jump = generator.emit<Bytecode::Op::Jump>();
 
     auto rhs_label = generator.make_label();
-
-    switch (m_op) {
-    case LogicalOp::And:
-        static_cast<Bytecode::Op::JumpIfTrue*>(test_instr)->set_target(rhs_label);
-        break;
-    case LogicalOp::Or:
-        static_cast<Bytecode::Op::JumpIfFalse*>(test_instr)->set_target(rhs_label);
-        break;
-    case LogicalOp::NullishCoalescing:
-        static_cast<Bytecode::Op::JumpIfNullish*>(test_instr)->set_target(rhs_label);
-        break;
-    default:
-        VERIFY_NOT_REACHED();
-    }
+    test_instr->set_target(rhs_label);
 
     auto rhs_reg = m_rhs->generate_bytecode(generator);
     generator.emit<Bytecode::Op::LoadRegister>(result_reg, *rhs_reg);

@@ -229,8 +229,14 @@ private:
     Register m_src;
 };
 
-class Jump final : public Instruction {
+class Jump : public Instruction {
 public:
+    explicit Jump(Type type, Optional<Label> target = {})
+        : Instruction(type)
+        , m_target(move(target))
+    {
+    }
+
     explicit Jump(Optional<Label> target = {})
         : Instruction(Type::Jump)
         , m_target(move(target))
@@ -242,65 +248,53 @@ public:
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
 
-private:
+protected:
     Optional<Label> m_target;
 };
 
-class JumpIfFalse final : public Instruction {
+class JumpIfFalse final : public Jump {
 public:
     explicit JumpIfFalse(Register result, Optional<Label> target = {})
-        : Instruction(Type::JumpIfFalse)
+        : Jump(Type::JumpIfFalse, move(target))
         , m_result(result)
-        , m_target(move(target))
     {
     }
-
-    void set_target(Optional<Label> target) { m_target = move(target); }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
 
 private:
     Register m_result;
-    Optional<Label> m_target;
 };
 
-class JumpIfTrue final : public Instruction {
+class JumpIfTrue : public Jump {
 public:
     explicit JumpIfTrue(Register result, Optional<Label> target = {})
-        : Instruction(Type::JumpIfTrue)
+        : Jump(Type::JumpIfTrue, move(target))
         , m_result(result)
-        , m_target(move(target))
     {
     }
-
-    void set_target(Optional<Label> target) { m_target = move(target); }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
 
 private:
     Register m_result;
-    Optional<Label> m_target;
 };
 
-class JumpIfNullish final : public Instruction {
+class JumpIfNullish final : public Jump {
 public:
     explicit JumpIfNullish(Register result, Optional<Label> target = {})
-        : Instruction(Type::JumpIfNullish)
+        : Jump(Type::JumpIfNullish, move(target))
         , m_result(result)
-        , m_target(move(target))
     {
     }
-
-    void set_target(Optional<Label> target) { m_target = move(target); }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
 
 private:
     Register m_result;
-    Optional<Label> m_target;
 };
 
 // NOTE: This instruction is variable-width depending on the number of arguments!
