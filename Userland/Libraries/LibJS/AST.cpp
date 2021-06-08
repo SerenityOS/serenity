@@ -685,16 +685,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto reference = m_lhs->to_reference(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        if (reference.is_unresolvable())
-            return Value(true);
-        // FIXME: Support deleting locals
-        VERIFY(!reference.is_local_variable());
-        if (reference.is_global_variable())
-            return Value(global_object.delete_property(reference.name()));
-        auto* base_object = reference.base().to_object(global_object);
-        if (!base_object)
-            return {};
-        return Value(base_object->delete_property(reference.name()));
+        return Value(reference.delete_(global_object));
     }
 
     Value lhs_result;

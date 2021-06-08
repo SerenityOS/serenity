@@ -98,4 +98,32 @@ Value Reference::get(GlobalObject& global_object)
     return object->get(m_name).value_or(js_undefined());
 }
 
+bool Reference::delete_(GlobalObject& global_object)
+{
+    if (is_unresolvable())
+        return true;
+
+    auto& vm = global_object.vm();
+
+    if (is_local_variable() || is_global_variable()) {
+        if (is_local_variable())
+            return vm.delete_variable(m_name.to_string());
+        else
+            return global_object.delete_property(m_name);
+    }
+
+    auto base = this->base();
+
+    if (base.is_nullish()) {
+        // This will always fail the to_object() call below, let's throw the TypeError ourselves with a nice message instead.
+        vm.throw_exception<TypeError>(global_object, ErrorType::ReferenceNullishDeleteProperty, m_name.to_value(vm).to_string_without_side_effects(), base.to_string_without_side_effects());
+        return false;
+    }
+
+    auto* object = base.to_object(global_object);
+    VERIFY(object);
+
+    return object->delete_property(m_name);
+}
+
 }

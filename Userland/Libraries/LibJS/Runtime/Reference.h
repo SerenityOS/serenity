@@ -67,6 +67,7 @@ public:
 
     void put(GlobalObject&, Value);
     Value get(GlobalObject&);
+    bool delete_(GlobalObject&);
 
 private:
     void throw_reference_error(GlobalObject&);
