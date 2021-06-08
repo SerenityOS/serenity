@@ -67,7 +67,7 @@ public:
         other.reset_capacity();
     }
 
-    Vector(const Vector& other)
+    Vector(Vector const& other)
     {
         ensure_capacity(other.size());
         TypedTransfer<T>::copy(data(), other.data(), other.size());
@@ -75,7 +75,7 @@ public:
     }
 
     template<size_t other_inline_capacity>
-    Vector(const Vector<T, other_inline_capacity>& other)
+    Vector(Vector<T, other_inline_capacity> const& other)
     {
         ensure_capacity(other.size());
         TypedTransfer<T>::copy(data(), other.data(), other.size());
@@ -88,10 +88,10 @@ public:
     }
 
     Span<T> span() { return { data(), size() }; }
-    Span<const T> span() const { return { data(), size() }; }
+    Span<T const> span() const { return { data(), size() }; }
 
     operator Span<T>() { return span(); }
-    operator Span<const T>() const { return span(); }
+    operator Span<T const>() const { return span(); }
 
     bool is_empty() const { return size() == 0; }
     ALWAYS_INLINE size_t size() const { return m_size; }
@@ -104,14 +104,14 @@ public:
         return m_outline_buffer;
     }
 
-    const T* data() const
+    T const* data() const
     {
         if constexpr (inline_capacity > 0)
             return m_outline_buffer ? m_outline_buffer : inline_buffer();
         return m_outline_buffer;
     }
 
-    ALWAYS_INLINE const T& at(size_t i) const
+    ALWAYS_INLINE T const& at(size_t i) const
     {
         VERIFY(i < m_size);
         return data()[i];
@@ -123,13 +123,13 @@ public:
         return data()[i];
     }
 
-    ALWAYS_INLINE const T& operator[](size_t i) const { return at(i); }
+    ALWAYS_INLINE T const& operator[](size_t i) const { return at(i); }
     ALWAYS_INLINE T& operator[](size_t i) { return at(i); }
 
-    const T& first() const { return at(0); }
+    T const& first() const { return at(0); }
     T& first() { return at(0); }
 
-    const T& last() const { return at(size() - 1); }
+    T const& last() const { return at(size() - 1); }
     T& last() { return at(size() - 1); }
 
     template<typename Callback>
@@ -155,14 +155,14 @@ public:
     }
 
     template<typename V>
-    bool operator==(const V& other) const
+    bool operator==(V const& other) const
     {
         if (m_size != other.size())
             return false;
         return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
-    bool contains_slow(const T& value) const
+    bool contains_slow(T const& value) const
     {
         for (size_t i = 0; i < size(); ++i) {
             if (Traits<T>::equals(at(i), value))
@@ -171,7 +171,7 @@ public:
         return false;
     }
 
-    bool contains_in_range(const T& value, const size_t start, const size_t end) const
+    bool contains_in_range(T const& value, size_t const start, size_t const end) const
     {
         VERIFY(start <= end);
         VERIFY(end < size());
@@ -202,7 +202,7 @@ public:
         VERIFY(did_allocate);
     }
 
-    void append(const Vector& other)
+    void append(Vector const& other)
     {
         auto did_allocate = try_append(other);
         VERIFY(did_allocate);
@@ -214,13 +214,13 @@ public:
         VERIFY(did_allocate);
     }
 
-    ALWAYS_INLINE void append(const T& value)
+    ALWAYS_INLINE void append(T const& value)
     {
         auto did_allocate = try_append(T(value));
         VERIFY(did_allocate);
     }
 
-    void append(const T* values, size_t count)
+    void append(T const* values, size_t count)
     {
         auto did_allocate = try_append(values, count);
         VERIFY(did_allocate);
@@ -254,7 +254,7 @@ public:
         VERIFY(did_allocate);
     }
 
-    void prepend(const T* values, size_t count)
+    void prepend(T const* values, size_t count)
     {
         auto did_allocate = try_prepend(values, count);
         VERIFY(did_allocate);
@@ -283,7 +283,7 @@ public:
         return *this;
     }
 
-    Vector& operator=(const Vector& other)
+    Vector& operator=(Vector const& other)
     {
         if (this != &other) {
             clear();
@@ -295,7 +295,7 @@ public:
     }
 
     template<size_t other_inline_capacity>
-    Vector& operator=(const Vector<T, other_inline_capacity>& other)
+    Vector& operator=(Vector<T, other_inline_capacity> const& other)
     {
         clear();
         ensure_capacity(other.size());
@@ -470,7 +470,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool try_append(const Vector& other)
+    [[nodiscard]] bool try_append(Vector const& other)
     {
         if (!try_grow_capacity(size() + other.size()))
             return false;
@@ -488,12 +488,12 @@ public:
         return true;
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool try_append(const T& value)
+    [[nodiscard]] ALWAYS_INLINE bool try_append(T const& value)
     {
         return try_append(T(value));
     }
 
-    [[nodiscard]] bool try_append(const T* values, size_t count)
+    [[nodiscard]] bool try_append(T const* values, size_t count)
     {
         if (!count)
             return true;
@@ -545,7 +545,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool try_prepend(const T* values, size_t count)
+    [[nodiscard]] bool try_prepend(T const* values, size_t count)
     {
         if (!count)
             return true;
@@ -652,7 +652,7 @@ public:
         VERIFY(did_allocate);
     }
 
-    using ConstIterator = SimpleIterator<const Vector, const T>;
+    using ConstIterator = SimpleIterator<Vector const, T const>;
     using Iterator = SimpleIterator<Vector, T>;
 
     ConstIterator begin() const { return ConstIterator::begin(*this); }
@@ -673,19 +673,19 @@ public:
         return AK::find_if(begin(), end(), forward<TUnaryPredicate>(finder));
     }
 
-    ConstIterator find(const T& value) const
+    ConstIterator find(T const& value) const
     {
         return AK::find(begin(), end(), value);
     }
 
-    Iterator find(const T& value)
+    Iterator find(T const& value)
     {
         return AK::find(begin(), end(), value);
     }
 
-    Optional<size_t> find_first_index(const T& value) const
+    Optional<size_t> find_first_index(T const& value) const
     {
-        if (const auto index = AK::find_index(begin(), end(), value);
+        if (auto const index = AK::find_index(begin(), end(), value);
             index < size()) {
             return index;
         }
@@ -704,17 +704,17 @@ private:
     }
 
     T* slot(size_t i) { return &data()[i]; }
-    const T* slot(size_t i) const { return &data()[i]; }
+    T const* slot(size_t i) const { return &data()[i]; }
 
     T* inline_buffer()
     {
         static_assert(inline_capacity > 0);
         return reinterpret_cast<T*>(m_inline_buffer_storage);
     }
-    const T* inline_buffer() const
+    T const* inline_buffer() const
     {
         static_assert(inline_capacity > 0);
-        return reinterpret_cast<const T*>(m_inline_buffer_storage);
+        return reinterpret_cast<T const*>(m_inline_buffer_storage);
     }
 
     size_t m_size { 0 };
