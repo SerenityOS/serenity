@@ -342,6 +342,26 @@ void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
         TODO();
 }
 
+void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Vector<Bytecode::Register> element_regs;
+    for (auto& element : m_elements) {
+        generator.emit<Bytecode::Op::LoadImmediate>(Value {});
+        if (element) {
+            element->generate_bytecode(generator);
+
+            if (is<SpreadExpression>(*element)) {
+                TODO();
+                continue;
+            }
+        }
+        auto element_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(element_reg);
+        element_regs.append(element_reg);
+    }
+    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(element_regs.size(), element_regs);
+}
+
 void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     object().generate_bytecode(generator);
