@@ -128,7 +128,6 @@
     M(ProxySetPrototypeOfNonExtensible, "Proxy handler's setPrototypeOf trap violates "                                                 \
                                         "invariant: the argument must match the prototype of the target if the "                        \
                                         "target is non-extensible")                                                                     \
-    M(ProxyTwoArguments, "Proxy constructor requires at least two arguments")                                                           \
     M(ReduceNoInitial, "Reduce of empty array with no initial value")                                                                   \
     M(ReferenceNullishDeleteProperty, "Cannot delete property '{}' of {}")                                                              \
     M(ReferenceNullishGetProperty, "Cannot get property '{}' of {}")                                                                    \
