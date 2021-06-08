@@ -430,4 +430,23 @@ Optional<Bytecode::Register> DebuggerStatement::generate_bytecode(Bytecode::Gene
     return {};
 }
 
+Optional<Bytecode::Register> ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto result_reg = generator.allocate_register();
+    auto test_reg = m_test->generate_bytecode(generator);
+    auto& alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_reg);
+
+    auto consequent_reg = m_consequent->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
+    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
+
+    alternate_jump.set_target(generator.make_label());
+    auto alternative_reg = m_alternate->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
+
+    end_jump.set_target(generator.make_label());
+
+    return result_reg;
+}
+
 }
