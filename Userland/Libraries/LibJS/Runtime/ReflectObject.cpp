@@ -78,6 +78,7 @@ void ReflectObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
     define_native_function(vm.names.set, set, 3, attr);
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
+    Object::define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Reflect"), Attribute::Configurable);
 }
 
 ReflectObject::~ReflectObject()
