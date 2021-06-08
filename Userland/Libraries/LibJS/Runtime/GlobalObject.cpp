@@ -48,6 +48,7 @@
 #include <LibJS/Runtime/RegExpConstructor.h>
 #include <LibJS/Runtime/RegExpPrototype.h>
 #include <LibJS/Runtime/SetConstructor.h>
+#include <LibJS/Runtime/SetIteratorPrototype.h>
 #include <LibJS/Runtime/SetPrototype.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringConstructor.h>

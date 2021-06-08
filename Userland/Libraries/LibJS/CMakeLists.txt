@@ -78,6 +78,8 @@ set(SOURCES
     Runtime/ScriptFunction.cpp
     Runtime/Set.cpp
     Runtime/SetConstructor.cpp
+    Runtime/SetIterator.cpp
+    Runtime/SetIteratorPrototype.cpp
     Runtime/SetPrototype.cpp
     Runtime/Shape.cpp
     Runtime/StringConstructor.cpp
