@@ -59,10 +59,10 @@ public:
     bool is_native_property() const { return m_type == Type::NativeProperty; }
     bool is_nullish() const { return is_null() || is_undefined(); }
     bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol() || is_native_property(); }
-    bool is_array() const;
+    bool is_array(GlobalObject&) const;
     bool is_function() const;
     bool is_constructor() const;
-    bool is_regexp(GlobalObject& global_object) const;
+    bool is_regexp(GlobalObject&) const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
