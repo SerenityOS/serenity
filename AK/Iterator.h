@@ -55,8 +55,8 @@ public:
     ALWAYS_INLINE constexpr const ValueType& operator*() const { return m_container[m_index]; }
     ALWAYS_INLINE constexpr ValueType& operator*() { return m_container[m_index]; }
 
-    constexpr const ValueType* operator->() const { return &m_container[m_index]; }
-    constexpr ValueType* operator->() { return &m_container[m_index]; }
+    constexpr auto operator->() const { return &m_container[m_index]; }
+    constexpr auto operator->() { return &m_container[m_index]; }
 
     SimpleIterator& operator=(const SimpleIterator& other)
     {
