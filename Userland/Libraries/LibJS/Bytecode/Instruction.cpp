@@ -29,6 +29,8 @@ size_t Instruction::length() const
 {
     if (type() == Type::Call)
         return static_cast<Op::Call const&>(*this).length();
+    else if (type() == Type::NewArray)
+        return static_cast<Op::NewArray const&>(*this).length();
 
 #define __BYTECODE_OP(op) \
     case Type::op:        \

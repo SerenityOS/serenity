@@ -168,6 +168,27 @@ private:
     Crypto::SignedBigInteger m_bigint;
 };
 
+// NOTE: This instruction is variable-width depending on the number of elements!
+class NewArray final : public Instruction {
+public:
+    NewArray(Vector<Register> const& elements)
+        : Instruction(Type::NewArray)
+        , m_element_count(elements.size())
+    {
+        for (size_t i = 0; i < m_element_count; ++i)
+            m_elements[i] = elements[i];
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+    size_t length() const { return sizeof(*this) + sizeof(Register) * m_element_count; }
+
+private:
+    size_t m_element_count { 0 };
+    Register m_elements[];
+};
+
 class ConcatString final : public Instruction {
 public:
     ConcatString(Register lhs)
