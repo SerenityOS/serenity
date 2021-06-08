@@ -56,6 +56,7 @@ public:
     {
         m_is_invalid = true;
         m_cached_trimmed_length = {};
+        m_cached_hash = 0;
     }
 
     bool is_odd() const { return m_words.size() && (m_words[0] & 1); }
@@ -78,6 +79,8 @@ public:
     UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
+    u32 hash() const;
+
     void set_bit_inplace(size_t bit_index);
 
     bool operator==(const UnsignedBigInteger& other) const;
@@ -89,6 +92,8 @@ private:
     // Little endian
     // m_word[0] + m_word[1] * Word::MAX + m_word[2] * Word::MAX * Word::MAX + ...
     Vector<Word, STARTING_WORD_SIZE> m_words;
+
+    mutable u32 m_cached_hash { 0 };
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };

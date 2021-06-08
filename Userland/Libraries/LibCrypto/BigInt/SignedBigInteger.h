@@ -99,6 +99,8 @@ public:
     SignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     SignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
+    u32 hash() const;
+
     void set_bit_inplace(size_t bit_index);
 
     bool operator==(const SignedBigInteger& other) const;

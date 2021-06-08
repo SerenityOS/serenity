@@ -217,6 +217,11 @@ FLATTEN SignedDivisionResult SignedBigInteger::divided_by(const SignedBigInteger
     };
 }
 
+u32 SignedBigInteger::hash() const
+{
+    return m_unsigned_data.hash() * (1 - (2 * m_sign));
+}
+
 void SignedBigInteger::set_bit_inplace(size_t bit_index)
 {
     m_unsigned_data.set_bit_inplace(bit_index);
