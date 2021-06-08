@@ -309,15 +309,15 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
 
 Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.begin_continuable_scope();
     auto test_label = generator.make_label();
     auto test_result_reg = m_test->generate_bytecode(generator);
     VERIFY(test_result_reg.has_value());
     auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
+    generator.begin_continuable_scope();
     auto body_result_reg = m_body->generate_bytecode(generator);
+    generator.end_continuable_scope();
     generator.emit<Bytecode::Op::Jump>(test_label);
     test_jump.set_target(generator.make_label());
-    generator.end_continuable_scope();
     return body_result_reg;
 }
 
@@ -340,21 +340,21 @@ Optional<Bytecode::Register> ForStatement::generate_bytecode(Bytecode::Generator
     if (m_init) {
         [[maybe_unused]] auto init_result_reg = m_init->generate_bytecode(generator);
     }
-    generator.begin_continuable_scope();
     auto jump_label = generator.make_label();
     if (m_test) {
         auto test_result_reg = m_test->generate_bytecode(generator);
         VERIFY(test_result_reg.has_value());
         test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
     }
+    generator.begin_continuable_scope();
     auto body_result_reg = m_body->generate_bytecode(generator);
+    generator.end_continuable_scope();
     if (m_update) {
         [[maybe_unused]] auto update_result_reg = m_update->generate_bytecode(generator);
     }
     generator.emit<Bytecode::Op::Jump>(jump_label);
     if (m_test)
         test_jump->set_target(generator.make_label());
-    generator.end_continuable_scope();
     return body_result_reg;
 }
 
@@ -422,13 +422,15 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
     auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*predicate_reg);
 
     auto consequent_reg = m_consequent->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
+    if (consequent_reg.has_value())
+        generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
     auto& end_jump = generator.emit<Bytecode::Op::Jump>();
 
     else_jump.set_target(generator.make_label());
     if (m_alternate) {
         auto alternative_reg = m_alternate->generate_bytecode(generator);
-        generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
+        if (consequent_reg.has_value())
+            generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
     } else {
         generator.emit<Bytecode::Op::Load>(result_reg, js_undefined());
     }
@@ -440,7 +442,7 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
 
 Optional<Bytecode::Register> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::Jump>(generator.nearest_continuable_scope());
+    generator.nearest_continuable_scope().append(&generator.emit<Bytecode::Op::Jump>());
     return {};
 }
 

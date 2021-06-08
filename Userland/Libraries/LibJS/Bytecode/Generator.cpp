@@ -53,19 +53,22 @@ Label Generator::make_label() const
     return Label { m_block->instruction_stream().size() };
 }
 
-Label Generator::nearest_continuable_scope() const
+Vector<Bytecode::Op::Jump*>& Generator::nearest_continuable_scope()
 {
     return m_continuable_scopes.last();
 }
 
 void Generator::begin_continuable_scope()
 {
-    m_continuable_scopes.append(make_label());
+    m_continuable_scopes.empend();
 }
 
 void Generator::end_continuable_scope()
 {
-    m_continuable_scopes.take_last();
+    auto label = make_label();
+    for (auto& jump : m_continuable_scopes.take_last()) {
+        jump->set_target(label);
+    }
 }
 
 }
