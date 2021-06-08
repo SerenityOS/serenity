@@ -29,6 +29,7 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.then, then, 2, attr);
     define_native_function(vm.names.catch_, catch_, 1, attr);
     define_native_function(vm.names.finally, finally, 1, attr);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Promise"), Attribute::Configurable);
 }
 
 static Promise* promise_from(VM& vm, GlobalObject& global_object)
