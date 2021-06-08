@@ -604,6 +604,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtrVector<Expression> m_expressions;
