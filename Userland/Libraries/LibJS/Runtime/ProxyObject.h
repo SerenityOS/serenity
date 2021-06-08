@@ -39,6 +39,7 @@ public:
     virtual bool put(const PropertyName& name, Value value, Value receiver) override;
     virtual bool delete_property(const PropertyName& name) override;
 
+    bool is_revoked() const { return m_is_revoked; }
     void revoke() { m_is_revoked = true; }
 
 private:
