@@ -166,8 +166,6 @@ namespace Bytecode {
 class Block;
 class Generator;
 class Instruction;
-template<typename OpType>
-class InstructionHandle;
 class Interpreter;
 class Register;
 }
