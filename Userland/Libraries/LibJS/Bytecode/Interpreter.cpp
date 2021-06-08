@@ -84,10 +84,6 @@ Value Interpreter::run(Bytecode::Block const& block)
     auto return_value = m_return_value.value_or(js_undefined());
     m_return_value = {};
 
-    // NOTE: The return value from a called function is put into $0 in the caller context.
-    if (!m_register_windows.is_empty())
-        m_register_windows.last()[0] = return_value;
-
     if (vm().call_stack().size() == 1)
         vm().pop_call_frame();
 
