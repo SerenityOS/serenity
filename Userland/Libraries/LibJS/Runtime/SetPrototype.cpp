@@ -20,6 +20,12 @@ void SetPrototype::initialize(GlobalObject& global_object)
     Set::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
+    define_native_function(vm.names.add, add, 1, attr);
+    define_native_function(vm.names.clear, clear, 0, attr);
+    define_native_function(vm.names.delete_, delete_, 1, attr);
+    define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.has, has, 1, attr);
+
     define_native_property(vm.names.size, size_getter, {}, attr);
 
     define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Set), Attribute::Configurable);
@@ -27,6 +33,62 @@ void SetPrototype::initialize(GlobalObject& global_object)
 
 SetPrototype::~SetPrototype()
 {
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)
+{
+    auto* set = typed_this(vm, global_object);
+    if (!set)
+        return {};
+    auto value = vm.argument(0);
+    if (value.is_negative_zero())
+        value = Value(0);
+    set->values().set(value, AK::HashSetExistingEntryBehavior::Keep);
+    return set;
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::clear)
+{
+    auto* set = typed_this(vm, global_object);
+    if (!set)
+        return {};
+    set->values().clear();
+    return js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::delete_)
+{
+    auto* set = typed_this(vm, global_object);
+    if (!set)
+        return {};
+    return Value(set->values().remove(vm.argument(0)));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::for_each)
+{
+    auto* set = typed_this(vm, global_object);
+    if (!set)
+        return {};
+    if (!vm.argument(0).is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, vm.argument(0).to_string_without_side_effects());
+        return {};
+    }
+    auto this_value = vm.this_value(global_object);
+    for (auto& value : set->values()) {
+        (void)vm.call(vm.argument(0).as_function(), vm.argument(1), value, value, this_value);
+        if (vm.exception())
+            return {};
+    }
+    return js_undefined();
+}
+
+JS_DEFINE_NATIVE_FUNCTION(SetPrototype::has)
+{
+    auto* set = typed_this(vm, global_object);
+    if (!set)
+        return {};
+    auto& values = set->values();
+    return Value(values.find(vm.argument(0)) != values.end());
 }
 
 JS_DEFINE_NATIVE_GETTER(SetPrototype::size_getter)

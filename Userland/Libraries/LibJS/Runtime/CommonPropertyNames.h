@@ -44,6 +44,7 @@ namespace JS {
     P(abs)                                   \
     P(acos)                                  \
     P(acosh)                                 \
+    P(add)                                   \
     P(all)                                   \
     P(allSettled)                            \
     P(anchor)                                \
@@ -290,6 +291,7 @@ namespace JS {
 
 struct CommonPropertyNames {
     FlyString catch_ { "catch" };
+    FlyString delete_ { "delete" };
     FlyString for_ { "for" };
 #define __ENUMERATE(x) FlyString x { #x };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)

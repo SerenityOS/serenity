@@ -27,5 +27,10 @@ describe("normal behavior", () => {
         var a = new Set([0, 1, 2]);
         expect(a instanceof Set).toBeTrue();
         expect(a).toHaveSize(3);
+        var seen = [false, false, false];
+        a.forEach(x => {
+            seen[x] = true;
+        });
+        expect(seen[0] && seen[1] && seen[2]);
     });
 });
