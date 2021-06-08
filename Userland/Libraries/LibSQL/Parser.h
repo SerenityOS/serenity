@@ -17,6 +17,7 @@ namespace SQL {
 namespace Limits {
 // https://www.sqlite.org/limits.html
 constexpr size_t maximum_expression_tree_depth = 1000;
+constexpr size_t maximum_subquery_depth = 100;
 }
 
 class Parser {
@@ -54,6 +55,7 @@ private:
         Token m_token;
         Vector<Error> m_errors;
         size_t m_current_expression_depth { 0 };
+        size_t m_current_subquery_depth { 0 };
     };
 
     NonnullRefPtr<Statement> parse_statement();
