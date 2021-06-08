@@ -358,14 +358,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {
         auto argument = vm.argument(i);
-        if (argument.is_array()) {
+        if (argument.is_array(global_object)) {
             auto& argument_object = argument.as_object();
             new_array->indexed_properties().append_all(&argument_object, argument_object.indexed_properties());
-            if (vm.exception())
-                return {};
-        } else {
-            new_array->indexed_properties().append(argument);
+            continue;
         }
+        if (vm.exception())
+            return {};
+        new_array->indexed_properties().append(argument);
     }
 
     return Value(new_array);
@@ -1027,10 +1027,12 @@ static void recursive_array_flat(VM& vm, GlobalObject& global_object, Array& new
         if (vm.exception())
             return;
 
-        if (depth > 0 && value.is_array()) {
+        if (depth > 0 && value.is_array(global_object)) {
             recursive_array_flat(vm, global_object, new_array, value.as_array(), depth - 1);
             continue;
         }
+        if (vm.exception())
+            return;
         if (!value.is_empty()) {
             new_array.indexed_properties().append(value);
             if (vm.exception())

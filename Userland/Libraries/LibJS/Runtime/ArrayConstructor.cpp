@@ -142,7 +142,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
-    return Value(value.is_array());
+    return Value(value.is_array(global_object));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
