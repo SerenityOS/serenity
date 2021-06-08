@@ -33,7 +33,7 @@ namespace AK {
 template<typename T, size_t inline_capacity>
 class Vector {
 public:
-    using value_type = T;
+    using ValueType = T;
 
     Vector()
         : m_capacity(inline_capacity)
