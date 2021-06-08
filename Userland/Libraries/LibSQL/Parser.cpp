@@ -5,6 +5,7 @@
  */
 
 #include "Parser.h"
+#include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
 
 namespace SQL {
@@ -946,6 +947,11 @@ NonnullRefPtr<ResultColumn> Parser::parse_result_column()
 
 NonnullRefPtr<TableOrSubquery> Parser::parse_table_or_subquery()
 {
+    if (++m_parser_state.m_current_subquery_depth > Limits::maximum_subquery_depth)
+        syntax_error(String::formatted("Exceeded maximum subquery depth of {}", Limits::maximum_subquery_depth));
+
+    ScopeGuard guard([&]() { --m_parser_state.m_current_subquery_depth; });
+
     // https://sqlite.org/syntax/table-or-subquery.html
     if (match(TokenType::Identifier)) {
         String schema_name;
