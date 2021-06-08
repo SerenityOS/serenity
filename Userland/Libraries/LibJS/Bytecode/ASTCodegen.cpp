@@ -449,4 +449,14 @@ Optional<Bytecode::Register> ConditionalExpression::generate_bytecode(Bytecode::
     return result_reg;
 }
 
+Optional<Bytecode::Register> SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Optional<Bytecode::Register> last_reg;
+
+    for (auto& expression : m_expressions)
+        last_reg = expression.generate_bytecode(generator);
+
+    return last_reg;
+}
+
 }
