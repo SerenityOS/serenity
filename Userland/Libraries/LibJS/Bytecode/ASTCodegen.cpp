@@ -13,489 +13,422 @@
 
 namespace JS {
 
-Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) const
+void ASTNode::generate_bytecode(Bytecode::Generator&) const
 {
     dbgln("Missing generate_bytecode()");
     TODO();
 }
 
-Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
+void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::EnterScope>(*this);
-    Optional<Bytecode::Register> last_value_reg;
-    for (auto& child : children()) {
-        last_value_reg = child.generate_bytecode(generator);
-    }
-    return last_value_reg;
+    for (auto& child : children())
+        child.generate_bytecode(generator);
 }
 
-Optional<Bytecode::Register> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
+void EmptyStatement::generate_bytecode(Bytecode::Generator&) const
 {
-    return {};
 }
 
-Optional<Bytecode::Register> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
+void ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    return m_expression->generate_bytecode(generator);
+    m_expression->generate_bytecode(generator);
 }
 
-Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+void BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
-    auto rhs_reg = m_rhs->generate_bytecode(generator);
+    m_lhs->generate_bytecode(generator);
+    auto lhs_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(lhs_reg);
 
-    VERIFY(lhs_reg.has_value());
-    VERIFY(rhs_reg.has_value());
-
-    auto dst_reg = generator.allocate_register();
+    m_rhs->generate_bytecode(generator);
 
     switch (m_op) {
     case BinaryOp::Addition:
-        generator.emit<Bytecode::Op::Add>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Add>(lhs_reg);
+        break;
     case BinaryOp::Subtraction:
-        generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Sub>(lhs_reg);
+        break;
     case BinaryOp::Multiplication:
-        generator.emit<Bytecode::Op::Mul>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Mul>(lhs_reg);
+        break;
     case BinaryOp::Division:
-        generator.emit<Bytecode::Op::Div>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Div>(lhs_reg);
+        break;
     case BinaryOp::Modulo:
-        generator.emit<Bytecode::Op::Mod>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Mod>(lhs_reg);
+        break;
     case BinaryOp::Exponentiation:
-        generator.emit<Bytecode::Op::Exp>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Exp>(lhs_reg);
+        break;
     case BinaryOp::GreaterThan:
-        generator.emit<Bytecode::Op::GreaterThan>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::GreaterThan>(lhs_reg);
+        break;
     case BinaryOp::GreaterThanEquals:
-        generator.emit<Bytecode::Op::GreaterThanEquals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::GreaterThanEquals>(lhs_reg);
+        break;
     case BinaryOp::LessThan:
-        generator.emit<Bytecode::Op::LessThan>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::LessThan>(lhs_reg);
+        break;
     case BinaryOp::LessThanEquals:
-        generator.emit<Bytecode::Op::LessThanEquals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::LessThanEquals>(lhs_reg);
+        break;
     case BinaryOp::AbstractInequals:
-        generator.emit<Bytecode::Op::AbstractInequals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::AbstractInequals>(lhs_reg);
+        break;
     case BinaryOp::AbstractEquals:
-        generator.emit<Bytecode::Op::AbstractEquals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::AbstractEquals>(lhs_reg);
+        break;
     case BinaryOp::TypedInequals:
-        generator.emit<Bytecode::Op::TypedInequals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::TypedInequals>(lhs_reg);
+        break;
     case BinaryOp::TypedEquals:
-        generator.emit<Bytecode::Op::TypedEquals>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::TypedEquals>(lhs_reg);
+        break;
     case BinaryOp::BitwiseAnd:
-        generator.emit<Bytecode::Op::BitwiseAnd>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::BitwiseAnd>(lhs_reg);
+        break;
     case BinaryOp::BitwiseOr:
-        generator.emit<Bytecode::Op::BitwiseOr>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::BitwiseOr>(lhs_reg);
+        break;
     case BinaryOp::BitwiseXor:
-        generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::BitwiseXor>(lhs_reg);
+        break;
     case BinaryOp::LeftShift:
-        generator.emit<Bytecode::Op::LeftShift>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::LeftShift>(lhs_reg);
+        break;
     case BinaryOp::RightShift:
-        generator.emit<Bytecode::Op::RightShift>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::RightShift>(lhs_reg);
+        break;
     case BinaryOp::UnsignedRightShift:
-        generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::UnsignedRightShift>(lhs_reg);
+        break;
     case BinaryOp::In:
-        generator.emit<Bytecode::Op::In>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::In>(lhs_reg);
+        break;
     case BinaryOp::InstanceOf:
-        generator.emit<Bytecode::Op::InstanceOf>(dst_reg, *lhs_reg, *rhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::InstanceOf>(lhs_reg);
+        break;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
-Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
+void LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto result_reg = generator.allocate_register();
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
+    m_lhs->generate_bytecode(generator);
 
     Bytecode::Op::Jump* test_instr;
     switch (m_op) {
     case LogicalOp::And:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>(*lhs_reg);
+        test_instr = &generator.emit<Bytecode::Op::JumpIfFalse>();
         break;
     case LogicalOp::Or:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfFalse>(*lhs_reg);
+        test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>();
         break;
     case LogicalOp::NullishCoalescing:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfNullish>(*lhs_reg);
+        test_instr = &generator.emit<Bytecode::Op::JumpIfNotNullish>();
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *lhs_reg);
-    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
-
-    auto rhs_label = generator.make_label();
-    test_instr->set_target(rhs_label);
-
-    auto rhs_reg = m_rhs->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *rhs_reg);
-
-    end_jump.set_target(generator.make_label());
-
-    return result_reg;
+    m_rhs->generate_bytecode(generator);
+    test_instr->set_target(generator.make_label());
 }
 
-Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+void UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto lhs_reg = m_lhs->generate_bytecode(generator);
-
-    VERIFY(lhs_reg.has_value());
-
-    auto dst_reg = generator.allocate_register();
+    m_lhs->generate_bytecode(generator);
 
     switch (m_op) {
     case UnaryOp::BitwiseNot:
-        generator.emit<Bytecode::Op::BitwiseNot>(dst_reg, *lhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::BitwiseNot>();
+        break;
     case UnaryOp::Not:
-        generator.emit<Bytecode::Op::Not>(dst_reg, *lhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Not>();
+        break;
     case UnaryOp::Plus:
-        generator.emit<Bytecode::Op::UnaryPlus>(dst_reg, *lhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::UnaryPlus>();
+        break;
     case UnaryOp::Minus:
-        generator.emit<Bytecode::Op::UnaryMinus>(dst_reg, *lhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::UnaryMinus>();
+        break;
     case UnaryOp::Typeof:
-        generator.emit<Bytecode::Op::Typeof>(dst_reg, *lhs_reg);
-        return dst_reg;
+        generator.emit<Bytecode::Op::Typeof>();
+        break;
     case UnaryOp::Void:
-        generator.emit<Bytecode::Op::Load>(dst_reg, js_undefined());
-        return dst_reg;
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        break;
     default:
         TODO();
     }
 }
 
-Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::Load>(dst, m_value);
-    return dst;
+    generator.emit<Bytecode::Op::LoadImmediate>(m_value);
 }
 
-Optional<Bytecode::Register> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::Load>(dst, Value(m_value));
-    return dst;
+    generator.emit<Bytecode::Op::LoadImmediate>(Value(m_value));
 }
 
-Optional<Bytecode::Register> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::Load>(dst, js_null());
-    return dst;
+    generator.emit<Bytecode::Op::LoadImmediate>(js_null());
 }
 
-Optional<Bytecode::Register> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::NewBigInt>(dst, Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
-    return dst;
+    generator.emit<Bytecode::Op::NewBigInt>(Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
-Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto dst = generator.allocate_register();
-    generator.emit<Bytecode::Op::NewString>(dst, m_value);
-    return dst;
+    generator.emit<Bytecode::Op::NewString>(m_value);
 }
 
-Optional<Bytecode::Register> Identifier::generate_bytecode(Bytecode::Generator& generator) const
+void Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::GetVariable>(reg, m_string);
-    return reg;
+    generator.emit<Bytecode::Op::GetVariable>(m_string);
 }
 
-Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
+void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (is<Identifier>(*m_lhs)) {
         auto& identifier = static_cast<Identifier const&>(*m_lhs);
-        auto rhs_reg = m_rhs->generate_bytecode(generator);
-        VERIFY(rhs_reg.has_value());
 
         if (m_op == AssignmentOp::Assignment) {
-            generator.emit<Bytecode::Op::SetVariable>(identifier.string(), *rhs_reg);
-            return rhs_reg;
+            m_rhs->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::SetVariable>(identifier.string());
+            return;
         }
 
-        auto lhs_reg = m_lhs->generate_bytecode(generator);
-        auto dst_reg = generator.allocate_register();
+        m_lhs->generate_bytecode(generator);
+        auto lhs_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(lhs_reg);
+        m_rhs->generate_bytecode(generator);
 
         switch (m_op) {
         case AssignmentOp::AdditionAssignment:
-            generator.emit<Bytecode::Op::Add>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Add>(lhs_reg);
             break;
         case AssignmentOp::SubtractionAssignment:
-            generator.emit<Bytecode::Op::Sub>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Sub>(lhs_reg);
             break;
         case AssignmentOp::MultiplicationAssignment:
-            generator.emit<Bytecode::Op::Mul>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Mul>(lhs_reg);
             break;
         case AssignmentOp::DivisionAssignment:
-            generator.emit<Bytecode::Op::Div>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Div>(lhs_reg);
             break;
         case AssignmentOp::ModuloAssignment:
-            generator.emit<Bytecode::Op::Mod>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Mod>(lhs_reg);
             break;
         case AssignmentOp::ExponentiationAssignment:
-            generator.emit<Bytecode::Op::Exp>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::Exp>(lhs_reg);
             break;
         case AssignmentOp::BitwiseAndAssignment:
-            generator.emit<Bytecode::Op::BitwiseAnd>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::BitwiseAnd>(lhs_reg);
             break;
         case AssignmentOp::BitwiseOrAssignment:
-            generator.emit<Bytecode::Op::BitwiseOr>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::BitwiseOr>(lhs_reg);
             break;
         case AssignmentOp::BitwiseXorAssignment:
-            generator.emit<Bytecode::Op::BitwiseXor>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::BitwiseXor>(lhs_reg);
             break;
         case AssignmentOp::LeftShiftAssignment:
-            generator.emit<Bytecode::Op::LeftShift>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::LeftShift>(lhs_reg);
             break;
         case AssignmentOp::RightShiftAssignment:
-            generator.emit<Bytecode::Op::RightShift>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::RightShift>(lhs_reg);
             break;
         case AssignmentOp::UnsignedRightShiftAssignment:
-            generator.emit<Bytecode::Op::UnsignedRightShift>(dst_reg, *lhs_reg, *rhs_reg);
+            generator.emit<Bytecode::Op::UnsignedRightShift>(lhs_reg);
             break;
         default:
             TODO();
         }
 
-        generator.emit<Bytecode::Op::SetVariable>(identifier.string(), dst_reg);
+        generator.emit<Bytecode::Op::SetVariable>(identifier.string());
 
-        return dst_reg;
+        return;
     }
 
     if (is<MemberExpression>(*m_lhs)) {
         auto& expression = static_cast<MemberExpression const&>(*m_lhs);
-        auto object_reg = expression.object().generate_bytecode(generator);
+        expression.object().generate_bytecode(generator);
+        auto object_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(object_reg);
 
         if (expression.is_computed()) {
             TODO();
         } else {
             VERIFY(is<Identifier>(expression.property()));
-            auto rhs_reg = m_rhs->generate_bytecode(generator);
-            generator.emit<Bytecode::Op::PutById>(*object_reg, static_cast<Identifier const&>(expression.property()).string(), *rhs_reg);
-            return rhs_reg;
+            m_rhs->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::PutById>(object_reg, static_cast<Identifier const&>(expression.property()).string());
+            return;
         }
     }
 
     TODO();
 }
 
-Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.begin_continuable_scope();
     auto test_label = generator.make_label();
-    auto test_result_reg = m_test->generate_bytecode(generator);
-    VERIFY(test_result_reg.has_value());
-    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
-    auto body_result_reg = m_body->generate_bytecode(generator);
+    m_test->generate_bytecode(generator);
+    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    m_body->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Jump>(test_label);
     test_jump.set_target(generator.make_label());
     generator.end_continuable_scope();
-    return body_result_reg;
 }
 
-Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.begin_continuable_scope();
     auto head_label = generator.make_label();
-    auto body_result_reg = m_body->generate_bytecode(generator);
+    m_body->generate_bytecode(generator);
     generator.end_continuable_scope();
-    auto test_result_reg = m_test->generate_bytecode(generator);
-    VERIFY(test_result_reg.has_value());
-    generator.emit<Bytecode::Op::JumpIfTrue>(*test_result_reg, head_label);
-    return body_result_reg;
+    m_test->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::JumpIfTrue>(head_label);
 }
 
-Optional<Bytecode::Register> ForStatement::generate_bytecode(Bytecode::Generator& generator) const
+void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     Bytecode::Op::Jump* test_jump { nullptr };
 
-    if (m_init) {
-        [[maybe_unused]] auto init_result_reg = m_init->generate_bytecode(generator);
-    }
+    if (m_init)
+        m_init->generate_bytecode(generator);
+
     generator.begin_continuable_scope();
     auto jump_label = generator.make_label();
     if (m_test) {
-        auto test_result_reg = m_test->generate_bytecode(generator);
-        VERIFY(test_result_reg.has_value());
-        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
+        m_test->generate_bytecode(generator);
+        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>();
     }
-    auto body_result_reg = m_body->generate_bytecode(generator);
-    if (m_update) {
-        [[maybe_unused]] auto update_result_reg = m_update->generate_bytecode(generator);
-    }
+
+    m_body->generate_bytecode(generator);
+    if (m_update)
+        m_update->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Jump>(jump_label);
     if (m_test)
         test_jump->set_target(generator.make_label());
     generator.end_continuable_scope();
-    return body_result_reg;
 }
 
-Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
+void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::NewObject>(reg);
+    generator.emit<Bytecode::Op::NewObject>();
 
-    if (!m_properties.is_empty()) {
+    if (!m_properties.is_empty())
         TODO();
-    }
-
-    return reg;
 }
 
-Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
+void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto object_reg = object().generate_bytecode(generator);
+    object().generate_bytecode(generator);
 
     if (is_computed()) {
         TODO();
     } else {
         VERIFY(is<Identifier>(property()));
-        auto dst_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::GetById>(dst_reg, *object_reg, static_cast<Identifier const&>(property()).string());
-        return dst_reg;
+        generator.emit<Bytecode::Op::GetById>(static_cast<Identifier const&>(property()).string());
     }
 }
 
-Optional<Bytecode::Register> FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
+void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
 {
-    return {};
 }
 
-Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
+void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto callee_reg = m_callee->generate_bytecode(generator);
+    m_callee->generate_bytecode(generator);
+    auto callee_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(callee_reg);
 
     // FIXME: Load the correct 'this' value into 'this_reg'.
     auto this_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Load>(this_reg, js_undefined());
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    generator.emit<Bytecode::Op::Store>(this_reg);
 
     Vector<Bytecode::Register> argument_registers;
-    for (auto& arg : m_arguments)
-        argument_registers.append(*arg.value->generate_bytecode(generator));
-    auto dst_reg = generator.allocate_register();
-    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), dst_reg, *callee_reg, this_reg, argument_registers);
-    return dst_reg;
-}
-
-Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
-{
-    Optional<Bytecode::Register> argument_reg;
-    if (m_argument)
-        argument_reg = m_argument->generate_bytecode(generator);
-
-    generator.emit<Bytecode::Op::Return>(argument_reg);
-    return argument_reg;
-}
-
-Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
-{
-    auto result_reg = generator.allocate_register();
-    auto predicate_reg = m_predicate->generate_bytecode(generator);
-    auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*predicate_reg);
-
-    auto consequent_reg = m_consequent->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
-    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
-
-    else_jump.set_target(generator.make_label());
-    if (m_alternate) {
-        auto alternative_reg = m_alternate->generate_bytecode(generator);
-        generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
-    } else {
-        generator.emit<Bytecode::Op::Load>(result_reg, js_undefined());
+    for (auto& arg : m_arguments) {
+        arg.value->generate_bytecode(generator);
+        auto arg_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(arg_reg);
+        argument_registers.append(arg_reg);
     }
-
-    end_jump.set_target(generator.make_label());
-
-    return result_reg;
+    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), callee_reg, this_reg, argument_registers);
 }
 
-Optional<Bytecode::Register> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
+void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::Return>();
+}
+
+void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    m_predicate->generate_bytecode(generator);
+    auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+
+    m_consequent->generate_bytecode(generator);
+    if (m_alternate) {
+        auto& if_jump = generator.emit<Bytecode::Op::Jump>();
+        else_jump.set_target(generator.make_label());
+        m_alternate->generate_bytecode(generator);
+        if_jump.set_target(generator.make_label());
+    } else {
+        else_jump.set_target(generator.make_label());
+    }
+}
+
+void ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::Jump>(generator.nearest_continuable_scope());
-    return {};
 }
 
-Optional<Bytecode::Register> DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
+void DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
 {
-    return {};
 }
 
-Optional<Bytecode::Register> ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
+void ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    auto result_reg = generator.allocate_register();
-    auto test_reg = m_test->generate_bytecode(generator);
-    auto& alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*test_reg);
+    m_test->generate_bytecode(generator);
+    auto& alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
 
-    auto consequent_reg = m_consequent->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
+    m_consequent->generate_bytecode(generator);
     auto& end_jump = generator.emit<Bytecode::Op::Jump>();
 
     alternate_jump.set_target(generator.make_label());
-    auto alternative_reg = m_alternate->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
+    m_alternate->generate_bytecode(generator);
 
     end_jump.set_target(generator.make_label());
-
-    return result_reg;
 }
 
-Optional<Bytecode::Register> SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
+void SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Optional<Bytecode::Register> last_reg;
-
     for (auto& expression : m_expressions)
-        last_reg = expression.generate_bytecode(generator);
-
-    return last_reg;
+        expression.generate_bytecode(generator);
 }
 
-Optional<Bytecode::Register> TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
+void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Optional<Bytecode::Register> result_reg;
+    auto string_reg = generator.allocate_register();
 
-    for (auto& expression : m_expressions) {
-        auto expr_reg = expression.generate_bytecode(generator);
-        if (!result_reg.has_value())
-            result_reg = expr_reg;
-        else
-            generator.emit<Bytecode::Op::Add>(*result_reg, *result_reg, *expr_reg);
+    for (size_t i = 0; i < m_expressions.size(); i++) {
+        m_expressions[i].generate_bytecode(generator);
+        if (i == 0) {
+            generator.emit<Bytecode::Op::Store>(string_reg);
+        } else {
+            generator.emit<Bytecode::Op::ConcatString>(string_reg);
+        }
     }
-
-    if (!result_reg.has_value()) {
-        result_reg = generator.allocate_register();
-        generator.emit<Bytecode::Op::NewString>(*result_reg, "");
-    }
-
-    return result_reg;
 }
 
 }

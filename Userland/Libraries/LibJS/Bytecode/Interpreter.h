@@ -30,6 +30,7 @@ public:
 
     Value run(Bytecode::Block const&);
 
+    ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
 
     void jump(Label const& label) { m_pending_jump = label.address(); }

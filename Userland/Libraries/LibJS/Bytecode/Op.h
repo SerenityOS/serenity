@@ -19,26 +19,8 @@ namespace JS::Bytecode::Op {
 
 class Load final : public Instruction {
 public:
-    Load(Register dst, Value value)
+    Load(Register src)
         : Instruction(Type::Load)
-        , m_dst(dst)
-        , m_value(value)
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-
-private:
-    Register m_dst;
-    Value m_value;
-};
-
-class LoadRegister final : public Instruction {
-public:
-    LoadRegister(Register dst, Register src)
-        : Instruction(Type::LoadRegister)
-        , m_dst(dst)
         , m_src(src)
     {
     }
@@ -47,8 +29,37 @@ public:
     String to_string() const;
 
 private:
-    Register m_dst;
     Register m_src;
+};
+
+class LoadImmediate final : public Instruction {
+public:
+    LoadImmediate(Value value)
+        : Instruction(Type::LoadImmediate)
+        , m_value(value)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Value m_value;
+};
+
+class Store final : public Instruction {
+public:
+    Store(Register dst)
+        : Instruction(Type::Store)
+        , m_dst(dst)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
 };
 
 #define JS_ENUMERATE_COMMON_BINARY_OPS(O)     \
@@ -78,11 +89,9 @@ private:
 #define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
     class OpTitleCase final : public Instruction {              \
     public:                                                     \
-        OpTitleCase(Register dst, Register src1, Register src2) \
+        OpTitleCase(Register lhs_reg)                           \
             : Instruction(Type::OpTitleCase)                    \
-            , m_dst(dst)                                        \
-            , m_src1(src1)                                      \
-            , m_src2(src2)                                      \
+            , m_lhs_reg(lhs_reg)                                \
         {                                                       \
         }                                                       \
                                                                 \
@@ -90,9 +99,7 @@ private:
         String to_string() const;                               \
                                                                 \
     private:                                                    \
-        Register m_dst;                                         \
-        Register m_src1;                                        \
-        Register m_src2;                                        \
+        Register m_lhs_reg;                                     \
     };
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
@@ -108,19 +115,13 @@ JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
 #define JS_DECLARE_COMMON_UNARY_OP(OpTitleCase, op_snake_case) \
     class OpTitleCase final : public Instruction {             \
     public:                                                    \
-        OpTitleCase(Register dst, Register src)                \
+        OpTitleCase()                                          \
             : Instruction(Type::OpTitleCase)                   \
-            , m_dst(dst)                                       \
-            , m_src(src)                                       \
         {                                                      \
         }                                                      \
                                                                \
         void execute(Bytecode::Interpreter&) const;            \
         String to_string() const;                              \
-                                                               \
-    private:                                                   \
-        Register m_dst;                                        \
-        Register m_src;                                        \
     };
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
@@ -128,9 +129,8 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
 
 class NewString final : public Instruction {
 public:
-    NewString(Register dst, String string)
+    NewString(String string)
         : Instruction(Type::NewString)
-        , m_dst(dst)
         , m_string(move(string))
     {
     }
@@ -139,30 +139,24 @@ public:
     String to_string() const;
 
 private:
-    Register m_dst;
     String m_string;
 };
 
 class NewObject final : public Instruction {
 public:
-    explicit NewObject(Register dst)
+    NewObject()
         : Instruction(Type::NewObject)
-        , m_dst(dst)
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
-
-private:
-    Register m_dst;
 };
 
 class NewBigInt final : public Instruction {
 public:
-    explicit NewBigInt(Register dst, Crypto::SignedBigInteger bigint)
+    explicit NewBigInt(Crypto::SignedBigInteger bigint)
         : Instruction(Type::NewBigInt)
-        , m_dst(dst)
         , m_bigint(move(bigint))
     {
     }
@@ -171,16 +165,29 @@ public:
     String to_string() const;
 
 private:
-    Register m_dst;
     Crypto::SignedBigInteger m_bigint;
+};
+
+class ConcatString final : public Instruction {
+public:
+    ConcatString(Register lhs)
+        : Instruction(Type::ConcatString)
+        , m_lhs(lhs)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_lhs;
 };
 
 class SetVariable final : public Instruction {
 public:
-    SetVariable(FlyString identifier, Register src)
+    SetVariable(FlyString identifier)
         : Instruction(Type::SetVariable)
         , m_identifier(move(identifier))
-        , m_src(src)
     {
     }
 
@@ -189,14 +196,12 @@ public:
 
 private:
     FlyString m_identifier;
-    Register m_src;
 };
 
 class GetVariable final : public Instruction {
 public:
-    GetVariable(Register dst, FlyString identifier)
+    GetVariable(FlyString identifier)
         : Instruction(Type::GetVariable)
-        , m_dst(dst)
         , m_identifier(move(identifier))
     {
     }
@@ -205,16 +210,13 @@ public:
     String to_string() const;
 
 private:
-    Register m_dst;
     FlyString m_identifier;
 };
 
 class GetById final : public Instruction {
 public:
-    GetById(Register dst, Register base, FlyString property)
+    GetById(FlyString property)
         : Instruction(Type::GetById)
-        , m_dst(dst)
-        , m_base(base)
         , m_property(move(property))
     {
     }
@@ -223,18 +225,15 @@ public:
     String to_string() const;
 
 private:
-    Register m_dst;
-    Register m_base;
     FlyString m_property;
 };
 
 class PutById final : public Instruction {
 public:
-    PutById(Register base, FlyString property, Register src)
+    PutById(Register base, FlyString property)
         : Instruction(Type::PutById)
         , m_base(base)
         , m_property(move(property))
-        , m_src(src)
     {
     }
 
@@ -244,7 +243,6 @@ public:
 private:
     Register m_base;
     FlyString m_property;
-    Register m_src;
 };
 
 class Jump : public Instruction {
@@ -272,55 +270,42 @@ protected:
 
 class JumpIfFalse final : public Jump {
 public:
-    explicit JumpIfFalse(Register result, Optional<Label> target = {})
+    explicit JumpIfFalse(Optional<Label> target = {})
         : Jump(Type::JumpIfFalse, move(target))
-        , m_result(result)
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
-
-private:
-    Register m_result;
 };
 
 class JumpIfTrue : public Jump {
 public:
-    explicit JumpIfTrue(Register result, Optional<Label> target = {})
+    explicit JumpIfTrue(Optional<Label> target = {})
         : Jump(Type::JumpIfTrue, move(target))
-        , m_result(result)
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
-
-private:
-    Register m_result;
 };
 
-class JumpIfNullish final : public Jump {
+class JumpIfNotNullish final : public Jump {
 public:
-    explicit JumpIfNullish(Register result, Optional<Label> target = {})
-        : Jump(Type::JumpIfNullish, move(target))
-        , m_result(result)
+    explicit JumpIfNotNullish(Optional<Label> target = {})
+        : Jump(Type::JumpIfNotNullish, move(target))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
-
-private:
-    Register m_result;
 };
 
 // NOTE: This instruction is variable-width depending on the number of arguments!
 class Call final : public Instruction {
 public:
-    Call(Register dst, Register callee, Register this_value, Vector<Register> const& arguments)
+    Call(Register callee, Register this_value, Vector<Register> const& arguments)
         : Instruction(Type::Call)
-        , m_dst(dst)
         , m_callee(callee)
         , m_this_value(this_value)
         , m_argument_count(arguments.size())
@@ -335,7 +320,6 @@ public:
     size_t length() const { return sizeof(*this) + sizeof(Register) * m_argument_count; }
 
 private:
-    Register m_dst;
     Register m_callee;
     Register m_this_value;
     size_t m_argument_count { 0 };
@@ -359,17 +343,13 @@ private:
 
 class Return final : public Instruction {
 public:
-    explicit Return(Optional<Register> argument)
+    Return()
         : Instruction(Type::Return)
-        , m_argument(move(argument))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
-
-private:
-    Optional<Register> m_argument;
 };
 
 }
