@@ -7,11 +7,17 @@ test("constructs properly", () => {
 test("constructor argument count", () => {
     expect(() => {
         new Proxy();
-    }).toThrowWithMessage(TypeError, "Proxy constructor requires at least two arguments");
+    }).toThrowWithMessage(
+        TypeError,
+        "Expected target argument of Proxy constructor to be object, got undefined"
+    );
 
     expect(() => {
         new Proxy({});
-    }).toThrowWithMessage(TypeError, "Proxy constructor requires at least two arguments");
+    }).toThrowWithMessage(
+        TypeError,
+        "Expected handler argument of Proxy constructor to be object, got undefined"
+    );
 });
 
 test("constructor requires objects", () => {
