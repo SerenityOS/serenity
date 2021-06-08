@@ -72,7 +72,8 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
         vm.throw_exception<TypeError>(global_object, ErrorType::StringRawCannotConvert, raw.is_null() ? "null" : "undefined");
         return {};
     }
-    if (!raw.is_array())
+    // FIXME: This should use length_of_array_like() and work with any object
+    if (!raw.is_object() || !raw.as_object().is_array())
         return js_string(vm, "");
 
     auto* array = static_cast<Array*>(raw.to_object(global_object));

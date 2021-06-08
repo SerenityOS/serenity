@@ -26,6 +26,7 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Symbol.h>
@@ -196,14 +197,29 @@ static String double_to_string(double d)
     return builder.to_string();
 }
 
-bool Value::is_array() const
+// 7.2.2 IsArray, https://tc39.es/ecma262/#sec-isarray
+bool Value::is_array(GlobalObject& global_object) const
 {
-    return is_object() && as_object().is_array();
+    if (!is_object())
+        return false;
+    auto& object = as_object();
+    if (object.is_array())
+        return true;
+    if (is<ProxyObject>(object)) {
+        auto& proxy = static_cast<ProxyObject const&>(object);
+        if (proxy.is_revoked()) {
+            auto& vm = global_object.vm();
+            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
+            return false;
+        }
+        return Value(&proxy.target()).is_array(global_object);
+    }
+    return false;
 }
 
 Array& Value::as_array()
 {
-    VERIFY(is_array());
+    VERIFY(is_object() && as_object().is_array());
     return static_cast<Array&>(*m_value.as_object);
 }
 

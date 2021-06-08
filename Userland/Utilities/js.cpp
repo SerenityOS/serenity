@@ -386,11 +386,10 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
         seen_objects.set(&value.as_object());
     }
 
-    if (value.is_array())
-        return print_array(static_cast<JS::Array&>(value.as_object()), seen_objects);
-
     if (value.is_object()) {
         auto& object = value.as_object();
+        if (object.is_array())
+            return print_array(static_cast<JS::Array&>(object), seen_objects);
         if (object.is_function())
             return print_function(object, seen_objects);
         if (is<JS::Date>(object))

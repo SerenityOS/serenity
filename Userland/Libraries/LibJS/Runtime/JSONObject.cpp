@@ -48,7 +48,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     if (replacer.is_object()) {
         if (replacer.as_object().is_function()) {
             state.replacer_function = &replacer.as_function();
-        } else if (replacer.is_array()) {
+        } else if (replacer.is_array(global_object)) {
             auto& replacer_object = replacer.as_object();
             auto replacer_length = length_of_array_like(global_object, replacer_object);
             if (vm.exception())
@@ -77,6 +77,8 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
             }
             state.property_list = list;
         }
+        if (vm.exception())
+            return {};
     }
 
     if (space.is_object()) {
@@ -172,8 +174,10 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
         return "null";
     }
     if (value.is_object() && !value.is_function()) {
-        if (value.is_array())
+        if (value.is_array(global_object))
             return serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
+        if (vm.exception())
+            return {};
         return serialize_json_object(global_object, state, value.as_object());
     }
     if (value.is_bigint())
