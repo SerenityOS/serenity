@@ -97,6 +97,17 @@ class ExpectationError extends Error {
             });
         }
 
+        toHaveSize(size) {
+            this.__expect(
+                typeof this.target.size === "number",
+                () => "toHaveSize: target.size not of type number"
+            );
+
+            this.__doMatcher(() => {
+                this.__expect(Object.is(this.target.size, size));
+            });
+        }
+
         toHaveProperty(property, value) {
             this.__doMatcher(() => {
                 let object = this.target;

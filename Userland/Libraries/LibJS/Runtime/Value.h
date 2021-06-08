@@ -253,6 +253,8 @@ public:
     i32 as_i32() const;
     u32 as_u32() const;
 
+    u64 encoded() const { return m_value.encoded; }
+
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
@@ -301,7 +303,9 @@ private:
         Accessor* as_accessor;
         BigInt* as_bigint;
         NativeProperty* as_native_property;
-    } m_value;
+
+        u64 encoded;
+    } m_value { .encoded = 0 };
 };
 
 inline Value js_undefined()
