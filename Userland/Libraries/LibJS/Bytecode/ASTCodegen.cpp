@@ -121,6 +121,53 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     }
 }
 
+Optional<Bytecode::Register> LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto result_reg = generator.allocate_register();
+    auto lhs_reg = m_lhs->generate_bytecode(generator);
+
+    Bytecode::Instruction* test_instr;
+    switch (m_op) {
+    case LogicalOp::And:
+        test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>(*lhs_reg);
+        break;
+    case LogicalOp::Or:
+        test_instr = &generator.emit<Bytecode::Op::JumpIfFalse>(*lhs_reg);
+        break;
+    case LogicalOp::NullishCoalescing:
+        test_instr = &generator.emit<Bytecode::Op::JumpIfNullish>(*lhs_reg);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *lhs_reg);
+    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
+
+    auto rhs_label = generator.make_label();
+
+    switch (m_op) {
+    case LogicalOp::And:
+        static_cast<Bytecode::Op::JumpIfTrue*>(test_instr)->set_target(rhs_label);
+        break;
+    case LogicalOp::Or:
+        static_cast<Bytecode::Op::JumpIfFalse*>(test_instr)->set_target(rhs_label);
+        break;
+    case LogicalOp::NullishCoalescing:
+        static_cast<Bytecode::Op::JumpIfNullish*>(test_instr)->set_target(rhs_label);
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    auto rhs_reg = m_rhs->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::LoadRegister>(result_reg, *rhs_reg);
+
+    end_jump.set_target(generator.make_label());
+
+    return result_reg;
+}
+
 Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto lhs_reg = m_lhs->generate_bytecode(generator);
