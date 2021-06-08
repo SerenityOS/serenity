@@ -51,12 +51,17 @@ namespace JS::Bytecode::Op {
 
 void Load::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = m_value;
+    interpreter.accumulator() = interpreter.reg(m_src);
 }
 
-void LoadRegister::execute(Bytecode::Interpreter& interpreter) const
+void LoadImmediate::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = interpreter.reg(m_src);
+    interpreter.accumulator() = m_value;
+}
+
+void Store::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = interpreter.accumulator();
 }
 
 static Value abstract_inequals(GlobalObject& global_object, Value src1, Value src2)
@@ -79,14 +84,16 @@ static Value typed_equals(GlobalObject&, Value src1, Value src2)
     return Value(strict_eq(src1, src2));
 }
 
-#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                                                                 \
-    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                                                        \
-    {                                                                                                                          \
-        interpreter.reg(m_dst) = op_snake_case(interpreter.global_object(), interpreter.reg(m_src1), interpreter.reg(m_src2)); \
-    }                                                                                                                          \
-    String OpTitleCase::to_string() const                                                                                      \
-    {                                                                                                                          \
-        return String::formatted(#OpTitleCase " dst:{}, src1:{}, src2:{}", m_dst, m_src1, m_src2);                             \
+#define JS_DEFINE_COMMON_BINARY_OP(OpTitleCase, op_snake_case)                            \
+    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                   \
+    {                                                                                     \
+        auto lhs = interpreter.reg(m_lhs_reg);                                            \
+        auto rhs = interpreter.accumulator();                                             \
+        interpreter.accumulator() = op_snake_case(interpreter.global_object(), lhs, rhs); \
+    }                                                                                     \
+    String OpTitleCase::to_string() const                                                 \
+    {                                                                                     \
+        return String::formatted(#OpTitleCase " lhs:{}", m_lhs_reg);                      \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
@@ -101,53 +108,58 @@ static Value typeof_(GlobalObject& global_object, Value value)
     return js_string(global_object.vm(), value.typeof());
 }
 
-#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                        \
-    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                              \
-    {                                                                                                \
-        interpreter.reg(m_dst) = op_snake_case(interpreter.global_object(), interpreter.reg(m_src)); \
-    }                                                                                                \
-    String OpTitleCase::to_string() const                                                            \
-    {                                                                                                \
-        return String::formatted(#OpTitleCase " dst:{}, src:{}", m_dst, m_src);                      \
+#define JS_DEFINE_COMMON_UNARY_OP(OpTitleCase, op_snake_case)                                              \
+    void OpTitleCase::execute(Bytecode::Interpreter& interpreter) const                                    \
+    {                                                                                                      \
+        interpreter.accumulator() = op_snake_case(interpreter.global_object(), interpreter.accumulator()); \
+    }                                                                                                      \
+    String OpTitleCase::to_string() const                                                                  \
+    {                                                                                                      \
+        return #OpTitleCase;                                                                               \
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 
 void NewBigInt::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = js_bigint(interpreter.vm().heap(), m_bigint);
+    interpreter.accumulator() = js_bigint(interpreter.vm().heap(), m_bigint);
 }
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = js_string(interpreter.vm(), m_string);
+    interpreter.accumulator() = js_string(interpreter.vm(), m_string);
 }
 
 void NewObject::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = Object::create_empty(interpreter.global_object());
+    interpreter.accumulator() = Object::create_empty(interpreter.global_object());
+}
+
+void ConcatString::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_lhs) = add(interpreter.global_object(), interpreter.reg(m_lhs), interpreter.accumulator());
 }
 
 void GetVariable::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.reg(m_dst) = interpreter.vm().get_variable(m_identifier, interpreter.global_object());
+    interpreter.accumulator() = interpreter.vm().get_variable(m_identifier, interpreter.global_object());
 }
 
 void SetVariable::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.vm().set_variable(m_identifier, interpreter.reg(m_src), interpreter.global_object());
+    interpreter.vm().set_variable(m_identifier, interpreter.accumulator(), interpreter.global_object());
 }
 
 void GetById::execute(Bytecode::Interpreter& interpreter) const
 {
-    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        interpreter.reg(m_dst) = object->get(m_property);
+    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
+        interpreter.accumulator() = object->get(m_property);
 }
 
 void PutById::execute(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        object->put(m_property, interpreter.reg(m_src));
+        object->put(m_property, interpreter.accumulator());
 }
 
 void Jump::execute(Bytecode::Interpreter& interpreter) const
@@ -158,7 +170,7 @@ void Jump::execute(Bytecode::Interpreter& interpreter) const
 void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_target.has_value());
-    auto result = interpreter.reg(m_result);
+    auto result = interpreter.accumulator();
     if (!result.to_boolean())
         interpreter.jump(m_target.value());
 }
@@ -166,16 +178,16 @@ void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
 void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_target.has_value());
-    auto result = interpreter.reg(m_result);
+    auto result = interpreter.accumulator();
     if (result.to_boolean())
         interpreter.jump(m_target.value());
 }
 
-void JumpIfNullish::execute(Bytecode::Interpreter& interpreter) const
+void JumpIfNotNullish::execute(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_target.has_value());
-    auto result = interpreter.reg(m_result);
-    if (result.is_nullish())
+    auto result = interpreter.accumulator();
+    if (!result.is_nullish())
         interpreter.jump(m_target.value());
 }
 
@@ -201,7 +213,7 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
         return_value = interpreter.vm().call(function, this_value, move(argument_values));
     }
 
-    interpreter.reg(m_dst) = return_value;
+    interpreter.accumulator() = return_value;
 }
 
 void EnterScope::execute(Bytecode::Interpreter& interpreter) const
@@ -223,53 +235,62 @@ void EnterScope::execute(Bytecode::Interpreter& interpreter) const
 
 void Return::execute(Bytecode::Interpreter& interpreter) const
 {
-    auto return_value = m_argument.has_value() ? interpreter.reg(m_argument.value()) : js_undefined();
-    interpreter.do_return(return_value);
+    interpreter.do_return(interpreter.accumulator().value_or(js_undefined()));
 }
 
 String Load::to_string() const
 {
-    return String::formatted("Load dst:{}, value:{}", m_dst, m_value.to_string_without_side_effects());
+    return String::formatted("Load src:{}", m_src);
 }
 
-String LoadRegister::to_string() const
+String LoadImmediate::to_string() const
 {
-    return String::formatted("LoadRegister dst:{}, src:{}", m_dst, m_src);
+    return String::formatted("LoadImmediate value:{}", m_value);
+}
+
+String Store::to_string() const
+{
+    return String::formatted("Store dst:{}", m_dst);
 }
 
 String NewBigInt::to_string() const
 {
-    return String::formatted("NewBigInt dst:{}, bigint:\"{}\"", m_dst, m_bigint.to_base10());
+    return String::formatted("NewBigInt bigint:\"{}\"", m_bigint.to_base10());
 }
 
 String NewString::to_string() const
 {
-    return String::formatted("NewString dst:{}, string:\"{}\"", m_dst, m_string);
+    return String::formatted("NewString string:\"{}\"", m_string);
 }
 
 String NewObject::to_string() const
 {
-    return String::formatted("NewObject dst:{}", m_dst);
+    return "NewObject";
+}
+
+String ConcatString::to_string() const
+{
+    return String::formatted("ConcatString lhs:{}", m_lhs);
 }
 
 String GetVariable::to_string() const
 {
-    return String::formatted("GetVariable dst:{}, identifier:{}", m_dst, m_identifier);
+    return String::formatted("GetVariable identifier:{}", m_identifier);
 }
 
 String SetVariable::to_string() const
 {
-    return String::formatted("SetVariable identifier:{}, src:{}", m_identifier, m_src);
+    return String::formatted("SetVariable identifier:{}", m_identifier);
 }
 
 String PutById::to_string() const
 {
-    return String::formatted("PutById base:{}, property:{}, src:{}", m_base, m_property, m_src);
+    return String::formatted("PutById base:{}, property:{}", m_base, m_property);
 }
 
 String GetById::to_string() const
 {
-    return String::formatted("GetById dst:{}, base:{}, property:{}", m_dst, m_base, m_property);
+    return String::formatted("GetById property:{}", m_property);
 }
 
 String Jump::to_string() const
@@ -280,28 +301,28 @@ String Jump::to_string() const
 String JumpIfFalse::to_string() const
 {
     if (m_target.has_value())
-        return String::formatted("JumpIfFalse result:{}, target:{}", m_result, m_target.value());
-    return String::formatted("JumpIfFalse result:{}, target:<empty>", m_result);
+        return String::formatted("JumpIfFalse target:{}", m_target.value());
+    return "JumpIfFalse target:<empty>";
 }
 
 String JumpIfTrue::to_string() const
 {
     if (m_target.has_value())
-        return String::formatted("JumpIfTrue result:{}, target:{}", m_result, m_target.value());
-    return String::formatted("JumpIfTrue result:{}, target:<empty>", m_result);
+        return String::formatted("JumpIfTrue target:{}", m_target.value());
+    return "JumpIfTrue result:{}, target:<empty>";
 }
 
-String JumpIfNullish::to_string() const
+String JumpIfNotNullish::to_string() const
 {
     if (m_target.has_value())
-        return String::formatted("JumpIfNullish result:{}, target:{}", m_result, m_target.value());
-    return String::formatted("JumpIfNullish result:{}, target:<empty>", m_result);
+        return String::formatted("JumpIfNotNullish target:{}", m_target.value());
+    return "JumpIfNotNullish target:<empty>";
 }
 
 String Call::to_string() const
 {
     StringBuilder builder;
-    builder.appendff("Call dst:{}, callee:{}, this:{}", m_dst, m_callee, m_this_value);
+    builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
     if (m_argument_count != 0) {
         builder.append(", arguments:[");
         for (size_t i = 0; i < m_argument_count; ++i) {
@@ -321,8 +342,6 @@ String EnterScope::to_string() const
 
 String Return::to_string() const
 {
-    if (m_argument.has_value())
-        return String::formatted("Return {}", m_argument.value());
     return "Return";
 }
 

@@ -11,7 +11,8 @@
 
 #define ENUMERATE_BYTECODE_OPS(O) \
     O(Load)                       \
-    O(LoadRegister)               \
+    O(LoadImmediate)              \
+    O(Store)                      \
     O(Add)                        \
     O(Sub)                        \
     O(Mul)                        \
@@ -36,7 +37,7 @@
     O(Jump)                       \
     O(JumpIfFalse)                \
     O(JumpIfTrue)                 \
-    O(JumpIfNullish)              \
+    O(JumpIfNotNullish)           \
     O(Call)                       \
     O(EnterScope)                 \
     O(Return)                     \
@@ -52,7 +53,8 @@
     O(RightShift)                 \
     O(UnsignedRightShift)         \
     O(In)                         \
-    O(InstanceOf)
+    O(InstanceOf)                 \
+    O(ConcatString)
 
 namespace JS::Bytecode {
 
