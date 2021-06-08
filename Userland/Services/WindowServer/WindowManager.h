@@ -200,19 +200,19 @@ public:
     {
         auto* blocking_modal_window = window.blocking_modal_window();
         if (blocking_modal_window || window.is_modal()) {
-            Vector<Window*> modal_stack;
+            Vector<Window&> modal_stack;
             auto* modal_stack_top = blocking_modal_window ? blocking_modal_window : &window;
             for (auto* parent = modal_stack_top->parent_window(); parent; parent = parent->parent_window()) {
                 auto* blocked_by = parent->blocking_modal_window();
                 if (!blocked_by || (blocked_by != modal_stack_top && !modal_stack_top->is_descendant_of(*blocked_by)))
                     break;
-                modal_stack.append(parent);
+                modal_stack.append(*parent);
                 if (!parent->is_modal())
                     break;
             }
             if (!modal_stack.is_empty()) {
                 for (size_t i = modal_stack.size(); i > 0; i--) {
-                    IterationDecision decision = f(*modal_stack[i - 1], false);
+                    IterationDecision decision = f(modal_stack[i - 1], false);
                     if (decision != IterationDecision::Continue)
                         return decision;
                 }

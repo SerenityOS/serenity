@@ -37,7 +37,7 @@ private:
     static String default_path(const URL& url);
 
     void store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, const URL& url, String canonicalized_domain, Web::Cookie::Source source);
-    Vector<Web::Cookie::Cookie*> get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source);
+    Vector<Web::Cookie::Cookie&> get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source);
     void purge_expired_cookies();
 
     HashMap<CookieStorageKey, Web::Cookie::Cookie> m_cookies;

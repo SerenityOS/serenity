@@ -228,7 +228,7 @@ ByteBuffer TLSv12::build_certificate()
 {
     PacketBuilder builder { MessageType::Handshake, m_context.options.version };
 
-    Vector<const Certificate*> certificates;
+    Vector<Certificate const&> certificates;
     Vector<Certificate>* local_certificates = nullptr;
 
     if (m_context.is_server) {
@@ -250,7 +250,7 @@ ByteBuffer TLSv12::build_certificate()
 
             // FIXME: Check for and respond with only the requested certificate types.
             if (true) {
-                certificates.append(&certificate);
+                certificates.append(certificate);
             }
         }
     }
@@ -266,9 +266,9 @@ ByteBuffer TLSv12::build_certificate()
         builder.append_u24(total_certificate_size);
 
         for (auto& certificate : certificates) {
-            if (!certificate->der.is_empty()) {
-                builder.append_u24(certificate->der.size());
-                builder.append(certificate->der.bytes());
+            if (!certificate.der.is_empty()) {
+                builder.append_u24(certificate.der.size());
+                builder.append(certificate.der.bytes());
             }
         }
     }

@@ -115,18 +115,18 @@ void Sheet::update()
         return;
     }
     m_visited_cells_in_update.clear();
-    Vector<Cell*> cells_copy;
+    Vector<Cell&> cells_copy;
 
     // Grab a copy as updates might insert cells into the table.
     for (auto& it : m_cells) {
         if (it.value->dirty()) {
-            cells_copy.append(it.value);
+            cells_copy.append(*it.value);
             m_workbook.set_dirty(true);
         }
     }
 
     for (auto& cell : cells_copy)
-        update(*cell);
+        update(cell);
 
     m_visited_cells_in_update.clear();
 }

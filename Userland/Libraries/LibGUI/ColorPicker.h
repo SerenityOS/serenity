@@ -37,7 +37,7 @@ private:
     Color m_color;
     bool m_color_has_alpha_channel { true };
 
-    Vector<ColorButton*> m_color_widgets;
+    Vector<ColorButton&> m_color_widgets;
     RefPtr<CustomColorWidget> m_custom_color;
     RefPtr<ColorPreview> m_preview_widget;
     RefPtr<TextBox> m_html_text;

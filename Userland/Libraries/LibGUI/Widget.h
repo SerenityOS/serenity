@@ -250,7 +250,7 @@ public:
         });
     }
 
-    Vector<Widget*> child_widgets() const;
+    Vector<Widget&> child_widgets() const;
 
     void do_layout();
 

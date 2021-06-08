@@ -58,7 +58,7 @@ struct EventLoop::Private {
 };
 
 static EventLoop* s_main_event_loop;
-static Vector<EventLoop*>* s_event_loop_stack;
+static Vector<EventLoop&>* s_event_loop_stack;
 static NeverDestroyed<IDAllocator> s_id_allocator;
 static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
 static HashTable<Notifier*>* s_notifiers;
@@ -257,7 +257,7 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
     : m_private(make<Private>())
 {
     if (!s_event_loop_stack) {
-        s_event_loop_stack = new Vector<EventLoop*>;
+        s_event_loop_stack = new Vector<EventLoop&>;
         s_timers = new HashMap<int, NonnullOwnPtr<EventLoopTimer>>;
         s_notifiers = new HashTable<Notifier*>;
     }
@@ -274,7 +274,7 @@ EventLoop::EventLoop([[maybe_unused]] MakeInspectable make_inspectable)
 
 #endif
         VERIFY(rc == 0);
-        s_event_loop_stack->append(this);
+        s_event_loop_stack->append(*this);
 
 #ifdef __serenity__
         if (getuid() != 0
@@ -314,9 +314,7 @@ EventLoop& EventLoop::main()
 
 EventLoop& EventLoop::current()
 {
-    EventLoop* event_loop = s_event_loop_stack->last();
-    VERIFY(event_loop != nullptr);
-    return *event_loop;
+    return s_event_loop_stack->last();
 }
 
 void EventLoop::quit(int code)
@@ -340,7 +338,7 @@ public:
     {
         if (&m_event_loop != s_main_event_loop) {
             m_event_loop.take_pending_events_from(EventLoop::current());
-            s_event_loop_stack->append(&event_loop);
+            s_event_loop_stack->append(event_loop);
         }
     }
     ~EventLoopPusher()

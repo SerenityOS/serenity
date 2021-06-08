@@ -136,9 +136,9 @@ void KeyboardMapperWidget::load_from_file(String filename)
     m_character_map = result.value();
     set_current_map("map");
 
-    for (Widget* widget : m_map_group->child_widgets()) {
-        auto radio_button = (GUI::RadioButton*)widget;
-        radio_button->set_checked(radio_button->name() == "map");
+    for (auto& widget : m_map_group->child_widgets()) {
+        auto& radio_button = static_cast<GUI::RadioButton&>(widget);
+        radio_button.set_checked(radio_button.name() == "map");
     }
 
     update_window_title();
@@ -153,9 +153,9 @@ void KeyboardMapperWidget::load_from_system()
     m_character_map = result.value().character_map_data();
     set_current_map("map");
 
-    for (Widget* widget : m_map_group->child_widgets()) {
-        auto radio_button = (GUI::RadioButton*)widget;
-        radio_button->set_checked(radio_button->name() == "map");
+    for (auto& widget : m_map_group->child_widgets()) {
+        auto& radio_button = static_cast<GUI::RadioButton&>(widget);
+        radio_button.set_checked(radio_button.name() == "map");
     }
 
     update_window_title();

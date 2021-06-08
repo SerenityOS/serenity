@@ -489,17 +489,17 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action
     return GUI::Action::create("Switch to &Next Editor", { Mod_Ctrl, Key_E }, [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
-        Vector<EditorWrapper*> wrappers;
+        Vector<EditorWrapper&> wrappers;
         m_editors_splitter->for_each_child_of_type<EditorWrapper>([this, &wrappers](auto& child) {
-            wrappers.append(&child);
+            wrappers.append(child);
             return IterationDecision::Continue;
         });
         for (size_t i = 0; i < wrappers.size(); ++i) {
-            if (m_current_editor_wrapper.ptr() == wrappers[i]) {
+            if (m_current_editor_wrapper.ptr() == &wrappers[i]) {
                 if (i == wrappers.size() - 1)
-                    wrappers[0]->editor().set_focus(true);
+                    wrappers[0].editor().set_focus(true);
                 else
-                    wrappers[i + 1]->editor().set_focus(true);
+                    wrappers[i + 1].editor().set_focus(true);
             }
         }
     });
@@ -510,17 +510,17 @@ NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_previous_editor_ac
     return GUI::Action::create("Switch to &Previous Editor", { Mod_Ctrl | Mod_Shift, Key_E }, [this](auto&) {
         if (m_all_editor_wrappers.size() <= 1)
             return;
-        Vector<EditorWrapper*> wrappers;
+        Vector<EditorWrapper&> wrappers;
         m_editors_splitter->for_each_child_of_type<EditorWrapper>([this, &wrappers](auto& child) {
-            wrappers.append(&child);
+            wrappers.append(child);
             return IterationDecision::Continue;
         });
         for (int i = wrappers.size() - 1; i >= 0; --i) {
-            if (m_current_editor_wrapper.ptr() == wrappers[i]) {
+            if (m_current_editor_wrapper.ptr() == &wrappers[i]) {
                 if (i == 0)
-                    wrappers.last()->editor().set_focus(true);
+                    wrappers.last().editor().set_focus(true);
                 else
-                    wrappers[i - 1]->editor().set_focus(true);
+                    wrappers[i - 1].editor().set_focus(true);
             }
         }
     });

@@ -663,7 +663,7 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
     cpu_graph_group_box.set_layout<GUI::HorizontalBoxLayout>();
     cpu_graph_group_box.layout()->set_margins({ 6, 16, 6, 6 });
     cpu_graph_group_box.set_fixed_height(120);
-    Vector<GraphWidget*> cpu_graphs;
+    Vector<GraphWidget&> cpu_graphs;
     for (size_t i = 0; i < ProcessModel::the().cpus().size(); i++) {
         auto& cpu_graph = cpu_graph_group_box.add<GraphWidget>();
         cpu_graph.set_max(100);
@@ -679,12 +679,12 @@ NonnullRefPtr<GUI::Widget> build_graphs_tab()
                                               return String::formatted("Kernel: {}%", value);
                                           },
                                       });
-        cpu_graphs.append(&cpu_graph);
+        cpu_graphs.append(cpu_graph);
     }
     ProcessModel::the().on_cpu_info_change = [cpu_graphs](const NonnullOwnPtrVector<ProcessModel::CpuInfo>& cpus) {
         float sum_cpu = 0;
         for (size_t i = 0; i < cpus.size(); ++i) {
-            cpu_graphs[i]->add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
+            cpu_graphs[i].add_value({ (int)cpus[i].total_cpu_percent, (int)cpus[i].total_cpu_percent_kernel });
             sum_cpu += cpus[i].total_cpu_percent;
         }
         float cpu_usage = sum_cpu / (float)cpus.size();

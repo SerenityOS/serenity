@@ -843,13 +843,13 @@ void Window::start_interactive_resize()
     WindowServerConnection::the().async_start_window_resize(m_window_id);
 }
 
-Vector<Widget*> Window::focusable_widgets(FocusSource source) const
+Vector<Widget&> Window::focusable_widgets(FocusSource source) const
 {
     if (!m_main_widget)
         return {};
 
     HashTable<Widget*> seen_widgets;
-    Vector<Widget*> collected_widgets;
+    Vector<Widget&> collected_widgets;
 
     Function<void(Widget&)> collect_focusable_widgets = [&](auto& widget) {
         bool widget_accepts_focus = false;
@@ -868,7 +868,7 @@ Vector<Widget*> Window::focusable_widgets(FocusSource source) const
         if (widget_accepts_focus) {
             auto& effective_focus_widget = widget.focus_proxy() ? *widget.focus_proxy() : widget;
             if (seen_widgets.set(&effective_focus_widget) == AK::HashSetResult::InsertedNewEntry)
-                collected_widgets.append(&effective_focus_widget);
+                collected_widgets.append(effective_focus_widget);
         }
         widget.for_each_child_widget([&](auto& child) {
             if (!child.is_visible())
@@ -1056,7 +1056,7 @@ void Window::focus_a_widget_if_possible(FocusSource source)
 {
     auto focusable_widgets = this->focusable_widgets(source);
     if (!focusable_widgets.is_empty())
-        set_focused_widget(focusable_widgets[0], source);
+        set_focused_widget(&focusable_widgets[0], source);
 }
 
 void Window::did_disable_focused_widget(Badge<Widget>)
