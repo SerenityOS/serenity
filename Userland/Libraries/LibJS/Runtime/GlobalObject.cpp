@@ -290,6 +290,11 @@ void GlobalObject::put_to_scope(const FlyString& name, Variable variable)
     put(name, variable.value);
 }
 
+bool GlobalObject::delete_from_scope(FlyString const& name)
+{
+    return delete_property(name);
+}
+
 bool GlobalObject::has_this_binding() const
 {
     return true;
