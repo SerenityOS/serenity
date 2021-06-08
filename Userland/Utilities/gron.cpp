@@ -70,7 +70,15 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    VERIFY(json.has_value());
+
+    if (!json.has_value()) {
+        if (path) {
+            warnln("Failed to parse '{}' as JSON", path);
+        } else {
+            warnln("Failed to parse stdin as JSON");
+        }
+        return 1;
+    }
 
     if (use_color) {
         color_name = "\033[33;1m";
