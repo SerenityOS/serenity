@@ -302,7 +302,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     auto* with_scope = interpreter.heap().allocate<WithScope>(global_object, *object, interpreter.vm().call_frame().scope);
     TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, with_scope);
-    return interpreter.execute_statement(global_object, m_body);
+    return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
 
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
