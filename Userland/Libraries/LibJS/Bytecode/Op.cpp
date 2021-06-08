@@ -8,6 +8,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -111,6 +112,11 @@ static Value typeof_(GlobalObject& global_object, Value value)
     }
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
+
+void NewBigInt::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.reg(m_dst) = js_bigint(interpreter.vm().heap(), m_bigint);
+}
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
@@ -229,6 +235,11 @@ String Load::to_string() const
 String LoadRegister::to_string() const
 {
     return String::formatted("LoadRegister dst:{}, src:{}", m_dst, m_src);
+}
+
+String NewBigInt::to_string() const
+{
+    return String::formatted("NewBigInt dst:{}, bigint:\"{}\"", m_dst, m_bigint.to_base10());
 }
 
 String NewString::to_string() const

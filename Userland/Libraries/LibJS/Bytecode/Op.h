@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/FlyString.h>
+#include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
@@ -155,6 +156,23 @@ public:
 
 private:
     Register m_dst;
+};
+
+class NewBigInt final : public Instruction {
+public:
+    explicit NewBigInt(Register dst, Crypto::SignedBigInteger bigint)
+        : Instruction(Type::NewBigInt)
+        , m_dst(dst)
+        , m_bigint(move(bigint))
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_dst;
+    Crypto::SignedBigInteger m_bigint;
 };
 
 class SetVariable final : public Instruction {

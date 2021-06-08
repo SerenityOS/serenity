@@ -208,6 +208,13 @@ Optional<Bytecode::Register> NullLiteral::generate_bytecode(Bytecode::Generator&
     return dst;
 }
 
+Optional<Bytecode::Register> BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto dst = generator.allocate_register();
+    generator.emit<Bytecode::Op::NewBigInt>(dst, Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
+    return dst;
+}
+
 Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
