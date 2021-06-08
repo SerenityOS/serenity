@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Bytecode/Block.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 

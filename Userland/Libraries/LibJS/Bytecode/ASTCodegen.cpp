@@ -119,16 +119,16 @@ void LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_lhs->generate_bytecode(generator);
 
-    Bytecode::InstructionHandle<Bytecode::Op::Jump> test_instr;
+    Bytecode::Op::Jump* test_instr;
     switch (m_op) {
     case LogicalOp::And:
-        test_instr = generator.emit<Bytecode::Op::JumpIfFalse>();
+        test_instr = &generator.emit<Bytecode::Op::JumpIfFalse>();
         break;
     case LogicalOp::Or:
-        test_instr = generator.emit<Bytecode::Op::JumpIfTrue>();
+        test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>();
         break;
     case LogicalOp::NullishCoalescing:
-        test_instr = generator.emit<Bytecode::Op::JumpIfNotNullish>();
+        test_instr = &generator.emit<Bytecode::Op::JumpIfNotNullish>();
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -285,10 +285,10 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
     auto result_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(result_reg);
     m_test->generate_bytecode(generator);
-    auto test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
     m_body->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Jump>(test_label);
-    test_jump->set_target(generator.make_label());
+    test_jump.set_target(generator.make_label());
     generator.end_continuable_scope();
     generator.emit<Bytecode::Op::Load>(result_reg);
 }
@@ -309,7 +309,7 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 
 void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Bytecode::InstructionHandle<Bytecode::Op::Jump> test_jump;
+    Bytecode::Op::Jump* test_jump { nullptr };
 
     if (m_init)
         m_init->generate_bytecode(generator);
@@ -321,7 +321,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::Store>(result_reg);
     if (m_test) {
         m_test->generate_bytecode(generator);
-        test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>();
     }
 
     m_body->generate_bytecode(generator);
@@ -387,16 +387,16 @@ void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_predicate->generate_bytecode(generator);
-    auto else_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
 
     m_consequent->generate_bytecode(generator);
     if (m_alternate) {
-        auto if_jump = generator.emit<Bytecode::Op::Jump>();
-        else_jump->set_target(generator.make_label());
+        auto& if_jump = generator.emit<Bytecode::Op::Jump>();
+        else_jump.set_target(generator.make_label());
         m_alternate->generate_bytecode(generator);
-        if_jump->set_target(generator.make_label());
+        if_jump.set_target(generator.make_label());
     } else {
-        else_jump->set_target(generator.make_label());
+        else_jump.set_target(generator.make_label());
     }
 }
 
@@ -412,15 +412,15 @@ void DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
 void ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_test->generate_bytecode(generator);
-    auto alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    auto& alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
 
     m_consequent->generate_bytecode(generator);
-    auto end_jump = generator.emit<Bytecode::Op::Jump>();
+    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
 
-    alternate_jump->set_target(generator.make_label());
+    alternate_jump.set_target(generator.make_label());
     m_alternate->generate_bytecode(generator);
 
-    end_jump->set_target(generator.make_label());
+    end_jump.set_target(generator.make_label());
 }
 
 void SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const

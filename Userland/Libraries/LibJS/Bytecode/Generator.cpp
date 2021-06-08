@@ -10,6 +10,7 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
 
@@ -27,7 +28,18 @@ OwnPtr<Block> Generator::generate(ASTNode const& node)
     Generator generator;
     node.generate_bytecode(generator);
     generator.m_block->set_register_count({}, generator.m_next_register);
+    generator.m_block->seal();
     return move(generator.m_block);
+}
+
+void Generator::grow(size_t additional_size)
+{
+    m_block->grow(additional_size);
+}
+
+void* Generator::next_slot()
+{
+    return m_block->next_slot();
 }
 
 Register Generator::allocate_register()
