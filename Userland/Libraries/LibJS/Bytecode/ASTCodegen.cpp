@@ -478,4 +478,24 @@ Optional<Bytecode::Register> SequenceExpression::generate_bytecode(Bytecode::Gen
     return last_reg;
 }
 
+Optional<Bytecode::Register> TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Optional<Bytecode::Register> result_reg;
+
+    for (auto& expression : m_expressions) {
+        auto expr_reg = expression.generate_bytecode(generator);
+        if (!result_reg.has_value())
+            result_reg = expr_reg;
+        else
+            generator.emit<Bytecode::Op::Add>(*result_reg, *result_reg, *expr_reg);
+    }
+
+    if (!result_reg.has_value()) {
+        result_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::NewString>(*result_reg, "");
+    }
+
+    return result_reg;
+}
+
 }

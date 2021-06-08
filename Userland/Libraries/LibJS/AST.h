@@ -1092,6 +1092,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     const NonnullRefPtrVector<Expression>& expressions() const { return m_expressions; }
     const NonnullRefPtrVector<Expression>& raw_strings() const { return m_raw_strings; }
