@@ -397,6 +397,8 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
     if (m_alternate) {
         auto alternative_reg = m_alternate->generate_bytecode(generator);
         generator.emit<Bytecode::Op::LoadRegister>(result_reg, *alternative_reg);
+    } else {
+        generator.emit<Bytecode::Op::Load>(result_reg, js_undefined());
     }
 
     end_jump.set_target(generator.make_label());
