@@ -284,6 +284,25 @@ private:
     Optional<Label> m_target;
 };
 
+class JumpIfNullish final : public Instruction {
+public:
+    explicit JumpIfNullish(Register result, Optional<Label> target = {})
+        : Instruction(Type::JumpIfNullish)
+        , m_result(result)
+        , m_target(move(target))
+    {
+    }
+
+    void set_target(Optional<Label> target) { m_target = move(target); }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+
+private:
+    Register m_result;
+    Optional<Label> m_target;
+};
+
 // NOTE: This instruction is variable-width depending on the number of arguments!
 class Call final : public Instruction {
 public:
