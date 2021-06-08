@@ -401,6 +401,8 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 
 void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_argument)
+        m_argument->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Return>();
 }
 
