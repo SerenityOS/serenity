@@ -26,6 +26,7 @@
     O(AbstractEquals)             \
     O(TypedInequals)              \
     O(TypedEquals)                \
+    O(NewBigInt)                  \
     O(NewString)                  \
     O(NewObject)                  \
     O(GetVariable)                \
