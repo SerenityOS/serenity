@@ -8,6 +8,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -123,6 +124,15 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DEFINE_COMMON_UNARY_OP)
 void NewBigInt::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = js_bigint(interpreter.vm().heap(), m_bigint);
+}
+
+void NewArray::execute(Bytecode::Interpreter& interpreter) const
+{
+    Vector<Value> elements;
+    elements.ensure_capacity(m_element_count);
+    for (size_t i = 0; i < m_element_count; i++)
+        elements.append(interpreter.reg(m_elements[i]));
+    interpreter.accumulator() = Array::create_from(interpreter.global_object(), elements);
 }
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
@@ -256,6 +266,22 @@ String Store::to_string() const
 String NewBigInt::to_string() const
 {
     return String::formatted("NewBigInt bigint:\"{}\"", m_bigint.to_base10());
+}
+
+String NewArray::to_string() const
+{
+    StringBuilder builder;
+    builder.append("NewArray");
+    if (m_element_count != 0) {
+        builder.append(", elements:[");
+        for (size_t i = 0; i < m_element_count; ++i) {
+            builder.appendff("{}", m_elements[i]);
+            if (i != m_element_count - 1)
+                builder.append(',');
+        }
+        builder.append(']');
+    }
+    return builder.to_string();
 }
 
 String NewString::to_string() const
