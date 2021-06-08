@@ -42,7 +42,8 @@ public:
 
     u8 address() const { return m_address; }
 
-private:
+    const USBDeviceDescriptor& device_descriptor() const { return m_device_descriptor; }
+
 private:
     PortNumber m_device_port;   // What port is this device attached to
     DeviceSpeed m_device_speed; // What speed is this device running at
