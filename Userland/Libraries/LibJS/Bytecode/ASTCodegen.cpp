@@ -387,10 +387,8 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
 {
     auto result_reg = generator.allocate_register();
     auto predicate_reg = m_predicate->generate_bytecode(generator);
-    auto& if_jump = generator.emit<Bytecode::Op::JumpIfTrue>(*predicate_reg);
     auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>(*predicate_reg);
 
-    if_jump.set_target(generator.make_label());
     auto consequent_reg = m_consequent->generate_bytecode(generator);
     generator.emit<Bytecode::Op::LoadRegister>(result_reg, *consequent_reg);
     auto& end_jump = generator.emit<Bytecode::Op::Jump>();
