@@ -115,7 +115,7 @@ template<typename T>
 class WeakPtr;
 
 template<typename T, size_t inline_capacity = 0>
-class Vector;
+requires(!IsRvalueReference<T>) class Vector;
 
 }
 
