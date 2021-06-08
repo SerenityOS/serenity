@@ -52,6 +52,7 @@ Value Interpreter::run(Bytecode::Block const& block)
 
     m_register_windows.append(make<RegisterWindow>());
     registers().resize(block.register_count());
+    registers()[0] = Value(0);
 
     Bytecode::InstructionStreamIterator pc(block.instruction_stream());
     while (!pc.at_end()) {

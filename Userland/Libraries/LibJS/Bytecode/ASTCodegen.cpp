@@ -157,6 +157,8 @@ Optional<Register> UnaryExpression::generate_bytecode(Bytecode::Generator& gener
 
 Optional<Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    if (m_value.is_integer() && m_value.as_i32() == 0)
+        return Register(0);
     auto dst = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(dst, m_value);
     return dst;
