@@ -15,7 +15,13 @@ namespace AK {
 
 enum class HashSetResult {
     InsertedNewEntry,
-    ReplacedExistingEntry
+    ReplacedExistingEntry,
+    KeptExistingEntry
+};
+
+enum class HashSetExistingEntryBehavior {
+    Keep,
+    Replace
 };
 
 template<typename HashTableType, typename T, typename BucketType>
@@ -184,10 +190,12 @@ public:
     }
 
     template<typename U = T>
-    HashSetResult set(U&& value)
+    HashSetResult set(U&& value, HashSetExistingEntryBehavior existing_entry_behaviour = HashSetExistingEntryBehavior::Replace)
     {
         auto& bucket = lookup_for_writing(value);
         if (bucket.used) {
+            if (existing_entry_behaviour == HashSetExistingEntryBehavior::Keep)
+                return HashSetResult::KeptExistingEntry;
             (*bucket.slot()) = forward<U>(value);
             return HashSetResult::ReplacedExistingEntry;
         }
