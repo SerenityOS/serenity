@@ -38,11 +38,6 @@ Value ProxyConstructor::call()
 Value ProxyConstructor::construct(Function&)
 {
     auto& vm = this->vm();
-    if (vm.argument_count() < 2) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::ProxyTwoArguments);
-        return {};
-    }
-
     auto target = vm.argument(0);
     auto handler = vm.argument(1);
 
