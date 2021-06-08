@@ -333,6 +333,31 @@ Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Gener
     return body_result_reg;
 }
 
+Optional<Bytecode::Register> ForStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Bytecode::Op::Jump* test_jump { nullptr };
+
+    if (m_init) {
+        [[maybe_unused]] auto init_result_reg = m_init->generate_bytecode(generator);
+    }
+    generator.begin_continuable_scope();
+    auto jump_label = generator.make_label();
+    if (m_test) {
+        auto test_result_reg = m_test->generate_bytecode(generator);
+        VERIFY(test_result_reg.has_value());
+        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>(*test_result_reg);
+    }
+    auto body_result_reg = m_body->generate_bytecode(generator);
+    if (m_update) {
+        [[maybe_unused]] auto update_result_reg = m_update->generate_bytecode(generator);
+    }
+    generator.emit<Bytecode::Op::Jump>(jump_label);
+    if (m_test)
+        test_jump->set_target(generator.make_label());
+    generator.end_continuable_scope();
+    return body_result_reg;
+}
+
 Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto reg = generator.allocate_register();
