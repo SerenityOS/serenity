@@ -37,6 +37,7 @@
     __JS_ENUMERATE(Object, object, ObjectPrototype, ObjectConstructor, void)                      \
     __JS_ENUMERATE(Promise, promise, PromisePrototype, PromiseConstructor, void)                  \
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                \
+    __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                  \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)
 

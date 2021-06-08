@@ -239,6 +239,7 @@ namespace JS {
     P(sign)                                  \
     P(sin)                                   \
     P(sinh)                                  \
+    P(size)                                  \
     P(slice)                                 \
     P(small)                                 \
     P(some)                                  \
