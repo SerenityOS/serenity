@@ -1,0 +1,13 @@
+--- libxml2-2.9.12/nanohttp.c	2020-07-17 17:18:23.000000000 +0200
++++ libxml2-2.9.12-patched/nanohttp.c	2021-06-04 14:56:42.336021798 +0200
+@@ -121,6 +121,10 @@
+ #define XML_NANO_HTTP_READ	2
+ #define XML_NANO_HTTP_NONE	4
+ 
++#ifndef ESHUTDOWN
++#define ESHUTDOWN ENOTCONN
++#endif
++
+ typedef struct xmlNanoHTTPCtxt {
+     char *protocol;	/* the protocol name */
+     char *hostname;	/* the host name */

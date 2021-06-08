@@ -25,7 +25,7 @@ FontSettingsWidget::FontSettingsWidget()
     update_label_with_font(*m_default_font_label, default_font);
 
     auto& default_font_button = *find_descendant_of_type_named<GUI::Button>("default_font_button");
-    default_font_button.on_click = [this] {
+    default_font_button.on_click = [this](auto) {
         auto font_picker = GUI::FontPicker::construct(window(), &m_default_font_label->font(), false);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             update_label_with_font(*m_default_font_label, *font_picker->font());
@@ -37,7 +37,7 @@ FontSettingsWidget::FontSettingsWidget()
     update_label_with_font(*m_fixed_width_font_label, default_fixed_width_font);
 
     auto& fixed_width_font_button = *find_descendant_of_type_named<GUI::Button>("fixed_width_font_button");
-    fixed_width_font_button.on_click = [this] {
+    fixed_width_font_button.on_click = [this](auto) {
         auto font_picker = GUI::FontPicker::construct(window(), &m_fixed_width_font_label->font(), true);
         if (font_picker->exec() == GUI::Dialog::ExecOK) {
             update_label_with_font(*m_fixed_width_font_label, *font_picker->font());

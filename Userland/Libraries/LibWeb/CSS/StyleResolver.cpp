@@ -318,6 +318,52 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Flex) {
+        if (value.is_length() || (value.is_identifier() && value.to_identifier() == CSS::ValueID::Content)) {
+            style.set_property(CSS::PropertyID::FlexBasis, value);
+            return;
+        }
+
+        if (!value.is_string())
+            return;
+
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() == 1) {
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+            return;
+        }
+
+        if (parts.size() == 2) {
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+
+            auto second_value = parse_css_value(context, parts[1]);
+            if (second_value->is_length() || (second_value->is_identifier() && second_value->to_identifier() == CSS::ValueID::Content)) {
+                style.set_property(CSS::PropertyID::FlexBasis, *second_value);
+            } else {
+                auto flex_shrink = parse_css_value(context, parts[1]);
+                style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
+            }
+            return;
+        }
+
+        if (parts.size() == 3) {
+            auto flex_grow = parse_css_value(context, parts[0]);
+            style.set_property(CSS::PropertyID::FlexGrow, *flex_grow);
+            auto flex_shrink = parse_css_value(context, parts[1]);
+            style.set_property(CSS::PropertyID::FlexShrink, *flex_shrink);
+
+            auto third_value = parse_css_value(context, parts[2]);
+            if (third_value->is_length() || (third_value->is_identifier() && third_value->to_identifier() == CSS::ValueID::Content))
+                style.set_property(CSS::PropertyID::FlexBasis, *third_value);
+            return;
+        }
+
+        dbgln("Unsure what to do with CSS flex value '{}'", value.to_string());
+        return;
+    }
+
     if (property_id == CSS::PropertyID::BorderTop
         || property_id == CSS::PropertyID::BorderRight
         || property_id == CSS::PropertyID::BorderBottom
@@ -759,6 +805,21 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         }
         auto family = parse_css_value(context, parts[1]);
         style.set_property(CSS::PropertyID::FontFamily, family.release_nonnull());
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::FlexFlow) {
+        auto parts = split_on_whitespace(value.to_string());
+        if (parts.size() == 0)
+            return;
+
+        auto direction = parse_css_value(context, parts[0]);
+        style.set_property(CSS::PropertyID::FlexDirection, direction.release_nonnull());
+
+        if (parts.size() > 1) {
+            auto wrap = parse_css_value(context, parts[1]);
+            style.set_property(CSS::PropertyID::FlexWrap, wrap.release_nonnull());
+        }
         return;
     }
 

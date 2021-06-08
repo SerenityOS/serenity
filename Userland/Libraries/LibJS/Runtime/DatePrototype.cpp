@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Petróczi Zoltán <petroczizoltan@tutanota.com>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -39,6 +40,7 @@ void DatePrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.getDate, get_date, 0, attr);
+    define_native_function(vm.names.setDate, set_date, 1, attr);
     define_native_function(vm.names.getDay, get_day, 0, attr);
     define_native_function(vm.names.getFullYear, get_full_year, 0, attr);
     define_native_function(vm.names.setFullYear, set_full_year, 3, attr);
@@ -51,19 +53,28 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.getMinutes, get_minutes, 0, attr);
     define_native_function(vm.names.setMinutes, set_minutes, 3, attr);
     define_native_function(vm.names.getMonth, get_month, 0, attr);
+    define_native_function(vm.names.setMonth, set_month, 2, attr);
     define_native_function(vm.names.getSeconds, get_seconds, 0, attr);
     define_native_function(vm.names.setSeconds, set_seconds, 2, attr);
     define_native_function(vm.names.getTime, get_time, 0, attr);
+    define_native_function(vm.names.setTime, set_time, 1, attr);
+    define_native_function(vm.names.getTimezoneOffset, get_timezone_offset, 0, attr);
     define_native_function(vm.names.getUTCDate, get_utc_date, 0, attr);
+    define_native_function(vm.names.setUTCDate, set_date, 1, attr); // FIXME: This is a hack, Serenity doesn't currently support timezones other than UTC.
     define_native_function(vm.names.getUTCDay, get_utc_day, 0, attr);
     define_native_function(vm.names.getUTCFullYear, get_utc_full_year, 0, attr);
+    define_native_function(vm.names.setUTCFullYear, set_full_year, 3, attr); // FIXME: see above
     define_native_function(vm.names.getUTCHours, get_utc_hours, 0, attr);
+    define_native_function(vm.names.setUTCHours, set_hours, 4, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMilliseconds, get_utc_milliseconds, 0, attr);
+    define_native_function(vm.names.setUTCMilliseconds, set_milliseconds, 1, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMinutes, get_utc_minutes, 0, attr);
+    define_native_function(vm.names.setUTCMinutes, set_minutes, 3, attr); // FIXME: see above
     define_native_function(vm.names.getUTCMonth, get_utc_month, 0, attr);
+    define_native_function(vm.names.setUTCMonth, set_month, 2, attr); // FIXME: see above
     define_native_function(vm.names.getUTCSeconds, get_utc_seconds, 0, attr);
+    define_native_function(vm.names.setUTCSeconds, set_seconds, 2, attr); // FIXME: see above
     define_native_function(vm.names.toDateString, to_date_string, 0, attr);
-    define_native_function(vm.names.toGMTString, to_gmt_string, 0, attr);
     define_native_function(vm.names.toUTCString, to_utc_string, 0, attr);
     define_native_function(vm.names.toISOString, to_iso_string, 0, attr);
     define_native_function(vm.names.toLocaleDateString, to_locale_date_string, 0, attr);
@@ -71,13 +82,17 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleTimeString, to_locale_time_string, 0, attr);
     define_native_function(vm.names.toTimeString, to_time_string, 0, attr);
     define_native_function(vm.names.toString, to_string, 0, attr);
+    define_native_function(vm.names.toJSON, to_json, 1, attr);
+
+    define_native_function(vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // Aliases.
     define_native_function(vm.names.valueOf, get_time, 0, attr);
-    // toJSON() isn't quite an alias for toISOString():
-    // - it returns null instead of throwing RangeError
-    // - its .length is 1, not 0
-    // - it can be transferred to other prototypes
+
+    // https://tc39.es/ecma262/#sec-date.prototype.togmtstring
+    // The function object that is the initial value of Date.prototype.toGMTString
+    // is the same function object that is the initial value of Date.prototype.toUTCString.
+    define_property(vm.names.toGMTString, get(vm.names.toUTCString), attr);
 }
 
 DatePrototype::~DatePrototype()
@@ -94,6 +109,33 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
         return js_nan();
 
     return Value(this_object->date());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto& datetime = this_object->datetime();
+
+    auto new_date_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_date_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_date = new_date_value.as_i32();
+
+    datetime.set_time(datetime.year(), datetime.month(), new_date, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
+    return Value(this_object->time());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
@@ -139,14 +181,14 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     }
     auto new_year = new_year_value.as_i32();
 
-    auto new_month_value = arg_or(1, datetime.month());
+    auto new_month_value = arg_or(1, datetime.month() - 1);
     if (vm.exception())
         return {};
     if (!new_month_value.is_finite_number()) {
         this_object->set_is_invalid(true);
         return js_nan();
     }
-    auto new_month = new_month_value.as_i32();
+    auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
 
     auto new_day_value = arg_or(2, datetime.day());
     if (vm.exception())
@@ -158,6 +200,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     auto new_day = new_day_value.as_i32();
 
     datetime.set_time(new_year, new_month, new_day, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
     this_object->set_is_invalid(false);
 
     return Value(this_object->time());
@@ -195,6 +242,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
         new_year += 1900;
 
     datetime.set_time(new_year, datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
     this_object->set_is_invalid(false);
 
     return Value(this_object->time());
@@ -258,12 +310,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), new_hours, new_minutes, new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -302,6 +358,11 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     if (added_seconds > 0) {
         auto& datetime = this_object->datetime();
         datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), datetime.second() + added_seconds);
+    }
+
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
     }
 
     this_object->set_is_invalid(false);
@@ -358,12 +419,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), new_minutes, new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -377,6 +442,44 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
         return js_nan();
 
     return Value(this_object->month());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback); };
+
+    auto& datetime = this_object->datetime();
+
+    auto new_month_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_month_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_month = new_month_value.as_i32() + 1; // JS Months: 0 - 11, DateTime months: 1-12
+
+    auto new_date_value = arg_or(1, this_object->date());
+    if (vm.exception())
+        return {};
+    if (!new_date_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_date = new_date_value.as_i32();
+
+    datetime.set_time(datetime.year(), new_month, new_date, datetime.hour(), datetime.minute(), datetime.second());
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
+    return Value(this_object->time());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
@@ -419,12 +522,16 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     }
     auto new_milliseconds = new_milliseconds_value.as_i32();
 
-    this_object->set_is_invalid(false);
-
     new_seconds += new_milliseconds / 1000;
     this_object->set_milliseconds(new_milliseconds % 1000);
 
     datetime.set_time(datetime.year(), datetime.month(), datetime.day(), datetime.hour(), datetime.minute(), new_seconds);
+    if (this_object->time() > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    this_object->set_is_invalid(false);
     return Value(this_object->time());
 }
 
@@ -438,6 +545,47 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
         return js_nan();
 
     return Value(this_object->time());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    auto new_time_value = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (!new_time_value.is_finite_number()) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+    auto new_time = new_time_value.as_double();
+
+    if (new_time > Date::time_clip) {
+        this_object->set_is_invalid(true);
+        return js_nan();
+    }
+
+    auto new_date_time = Core::DateTime::from_timestamp(static_cast<time_t>(new_time / 1000));
+    this_object->datetime().set_time(new_date_time.year(), new_date_time.month(), new_date_time.day(), new_date_time.hour(), new_date_time.minute(), new_date_time.second());
+    this_object->set_milliseconds(static_cast<i16>(fmod(new_time, 1000)));
+
+    this_object->set_is_invalid(false);
+    return Value(this_object->time());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
+{
+    auto* this_object = typed_this(vm, global_object);
+    if (!this_object)
+        return {};
+
+    if (this_object->is_invalid())
+        return js_nan();
+
+    // FIXME: Make this actually do something once we support timezones instead of just UTC
+    return Value(0);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
@@ -651,6 +799,41 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 
     auto string = this_object->string();
     return js_string(vm, move(string));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto time_value = Value(this_object).to_primitive(global_object, Value::PreferredType::Number);
+    if (time_value.is_number() && !time_value.is_finite_number())
+        return js_null();
+
+    return this_object->invoke(vm.names.toISOString);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
+{
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject);
+        return {};
+    }
+    auto hint = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    Value::PreferredType try_first;
+    if (hint == "string" || hint == "default") {
+        try_first = Value::PreferredType::String;
+    } else if (hint == "number") {
+        try_first = Value::PreferredType::Number;
+    } else {
+        vm.throw_exception<TypeError>(global_object, ErrorType::InvalidHint, hint);
+        return {};
+    }
+    return this_value.as_object().ordinary_to_primitive(try_first);
 }
 
 }

@@ -156,7 +156,7 @@ void ResourceLoader::load(const LoadRequest& request, Function<void(ReadonlyByte
             headers.set(it.key, it.value);
         }
 
-        auto protocol_request = protocol_client().start_request(request.method(), url.to_string(), headers, request.body());
+        auto protocol_request = protocol_client().start_request(request.method(), url, headers, request.body());
         if (!protocol_request) {
             if (error_callback)
                 error_callback("Failed to initiate load", {});

@@ -17,6 +17,7 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NativeProperty.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/TemporaryClearException.h>
@@ -110,17 +111,32 @@ const Object* Object::prototype() const
     return shape().prototype();
 }
 
+// 10.1.2.1 OrdinarySetPrototypeOf, https://tc39.es/ecma262/#sec-ordinarysetprototypeof
 bool Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
         return true;
     if (!m_is_extensible)
         return false;
-    if (shape().is_unique()) {
-        shape().set_prototype_without_transition(new_prototype);
-        return true;
+    auto* prototype = new_prototype;
+    while (prototype) {
+        if (prototype == this)
+            return false;
+        // NOTE: This is a best-effort implementation of the following step:
+        // "If p.[[GetPrototypeOf]] is not the ordinary object internal method defined in 10.1.1,
+        // set done to true."
+        // We don't have a good way of detecting whether certain virtual Object methods have been
+        // overridden by a given object, but as ProxyObject is the only one doing that, this check
+        // does the trick.
+        if (is<ProxyObject>(prototype))
+            break;
+        prototype = prototype->prototype();
     }
-    m_shape = m_shape->create_prototype_transition(new_prototype);
+    auto& shape = this->shape();
+    if (shape.is_unique())
+        shape.set_prototype_without_transition(new_prototype);
+    else
+        m_shape = shape.create_prototype_transition(new_prototype);
     return true;
 }
 
@@ -398,6 +414,8 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
     return descriptor;
 }
 
+// Equivalent to:
+// 6.2.5.4 FromPropertyDescriptor, https://tc39.es/ecma262/#sec-frompropertydescriptor
 Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
     VERIFY(property_name.is_valid());
@@ -409,31 +427,16 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
     auto descriptor = descriptor_opt.value();
 
     auto* descriptor_object = Object::create_empty(global_object());
-    descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
-    if (vm.exception())
-        return {};
-    descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
-    if (vm.exception())
-        return {};
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property(vm.names.value, descriptor.value.value_or(js_undefined()));
-        if (vm.exception())
-            return {};
         descriptor_object->define_property(vm.names.writable, Value(descriptor.attributes.is_writable()));
-        if (vm.exception())
-            return {};
-    } else if (descriptor.is_accessor_descriptor()) {
-        if (descriptor.getter) {
-            descriptor_object->define_property(vm.names.get, Value(descriptor.getter));
-            if (vm.exception())
-                return {};
-        }
-        if (descriptor.setter) {
-            descriptor_object->define_property(vm.names.set, Value(descriptor.setter));
-            if (vm.exception())
-                return {};
-        }
+    } else {
+        VERIFY(descriptor.is_accessor_descriptor());
+        descriptor_object->define_property(vm.names.get, descriptor.getter ? Value(descriptor.getter) : js_undefined());
+        descriptor_object->define_property(vm.names.set, descriptor.setter ? Value(descriptor.setter) : js_undefined());
     }
+    descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
+    descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
     return descriptor_object;
 }
 
@@ -637,6 +640,8 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
     auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
         dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
+        if (throw_exceptions && vm().in_strict_mode())
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescWriteNonWritable, property_name.to_display_string());
         return false;
     }
 
@@ -765,7 +770,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
         return get_by_index(property_name.as_number());
 
     if (property_name.is_string()) {
-        auto property_string = property_name.to_string();
+        auto& property_string = property_name.as_string();
         i32 property_index = property_string.to_int().value_or(-1);
         if (property_index >= 0)
             return get_by_index(property_index);

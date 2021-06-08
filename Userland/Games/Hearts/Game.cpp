@@ -141,7 +141,7 @@ void Game::show_score_card(bool game_over)
     button_container.set_layout<GUI::VerticalBoxLayout>();
 
     auto& close_button = button_container.add<GUI::Button>("OK");
-    close_button.on_click = [&score_dialog] {
+    close_button.on_click = [&score_dialog](auto) {
         score_dialog->done(GUI::Dialog::ExecOK);
     };
     close_button.set_min_width(70);
@@ -270,8 +270,12 @@ void Game::timer_event(Core::TimerEvent&)
         if (m_animation_current_step >= m_animation_steps) {
             stop_timer();
             m_animation_playing = false;
-            if (m_animation_did_finish)
-                (*m_animation_did_finish)();
+            if (m_animation_did_finish) {
+                // The did_finish handler might end up destroying/replacing the handler
+                // so we have to save it first.
+                OwnPtr<Function<void()>> animation_did_finish = move(m_animation_did_finish);
+                (*animation_did_finish)();
+            }
         }
         m_animation_current_step++;
     }

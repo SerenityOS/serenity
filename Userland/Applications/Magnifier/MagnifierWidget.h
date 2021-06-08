@@ -19,9 +19,10 @@ public:
     void track_cursor_globally();
 
 private:
-    virtual void timer_event(Core::TimerEvent&) override;
     virtual void paint_event(GUI::PaintEvent&) override;
 
-    Gfx::IntPoint m_mouse_position;
+    void sync();
+
     int m_scale_factor { 2 };
+    RefPtr<Gfx::Bitmap> m_grabbed_bitmap;
 };

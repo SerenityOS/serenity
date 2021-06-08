@@ -30,10 +30,10 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("Display or modify the configuration of each network interface.");
-    args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "The new IP of the network");
-    args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "The name of a network adapter");
-    args_parser.add_option(value_gateway, "Set the default gateway of the selected network", "gateway", 'g', "The new IP of the gateway");
-    args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "The new network mask");
+    args_parser.add_option(value_ipv4, "Set the IP address of the selected network", "ipv4", 'i', "ip");
+    args_parser.add_option(value_adapter, "Select a specific network adapter to configure", "adapter", 'a', "adapter");
+    args_parser.add_option(value_gateway, "Set the default gateway of the selected network", "gateway", 'g', "gateway");
+    args_parser.add_option(value_mask, "Set the network mask of the selected network", "mask", 'm', "mask");
     args_parser.parse(argc, argv);
 
     if (!value_ipv4 && !value_adapter && !value_gateway && !value_mask) {

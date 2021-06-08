@@ -47,6 +47,7 @@ TEST_CASE(enumeration)
         actual_size++;
     }
     EXPECT_EQ(expected_size, actual_size);
+    EXPECT_EQ(expected_size, list.size_slow());
 
     size_t reverse_actual_size = 0;
     for (auto it = list.rbegin(); it != list.rend(); ++it) {

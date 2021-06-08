@@ -109,6 +109,9 @@ public:
     bool is_absolutely_positioned() const;
     bool is_fixed_position() const;
 
+    bool is_flex_item() const { return m_is_flex_item; }
+    void set_flex_item(bool b) { m_is_flex_item = b; }
+
     const BlockBox* containing_block() const;
     BlockBox* containing_block() { return const_cast<BlockBox*>(const_cast<const Node*>(this)->containing_block()); }
 
@@ -182,6 +185,8 @@ private:
     bool m_visible { true };
     bool m_children_are_inline { false };
     SelectionState m_selection_state { SelectionState::None };
+
+    bool m_is_flex_item { false };
 };
 
 class NodeWithStyle : public Node {
@@ -199,6 +204,9 @@ public:
 
     NonnullRefPtr<NodeWithStyle> create_anonymous_wrapper() const;
 
+    bool has_definite_height() const { return m_has_definite_height; }
+    bool has_definite_width() const { return m_has_definite_width; }
+
 protected:
     NodeWithStyle(DOM::Document&, DOM::Node*, NonnullRefPtr<CSS::StyleProperties>);
     NodeWithStyle(DOM::Document&, DOM::Node*, CSS::ComputedValues);
@@ -211,6 +219,9 @@ private:
     RefPtr<CSS::ImageStyleValue> m_background_image;
 
     CSS::Position m_position;
+
+    bool m_has_definite_height { false };
+    bool m_has_definite_width { false };
 };
 
 class NodeWithStyleAndBoxModelMetrics : public NodeWithStyle {

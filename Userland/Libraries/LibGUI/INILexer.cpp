@@ -5,12 +5,12 @@
  */
 
 #include "INILexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Vector.h>
-#include <ctype.h>
 
 namespace GUI {
 
-IniLexer::IniLexer(const StringView& input)
+IniLexer::IniLexer(StringView const& input)
     : m_input(input)
 {
 }
@@ -26,7 +26,6 @@ char IniLexer::consume()
 {
     VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
-    m_previous_position = m_position;
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
@@ -47,9 +46,9 @@ Vector<IniToken> IniLexer::lex()
         IniToken token;
         token.m_type = type;
         token.m_start = m_position;
+        consume();
         token.m_end = m_position;
         tokens.append(token);
-        consume();
     };
 
     auto begin_token = [&] {
@@ -61,16 +60,16 @@ Vector<IniToken> IniLexer::lex()
         IniToken token;
         token.m_type = type;
         token.m_start = token_start_position;
-        token.m_end = m_previous_position;
+        token.m_end = m_position;
         tokens.append(token);
     };
 
     while (m_index < m_input.length()) {
         auto ch = peek();
 
-        if (isspace(ch)) {
+        if (is_ascii_space(ch)) {
             begin_token();
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
             commit_token(IniToken::Type::Whitespace);
             continue;

@@ -8,11 +8,12 @@
 
 #include "Card.h"
 #include <AK/Format.h>
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 
 namespace Cards {
 
-class CardStack final {
+class CardStack final : public RefCounted<CardStack> {
 public:
     enum Type {
         Invalid,
@@ -25,6 +26,7 @@ public:
 
     CardStack();
     CardStack(const Gfx::IntPoint& position, Type type);
+    CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<CardStack> associated_stack);
 
     bool is_empty() const { return m_stack.is_empty(); }
     bool is_focused() const { return m_focused; }
@@ -75,6 +77,7 @@ private:
 
     void calculate_bounding_box();
 
+    RefPtr<CardStack> m_associated_stack;
     NonnullRefPtrVector<Card> m_stack;
     Vector<Gfx::IntPoint> m_stack_positions;
     Gfx::IntPoint m_position;

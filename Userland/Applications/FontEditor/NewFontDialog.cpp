@@ -197,7 +197,7 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
 
     m_glyph_width_spinbox->on_change = [&](int value) {
         preview_editor.set_preview_size(value, m_glyph_height_spinbox->value());
-        deferred_invoke([&] {
+        deferred_invoke([&](auto&) {
             m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
         });
     };
@@ -205,7 +205,7 @@ NewFontDialog::NewFontDialog(GUI::Window* parent_window)
         preview_editor.set_preview_size(m_glyph_width_spinbox->value(), value);
         m_mean_line_spinbox->set_max(max(value - 2, 0));
         m_baseline_spinbox->set_max(max(value - 2, 0));
-        deferred_invoke([&] {
+        deferred_invoke([&](auto&) {
             m_glyph_editor_container->set_fixed_height(1 + preview_editor.height() + preview_editor.frame_thickness() * 2);
         });
     };

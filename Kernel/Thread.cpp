@@ -241,6 +241,16 @@ void Thread::die_if_needed()
     u32 unlock_count;
     [[maybe_unused]] auto rc = unlock_process_if_locked(unlock_count);
 
+    dbgln_if(THREAD_DEBUG, "Thread {} is dying", *this);
+
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+        // It's possible that we don't reach the code after this block if the
+        // scheduler is invoked and FinalizerTask cleans up this thread, however
+        // that doesn't matter because we're trying to invoke the scheduler anyway
+        set_state(Thread::Dying);
+    }
+
     ScopedCritical critical;
 
     // Flag a context switch. Because we're in a critical section,

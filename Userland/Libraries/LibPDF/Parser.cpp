@@ -252,7 +252,7 @@ String Parser::parse_comment()
 
     consume();
     auto comment_start_offset = m_reader.offset();
-    m_reader.move_until([&] {
+    m_reader.move_until([&](auto) {
         return matches_eol();
     });
     String str = StringView(m_reader.bytes().slice(comment_start_offset, m_reader.offset() - comment_start_offset));
@@ -664,7 +664,7 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
         auto stream_start = m_reader.offset();
 
         while (true) {
-            m_reader.move_until([&] { return matches_eol(); });
+            m_reader.move_until([&](auto) { return matches_eol(); });
             auto potential_stream_end = m_reader.offset();
             consume_eol();
             if (!m_reader.matches("endstream"))

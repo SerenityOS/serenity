@@ -47,6 +47,7 @@ private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FunctionNode::Parameter> m_parameters;
+    OwnPtr<Bytecode::Block> m_bytecode_block;
     ScopeObject* m_parent_scope { nullptr };
     i32 m_function_length { 0 };
     bool m_is_strict { false };

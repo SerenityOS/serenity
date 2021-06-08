@@ -33,7 +33,7 @@ struct IniToken {
 #undef __TOKEN
     };
 
-    const char* to_string() const
+    char const* to_string() const
     {
         switch (m_type) {
 #define __TOKEN(x) \
@@ -52,7 +52,7 @@ struct IniToken {
 
 class IniLexer {
 public:
-    IniLexer(const StringView&);
+    IniLexer(StringView const&);
 
     Vector<IniToken> lex();
 
@@ -62,7 +62,6 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    IniPosition m_previous_position { 0, 0 };
     IniPosition m_position { 0, 0 };
 };
 

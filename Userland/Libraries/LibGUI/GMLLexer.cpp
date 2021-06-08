@@ -5,12 +5,12 @@
  */
 
 #include "GMLLexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Vector.h>
-#include <ctype.h>
 
 namespace GUI {
 
-GMLLexer::GMLLexer(const StringView& input)
+GMLLexer::GMLLexer(StringView const& input)
     : m_input(input)
 {
 }
@@ -26,7 +26,6 @@ char GMLLexer::consume()
 {
     VERIFY(m_index < m_input.length());
     char ch = m_input[m_index++];
-    m_previous_position = m_position;
     if (ch == '\n') {
         m_position.line++;
         m_position.column = 0;
@@ -36,19 +35,19 @@ char GMLLexer::consume()
     return ch;
 }
 
-static bool is_valid_identifier_start(char ch)
+constexpr bool is_valid_identifier_start(char ch)
 {
-    return isalpha(ch) || ch == '_';
+    return is_ascii_alpha(ch) || ch == '_';
 }
 
-static bool is_valid_identifier_character(char ch)
+constexpr bool is_valid_identifier_character(char ch)
 {
-    return isalnum(ch) || ch == '_';
+    return is_ascii_alphanumeric(ch) || ch == '_';
 }
 
-static bool is_valid_class_character(char ch)
+constexpr bool is_valid_class_character(char ch)
 {
-    return isalnum(ch) || ch == '_' || ch == ':';
+    return is_ascii_alphanumeric(ch) || ch == '_' || ch == ':';
 }
 
 Vector<GMLToken> GMLLexer::lex()
@@ -68,7 +67,7 @@ Vector<GMLToken> GMLLexer::lex()
         token.m_view = m_input.substring_view(token_start_index, m_index - token_start_index);
         token.m_type = type;
         token.m_start = token_start_position;
-        token.m_end = m_previous_position;
+        token.m_end = m_position;
         tokens.append(token);
     };
 
@@ -83,9 +82,9 @@ Vector<GMLToken> GMLLexer::lex()
     };
 
     while (m_index < m_input.length()) {
-        if (isspace(peek(0))) {
+        if (is_ascii_space(peek(0))) {
             begin_token();
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
             continue;
         }
@@ -132,7 +131,7 @@ Vector<GMLToken> GMLLexer::lex()
             consume();
             commit_token(GMLToken::Type::Colon);
 
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
 
             if (peek(0) == '@') {

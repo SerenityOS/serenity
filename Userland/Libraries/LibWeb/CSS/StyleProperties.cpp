@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/TypeCasts.h>
 #include <LibCore/DirIterator.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibWeb/CSS/StyleProperties.h>
@@ -238,6 +239,64 @@ Optional<CSS::FlexDirection> StyleProperties::flex_direction() const
     default:
         return {};
     }
+}
+
+Optional<CSS::FlexWrap> StyleProperties::flex_wrap() const
+{
+    auto value = property(CSS::PropertyID::FlexWrap);
+    if (!value.has_value())
+        return {};
+    switch (value.value()->to_identifier()) {
+    case CSS::ValueID::Wrap:
+        return CSS::FlexWrap::Wrap;
+    case CSS::ValueID::Nowrap:
+        return CSS::FlexWrap::Nowrap;
+    case CSS::ValueID::WrapReverse:
+        return CSS::FlexWrap::WrapReverse;
+    default:
+        return {};
+    }
+}
+
+Optional<CSS::FlexBasisData> StyleProperties::flex_basis() const
+{
+    auto value = property(CSS::PropertyID::FlexBasis);
+    if (!value.has_value())
+        return {};
+
+    if (value.value()->is_identifier() && value.value()->to_identifier() == CSS::ValueID::Content)
+        return { { CSS::FlexBasis::Content, {} } };
+
+    if (value.value()->is_length())
+        return { { CSS::FlexBasis::Length, value.value()->to_length() } };
+
+    return {};
+}
+
+Optional<float> StyleProperties::flex_grow_factor() const
+{
+    auto value = property(CSS::PropertyID::FlexGrow);
+    if (!value.has_value())
+        return {};
+    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+        return { 0 };
+    if (!value.value()->is_numeric())
+        return {};
+    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    return numeric->value();
+}
+
+Optional<float> StyleProperties::flex_shrink_factor() const
+{
+    auto value = property(CSS::PropertyID::FlexShrink);
+    if (!value.has_value())
+        return {};
+    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+        return { 0 };
+    if (!value.value()->is_numeric())
+        return {};
+    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    return numeric->value();
 }
 
 Optional<CSS::Position> StyleProperties::position() const
@@ -662,5 +721,4 @@ Optional<CSS::Repeat> StyleProperties::background_repeat_y() const
         return {};
     }
 }
-
 }

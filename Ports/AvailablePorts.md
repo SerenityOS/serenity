@@ -5,6 +5,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | Port                                   | Name                                                       | Version                  | Website                                                                        |
 |----------------------------------------|------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
 | [`bash`](bash/)                        | GNU Bash                                                   | 5.0                      | https://www.gnu.org/software/bash/                                             |
+| [`bass`](bass/)                        | Beneath a Steel Sky                                        | cd-1.2                   | https://www.scummvm.org/games                                                  |
 | [`bc`](bc/)                            | bc                                                         | 2.5.1                    | https://github.com/gavinhoward/bc                                              |
 | [`binutils`](binutils/)                | GNU Binutils                                               | 2.36.1                   | https://www.gnu.org/software/binutils/                                         |
 | [`bison`](bison/)                      | GNU Bison                                                  | 1.25                     | https://www.gnu.org/software/bison/                                            |
@@ -29,6 +30,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`flatbuffers`](flatbuffers/)          | Flatbuffers                                                | 1.12.0                   | https://github.com/google/flatbuffers                                          |
 | [`flex`](flex/)                        | flex                                                       | 2.6.4                    | https://github.com/westes/flex                                                 |
 | [`ffmpeg`](ffmpeg/)                    | ffmpeg                                                     | 4.4                      | https://ffmpeg.org                                                             |
+| [`freeciv`](freeciv/)                  | Freeciv                                                    | 3.0.0-beta2              | http://freeciv.org/                                                            |
 | [`freetype`](freetype/)                | FreeType                                                   | 2.10.4                   | https://www.freetype.org/                                                      |
 | [`frotz`](frotz/)                      | Frotz                                                      | 2.53                     | https://gitlab.com/DavidGriffith/frotz                                         |
 | [`gcc`](gcc/)                          | GNU Compiler Collection                                    | 11.1.0                   | https://gcc.gnu.org/                                                           |
@@ -68,6 +70,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libtiff`](libtiff/)                  | libtiff                                                    | 4.2.0                    | http://www.libtiff.org/                                                        |
 | [`libtool`](libtool/)                  | libtool                                                    | 2.4                      | https://www.gnu.org/software/libtool/                                          |
 | [`libvorbis`](libvorbis/)              | libvorbis                                                  | 1.3.7                    | https://github.com/xiph/vorbis                                                 |
+| [`libxml2`](libxml2/)                  | libxml2                                                    | 2.9.12                   | http://www.xmlsoft.org/                                                        |
 | [`libzip`](libzip/)                    | libzip                                                     | 1.7.3                    | https://libzip.org/                                                            |
 | [`links`](links/)                      | Links web browser                                          | 2.22                     | http://links.twibright.com/                                                    |
 | [`lua`](lua/)                          | Lua                                                        | 5.3.5                    | https://www.lua.org/                                                           |
@@ -110,6 +113,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`quake2`](quake2/)                    | QuakeII                                                    | 0.1                      | https://github.com/SerenityOS/SerenityQuakeII                                  |
 | [`readline`](readline/)                | GNU Readline Library                                       | 8.1                      | https://tiswww.case.edu/php/chet/readline/rltop.html                           |
 | [`rsync`](rsync/)                      | rsync                                                      | 3.1.3                    | https://rsync.samba.org/                                                       |
+| [`sam`](sam/)                          | Software Automatic Mouth (SAM)                             | c86ea39                  | https://github.com/vidarh/SAM                                                  |
 | [`scummvm`](scummvm/)                  | ScummVM                                                    | 2.2.0                    | https://www.scummvm.org/                                                       |
 | [`SDL2`](SDL2/)                        | Simple DirectMedia Layer (SDL2)                            |                          | https://github.com/SerenityOS/SDL                                              |
 | [`SDL2-GNUBoy`](SDL2-GNUBoy/)          | SDL2 GNUBoy                                                | 1.2                      | https://github.com/AlexOberhofer/SDL2-GNUBoy                                   |

@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -32,34 +33,41 @@ void NumberPrototype::initialize(GlobalObject& object)
 {
     auto& vm = this->vm();
     Object::initialize(object);
-    define_native_function(vm.names.toString, to_string, 1, Attribute::Configurable | Attribute::Writable);
+    u8 attr = Attribute::Configurable | Attribute::Writable;
+    define_native_function(vm.names.toString, to_string, 1, attr);
+    define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
 
 NumberPrototype::~NumberPrototype()
 {
 }
 
+// thisNumberValue, https://tc39.es/ecma262/#thisnumbervalue
+static Value this_number_value(GlobalObject& global_object, Value value)
+{
+    if (value.is_number())
+        return value;
+    if (value.is_object() && is<NumberObject>(value.as_object()))
+        return static_cast<NumberObject&>(value.as_object()).value_of();
+    auto& vm = global_object.vm();
+    vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Number");
+    return {};
+}
+
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
-    Value number_value;
-
-    auto this_value = vm.this_value(global_object);
-    if (this_value.is_number()) {
-        number_value = this_value;
-    } else if (this_value.is_object() && is<NumberObject>(this_value.as_object())) {
-        number_value = static_cast<NumberObject&>(this_value.as_object()).value_of();
-    } else {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NumberIncompatibleThis, "toString");
+    auto number_value = this_number_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
-    }
 
-    int radix;
+    double radix_argument = 10;
     auto argument = vm.argument(0);
-    if (argument.is_undefined()) {
-        radix = 10;
-    } else {
-        radix = argument.to_i32(global_object);
+    if (!vm.argument(0).is_undefined()) {
+        radix_argument = argument.to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
     }
+    int radix = (int)radix_argument;
 
     if (vm.exception() || radix < 2 || radix > 36) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidRadix);
@@ -121,6 +129,11 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     }
 
     return js_string(vm, String(characters.data(), characters.size()));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
+{
+    return this_number_value(global_object, vm.this_value(global_object));
 }
 
 }

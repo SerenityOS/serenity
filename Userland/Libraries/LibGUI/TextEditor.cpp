@@ -497,7 +497,9 @@ void TextEditor::paint_event(PaintEvent& event)
                 Gfx::IntRect span_rect = { visual_line_rect.location(), { 0, line_height() } };
 
                 auto draw_text_helper = [&](size_t start, size_t end, RefPtr<Gfx::Font>& font, Color& color, Optional<Color> background_color = {}, bool underline = false) {
-                    size_t length = end - start + 1;
+                    size_t length = end - start;
+                    if (length == 0)
+                        return;
                     auto text = visual_line_text.substring_view(start, length);
                     span_rect.set_width(font->width(text));
                     if (background_color.has_value()) {
@@ -529,11 +531,7 @@ void TextEditor::paint_event(PaintEvent& event)
                         break;
                     }
                     if (span.range.start().line() == span.range.end().line() && span.range.end().column() < span.range.start().column()) {
-                        if (span.range.end().column() == span.range.start().column() - 1) {
-                            // span length is zero, just ignore
-                        } else {
-                            dbgln_if(TEXTEDITOR_DEBUG, "span form {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
-                        }
+                        dbgln_if(TEXTEDITOR_DEBUG, "span form {}:{} to {}:{} has negative length => ignoring", span.range.start().line(), span.range.start().column(), span.range.end().line(), span.range.end().column());
                         ++span_index;
                         continue;
                     }
@@ -556,21 +554,17 @@ void TextEditor::paint_event(PaintEvent& event)
                     }
                     size_t span_end;
                     bool span_consumned;
-                    if (span.range.end().line() > line_index || span.range.end().column() >= start_of_visual_line + visual_line_text.length()) {
-                        if (visual_line_text.length() == 0) {
-                            // subtracting 1 would wrap around
-                            // since there is nothing to draw here just move on
-                            break;
-                        }
-                        span_end = visual_line_text.length() - 1;
+                    if (span.range.end().line() > line_index || span.range.end().column() > start_of_visual_line + visual_line_text.length()) {
+                        span_end = visual_line_text.length();
                         span_consumned = false;
                     } else {
                         span_end = span.range.end().column() - start_of_visual_line;
                         span_consumned = true;
                     }
+
                     if (span_start != next_column) {
                         // draw unspanned text between spans
-                        draw_text_helper(next_column, span_start - 1, unspanned_font, unspanned_color);
+                        draw_text_helper(next_column, span_start, unspanned_font, unspanned_color);
                     }
                     auto font = unspanned_font;
                     if (span.attributes.bold) {
@@ -578,7 +572,7 @@ void TextEditor::paint_event(PaintEvent& event)
                             font = bold_font;
                     }
                     draw_text_helper(span_start, span_end, font, span.attributes.color, span.attributes.background_color, span.attributes.underline);
-                    next_column = span_end + 1;
+                    next_column = span_end;
                     if (!span_consumned) {
                         // continue with same span on next line
                         break;
@@ -588,7 +582,7 @@ void TextEditor::paint_event(PaintEvent& event)
                 }
                 // draw unspanned text after last span
                 if (next_column < visual_line_text.length()) {
-                    draw_text_helper(next_column, visual_line_text.length() - 1, unspanned_font, unspanned_color);
+                    draw_text_helper(next_column, visual_line_text.length(), unspanned_font, unspanned_color);
                 }
                 // consume all spans that should end this line
                 // this is necessary since the spans can include the new line character

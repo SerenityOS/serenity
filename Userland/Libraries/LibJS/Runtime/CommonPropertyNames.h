@@ -24,7 +24,9 @@ namespace JS {
     P(LOG10E)                                \
     P(LOG2E)                                 \
     P(MAX_SAFE_INTEGER)                      \
+    P(MAX_VALUE)                             \
     P(MIN_SAFE_INTEGER)                      \
+    P(MIN_VALUE)                             \
     P(Math)                                  \
     P(NEGATIVE_INFINITY)                     \
     P(NaN)                                   \
@@ -97,6 +99,7 @@ namespace JS {
     P(entries)                               \
     P(enumerable)                            \
     P(error)                                 \
+    P(escape)                                \
     P(eval)                                  \
     P(every)                                 \
     P(exec)                                  \
@@ -132,6 +135,7 @@ namespace JS {
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
+    P(getTimezoneOffset)                     \
     P(getUTCDate)                            \
     P(getUTCDay)                             \
     P(getUTCFullYear)                        \
@@ -211,12 +215,22 @@ namespace JS {
     P(round)                                 \
     P(seal)                                  \
     P(set)                                   \
+    P(setDate)                               \
     P(setFullYear)                           \
     P(setHours)                              \
     P(setMilliseconds)                       \
     P(setMinutes)                            \
+    P(setMonth)                              \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
+    P(setTime)                               \
+    P(setUTCDate)                            \
+    P(setUTCFullYear)                        \
+    P(setUTCHours)                           \
+    P(setUTCMilliseconds)                    \
+    P(setUTCMinutes)                         \
+    P(setUTCMonth)                           \
+    P(setUTCSeconds)                         \
     P(setYear)                               \
     P(shift)                                 \
     P(sign)                                  \
@@ -261,6 +275,7 @@ namespace JS {
     P(trimStart)                             \
     P(trunc)                                 \
     P(undefined)                             \
+    P(unescape)                              \
     P(unicode)                               \
     P(unshift)                               \
     P(value)                                 \

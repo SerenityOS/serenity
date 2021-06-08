@@ -13,7 +13,7 @@
 
 namespace Cpp {
 
-static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::Token::Type type)
+static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Cpp::Token::Type type)
 {
     switch (type) {
     case Cpp::Token::Type::Keyword:
@@ -43,19 +43,19 @@ static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, Cpp::
     }
 }
 
-bool SyntaxHighlighter::is_identifier(void* token) const
+bool SyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
+    auto cpp_token = static_cast<Cpp::Token::Type>(token);
     return cpp_token == Cpp::Token::Type::Identifier;
 }
 
-bool SyntaxHighlighter::is_navigatable(void* token) const
+bool SyntaxHighlighter::is_navigatable(u64 token) const
 {
-    auto cpp_token = static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token));
+    auto cpp_token = static_cast<Cpp::Token::Type>(token);
     return cpp_token == Cpp::Token::Type::IncludePath;
 }
 
-void SyntaxHighlighter::rehighlight(const Palette& palette)
+void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
     Cpp::Lexer lexer(text);
@@ -63,15 +63,16 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
 
     Vector<GUI::TextDocumentSpan> spans;
     for (auto& token : tokens) {
-        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.type_as_string(), token.start().line, token.start().column, token.end().line, token.end().column);
+        // FIXME: The +1 for the token end column is a quick hack due to not wanting to modify the lexer (which is also used by the parser). Maybe there's a better way to do this.
+        dbgln_if(SYNTAX_HIGHLIGHTING_DEBUG, "{} @ {}:{} - {}:{}", token.type_as_string(), token.start().line, token.start().column, token.end().line, token.end().column + 1);
         GUI::TextDocumentSpan span;
         span.range.set_start({ token.start().line, token.start().column });
-        span.range.set_end({ token.end().line, token.end().column });
+        span.range.set_end({ token.end().line, token.end().column + 1 });
         auto style = style_for_token_type(palette, token.type());
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
         span.is_skippable = token.type() == Cpp::Token::Type::Whitespace;
-        span.data = reinterpret_cast<void*>(token.type());
+        span.data = static_cast<u64>(token.type());
         spans.append(span);
     }
     m_client->do_set_spans(move(spans));
@@ -82,20 +83,20 @@ void SyntaxHighlighter::rehighlight(const Palette& palette)
     m_client->do_update();
 }
 
-Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs() const
+Vector<SyntaxHighlighter::MatchingTokenPair> SyntaxHighlighter::matching_token_pairs_impl() const
 {
     static Vector<SyntaxHighlighter::MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftCurly), reinterpret_cast<void*>(Cpp::Token::Type::RightCurly) });
-        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftParen), reinterpret_cast<void*>(Cpp::Token::Type::RightParen) });
-        pairs.append({ reinterpret_cast<void*>(Cpp::Token::Type::LeftBracket), reinterpret_cast<void*>(Cpp::Token::Type::RightBracket) });
+        pairs.append({ static_cast<u64>(Cpp::Token::Type::LeftCurly), static_cast<u64>(Cpp::Token::Type::RightCurly) });
+        pairs.append({ static_cast<u64>(Cpp::Token::Type::LeftParen), static_cast<u64>(Cpp::Token::Type::RightParen) });
+        pairs.append({ static_cast<u64>(Cpp::Token::Type::LeftBracket), static_cast<u64>(Cpp::Token::Type::RightBracket) });
     }
     return pairs;
 }
 
-bool SyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+bool SyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
-    return static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token1)) == static_cast<Cpp::Token::Type>(reinterpret_cast<size_t>(token2));
+    return static_cast<Cpp::Token::Type>(token1) == static_cast<Cpp::Token::Type>(token2);
 }
 
 SyntaxHighlighter::~SyntaxHighlighter()

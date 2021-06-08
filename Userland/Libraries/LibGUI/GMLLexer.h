@@ -33,7 +33,7 @@ struct GMLToken {
 #undef __TOKEN
     };
 
-    const char* to_string() const
+    char const* to_string() const
     {
         switch (m_type) {
 #define __TOKEN(x) \
@@ -53,7 +53,7 @@ struct GMLToken {
 
 class GMLLexer {
 public:
-    GMLLexer(const StringView&);
+    GMLLexer(StringView const&);
 
     Vector<GMLToken> lex();
 
@@ -63,7 +63,6 @@ private:
 
     StringView m_input;
     size_t m_index { 0 };
-    GMLPosition m_previous_position { 0, 0 };
     GMLPosition m_position { 0, 0 };
 };
 

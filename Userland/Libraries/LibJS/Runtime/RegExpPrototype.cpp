@@ -166,8 +166,9 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::exec)
     auto& match = result.matches[0];
 
     // FIXME: Do code point index correction if the Unicode flag is set.
-    auto* array = Array::create(global_object);
-    array->indexed_properties().set_array_like_size(result.n_capture_groups + 1);
+    auto* array = Array::create(global_object, result.n_capture_groups + 1);
+    if (vm.exception())
+        return {};
     array->define_property(vm.names.index, Value((i32)match.global_offset));
     array->define_property(vm.names.input, js_string(vm, str));
     array->indexed_properties().put(array, 0, js_string(vm, match.view.to_string()));

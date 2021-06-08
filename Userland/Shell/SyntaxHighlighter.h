@@ -15,15 +15,15 @@ public:
     SyntaxHighlighter() { }
     virtual ~SyntaxHighlighter() override;
 
-    virtual bool is_identifier(void*) const override;
-    virtual bool is_navigatable(void*) const override;
+    virtual bool is_identifier(u64) const override;
+    virtual bool is_navigatable(u64) const override;
 
     virtual Syntax::Language language() const override { return Syntax::Language::Shell; }
     virtual void rehighlight(const Palette&) override;
 
 protected:
-    virtual Vector<MatchingTokenPair> matching_token_pairs() const override;
-    virtual bool token_types_equal(void*, void*) const override;
+    virtual Vector<MatchingTokenPair> matching_token_pairs_impl() const override;
+    virtual bool token_types_equal(u64, u64) const override;
 };
 
 }

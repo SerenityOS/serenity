@@ -19,8 +19,6 @@ public:
     virtual ~StringPrototype() override;
 
 private:
-    JS_DECLARE_NATIVE_GETTER(length_getter);
-
     JS_DECLARE_NATIVE_FUNCTION(char_at);
     JS_DECLARE_NATIVE_FUNCTION(char_code_at);
     JS_DECLARE_NATIVE_FUNCTION(repeat);
@@ -30,6 +28,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_lowercase);
     JS_DECLARE_NATIVE_FUNCTION(to_uppercase);
     JS_DECLARE_NATIVE_FUNCTION(to_string);
+    JS_DECLARE_NATIVE_FUNCTION(value_of);
     JS_DECLARE_NATIVE_FUNCTION(pad_start);
     JS_DECLARE_NATIVE_FUNCTION(pad_end);
     JS_DECLARE_NATIVE_FUNCTION(substring);

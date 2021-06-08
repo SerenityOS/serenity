@@ -40,7 +40,7 @@ test("Year and month as arguments", () => {
 
     date.setFullYear(2021, 3);
     expect(date.getFullYear()).toBe(2021);
-    expect(date.getMonth()).toBe(2);
+    expect(date.getMonth()).toBe(3);
     expect(date.getDate()).toBe(1);
     expect(date.getHours()).toBe(0);
     expect(date.getMinutes()).toBe(0);
@@ -53,7 +53,7 @@ test("Year, month, and day as arguments", () => {
 
     date.setFullYear(2021, 3, 16);
     expect(date.getFullYear()).toBe(2021);
-    expect(date.getMonth()).toBe(2);
+    expect(date.getMonth()).toBe(3);
     expect(date.getDate()).toBe(16);
     expect(date.getHours()).toBe(0);
     expect(date.getMinutes()).toBe(0);
@@ -88,7 +88,7 @@ test("NaN or undefined in any arguments", () => {
 
     date.setFullYear(2021, 3, 16);
     expect(date.getFullYear()).toBe(2021);
-    expect(date.getMonth()).toBe(2);
+    expect(date.getMonth()).toBe(3);
     expect(date.getDate()).toBe(16);
     expect(date.getHours()).toBe(0);
     expect(date.getMinutes()).toBe(0);
@@ -103,7 +103,7 @@ test("Make Invalid Date valid again", () => {
 
     date.setFullYear(2021, 3, 16);
     expect(date.getFullYear()).toBe(2021);
-    expect(date.getMonth()).toBe(2);
+    expect(date.getMonth()).toBe(3);
     expect(date.getDate()).toBe(16);
     expect(date.getHours()).toBe(0);
     expect(date.getMinutes()).toBe(0);

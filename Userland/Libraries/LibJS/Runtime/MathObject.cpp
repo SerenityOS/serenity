@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -51,6 +52,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.atan2, atan2, 2, attr);
     define_native_function(vm.names.fround, fround, 1, attr);
     define_native_function(vm.names.hypot, hypot, 2, attr);
+    define_native_function(vm.names.imul, imul, 2, attr);
     define_native_function(vm.names.log, log, 1, attr);
     define_native_function(vm.names.log2, log2, 1, attr);
     define_native_function(vm.names.log10, log10, 1, attr);
@@ -81,7 +83,11 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
         return {};
     if (number.is_nan())
         return js_nan();
-    return Value(number.as_double() >= 0 ? number.as_double() : -number.as_double());
+    if (number.is_negative_zero())
+        return Value(0);
+    if (number.is_negative_infinity())
+        return js_infinity();
+    return Value(number.as_double() < 0 ? -number.as_double() : number.as_double());
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
@@ -148,38 +154,42 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
-    if (!vm.argument_count())
-        return js_negative_infinity();
-
-    auto max = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        if ((max.is_negative_zero() && cur.is_positive_zero()) || cur.as_double() > max.as_double())
-            max = cur;
+        coerced.append(number);
     }
-    return max;
+
+    auto highest = js_negative_infinity();
+    for (auto& number : coerced) {
+        if (number.is_nan())
+            return js_nan();
+        if ((number.is_positive_zero() && highest.is_negative_zero()) || number.as_double() > highest.as_double())
+            highest = number;
+    }
+    return highest;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
-    if (!vm.argument_count())
-        return js_infinity();
-
-    auto min = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        if ((min.is_positive_zero() && cur.is_negative_zero()) || cur.as_double() < min.as_double())
-            min = cur;
+        coerced.append(number);
     }
-    return min;
+
+    auto lowest = js_infinity();
+    for (auto& number : coerced) {
+        if (number.is_nan())
+            return js_nan();
+        if ((number.is_negative_zero() && lowest.is_positive_zero()) || number.as_double() < lowest.as_double())
+            lowest = number;
+    }
+    return lowest;
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
@@ -226,7 +236,59 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
-    return JS::exp(global_object, vm.argument(0), vm.argument(1));
+    auto base = vm.argument(0).to_number(global_object);
+    if (vm.exception())
+        return {};
+    auto exponent = vm.argument(1).to_number(global_object);
+    if (vm.exception())
+        return {};
+    if (exponent.is_nan())
+        return js_nan();
+    if (exponent.is_positive_zero() || exponent.is_negative_zero())
+        return Value(1);
+    if (base.is_nan())
+        return js_nan();
+    if (base.is_positive_infinity())
+        return exponent.as_double() > 0 ? js_infinity() : Value(0);
+    if (base.is_negative_infinity()) {
+        auto is_odd_integral_number = exponent.is_integer() && (exponent.as_i32() % 2 != 0);
+        if (exponent.as_double() > 0)
+            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
+        else
+            return is_odd_integral_number ? Value(-0.0) : Value(0);
+    }
+    if (base.is_positive_zero())
+        return exponent.as_double() > 0 ? Value(0) : js_infinity();
+    if (base.is_negative_zero()) {
+        auto is_odd_integral_number = exponent.is_integer() && (exponent.as_i32() % 2 != 0);
+        if (exponent.as_double() > 0)
+            return is_odd_integral_number ? Value(-0.0) : Value(0);
+        else
+            return is_odd_integral_number ? js_negative_infinity() : js_infinity();
+    }
+    VERIFY(base.is_finite_number() && !base.is_positive_zero() && !base.is_negative_zero());
+    if (exponent.is_positive_infinity()) {
+        auto absolute_base = fabs(base.as_double());
+        if (absolute_base > 1)
+            return js_infinity();
+        else if (absolute_base == 1)
+            return js_nan();
+        else if (absolute_base < 1)
+            return Value(0);
+    }
+    if (exponent.is_negative_infinity()) {
+        auto absolute_base = fabs(base.as_double());
+        if (absolute_base > 1)
+            return Value(0);
+        else if (absolute_base == 1)
+            return js_nan();
+        else if (absolute_base < 1)
+            return js_infinity();
+    }
+    VERIFY(exponent.is_finite_number() && !exponent.is_positive_zero() && !exponent.is_negative_zero());
+    if (base.as_double() < 0 && !exponent.is_integer())
+        return js_nan();
+    return Value(::pow(base.as_double(), exponent.as_double()));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
@@ -359,44 +421,63 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
-    auto y = vm.argument(0).to_number(global_object), x = vm.argument(1).to_number(global_object);
-    auto pi_4 = M_PI_2 / 2;
-    auto three_pi_4 = pi_4 + M_PI_2;
+    auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
+
+    auto y = vm.argument(0).to_number(global_object);
     if (vm.exception())
         return {};
-    if (x.is_positive_zero()) {
-        if (y.is_positive_zero() || y.is_negative_zero())
-            return y;
-        else
-            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
-    }
-    if (x.is_negative_zero()) {
-        if (y.is_positive_zero())
-            return Value(M_PI);
-        else if (y.is_negative_zero())
-            return Value(-M_PI);
-        else
-            return (y.as_double() > 0) ? Value(M_PI_2) : Value(-M_PI_2);
-    }
-    if (x.is_positive_infinity()) {
-        if (y.is_infinity())
-            return (y.is_positive_infinity()) ? Value(pi_4) : Value(-pi_4);
-        else
-            return (y.as_double() > 0) ? Value(+0.0) : Value(-0.0);
-    }
-    if (x.is_negative_infinity()) {
-        if (y.is_infinity())
-            return (y.is_positive_infinity()) ? Value(three_pi_4) : Value(-three_pi_4);
-        else
-            return (y.as_double() > 0) ? Value(M_PI) : Value(-M_PI);
-    }
-    if (y.is_infinity())
-        return (y.is_positive_infinity()) ? Value(M_PI_2) : Value(-M_PI_2);
-    if (y.is_positive_zero())
-        return (x.as_double() > 0) ? Value(+0.0) : Value(M_PI);
-    if (y.is_negative_zero())
-        return (x.as_double() > 0) ? Value(-0.0) : Value(-M_PI);
+    auto x = vm.argument(1).to_number(global_object);
+    if (vm.exception())
+        return {};
 
+    if (y.is_nan() || x.is_nan())
+        return js_nan();
+    if (y.is_positive_infinity()) {
+        if (x.is_positive_infinity())
+            return Value(M_PI_4);
+        else if (x.is_negative_infinity())
+            return Value(three_quarters_pi);
+        else
+            return Value(M_PI_2);
+    }
+    if (y.is_negative_infinity()) {
+        if (x.is_positive_infinity())
+            return Value(-M_PI_4);
+        else if (x.is_negative_infinity())
+            return Value(-three_quarters_pi);
+        else
+            return Value(-M_PI_2);
+    }
+    if (y.is_positive_zero()) {
+        if (x.as_double() > 0 || x.is_positive_zero())
+            return Value(0.0);
+        else
+            return Value(M_PI);
+    }
+    if (y.is_negative_zero()) {
+        if (x.as_double() > 0 || x.is_positive_zero())
+            return Value(-0.0);
+        else
+            return Value(-M_PI);
+    }
+    VERIFY(y.is_finite_number() && !y.is_positive_zero() && !y.is_negative_zero());
+    if (y.as_double() > 0) {
+        if (x.is_positive_infinity())
+            return Value(0);
+        else if (x.is_negative_infinity())
+            return Value(M_PI);
+        else if (x.is_positive_zero() || x.is_negative_zero())
+            return Value(M_PI_2);
+    }
+    if (y.as_double() < 0) {
+        if (x.is_positive_infinity())
+            return Value(-0.0);
+        else if (x.is_negative_infinity())
+            return Value(-M_PI);
+        else if (x.is_positive_zero() || x.is_negative_zero())
+            return Value(-M_PI_2);
+    }
+    VERIFY(x.is_finite_number() && !x.is_positive_zero() && !x.is_negative_zero());
     return Value(::atan2(y.as_double(), x.as_double()));
 }
 
@@ -412,20 +493,44 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 {
-    if (!vm.argument_count())
-        return Value(0);
-
-    auto hypot = vm.argument(0).to_number(global_object);
-    if (vm.exception())
-        return {};
-    hypot = Value(hypot.as_double() * hypot.as_double());
-    for (size_t i = 1; i < vm.argument_count(); ++i) {
-        auto cur = vm.argument(i).to_number(global_object);
+    Vector<Value> coerced;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto number = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        hypot = Value(hypot.as_double() + cur.as_double() * cur.as_double());
+        coerced.append(number);
     }
-    return Value(::sqrt(hypot.as_double()));
+
+    for (auto& number : coerced) {
+        if (number.is_positive_infinity() || number.is_negative_infinity())
+            return js_infinity();
+    }
+
+    auto only_zero = true;
+    double sum_of_squares = 0;
+    for (auto& number : coerced) {
+        if (number.is_nan() || number.is_positive_infinity())
+            return number;
+        if (number.is_negative_infinity())
+            return js_infinity();
+        if (!number.is_positive_zero() && !number.is_negative_zero())
+            only_zero = false;
+        sum_of_squares += number.as_double() * number.as_double();
+    }
+    if (only_zero)
+        return Value(0);
+    return Value(::sqrt(sum_of_squares));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
+{
+    auto a = vm.argument(0).to_u32(global_object);
+    if (vm.exception())
+        return {};
+    auto b = vm.argument(1).to_u32(global_object);
+    if (vm.exception())
+        return {};
+    return Value(static_cast<i32>(a * b));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log)

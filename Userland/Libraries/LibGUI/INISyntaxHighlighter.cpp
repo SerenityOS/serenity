@@ -32,9 +32,9 @@ static Syntax::TextStyle style_for_token_type(const Gfx::Palette& palette, IniTo
     }
 }
 
-bool IniSyntaxHighlighter::is_identifier(void* token) const
+bool IniSyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto ini_token = static_cast<GUI::IniToken::Type>(reinterpret_cast<size_t>(token));
+    auto ini_token = static_cast<GUI::IniToken::Type>(token);
     return ini_token == GUI::IniToken::Type::Name;
 }
 
@@ -53,7 +53,7 @@ void IniSyntaxHighlighter::rehighlight(const Palette& palette)
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
         span.is_skippable = token.m_type == IniToken::Type::Whitespace;
-        span.data = reinterpret_cast<void*>(token.m_type);
+        span.data = static_cast<u64>(token.m_type);
         spans.append(span);
     }
     m_client->do_set_spans(move(spans));
@@ -64,18 +64,18 @@ void IniSyntaxHighlighter::rehighlight(const Palette& palette)
     m_client->do_update();
 }
 
-Vector<IniSyntaxHighlighter::MatchingTokenPair> IniSyntaxHighlighter::matching_token_pairs() const
+Vector<IniSyntaxHighlighter::MatchingTokenPair> IniSyntaxHighlighter::matching_token_pairs_impl() const
 {
     static Vector<MatchingTokenPair> pairs;
     if (pairs.is_empty()) {
-        pairs.append({ reinterpret_cast<void*>(IniToken::Type::LeftBracket), reinterpret_cast<void*>(IniToken::Type::RightBracket) });
+        pairs.append({ static_cast<u64>(IniToken::Type::LeftBracket), static_cast<u64>(IniToken::Type::RightBracket) });
     }
     return pairs;
 }
 
-bool IniSyntaxHighlighter::token_types_equal(void* token1, void* token2) const
+bool IniSyntaxHighlighter::token_types_equal(u64 token1, u64 token2) const
 {
-    return static_cast<GUI::IniToken::Type>(reinterpret_cast<size_t>(token1)) == static_cast<GUI::IniToken::Type>(reinterpret_cast<size_t>(token2));
+    return static_cast<GUI::IniToken::Type>(token1) == static_cast<GUI::IniToken::Type>(token2);
 }
 
 IniSyntaxHighlighter::~IniSyntaxHighlighter()

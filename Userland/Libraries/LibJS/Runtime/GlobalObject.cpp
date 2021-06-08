@@ -106,12 +106,14 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isFinite, is_finite, 1, attr);
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
-    define_native_function(vm.names.parseInt, parse_int, 1, attr);
+    define_native_function(vm.names.parseInt, parse_int, 2, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
     define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
     define_native_function(vm.names.decodeURIComponent, decode_uri_component, 1, attr);
+    define_native_function(vm.names.escape, escape, 1, attr);
+    define_native_function(vm.names.unescape, unescape, 1, attr);
 
     define_property(vm.names.NaN, js_nan(), 0);
     define_property(vm.names.Infinity, js_infinity(), 0);
@@ -200,12 +202,13 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_float)
 {
     if (vm.argument(0).is_number())
         return vm.argument(0);
-    auto string = vm.argument(0).to_string(global_object);
+    auto input_string = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    for (size_t length = string.length(); length > 0; --length) {
+    auto trimmed_string = input_string.trim_whitespace(TrimMode::Left);
+    for (size_t length = trimmed_string.length(); length > 0; --length) {
         // This can't throw, so no exception check is fine.
-        auto number = Value(js_string(vm, string.substring(0, length))).to_number(global_object);
+        auto number = Value(js_string(vm, trimmed_string.substring(0, length))).to_number(global_object);
         if (!number.is_nan())
             return number;
     }
@@ -249,9 +252,9 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     }
 
     auto parse_digit = [&](u32 code_point, i32 radix) -> Optional<i32> {
-        if (!is_ascii_hex_digit(code_point) || radix <= 0)
+        if (!is_ascii_alphanumeric(code_point) || radix <= 0)
             return {};
-        auto digit = parse_ascii_hex_digit(code_point);
+        auto digit = parse_ascii_base36_digit(code_point);
         if (digit >= (u32)radix)
             return {};
         return digit;
@@ -431,6 +434,48 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::decode_uri_component)
     if (vm.exception())
         return {};
     return js_string(vm, move(decoded));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::escape)
+{
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    StringBuilder escaped;
+    for (auto code_point : Utf8View(string)) {
+        if (code_point < 256) {
+            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@*_+-./"sv.contains(code_point))
+                escaped.append(code_point);
+            else
+                escaped.appendff("%{:02X}", code_point);
+            continue;
+        }
+        escaped.appendff("%u{:04X}", code_point); // FIXME: Handle utf-16 surrogate pairs
+    }
+    return js_string(vm, escaped.build());
+}
+
+JS_DEFINE_NATIVE_FUNCTION(GlobalObject::unescape)
+{
+    auto string = vm.argument(0).to_string(global_object);
+    if (vm.exception())
+        return {};
+    ssize_t length = string.length();
+    StringBuilder unescaped(length);
+    for (auto k = 0; k < length; ++k) {
+        u32 code_point = string[k];
+        if (code_point == '%') {
+            if (k <= length - 6 && string[k + 1] == 'u' && is_ascii_hex_digit(string[k + 2]) && is_ascii_hex_digit(string[k + 3]) && is_ascii_hex_digit(string[k + 4]) && is_ascii_hex_digit(string[k + 5])) {
+                code_point = (parse_ascii_hex_digit(string[k + 2]) << 12) | (parse_ascii_hex_digit(string[k + 3]) << 8) | (parse_ascii_hex_digit(string[k + 4]) << 4) | parse_ascii_hex_digit(string[k + 5]);
+                k += 5;
+            } else if (k <= length - 3 && is_ascii_hex_digit(string[k + 1]) && is_ascii_hex_digit(string[k + 2])) {
+                code_point = (parse_ascii_hex_digit(string[k + 1]) << 4) | parse_ascii_hex_digit(string[k + 2]);
+                k += 2;
+            }
+        }
+        unescaped.append_code_point(code_point);
+    }
+    return js_string(vm, unescaped.build());
 }
 
 }

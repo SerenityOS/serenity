@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/Forward.h>
+#include <LibWeb/CSS/ComputedValues.h>
 #include <LibWeb/CSS/LengthBox.h>
 #include <LibWeb/CSS/StyleValue.h>
 
@@ -51,6 +52,10 @@ public:
     Optional<CSS::TextTransform> text_transform() const;
     Optional<CSS::ListStyleType> list_style_type() const;
     Optional<CSS::FlexDirection> flex_direction() const;
+    Optional<CSS::FlexWrap> flex_wrap() const;
+    Optional<CSS::FlexBasisData> flex_basis() const;
+    Optional<float> flex_grow_factor() const;
+    Optional<float> flex_shrink_factor() const;
     Optional<CSS::Overflow> overflow_x() const;
     Optional<CSS::Overflow> overflow_y() const;
     Optional<CSS::Repeat> background_repeat_x() const;

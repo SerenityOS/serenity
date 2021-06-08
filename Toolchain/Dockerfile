@@ -5,9 +5,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
     && apt-get install -y \
         build-essential \
+        ccache \
         cmake \
         curl \
         genext2fs \
+        gettext \
         git \
         imagemagick \
         libmpfr-dev \

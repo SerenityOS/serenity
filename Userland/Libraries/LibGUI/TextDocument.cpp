@@ -879,6 +879,9 @@ void TextDocument::remove(const TextRange& unnormalized_range)
     if (range.start().line() == range.end().line()) {
         // Delete within same line.
         auto& line = this->line(range.start().line());
+        if (line.length() == 0)
+            return;
+
         bool whole_line_is_selected = range.start().column() == 0 && range.end().column() == line.length();
 
         if (whole_line_is_selected) {

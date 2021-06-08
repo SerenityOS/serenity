@@ -53,6 +53,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
+    m_playback_progress_slider->set_jump_to_cursor(true);
     m_playback_progress_slider->set_min(0);
     m_playback_progress_slider->set_max(total_samples);
     m_playback_progress_slider->set_page_step(total_samples / 10);
@@ -71,6 +72,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
         bool paused = this->manager().toggle_pause();
         set_paused(paused);
         m_play_button->set_icon(paused ? *m_play_icon : *m_pause_icon);
+        m_stop_button->set_enabled(has_loaded_file());
     };
 
     m_stop_button = menubar.add<GUI::Button>();

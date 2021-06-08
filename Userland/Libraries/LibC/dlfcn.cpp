@@ -10,3 +10,4 @@
 DlCloseFunction __dlclose;
 DlOpenFunction __dlopen;
 DlSymFunction __dlsym;
+DlAddrFunction __dladdr;

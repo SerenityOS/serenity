@@ -543,6 +543,16 @@ double Value::to_double(GlobalObject& global_object) const
     return number.as_double();
 }
 
+StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
+{
+    auto key = to_primitive(global_object, PreferredType::String);
+    if (global_object.vm().exception())
+        return {};
+    if (key.is_symbol())
+        return &key.as_symbol();
+    return to_string(global_object);
+}
+
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
 {
     VERIFY(type() != Type::Int32);
@@ -556,7 +566,8 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     auto int_val = floor(abs);
     if (signbit(value))
         int_val = -int_val;
-    auto int32bit = fmod(int_val, 4294967296.0);
+    auto remainder = fmod(int_val, 4294967296.0);
+    auto int32bit = remainder >= 0.0 ? remainder : remainder + 4294967296.0; // The notation “x modulo y” computes a value k of the same sign as y
     if (int32bit >= 2147483648.0)
         int32bit -= 4294967296.0;
     return static_cast<i32>(int32bit);
@@ -1008,10 +1019,10 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::InOperatorWithObject);
         return {};
     }
-    auto lhs_string_or_symbol = StringOrSymbol::from_value(global_object, lhs);
+    auto lhs_property_key = lhs.to_property_key(global_object);
     if (global_object.vm().exception())
         return {};
-    return Value(rhs.as_object().has_property(lhs_string_or_symbol));
+    return Value(rhs.as_object().has_property(lhs_property_key));
 }
 
 Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
@@ -1379,4 +1390,16 @@ Object* species_constructor(GlobalObject& global_object, const Object& object, O
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
     return nullptr;
 }
+
+// 7.2.1 RequireObjectCoercible, https://tc39.es/ecma262/#sec-requireobjectcoercible
+Value require_object_coercible(GlobalObject& global_object, Value value)
+{
+    auto& vm = global_object.vm();
+    if (value.is_nullish()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
+        return {};
+    }
+    return value;
+}
+
 }

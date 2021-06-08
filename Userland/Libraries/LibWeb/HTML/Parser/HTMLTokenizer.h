@@ -147,7 +147,7 @@ private:
     bool consumed_as_part_of_an_attribute() const;
 
     void restore_to(const Utf8CodePointIterator& new_iterator);
-    auto& nth_last_position(size_t n = 0) { return m_source_positions.at(m_source_positions.size() - 1 - n); }
+    HTMLToken::Position nth_last_position(size_t n = 0);
 
     State m_state { State::Data };
     State m_return_state { State::Data };

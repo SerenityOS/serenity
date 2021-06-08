@@ -5,14 +5,14 @@
  */
 
 #include "Lexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/HashTable.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
-#include <ctype.h>
 
 namespace Cpp {
 
-Lexer::Lexer(const StringView& input)
+Lexer::Lexer(StringView const& input)
     : m_input(input)
 {
 }
@@ -38,17 +38,17 @@ char Lexer::consume()
     return ch;
 }
 
-static bool is_valid_first_character_of_identifier(char ch)
+constexpr bool is_valid_first_character_of_identifier(char ch)
 {
-    return isalpha(ch) || ch == '_' || ch == '$';
+    return is_ascii_alpha(ch) || ch == '_' || ch == '$';
 }
 
-static bool is_valid_nonfirst_character_of_identifier(char ch)
+constexpr bool is_valid_nonfirst_character_of_identifier(char ch)
 {
-    return is_valid_first_character_of_identifier(ch) || isdigit(ch);
+    return is_valid_first_character_of_identifier(ch) || is_ascii_digit(ch);
 }
 
-constexpr const char* s_known_keywords[] = {
+constexpr char const* s_known_keywords[] = {
     "alignas",
     "alignof",
     "and",
@@ -125,7 +125,7 @@ constexpr const char* s_known_keywords[] = {
     "xor_eq"
 };
 
-constexpr const char* s_known_types[] = {
+constexpr char const* s_known_types[] = {
     "ByteBuffer",
     "CircularDeque",
     "CircularQueue",
@@ -186,7 +186,7 @@ constexpr const char* s_known_types[] = {
     "wchar_t"
 };
 
-static bool is_keyword(const StringView& string)
+static bool is_keyword(StringView const& string)
 {
     static HashTable<String> keywords(array_size(s_known_keywords));
     if (keywords.is_empty()) {
@@ -195,7 +195,7 @@ static bool is_keyword(const StringView& string)
     return keywords.contains(string);
 }
 
-static bool is_known_type(const StringView& string)
+static bool is_known_type(StringView const& string)
 {
     static HashTable<String> types(array_size(s_known_types));
     if (types.is_empty()) {
@@ -268,7 +268,7 @@ Vector<Token> Lexer::lex()
         }
         case 'x': {
             size_t hex_digits = 0;
-            while (isxdigit(peek(2 + hex_digits)))
+            while (is_ascii_hex_digit(peek(2 + hex_digits)))
                 ++hex_digits;
             return 2 + hex_digits;
         }
@@ -277,7 +277,7 @@ Vector<Token> Lexer::lex()
             bool is_unicode = true;
             size_t number_of_digits = peek(1) == 'u' ? 4 : 8;
             for (size_t i = 0; i < number_of_digits; ++i) {
-                if (!isxdigit(peek(2 + i))) {
+                if (!is_ascii_hex_digit(peek(2 + i))) {
                     is_unicode = false;
                     break;
                 }
@@ -307,9 +307,9 @@ Vector<Token> Lexer::lex()
 
     while (m_index < m_input.length()) {
         auto ch = peek();
-        if (isspace(ch)) {
+        if (is_ascii_space(ch)) {
             begin_token();
-            while (isspace(peek()))
+            while (is_ascii_space(peek()))
                 consume();
             commit_token(Token::Type::Whitespace);
             continue;
@@ -534,10 +534,13 @@ Vector<Token> Lexer::lex()
             if (directive == "#include") {
                 commit_token(Token::Type::IncludeStatement);
 
-                begin_token();
-                while (isspace(peek()))
-                    consume();
-                commit_token(Token::Type::Whitespace);
+                if (is_ascii_space(peek())) {
+                    begin_token();
+                    do {
+                        consume();
+                    } while (is_ascii_space(peek()));
+                    commit_token(Token::Type::Whitespace);
+                }
 
                 begin_token();
                 if (peek() == '<' || peek() == '"') {
@@ -667,7 +670,7 @@ Vector<Token> Lexer::lex()
             commit_token(Token::Type::SingleQuotedString);
             continue;
         }
-        if (isdigit(ch) || (ch == '.' && isdigit(peek(1)))) {
+        if (is_ascii_digit(ch) || (ch == '.' && is_ascii_digit(peek(1)))) {
             begin_token();
             consume();
 
@@ -686,7 +689,7 @@ Vector<Token> Lexer::lex()
                 if (ch == '+' || ch == '-') {
                     ++length;
                 }
-                for (ch = peek(length); isdigit(ch); ch = peek(length)) {
+                for (ch = peek(length); is_ascii_digit(ch); ch = peek(length)) {
                     ++length;
                 }
                 return length;
@@ -720,7 +723,7 @@ Vector<Token> Lexer::lex()
                     is_hex = true;
                 }
 
-                for (char ch = peek(); (is_hex ? isxdigit(ch) : isdigit(ch)) || (ch == '\'' && peek(1) != '\'') || ch == '.'; ch = peek()) {
+                for (char ch = peek(); (is_hex ? is_ascii_hex_digit(ch) : is_ascii_digit(ch)) || (ch == '\'' && peek(1) != '\'') || ch == '.'; ch = peek()) {
                     if (ch == '.') {
                         if (type == Token::Type::Integer) {
                             type = Token::Type::Float;

@@ -16,18 +16,21 @@
 
 namespace AK {
 
+// NOTE: This is similar to the LibC macro EOF = -1.
+constexpr u32 end_of_file = 0xFFFFFFFF;
+
 constexpr bool is_url_code_point(u32 code_point)
 {
     // FIXME: [...] and code points in the range U+00A0 to U+10FFFD, inclusive, excluding surrogates and noncharacters.
     return is_ascii_alphanumeric(code_point) || code_point >= 0xA0 || "!$&'()*+,-./:;=?@_~"sv.contains(code_point);
 }
 
-static void report_validation_error(const SourceLocation& location = SourceLocation::current())
+static void report_validation_error(SourceLocation const& location = SourceLocation::current())
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Validation error! {}", location);
 }
 
-static Optional<String> parse_opaque_host(const StringView& input)
+static Optional<String> parse_opaque_host(StringView const& input)
 {
     auto forbidden_host_code_points_excluding_percent = "\0\t\n\r #/:<>?@[\\]^|"sv;
     for (auto code_point : forbidden_host_code_points_excluding_percent) {
@@ -41,7 +44,7 @@ static Optional<String> parse_opaque_host(const StringView& input)
     return URL::percent_encode(input, URL::PercentEncodeSet::C0Control);
 }
 
-static Optional<String> parse_ipv4_address(const StringView& input)
+static Optional<String> parse_ipv4_address(StringView const& input)
 {
     // FIXME: Implement the correct IPv4 parser as specified by https://url.spec.whatwg.org/#concept-ipv4-parser.
     return input;
@@ -49,7 +52,7 @@ static Optional<String> parse_ipv4_address(const StringView& input)
 
 // https://url.spec.whatwg.org/#concept-host-parser
 // NOTE: This is a very bare-bones implementation.
-static Optional<String> parse_host(const StringView& input, bool is_not_special = false)
+static Optional<String> parse_host(StringView const& input, bool is_not_special = false)
 {
     if (input.starts_with('[')) {
         if (!input.ends_with(']')) {
@@ -81,7 +84,7 @@ static Optional<String> parse_host(const StringView& input, bool is_not_special 
     return ipv4_host;
 }
 
-constexpr bool starts_with_windows_drive_letter(const StringView& input)
+constexpr bool starts_with_windows_drive_letter(StringView const& input)
 {
     if (input.length() < 2)
         return false;
@@ -92,29 +95,29 @@ constexpr bool starts_with_windows_drive_letter(const StringView& input)
     return "/\\?#"sv.contains(input[2]);
 }
 
-constexpr bool is_windows_drive_letter(const StringView& input)
+constexpr bool is_windows_drive_letter(StringView const& input)
 {
     return input.length() == 2 && is_ascii_alpha(input[0]) && (input[1] == ':' || input[1] == '|');
 }
 
-constexpr bool is_normalized_windows_drive_letter(const StringView& input)
+constexpr bool is_normalized_windows_drive_letter(StringView const& input)
 {
     return input.length() == 2 && is_ascii_alpha(input[0]) && input[1] == ':';
 }
 
-constexpr bool is_single_dot_path_segment(const StringView& input)
+constexpr bool is_single_dot_path_segment(StringView const& input)
 {
     return input == "."sv || input.equals_ignoring_case("%2e"sv);
 }
 
-constexpr bool is_double_dot_path_segment(const StringView& input)
+constexpr bool is_double_dot_path_segment(StringView const& input)
 {
     return input == ".."sv || input.equals_ignoring_case(".%2e"sv) || input.equals_ignoring_case("%2e."sv) || input.equals_ignoring_case("%2e%2e"sv);
 }
 
 // https://fetch.spec.whatwg.org/#data-urls
 // FIXME: This only loosely follow the spec, as we use the same class for "regular" and data URLs, unlike the spec.
-Optional<URL> URLParser::parse_data_url(const StringView& raw_input)
+Optional<URL> URLParser::parse_data_url(StringView const& raw_input)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse_data_url: Parsing '{}'.", raw_input);
     VERIFY(raw_input.starts_with("data:"));
@@ -154,7 +157,7 @@ Optional<URL> URLParser::parse_data_url(const StringView& raw_input)
 // NOTE: Since the URL class's member variables contain percent decoded data, we have to deviate from the URL parser specification when setting
 //       some of those values. Because the specification leaves all values percent encoded in their URL data structure, we have to percent decode
 //       everything before setting the member variables.
-URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_url)
+URL URLParser::parse(Badge<URL>, StringView const& raw_input, URL const* base_url)
 {
     dbgln_if(URL_PARSER_DEBUG, "URLParser::parse: Parsing '{}'", raw_input);
     if (raw_input.is_empty())
@@ -174,7 +177,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
     size_t start_index = 0;
     size_t end_index = raw_input.length();
     for (size_t i = 0; i < raw_input.length(); ++i) {
-        if (raw_input[i] <= 0x20) {
+        if (0 <= raw_input[i] && raw_input[i] <= 0x20) {
             ++start_index;
             has_validation_error = true;
         } else {
@@ -182,7 +185,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
         }
     }
     for (ssize_t i = raw_input.length() - 1; i >= 0; --i) {
-        if (raw_input[i] <= 0x20) {
+        if (0 <= raw_input[i] && raw_input[i] <= 0x20) {
             --end_index;
             has_validation_error = true;
         } else {
@@ -221,17 +224,18 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
     // NOTE: "continue" should only be used to prevent incrementing the iterator, as this is done at the end of the loop.
     //       ++iterator : "increase pointer by 1"
     //       continue   : "decrease pointer by 1"
-    // NOTE: The NULL code point is used as the "EOF code point".
     for (;;) {
-        u32 code_point = 0;
+        u32 code_point = end_of_file;
         if (!iterator.done())
             code_point = *iterator;
 
         if constexpr (URL_PARSER_DEBUG) {
-            if (code_point)
-                dbgln("URLParser::parse: State {:2d} with code point '{:c}' (U+{:04X}).", (int)state, code_point, code_point);
+            if (code_point == end_of_file)
+                dbgln("URLParser::parse: {} state with EOF.", state_name(state));
+            else if (is_ascii_printable(code_point))
+                dbgln("URLParser::parse: {} state with code point U+{:04X} ({:c}).", state_name(state), code_point, code_point);
             else
-                dbgln("URLParser::parse: State {:2d} with code point EOF (U+0000).", (int)state);
+                dbgln("URLParser::parse: {} state with code point U+{:04X}.", state_name(state), code_point);
         }
 
         switch (state) {
@@ -333,7 +337,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                 } else if (code_point == '#') {
                     url.m_fragment = "";
                     state = State::Fragment;
-                } else if (code_point != 0) {
+                } else if (code_point != end_of_file) {
                     url.m_query = {};
                     if (url.m_paths.size())
                         url.m_paths.remove(url.m_paths.size() - 1);
@@ -406,7 +410,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                     }
                 }
                 buffer.clear();
-            } else if (code_point == 0 || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
+            } else if (code_point == end_of_file || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
                 if (at_sign_seen && buffer.is_empty()) {
                     report_validation_error();
                     return {};
@@ -432,7 +436,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                 url.m_host = host.release_value();
                 buffer.clear();
                 state = State::Port;
-            } else if (code_point == 0 || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
+            } else if (code_point == end_of_file || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
                 if (url.is_special() && buffer.is_empty()) {
                     report_validation_error();
                     return {};
@@ -455,7 +459,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
         case State::Port:
             if (is_ascii_digit(code_point)) {
                 buffer.append_code_point(code_point);
-            } else if (code_point == 0 || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
+            } else if (code_point == end_of_file || code_point == '/' || code_point == '?' || code_point == '#' || (url.is_special() && code_point == '\\')) {
                 if (!buffer.is_empty()) {
                     auto port = buffer.to_string().to_uint();
                     if (!port.has_value() || port.value() > 65535) {
@@ -492,7 +496,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                 } else if (code_point == '#') {
                     url.m_fragment = "";
                     state = State::Fragment;
-                } else if (code_point != 0) {
+                } else if (code_point != end_of_file) {
                     url.m_query = {};
                     auto substring_from_pointer = input.substring_view(iterator - input.begin()).as_string();
                     if (!starts_with_windows_drive_letter(substring_from_pointer)) {
@@ -522,7 +526,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
             }
             break;
         case State::FileHost:
-            if (code_point == 0 || code_point == '/' || code_point == '\\' || code_point == '?' || code_point == '#') {
+            if (code_point == end_of_file || code_point == '/' || code_point == '\\' || code_point == '?' || code_point == '#') {
                 if (is_windows_drive_letter(buffer.to_string())) {
                     report_validation_error();
                     state = State::Path;
@@ -557,14 +561,14 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
             } else if (code_point == '#') {
                 url.m_fragment = "";
                 state = State::Fragment;
-            } else if (code_point != 0) {
+            } else if (code_point != end_of_file) {
                 state = State::Path;
                 if (code_point != '/')
                     continue;
             }
             break;
         case State::Path:
-            if (code_point == 0 || code_point == '/' || (url.is_special() && code_point == '\\') || code_point == '?' || code_point == '#') {
+            if (code_point == end_of_file || code_point == '/' || (url.is_special() && code_point == '\\') || code_point == '?' || code_point == '#') {
                 if (url.is_special() && code_point == '\\')
                     report_validation_error();
                 if (is_double_dot_path_segment(buffer.to_string())) {
@@ -614,10 +618,10 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                 url.m_fragment = "";
                 state = State::Fragment;
             } else {
-                if (code_point != 0 && !is_url_code_point(code_point) && code_point != '%')
+                if (code_point != end_of_file && !is_url_code_point(code_point) && code_point != '%')
                     report_validation_error();
                 // FIXME: If c is U+0025 (%) and remaining does not start with two ASCII hex digits, validation error.
-                if (code_point != 0) {
+                if (code_point != end_of_file) {
                     URL::append_percent_encoded_if_necessary(buffer, code_point, URL::PercentEncodeSet::C0Control);
                 } else {
                     // NOTE: This needs to be percent decoded since the member variables contain decoded data.
@@ -626,7 +630,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
             }
             break;
         case State::Query:
-            if (code_point == '#' || code_point == 0) {
+            if (code_point == end_of_file || code_point == '#') {
                 VERIFY(url.m_query == "");
                 auto query_percent_encode_set = url.is_special() ? URL::PercentEncodeSet::SpecialQuery : URL::PercentEncodeSet::Query;
                 // NOTE: This is has to be encoded and then decoded because the original sequence could contain already percent-encoded sequences.
@@ -636,7 +640,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
                     url.m_fragment = "";
                     state = State::Fragment;
                 }
-            } else if (code_point != 0) {
+            } else if (code_point != end_of_file) {
                 if (!is_url_code_point(code_point) && code_point != '%')
                     report_validation_error();
                 // FIXME: If c is U+0025 (%) and remaining does not start with two ASCII hex digits, validation error.
@@ -645,7 +649,7 @@ URL URLParser::parse(Badge<URL>, const StringView& raw_input, URL const* base_ur
             break;
         case State::Fragment:
             // NOTE: This does not follow the spec exactly but rather uses the buffer and only sets the fragment on EOF.
-            if (code_point) {
+            if (code_point != end_of_file) {
                 if (!is_url_code_point(code_point) && code_point != '%')
                     report_validation_error();
                 // FIXME: If c is U+0025 (%) and remaining does not start with two ASCII hex digits, validation error.
