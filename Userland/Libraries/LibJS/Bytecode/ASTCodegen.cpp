@@ -279,24 +279,32 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
 
 void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     generator.begin_continuable_scope();
     auto test_label = generator.make_label();
+    auto result_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(result_reg);
     m_test->generate_bytecode(generator);
     auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
     m_body->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Jump>(test_label);
     test_jump.set_target(generator.make_label());
     generator.end_continuable_scope();
+    generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     generator.begin_continuable_scope();
     auto head_label = generator.make_label();
     m_body->generate_bytecode(generator);
     generator.end_continuable_scope();
+    auto result_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(result_reg);
     m_test->generate_bytecode(generator);
     generator.emit<Bytecode::Op::JumpIfTrue>(head_label);
+    generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
@@ -306,8 +314,11 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_init)
         m_init->generate_bytecode(generator);
 
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     generator.begin_continuable_scope();
     auto jump_label = generator.make_label();
+    auto result_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(result_reg);
     if (m_test) {
         m_test->generate_bytecode(generator);
         test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>();
@@ -320,6 +331,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     if (m_test)
         test_jump->set_target(generator.make_label());
     generator.end_continuable_scope();
+    generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
