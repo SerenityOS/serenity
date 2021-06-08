@@ -439,3 +439,74 @@ TEST_CASE(should_not_contain_present_not_in_range)
 
     EXPECT(!v.contains_in_range(2, 2, 4));
 }
+
+TEST_CASE(can_store_references)
+{
+    int my_integer = 42;
+    Vector<int&> references;
+    references.append(my_integer);
+    references.prepend(my_integer);
+    EXPECT_EQ(&references.first(), &references.last());
+
+    {
+        Vector<int&> other_references;
+        other_references.append(references);
+        EXPECT_EQ(&other_references.first(), &my_integer);
+    }
+
+    {
+        Vector<int&> other_references;
+        other_references = references;
+        EXPECT_EQ(&other_references.first(), &my_integer);
+    }
+
+    {
+        auto it = references.find(my_integer);
+        EXPECT(!it.is_end());
+        EXPECT_EQ(*it, my_integer);
+    }
+
+    {
+        int other_integer = 42;
+        auto index = references.find_first_index(other_integer);
+        EXPECT(index.has_value());
+        EXPECT_EQ(index.value_or(99999u), 0u);
+    }
+
+    {
+        auto integer = 42;
+        EXPECT(references.contains_slow(integer));
+    }
+
+    {
+        references.remove(0);
+        references.ensure_capacity(10);
+        EXPECT_EQ(&references.take_first(), &my_integer);
+    }
+}
+
+TEST_CASE(reference_deletion_should_not_affect_object)
+{
+    size_t times_deleted = 0;
+    struct DeleteCounter {
+        explicit DeleteCounter(size_t& deleted)
+            : deleted(deleted)
+        {
+        }
+
+        ~DeleteCounter()
+        {
+            ++deleted;
+        }
+
+        size_t& deleted;
+    };
+
+    {
+        DeleteCounter counter { times_deleted };
+        Vector<DeleteCounter&> references;
+        for (size_t i = 0; i < 16; ++i)
+            references.append(counter);
+    }
+    EXPECT_EQ(times_deleted, 1u);
+}
