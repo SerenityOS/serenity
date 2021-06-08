@@ -227,34 +227,34 @@ void MenuManager::close_everyone()
 
 void MenuManager::close_everyone_not_in_lineage(Menu& menu)
 {
-    Vector<Menu*> menus_to_close;
+    Vector<Menu&> menus_to_close;
     for (auto& open_menu : m_open_menu_stack) {
         if (!open_menu)
             continue;
         if (&menu == open_menu.ptr() || open_menu->is_menu_ancestor_of(menu))
             continue;
-        menus_to_close.append(open_menu);
+        menus_to_close.append(*open_menu);
     }
     close_menus(menus_to_close);
 }
 
-void MenuManager::close_menus(const Vector<Menu*>& menus)
+void MenuManager::close_menus(const Vector<Menu&>& menus)
 {
     for (auto& menu : menus) {
-        if (menu == m_current_menu)
+        if (&menu == m_current_menu)
             clear_current_menu();
-        menu->set_visible(false);
-        menu->clear_hovered_item();
+        menu.set_visible(false);
+        menu.clear_hovered_item();
         m_open_menu_stack.remove_first_matching([&](auto& entry) {
-            return entry == menu;
+            return entry == &menu;
         });
     }
     refresh();
 }
 
-static void collect_menu_subtree(Menu& menu, Vector<Menu*>& menus)
+static void collect_menu_subtree(Menu& menu, Vector<Menu&>& menus)
 {
-    menus.append(&menu);
+    menus.append(menu);
     for (size_t i = 0; i < menu.item_count(); ++i) {
         auto& item = menu.item(i);
         if (!item.is_submenu())
@@ -265,7 +265,7 @@ static void collect_menu_subtree(Menu& menu, Vector<Menu*>& menus)
 
 void MenuManager::close_menu_and_descendants(Menu& menu)
 {
-    Vector<Menu*> menus_to_close;
+    Vector<Menu&> menus_to_close;
     collect_menu_subtree(menu, menus_to_close);
     close_menus(menus_to_close);
 }

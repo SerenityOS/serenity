@@ -112,14 +112,14 @@ void CellTypeDialog::setup_tabs(GUI::TabWidget& tabs, const Vector<Position>& po
     for (auto& type_name : CellType::names())
         g_types.append(type_name);
 
-    Vector<Cell*> cells;
+    Vector<Cell&> cells;
     for (auto& position : positions) {
         if (auto cell = sheet.at(position))
-            cells.append(cell);
+            cells.append(*cell);
     }
 
     if (cells.size() == 1) {
-        auto& cell = *cells.first();
+        auto& cell = cells.first();
         m_format = cell.type_metadata().format;
         m_length = cell.type_metadata().length;
         m_type = &cell.type();

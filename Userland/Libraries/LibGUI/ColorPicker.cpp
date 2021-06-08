@@ -362,8 +362,8 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
     auto& widget = container.add<ColorButton>(*this, color);
     widget.on_click = [this](Color color) {
         for (auto& value : m_color_widgets) {
-            value->set_selected(false);
-            value->update();
+            value.set_selected(false);
+            value.update();
         }
 
         m_color = color;
@@ -375,7 +375,7 @@ void ColorPicker::create_color_button(Widget& container, unsigned rgb)
         widget.set_selected(true);
     }
 
-    m_color_widgets.append(&widget);
+    m_color_widgets.append(widget);
 }
 
 ColorButton::ColorButton(ColorPicker& picker, Color color)
