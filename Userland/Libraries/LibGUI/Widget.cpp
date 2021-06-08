@@ -851,14 +851,14 @@ void Widget::focus_previous_widget(FocusSource source, bool siblings_only)
 {
     auto focusable_widgets = window()->focusable_widgets(source);
     if (siblings_only)
-        focusable_widgets.remove_all_matching([this](auto& entry) { return entry->parent() != parent(); });
+        focusable_widgets.remove_all_matching([this](auto& entry) { return entry.parent() != parent(); });
     for (int i = focusable_widgets.size() - 1; i >= 0; --i) {
-        if (focusable_widgets[i] != this)
+        if (&focusable_widgets[i] != this)
             continue;
         if (i > 0)
-            focusable_widgets[i - 1]->set_focus(true, source);
+            focusable_widgets[i - 1].set_focus(true, source);
         else
-            focusable_widgets.last()->set_focus(true, source);
+            focusable_widgets.last().set_focus(true, source);
     }
 }
 
@@ -866,24 +866,24 @@ void Widget::focus_next_widget(FocusSource source, bool siblings_only)
 {
     auto focusable_widgets = window()->focusable_widgets(source);
     if (siblings_only)
-        focusable_widgets.remove_all_matching([this](auto& entry) { return entry->parent() != parent(); });
+        focusable_widgets.remove_all_matching([this](auto& entry) { return entry.parent() != parent(); });
     for (size_t i = 0; i < focusable_widgets.size(); ++i) {
-        if (focusable_widgets[i] != this)
+        if (&focusable_widgets[i] != this)
             continue;
         if (i < focusable_widgets.size() - 1)
-            focusable_widgets[i + 1]->set_focus(true, source);
+            focusable_widgets[i + 1].set_focus(true, source);
         else
-            focusable_widgets.first()->set_focus(true, source);
+            focusable_widgets.first().set_focus(true, source);
     }
 }
 
-Vector<Widget*> Widget::child_widgets() const
+Vector<Widget&> Widget::child_widgets() const
 {
-    Vector<Widget*> widgets;
+    Vector<Widget&> widgets;
     widgets.ensure_capacity(children().size());
     for (auto& child : const_cast<Widget*>(this)->children()) {
         if (is<Widget>(child))
-            widgets.append(static_cast<Widget*>(&child));
+            widgets.append(static_cast<Widget&>(child));
     }
     return widgets;
 }

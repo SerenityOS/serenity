@@ -21,7 +21,7 @@ Menubar::~Menubar()
 
 void Menubar::add_menu(Menu& menu)
 {
-    m_menus.append(&menu);
+    m_menus.append(menu);
 }
 
 }

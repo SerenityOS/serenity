@@ -21,16 +21,16 @@ String CookieJar::get_cookie(const URL& url, Web::Cookie::Source source)
     if (!domain.has_value())
         return {};
 
-    Vector<Web::Cookie::Cookie*> cookie_list = get_matching_cookies(url, domain.value(), source);
+    auto cookie_list = get_matching_cookies(url, domain.value(), source);
     StringBuilder builder;
 
-    for (const auto* cookie : cookie_list) {
+    for (const auto& cookie : cookie_list) {
         // If there is an unprocessed cookie in the cookie-list, output the characters %x3B and %x20 ("; ")
         if (!builder.is_empty())
             builder.append("; ");
 
         // Output the cookie's name, the %x3D ("=") character, and the cookie's value.
-        builder.appendff("{}={}", cookie->name, cookie->value);
+        builder.appendff("{}={}", cookie.name, cookie.value);
     }
 
     return builder.build();
@@ -238,14 +238,14 @@ void CookieJar::store_cookie(const Web::Cookie::ParsedCookie& parsed_cookie, con
     m_cookies.set(key, move(cookie));
 }
 
-Vector<Web::Cookie::Cookie*> CookieJar::get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source)
+Vector<Web::Cookie::Cookie&> CookieJar::get_matching_cookies(const URL& url, const String& canonicalized_domain, Web::Cookie::Source source)
 {
     // https://tools.ietf.org/html/rfc6265#section-5.4
 
     auto now = Core::DateTime::now();
 
     // 1. Let cookie-list be the set of cookies from the cookie store that meets all of the following requirements:
-    Vector<Web::Cookie::Cookie*> cookie_list;
+    Vector<Web::Cookie::Cookie&> cookie_list;
 
     for (auto& cookie : m_cookies) {
         // Either: The cookie's host-only-flag is true and the canonicalized request-host is identical to the cookie's domain.
@@ -270,11 +270,11 @@ Vector<Web::Cookie::Cookie*> CookieJar::get_matching_cookies(const URL& url, con
         // 2.  The user agent SHOULD sort the cookie-list in the following order:
         //   - Cookies with longer paths are listed before cookies with shorter paths.
         //   - Among cookies that have equal-length path fields, cookies with earlier creation-times are listed before cookies with later creation-times.
-        cookie_list.insert_before_matching(&cookie.value, [&cookie](auto* entry) {
-            if (cookie.value.path.length() > entry->path.length()) {
+        cookie_list.insert_before_matching(cookie.value, [&cookie](auto& entry) {
+            if (cookie.value.path.length() > entry.path.length()) {
                 return true;
-            } else if (cookie.value.path.length() == entry->path.length()) {
-                if (cookie.value.creation_time.timestamp() < entry->creation_time.timestamp())
+            } else if (cookie.value.path.length() == entry.path.length()) {
+                if (cookie.value.creation_time.timestamp() < entry.creation_time.timestamp())
                     return true;
             }
             return false;
