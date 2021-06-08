@@ -246,13 +246,13 @@ u32 Utf8CodePointIterator::operator*() const
 
     if (!first_byte_makes_sense) {
         // The first byte of the code point doesn't make sense: output a replacement character
-        dbgln("First byte doesn't make sense, bytes: {}", StringView { (const char*)m_ptr, m_length });
+        dbgln("First byte doesn't make sense: {:#02x}.", m_ptr[0]);
         return 0xFFFD;
     }
 
     if (code_point_length_in_bytes > m_length) {
         // There is not enough data left for the full code point: output a replacement character
-        dbgln("Not enough bytes (need {}, have {}), first byte is: {:#02x}, '{}'", code_point_length_in_bytes, m_length, m_ptr[0], (const char*)m_ptr);
+        dbgln("Not enough bytes (need {}, have {}), first byte is: {:#02x}.", code_point_length_in_bytes, m_length, m_ptr[0]);
         return 0xFFFD;
     }
 
