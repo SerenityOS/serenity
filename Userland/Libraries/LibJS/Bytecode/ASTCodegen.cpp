@@ -13,33 +13,35 @@
 
 namespace JS {
 
-Optional<Bytecode::Register> ASTNode::generate_bytecode(Bytecode::Generator&) const
+using Bytecode::Register;
+
+Optional<Register> ASTNode::generate_bytecode(Bytecode::Generator&) const
 {
     dbgln("Missing generate_bytecode()");
     TODO();
 }
 
-Optional<Bytecode::Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::EnterScope>(*this);
-    Optional<Bytecode::Register> last_value_reg;
+    Optional<Register> last_value_reg;
     for (auto& child : children()) {
         last_value_reg = child.generate_bytecode(generator);
     }
     return last_value_reg;
 }
 
-Optional<Bytecode::Register> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
+Optional<Register> EmptyStatement::generate_bytecode(Bytecode::Generator&) const
 {
     return {};
 }
 
-Optional<Bytecode::Register> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> ExpressionStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     return m_expression->generate_bytecode(generator);
 }
 
-Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> BinaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto lhs_reg = m_lhs->generate_bytecode(generator);
     auto rhs_reg = m_rhs->generate_bytecode(generator);
@@ -121,7 +123,7 @@ Optional<Bytecode::Register> BinaryExpression::generate_bytecode(Bytecode::Gener
     }
 }
 
-Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto lhs_reg = m_lhs->generate_bytecode(generator);
 
@@ -153,42 +155,42 @@ Optional<Bytecode::Register> UnaryExpression::generate_bytecode(Bytecode::Genera
     }
 }
 
-Optional<Bytecode::Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> NumericLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(dst, m_value);
     return dst;
 }
 
-Optional<Bytecode::Register> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> BooleanLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(dst, Value(m_value));
     return dst;
 }
 
-Optional<Bytecode::Register> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(dst, js_null());
     return dst;
 }
 
-Optional<Bytecode::Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto dst = generator.allocate_register();
     generator.emit<Bytecode::Op::NewString>(dst, m_value);
     return dst;
 }
 
-Optional<Bytecode::Register> Identifier::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto reg = generator.allocate_register();
     generator.emit<Bytecode::Op::GetVariable>(reg, m_string);
     return reg;
 }
 
-Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (is<Identifier>(*m_lhs)) {
         auto& identifier = static_cast<Identifier const&>(*m_lhs);
@@ -266,7 +268,7 @@ Optional<Bytecode::Register> AssignmentExpression::generate_bytecode(Bytecode::G
     TODO();
 }
 
-Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.begin_continuable_scope();
     auto test_label = generator.make_label();
@@ -280,7 +282,7 @@ Optional<Bytecode::Register> WhileStatement::generate_bytecode(Bytecode::Generat
     return body_result_reg;
 }
 
-Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.begin_continuable_scope();
     auto head_label = generator.make_label();
@@ -292,7 +294,7 @@ Optional<Bytecode::Register> DoWhileStatement::generate_bytecode(Bytecode::Gener
     return body_result_reg;
 }
 
-Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto reg = generator.allocate_register();
     generator.emit<Bytecode::Op::NewObject>(reg);
@@ -304,7 +306,7 @@ Optional<Bytecode::Register> ObjectExpression::generate_bytecode(Bytecode::Gener
     return reg;
 }
 
-Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto object_reg = object().generate_bytecode(generator);
 
@@ -318,12 +320,12 @@ Optional<Bytecode::Register> MemberExpression::generate_bytecode(Bytecode::Gener
     }
 }
 
-Optional<Bytecode::Register> FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
+Optional<Register> FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
 {
     return {};
 }
 
-Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto callee_reg = m_callee->generate_bytecode(generator);
 
@@ -331,7 +333,7 @@ Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generat
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Load>(this_reg, js_undefined());
 
-    Vector<Bytecode::Register> argument_registers;
+    Vector<Register> argument_registers;
     for (auto& arg : m_arguments)
         argument_registers.append(*arg.value->generate_bytecode(generator));
     auto dst_reg = generator.allocate_register();
@@ -339,9 +341,9 @@ Optional<Bytecode::Register> CallExpression::generate_bytecode(Bytecode::Generat
     return dst_reg;
 }
 
-Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Optional<Bytecode::Register> argument_reg;
+    Optional<Register> argument_reg;
     if (m_argument)
         argument_reg = m_argument->generate_bytecode(generator);
 
@@ -349,7 +351,7 @@ Optional<Bytecode::Register> ReturnStatement::generate_bytecode(Bytecode::Genera
     return argument_reg;
 }
 
-Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto result_reg = generator.allocate_register();
     auto predicate_reg = m_predicate->generate_bytecode(generator);
@@ -372,13 +374,13 @@ Optional<Bytecode::Register> IfStatement::generate_bytecode(Bytecode::Generator&
     return result_reg;
 }
 
-Optional<Bytecode::Register> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
+Optional<Register> ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::Jump>(generator.nearest_continuable_scope());
     return {};
 }
 
-Optional<Bytecode::Register> DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
+Optional<Register> DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
 {
     return {};
 }
