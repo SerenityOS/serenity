@@ -24,7 +24,7 @@ void ArrayIteratorPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
-    define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
 }
 
 ArrayIteratorPrototype::~ArrayIteratorPrototype()
