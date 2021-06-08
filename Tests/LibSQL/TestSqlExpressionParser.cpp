@@ -603,7 +603,7 @@ TEST_CASE(in_selection_expression)
     validate("15 NOT IN (SELECT * FROM table)", true);
 }
 
-TEST_CASE(stack_limit)
+TEST_CASE(expression_tree_depth_limit)
 {
     auto too_deep_expression = String::formatted("{:+^{}}1", "", SQL::Limits::maximum_expression_tree_depth);
     EXPECT(!parse(too_deep_expression.substring_view(1)).is_error());
