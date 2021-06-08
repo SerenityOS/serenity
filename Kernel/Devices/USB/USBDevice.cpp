@@ -94,6 +94,7 @@ KResult Device::enumerate()
     VERIFY(transfer_length > 0);
     m_address = s_next_usb_address++;
 
+    memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
     return KSuccess;
 }
 
