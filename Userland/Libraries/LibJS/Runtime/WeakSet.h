@@ -21,11 +21,13 @@ public:
     explicit WeakSet(Object& prototype);
     virtual ~WeakSet() override;
 
-    HashTable<Object*> const& values() const { return m_values; };
-    HashTable<Object*>& values() { return m_values; };
+    HashTable<Cell*> const& values() const { return m_values; };
+    HashTable<Cell*>& values() { return m_values; };
+
+    void remove_sweeped_cells(Badge<Heap>, Vector<Cell*>&);
 
 private:
-    HashTable<Object*> m_values;
+    HashTable<Cell*> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping
 };
 
 }

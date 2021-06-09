@@ -16,10 +16,18 @@ WeakSet* WeakSet::create(GlobalObject& global_object)
 WeakSet::WeakSet(Object& prototype)
     : Object(prototype)
 {
+    heap().did_create_weak_set({}, *this);
 }
 
 WeakSet::~WeakSet()
 {
+    heap().did_destroy_weak_set({}, *this);
+}
+
+void WeakSet::remove_sweeped_cells(Badge<Heap>, Vector<Cell*>& cells)
+{
+    for (auto* cell : cells)
+        m_values.remove(cell);
 }
 
 }
