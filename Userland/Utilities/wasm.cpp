@@ -91,6 +91,30 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
         if (args.is_empty())
             continue;
         auto& cmd = args[0];
+        if (cmd.is_one_of("h", "help")) {
+            warnln("Wasm shell commands");
+            warnln("Toplevel:");
+            warnln("- [s]tep                     Run one instruction");
+            warnln("- next                       Alias for step");
+            warnln("- [c]ontinue                 Execute until a trap or the program exit point");
+            warnln("- [p]rint <args...>          Print various things (see section on print)");
+            warnln("- call <fn> <args...>        Call the function <fn> with the given arguments");
+            warnln("- set <args...>              Set shell option (see section on settings)");
+            warnln("- unset <args...>            Unset shell option (see section on settings)");
+            warnln("- [h]elp                     Print this help");
+            warnln();
+            warnln("Print:");
+            warnln("- print [s]tack              Print the contents of the stack, including frames and labels");
+            warnln("- print [[m]em]ory <index>   Print the contents of the memory identified by <index>");
+            warnln("- print [[i]nstr]uction      Print the current instruction");
+            warnln("- print [[f]unc]tion <index> Print the function identified by <index>");
+            warnln();
+            warnln("Settings:");
+            warnln("- set print stack            Make the shell print the stack on every instruction executed");
+            warnln("- set print [instr]uction    Make the shell print the instruction that will be executed next");
+            warnln();
+            continue;
+        }
         if (cmd.is_one_of("s", "step", "next")) {
             return true;
         }
@@ -266,6 +290,7 @@ int main(int argc, char* argv[])
     bool attempt_instantiate = false;
     bool debug = false;
     bool export_all_imports = false;
+    bool shell_mode = false;
     String exported_function_to_execute;
     Vector<u64> values_to_push;
     Vector<String> modules_to_link_in;
@@ -277,6 +302,7 @@ int main(int argc, char* argv[])
     parser.add_option(attempt_instantiate, "Attempt to instantiate the module", "instantiate", 'i');
     parser.add_option(exported_function_to_execute, "Attempt to execute the named exported function from the module (implies -i)", "execute", 'e', "name");
     parser.add_option(export_all_imports, "Export noop functions corresponding to imports", "export-noop", 0);
+    parser.add_option(shell_mode, "Launch a REPL in the module's context (implies -i)", "shell", 's');
     parser.add_option(Core::ArgsParser::Option {
         .requires_argument = true,
         .help_string = "Extra modules to link with, use to resolve imports",
@@ -307,12 +333,17 @@ int main(int argc, char* argv[])
     });
     parser.parse(argc, argv);
 
-    if (debug && exported_function_to_execute.is_empty()) {
+    if (shell_mode) {
+        debug = true;
+        attempt_instantiate = true;
+    }
+
+    if (!shell_mode && debug && exported_function_to_execute.is_empty()) {
         warnln("Debug what? (pass -e fn)");
         return 1;
     }
 
-    if (debug) {
+    if (debug || shell_mode) {
         old_signal = signal(SIGINT, sigint_handler);
     }
 
@@ -337,6 +368,7 @@ int main(int argc, char* argv[])
             g_interpreter.pre_interpret_hook = pre_interpret_hook;
             g_interpreter.post_interpret_hook = post_interpret_hook;
         }
+
         // First, resolve the linked modules
         NonnullOwnPtrVector<Wasm::ModuleInstance> linked_instances;
         Vector<Wasm::Module> linked_modules;
@@ -414,6 +446,21 @@ int main(int argc, char* argv[])
         }
         auto module_instance = result.release_value();
 
+        auto launch_repl = [&] {
+            Wasm::Configuration config { machine.store() };
+            Wasm::Expression expression { {} };
+            config.set_frame(Wasm::Frame {
+                *module_instance,
+                Vector<Wasm::Value> {},
+                expression,
+                0,
+            });
+            Wasm::Instruction instr { Wasm::Instructions::nop };
+            Wasm::InstructionPointer ip { 0 };
+            g_continue = false;
+            pre_interpret_hook(config, ip, instr);
+        };
+
         auto stream = Core::OutputFileStream::standard_output();
         auto print_func = [&](auto const& address) {
             Wasm::FunctionInstance* fn = machine.store().get(address);
@@ -436,6 +483,11 @@ int main(int argc, char* argv[])
             for (auto& address : module_instance->functions()) {
                 print_func(address);
             }
+        }
+
+        if (shell_mode) {
+            launch_repl();
+            return 0;
         }
 
         if (!exported_function_to_execute.is_empty()) {
@@ -475,19 +527,8 @@ int main(int argc, char* argv[])
 
             auto result = machine.invoke(g_interpreter, run_address.value(), move(values));
 
-            if (debug) {
-                Wasm::Configuration config { machine.store() };
-                config.set_frame(Wasm::Frame {
-                    *module_instance,
-                    Vector<Wasm::Value> {},
-                    instance->get<Wasm::WasmFunction>().code().body(),
-                    1,
-                });
-                Wasm::Instruction instr { Wasm::Instructions::nop };
-                Wasm::InstructionPointer ip { 0 };
-                g_continue = false;
-                pre_interpret_hook(config, ip, instr);
-            }
+            if (debug)
+                launch_repl();
 
             if (result.is_trap())
                 warnln("Execution trapped!");
