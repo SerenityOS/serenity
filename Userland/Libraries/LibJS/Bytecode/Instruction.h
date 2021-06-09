@@ -54,7 +54,9 @@
     O(UnsignedRightShift)         \
     O(In)                         \
     O(InstanceOf)                 \
-    O(ConcatString)
+    O(ConcatString)               \
+    O(Increment)                  \
+    O(Decrement)
 
 namespace JS::Bytecode {
 

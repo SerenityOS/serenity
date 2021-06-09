@@ -231,6 +231,30 @@ void Return::execute(Bytecode::Interpreter& interpreter) const
     interpreter.do_return(interpreter.accumulator().value_or(js_undefined()));
 }
 
+void Increment::execute(Bytecode::Interpreter& interpreter) const
+{
+    auto old_value = interpreter.accumulator().to_numeric(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+
+    if (old_value.is_number())
+        interpreter.accumulator() = Value(old_value.as_double() + 1);
+    else
+        interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().plus(Crypto::SignedBigInteger { 1 }));
+}
+
+void Decrement::execute(Bytecode::Interpreter& interpreter) const
+{
+    auto old_value = interpreter.accumulator().to_numeric(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+
+    if (old_value.is_number())
+        interpreter.accumulator() = Value(old_value.as_double() - 1);
+    else
+        interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
+}
+
 String Load::to_string() const
 {
     return String::formatted("Load {}", m_src);
@@ -347,6 +371,16 @@ String EnterScope::to_string() const
 String Return::to_string() const
 {
     return "Return";
+}
+
+String Increment::to_string() const
+{
+    return "Increment";
+}
+
+String Decrement::to_string() const
+{
+    return "Decrement";
 }
 
 }
