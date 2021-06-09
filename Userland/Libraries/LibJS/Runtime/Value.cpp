@@ -7,6 +7,7 @@
 
 #include <AK/AllOf.h>
 #include <AK/FlyString.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Utf8View.h>
@@ -1416,6 +1417,37 @@ Value require_object_coercible(GlobalObject& global_object, Value value)
         return {};
     }
     return value;
+}
+
+// 7.3.19 CreateListFromArrayLike, https://tc39.es/ecma262/#sec-createlistfromarraylike
+MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value value, AK::Function<Result<void, ErrorType>(Value)> check_value)
+{
+    auto& vm = global_object.vm();
+    auto& heap = global_object.heap();
+    if (!value.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, value.to_string_without_side_effects());
+        return MarkedValueList { heap };
+    }
+    auto& array_like = value.as_object();
+    auto length = length_of_array_like(global_object, array_like);
+    if (vm.exception())
+        return MarkedValueList { heap };
+    auto list = MarkedValueList { heap };
+    for (size_t i = 0; i < length; ++i) {
+        auto index_name = String::number(i);
+        auto next = array_like.get(index_name).value_or(js_undefined());
+        if (vm.exception())
+            return MarkedValueList { heap };
+        if (check_value) {
+            auto result = check_value(next);
+            if (result.is_error()) {
+                vm.throw_exception<TypeError>(global_object, result.release_error());
+                return MarkedValueList { heap };
+            }
+        }
+        list.append(next);
+    }
+    return list;
 }
 
 }

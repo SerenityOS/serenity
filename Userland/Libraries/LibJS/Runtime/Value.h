@@ -11,6 +11,8 @@
 #include <AK/BitCast.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/Function.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
@@ -372,6 +374,7 @@ Function* get_method(GlobalObject& global_object, Value, const PropertyName&);
 size_t length_of_array_like(GlobalObject&, const Object&);
 Object* species_constructor(GlobalObject&, const Object&, Object& default_constructor);
 Value require_object_coercible(GlobalObject&, Value);
+MarkedValueList create_list_from_array_like(GlobalObject&, Value, AK::Function<Result<void, ErrorType>(Value)> = {});
 
 }
 
