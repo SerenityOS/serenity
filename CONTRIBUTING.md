@@ -8,9 +8,7 @@ Everyone is welcome to work on the project, and while we have lots of fun, it's 
 
 ## Communication
 
-Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
-
-IRC: `#serenityos` on the Freenode IRC network.
+Join our Discord server: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 
 ## Issue policy
 
