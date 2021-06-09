@@ -46,7 +46,7 @@ struct Variant;
 template<typename IndexType, IndexType InitialIndex, typename F, typename... Ts>
 struct Variant<IndexType, InitialIndex, F, Ts...> {
     static constexpr auto current_index = VariantIndexOf<F, IndexType, InitialIndex, F, Ts...> {}();
-    static void delete_(IndexType id, void* data)
+    ALWAYS_INLINE static void delete_(IndexType id, void* data)
     {
         if (id == current_index)
             bit_cast<F*>(data)->~F();
@@ -54,7 +54,7 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
             Variant<IndexType, InitialIndex + 1, Ts...>::delete_(id, data);
     }
 
-    static void move_(IndexType old_id, void* old_data, void* new_data)
+    ALWAYS_INLINE static void move_(IndexType old_id, void* old_data, void* new_data)
     {
         if (old_id == current_index)
             new (new_data) F(move(*bit_cast<F*>(old_data)));
@@ -62,10 +62,10 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
             Variant<IndexType, InitialIndex + 1, Ts...>::move_(old_id, old_data, new_data);
     }
 
-    static void copy_(IndexType old_id, const void* old_data, void* new_data)
+    ALWAYS_INLINE static void copy_(IndexType old_id, const void* old_data, void* new_data)
     {
         if (old_id == current_index)
-            new (new_data) F(*bit_cast<F*>(old_data));
+            new (new_data) F(*bit_cast<F const*>(old_data));
         else
             Variant<IndexType, InitialIndex + 1, Ts...>::copy_(old_id, old_data, new_data);
     }
@@ -73,15 +73,15 @@ struct Variant<IndexType, InitialIndex, F, Ts...> {
 
 template<typename IndexType, IndexType InitialIndex>
 struct Variant<IndexType, InitialIndex> {
-    static void delete_(IndexType, void*) { }
-    static void move_(IndexType, void*, void*) { }
-    static void copy_(IndexType, const void*, void*) { }
+    ALWAYS_INLINE static void delete_(IndexType, void*) { }
+    ALWAYS_INLINE static void move_(IndexType, void*, void*) { }
+    ALWAYS_INLINE static void copy_(IndexType, const void*, void*) { }
 };
 
 template<typename IndexType, typename... Ts>
 struct VisitImpl {
     template<typename Visitor, IndexType CurrentIndex = 0>
-    static constexpr decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
+    ALWAYS_INLINE static constexpr decltype(auto) visit(IndexType id, const void* data, Visitor&& visitor) requires(CurrentIndex < sizeof...(Ts))
     {
         using T = typename TypeList<Ts...>::template Type<CurrentIndex>;
 
@@ -104,22 +104,22 @@ struct VariantConstructTag {
 
 template<typename T, typename Base>
 struct VariantConstructors {
-    VariantConstructors(T&& t)
+    ALWAYS_INLINE VariantConstructors(T&& t)
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(move(t), VariantNoClearTag {});
     }
 
-    VariantConstructors(const T& t)
+    ALWAYS_INLINE VariantConstructors(const T& t)
     {
         internal_cast().clear_without_destruction();
         internal_cast().set(t, VariantNoClearTag {});
     }
 
-    VariantConstructors() { }
+    ALWAYS_INLINE VariantConstructors() { }
 
 private:
-    [[nodiscard]] Base& internal_cast()
+    [[nodiscard]] ALWAYS_INLINE Base& internal_cast()
     {
         // Warning: Internal type shenanigans - VariantsConstrutors<T, Base> <- Base
         //          Not the other way around, so be _really_ careful not to cause issues.
@@ -210,7 +210,7 @@ public:
     template<typename... NewTs>
     friend struct Variant;
 
-    Variant(const Variant& old)
+    ALWAYS_INLINE Variant(const Variant& old)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_data {}
         , m_index(old.m_index)
@@ -222,7 +222,7 @@ public:
     //       so if a variant containing an int is moved from, it will still contain that int
     //       and if a variant with a nontrivial move ctor is moved from, it may or may not be valid
     //       but it will still contain the "moved-from" state of the object it previously contained.
-    Variant(Variant&& old)
+    ALWAYS_INLINE Variant(Variant&& old)
         : Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>()
         , m_data {}
         , m_index(old.m_index)
@@ -230,19 +230,19 @@ public:
         Helper::move_(old.m_index, old.m_data, m_data);
     }
 
-    ~Variant()
+    ALWAYS_INLINE ~Variant()
     {
         Helper::delete_(m_index, m_data);
     }
 
-    Variant& operator=(const Variant& other)
+    ALWAYS_INLINE Variant& operator=(const Variant& other)
     {
         m_index = other.m_index;
         Helper::copy_(other.m_index, other.m_data, m_data);
         return *this;
     }
 
-    Variant& operator=(Variant&& other)
+    ALWAYS_INLINE Variant& operator=(Variant&& other)
     {
         m_index = other.m_index;
         Helper::move_(other.m_index, other.m_data, m_data);
@@ -305,14 +305,14 @@ public:
     }
 
     template<typename... Fs>
-    decltype(auto) visit(Fs&&... functions)
+    ALWAYS_INLINE decltype(auto) visit(Fs&&... functions)
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
         return VisitHelper::visit(m_index, m_data, move(visitor));
     }
 
     template<typename... Fs>
-    decltype(auto) visit(Fs&&... functions) const
+    ALWAYS_INLINE decltype(auto) visit(Fs&&... functions) const
     {
         Visitor<Fs...> visitor { forward<Fs>(functions)... };
         return VisitHelper::visit(m_index, m_data, move(visitor));
@@ -357,7 +357,7 @@ private:
     {
     }
 
-    void clear_without_destruction()
+    ALWAYS_INLINE void clear_without_destruction()
     {
         __builtin_memset(m_data, 0, data_size);
         m_index = invalid_index;
@@ -373,10 +373,10 @@ private:
         using Fs::operator()...;
     };
 
-    alignas(data_alignment) u8 m_data[data_size];
     // Note: Make sure not to default-initialize!
     //       VariantConstructors::VariantConstructors(T) will set this to the correct value
     //       So default-constructing to anything will leave the first initialization with that value instead of the correct one.
+    alignas(data_alignment) u8 m_data[data_size];
     IndexType m_index;
 };
 
