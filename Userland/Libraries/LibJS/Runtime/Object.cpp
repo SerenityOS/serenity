@@ -209,7 +209,8 @@ bool Object::set_integrity_level(IntegrityLevel level)
                     property_name = property_index;
             }
             auto property_descriptor = get_own_property_descriptor(property_name);
-            VERIFY(property_descriptor.has_value());
+            if (!property_descriptor.has_value())
+                continue;
             u8 attributes = property_descriptor->is_accessor_descriptor()
                 ? ~Attribute::Configurable
                 : ~Attribute::Configurable & ~Attribute::Writable;
@@ -239,7 +240,8 @@ bool Object::test_integrity_level(IntegrityLevel level)
     for (auto& key : keys) {
         auto property_name = PropertyName::from_value(global_object(), key);
         auto property_descriptor = get_own_property_descriptor(property_name);
-        VERIFY(property_descriptor.has_value());
+        if (!property_descriptor.has_value())
+            continue;
         if (property_descriptor->attributes.is_configurable())
             return false;
         if (level == IntegrityLevel::Frozen && property_descriptor->is_data_descriptor()) {
