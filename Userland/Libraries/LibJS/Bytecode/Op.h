@@ -392,4 +392,23 @@ ALWAYS_INLINE void Instruction::execute(Bytecode::Interpreter& interpreter) cons
 #undef __BYTECODE_OP
 }
 
+ALWAYS_INLINE size_t Instruction::length() const
+{
+    if (type() == Type::Call)
+        return static_cast<Op::Call const&>(*this).length();
+    else if (type() == Type::NewArray)
+        return static_cast<Op::NewArray const&>(*this).length();
+
+#define __BYTECODE_OP(op) \
+    case Type::op:        \
+        return sizeof(Op::op);
+
+    switch (type()) {
+        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
+    default:
+        VERIFY_NOT_REACHED();
+    }
+#undef __BYTECODE_OP
+}
+
 }
