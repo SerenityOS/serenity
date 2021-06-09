@@ -346,11 +346,11 @@ private:
     Register m_arguments[];
 };
 
-class EnterScope final : public Instruction {
+class NewFunction final : public Instruction {
 public:
-    explicit EnterScope(ScopeNode const& scope_node)
-        : Instruction(Type::EnterScope)
-        , m_scope_node(scope_node)
+    explicit NewFunction(FunctionNode const& function_node)
+        : Instruction(Type::NewFunction)
+        , m_function_node(function_node)
     {
     }
 
@@ -358,7 +358,7 @@ public:
     String to_string(Bytecode::Executable const&) const;
 
 private:
-    ScopeNode const& m_scope_node;
+    FunctionNode const& m_function_node;
 };
 
 class Return final : public Instruction {

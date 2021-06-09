@@ -114,6 +114,7 @@ class Error;
 class ErrorType;
 class Exception;
 class Expression;
+class FunctionNode;
 class Accessor;
 class GlobalObject;
 class HandleImpl;
