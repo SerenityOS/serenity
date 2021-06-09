@@ -79,7 +79,7 @@ static Value typed_equals(GlobalObject&, Value src1, Value src2)
     }                                                                                     \
     String OpTitleCase::to_string() const                                                 \
     {                                                                                     \
-        return String::formatted(#OpTitleCase " lhs:{}", m_lhs_reg);                      \
+        return String::formatted(#OpTitleCase " {}", m_lhs_reg);                          \
     }
 
 JS_ENUMERATE_COMMON_BINARY_OPS(JS_DEFINE_COMMON_BINARY_OP)
@@ -233,22 +233,22 @@ void Return::execute(Bytecode::Interpreter& interpreter) const
 
 String Load::to_string() const
 {
-    return String::formatted("Load src:{}", m_src);
+    return String::formatted("Load {}", m_src);
 }
 
 String LoadImmediate::to_string() const
 {
-    return String::formatted("LoadImmediate value:{}", m_value);
+    return String::formatted("LoadImmediate {}", m_value);
 }
 
 String Store::to_string() const
 {
-    return String::formatted("Store dst:{}", m_dst);
+    return String::formatted("Store {}", m_dst);
 }
 
 String NewBigInt::to_string() const
 {
-    return String::formatted("NewBigInt bigint:\"{}\"", m_bigint.to_base10());
+    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base10());
 }
 
 String NewArray::to_string() const
@@ -256,7 +256,7 @@ String NewArray::to_string() const
     StringBuilder builder;
     builder.append("NewArray");
     if (m_element_count != 0) {
-        builder.append(", elements:[");
+        builder.append(" [");
         for (size_t i = 0; i < m_element_count; ++i) {
             builder.appendff("{}", m_elements[i]);
             if (i != m_element_count - 1)
@@ -269,7 +269,7 @@ String NewArray::to_string() const
 
 String NewString::to_string() const
 {
-    return String::formatted("NewString string:\"{}\"", m_string);
+    return String::formatted("NewString \"{}\"", m_string);
 }
 
 String NewObject::to_string() const
@@ -279,17 +279,17 @@ String NewObject::to_string() const
 
 String ConcatString::to_string() const
 {
-    return String::formatted("ConcatString lhs:{}", m_lhs);
+    return String::formatted("ConcatString {}", m_lhs);
 }
 
 String GetVariable::to_string() const
 {
-    return String::formatted("GetVariable identifier:{}", m_identifier);
+    return String::formatted("GetVariable {}", m_identifier);
 }
 
 String SetVariable::to_string() const
 {
-    return String::formatted("SetVariable identifier:{}", m_identifier);
+    return String::formatted("SetVariable {}", m_identifier);
 }
 
 String PutById::to_string() const
@@ -299,7 +299,7 @@ String PutById::to_string() const
 
 String GetById::to_string() const
 {
-    return String::formatted("GetById property:{}", m_property);
+    return String::formatted("GetById {}", m_property);
 }
 
 String Jump::to_string() const
