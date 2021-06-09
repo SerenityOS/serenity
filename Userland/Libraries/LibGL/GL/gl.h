@@ -201,6 +201,9 @@ extern "C" {
 #define GL_NEAREST_MIPMAP_LINEAR 0x2602
 #define GL_REPEAT 0x2603
 
+// OpenGL State & GLGet
+#define GL_MODELVIEW_MATRIX 0x0BA6
+
 //
 // OpenGL typedefs
 //
@@ -294,6 +297,7 @@ GLAPI void glTexImage2D(GLenum target, GLint level, GLint internalFormat, GLsize
 GLAPI void glTexCoord2f(GLfloat s, GLfloat t);
 GLAPI void glBindTexture(GLenum target, GLuint texture);
 GLAPI void glActiveTexture(GLenum texture);
+GLAPI void glGetFloatv(GLenum pname, GLfloat* params);
 
 #ifdef __cplusplus
 }
