@@ -14,3 +14,13 @@ test("invalid values", () => {
         }).toThrowWithMessage(TypeError, "is not an object");
     });
 });
+
+test("automatic removal of garbage-collected values", () => {
+    const weakSet = new WeakSet();
+    {
+        expect(weakSet.add({ a: 1 })).toBe(weakSet);
+        expect(getWeakSetSize(weakSet)).toBe(1);
+    }
+    gc();
+    expect(getWeakSetSize(weakSet)).toBe(0);
+});
