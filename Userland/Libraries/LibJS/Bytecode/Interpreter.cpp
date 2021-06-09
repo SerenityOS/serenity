@@ -65,6 +65,8 @@ Value Interpreter::run(Executable const& executable)
         while (!pc.at_end()) {
             auto& instruction = *pc;
             instruction.execute(*this);
+            if (vm().exception())
+                break;
             if (m_pending_jump.has_value()) {
                 block = m_pending_jump.release_value();
                 will_jump = true;
@@ -81,6 +83,9 @@ Value Interpreter::run(Executable const& executable)
             break;
 
         if (pc.at_end() && !will_jump)
+            break;
+
+        if (vm().exception())
             break;
     }
 
