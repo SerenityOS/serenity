@@ -15,16 +15,7 @@ configopts="
 launcher_name=ScummVM
 launcher_category=Games
 launcher_command=/usr/local/bin/scummvm
+icon_file=icons/scummvm.ico
 
 export FREETYPE2_CFLAGS="-I${SERENITY_INSTALL_ROOT}/usr/local/include/freetype2"
 export FREETYPE2_LIBS="-lfreetype"
-
-post_install() {
-    if command -v convert >/dev/null; then
-        run convert "icons/scummvm.ico[0]" app-32x32.png
-        run convert "icons/scummvm.ico[1]" app-16x16.png
-        target_binary="${SERENITY_INSTALL_ROOT}/usr/local/bin/scummvm"
-        run objcopy --add-section serenity_icon_s="app-16x16.png" "${target_binary}"
-        run objcopy --add-section serenity_icon_m="app-32x32.png" "${target_binary}"
-    fi
-}
