@@ -25,7 +25,6 @@
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DivisionByZero, "Division by zero")                                                                                               \
-    M(FunctionArgsNotObject, "Argument array must be an object")                                                                        \
     M(GetCapabilitiesExecutorCalledMultipleTimes, "GetCapabilitiesExecutor was called multiple times")                                  \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
