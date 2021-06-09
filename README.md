@@ -102,9 +102,7 @@ FAQ: [Frequently Asked Questions](https://github.com/SerenityOS/serenity/blob/ma
 
 ## Get in touch
 
-IRC: `#serenityos` on the Freenode IRC network.
-
-Discord: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
+Join our Discord server: [SerenityOS Discord](https://discord.com/invite/29gCcKsXkF)
 
 ## Author
 
