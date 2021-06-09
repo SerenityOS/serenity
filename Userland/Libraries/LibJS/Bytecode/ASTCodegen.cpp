@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -666,6 +667,12 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     TODO();
+}
+
+void ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    m_argument->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::Throw>();
 }
 
 }

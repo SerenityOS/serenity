@@ -56,7 +56,8 @@
     O(InstanceOf)                 \
     O(ConcatString)               \
     O(Increment)                  \
-    O(Decrement)
+    O(Decrement)                  \
+    O(Throw)
 
 namespace JS::Bytecode {
 
