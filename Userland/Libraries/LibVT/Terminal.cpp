@@ -907,6 +907,28 @@ void Terminal::DECBI()
         set_cursor(cursor_row(), cursor_column() - 1);
 }
 
+void Terminal::DECIC(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+
+    num = min<unsigned>(num, columns() - cursor_column());
+    for (unsigned row = cursor_row(); row <= m_scroll_region_bottom; ++row)
+        scroll_right(row, cursor_column(), num);
+}
+
+void Terminal::DECDC(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+
+    num = min<unsigned>(num, columns() - cursor_column());
+    for (unsigned row = cursor_row(); row <= m_scroll_region_bottom; ++row)
+        scroll_left(row, cursor_column(), num);
+}
+
 void Terminal::DSR(Parameters params)
 {
     if (params.size() == 1 && params[0] == 5) {
@@ -1146,6 +1168,18 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
         break;
     case 'u':
         SCORC();
+        break;
+    case '}':
+        if (intermediates.size() >= 1 && intermediates[0] == '\'')
+            DECIC(parameters);
+        else
+            unimplemented_csi_sequence(parameters, intermediates, last_byte);
+        break;
+    case '~':
+        if (intermediates.size() >= 1 && intermediates[0] == '\'')
+            DECDC(parameters);
+        else
+            unimplemented_csi_sequence(parameters, intermediates, last_byte);
         break;
     default:
         unimplemented_csi_sequence(parameters, intermediates, last_byte);
