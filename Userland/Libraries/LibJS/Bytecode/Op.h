@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -388,6 +389,19 @@ class Decrement final : public Instruction {
 public:
     Decrement()
         : Instruction(Type::Decrement)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+};
+
+class Throw final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    Throw()
+        : Instruction(Type::Throw)
     {
     }
 
