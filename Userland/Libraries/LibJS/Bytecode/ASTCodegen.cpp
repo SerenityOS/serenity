@@ -23,8 +23,11 @@ void ASTNode::generate_bytecode(Bytecode::Generator&) const
 void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::EnterScope>(*this);
-    for (auto& child : children())
+    for (auto& child : children()) {
         child.generate_bytecode(generator);
+        if (generator.is_current_block_terminated())
+            break;
+    }
 }
 
 void EmptyStatement::generate_bytecode(Bytecode::Generator&) const
@@ -329,13 +332,15 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     m_body->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        Bytecode::Label { test_block },
-        {});
-    generator.end_continuable_scope();
+    if (!generator.is_current_block_terminated()) {
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { test_block },
+            {});
+        generator.end_continuable_scope();
 
-    generator.switch_to_basic_block(end_block);
-    generator.emit<Bytecode::Op::Load>(result_reg);
+        generator.switch_to_basic_block(end_block);
+        generator.emit<Bytecode::Op::Load>(result_reg);
+    }
 }
 
 void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
@@ -369,13 +374,15 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
     m_body->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        Bytecode::Label { test_block },
-        {});
-    generator.end_continuable_scope();
+    if (!generator.is_current_block_terminated()) {
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { test_block },
+            {});
+        generator.end_continuable_scope();
 
-    generator.switch_to_basic_block(end_block);
-    generator.emit<Bytecode::Op::Load>(result_reg);
+        generator.switch_to_basic_block(end_block);
+        generator.emit<Bytecode::Op::Load>(result_reg);
+    }
 }
 
 void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
@@ -435,21 +442,23 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
     m_body->generate_bytecode(generator);
     generator.end_continuable_scope();
 
-    if (m_update) {
+    if (!generator.is_current_block_terminated()) {
+        if (m_update) {
+            generator.emit<Bytecode::Op::Jump>().set_targets(
+                Bytecode::Label { *update_block_ptr },
+                {});
+
+            generator.switch_to_basic_block(*update_block_ptr);
+            m_update->generate_bytecode(generator);
+        }
+
         generator.emit<Bytecode::Op::Jump>().set_targets(
-            Bytecode::Label { *update_block_ptr },
+            Bytecode::Label { *test_block_ptr },
             {});
 
-        generator.switch_to_basic_block(*update_block_ptr);
-        m_update->generate_bytecode(generator);
+        generator.switch_to_basic_block(end_block);
+        generator.emit<Bytecode::Op::Load>(result_reg);
     }
-
-    generator.emit<Bytecode::Op::Jump>().set_targets(
-        Bytecode::Label { *test_block_ptr },
-        {});
-
-    generator.switch_to_basic_block(end_block);
-    generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
