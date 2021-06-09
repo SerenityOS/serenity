@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-void SyncTask::spawn()
+UNMAP_AFTER_INIT void SyncTask::spawn()
 {
     RefPtr<Thread> syncd_thread;
     Process::create_kernel_process(syncd_thread, "SyncTask", [] {
