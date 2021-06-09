@@ -228,7 +228,7 @@ void NE2000NetworkAdapter::handle_irq(const RegisterState&)
     out8(REG_RW_INTERRUPTSTATUS, status);
 }
 
-int NE2000NetworkAdapter::ram_test()
+UNMAP_AFTER_INIT int NE2000NetworkAdapter::ram_test()
 {
     IOAddress io(PCI::get_BAR0(pci_address()) & ~3);
     int errors = 0;
