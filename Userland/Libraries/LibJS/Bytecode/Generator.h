@@ -99,7 +99,7 @@ private:
     NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
     NonnullOwnPtr<StringTable> m_string_table;
 
-    u32 m_next_register { 1 };
+    u32 m_next_register { 2 };
     u32 m_next_block { 1 };
     Vector<Label> m_continuable_scopes;
     Vector<Label> m_breakable_scopes;
