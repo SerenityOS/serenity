@@ -16,21 +16,6 @@
 
 namespace JS::Bytecode {
 
-void Instruction::execute(Bytecode::Interpreter& interpreter) const
-{
-#define __BYTECODE_OP(op)       \
-    case Instruction::Type::op: \
-        return static_cast<Bytecode::Op::op const&>(*this).execute(interpreter);
-
-    switch (type()) {
-        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
-    default:
-        VERIFY_NOT_REACHED();
-    }
-
-#undef __BYTECODE_OP
-}
-
 String Instruction::to_string() const
 {
 #define __BYTECODE_OP(op)       \
