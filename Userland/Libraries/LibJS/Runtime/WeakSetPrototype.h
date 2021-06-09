@@ -20,4 +20,10 @@ public:
 
 private:
     static WeakSet* typed_this(VM&, GlobalObject&);
+
+    JS_DECLARE_NATIVE_FUNCTION(add);
+    JS_DECLARE_NATIVE_FUNCTION(delete_);
+    JS_DECLARE_NATIVE_FUNCTION(has);
+};
+
 }
