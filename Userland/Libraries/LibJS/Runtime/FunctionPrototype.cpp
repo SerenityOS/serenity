@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -56,20 +56,9 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
         return vm.call(function, this_arg);
-    if (!arg_array.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::FunctionArgsNotObject);
-        return {};
-    }
-    auto length = length_of_array_like(global_object, arg_array.as_object());
+    auto arguments = create_list_from_array_like(global_object, arg_array);
     if (vm.exception())
         return {};
-    MarkedValueList arguments(vm.heap());
-    for (size_t i = 0; i < length; ++i) {
-        auto element = arg_array.as_object().get(i);
-        if (vm.exception())
-            return {};
-        arguments.append(element.value_or(js_undefined()));
-    }
     return vm.call(function, this_arg, move(arguments));
 }
 
