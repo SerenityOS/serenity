@@ -21,7 +21,7 @@ Generator::~Generator()
 {
 }
 
-ExecutionUnit Generator::generate(ASTNode const& node)
+Executable Generator::generate(ASTNode const& node)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());

@@ -33,9 +33,9 @@ Interpreter::~Interpreter()
     s_current = nullptr;
 }
 
-Value Interpreter::run(ExecutionUnit const& execution_unit)
+Value Interpreter::run(Executable const& executable)
 {
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &execution_unit);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
     CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {
@@ -50,9 +50,9 @@ Value Interpreter::run(ExecutionUnit const& execution_unit)
         VERIFY(!vm().exception());
     }
 
-    auto block = &execution_unit.basic_blocks.first();
+    auto block = &executable.basic_blocks.first();
     m_register_windows.append(make<RegisterWindow>());
-    registers().resize(execution_unit.number_of_registers);
+    registers().resize(executable.number_of_registers);
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());
@@ -80,7 +80,7 @@ Value Interpreter::run(ExecutionUnit const& execution_unit)
             break;
     }
 
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &execution_unit);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &executable);
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {
