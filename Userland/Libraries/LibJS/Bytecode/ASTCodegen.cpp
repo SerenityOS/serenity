@@ -119,23 +119,43 @@ void LogicalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_lhs->generate_bytecode(generator);
 
-    Bytecode::Op::Jump* test_instr;
+    // lhs
+    // jump op (true) end (false) rhs
+    // rhs
+    // jump always (true) end
+    // end
+
+    auto& rhs_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
     switch (m_op) {
     case LogicalOp::And:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfFalse>();
+        generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+            Bytecode::Label { rhs_block },
+            Bytecode::Label { end_block });
         break;
     case LogicalOp::Or:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfTrue>();
+        generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+            Bytecode::Label { end_block },
+            Bytecode::Label { rhs_block });
         break;
     case LogicalOp::NullishCoalescing:
-        test_instr = &generator.emit<Bytecode::Op::JumpIfNotNullish>();
+        generator.emit<Bytecode::Op::JumpNullish>().set_targets(
+            Bytecode::Label { rhs_block },
+            Bytecode::Label { end_block });
         break;
     default:
         VERIFY_NOT_REACHED();
     }
 
+    generator.switch_to_basic_block(rhs_block);
     m_rhs->generate_bytecode(generator);
-    test_instr->set_target(generator.make_label());
+
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { end_block },
+        {});
+
+    generator.switch_to_basic_block(end_block);
 }
 
 void UnaryExpression::generate_bytecode(Bytecode::Generator& generator) const
@@ -279,58 +299,154 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
 
 void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // test
+    // jump if_false (true) end (false) body
+    // body
+    // jump always (true) test
+    // end
+    auto& test_block = generator.make_block();
+    auto& body_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
+    // Init result register
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-    generator.begin_continuable_scope();
-    auto test_label = generator.make_label();
     auto result_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(result_reg);
+
+    // jump to the test block
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { test_block },
+        {});
+
+    generator.switch_to_basic_block(test_block);
     m_test->generate_bytecode(generator);
-    auto& test_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { body_block },
+        Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(body_block);
+    generator.begin_continuable_scope(Bytecode::Label { test_block });
     m_body->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::Jump>(test_label);
-    test_jump.set_target(generator.make_label());
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { test_block },
+        {});
     generator.end_continuable_scope();
+
+    generator.switch_to_basic_block(end_block);
     generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // jump always (true) body
+    // test
+    // jump if_false (true) end (false) body
+    // body
+    // jump always (true) test
+    // end
+    auto& test_block = generator.make_block();
+    auto& body_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
+    // Init result register
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-    generator.begin_continuable_scope();
-    auto head_label = generator.make_label();
-    m_body->generate_bytecode(generator);
-    generator.end_continuable_scope();
     auto result_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(result_reg);
+
+    // jump to the body block
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { body_block },
+        {});
+
+    generator.switch_to_basic_block(test_block);
     m_test->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::JumpIfTrue>(head_label);
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { body_block },
+        Bytecode::Label { end_block });
+
+    generator.switch_to_basic_block(body_block);
+    generator.begin_continuable_scope(Bytecode::Label { test_block });
+    m_body->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { test_block },
+        {});
+    generator.end_continuable_scope();
+
+    generator.switch_to_basic_block(end_block);
     generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
 void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    Bytecode::Op::Jump* test_jump { nullptr };
+    // init
+    // jump always (true) test
+    // test
+    // jump if_true (true) body (false) end
+    // body
+    // jump always (true) update
+    // update
+    // jump always (true) test
+    // end
+
+    // If 'test' is missing, fuse the 'test' and 'body' basic blocks
+    // If 'update' is missing, fuse the 'body' and 'update' basic blocks
+
+    Bytecode::BasicBlock* test_block_ptr { nullptr };
+    Bytecode::BasicBlock* body_block_ptr { nullptr };
+    Bytecode::BasicBlock* update_block_ptr { nullptr };
+
+    auto& end_block = generator.make_block();
 
     if (m_init)
         m_init->generate_bytecode(generator);
 
+    body_block_ptr = &generator.make_block();
+
+    if (m_test)
+        test_block_ptr = &generator.make_block();
+    else
+        test_block_ptr = body_block_ptr;
+
+    if (m_update)
+        update_block_ptr = &generator.make_block();
+    else
+        update_block_ptr = body_block_ptr;
+
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-    generator.begin_continuable_scope();
-    auto jump_label = generator.make_label();
     auto result_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(result_reg);
+
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { *test_block_ptr },
+        {});
+
     if (m_test) {
+        generator.switch_to_basic_block(*test_block_ptr);
         m_test->generate_bytecode(generator);
-        test_jump = &generator.emit<Bytecode::Op::JumpIfFalse>();
+        generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+            Bytecode::Label { *body_block_ptr },
+            Bytecode::Label { end_block });
     }
 
+    generator.switch_to_basic_block(*body_block_ptr);
+    generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr });
     m_body->generate_bytecode(generator);
-    if (m_update)
-        m_update->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::Jump>(jump_label);
-    if (m_test)
-        test_jump->set_target(generator.make_label());
     generator.end_continuable_scope();
+
+    if (m_update) {
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { *update_block_ptr },
+            {});
+
+        generator.switch_to_basic_block(*update_block_ptr);
+        m_update->generate_bytecode(generator);
+    }
+
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { *test_block_ptr },
+        {});
+
+    generator.switch_to_basic_block(end_block);
     generator.emit<Bytecode::Op::Load>(result_reg);
 }
 
@@ -408,23 +524,60 @@ void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 
 void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_predicate->generate_bytecode(generator);
-    auto& else_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    // test
+    // jump if_true (true) true (false) false
+    // true
+    // jump always (true) end
+    // false
+    // jump always (true) end
+    // end
 
+    // If the 'false' branch doesn't exist, we're just gonna substitute it for 'end' and elide the last two entries above.
+
+    auto& true_block = generator.make_block();
+    auto& false_block = generator.make_block();
+
+    m_predicate->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { true_block },
+        Bytecode::Label { false_block });
+
+    Bytecode::Op::Jump* true_block_jump { nullptr };
+
+    generator.switch_to_basic_block(true_block);
     m_consequent->generate_bytecode(generator);
+    if (!generator.is_current_block_terminated())
+        true_block_jump = &generator.emit<Bytecode::Op::Jump>();
+
+    generator.switch_to_basic_block(false_block);
     if (m_alternate) {
-        auto& if_jump = generator.emit<Bytecode::Op::Jump>();
-        else_jump.set_target(generator.make_label());
+        auto& end_block = generator.make_block();
+
         m_alternate->generate_bytecode(generator);
-        if_jump.set_target(generator.make_label());
+        if (!generator.is_current_block_terminated())
+            generator.emit<Bytecode::Op::Jump>().set_targets(
+                Bytecode::Label { end_block },
+                {});
+
+        if (true_block_jump)
+            true_block_jump->set_targets(
+                Bytecode::Label { end_block },
+                {});
+
+        generator.switch_to_basic_block(end_block);
     } else {
-        else_jump.set_target(generator.make_label());
+        if (true_block_jump)
+            true_block_jump->set_targets(
+                Bytecode::Label { false_block },
+                {});
     }
 }
 
 void ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::Jump>(generator.nearest_continuable_scope());
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        generator.nearest_continuable_scope(),
+        {});
 }
 
 void DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
@@ -433,16 +586,36 @@ void DebuggerStatement::generate_bytecode(Bytecode::Generator&) const
 
 void ConditionalExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
+    // test
+    // jump if_true (true) true (false) false
+    // true
+    // jump always (true) end
+    // false
+    // jump always (true) end
+    // end
+
+    auto& true_block = generator.make_block();
+    auto& false_block = generator.make_block();
+    auto& end_block = generator.make_block();
+
     m_test->generate_bytecode(generator);
-    auto& alternate_jump = generator.emit<Bytecode::Op::JumpIfFalse>();
+    generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+        Bytecode::Label { true_block },
+        Bytecode::Label { false_block });
 
+    generator.switch_to_basic_block(true_block);
     m_consequent->generate_bytecode(generator);
-    auto& end_jump = generator.emit<Bytecode::Op::Jump>();
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { end_block },
+        {});
 
-    alternate_jump.set_target(generator.make_label());
+    generator.switch_to_basic_block(false_block);
     m_alternate->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        Bytecode::Label { end_block },
+        {});
 
-    end_jump.set_target(generator.make_label());
+    generator.switch_to_basic_block(end_block);
 }
 
 void SequenceExpression::generate_bytecode(Bytecode::Generator& generator) const
@@ -464,5 +637,4 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
         }
     }
 }
-
 }

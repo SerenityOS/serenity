@@ -5,7 +5,7 @@
  */
 
 #include <AK/Debug.h>
-#include <LibJS/Bytecode/Block.h>
+#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -33,9 +33,9 @@ Interpreter::~Interpreter()
     s_current = nullptr;
 }
 
-Value Interpreter::run(Bytecode::Block const& block)
+Value Interpreter::run(ExecutionUnit const& execution_unit)
 {
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run block {:p}", &block);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &execution_unit);
 
     CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {
@@ -50,23 +50,37 @@ Value Interpreter::run(Bytecode::Block const& block)
         VERIFY(!vm().exception());
     }
 
+    auto block = &execution_unit.basic_blocks.first();
     m_register_windows.append(make<RegisterWindow>());
-    registers().resize(block.register_count());
+    registers().resize(execution_unit.number_of_registers);
 
-    Bytecode::InstructionStreamIterator pc(block.instruction_stream());
-    while (!pc.at_end()) {
-        auto& instruction = *pc;
-        instruction.execute(*this);
-        if (m_pending_jump.has_value()) {
-            pc.jump(m_pending_jump.release_value());
-            continue;
+    for (;;) {
+        Bytecode::InstructionStreamIterator pc(block->instruction_stream());
+        bool will_jump = false;
+        bool will_return = false;
+        while (!pc.at_end()) {
+            auto& instruction = *pc;
+            instruction.execute(*this);
+            if (m_pending_jump.has_value()) {
+                block = m_pending_jump.release_value();
+                will_jump = true;
+                break;
+            }
+            if (!m_return_value.is_empty()) {
+                will_return = true;
+                break;
+            }
+            ++pc;
         }
-        if (!m_return_value.is_empty())
+
+        if (will_return)
             break;
-        ++pc;
+
+        if (pc.at_end() && !will_jump)
+            break;
     }
 
-    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run block {:p}", &block);
+    dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter did run unit {:p}", &execution_unit);
 
     if constexpr (JS_BYTECODE_DEBUG) {
         for (size_t i = 0; i < registers().size(); ++i) {

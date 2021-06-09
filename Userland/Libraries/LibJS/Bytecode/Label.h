@@ -7,20 +7,21 @@
 #pragma once
 
 #include <AK/Format.h>
+#include <LibJS/Bytecode/BasicBlock.h>
 
 namespace JS::Bytecode {
 
 class Label {
 public:
-    explicit Label(size_t address)
-        : m_address(address)
+    explicit Label(BasicBlock const& block)
+        : m_block(block)
     {
     }
 
-    size_t address() const { return m_address; }
+    auto& block() const { return m_block; }
 
 private:
-    size_t m_address { 0 };
+    BasicBlock const& m_block;
 };
 
 }
@@ -29,6 +30,6 @@ template<>
 struct AK::Formatter<JS::Bytecode::Label> : AK::Formatter<FormatString> {
     void format(FormatBuilder& builder, JS::Bytecode::Label const& value)
     {
-        return AK::Formatter<FormatString>::format(builder, "@{:x}", value.address());
+        return AK::Formatter<FormatString>::format(builder, "@{}", value.block().name());
     }
 };

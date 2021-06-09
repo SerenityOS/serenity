@@ -268,31 +268,40 @@ private:
 
 class Jump : public Instruction {
 public:
-    explicit Jump(Type type, Optional<Label> target = {})
+    constexpr static bool IsTerminator = true;
+
+    explicit Jump(Type type, Optional<Label> taken_target = {}, Optional<Label> nontaken_target = {})
         : Instruction(type)
-        , m_target(move(target))
+        , m_true_target(move(taken_target))
+        , m_false_target(move(nontaken_target))
     {
     }
 
-    explicit Jump(Optional<Label> target = {})
+    explicit Jump(Optional<Label> taken_target = {}, Optional<Label> nontaken_target = {})
         : Instruction(Type::Jump)
-        , m_target(move(target))
+        , m_true_target(move(taken_target))
+        , m_false_target(move(nontaken_target))
     {
     }
 
-    void set_target(Optional<Label> target) { m_target = move(target); }
+    void set_targets(Optional<Label> true_target, Optional<Label> false_target)
+    {
+        m_true_target = move(true_target);
+        m_false_target = move(false_target);
+    }
 
     void execute(Bytecode::Interpreter&) const;
     String to_string() const;
 
 protected:
-    Optional<Label> m_target;
+    Optional<Label> m_true_target;
+    Optional<Label> m_false_target;
 };
 
-class JumpIfFalse final : public Jump {
+class JumpConditional final : public Jump {
 public:
-    explicit JumpIfFalse(Optional<Label> target = {})
-        : Jump(Type::JumpIfFalse, move(target))
+    explicit JumpConditional(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+        : Jump(Type::JumpConditional, move(true_target), move(false_target))
     {
     }
 
@@ -300,21 +309,10 @@ public:
     String to_string() const;
 };
 
-class JumpIfTrue : public Jump {
+class JumpNullish final : public Jump {
 public:
-    explicit JumpIfTrue(Optional<Label> target = {})
-        : Jump(Type::JumpIfTrue, move(target))
-    {
-    }
-
-    void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
-};
-
-class JumpIfNotNullish final : public Jump {
-public:
-    explicit JumpIfNotNullish(Optional<Label> target = {})
-        : Jump(Type::JumpIfNotNullish, move(target))
+    explicit JumpNullish(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+        : Jump(Type::JumpNullish, move(true_target), move(false_target))
     {
     }
 
@@ -364,6 +362,8 @@ private:
 
 class Return final : public Instruction {
 public:
+    constexpr static bool IsTerminator = true;
+
     Return()
         : Instruction(Type::Return)
     {

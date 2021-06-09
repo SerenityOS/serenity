@@ -1,7 +1,7 @@
 set(SOURCES
         AST.cpp
         Bytecode/ASTCodegen.cpp
-        Bytecode/Block.cpp
+        Bytecode/BasicBlock.cpp
         Bytecode/Generator.cpp
         Bytecode/Instruction.cpp
         Bytecode/Interpreter.cpp

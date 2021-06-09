@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Runtime/Function.h>
 
 namespace JS {
@@ -47,7 +48,7 @@ private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FunctionNode::Parameter> m_parameters;
-    OwnPtr<Bytecode::Block> m_bytecode_block;
+    Optional<Bytecode::ExecutionUnit> m_bytecode_execution_unit;
     ScopeObject* m_parent_scope { nullptr };
     i32 m_function_length { 0 };
     bool m_is_strict { false };

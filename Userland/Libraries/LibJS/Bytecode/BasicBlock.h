@@ -8,6 +8,7 @@
 
 #include <AK/Badge.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/String.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
@@ -37,30 +38,32 @@ private:
     size_t m_offset { 0 };
 };
 
-class Block {
+class BasicBlock {
 public:
-    static NonnullOwnPtr<Block> create();
-    ~Block();
+    static NonnullOwnPtr<BasicBlock> create(String name);
+    ~BasicBlock();
 
     void seal();
 
     void dump() const;
     ReadonlyBytes instruction_stream() const { return ReadonlyBytes { m_buffer, m_buffer_size }; }
 
-    size_t register_count() const { return m_register_count; }
-
-    void set_register_count(Badge<Bytecode::Generator>, size_t count) { m_register_count = count; }
-
     void* next_slot() { return m_buffer + m_buffer_size; }
     void grow(size_t additional_size);
 
-private:
-    Block();
+    void terminate(Badge<Generator>) { m_is_terminated = true; }
+    bool is_terminated() const { return m_is_terminated; }
 
-    size_t m_register_count { 0 };
+    String const& name() const { return m_name; }
+
+private:
+    BasicBlock(String name);
+
     u8* m_buffer { nullptr };
     size_t m_buffer_capacity { 0 };
     size_t m_buffer_size { 0 };
+    bool m_is_terminated { false };
+    String m_name;
 };
 
 }
