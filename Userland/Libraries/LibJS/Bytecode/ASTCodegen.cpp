@@ -462,7 +462,6 @@ void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     Vector<Bytecode::Register> element_regs;
     for (auto& element : m_elements) {
-        generator.emit<Bytecode::Op::LoadImmediate>(Value {});
         if (element) {
             element->generate_bytecode(generator);
 
@@ -470,6 +469,8 @@ void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
                 TODO();
                 continue;
             }
+        } else {
+            generator.emit<Bytecode::Op::LoadImmediate>(Value {});
         }
         auto element_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(element_reg);
