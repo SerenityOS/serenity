@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -255,6 +256,11 @@ void Decrement::execute(Bytecode::Interpreter& interpreter) const
         interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
 }
 
+void Throw::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.vm().throw_exception(interpreter.global_object(), interpreter.accumulator());
+}
+
 String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -381,6 +387,11 @@ String Increment::to_string(Bytecode::Executable const&) const
 String Decrement::to_string(Bytecode::Executable const&) const
 {
     return "Decrement";
+}
+
+String Throw::to_string(Bytecode::Executable const&) const
+{
+    return "Throw";
 }
 
 }
