@@ -174,31 +174,29 @@ void PutById::execute(Bytecode::Interpreter& interpreter) const
 
 void Jump::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.jump(*m_target);
+    interpreter.jump(*m_true_target);
 }
 
-void JumpIfFalse::execute(Bytecode::Interpreter& interpreter) const
+void JumpConditional::execute(Bytecode::Interpreter& interpreter) const
 {
-    VERIFY(m_target.has_value());
-    auto result = interpreter.accumulator();
-    if (!result.to_boolean())
-        interpreter.jump(m_target.value());
-}
-
-void JumpIfTrue::execute(Bytecode::Interpreter& interpreter) const
-{
-    VERIFY(m_target.has_value());
+    VERIFY(m_true_target.has_value());
+    VERIFY(m_false_target.has_value());
     auto result = interpreter.accumulator();
     if (result.to_boolean())
-        interpreter.jump(m_target.value());
+        interpreter.jump(m_true_target.value());
+    else
+        interpreter.jump(m_false_target.value());
 }
 
-void JumpIfNotNullish::execute(Bytecode::Interpreter& interpreter) const
+void JumpNullish::execute(Bytecode::Interpreter& interpreter) const
 {
-    VERIFY(m_target.has_value());
+    VERIFY(m_true_target.has_value());
+    VERIFY(m_false_target.has_value());
     auto result = interpreter.accumulator();
-    if (!result.is_nullish())
-        interpreter.jump(m_target.value());
+    if (result.is_nullish())
+        interpreter.jump(m_true_target.value());
+    else
+        interpreter.jump(m_false_target.value());
 }
 
 void Call::execute(Bytecode::Interpreter& interpreter) const
@@ -321,28 +319,23 @@ String GetById::to_string() const
 
 String Jump::to_string() const
 {
-    return String::formatted("Jump {}", *m_target);
+    if (m_true_target.has_value())
+        return String::formatted("Jump {}", *m_true_target);
+    return String::formatted("Jump <empty>");
 }
 
-String JumpIfFalse::to_string() const
+String JumpConditional::to_string() const
 {
-    if (m_target.has_value())
-        return String::formatted("JumpIfFalse target:{}", m_target.value());
-    return "JumpIfFalse target:<empty>";
+    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
+    return String::formatted("JumpConditional true:{} false:{}", true_string, false_string);
 }
 
-String JumpIfTrue::to_string() const
+String JumpNullish::to_string() const
 {
-    if (m_target.has_value())
-        return String::formatted("JumpIfTrue target:{}", m_target.value());
-    return "JumpIfTrue result:{}, target:<empty>";
-}
-
-String JumpIfNotNullish::to_string() const
-{
-    if (m_target.has_value())
-        return String::formatted("JumpIfNotNullish target:{}", m_target.value());
-    return "JumpIfNotNullish target:<empty>";
+    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
+    return String::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
 }
 
 String Call::to_string() const

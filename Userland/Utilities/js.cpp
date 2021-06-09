@@ -14,7 +14,7 @@
 #include <LibCore/File.h>
 #include <LibCore/StandardPaths.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/Block.h>
+#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Console.h>
@@ -494,15 +494,15 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         program->dump(0);
 
     if (s_dump_bytecode || s_run_bytecode) {
-        auto block = JS::Bytecode::Generator::generate(*program);
-        VERIFY(block);
-
-        if (s_dump_bytecode)
-            block->dump();
+        auto unit = JS::Bytecode::Generator::generate(*program);
+        if (s_dump_bytecode) {
+            for (auto& block : unit.basic_blocks)
+                block.dump();
+        }
 
         if (s_run_bytecode) {
             JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
-            bytecode_interpreter.run(*block);
+            bytecode_interpreter.run(unit);
         }
 
         return true;

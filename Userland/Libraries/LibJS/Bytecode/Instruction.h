@@ -36,9 +36,8 @@
     O(PutById)                    \
     O(GetById)                    \
     O(Jump)                       \
-    O(JumpIfFalse)                \
-    O(JumpIfTrue)                 \
-    O(JumpIfNotNullish)           \
+    O(JumpConditional)            \
+    O(JumpNullish)                \
     O(Call)                       \
     O(EnterScope)                 \
     O(Return)                     \
@@ -61,6 +60,8 @@ namespace JS::Bytecode {
 
 class Instruction {
 public:
+    constexpr static bool IsTerminator = false;
+
     enum class Type {
 #define __BYTECODE_OP(op) \
     op,
