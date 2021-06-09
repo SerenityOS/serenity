@@ -15,7 +15,7 @@ namespace JS {
 
 void ASTNode::generate_bytecode(Bytecode::Generator&) const
 {
-    dbgln("Missing generate_bytecode()");
+    dbgln("Missing generate_bytecode() in {}", class_name());
     TODO();
 }
 
