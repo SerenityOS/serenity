@@ -22,18 +22,6 @@ Set::~Set()
 {
 }
 
-Set* Set::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<Set>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Set");
-        return nullptr;
-    }
-    return static_cast<Set*>(this_object);
-}
-
 void Set::visit_edges(Cell::Visitor& visitor)
 {
     Object::visit_edges(visitor);
