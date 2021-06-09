@@ -97,6 +97,9 @@ set(SOURCES
     Runtime/TypedArrayPrototype.cpp
     Runtime/VM.cpp
     Runtime/Value.cpp
+    Runtime/WeakSet.cpp
+    Runtime/WeakSetConstructor.cpp
+    Runtime/WeakSetPrototype.cpp
     Runtime/WithScope.cpp
     SyntaxHighlighter.cpp
     Token.cpp

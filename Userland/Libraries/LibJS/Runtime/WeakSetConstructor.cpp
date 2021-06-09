@@ -1,0 +1,64 @@
+/*
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/WeakSet.h>
+#include <LibJS/Runtime/WeakSetConstructor.h>
+
+namespace JS {
+
+WeakSetConstructor::WeakSetConstructor(GlobalObject& global_object)
+    : NativeFunction(vm().names.WeakSet, *global_object.function_prototype())
+{
+}
+
+void WeakSetConstructor::initialize(GlobalObject& global_object)
+{
+    auto& vm = this->vm();
+    NativeFunction::initialize(global_object);
+    define_property(vm.names.prototype, global_object.weak_set_prototype(), 0);
+    define_property(vm.names.length, Value(0), Attribute::Configurable);
+}
+
+WeakSetConstructor::~WeakSetConstructor()
+{
+}
+
+Value WeakSetConstructor::call()
+{
+    auto& vm = this->vm();
+    vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.WeakSet);
+    return {};
+}
+
+Value WeakSetConstructor::construct(Function&)
+{
+    auto& vm = this->vm();
+    if (vm.argument(0).is_nullish())
+        return WeakSet::create(global_object());
+
+    auto* weak_set = WeakSet::create(global_object());
+    auto adder = weak_set->get(vm.names.add);
+    if (vm.exception())
+        return {};
+    if (!adder.is_function()) {
+        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, "'add' property of WeakSet");
+        return {};
+    }
+    get_iterator_values(global_object(), vm.argument(0), [&](Value iterator_value) {
+        if (vm.exception())
+            return IterationDecision::Break;
+        (void)vm.call(adder.as_function(), Value(weak_set), iterator_value);
+        return vm.exception() ? IterationDecision::Break : IterationDecision::Continue;
+    });
+    if (vm.exception())
+        return {};
+    return weak_set;
+}
+
+}
