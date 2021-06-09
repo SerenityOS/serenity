@@ -399,12 +399,14 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
         call_frame.arguments.append(arguments.value().values());
     auto* environment = function.create_environment();
     call_frame.scope = environment;
-    environment->set_new_target(&new_target);
+    if (environment)
+        environment->set_new_target(&new_target);
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
         new_object = Object::create_empty(global_object);
-        environment->bind_this_value(global_object, new_object);
+        if (environment)
+            environment->bind_this_value(global_object, new_object);
         if (exception())
             return {};
         auto prototype = new_target.get(names.prototype);
@@ -422,15 +424,18 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.this_value = this_value;
     auto result = function.construct(new_target);
 
-    this_value = call_frame.scope->get_this_binding(global_object);
+    if (environment)
+        this_value = environment->get_this_binding(global_object);
     pop_call_frame();
     call_frame_popper.disarm();
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
-        VERIFY(is<LexicalEnvironment>(current_scope()));
-        static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
+        if (environment) {
+            VERIFY(is<LexicalEnvironment>(current_scope()));
+            static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
+        }
         auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
@@ -507,8 +512,11 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     auto* environment = function.create_environment();
     call_frame.scope = environment;
 
-    VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
-    environment->bind_this_value(function.global_object(), call_frame.this_value);
+    if (environment) {
+        VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+        environment->bind_this_value(function.global_object(), call_frame.this_value);
+    }
+
     if (exception())
         return {};
 
