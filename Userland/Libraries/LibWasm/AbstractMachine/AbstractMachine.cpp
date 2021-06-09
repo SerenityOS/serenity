@@ -457,6 +457,9 @@ void Linker::link(HashMap<Linker::Name, ExternValue> const& exports)
     if (m_unresolved_imports.is_empty())
         return;
 
+    if (exports.is_empty())
+        return;
+
     HashTable<Name> resolved_imports;
     for (auto& import_ : m_unresolved_imports) {
         auto export_ = exports.get(import_);

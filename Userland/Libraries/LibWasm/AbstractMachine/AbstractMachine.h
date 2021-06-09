@@ -472,10 +472,10 @@ public:
     Stack() = default;
 
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_data.is_empty(); }
-    FLATTEN void push(EntryType entry) { m_data.append(move(entry)); }
-    FLATTEN auto pop() { return m_data.take_last(); }
-    FLATTEN auto& peek() const { return m_data.last(); }
-    FLATTEN auto& peek() { return m_data.last(); }
+    ALWAYS_INLINE void push(EntryType entry) { m_data.append(move(entry)); }
+    ALWAYS_INLINE auto pop() { return m_data.take_last(); }
+    ALWAYS_INLINE auto& peek() const { return m_data.last(); }
+    ALWAYS_INLINE auto& peek() { return m_data.last(); }
 
     ALWAYS_INLINE auto size() const { return m_data.size(); }
     ALWAYS_INLINE auto& entries() const { return m_data; }
