@@ -111,6 +111,7 @@ class Cell;
 class Console;
 class DeferGC;
 class Error;
+class ErrorType;
 class Exception;
 class Expression;
 class Accessor;
