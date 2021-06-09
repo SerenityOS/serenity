@@ -649,6 +649,8 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
             generator.emit<Bytecode::Op::ConcatString>(string_reg);
         }
     }
+
+    generator.emit<Bytecode::Op::Load>(string_reg);
 }
 
 void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
