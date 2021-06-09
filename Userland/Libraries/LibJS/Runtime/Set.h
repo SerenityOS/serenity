@@ -41,8 +41,6 @@ public:
     explicit Set(Object& prototype);
     virtual ~Set() override;
 
-    static Set* typed_this(VM&, GlobalObject&);
-
     HashTable<Value, ValueTraits> const& values() const { return m_values; };
     HashTable<Value, ValueTraits>& values() { return m_values; };
 

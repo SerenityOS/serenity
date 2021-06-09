@@ -11,14 +11,14 @@
 namespace JS {
 
 SetPrototype::SetPrototype(GlobalObject& global_object)
-    : Set(*global_object.object_prototype())
+    : Object(*global_object.object_prototype())
 {
 }
 
 void SetPrototype::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
-    Set::initialize(global_object);
+    Object::initialize(global_object);
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     define_native_function(vm.names.add, add, 1, attr);
@@ -38,6 +38,18 @@ void SetPrototype::initialize(GlobalObject& global_object)
 
 SetPrototype::~SetPrototype()
 {
+}
+
+Set* SetPrototype::typed_this(VM& vm, GlobalObject& global_object)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    if (!is<Set>(this_object)) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Set");
+        return nullptr;
+    }
+    return static_cast<Set*>(this_object);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(SetPrototype::add)

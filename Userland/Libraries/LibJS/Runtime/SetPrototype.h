@@ -10,8 +10,8 @@
 
 namespace JS {
 
-class SetPrototype final : public Set {
-    JS_OBJECT(SetPrototype, Set);
+class SetPrototype final : public Object {
+    JS_OBJECT(SetPrototype, Object);
 
 public:
     SetPrototype(GlobalObject&);
@@ -19,6 +19,8 @@ public:
     virtual ~SetPrototype() override;
 
 private:
+    static Set* typed_this(VM&, GlobalObject&);
+
     JS_DECLARE_NATIVE_FUNCTION(add);
     JS_DECLARE_NATIVE_FUNCTION(clear);
     JS_DECLARE_NATIVE_FUNCTION(delete_);
