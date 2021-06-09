@@ -13,12 +13,12 @@ namespace Kernel {
 
 WorkQueue* g_io_work;
 
-void WorkQueue::initialize()
+UNMAP_AFTER_INIT void WorkQueue::initialize()
 {
     g_io_work = new WorkQueue("IO WorkQueue");
 }
 
-WorkQueue::WorkQueue(const char* name)
+UNMAP_AFTER_INIT WorkQueue::WorkQueue(const char* name)
 {
     RefPtr<Thread> thread;
     Process::create_kernel_process(thread, name, [this] {
