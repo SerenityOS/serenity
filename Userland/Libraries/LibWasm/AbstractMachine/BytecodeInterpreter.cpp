@@ -396,6 +396,34 @@ ALWAYS_INLINE static i32 ctz(T value)
         VERIFY_NOT_REACHED();
 }
 
+template<typename T>
+ALWAYS_INLINE static T float_max(T lhs, T rhs)
+{
+    if (isnan(lhs))
+        return lhs;
+    if (isnan(rhs))
+        return rhs;
+    if (isinf(lhs))
+        return lhs > 0 ? lhs : rhs;
+    if (isinf(rhs))
+        return rhs > 0 ? rhs : lhs;
+    return max(lhs, rhs);
+}
+
+template<typename T>
+ALWAYS_INLINE static T float_min(T lhs, T rhs)
+{
+    if (isnan(lhs))
+        return lhs;
+    if (isnan(rhs))
+        return rhs;
+    if (isinf(lhs))
+        return lhs > 0 ? rhs : lhs;
+    if (isinf(rhs))
+        return rhs > 0 ? lhs : rhs;
+    return min(lhs, rhs);
+}
+
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
@@ -843,9 +871,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f32_div.value():
         BINARY_NUMERIC_OPERATION(float, /, float);
     case Instructions::f32_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, min, float);
+        BINARY_PREFIX_NUMERIC_OPERATION(float, float_min, float);
     case Instructions::f32_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, max, float);
+        BINARY_PREFIX_NUMERIC_OPERATION(float, float_max, float);
     case Instructions::f32_copysign.value():
         BINARY_PREFIX_NUMERIC_OPERATION(float, copysignf, float);
     case Instructions::f64_abs.value():
@@ -871,9 +899,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f64_div.value():
         BINARY_NUMERIC_OPERATION(double, /, double);
     case Instructions::f64_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, min, double);
+        BINARY_PREFIX_NUMERIC_OPERATION(double, float_min, double);
     case Instructions::f64_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, max, double);
+        BINARY_PREFIX_NUMERIC_OPERATION(double, float_max, double);
     case Instructions::f64_copysign.value():
         BINARY_PREFIX_NUMERIC_OPERATION(double, copysign, double);
     case Instructions::i32_wrap_i64.value():
