@@ -39,7 +39,8 @@
     __JS_ENUMERATE(RegExpObject, regexp, RegExpPrototype, RegExpConstructor, void)                \
     __JS_ENUMERATE(Set, set, SetPrototype, SetConstructor, void)                                  \
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                \
-    __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)
+    __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                \
+    __JS_ENUMERATE(WeakSet, weak_set, WeakSetPrototype, WeakSetConstructor, void)
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                 \
     JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES \
