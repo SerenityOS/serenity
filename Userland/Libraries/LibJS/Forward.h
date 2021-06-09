@@ -163,7 +163,7 @@ template<class T>
 class Handle;
 
 namespace Bytecode {
-class Block;
+class BasicBlock;
 class Generator;
 class Instruction;
 class Interpreter;
