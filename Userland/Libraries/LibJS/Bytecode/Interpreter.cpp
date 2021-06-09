@@ -59,6 +59,7 @@ Value Interpreter::run(Executable const& executable)
     auto block = &executable.basic_blocks.first();
     m_register_windows.append(make<RegisterWindow>());
     registers().resize(executable.number_of_registers);
+    registers()[Register::global_object_index] = Value(&global_object());
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());
