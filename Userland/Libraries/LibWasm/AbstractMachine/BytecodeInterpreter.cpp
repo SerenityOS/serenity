@@ -396,6 +396,13 @@ ALWAYS_INLINE static i32 ctz(T value)
         VERIFY_NOT_REACHED();
 }
 
+template<typename InputT, typename OutputT>
+ALWAYS_INLINE static OutputT extend_signed(InputT value)
+{
+    // Note: C++ will take care of sign extension.
+    return value;
+}
+
 template<typename T>
 ALWAYS_INLINE static T float_max(T lhs, T rhs)
 {
@@ -970,6 +977,16 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         UNARY_MAP(i32, bit_cast<float>, float);
     case Instructions::f64_reinterpret_i64.value():
         UNARY_MAP(i64, bit_cast<double>, double);
+    case Instructions::i32_extend8_s.value():
+        UNARY_MAP(i32, (extend_signed<i8, i32>), i32);
+    case Instructions::i32_extend16_s.value():
+        UNARY_MAP(i32, (extend_signed<i16, i32>), i32);
+    case Instructions::i64_extend8_s.value():
+        UNARY_MAP(i64, (extend_signed<i8, i64>), i64);
+    case Instructions::i64_extend16_s.value():
+        UNARY_MAP(i64, (extend_signed<i16, i64>), i64);
+    case Instructions::i64_extend32_s.value():
+        UNARY_MAP(i64, (extend_signed<i32, i64>), i64);
     case Instructions::i32_trunc_sat_f32_s.value():
     case Instructions::i32_trunc_sat_f32_u.value():
     case Instructions::i32_trunc_sat_f64_s.value():
@@ -988,11 +1005,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::table_grow.value():
     case Instructions::table_size.value():
     case Instructions::table_fill.value():
-    case Instructions::i32_extend8_s.value():
-    case Instructions::i32_extend16_s.value():
-    case Instructions::i64_extend8_s.value():
-    case Instructions::i64_extend16_s.value():
-    case Instructions::i64_extend32_s.value():
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));
