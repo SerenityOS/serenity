@@ -156,7 +156,7 @@ Value ScriptFunction::execute_function_body()
             if constexpr (JS_BYTECODE_DEBUG) {
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);
                 for (auto& block : m_bytecode_executable->basic_blocks)
-                    block.dump();
+                    block.dump(*m_bytecode_executable);
             }
         }
         return bytecode_interpreter->run(*m_bytecode_executable);

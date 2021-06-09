@@ -166,6 +166,7 @@ class Handle;
 
 namespace Bytecode {
 class BasicBlock;
+struct Executable;
 class Generator;
 class Instruction;
 class Interpreter;
