@@ -9,6 +9,7 @@
 #include <LibJS/Bytecode/Block.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 
@@ -66,6 +67,24 @@ void Generator::begin_continuable_scope()
 void Generator::end_continuable_scope()
 {
     m_continuable_scopes.take_last();
+}
+
+void Generator::begin_breakable_scope()
+{
+    m_breakable_scopes.empend();
+}
+
+void Generator::end_breakable_scope()
+{
+    auto break_label = make_label();
+    for (auto& jump : m_breakable_scopes.take_last()) {
+        jump->set_target(break_label);
+    }
+}
+
+Vector<Bytecode::Op::Jump*>& Generator::nearest_breakable_scope()
+{
+    return m_breakable_scopes.last();
 }
 
 }

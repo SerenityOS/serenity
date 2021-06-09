@@ -1293,6 +1293,7 @@ public:
     }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual Optional<Bytecode::Register> generate_bytecode(Bytecode::Generator&) const override;
 
     const FlyString& target_label() const { return m_target_label; }
 

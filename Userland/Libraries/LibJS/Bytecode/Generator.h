@@ -8,6 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <LibJS/Bytecode/Label.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 
@@ -44,6 +45,10 @@ public:
 
     Label nearest_continuable_scope() const;
 
+    void begin_breakable_scope();
+    void end_breakable_scope();
+    Vector<Bytecode::Op::Jump*>& nearest_breakable_scope();
+
 private:
     Generator();
     ~Generator();
@@ -54,6 +59,7 @@ private:
     OwnPtr<Block> m_block;
     u32 m_next_register { 1 };
     Vector<Label> m_continuable_scopes;
+    Vector<Vector<Bytecode::Op::Jump*>> m_breakable_scopes;
 };
 
 }
