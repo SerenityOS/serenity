@@ -53,28 +53,28 @@ PhysicalID Access::get_physical_id(Address address) const
     VERIFY_NOT_REACHED();
 }
 
-UNMAP_AFTER_INIT u8 Access::early_read8_field(Address address, u32 field)
+u8 Access::early_read8_field(Address address, u32 field)
 {
     dbgln_if(PCI_DEBUG, "PCI: Early reading 8-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in8(PCI_VALUE_PORT + (field & 3));
 }
 
-UNMAP_AFTER_INIT u16 Access::early_read16_field(Address address, u32 field)
+u16 Access::early_read16_field(Address address, u32 field)
 {
     dbgln_if(PCI_DEBUG, "PCI: Early reading 16-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in16(PCI_VALUE_PORT + (field & 2));
 }
 
-UNMAP_AFTER_INIT u32 Access::early_read32_field(Address address, u32 field)
+u32 Access::early_read32_field(Address address, u32 field)
 {
     dbgln_if(PCI_DEBUG, "PCI: Early reading 32-bit field {:#08x} for {}", field, address);
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     return IO::in32(PCI_VALUE_PORT);
 }
 
-UNMAP_AFTER_INIT u16 Access::early_read_type(Address address)
+u16 Access::early_read_type(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Early reading type for {}", address);
     return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
@@ -118,14 +118,14 @@ UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, Function<void(Addr
         enumerate_device(type, bus, device, callback, recursive);
 }
 
-UNMAP_AFTER_INIT void Access::enumerate(Function<void(Address, ID)>& callback) const
+void Access::enumerate(Function<void(Address, ID)>& callback) const
 {
     for (auto& physical_id : m_physical_ids) {
         callback(physical_id.address(), physical_id.id());
     }
 }
 
-UNMAP_AFTER_INIT void enumerate(Function<void(Address, ID)> callback)
+void enumerate(Function<void(Address, ID)> callback)
 {
     Access::the().enumerate(callback);
 }
