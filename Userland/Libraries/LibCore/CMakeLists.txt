@@ -13,6 +13,7 @@ set(SOURCES
     File.cpp
     GetPassword.cpp
     IODevice.cpp
+    Language.cpp
     LocalServer.cpp
     LocalSocket.cpp
     MimeData.cpp
