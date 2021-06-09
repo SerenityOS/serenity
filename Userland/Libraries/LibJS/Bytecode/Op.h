@@ -373,6 +373,28 @@ public:
     String to_string() const;
 };
 
+class Increment final : public Instruction {
+public:
+    Increment()
+        : Instruction(Type::Increment)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+};
+
+class Decrement final : public Instruction {
+public:
+    Decrement()
+        : Instruction(Type::Decrement)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string() const;
+};
+
 }
 
 namespace JS::Bytecode {

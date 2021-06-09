@@ -638,4 +638,32 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
         }
     }
 }
+
+void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    if (is<Identifier>(*m_argument)) {
+        auto& identifier = static_cast<Identifier const&>(*m_argument);
+        generator.emit<Bytecode::Op::GetVariable>(identifier.string());
+
+        Optional<Bytecode::Register> previous_value_for_postfix_reg;
+        if (!m_prefixed) {
+            previous_value_for_postfix_reg = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(*previous_value_for_postfix_reg);
+        }
+
+        if (m_op == UpdateOp::Increment)
+            generator.emit<Bytecode::Op::Increment>();
+        else
+            generator.emit<Bytecode::Op::Decrement>();
+
+        generator.emit<Bytecode::Op::SetVariable>(identifier.string());
+
+        if (!m_prefixed)
+            generator.emit<Bytecode::Op::Load>(*previous_value_for_postfix_reg);
+        return;
+    }
+
+    TODO();
+}
+
 }
