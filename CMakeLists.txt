@@ -218,6 +218,7 @@ add_compile_options(-Wno-unknown-warning-option)
 add_compile_options(-Wundef)
 add_compile_options(-Wunused)
 add_compile_options(-Wwrite-strings)
+add_compile_options(-Wno-maybe-uninitialized)
 
 add_compile_options(-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.)
 add_compile_options(-fno-exceptions)
