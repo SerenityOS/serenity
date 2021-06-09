@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-VirtIORNG::VirtIORNG(PCI::Address address)
+UNMAP_AFTER_INIT VirtIORNG::VirtIORNG(PCI::Address address)
     : CharacterDevice(10, 183)
     , VirtIODevice(address, "VirtIORNG")
 {
