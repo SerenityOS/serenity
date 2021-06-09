@@ -556,6 +556,10 @@ void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
 {
 }
 
+void VariableDeclaration::generate_bytecode(Bytecode::Generator&) const
+{
+}
+
 void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_callee->generate_bytecode(generator);
