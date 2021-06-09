@@ -5,6 +5,7 @@
  */
 
 #include <AK/Debug.h>
+#include <AK/TemporaryChange.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
@@ -37,6 +38,8 @@ Interpreter::~Interpreter()
 Value Interpreter::run(Executable const& executable)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
+
+    TemporaryChange restore_executable { m_current_executable, &executable };
 
     CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {

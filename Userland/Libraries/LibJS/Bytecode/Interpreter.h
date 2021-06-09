@@ -39,6 +39,8 @@ public:
     }
     void do_return(Value return_value) { m_return_value = return_value; }
 
+    Executable const& current_executable() { return *m_current_executable; }
+
 private:
     RegisterWindow& registers() { return m_register_windows.last(); }
 
@@ -47,6 +49,7 @@ private:
     NonnullOwnPtrVector<RegisterWindow> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
+    Executable const* m_current_executable { nullptr };
 };
 
 }

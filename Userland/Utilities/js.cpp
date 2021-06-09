@@ -516,7 +516,11 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
         auto unit = JS::Bytecode::Generator::generate(*program);
         if (s_dump_bytecode) {
             for (auto& block : unit.basic_blocks)
-                block.dump();
+                block.dump(unit);
+            if (!unit.string_table->is_empty()) {
+                outln();
+                unit.string_table->dump();
+            }
         }
 
         if (s_run_bytecode) {

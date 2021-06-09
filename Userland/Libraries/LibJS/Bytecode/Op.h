@@ -7,11 +7,11 @@
 
 #pragma once
 
-#include <AK/FlyString.h>
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -26,7 +26,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Register m_src;
@@ -41,7 +41,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Value m_value;
@@ -56,7 +56,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Register m_dst;
@@ -96,7 +96,7 @@ private:
         }                                                       \
                                                                 \
         void execute(Bytecode::Interpreter&) const;             \
-        String to_string() const;                               \
+        String to_string(Bytecode::Executable const&) const;    \
                                                                 \
     private:                                                    \
         Register m_lhs_reg;                                     \
@@ -121,7 +121,7 @@ JS_ENUMERATE_COMMON_BINARY_OPS(JS_DECLARE_COMMON_BINARY_OP)
         }                                                      \
                                                                \
         void execute(Bytecode::Interpreter&) const;            \
-        String to_string() const;                              \
+        String to_string(Bytecode::Executable const&) const;   \
     };
 
 JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
@@ -129,17 +129,17 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
 
 class NewString final : public Instruction {
 public:
-    NewString(String string)
+    NewString(StringTableIndex string)
         : Instruction(Type::NewString)
         , m_string(move(string))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
-    String m_string;
+    StringTableIndex m_string;
 };
 
 class NewObject final : public Instruction {
@@ -150,7 +150,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 class NewBigInt final : public Instruction {
@@ -162,7 +162,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Crypto::SignedBigInteger m_bigint;
@@ -180,7 +180,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
     size_t length() const { return sizeof(*this) + sizeof(Register) * m_element_count; }
 
@@ -198,7 +198,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Register m_lhs;
@@ -206,52 +206,52 @@ private:
 
 class SetVariable final : public Instruction {
 public:
-    SetVariable(FlyString identifier)
+    SetVariable(StringTableIndex identifier)
         : Instruction(Type::SetVariable)
         , m_identifier(move(identifier))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
-    FlyString m_identifier;
+    StringTableIndex m_identifier;
 };
 
 class GetVariable final : public Instruction {
 public:
-    GetVariable(FlyString identifier)
+    GetVariable(StringTableIndex identifier)
         : Instruction(Type::GetVariable)
         , m_identifier(move(identifier))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
-    FlyString m_identifier;
+    StringTableIndex m_identifier;
 };
 
 class GetById final : public Instruction {
 public:
-    GetById(FlyString property)
+    GetById(StringTableIndex property)
         : Instruction(Type::GetById)
         , m_property(move(property))
     {
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
-    FlyString m_property;
+    StringTableIndex m_property;
 };
 
 class PutById final : public Instruction {
 public:
-    PutById(Register base, FlyString property)
+    PutById(Register base, StringTableIndex property)
         : Instruction(Type::PutById)
         , m_base(base)
         , m_property(move(property))
@@ -259,11 +259,11 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     Register m_base;
-    FlyString m_property;
+    StringTableIndex m_property;
 };
 
 class Jump : public Instruction {
@@ -291,7 +291,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 protected:
     Optional<Label> m_true_target;
@@ -306,7 +306,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 class JumpNullish final : public Jump {
@@ -317,7 +317,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 // NOTE: This instruction is variable-width depending on the number of arguments!
@@ -334,7 +334,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
     size_t length() const { return sizeof(*this) + sizeof(Register) * m_argument_count; }
 
@@ -354,7 +354,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 
 private:
     ScopeNode const& m_scope_node;
@@ -370,7 +370,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 class Increment final : public Instruction {
@@ -381,7 +381,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 class Decrement final : public Instruction {
@@ -392,7 +392,7 @@ public:
     }
 
     void execute(Bytecode::Interpreter&) const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
 };
 
 }
