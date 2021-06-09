@@ -1291,6 +1291,38 @@ void SoftwareGLContext::gl_active_texture(GLenum texture)
     m_active_texture_unit = &m_texture_units.at(texture - GL_TEXTURE0);
 }
 
+void SoftwareGLContext::gl_get_floatv(GLenum pname, GLfloat* params)
+{
+    RETURN_WITH_ERROR_IF(m_in_draw_state, GL_INVALID_OPERATION);
+
+    auto flatten_and_assign_matrix = [&params](const FloatMatrix4x4& matrix) {
+        auto elements = matrix.elements();
+
+        for (size_t i = 0; i < 4; ++i) {
+            for (size_t j = 0; j < 4; ++j) {
+                params[i * 4 + j] = elements[i][j];
+            }
+        }
+    };
+
+    switch (pname) {
+    case GL_MODELVIEW_MATRIX:
+        if (m_current_matrix_mode == GL_MODELVIEW)
+            flatten_and_assign_matrix(m_model_view_matrix);
+        else {
+            if (m_model_view_matrix_stack.is_empty())
+                flatten_and_assign_matrix(FloatMatrix4x4::identity());
+            else
+                flatten_and_assign_matrix(m_model_view_matrix_stack.last());
+        }
+        break;
+    default:
+        // FIXME: Because glQuake only requires GL_MODELVIEW_MATRIX, that is the only parameter
+        // that we currently support. More parameters should be supported.
+        TODO();
+    }
+}
+
 void SoftwareGLContext::present()
 {
     m_rasterizer.blit_to(*m_frontbuffer);
