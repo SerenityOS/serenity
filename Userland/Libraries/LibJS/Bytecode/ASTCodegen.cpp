@@ -655,6 +655,10 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 
 void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
+    m_tag->generate_bytecode(generator);
+    auto tag_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(tag_reg);
+
     Vector<Bytecode::Register> string_regs;
     auto& expressions = m_template_literal->expressions();
     for (size_t i = 0; i < expressions.size(); ++i) {
@@ -697,10 +701,6 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
 
     generator.emit<Bytecode::Op::Load>(strings_reg);
     generator.emit<Bytecode::Op::PutById>(raw_strings_reg, generator.intern_string("raw"));
-
-    m_tag->generate_bytecode(generator);
-    auto tag_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Store>(tag_reg);
 
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     auto this_reg = generator.allocate_register();
