@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -50,7 +49,7 @@ Value NativeFunction::construct(Function&)
 
 LexicalEnvironment* NativeFunction::create_environment()
 {
-    return heap().allocate<LexicalEnvironment>(global_object(), LexicalEnvironment::EnvironmentRecordType::Function);
+    return nullptr;
 }
 
 bool NativeFunction::is_strict_mode() const
