@@ -359,6 +359,12 @@ protected:
     // FIXME: Find the right names for these.
     void XTERM_WM(Parameters);
 
+    // DECIC - Insert Column
+    void DECIC(Parameters);
+
+    // DECDC - Delete Column
+    void DECDC(Parameters);
+
 #ifndef KERNEL
     TerminalClient& m_client;
 #else
