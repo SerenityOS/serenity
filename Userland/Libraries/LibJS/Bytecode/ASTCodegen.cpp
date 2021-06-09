@@ -232,6 +232,39 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
         }
 
         m_lhs->generate_bytecode(generator);
+
+        Bytecode::BasicBlock* rhs_block_ptr { nullptr };
+        Bytecode::BasicBlock* end_block_ptr { nullptr };
+
+        // Logical assignments short circuit.
+        if (m_op == AssignmentOp::AndAssignment) { // &&=
+            rhs_block_ptr = &generator.make_block();
+            end_block_ptr = &generator.make_block();
+
+            generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+                Bytecode::Label { *rhs_block_ptr },
+                Bytecode::Label { *end_block_ptr });
+        } else if (m_op == AssignmentOp::OrAssignment) { // ||=
+            rhs_block_ptr = &generator.make_block();
+            end_block_ptr = &generator.make_block();
+
+            generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+                Bytecode::Label { *end_block_ptr },
+                Bytecode::Label { *rhs_block_ptr });
+        } else if (m_op == AssignmentOp::NullishAssignment) { // ??=
+            rhs_block_ptr = &generator.make_block();
+            end_block_ptr = &generator.make_block();
+
+            generator.emit<Bytecode::Op::JumpNullish>().set_targets(
+                Bytecode::Label { *rhs_block_ptr },
+                Bytecode::Label { *end_block_ptr });
+        }
+
+        if (rhs_block_ptr)
+            generator.switch_to_basic_block(*rhs_block_ptr);
+
+        // lhs_reg is a part of the rhs_block because the store isn't necessary
+        // if the logical assignment condition fails.
         auto lhs_reg = generator.allocate_register();
         generator.emit<Bytecode::Op::Store>(lhs_reg);
         m_rhs->generate_bytecode(generator);
@@ -273,11 +306,23 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
         case AssignmentOp::UnsignedRightShiftAssignment:
             generator.emit<Bytecode::Op::UnsignedRightShift>(lhs_reg);
             break;
+        case AssignmentOp::AndAssignment:
+        case AssignmentOp::OrAssignment:
+        case AssignmentOp::NullishAssignment:
+            break; // These are handled above.
         default:
             TODO();
         }
 
         generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier.string()));
+
+        if (end_block_ptr) {
+            generator.emit<Bytecode::Op::Jump>().set_targets(
+                Bytecode::Label { *end_block_ptr },
+                {});
+
+            generator.switch_to_basic_block(*end_block_ptr);
+        }
 
         return;
     }
