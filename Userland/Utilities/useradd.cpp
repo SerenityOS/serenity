@@ -64,6 +64,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (getpwnam(username)) {
+        warnln("user {} already exists!", username);
+        return 1;
+    }
+
     if (uid < 0) {
         warnln("invalid uid {}!", uid);
         return 3;
