@@ -119,7 +119,7 @@ namespace Kernel {
 #define INTERRUPT_SRPD (1 << 16)
 
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
-static bool is_valid_device_id(u16 device_id)
+UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 {
     // FIXME: It would be nice to distinguish which particular device it is.
     //        Especially since it's needed to determine which registers we can access.
