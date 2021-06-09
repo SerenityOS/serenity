@@ -6,6 +6,7 @@ set(SOURCES
     Bytecode/Instruction.cpp
     Bytecode/Interpreter.cpp
     Bytecode/Op.cpp
+    Bytecode/StringTable.cpp
     Console.cpp
     Heap/CellAllocator.cpp
     Heap/BlockAllocator.cpp

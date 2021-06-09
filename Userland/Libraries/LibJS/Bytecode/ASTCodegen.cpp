@@ -208,12 +208,12 @@ void BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
 
 void StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::NewString>(m_value);
+    generator.emit<Bytecode::Op::NewString>(generator.intern_string(m_value));
 }
 
 void Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::GetVariable>(m_string);
+    generator.emit<Bytecode::Op::GetVariable>(generator.intern_string(m_string));
 }
 
 void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
@@ -223,7 +223,7 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
 
         if (m_op == AssignmentOp::Assignment) {
             m_rhs->generate_bytecode(generator);
-            generator.emit<Bytecode::Op::SetVariable>(identifier.string());
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier.string()));
             return;
         }
 
@@ -273,7 +273,7 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
             TODO();
         }
 
-        generator.emit<Bytecode::Op::SetVariable>(identifier.string());
+        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier.string()));
 
         return;
     }
@@ -289,7 +289,8 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
         } else {
             VERIFY(is<Identifier>(expression.property()));
             m_rhs->generate_bytecode(generator);
-            generator.emit<Bytecode::Op::PutById>(object_reg, static_cast<Identifier const&>(expression.property()).string());
+            auto identifier_table_ref = generator.intern_string(static_cast<Identifier const&>(expression.property()).string());
+            generator.emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
             return;
         }
     }
@@ -487,7 +488,8 @@ void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
         TODO();
     } else {
         VERIFY(is<Identifier>(property()));
-        generator.emit<Bytecode::Op::GetById>(static_cast<Identifier const&>(property()).string());
+        auto identifier_table_ref = generator.intern_string(static_cast<Identifier const&>(property()).string());
+        generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
     }
 }
 
@@ -643,7 +645,7 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (is<Identifier>(*m_argument)) {
         auto& identifier = static_cast<Identifier const&>(*m_argument);
-        generator.emit<Bytecode::Op::GetVariable>(identifier.string());
+        generator.emit<Bytecode::Op::GetVariable>(generator.intern_string(identifier.string()));
 
         Optional<Bytecode::Register> previous_value_for_postfix_reg;
         if (!m_prefixed) {
@@ -656,7 +658,7 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
         else
             generator.emit<Bytecode::Op::Decrement>();
 
-        generator.emit<Bytecode::Op::SetVariable>(identifier.string());
+        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier.string()));
 
         if (!m_prefixed)
             generator.emit<Bytecode::Op::Load>(*previous_value_for_postfix_reg);

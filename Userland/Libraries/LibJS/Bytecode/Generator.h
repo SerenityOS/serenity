@@ -12,13 +12,17 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
 
 namespace JS::Bytecode {
 
 struct Executable {
     NonnullOwnPtrVector<BasicBlock> basic_blocks;
+    NonnullOwnPtr<StringTable> string_table;
     size_t number_of_registers { 0 };
+
+    String const& get_string(StringTableIndex index) const { return string_table->get(index); }
 };
 
 class Generator {
@@ -74,6 +78,11 @@ public:
         return m_current_basic_block->is_terminated();
     }
 
+    StringTableIndex intern_string(StringView const& string)
+    {
+        return m_string_table->insert(string);
+    }
+
 private:
     Generator();
     ~Generator();
@@ -83,6 +92,7 @@ private:
 
     BasicBlock* m_current_basic_block { nullptr };
     NonnullOwnPtrVector<BasicBlock> m_root_basic_blocks;
+    NonnullOwnPtr<StringTable> m_string_table;
 
     u32 m_next_register { 1 };
     u32 m_next_block { 1 };

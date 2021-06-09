@@ -45,7 +45,7 @@ public:
 
     void seal();
 
-    void dump() const;
+    void dump(Executable const&) const;
     ReadonlyBytes instruction_stream() const { return ReadonlyBytes { m_buffer, m_buffer_size }; }
 
     void* next_slot() { return m_buffer + m_buffer_size; }

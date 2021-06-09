@@ -73,7 +73,7 @@ public:
 
     Type type() const { return m_type; }
     size_t length() const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
     void execute(Bytecode::Interpreter&) const;
     static void destroy(Instruction&);
 

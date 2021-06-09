@@ -47,13 +47,13 @@ void BasicBlock::seal()
     // It also doesn't work because instructions that have String members use RefPtr internally which must be in writable memory.
 }
 
-void BasicBlock::dump() const
+void BasicBlock::dump(Bytecode::Executable const& executable) const
 {
     Bytecode::InstructionStreamIterator it(instruction_stream());
     if (!m_name.is_empty())
         warnln("{}:", m_name);
     while (!it.at_end()) {
-        warnln("[{:4x}] {}", it.offset(), (*it).to_string());
+        warnln("[{:4x}] {}", it.offset(), (*it).to_string(executable));
         ++it;
     }
 }

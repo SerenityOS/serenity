@@ -16,11 +16,11 @@
 
 namespace JS::Bytecode {
 
-String Instruction::to_string() const
+String Instruction::to_string(Bytecode::Executable const& executable) const
 {
 #define __BYTECODE_OP(op)       \
     case Instruction::Type::op: \
-        return static_cast<Bytecode::Op::op const&>(*this).to_string();
+        return static_cast<Bytecode::Op::op const&>(*this).to_string(executable);
 
     switch (type()) {
         ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
@@ -77,7 +77,7 @@ static Value typed_equals(GlobalObject&, Value src1, Value src2)
         auto rhs = interpreter.accumulator();                                             \
         interpreter.accumulator() = op_snake_case(interpreter.global_object(), lhs, rhs); \
     }                                                                                     \
-    String OpTitleCase::to_string() const                                                 \
+    String OpTitleCase::to_string(Bytecode::Executable const&) const                      \
     {                                                                                     \
         return String::formatted(#OpTitleCase " {}", m_lhs_reg);                          \
     }
@@ -99,7 +99,7 @@ static Value typeof_(GlobalObject& global_object, Value value)
     {                                                                                                      \
         interpreter.accumulator() = op_snake_case(interpreter.global_object(), interpreter.accumulator()); \
     }                                                                                                      \
-    String OpTitleCase::to_string() const                                                                  \
+    String OpTitleCase::to_string(Bytecode::Executable const&) const                                       \
     {                                                                                                      \
         return #OpTitleCase;                                                                               \
     }
@@ -122,7 +122,7 @@ void NewArray::execute(Bytecode::Interpreter& interpreter) const
 
 void NewString::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = js_string(interpreter.vm(), m_string);
+    interpreter.accumulator() = js_string(interpreter.vm(), interpreter.current_executable().get_string(m_string));
 }
 
 void NewObject::execute(Bytecode::Interpreter& interpreter) const
@@ -137,24 +137,24 @@ void ConcatString::execute(Bytecode::Interpreter& interpreter) const
 
 void GetVariable::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = interpreter.vm().get_variable(m_identifier, interpreter.global_object());
+    interpreter.accumulator() = interpreter.vm().get_variable(interpreter.current_executable().get_string(m_identifier), interpreter.global_object());
 }
 
 void SetVariable::execute(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.vm().set_variable(m_identifier, interpreter.accumulator(), interpreter.global_object());
+    interpreter.vm().set_variable(interpreter.current_executable().get_string(m_identifier), interpreter.accumulator(), interpreter.global_object());
 }
 
 void GetById::execute(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
-        interpreter.accumulator() = object->get(m_property);
+        interpreter.accumulator() = object->get(interpreter.current_executable().get_string(m_property));
 }
 
 void PutById::execute(Bytecode::Interpreter& interpreter) const
 {
     if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object()))
-        object->put(m_property, interpreter.accumulator());
+        object->put(interpreter.current_executable().get_string(m_property), interpreter.accumulator());
 }
 
 void Jump::execute(Bytecode::Interpreter& interpreter) const
@@ -255,27 +255,27 @@ void Decrement::execute(Bytecode::Interpreter& interpreter) const
         interpreter.accumulator() = js_bigint(interpreter.vm().heap(), old_value.as_bigint().big_integer().minus(Crypto::SignedBigInteger { 1 }));
 }
 
-String Load::to_string() const
+String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
 }
 
-String LoadImmediate::to_string() const
+String LoadImmediate::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("LoadImmediate {}", m_value);
 }
 
-String Store::to_string() const
+String Store::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Store {}", m_dst);
 }
 
-String NewBigInt::to_string() const
+String NewBigInt::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("NewBigInt \"{}\"", m_bigint.to_base10());
 }
 
-String NewArray::to_string() const
+String NewArray::to_string(Bytecode::Executable const&) const
 {
     StringBuilder builder;
     builder.append("NewArray");
@@ -291,63 +291,63 @@ String NewArray::to_string() const
     return builder.to_string();
 }
 
-String NewString::to_string() const
+String NewString::to_string(Bytecode::Executable const& executable) const
 {
-    return String::formatted("NewString \"{}\"", m_string);
+    return String::formatted("NewString {} (\"{}\")", m_string, executable.string_table->get(m_string));
 }
 
-String NewObject::to_string() const
+String NewObject::to_string(Bytecode::Executable const&) const
 {
     return "NewObject";
 }
 
-String ConcatString::to_string() const
+String ConcatString::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("ConcatString {}", m_lhs);
 }
 
-String GetVariable::to_string() const
+String GetVariable::to_string(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetVariable {}", m_identifier);
+    return String::formatted("GetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
 }
 
-String SetVariable::to_string() const
+String SetVariable::to_string(Bytecode::Executable const& executable) const
 {
-    return String::formatted("SetVariable {}", m_identifier);
+    return String::formatted("SetVariable {} ({})", m_identifier, executable.string_table->get(m_identifier));
 }
 
-String PutById::to_string() const
+String PutById::to_string(Bytecode::Executable const& executable) const
 {
-    return String::formatted("PutById base:{}, property:{}", m_base, m_property);
+    return String::formatted("PutById base:{}, property:{} ({})", m_base, m_property, executable.string_table->get(m_property));
 }
 
-String GetById::to_string() const
+String GetById::to_string(Bytecode::Executable const& executable) const
 {
-    return String::formatted("GetById {}", m_property);
+    return String::formatted("GetById {} ({})", m_property, executable.string_table->get(m_property));
 }
 
-String Jump::to_string() const
+String Jump::to_string(Bytecode::Executable const&) const
 {
     if (m_true_target.has_value())
         return String::formatted("Jump {}", *m_true_target);
     return String::formatted("Jump <empty>");
 }
 
-String JumpConditional::to_string() const
+String JumpConditional::to_string(Bytecode::Executable const&) const
 {
     auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
     return String::formatted("JumpConditional true:{} false:{}", true_string, false_string);
 }
 
-String JumpNullish::to_string() const
+String JumpNullish::to_string(Bytecode::Executable const&) const
 {
     auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
     return String::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
 }
 
-String Call::to_string() const
+String Call::to_string(Bytecode::Executable const&) const
 {
     StringBuilder builder;
     builder.appendff("Call callee:{}, this:{}", m_callee, m_this_value);
@@ -363,22 +363,22 @@ String Call::to_string() const
     return builder.to_string();
 }
 
-String EnterScope::to_string() const
+String EnterScope::to_string(Bytecode::Executable const&) const
 {
     return "EnterScope";
 }
 
-String Return::to_string() const
+String Return::to_string(Bytecode::Executable const&) const
 {
     return "Return";
 }
 
-String Increment::to_string() const
+String Increment::to_string(Bytecode::Executable const&) const
 {
     return "Increment";
 }
 
-String Decrement::to_string() const
+String Decrement::to_string(Bytecode::Executable const&) const
 {
     return "Decrement";
 }
