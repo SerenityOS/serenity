@@ -10,7 +10,7 @@ namespace Kernel {
 
 unsigned VirtIOConsole::next_device_id = 0;
 
-VirtIOConsole::VirtIOConsole(PCI::Address address)
+UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
     : CharacterDevice(229, next_device_id++)
     , VirtIODevice(address, "VirtIOConsole")
 {
