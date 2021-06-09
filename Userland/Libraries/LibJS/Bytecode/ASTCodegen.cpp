@@ -22,7 +22,11 @@ void ASTNode::generate_bytecode(Bytecode::Generator&) const
 
 void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::EnterScope>(*this);
+    for (auto& function : functions()) {
+        generator.emit<Bytecode::Op::NewFunction>(function);
+        generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(function.name()));
+    }
+
     for (auto& child : children()) {
         child.generate_bytecode(generator);
         if (generator.is_current_block_terminated())

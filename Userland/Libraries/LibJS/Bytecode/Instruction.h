@@ -39,7 +39,7 @@
     O(JumpConditional)            \
     O(JumpNullish)                \
     O(Call)                       \
-    O(EnterScope)                 \
+    O(NewFunction)                \
     O(Return)                     \
     O(BitwiseAnd)                 \
     O(BitwiseOr)                  \

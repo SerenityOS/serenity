@@ -210,21 +210,11 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
     interpreter.accumulator() = return_value;
 }
 
-void EnterScope::execute(Bytecode::Interpreter& interpreter) const
+void NewFunction::execute(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
     auto& global_object = interpreter.global_object();
-
-    for (auto& declaration : m_scope_node.functions())
-        vm.current_scope()->put_to_scope(declaration.name(), { js_undefined(), DeclarationKind::Var });
-
-    for (auto& declaration : m_scope_node.functions()) {
-        auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), vm.current_scope(), declaration.is_strict_mode());
-        vm.set_variable(declaration.name(), function, global_object);
-    }
-
-    // FIXME: Process variable declarations.
-    // FIXME: Whatever else JS::Interpreter::enter_scope() does.
+    interpreter.accumulator() = ScriptFunction::create(global_object, m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_scope(), m_function_node.is_strict_mode());
 }
 
 void Return::execute(Bytecode::Interpreter& interpreter) const
@@ -384,9 +374,9 @@ String Call::to_string(Bytecode::Executable const&) const
     return builder.to_string();
 }
 
-String EnterScope::to_string(Bytecode::Executable const&) const
+String NewFunction::to_string(Bytecode::Executable const&) const
 {
-    return "EnterScope";
+    return "NewFunction";
 }
 
 String Return::to_string(Bytecode::Executable const&) const
