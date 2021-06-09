@@ -35,7 +35,7 @@ u8 MMIOAccess::segment_end_bus(u32 seg) const
     return segment.value().get_end_bus();
 }
 
-PhysicalAddress MMIOAccess::determine_memory_mapped_bus_region(u32 segment, u8 bus) const
+UNMAP_AFTER_INIT PhysicalAddress MMIOAccess::determine_memory_mapped_bus_region(u32 segment, u8 bus) const
 {
     VERIFY(bus >= segment_start_bus(segment) && bus <= segment_end_bus(segment));
     auto seg = m_segments.get(segment);
