@@ -151,15 +151,15 @@ Value ScriptFunction::execute_function_body()
 
     if (bytecode_interpreter) {
         prepare_arguments();
-        if (!m_bytecode_execution_unit.has_value()) {
-            m_bytecode_execution_unit = Bytecode::Generator::generate(m_body);
+        if (!m_bytecode_executable.has_value()) {
+            m_bytecode_executable = Bytecode::Generator::generate(m_body);
             if constexpr (JS_BYTECODE_DEBUG) {
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-                for (auto& block : m_bytecode_execution_unit->basic_blocks)
+                for (auto& block : m_bytecode_executable->basic_blocks)
                     block.dump();
             }
         }
-        return bytecode_interpreter->run(*m_bytecode_execution_unit);
+        return bytecode_interpreter->run(*m_bytecode_executable);
     } else {
         OwnPtr<Interpreter> local_interpreter;
         ast_interpreter = vm.interpreter_if_exists();

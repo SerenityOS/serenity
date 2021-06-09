@@ -28,7 +28,7 @@ public:
     GlobalObject& global_object() { return m_global_object; }
     VM& vm() { return m_vm; }
 
-    Value run(Bytecode::ExecutionUnit const&);
+    Value run(Bytecode::Executable const&);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }

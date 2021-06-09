@@ -16,14 +16,14 @@
 
 namespace JS::Bytecode {
 
-struct ExecutionUnit {
+struct Executable {
     NonnullOwnPtrVector<BasicBlock> basic_blocks;
     size_t number_of_registers { 0 };
 };
 
 class Generator {
 public:
-    static ExecutionUnit generate(ASTNode const&);
+    static Executable generate(ASTNode const&);
 
     Register allocate_register();
 
