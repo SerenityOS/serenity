@@ -34,4 +34,11 @@ Set* Set::typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<Set*>(this_object);
 }
 
+void Set::visit_edges(Cell::Visitor& visitor)
+{
+    Object::visit_edges(visitor);
+    for (auto& value : m_values)
+        visitor.visit(value);
+}
+
 }
