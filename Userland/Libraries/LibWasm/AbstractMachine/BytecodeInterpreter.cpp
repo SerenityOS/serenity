@@ -403,6 +403,32 @@ ALWAYS_INLINE static OutputT extend_signed(InputT value)
     return value;
 }
 
+template<typename TruncT, typename T>
+ALWAYS_INLINE static TruncT saturating_truncate(T value)
+{
+    if (isnan(value))
+        return 0;
+
+    if (isinf(value)) {
+        if (value < 0)
+            return NumericLimits<TruncT>::min();
+        return NumericLimits<TruncT>::max();
+    }
+
+    constexpr auto convert = [](auto truncated_value) {
+        if (truncated_value < NumericLimits<TruncT>::min())
+            return NumericLimits<TruncT>::min();
+        if (static_cast<double>(truncated_value) > static_cast<double>(NumericLimits<TruncT>::max()))
+            return NumericLimits<TruncT>::max();
+        return static_cast<TruncT>(truncated_value);
+    };
+
+    if constexpr (IsSame<T, float>)
+        return convert(truncf(value));
+    else
+        return convert(trunc(value));
+}
+
 template<typename T>
 ALWAYS_INLINE static T float_max(T lhs, T rhs)
 {
@@ -988,13 +1014,21 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_extend32_s.value():
         UNARY_MAP(i64, (extend_signed<i32, i64>), i64);
     case Instructions::i32_trunc_sat_f32_s.value():
+        UNARY_MAP(float, saturating_truncate<i32>, i32);
     case Instructions::i32_trunc_sat_f32_u.value():
+        UNARY_MAP(float, saturating_truncate<u32>, i32);
     case Instructions::i32_trunc_sat_f64_s.value():
+        UNARY_MAP(double, saturating_truncate<i32>, i32);
     case Instructions::i32_trunc_sat_f64_u.value():
+        UNARY_MAP(double, saturating_truncate<u32>, i32);
     case Instructions::i64_trunc_sat_f32_s.value():
+        UNARY_MAP(float, saturating_truncate<i64>, i64);
     case Instructions::i64_trunc_sat_f32_u.value():
+        UNARY_MAP(float, saturating_truncate<u64>, i64);
     case Instructions::i64_trunc_sat_f64_s.value():
+        UNARY_MAP(double, saturating_truncate<i64>, i64);
     case Instructions::i64_trunc_sat_f64_u.value():
+        UNARY_MAP(double, saturating_truncate<u64>, i64);
     case Instructions::memory_init.value():
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
