@@ -421,7 +421,7 @@ public:
         }
     }
 
-    T take_last()
+    ALWAYS_INLINE T take_last()
     {
         VERIFY(!is_empty());
         auto value = move(raw_last());
