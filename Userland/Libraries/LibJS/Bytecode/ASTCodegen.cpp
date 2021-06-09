@@ -653,6 +653,62 @@ void TemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::Load>(string_reg);
 }
 
+void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    Vector<Bytecode::Register> string_regs;
+    auto& expressions = m_template_literal->expressions();
+    for (size_t i = 0; i < expressions.size(); ++i) {
+        if (i % 2 != 0)
+            continue;
+
+        expressions[i].generate_bytecode(generator);
+        auto string_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(string_reg);
+        string_regs.append(string_reg);
+    }
+
+    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(string_regs.size(), string_regs);
+    auto strings_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(strings_reg);
+
+    Vector<Bytecode::Register> argument_regs;
+    argument_regs.append(strings_reg);
+    for (size_t i = 0; i < expressions.size(); ++i) {
+        if (i % 2 == 0)
+            continue;
+
+        expressions[i].generate_bytecode(generator);
+        auto string_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(string_reg);
+        argument_regs.append(string_reg);
+    }
+
+    Vector<Bytecode::Register> raw_string_regs;
+    for (auto& raw_string : m_template_literal->raw_strings()) {
+        raw_string.generate_bytecode(generator);
+        auto raw_string_reg = generator.allocate_register();
+        generator.emit<Bytecode::Op::Store>(raw_string_reg);
+        raw_string_regs.append(raw_string_reg);
+    }
+
+    generator.emit_with_extra_register_slots<Bytecode::Op::NewArray>(raw_string_regs.size(), raw_string_regs);
+    auto raw_strings_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(raw_strings_reg);
+
+    generator.emit<Bytecode::Op::Load>(strings_reg);
+    generator.emit<Bytecode::Op::PutById>(raw_strings_reg, generator.intern_string("raw"));
+
+    m_tag->generate_bytecode(generator);
+    auto tag_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(tag_reg);
+
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    auto this_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(this_reg);
+
+    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_regs.size(), tag_reg, this_reg, move(argument_regs));
+}
+
 void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (is<Identifier>(*m_argument)) {
