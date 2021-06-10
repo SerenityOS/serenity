@@ -57,7 +57,10 @@
     O(ConcatString)               \
     O(Increment)                  \
     O(Decrement)                  \
-    O(Throw)
+    O(Throw)                      \
+    O(EnterUnwindContext)         \
+    O(LeaveUnwindContext)         \
+    O(ContinuePendingUnwind)
 
 namespace JS::Bytecode {
 
