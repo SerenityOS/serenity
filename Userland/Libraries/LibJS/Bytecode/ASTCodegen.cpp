@@ -2,10 +2,12 @@
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2021, Gunnar Beutner <gbeutner@serenityos.org>
+ * Copyright (c) 2021, Marcin Gasperowicz <xnooga@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Format.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Instruction.h>
@@ -966,6 +968,62 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
         generator.emit<Bytecode::Op::Jump>(finalizer_target);
 
     generator.switch_to_basic_block(next_block ? *next_block : saved_block);
+}
+
+void SwitchStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto discriminant_reg = generator.allocate_register();
+    m_discriminant->generate_bytecode(generator);
+    generator.emit<Bytecode::Op::Store>(discriminant_reg);
+    Vector<Bytecode::BasicBlock&> case_blocks;
+    Bytecode::BasicBlock* default_block { nullptr };
+    Bytecode::BasicBlock* next_test_block = &generator.make_block();
+    generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *next_test_block }, {});
+    for (auto& switch_case : m_cases) {
+        auto& case_block = generator.make_block();
+        if (switch_case.test()) {
+            generator.switch_to_basic_block(*next_test_block);
+            switch_case.test()->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::TypedEquals>(discriminant_reg);
+            next_test_block = &generator.make_block();
+            generator.emit<Bytecode::Op::JumpConditional>().set_targets(Bytecode::Label { case_block }, Bytecode::Label { *next_test_block });
+        } else {
+            default_block = &case_block;
+        }
+        case_blocks.append(case_block);
+    }
+    generator.switch_to_basic_block(*next_test_block);
+    auto& end_block = generator.make_block();
+
+    if (default_block != nullptr) {
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *default_block }, {});
+    } else {
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { end_block }, {});
+    }
+    auto current_block = case_blocks.begin();
+    generator.begin_breakable_scope(Bytecode::Label { end_block });
+    for (auto& switch_case : m_cases) {
+        generator.switch_to_basic_block(*current_block);
+
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        for (auto& statement : switch_case.consequent()) {
+            statement.generate_bytecode(generator);
+        }
+        if (!generator.is_current_block_terminated()) {
+            auto next_block = current_block;
+            next_block++;
+            if (next_block.is_end()) {
+                generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { end_block }, {});
+            } else {
+                generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { *next_block }, {});
+            }
+        }
+        current_block++;
+    }
+    generator.end_breakable_scope();
+
+    generator.switch_to_basic_block(end_block);
 }
 
 }
