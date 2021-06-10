@@ -259,6 +259,12 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     return result;
 }
 
+Value YieldExpression::execute(Interpreter&, GlobalObject&) const
+{
+    // This should be transformed to a return.
+    VERIFY_NOT_REACHED();
+}
+
 Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
@@ -1151,7 +1157,7 @@ void BindingPattern::dump(int indent) const
 void FunctionNode::dump(int indent, const String& class_name) const
 {
     print_indent(indent);
-    outln("{} '{}'", class_name, name());
+    outln("{}{} '{}'", class_name, m_is_generator ? "*" : "", name());
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
         outln("(Parameters)");
@@ -1191,6 +1197,13 @@ void FunctionDeclaration::dump(int indent) const
 void FunctionExpression::dump(int indent) const
 {
     FunctionNode::dump(indent, class_name());
+}
+
+void YieldExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    if (argument())
+        argument()->dump(indent + 1);
 }
 
 void ReturnStatement::dump(int indent) const

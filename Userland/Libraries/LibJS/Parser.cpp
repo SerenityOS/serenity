@@ -590,9 +590,9 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
             constructor_body->append(create_ast_node<ExpressionStatement>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(super_call)));
             constructor_body->add_variables(m_parser_state.m_var_scopes.last());
 
-            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), true);
+            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), false, true);
         } else {
-            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), true);
+            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), false, true);
         }
     }
 
@@ -634,6 +634,7 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
             syntax_error("'super' keyword unexpected here");
         return create_ast_node<SuperExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() });
     case TokenType::Identifier: {
+    read_as_identifier:;
         if (!try_parse_arrow_function_expression_failed_at_position(position())) {
             auto arrow_function_result = try_parse_arrow_function_expression(false);
             if (!arrow_function_result.is_null())
@@ -674,6 +675,10 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
         }
         return parse_new_expression();
     }
+    case TokenType::Yield:
+        if (!m_parser_state.m_in_generator_function_context)
+            goto read_as_identifier;
+        return parse_yield_expression();
     default:
         expected("primary expression");
         consume();
@@ -1256,6 +1261,16 @@ NonnullRefPtr<NewExpression> Parser::parse_new_expression()
     return create_ast_node<NewExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(callee), move(arguments));
 }
 
+NonnullRefPtr<YieldExpression> Parser::parse_yield_expression()
+{
+    auto rule_start = push_start();
+    consume(TokenType::Yield);
+    RefPtr<Expression> argument;
+    if (match_expression())
+        argument = parse_expression(0);
+    return create_ast_node<YieldExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(argument));
+}
+
 NonnullRefPtr<ReturnStatement> Parser::parse_return_statement()
 {
     auto rule_start = push_start();
@@ -1336,9 +1351,14 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
+    auto is_generator = false;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
         consume(TokenType::Function);
+        is_generator = match(TokenType::Asterisk);
+        if (is_generator)
+            consume(TokenType::Asterisk);
+
         if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
             name = consume(TokenType::Identifier).value();
     }
@@ -1351,6 +1371,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         function_length = parameters.size();
 
     TemporaryChange change(m_parser_state.m_in_function_context, true);
+    TemporaryChange generator_change(m_parser_state.m_in_generator_function_context, m_parser_state.m_in_generator_function_context || is_generator);
     auto old_labels_in_scope = move(m_parser_state.m_labels_in_scope);
     ScopeGuard guard([&]() {
         m_parser_state.m_labels_in_scope = move(old_labels_in_scope);
@@ -1360,7 +1381,7 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     auto body = parse_block_statement(is_strict);
     body->add_variables(m_parser_state.m_var_scopes.last());
     body->add_functions(m_parser_state.m_function_scopes.last());
-    return create_ast_node<FunctionNodeType>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_strict);
+    return create_ast_node<FunctionNodeType>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_generator, is_strict);
 }
 
 Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u8 parse_options)
@@ -2009,6 +2030,7 @@ bool Parser::match_expression() const
         || type == TokenType::This
         || type == TokenType::Super
         || type == TokenType::RegexLiteral
+        || type == TokenType::Yield
         || match_unary_prefixed_expression();
 }
 
@@ -2085,6 +2107,7 @@ bool Parser::match_statement() const
     auto type = m_parser_state.m_current_token.type();
     return match_expression()
         || type == TokenType::Return
+        || type == TokenType::Yield
         || type == TokenType::Do
         || type == TokenType::If
         || type == TokenType::Throw

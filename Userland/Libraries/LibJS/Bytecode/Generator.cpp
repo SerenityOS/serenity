@@ -23,11 +23,28 @@ Generator::~Generator()
 {
 }
 
-Executable Generator::generate(ASTNode const& node)
+Executable Generator::generate(ASTNode const& node, bool is_in_generator_function)
 {
     Generator generator;
     generator.switch_to_basic_block(generator.make_block());
+    if (is_in_generator_function) {
+        generator.enter_generator_context();
+        // Immediately yield with no value.
+        auto& start_block = generator.make_block();
+        generator.emit<Bytecode::Op::Yield>(Label { start_block });
+        generator.switch_to_basic_block(start_block);
+    }
     node.generate_bytecode(generator);
+    if (is_in_generator_function) {
+        // Terminate all unterminated blocks with yield return
+        for (auto& block : generator.m_root_basic_blocks) {
+            if (block.is_terminated())
+                continue;
+            generator.switch_to_basic_block(block);
+            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+            generator.emit<Bytecode::Op::Yield>(nullptr);
+        }
+    }
     return { move(generator.m_root_basic_blocks), move(generator.m_string_table), generator.m_next_register };
 }
 

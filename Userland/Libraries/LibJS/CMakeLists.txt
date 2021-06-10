@@ -45,6 +45,7 @@ set(SOURCES
     Runtime/FunctionConstructor.cpp
     Runtime/Function.cpp
     Runtime/FunctionPrototype.cpp
+    Runtime/GeneratorObject.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
     Runtime/IteratorOperations.cpp
