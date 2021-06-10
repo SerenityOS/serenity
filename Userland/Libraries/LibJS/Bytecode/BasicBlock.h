@@ -44,6 +44,8 @@ struct UnwindInfo {
 };
 
 class BasicBlock {
+    AK_MAKE_NONCOPYABLE(BasicBlock);
+
 public:
     static NonnullOwnPtr<BasicBlock> create(String name);
     ~BasicBlock();
@@ -54,6 +56,7 @@ public:
     ReadonlyBytes instruction_stream() const { return ReadonlyBytes { m_buffer, m_buffer_size }; }
 
     void* next_slot() { return m_buffer + m_buffer_size; }
+    bool can_grow(size_t additional_size) const { return m_buffer_size + additional_size <= m_buffer_capacity; }
     void grow(size_t additional_size);
 
     void terminate(Badge<Generator>) { m_is_terminated = true; }
