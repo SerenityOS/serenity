@@ -158,6 +158,7 @@ public:
     }
 
     Value last_value() const { return m_last_value; }
+    void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
     void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
 
     const StackInfo& stack_info() const { return m_stack_info; };
