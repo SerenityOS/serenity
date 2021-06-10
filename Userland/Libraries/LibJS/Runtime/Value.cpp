@@ -1387,7 +1387,7 @@ size_t length_of_array_like(GlobalObject& global_object, const Object& object)
 }
 
 // 7.3.22 SpeciesConstructor, https://tc39.es/ecma262/#sec-speciesconstructor
-Object* species_constructor(GlobalObject& global_object, const Object& object, Object& default_constructor)
+Function* species_constructor(GlobalObject& global_object, const Object& object, Function& default_constructor)
 {
     auto& vm = global_object.vm();
     auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
@@ -1403,7 +1403,7 @@ Object* species_constructor(GlobalObject& global_object, const Object& object, O
     if (species.is_nullish())
         return &default_constructor;
     if (species.is_constructor())
-        return &species.as_object();
+        return &species.as_function();
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
     return nullptr;
 }
