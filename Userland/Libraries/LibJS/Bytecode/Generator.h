@@ -68,6 +68,8 @@ public:
         m_current_basic_block = &block;
     }
 
+    [[nodiscard]] BasicBlock& current_block() { return *m_current_basic_block; }
+
     BasicBlock& make_block(String name = {})
     {
         if (name.is_empty())

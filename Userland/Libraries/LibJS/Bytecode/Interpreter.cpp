@@ -67,8 +67,25 @@ Value Interpreter::run(Executable const& executable)
         while (!pc.at_end()) {
             auto& instruction = *pc;
             instruction.execute(*this);
-            if (vm().exception())
-                break;
+            if (vm().exception()) {
+                m_saved_exception = {};
+                if (m_unwind_contexts.is_empty())
+                    break;
+                auto& unwind_context = m_unwind_contexts.last();
+                if (unwind_context.handler) {
+                    block = unwind_context.handler;
+                    unwind_context.handler = nullptr;
+                    accumulator() = vm().exception()->value();
+                    vm().clear_exception();
+                    will_jump = true;
+                } else if (unwind_context.finalizer) {
+                    block = unwind_context.finalizer;
+                    m_unwind_contexts.take_last();
+                    will_jump = true;
+                    m_saved_exception = Handle<Exception>::create(vm().exception());
+                    vm().clear_exception();
+                }
+            }
             if (m_pending_jump.has_value()) {
                 block = m_pending_jump.release_value();
                 will_jump = true;
@@ -121,4 +138,23 @@ Value Interpreter::run(Executable const& executable)
     return return_value;
 }
 
+void Interpreter::enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target)
+{
+    m_unwind_contexts.empend(handler_target.has_value() ? &handler_target->block() : nullptr, finalizer_target.has_value() ? &finalizer_target->block() : nullptr);
+}
+
+void Interpreter::leave_unwind_context()
+{
+    m_unwind_contexts.take_last();
+}
+
+void Interpreter::continue_pending_unwind(Label const& resume_label)
+{
+    if (!m_saved_exception.is_null()) {
+        vm().set_exception(*m_saved_exception.cell());
+        m_saved_exception = {};
+    } else {
+        jump(resume_label);
+    }
+}
 }
