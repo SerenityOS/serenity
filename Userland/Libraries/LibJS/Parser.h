@@ -77,6 +77,7 @@ public:
     NonnullRefPtr<NewExpression> parse_new_expression();
     NonnullRefPtr<ClassDeclaration> parse_class_declaration();
     NonnullRefPtr<ClassExpression> parse_class_expression(bool expect_class_name);
+    NonnullRefPtr<YieldExpression> parse_yield_expression();
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
 
@@ -200,6 +201,7 @@ private:
         bool m_allow_super_property_lookup { false };
         bool m_allow_super_constructor_call { false };
         bool m_in_function_context { false };
+        bool m_in_generator_function_context { false };
         bool m_in_arrow_function_context { false };
         bool m_in_break_context { false };
         bool m_in_continue_context { false };

@@ -293,6 +293,8 @@ struct CommonPropertyNames {
     FlyString catch_ { "catch" };
     FlyString delete_ { "delete" };
     FlyString for_ { "for" };
+    FlyString return_ { "return" };
+    FlyString throw_ { "throw" };
 #define __ENUMERATE(x) FlyString x { #x };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE

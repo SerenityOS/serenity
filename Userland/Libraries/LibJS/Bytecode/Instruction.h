@@ -61,7 +61,8 @@
     O(PushLexicalEnvironment)     \
     O(EnterUnwindContext)         \
     O(LeaveUnwindContext)         \
-    O(ContinuePendingUnwind)
+    O(ContinuePendingUnwind)      \
+    O(Yield)
 
 namespace JS::Bytecode {
 
