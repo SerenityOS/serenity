@@ -81,9 +81,9 @@ public:
 
         FileSystemModel& m_model;
 
-        Node* parent { nullptr };
-        NonnullOwnPtrVector<Node> children;
-        bool has_traversed { false };
+        Node* m_parent { nullptr };
+        NonnullOwnPtrVector<Node> m_children;
+        bool m_has_traversed { false };
 
         bool m_selected { false };
 
@@ -93,7 +93,9 @@ public:
         ModelIndex index(int column) const;
         void traverse_if_needed();
         void reify_if_needed();
-        bool fetch_data(const String& full_path, bool is_root);
+        bool fetch_data(String const& full_path, bool is_root);
+
+        OwnPtr<Node> create_child(String const& child_name);
     };
 
     static NonnullRefPtr<FileSystemModel> create(String root_path = "/", Mode mode = Mode::FilesAndDirectories)
@@ -154,6 +156,8 @@ private:
 
     bool fetch_thumbnail_for(const Node& node);
     GUI::Icon icon_for(const Node& node) const;
+
+    void handle_file_event(Core::FileWatcherEvent const& event);
 
     String m_root_path;
     Mode m_mode { Invalid };

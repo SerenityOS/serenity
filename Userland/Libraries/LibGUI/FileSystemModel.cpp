@@ -28,10 +28,10 @@ namespace GUI {
 
 ModelIndex FileSystemModel::Node::index(int column) const
 {
-    if (!parent)
+    if (!m_parent)
         return {};
-    for (size_t row = 0; row < parent->children.size(); ++row) {
-        if (&parent->children[row] == this)
+    for (size_t row = 0; row < m_parent->m_children.size(); ++row) {
+        if (&m_parent->m_children[row] == this)
             return m_model.create_index(row, column, const_cast<Node*>(this));
     }
     VERIFY_NOT_REACHED();
@@ -73,17 +73,17 @@ bool FileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
 
 void FileSystemModel::Node::traverse_if_needed()
 {
-    if (!is_directory() || has_traversed)
+    if (!is_directory() || m_has_traversed)
         return;
 
-    has_traversed = true;
+    m_has_traversed = true;
 
     if (m_parent_of_root) {
         auto root = adopt_own(*new Node(m_model));
         root->fetch_data("/", true);
         root->name = "/";
-        root->parent = this;
-        children.append(move(root));
+        root->m_parent = this;
+        m_children.append(move(root));
         return;
     }
 
@@ -107,15 +107,11 @@ void FileSystemModel::Node::traverse_if_needed()
     NonnullOwnPtrVector<Node> file_children;
 
     for (auto& child_name : child_names) {
-        String child_path = String::formatted("{}/{}", full_path, child_name);
-        auto child = adopt_own(*new Node(m_model));
-        bool ok = child->fetch_data(child_path, false);
-        if (!ok)
+        auto maybe_child = create_child(child_name);
+        if (!maybe_child)
             continue;
-        if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
-            continue;
-        child->name = child_name;
-        child->parent = this;
+
+        auto child = maybe_child.release_nonnull();
         total_size += child->size;
         if (S_ISDIR(child->mode))
             directory_children.append(move(child));
@@ -123,8 +119,8 @@ void FileSystemModel::Node::traverse_if_needed()
             file_children.append(move(child));
     }
 
-    children.extend(move(directory_children));
-    children.extend(move(file_children));
+    m_children.extend(move(directory_children));
+    m_children.extend(move(file_children));
 
     if (!m_model.m_file_watcher->is_watching(full_path)) {
         // We are not already watching this file, watch it
@@ -142,12 +138,29 @@ void FileSystemModel::Node::traverse_if_needed()
     }
 }
 
+OwnPtr<FileSystemModel::Node> FileSystemModel::Node::create_child(String const& child_name)
+{
+    String child_path = String::formatted("{}/{}", full_path(), child_name);
+    auto child = adopt_own(*new Node(m_model));
+
+    bool ok = child->fetch_data(child_path, false);
+    if (!ok)
+        return {};
+
+    if (m_model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
+        return {};
+
+    child->name = child_name;
+    child->m_parent = this;
+    return child;
+}
+
 void FileSystemModel::Node::reify_if_needed()
 {
     traverse_if_needed();
     if (mode != 0)
         return;
-    fetch_data(full_path(), parent == nullptr || parent->m_parent_of_root);
+    fetch_data(full_path(), m_parent == nullptr || m_parent->m_parent_of_root);
 }
 
 bool FileSystemModel::Node::is_symlink_to_directory() const
@@ -163,7 +176,7 @@ bool FileSystemModel::Node::is_symlink_to_directory() const
 String FileSystemModel::Node::full_path() const
 {
     Vector<String, 32> lineage;
-    for (auto* ancestor = parent; ancestor; ancestor = ancestor->parent) {
+    for (auto* ancestor = m_parent; ancestor; ancestor = ancestor->m_parent) {
         lineage.append(ancestor->name);
     }
     StringBuilder builder;
@@ -198,7 +211,7 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
         resolved_path = path;
     LexicalPath lexical_path(resolved_path);
 
-    const Node* node = m_root->m_parent_of_root ? &m_root->children.first() : m_root;
+    const Node* node = m_root->m_parent_of_root ? &m_root->m_children.first() : m_root;
     if (lexical_path.string() == "/")
         return node;
 
@@ -206,7 +219,7 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
     for (size_t i = 0; i < parts.size(); ++i) {
         auto& part = parts[i];
         bool found = false;
-        for (auto& child : node->children) {
+        for (auto& child : node->m_children) {
             if (child.name == part) {
                 const_cast<Node&>(child).reify_if_needed();
                 node = &child;
@@ -251,39 +264,7 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
 
     m_file_watcher = result.release_value();
     m_file_watcher->on_change = [this](Core::FileWatcherEvent const& event) {
-        Node const* maybe_node = node_for_path(event.event_path);
-        if (maybe_node == nullptr) {
-            dbgln("Received event at \"{}\" but we don't have that node", event.event_path);
-            return;
-        }
-        auto& node = *const_cast<Node*>(maybe_node);
-
-        dbgln("Event at \"{}\" on Node {}: {}", node.full_path(), &node, event);
-
-        // FIXME: Your time is coming, un-granular updates.
-        auto refresh_node = [](Node& node) {
-            node.has_traversed = false;
-            node.mode = 0;
-            node.children.clear();
-            node.reify_if_needed();
-        };
-
-        if (event.type == Core::FileWatcherEvent::Type::Deleted) {
-            auto canonical_event_path = LexicalPath::canonicalized_path(event.event_path);
-            if (m_root_path.starts_with(canonical_event_path)) {
-                // Deleted directory contains our root, so navigate to our nearest parent.
-                auto new_path = LexicalPath(m_root_path).parent();
-                while (!Core::File::is_directory(new_path.string()))
-                    new_path = new_path.parent();
-
-                set_root_path(new_path.string());
-            } else if (node.parent) {
-                refresh_node(*node.parent);
-            }
-        } else {
-            refresh_node(node);
-        }
-        did_update();
+        handle_file_event(event);
     };
 
     invalidate();
@@ -386,12 +367,78 @@ void FileSystemModel::invalidate()
     Model::invalidate();
 }
 
+void FileSystemModel::handle_file_event(Core::FileWatcherEvent const& event)
+{
+    if (event.type == Core::FileWatcherEvent::Type::ChildCreated) {
+        if (node_for_path(event.event_path) != nullptr)
+            return;
+    } else {
+        if (node_for_path(event.event_path) == nullptr)
+            return;
+    }
+
+    switch (event.type) {
+    case Core::FileWatcherEvent::Type::ChildCreated: {
+        LexicalPath path { event.event_path };
+        auto& parts = path.parts_view();
+        StringView child_name = parts.last();
+
+        auto parent_name = path.parent().string();
+        Node* parent = const_cast<Node*>(node_for_path(parent_name));
+        if (parent == nullptr) {
+            dbgln("Got a ChildCreated on '{}' but that path does not exist?!", parent_name);
+            break;
+        }
+
+        int child_count = parent->m_children.size();
+
+        auto maybe_child = parent->create_child(child_name);
+        if (!maybe_child)
+            break;
+
+        begin_insert_rows(parent->index(0), child_count, child_count);
+
+        auto child = maybe_child.release_nonnull();
+        parent->total_size += child->size;
+        parent->m_children.append(move(child));
+
+        end_insert_rows();
+        break;
+    }
+    case Core::FileWatcherEvent::Type::Deleted:
+    case Core::FileWatcherEvent::Type::ChildDeleted: {
+        Node* child = const_cast<Node*>(node_for_path(event.event_path));
+        if (child == nullptr) {
+            dbgln("Got a ChildDeleted/Deleted on '{}' but the child does not exist?! (already gone?)", event.event_path);
+            break;
+        }
+
+        auto index = child->index(0);
+        begin_delete_rows(index.parent(), index.row(), index.row());
+
+        Node* parent = child->m_parent;
+        parent->m_children.remove(index.row());
+
+        end_delete_rows();
+        break;
+    }
+    case Core::FileWatcherEvent::Type::MetadataModified: {
+        // FIXME: Do we do anything in case the metadata is modified?
+        break;
+    }
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    did_update(UpdateFlag::DontInvalidateIndices);
+}
+
 int FileSystemModel::row_count(const ModelIndex& index) const
 {
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
     if (node.is_directory())
-        return node.children.size();
+        return node.m_children.size();
     return 0;
 }
 
@@ -409,9 +456,9 @@ ModelIndex FileSystemModel::index(int row, int column, const ModelIndex& parent)
         return {};
     auto& node = this->node(parent);
     const_cast<Node&>(node).reify_if_needed();
-    if (static_cast<size_t>(row) >= node.children.size())
+    if (static_cast<size_t>(row) >= node.m_children.size())
         return {};
-    return create_index(row, column, &node.children[row]);
+    return create_index(row, column, &node.m_children[row]);
 }
 
 ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
@@ -419,11 +466,11 @@ ModelIndex FileSystemModel::parent_index(const ModelIndex& index) const
     if (!index.is_valid())
         return {};
     auto& node = this->node(index);
-    if (!node.parent) {
+    if (!node.m_parent) {
         VERIFY(&node == m_root);
         return {};
     }
-    return node.parent->index(index.column());
+    return node.m_parent->index(index.column());
 }
 
 Variant FileSystemModel::data(const ModelIndex& index, ModelRole role) const
@@ -695,7 +742,7 @@ Vector<ModelIndex, 1> FileSystemModel::matches(const StringView& searching, unsi
     Node& node = const_cast<Node&>(this->node(index));
     node.reify_if_needed();
     Vector<ModelIndex, 1> found_indices;
-    for (auto& child : node.children) {
+    for (auto& child : node.m_children) {
         if (string_matches(child.name, searching, flags)) {
             const_cast<Node&>(child).reify_if_needed();
             found_indices.append(child.index(Column::Name));
