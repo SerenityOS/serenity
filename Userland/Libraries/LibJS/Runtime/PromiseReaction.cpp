@@ -45,7 +45,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
 
     MarkedValueList arguments(vm.heap());
     arguments.append(executor);
-    auto promise = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments), global_object);
+    auto promise = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
     if (vm.exception())
         return {};
 

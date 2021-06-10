@@ -213,7 +213,7 @@ public:
         return throw_exception(global_object, T::create(global_object, String::formatted(type.message(), forward<Args>(args)...)));
     }
 
-    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
+    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments);
 
     String join_arguments(size_t start_index = 0) const;
 
