@@ -1300,6 +1300,7 @@ public:
     virtual Value execute(Interpreter&, GlobalObject&) const override;
 
     const FlyString& target_label() const { return m_target_label; }
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     FlyString m_target_label;

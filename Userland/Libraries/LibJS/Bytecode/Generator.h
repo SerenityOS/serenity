@@ -57,8 +57,11 @@ public:
 
     void begin_continuable_scope(Label continue_target);
     void end_continuable_scope();
+    void begin_breakable_scope(Label breakable_target);
+    void end_breakable_scope();
 
     [[nodiscard]] Label nearest_continuable_scope() const;
+    [[nodiscard]] Label nearest_breakable_scope() const;
 
     void switch_to_basic_block(BasicBlock& block)
     {
@@ -97,6 +100,7 @@ private:
     u32 m_next_register { 1 };
     u32 m_next_block { 1 };
     Vector<Label> m_continuable_scopes;
+    Vector<Label> m_breakable_scopes;
 };
 
 }
