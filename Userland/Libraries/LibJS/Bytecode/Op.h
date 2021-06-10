@@ -14,6 +14,7 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode::Op {
@@ -452,6 +453,19 @@ public:
 
 private:
     Label m_resume_target;
+};
+
+class PushLexicalEnvironment final : public Instruction {
+public:
+    PushLexicalEnvironment(HashMap<u32, Variable> variables)
+        : Instruction(Type::PushLexicalEnvironment)
+        , m_variables(move(variables))
+    {
+    }
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+    HashMap<u32, Variable> m_variables;
 };
 }
 

@@ -12,6 +12,8 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/LexicalEnvironment.h>
+#include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -266,6 +268,15 @@ void ContinuePendingUnwind::execute(Bytecode::Interpreter& interpreter) const
     interpreter.continue_pending_unwind(m_resume_target);
 }
 
+void PushLexicalEnvironment::execute(Bytecode::Interpreter& interpreter) const
+{
+    HashMap<FlyString, Variable> resolved_variables;
+    for (auto& it : m_variables)
+        resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
+    auto* block_lexical_environment = interpreter.vm().heap().allocate<LexicalEnvironment>(interpreter.global_object(), move(resolved_variables), interpreter.vm().current_scope());
+    interpreter.vm().call_frame().scope = block_lexical_environment;
+}
+
 String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -414,6 +425,21 @@ String LeaveUnwindContext::to_string(Bytecode::Executable const&) const
 String ContinuePendingUnwind::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
+}
+
+String PushLexicalEnvironment::to_string(const Bytecode::Executable& executable) const
+{
+    StringBuilder builder;
+    builder.append("PushLexicalEnvironment");
+    if (!m_variables.is_empty()) {
+        builder.append(" {");
+        Vector<String> names;
+        for (auto& it : m_variables)
+            names.append(executable.get_string(it.key));
+        builder.join(", ", names);
+        builder.append("}");
+    }
+    return builder.to_string();
 }
 
 }
