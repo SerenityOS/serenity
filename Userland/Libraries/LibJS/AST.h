@@ -1309,6 +1309,7 @@ public:
 
     virtual void dump(int indent) const override;
     virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
 private:
     NonnullRefPtr<Expression> m_discriminant;
