@@ -28,10 +28,14 @@ public:
     const ByteBuffer& buffer() const { return buffer_impl(); }
 
     Value detach_key() const { return m_detach_key; }
+    void set_detach_key(Value detach_key) { m_detach_key = detach_key; }
+
     void detach_buffer() { m_buffer = Empty {}; }
     bool is_detached() const { return m_buffer.has<Empty>(); }
 
 private:
+    virtual void visit_edges(Visitor&) override;
+
     ByteBuffer& buffer_impl()
     {
         ByteBuffer* ptr { nullptr };

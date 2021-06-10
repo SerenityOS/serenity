@@ -441,7 +441,9 @@ JS_DEFINE_NATIVE_GETTER(WebAssemblyMemoryObject::buffer)
     if (!memory)
         return JS::js_undefined();
 
-    return JS::ArrayBuffer::create(global_object, &memory->data());
+    auto array_buffer = JS::ArrayBuffer::create(global_object, &memory->data());
+    array_buffer->set_detach_key(JS::js_string(vm, "WebAssembly.Memory"));
+    return array_buffer;
 }
 
 }
