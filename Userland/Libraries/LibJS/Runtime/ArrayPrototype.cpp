@@ -905,12 +905,25 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
         return {};
 
     for (size_t i = 0; i < actual_delete_count; ++i) {
-        auto value = this_object->get(actual_start + i);
+        auto from = actual_start + i;
+        bool from_present = this_object->has_property(from);
         if (vm.exception())
             return {};
 
-        removed_elements->indexed_properties().append(value);
+        if (from_present) {
+            auto from_value = this_object->get(actual_start + i);
+            if (vm.exception())
+                return {};
+
+            removed_elements->define_property(i, from_value);
+            if (vm.exception())
+                return {};
+        }
     }
+
+    removed_elements->put(vm.names.length, Value(actual_delete_count));
+    if (vm.exception())
+        return {};
 
     if (insert_count < actual_delete_count) {
         for (size_t i = actual_start; i < initial_length - actual_delete_count; ++i) {
