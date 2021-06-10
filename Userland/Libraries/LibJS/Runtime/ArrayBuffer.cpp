@@ -22,12 +22,14 @@ ArrayBuffer* ArrayBuffer::create(GlobalObject& global_object, ByteBuffer* buffer
 ArrayBuffer::ArrayBuffer(size_t byte_size, Object& prototype)
     : Object(prototype)
     , m_buffer(ByteBuffer::create_zeroed(byte_size))
+    , m_detach_key(js_undefined())
 {
 }
 
 ArrayBuffer::ArrayBuffer(ByteBuffer* buffer, Object& prototype)
     : Object(prototype)
     , m_buffer(buffer)
+    , m_detach_key(js_undefined())
 {
 }
 
