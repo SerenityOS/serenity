@@ -4,14 +4,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ProcessStateWidget.h"
 #include "ProcessModel.h"
+#include "ProcessStateWidget.h"
 #include <LibCore/Timer.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/HeaderView.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/PersistentModelIndex.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>

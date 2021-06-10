@@ -153,7 +153,7 @@ private:
     ViewMode m_view_mode { Invalid };
 
     NonnullRefPtr<GUI::FileSystemModel> m_model;
-    NonnullRefPtr<GUI::SortingProxyModel> m_sorting_model;
+    NonnullRefPtr<GUI::ViewModel> m_view_model;
     size_t m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(String);

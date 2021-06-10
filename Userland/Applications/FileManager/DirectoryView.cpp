@@ -18,7 +18,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ModelEditingDelegate.h>
-#include <LibGUI/SortingProxyModel.h>
+#include <LibGUI/ViewModel.h>
 #include <serenity.h>
 #include <spawn.h>
 #include <stdio.h>
@@ -186,7 +186,7 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
 DirectoryView::DirectoryView(Mode mode)
     : m_mode(mode)
     , m_model(GUI::FileSystemModel::create({}))
-    , m_sorting_model(GUI::SortingProxyModel::create(m_model))
+    , m_view_model(GUI::ViewModel::create(m_model))
 {
     set_active_widget(nullptr);
     set_content_margins({ 2, 2, 2, 2 });
@@ -209,7 +209,7 @@ DirectoryView::DirectoryView(Mode mode)
 
 const GUI::FileSystemModel::Node& DirectoryView::node(const GUI::ModelIndex& index) const
 {
-    return model().node(m_sorting_model->map_to_source(index));
+    return model().node(m_view_model->source_index_from_proxy(index));
 }
 
 void DirectoryView::setup_model()
@@ -277,7 +277,7 @@ void DirectoryView::setup_icon_view()
         m_icon_view->set_flow_direction(GUI::IconView::FlowDirection::TopToBottom);
     }
 
-    m_icon_view->set_model(m_sorting_model);
+    m_icon_view->set_model(m_view_model);
     m_icon_view->set_model_column(GUI::FileSystemModel::Column::Name);
     m_icon_view->on_activation = [&](auto& index) {
         handle_activation(index);
@@ -305,7 +305,7 @@ void DirectoryView::setup_columns_view()
         return make<GUI::StringModelEditingDelegate>();
     };
 
-    m_columns_view->set_model(m_sorting_model);
+    m_columns_view->set_model(m_view_model);
     m_columns_view->set_model_column(GUI::FileSystemModel::Column::Name);
 
     m_columns_view->on_activation = [&](auto& index) {
@@ -337,7 +337,7 @@ void DirectoryView::setup_table_view()
         return make<GUI::StringModelEditingDelegate>();
     };
 
-    m_table_view->set_model(m_sorting_model);
+    m_table_view->set_model(m_view_model);
     m_table_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
 
     m_table_view->on_activation = [&](auto& index) {
