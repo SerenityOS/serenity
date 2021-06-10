@@ -512,25 +512,6 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     if (s_dump_ast)
         program->dump(0);
 
-    if (s_dump_bytecode || s_run_bytecode) {
-        auto unit = JS::Bytecode::Generator::generate(*program);
-        if (s_dump_bytecode) {
-            for (auto& block : unit.basic_blocks)
-                block.dump(unit);
-            if (!unit.string_table->is_empty()) {
-                outln();
-                unit.string_table->dump();
-            }
-        }
-
-        if (s_run_bytecode) {
-            JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
-            bytecode_interpreter.run(unit);
-        }
-
-        return true;
-    }
-
     if (parser.has_errors()) {
         auto error = parser.errors()[0];
         auto hint = error.source_location_hint(source);
@@ -538,7 +519,26 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
             outln("{}", hint);
         vm->throw_exception<JS::SyntaxError>(interpreter.global_object(), error.to_string());
     } else {
-        interpreter.run(interpreter.global_object(), *program);
+        if (s_dump_bytecode || s_run_bytecode) {
+            auto unit = JS::Bytecode::Generator::generate(*program);
+            if (s_dump_bytecode) {
+                for (auto& block : unit.basic_blocks)
+                    block.dump(unit);
+                if (!unit.string_table->is_empty()) {
+                    outln();
+                    unit.string_table->dump();
+                }
+            }
+
+            if (s_run_bytecode) {
+                JS::Bytecode::Interpreter bytecode_interpreter(interpreter.global_object());
+                bytecode_interpreter.run(unit);
+            }
+
+            return true;
+        } else {
+            interpreter.run(interpreter.global_object(), *program);
+        }
     }
 
     auto handle_exception = [&] {
