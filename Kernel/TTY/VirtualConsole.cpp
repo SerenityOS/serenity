@@ -208,7 +208,7 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
     case VT::Color::ANSIColor::Red:
         return Graphics::Console::Color::Red;
     case VT::Color::ANSIColor::Green:
-        return Graphics::Console::Green;
+        return Graphics::Console::Color::Green;
     case VT::Color::ANSIColor::Yellow:
         // VGA only has bright yellow, and treats normal yellow as a brownish orange color.
         return Graphics::Console::Color::Brown;
@@ -220,9 +220,9 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
         return Graphics::Console::Color::Cyan;
     case VT::Color::ANSIColor::DefaultForeground:
     case VT::Color::ANSIColor::White:
-        return Graphics::Console::Color::White;
-    case VT::Color::ANSIColor::BrightBlack:
         return Graphics::Console::Color::LightGray;
+    case VT::Color::ANSIColor::BrightBlack:
+        return Graphics::Console::Color::DarkGray;
     case VT::Color::ANSIColor::BrightRed:
         return Graphics::Console::Color::BrightRed;
     case VT::Color::ANSIColor::BrightGreen:
@@ -235,9 +235,10 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
         return Graphics::Console::Color::BrightMagenta;
     case VT::Color::ANSIColor::BrightCyan:
         return Graphics::Console::Color::BrightCyan;
-    default:
-        VERIFY_NOT_REACHED();
+    case VT::Color::ANSIColor::BrightWhite:
+        return Graphics::Console::Color::White;
     }
+    VERIFY_NOT_REACHED();
 }
 
 static inline Graphics::Console::Color terminal_to_standard_color(VT::Color color)
