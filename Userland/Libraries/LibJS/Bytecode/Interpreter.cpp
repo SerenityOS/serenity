@@ -41,6 +41,8 @@ Value Interpreter::run(Executable const& executable)
 
     TemporaryChange restore_executable { m_current_executable, &executable };
 
+    vm().set_last_value(Badge<Interpreter> {}, {});
+
     CallFrame global_call_frame;
     if (vm().call_stack().is_empty()) {
         global_call_frame.this_value = &global_object();
@@ -101,6 +103,8 @@ Value Interpreter::run(Executable const& executable)
             dbgln("[{:3}] {}", i, value_string);
         }
     }
+
+    vm().set_last_value(Badge<Interpreter> {}, accumulator());
 
     m_register_windows.take_last();
 
