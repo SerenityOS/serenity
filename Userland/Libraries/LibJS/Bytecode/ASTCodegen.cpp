@@ -616,14 +616,35 @@ void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) cons
 
 void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
-    m_callee->generate_bytecode(generator);
     auto callee_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::Store>(callee_reg);
-
-    // FIXME: Load the correct 'this' value into 'this_reg'.
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     generator.emit<Bytecode::Op::Store>(this_reg);
+
+    if (is<NewExpression>(this)) {
+        m_callee->generate_bytecode(generator);
+        generator.emit<Bytecode::Op::Store>(callee_reg);
+    } else if (is<SuperExpression>(*m_callee)) {
+        TODO();
+    } else if (is<MemberExpression>(*m_callee)) {
+        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        if (is<SuperExpression>(member_expression.object())) {
+            TODO();
+        } else {
+            member_expression.object().generate_bytecode(generator);
+            generator.emit<Bytecode::Op::Store>(this_reg);
+            // FIXME: Don't copy this logic here, make MemberExpression generate it.
+            if (!is<Identifier>(member_expression.property()))
+                TODO();
+            auto identifier_table_ref = generator.intern_string(static_cast<Identifier const&>(member_expression.property()).string());
+            generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
+            generator.emit<Bytecode::Op::Store>(callee_reg);
+        }
+    } else {
+        // FIXME: this = global object in sloppy mode.
+        m_callee->generate_bytecode(generator);
+        generator.emit<Bytecode::Op::Store>(callee_reg);
+    }
 
     Vector<Bytecode::Register> argument_registers;
     for (auto& arg : m_arguments) {
