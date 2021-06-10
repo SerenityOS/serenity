@@ -14,6 +14,5 @@ depends="zlib"
 configopts="--prefix=${SERENITY_INSTALL_ROOT}/usr/local -DOPENSSL_SYS_SERENITY=1 --openssldir=${SERENITY_INSTALL_ROOT}/usr/local/ssl linux-elf zlib no-tests no-threads no-asm"
 
 configure() {
-    run rm -rf ./test/
     run ./"$configscript" $configopts
 }
