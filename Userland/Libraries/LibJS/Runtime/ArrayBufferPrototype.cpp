@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
+#include <LibJS/Runtime/ArrayBufferConstructor.h>
 #include <LibJS/Runtime/ArrayBufferPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
@@ -49,9 +50,6 @@ static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object
 // 25.1.5.3 ArrayBuffer.prototype.slice, https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
-    const auto start = vm.argument(0);
-    const auto end = vm.argument(1);
-
     auto array_buffer_object = array_buffer_object_from(vm, global_object);
     if (!array_buffer_object)
         return {};
@@ -59,38 +57,65 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     // FIXME: Check for shared buffer
     // FIXME: Check for detached buffer
 
-    const auto len = array_buffer_object->byte_length();
+    auto length = array_buffer_object->byte_length();
 
-    const auto relative_start = start.is_negative_infinity()
-        ? 0
-        : start.to_integer_or_infinity(global_object);
+    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
     if (vm.exception())
         return {};
 
-    const auto first = relative_start < 0
-        ? max(len + relative_start, 0.0)
-        : min(relative_start, static_cast<double>(len));
-
-    const auto relative_end = end.is_undefined()
-        ? len
-        : end.to_integer_or_infinity(global_object);
-    if (vm.exception())
-        return {};
-
-    double final_;
-    if (end.is_negative_infinity())
-        final_ = 0;
-    else if (relative_end < 0)
-        final_ = max(len + relative_end, 0.0);
+    double first;
+    if (relative_start < 0)
+        first = max(length + relative_start, 0.0);
     else
-        final_ = min(relative_end, static_cast<double>(len));
+        first = min(relative_start, (double)length);
 
-    const auto new_len = max(final_ - first, 0.0);
+    auto relative_end = vm.argument(1).is_undefined() ? length : vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
 
-    // FIXME: this is a bit more involved in the specification
-    auto sliced = array_buffer_object->buffer().slice(first, new_len);
-    auto buffer = ArrayBuffer::create(global_object, sliced);
-    return buffer;
+    double final;
+    if (relative_end < 0)
+        final = max(length + relative_end, 0.0);
+    else
+        final = min(relative_end, (double)length);
+
+    auto new_length = max(final - first, 0.0);
+
+    auto constructor = species_constructor(global_object, *array_buffer_object, *global_object.array_buffer_constructor());
+    if (vm.exception())
+        return {};
+
+    MarkedValueList arguments(vm.heap());
+    arguments.append(Value(new_length));
+    auto new_array_buffer = vm.construct(*constructor, *constructor, move(arguments));
+    if (vm.exception())
+        return {};
+
+    if (!new_array_buffer.is_object() || !is<ArrayBuffer>(new_array_buffer.as_object())) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorDidNotCreate, "an ArrayBuffer");
+        return {};
+    }
+    auto* new_array_buffer_object = static_cast<ArrayBuffer*>(&new_array_buffer.as_object());
+
+    // FIXME: Check for shared buffer
+    // FIXME: Check for detached buffer
+    if (same_value(new_array_buffer_object, array_buffer_object)) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "same ArrayBuffer instance");
+        return {};
+    }
+    if (new_array_buffer_object->byte_length() < new_length) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "an ArrayBuffer smaller than requested");
+        return {};
+    }
+
+    if (array_buffer_object->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return {};
+    }
+
+    // This is ugly, is there a better way to do this?
+    array_buffer_object->buffer().span().slice(first, new_length).copy_to(new_array_buffer_object->buffer().span());
+    return new_array_buffer_object;
 }
 
 JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
