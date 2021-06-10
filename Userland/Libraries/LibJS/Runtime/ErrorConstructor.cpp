@@ -42,7 +42,7 @@ Value ErrorConstructor::construct(Function&)
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName::ConstructorName(GlobalObject& global_object)                        \
-        : NativeFunction(*global_object.function_prototype())                            \
+        : NativeFunction(*static_cast<Object*>(global_object.error_constructor()))       \
     {                                                                                    \
     }                                                                                    \
                                                                                          \
