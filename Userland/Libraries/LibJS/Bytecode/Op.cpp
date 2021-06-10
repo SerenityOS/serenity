@@ -291,6 +291,26 @@ void Yield::execute(Bytecode::Interpreter& interpreter) const
     interpreter.do_return(object);
 }
 
+void GetByValue::execute(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object())) {
+        auto property_key = interpreter.accumulator().to_property_key(interpreter.global_object());
+        if (interpreter.vm().exception())
+            return;
+        interpreter.accumulator() = object->get(property_key);
+    }
+}
+
+void PutByValue::execute(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* object = interpreter.reg(m_base).to_object(interpreter.global_object())) {
+        auto property_key = interpreter.reg(m_property).to_property_key(interpreter.global_object());
+        if (interpreter.vm().exception())
+            return;
+        object->put(property_key, interpreter.accumulator());
+    }
+}
+
 String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -461,6 +481,16 @@ String Yield::to_string(Bytecode::Executable const&) const
     if (m_continuation_label.has_value())
         return String::formatted("Yield continuation:@{}", m_continuation_label->block().name());
     return String::formatted("Yield return");
+}
+
+String GetByValue::to_string(const Bytecode::Executable&) const
+{
+    return String::formatted("GetByValue base:{}", m_base);
+}
+
+String PutByValue::to_string(const Bytecode::Executable&) const
+{
+    return String::formatted("PutByValue base:{}, property:{}", m_base, m_property);
 }
 
 }
