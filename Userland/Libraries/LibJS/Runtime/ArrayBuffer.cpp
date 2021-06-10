@@ -37,4 +37,10 @@ ArrayBuffer::~ArrayBuffer()
 {
 }
 
+void ArrayBuffer::visit_edges(Cell::Visitor& visitor)
+{
+    Object::visit_edges(visitor);
+    visitor.visit(m_detach_key);
+}
+
 }
