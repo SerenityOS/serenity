@@ -415,7 +415,9 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         state_rollback_guard.disarm();
         discard_saved_state();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), false, is_strict, true);
+        return create_ast_node<FunctionExpression>(
+            { m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "", move(body),
+            move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), FunctionKind::Regular, is_strict, true);
     }
 
     return nullptr;
@@ -586,13 +588,20 @@ NonnullRefPtr<ClassExpression> Parser::parse_class_expression(bool expect_class_
         if (!super_class.is_null()) {
             // Set constructor to the result of parsing the source text
             // constructor(... args){ super (...args);}
-            auto super_call = create_ast_node<CallExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, create_ast_node<SuperExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }), Vector { CallExpression::Argument { create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "args"), true } });
+            auto super_call = create_ast_node<CallExpression>(
+                { m_parser_state.m_current_token.filename(), rule_start.position(), position() },
+                create_ast_node<SuperExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }),
+                Vector { CallExpression::Argument { create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "args"), true } });
             constructor_body->append(create_ast_node<ExpressionStatement>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, move(super_call)));
             constructor_body->add_variables(m_parser_state.m_var_scopes.last());
 
-            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), false, true);
+            constructor = create_ast_node<FunctionExpression>(
+                { m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
+                Vector { FunctionNode::Parameter { FlyString { "args" }, nullptr, true } }, 0, NonnullRefPtrVector<VariableDeclaration>(), FunctionKind::Regular, true);
         } else {
-            constructor = create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body), Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), false, true);
+            constructor = create_ast_node<FunctionExpression>(
+                { m_parser_state.m_current_token.filename(), rule_start.position(), position() }, class_name, move(constructor_body),
+                Vector<FunctionNode::Parameter> {}, 0, NonnullRefPtrVector<VariableDeclaration>(), FunctionKind::Regular, true);
         }
     }
 
@@ -1381,7 +1390,10 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
     auto body = parse_block_statement(is_strict);
     body->add_variables(m_parser_state.m_var_scopes.last());
     body->add_functions(m_parser_state.m_function_scopes.last());
-    return create_ast_node<FunctionNodeType>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(), is_generator, is_strict);
+    return create_ast_node<FunctionNodeType>(
+        { m_parser_state.m_current_token.filename(), rule_start.position(), position() },
+        name, move(body), move(parameters), function_length, NonnullRefPtrVector<VariableDeclaration>(),
+        is_generator ? FunctionKind::Generator : FunctionKind::Regular, is_strict);
 }
 
 Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_length, u8 parse_options)

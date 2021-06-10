@@ -16,9 +16,9 @@ class ScriptFunction final : public Function {
     JS_OBJECT(ScriptFunction, Function);
 
 public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, bool is_generator, bool is_strict, bool is_arrow_function = false);
+    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    ScriptFunction(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, bool is_generator, bool is_strict, bool is_arrow_function = false);
+    ScriptFunction(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
     virtual ~ScriptFunction();
 
@@ -53,7 +53,7 @@ private:
     Optional<Bytecode::Executable> m_bytecode_executable;
     ScopeObject* m_parent_scope { nullptr };
     i32 m_function_length { 0 };
-    bool m_is_generator { false };
+    FunctionKind m_kind { FunctionKind::Regular };
     bool m_is_strict { false };
     bool m_is_arrow_function { false };
     bool m_is_class_constructor { false };
