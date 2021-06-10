@@ -222,7 +222,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is<NewExpression>(*this)) {
-        result = vm.construct(function, function, move(arguments), global_object);
+        result = vm.construct(function, function, move(arguments));
         if (result.is_object())
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
@@ -239,7 +239,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
             return {};
         }
-        result = vm.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
+        result = vm.construct(static_cast<Function&>(*super_constructor), function, move(arguments));
         if (vm.exception())
             return {};
 
