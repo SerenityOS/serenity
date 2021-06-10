@@ -199,14 +199,17 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
 
     Value return_value;
 
-    if (m_argument_count == 0) {
+    if (m_argument_count == 0 && m_type == CallType::Call) {
         return_value = interpreter.vm().call(function, this_value);
     } else {
         MarkedValueList argument_values { interpreter.vm().heap() };
         for (size_t i = 0; i < m_argument_count; ++i) {
             argument_values.append(interpreter.reg(m_arguments[i]));
         }
-        return_value = interpreter.vm().call(function, this_value, move(argument_values));
+        if (m_type == CallType::Call)
+            return_value = interpreter.vm().call(function, this_value, move(argument_values));
+        else
+            return_value = interpreter.vm().construct(function, function, move(argument_values), interpreter.global_object());
     }
 
     interpreter.accumulator() = return_value;

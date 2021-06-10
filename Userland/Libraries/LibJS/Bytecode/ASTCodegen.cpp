@@ -632,7 +632,15 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
         generator.emit<Bytecode::Op::Store>(arg_reg);
         argument_registers.append(arg_reg);
     }
-    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), callee_reg, this_reg, argument_registers);
+
+    Bytecode::Op::Call::CallType call_type;
+    if (is<NewExpression>(*this)) {
+        call_type = Bytecode::Op::Call::CallType::Construct;
+    } else {
+        call_type = Bytecode::Op::Call::CallType::Call;
+    }
+
+    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_registers.size(), call_type, callee_reg, this_reg, argument_registers);
 }
 
 void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
@@ -813,7 +821,7 @@ void TaggedTemplateLiteral::generate_bytecode(Bytecode::Generator& generator) co
     auto this_reg = generator.allocate_register();
     generator.emit<Bytecode::Op::Store>(this_reg);
 
-    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_regs.size(), tag_reg, this_reg, move(argument_regs));
+    generator.emit_with_extra_register_slots<Bytecode::Op::Call>(argument_regs.size(), Bytecode::Op::Call::CallType::Call, tag_reg, this_reg, move(argument_regs));
 }
 
 void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
