@@ -43,7 +43,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
 
     VM::InterpreterExecutionScope scope(*this);
 
-    vm.set_last_value({}, {});
+    vm.set_last_value(Badge<Interpreter> {}, {});
 
     CallFrame global_call_frame;
     global_call_frame.current_node = &program;
@@ -56,7 +56,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     vm.push_call_frame(global_call_frame, global_object);
     VERIFY(!vm.exception());
     auto value = program.execute(*this, global_object);
-    vm.set_last_value({}, value.value_or(js_undefined()));
+    vm.set_last_value(Badge<Interpreter> {}, value.value_or(js_undefined()));
 
     vm.pop_call_frame();
 
