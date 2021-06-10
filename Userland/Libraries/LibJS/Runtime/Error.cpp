@@ -14,8 +14,10 @@ Error* Error::create(GlobalObject& global_object, const String& message)
 {
     auto& vm = global_object.vm();
     auto* error = global_object.heap().allocate<Error>(global_object, *global_object.error_prototype());
-    if (!message.is_null())
-        error->define_property(vm.names.message, js_string(vm, message));
+    if (!message.is_null()) {
+        u8 attr = Attribute::Writable | Attribute::Configurable;
+        error->define_property(vm.names.message, js_string(vm, message), attr);
+    }
     return error;
 }
 
@@ -29,8 +31,10 @@ Error::Error(Object& prototype)
     {                                                                                                                   \
         auto& vm = global_object.vm();                                                                                  \
         auto* error = global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype()); \
-        if (!message.is_null())                                                                                         \
-            error->define_property(vm.names.message, js_string(vm, message));                                           \
+        if (!message.is_null()) {                                                                                       \
+            u8 attr = Attribute::Writable | Attribute::Configurable;                                                    \
+            error->define_property(vm.names.message, js_string(vm, message), attr);                                     \
+        }                                                                                                               \
         return error;                                                                                                   \
     }                                                                                                                   \
                                                                                                                         \
