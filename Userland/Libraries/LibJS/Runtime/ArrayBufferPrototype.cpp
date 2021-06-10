@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Idan Horowitz <idan.horowitz@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -52,7 +53,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
         return {};
 
     // FIXME: Check for shared buffer
-    // FIXME: Check for detached buffer
+    if (array_buffer_object->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return {};
+    }
 
     auto length = array_buffer_object->byte_length();
 
@@ -95,7 +99,10 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     auto* new_array_buffer_object = static_cast<ArrayBuffer*>(&new_array_buffer.as_object());
 
     // FIXME: Check for shared buffer
-    // FIXME: Check for detached buffer
+    if (new_array_buffer_object->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "a detached ArrayBuffer");
+        return {};
+    }
     if (same_value(new_array_buffer_object, array_buffer_object)) {
         vm.throw_exception<TypeError>(global_object, ErrorType::SpeciesConstructorReturned, "same ArrayBuffer instance");
         return {};
@@ -120,9 +127,12 @@ JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
     auto array_buffer_object = array_buffer_object_from(vm, global_object);
     if (!array_buffer_object)
         return {};
+
     // FIXME: Check for shared buffer
-    // FIXME: Check for detached buffer
-    return Value((double)array_buffer_object->byte_length());
+    if (array_buffer_object->is_detached())
+        return Value(0);
+
+    return Value(array_buffer_object->byte_length());
 }
 
 }

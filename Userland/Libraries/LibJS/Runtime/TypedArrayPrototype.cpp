@@ -50,6 +50,10 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::length_getter)
     auto typed_array = typed_array_from(vm, global_object);
     if (!typed_array)
         return {};
+    auto* array_buffer = typed_array->viewed_array_buffer();
+    VERIFY(array_buffer);
+    if (array_buffer->is_detached())
+        return Value(0);
     return Value(typed_array->array_length());
 }
 
@@ -95,7 +99,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_length_getter)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
-    // FIXME: If array_buffer is detached, return 0.
+    if (array_buffer->is_detached())
+        return Value(0);
     return Value(typed_array->byte_length());
 }
 
@@ -107,7 +112,8 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::byte_offset_getter)
         return {};
     auto* array_buffer = typed_array->viewed_array_buffer();
     VERIFY(array_buffer);
-    // FIXME: If array_buffer is detached, return 0.
+    if (array_buffer->is_detached())
+        return Value(0);
     return Value(typed_array->byte_offset());
 }
 
