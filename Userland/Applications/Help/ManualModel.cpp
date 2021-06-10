@@ -10,7 +10,6 @@
 #include "ManualSectionNode.h"
 #include <AK/ByteBuffer.h>
 #include <LibCore/File.h>
-#include <LibGUI/FilteringProxyModel.h>
 
 static ManualSectionNode s_sections[] = {
     { "1", "User programs" },

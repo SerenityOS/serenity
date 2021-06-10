@@ -15,7 +15,6 @@
 #include <LibGUI/Application.h>
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/Clipboard.h>
-#include <LibGUI/FilteringProxyModel.h>
 #include <LibGUI/ListView.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
@@ -27,6 +26,7 @@
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
 #include <LibGUI/TreeView.h>
+#include <LibGUI/ViewModel.h>
 #include <LibGUI/Window.h>
 #include <LibMarkdown/Document.h>
 #include <LibWeb/OutOfProcessWebView.h>
@@ -107,13 +107,11 @@ int main(int argc, char* argv[])
     search_box.set_placeholder("Search...");
     search_box.on_change = [&] {
         if (auto model = search_list_view.model()) {
-            auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-            search_model.set_filter_term(search_box.text());
-            search_model.invalidate();
+            auto& search_model = *static_cast<GUI::ViewModel*>(model);
+            search_model.filter(search_box.text());
         }
     };
-    search_list_view.set_model(GUI::FilteringProxyModel::construct(model));
-    search_list_view.model()->invalidate();
+    search_list_view.set_model(GUI::ViewModel::create(model));
 
     tree_view.set_model(model);
     left_tab_bar.set_fixed_width(200);
@@ -200,15 +198,16 @@ int main(int argc, char* argv[])
             page_view.load_empty_document();
             return;
         }
-        auto& search_model = *static_cast<GUI::FilteringProxyModel*>(view_model);
-        const auto& mapped_index = search_model.map(index);
-        String path = model->page_path(mapped_index);
+        auto& search_model = *static_cast<GUI::ViewModel*>(view_model);
+        auto const& source_index = search_model.source_index_from_proxy(index);
+
+        String path = model->page_path(source_index);
         if (path.is_null()) {
             page_view.load_empty_document();
             return;
         }
         tree_view.selection().clear();
-        tree_view.selection().add(mapped_index);
+        tree_view.selection().add(source_index);
         history.push(path);
         update_actions();
         open_page(path);
@@ -307,8 +306,8 @@ int main(int argc, char* argv[])
             left_tab_bar.set_active_widget(&search_view);
             search_box.set_text(start_page);
             if (auto model = search_list_view.model()) {
-                auto& search_model = *static_cast<GUI::FilteringProxyModel*>(model);
-                search_model.set_filter_term(search_box.text());
+                auto& search_model = *static_cast<GUI::ViewModel*>(model);
+                search_model.filter(search_box.text());
             }
         }
     } else {

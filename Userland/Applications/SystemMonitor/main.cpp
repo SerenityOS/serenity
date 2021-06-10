@@ -32,11 +32,12 @@
 #include <LibGUI/Menubar.h>
 #include <LibGUI/Painter.h>
 #include <LibGUI/SeparatorWidget.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/StackWidget.h>
 #include <LibGUI/Statusbar.h>
 #include <LibGUI/TabWidget.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/Toolbar.h>
+#include <LibGUI/ViewModel.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 #include <LibGfx/FontDatabase.h>
@@ -213,7 +214,7 @@ int main(int argc, char** argv)
 
     auto& process_table_view = process_table_container.add<GUI::TableView>();
     process_table_view.set_column_headers_visible(true);
-    process_table_view.set_model(GUI::SortingProxyModel::create(process_model));
+    process_table_view.set_model(GUI::ViewModel::create(process_model));
     for (auto column = 0; column < ProcessModel::Column::__Count; ++column)
         process_table_view.set_column_visible(column, false);
     process_table_view.set_column_visible(ProcessModel::Column::Icon, true);
@@ -225,11 +226,11 @@ int main(int argc, char** argv)
     process_table_view.set_column_visible(ProcessModel::Column::DirtyPrivate, true);
 
     process_table_view.set_key_column_and_sort_order(ProcessModel::Column::CPU, GUI::SortOrder::Descending);
-    process_table_view.model()->invalidate();
+    process_model->update();
 
     auto& refresh_timer = window->add<Core::Timer>(
         3000, [&] {
-            process_table_view.model()->invalidate();
+            process_model->update();
             if (auto* memory_stats_widget = MemoryStatsWidget::the())
                 memory_stats_widget->refresh();
         });
@@ -648,7 +649,7 @@ NonnullRefPtr<GUI::Widget> build_devices_tab()
         self.layout()->set_margins({ 4, 4, 4, 4 });
 
         auto& devices_table_view = self.add<GUI::TableView>();
-        devices_table_view.set_model(GUI::SortingProxyModel::create(DevicesModel::create()));
+        devices_table_view.set_model(GUI::ViewModel::create(DevicesModel::create()));
         devices_table_view.model()->invalidate();
     };
 

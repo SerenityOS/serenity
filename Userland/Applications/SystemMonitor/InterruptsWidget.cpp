@@ -8,8 +8,8 @@
 #include <LibGUI/BoxLayout.h>
 #include <LibGUI/GroupBox.h>
 #include <LibGUI/JsonArrayModel.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/ViewModel.h>
 
 InterruptsWidget::InterruptsWidget()
 {
@@ -27,7 +27,7 @@ InterruptsWidget::InterruptsWidget()
 
         m_interrupt_table_view = add<GUI::TableView>();
         m_interrupt_model = GUI::JsonArrayModel::create("/proc/interrupts", move(interrupts_field));
-        m_interrupt_table_view->set_model(GUI::SortingProxyModel::create(*m_interrupt_model));
+        m_interrupt_table_view->set_model(GUI::ViewModel::create(*m_interrupt_model));
 
         m_update_timer = add<Core::Timer>(
             1000, [this] {

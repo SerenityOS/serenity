@@ -21,9 +21,9 @@
 #include <LibGUI/Menu.h>
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/MultiView.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TextBox.h>
 #include <LibGUI/Toolbar.h>
+#include <LibGUI/ViewModel.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 #include <string.h>
@@ -94,7 +94,7 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
 
     m_view = *widget.find_descendant_of_type_named<GUI::MultiView>("view");
     m_view->set_selection_mode(m_mode == Mode::OpenMultiple ? GUI::AbstractView::SelectionMode::MultiSelection : GUI::AbstractView::SelectionMode::SingleSelection);
-    m_view->set_model(SortingProxyModel::create(*m_model));
+    m_view->set_model(ViewModel::create(*m_model));
     m_view->set_model_column(FileSystemModel::Column::Name);
     m_view->set_key_column_and_sort_order(GUI::FileSystemModel::Column::Name, GUI::SortOrder::Ascending);
     m_view->set_column_visible(FileSystemModel::Column::Owner, true);
@@ -161,9 +161,9 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
 
     m_view->on_selection_change = [this] {
         auto index = m_view->selection().first();
-        auto& filter_model = (SortingProxyModel&)*m_view->model();
-        auto local_index = filter_model.map_to_source(index);
-        const FileSystemModel::Node& node = m_model->node(local_index);
+        auto& filter_model = (ViewModel&)*m_view->model();
+        auto source_index = filter_model.source_index_from_proxy(index);
+        const FileSystemModel::Node& node = m_model->node(source_index);
         LexicalPath path { node.full_path() };
 
         auto should_open_folder = m_mode == Mode::OpenFolder;
@@ -201,9 +201,9 @@ FilePicker::FilePicker(Window* parent_window, Mode mode, const StringView& filen
     };
 
     m_view->on_activation = [this](auto& index) {
-        auto& filter_model = (SortingProxyModel&)*m_view->model();
-        auto local_index = filter_model.map_to_source(index);
-        const FileSystemModel::Node& node = m_model->node(local_index);
+        auto& filter_model = (ViewModel&)*m_view->model();
+        auto source_index = filter_model.source_index_from_proxy(index);
+        const FileSystemModel::Node& node = m_model->node(source_index);
         auto path = node.full_path();
 
         if (node.is_directory() || node.is_symlink_to_directory()) {

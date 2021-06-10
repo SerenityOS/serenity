@@ -9,8 +9,8 @@
 #include <LibGUI/MessageBox.h>
 #include <LibGUI/ProcessChooser.h>
 #include <LibGUI/RunningProcessesModel.h>
-#include <LibGUI/SortingProxyModel.h>
 #include <LibGUI/TableView.h>
+#include <LibGUI/ViewModel.h>
 
 namespace GUI {
 
@@ -35,9 +35,9 @@ ProcessChooser::ProcessChooser(const StringView& window_title, const StringView&
     widget.set_layout<GUI::VerticalBoxLayout>();
 
     m_table_view = widget.add<GUI::TableView>();
-    auto sorting_model = GUI::SortingProxyModel::create(RunningProcessesModel::create());
-    sorting_model->set_sort_role(GUI::ModelRole::Display);
-    m_table_view->set_model(sorting_model);
+    auto view_model = GUI::ViewModel::create(RunningProcessesModel::create());
+    view_model->set_sort_role(GUI::ModelRole::Display);
+    m_table_view->set_model(view_model);
     m_table_view->set_key_column_and_sort_order(RunningProcessesModel::Column::PID, GUI::SortOrder::Descending);
 
     m_table_view->on_activation = [this](const ModelIndex& index) { set_pid_from_index_and_close(index); };
