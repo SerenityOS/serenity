@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -40,20 +41,48 @@ public:
         return 0;
     }
 
-    int set_termios(const termios&);
+    int set_termios(const termios& new_termios, bool force = false);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
     void set_default_termios();
+    const termios& get_termios() const { return m_termios; }
     void hang_up();
 
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
 
 protected:
+    enum class Parity {
+        None,
+        Even,
+        Odd
+    };
+
+    enum class StopBits {
+        One,
+        Two,
+    };
+
+    enum class CharacterSize {
+        FiveBits,
+        SixBits,
+        SevenBits,
+        EightBits
+    };
+
     virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
+    virtual int change_baud(speed_t, speed_t) { return 0; }
+    virtual int change_parity(Parity) { return 0; }
+    virtual int change_stop_bits(StopBits) { return 0; }
+    virtual int change_character_size(CharacterSize) { return 0; }
+    virtual int change_receiver_enabled(bool) { return 0; }
+    virtual int change_ignore_modem_status(bool) { return 0; }
+    virtual void discard_input_buffer() { }
+    virtual void discard_output_buffer() { }
+
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
@@ -66,6 +95,9 @@ protected:
     void erase_character();
     void kill_line();
     void flush_input();
+    void flush_output();
+
+    void load_termios();
 
     bool is_eol(u8) const;
     bool is_eof(u8) const;

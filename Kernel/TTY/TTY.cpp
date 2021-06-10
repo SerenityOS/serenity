@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Daniel Bertalan <dani@danielbertalan.dev>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -144,8 +145,9 @@ bool TTY::can_read(const FileDescription&, size_t) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
+    } else {
+        return !m_input_buffer.is_empty();
     }
-    return !m_input_buffer.is_empty();
 }
 
 bool TTY::can_write(const FileDescription&, size_t) const
@@ -180,6 +182,8 @@ bool TTY::is_werase(u8 ch) const
 
 void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 {
+    // FIXME: add support for parity checking once we have serial TTYs.
+    //        0xFF bytes that escape parity errors should not be stripped.
     if (m_termios.c_iflag & ISTRIP)
         ch &= 0x7F;
 
@@ -343,8 +347,10 @@ void TTY::generate_signal(int signal)
 {
     if (!pgid())
         return;
-    if (should_flush_on_signal())
+    if (should_flush_on_signal()) {
         flush_input();
+        flush_output();
+    }
     dbgln_if(TTY_DEBUG, "{}: Send signal {} to everyone in pgrp {}", tty_name(), signal, pgid().value());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
@@ -354,42 +360,62 @@ void TTY::generate_signal(int signal)
     });
 }
 
+// In this context, flush means to discard any unprocessed data.
+
 void TTY::flush_input()
 {
     m_available_lines = 0;
     m_input_buffer.clear();
+    discard_input_buffer();
     evaluate_block_conditions();
 }
 
-int TTY::set_termios(const termios& t)
+void TTY::flush_output()
+{
+    discard_output_buffer();
+}
+
+// Subclasses can call this once they're ready to setup the various serial parameters.
+void TTY::load_termios()
+{
+    set_default_termios();
+    set_termios(m_termios);
+}
+
+int TTY::set_termios(const termios& new_termios, bool force_set)
 {
     int rc = 0;
-    m_termios = t;
+
+    // We intentionally do not return early from this function, so as to keep programs in a (somewhat) working state
+    // even if one of the options it sets isn't implemented.
+    auto attempt = [&](int call_rc) {
+        if (call_rc < 0)
+            rc = call_rc;
+    };
 
     dbgln_if(TTY_DEBUG, "{} set_termios: ECHO={}, ISIG={}, ICANON={}, ECHOE={}, ECHOK={}, ECHONL={}, ISTRIP={}, ICRNL={}, INLCR={}, IGNCR={}, OPOST={}, ONLCR={}",
         tty_name(),
         should_echo_input(),
         should_generate_signals(),
         in_canonical_mode(),
-        ((m_termios.c_lflag & ECHOE) != 0),
-        ((m_termios.c_lflag & ECHOK) != 0),
-        ((m_termios.c_lflag & ECHONL) != 0),
-        ((m_termios.c_iflag & ISTRIP) != 0),
-        ((m_termios.c_iflag & ICRNL) != 0),
-        ((m_termios.c_iflag & INLCR) != 0),
-        ((m_termios.c_iflag & IGNCR) != 0),
-        ((m_termios.c_oflag & OPOST) != 0),
-        ((m_termios.c_oflag & ONLCR) != 0));
+        ((new_termios.c_lflag & ECHOE) != 0),
+        ((new_termios.c_lflag & ECHOK) != 0),
+        ((new_termios.c_lflag & ECHONL) != 0),
+        ((new_termios.c_iflag & ISTRIP) != 0),
+        ((new_termios.c_iflag & ICRNL) != 0),
+        ((new_termios.c_iflag & INLCR) != 0),
+        ((new_termios.c_iflag & IGNCR) != 0),
+        ((new_termios.c_oflag & OPOST) != 0),
+        ((new_termios.c_oflag & ONLCR) != 0));
 
+    // We deliberately don't return early for unimplemented flags, so that we can get all debug messages
     struct FlagDescription {
         tcflag_t value;
         StringView name;
     };
 
     static constexpr FlagDescription unimplemented_iflags[] = {
-        { IGNBRK, "IGNBRK" },
         { BRKINT, "BRKINT" },
-        { IGNPAR, "IGNPAR" },
         { PARMRK, "PARMRK" },
         { INPCK, "INPCK" },
         { IGNCR, "IGNCR" },
@@ -401,9 +427,19 @@ int TTY::set_termios(const termios& t)
         { IUTF8, "IUTF8" }
     };
     for (auto flag : unimplemented_iflags) {
-        if (m_termios.c_iflag & flag.value) {
+        if (new_termios.c_iflag & flag.value) {
             dbgln("FIXME: iflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
+        }
+    }
+
+    static constexpr FlagDescription always_on_iflags[] = {
+        { IGNBRK, "IGNBRK" },
+        { IGNPAR, "IGNPAR" },
+    };
+    for (auto flag : always_on_iflags) {
+        if (!(new_termios.c_iflag & flag.value)) {
+            dbgln("FIXME: disabling iflag {} is not implemented", flag.name);
         }
     }
 
@@ -415,43 +451,82 @@ int TTY::set_termios(const termios& t)
         { OFDEL, "OFDEL" }
     };
     for (auto flag : unimplemented_oflags) {
-        if (m_termios.c_oflag & flag.value) {
+        if (new_termios.c_oflag & flag.value) {
             dbgln("FIXME: oflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
     }
 
-    static constexpr FlagDescription unimplemented_cflags[] = {
-        { CSIZE, "CSIZE" },
-        { CS5, "CS5" },
-        { CS6, "CS6" },
-        { CS7, "CS7" },
-        { CS8, "CS8" },
-        { CSTOPB, "CSTOPB" },
-        { CREAD, "CREAD" },
-        { PARENB, "PARENB" },
-        { PARODD, "PARODD" },
-        { HUPCL, "HUPCL" },
-        { CLOCAL, "CLOCAL" }
-    };
-    for (auto flag : unimplemented_cflags) {
-        if (m_termios.c_cflag & flag.value) {
-            dbgln("FIXME: cflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
-        }
-    }
-
     static constexpr FlagDescription unimplemented_lflags[] = {
-        { TOSTOP, "TOSTOP" },
         { IEXTEN, "IEXTEN" }
     };
     for (auto flag : unimplemented_lflags) {
-        if (m_termios.c_lflag & flag.value) {
+        if (new_termios.c_lflag & flag.value) {
             dbgln("FIXME: lflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
     }
 
+    static constexpr FlagDescription unimplemented_cflags[] = {
+        { HUPCL, "HUPCL" }
+    };
+    for (auto flag : unimplemented_cflags) {
+        if (new_termios.c_cflag & flag.value) {
+            dbgln("FIXME: cflag {} unimplemented", flag.name);
+            rc = -ENOTIMPL;
+        }
+    }
+
+    if (force_set || new_termios.c_ispeed != m_termios.c_ispeed || new_termios.c_ospeed != m_termios.c_ospeed)
+        attempt(change_baud(new_termios.c_ispeed, new_termios.c_ospeed));
+
+    static_assert(__builtin_popcount(CSIZE) == 2, "There are 4 character sizes, so CSIZE should be a 2-bit bitmask.");
+    static_assert((CS5 & ~CSIZE) == 0, "CS5 must be contained within the CSIZE bitmask.");
+    static_assert((CS6 & ~CSIZE) == 0, "CS6 must be contained within the CSIZE bitmask.");
+    static_assert((CS7 & ~CSIZE) == 0, "CS7 must be contained within the CSIZE bitmask.");
+    static_assert((CS8 & ~CSIZE) == 0, "CS8 must be contained within the CSIZE bitmask.");
+
+    if (force_set || (new_termios.c_cflag & CSIZE) != (m_termios.c_cflag & CSIZE)) {
+        switch (new_termios.c_cflag & CSIZE) {
+        case CS5:
+            attempt(change_character_size(CharacterSize::FiveBits));
+            break;
+        case CS6:
+            attempt(change_character_size(CharacterSize::SixBits));
+            break;
+        case CS7:
+            attempt(change_character_size(CharacterSize::SevenBits));
+            break;
+        case CS8:
+            attempt(change_character_size(CharacterSize::EightBits));
+            break;
+        }
+    }
+
+    if (force_set || (new_termios.c_cflag & CSTOPB) != (m_termios.c_cflag & CSTOPB)) {
+        if (new_termios.c_cflag & CSTOPB)
+            attempt(change_stop_bits(StopBits::Two));
+        else
+            attempt(change_stop_bits(StopBits::One));
+    }
+
+    if (force_set || (new_termios.c_cflag & CREAD) != (m_termios.c_cflag & CREAD))
+        attempt(change_receiver_enabled(new_termios.c_cflag & CREAD));
+
+    if (force_set || (new_termios.c_cflag & PARENB) != (m_termios.c_cflag & PARENB) || (new_termios.c_cflag & PARODD) != (m_termios.c_cflag & PARODD)) {
+        if (!(new_termios.c_cflag & PARENB))
+            attempt(change_parity(Parity::None));
+        else if (new_termios.c_cflag & PARODD)
+            attempt(change_parity(Parity::Odd));
+        else
+            attempt(change_parity(Parity::Even));
+        // FIXME: Add sticky parity handling (not POSIX, but other systems support it).
+    }
+
+    if (force_set || (new_termios.c_cflag & CLOCAL) != (m_termios.c_cflag & CLOCAL))
+        attempt(change_ignore_modem_status(new_termios.c_cflag & CLOCAL));
+
+    m_termios = new_termios;
     return rc;
 }
 
@@ -519,10 +594,14 @@ int TTY::ioctl(FileDescription&, unsigned request, FlatPtr arg)
         return rc;
     }
     case TCFLSH:
-        // Serenity's TTY implementation does not use an output buffer, so ignore TCOFLUSH.
-        if (arg == TCIFLUSH || arg == TCIOFLUSH) {
+        if (arg == TCIOFLUSH) {
             flush_input();
-        } else if (arg != TCOFLUSH) {
+            flush_output();
+        } else if (arg == TCIFLUSH) {
+            flush_input();
+        } else if (arg == TCOFLUSH) {
+            flush_output();
+        } else {
             return -EINVAL;
         }
         return 0;
