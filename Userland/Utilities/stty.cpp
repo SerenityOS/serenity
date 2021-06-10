@@ -240,9 +240,9 @@ void print_human_readable(const termios& modes, const winsize& ws, bool verbose_
     };
 
     auto print_flags = [&] {
-        print_flags_of_type(all_cflags, sizeof(all_cflags) / sizeof(TermiosFlag), modes.c_iflag, TTYDEF_CFLAG);
+        print_flags_of_type(all_cflags, sizeof(all_cflags) / sizeof(TermiosFlag), modes.c_cflag, TTYDEF_CFLAG);
         print_flags_of_type(all_oflags, sizeof(all_oflags) / sizeof(TermiosFlag), modes.c_oflag, TTYDEF_OFLAG);
-        print_flags_of_type(all_iflags, sizeof(all_iflags) / sizeof(TermiosFlag), modes.c_cflag, TTYDEF_IFLAG);
+        print_flags_of_type(all_iflags, sizeof(all_iflags) / sizeof(TermiosFlag), modes.c_iflag, TTYDEF_IFLAG);
         print_flags_of_type(all_lflags, sizeof(all_lflags) / sizeof(TermiosFlag), modes.c_lflag, TTYDEF_LFLAG);
     };
 
