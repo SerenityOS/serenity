@@ -58,6 +58,7 @@
     O(Increment)                  \
     O(Decrement)                  \
     O(Throw)                      \
+    O(PushLexicalEnvironment)     \
     O(EnterUnwindContext)         \
     O(LeaveUnwindContext)         \
     O(ContinuePendingUnwind)
