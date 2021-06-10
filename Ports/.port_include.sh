@@ -305,6 +305,10 @@ fetch() {
     post_fetch
 }
 
+func_defined pre_patch || pre_patch() {
+    :
+}
+
 func_defined patch_internal || patch_internal() {
     # patch if it was not yet patched (applying patches multiple times doesn't work!)
     if [ -d patches ]; then
@@ -421,6 +425,7 @@ do_fetch() {
 }
 do_patch() {
     echo "Patching $port!"
+    pre_patch
     patch_internal
 }
 do_configure() {
