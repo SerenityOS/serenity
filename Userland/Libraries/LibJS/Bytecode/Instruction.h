@@ -35,6 +35,8 @@
     O(SetVariable)                \
     O(PutById)                    \
     O(GetById)                    \
+    O(PutByValue)                 \
+    O(GetByValue)                 \
     O(Jump)                       \
     O(JumpConditional)            \
     O(JumpNullish)                \
