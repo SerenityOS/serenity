@@ -30,10 +30,18 @@ public:
 
     virtual void seek(const int sample_index) = 0;
 
+    // total_samples() and loaded_samples() should be independent
+    // of the number of channels.
+    //
+    // For example, with a three-second-long, stereo, 44.1KHz audio file:
+    //    num_channels() should return 2
+    //    sample_rate() should return 44100 (each channel is sampled at this rate)
+    //    total_samples() should return 132300 (sample_rate * three seconds)
     virtual int loaded_samples() = 0;
     virtual int total_samples() = 0;
     virtual u32 sample_rate() = 0;
     virtual u16 num_channels() = 0;
+
     virtual PcmSampleFormat pcm_format() = 0;
     virtual RefPtr<Core::File> file() = 0;
 };
