@@ -37,7 +37,7 @@ class InterpreterNodeScope {
     AK_MAKE_NONMOVABLE(InterpreterNodeScope);
 
 public:
-    InterpreterNodeScope(Interpreter& interpreter, const ASTNode& node)
+    InterpreterNodeScope(Interpreter& interpreter, ASTNode const& node)
         : m_interpreter(interpreter)
         , m_chain_node { nullptr, node }
     {
@@ -61,7 +61,7 @@ String ASTNode::class_name() const
     return demangle(typeid(*this).name()).substring(4);
 }
 
-static void update_function_name(Value value, const FlyString& name)
+static void update_function_name(Value value, FlyString const& name)
 {
     if (!value.is_function())
         return;
@@ -126,7 +126,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     }
 
     if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         Value callee;
         Object* this_value = nullptr;
 
@@ -184,9 +184,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
             String expression_string;
             if (is<Identifier>(*m_callee)) {
-                expression_string = static_cast<const Identifier&>(*m_callee).string();
+                expression_string = static_cast<Identifier const&>(*m_callee).string();
             } else {
-                expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
+                expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
             }
             vm.throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
         } else {
@@ -377,10 +377,10 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
     RefPtr<BlockStatement> wrapper;
 
-    if (m_init && is<VariableDeclaration>(*m_init) && static_cast<const VariableDeclaration&>(*m_init).declaration_kind() != DeclarationKind::Var) {
+    if (m_init && is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var) {
         wrapper = create_ast_node<BlockStatement>(source_range());
         NonnullRefPtrVector<VariableDeclaration> decls;
-        decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
+        decls.append(*static_cast<VariableDeclaration const*>(m_init.ptr()));
         wrapper->add_variables(decls);
         interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
     }
@@ -449,10 +449,10 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     return last_value;
 }
 
-static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, const ASTNode& node, RefPtr<BlockStatement> wrapper)
+static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, ASTNode const& node, RefPtr<BlockStatement> wrapper)
 {
     if (is<VariableDeclaration>(node)) {
-        auto& variable_declaration = static_cast<const VariableDeclaration&>(node);
+        auto& variable_declaration = static_cast<VariableDeclaration const&>(node);
         VERIFY(!variable_declaration.declarations().is_empty());
         if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>(node.source_range());
@@ -463,7 +463,7 @@ static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variabl
     }
 
     if (is<Identifier>(node)) {
-        return NonnullRefPtr(static_cast<const Identifier&>(node));
+        return NonnullRefPtr(static_cast<Identifier const&>(node));
     }
 
     VERIFY_NOT_REACHED();
@@ -1154,7 +1154,7 @@ void BindingPattern::dump(int indent) const
     }
 }
 
-void FunctionNode::dump(int indent, const String& class_name) const
+void FunctionNode::dump(int indent, String const& class_name) const
 {
     print_indent(indent);
     outln("{}{} '{}'", class_name, m_is_generator ? "*" : "", name());
@@ -1167,10 +1167,10 @@ void FunctionNode::dump(int indent, const String& class_name) const
             if (parameter.is_rest)
                 out("...");
             parameter.binding.visit(
-                [&](const FlyString& name) {
+                [&](FlyString const& name) {
                     outln("{}", name);
                 },
-                [&](const BindingPattern& pattern) {
+                [&](BindingPattern const& pattern) {
                     pattern.dump(indent + 2);
                 });
             if (parameter.default_value)
@@ -1589,13 +1589,13 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             if (interpreter.exception())
                 return {};
             declarator.target().visit(
-                [&](const NonnullRefPtr<Identifier>& id) {
+                [&](NonnullRefPtr<Identifier> const& id) {
                     auto variable_name = id->string();
                     if (is<ClassExpression>(*init))
                         update_function_name(initalizer_result, variable_name);
                     interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
                 },
-                [&](const NonnullRefPtr<BindingPattern>& pattern) {
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     interpreter.vm().assign(pattern, initalizer_result, global_object, true);
                 });
         }
@@ -1761,7 +1761,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
 {
     if (!is_computed()) {
         VERIFY(is<Identifier>(*m_property));
-        return static_cast<const Identifier&>(*m_property).string();
+        return static_cast<Identifier const&>(*m_property).string();
     }
     auto value = m_property->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -1774,11 +1774,11 @@ String MemberExpression::to_string_approximation() const
 {
     String object_string = "<object>";
     if (is<Identifier>(*m_object))
-        object_string = static_cast<const Identifier&>(*m_object).string();
+        object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
         return String::formatted("{}[<computed>]", object_string);
     VERIFY(is<Identifier>(*m_property));
-    return String::formatted("{}.{}", object_string, static_cast<const Identifier&>(*m_property).string());
+    return String::formatted("{}.{}", object_string, static_cast<Identifier const&>(*m_property).string());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
