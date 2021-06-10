@@ -100,7 +100,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_generator(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1157,7 +1157,7 @@ void BindingPattern::dump(int indent) const
 void FunctionNode::dump(int indent, String const& class_name) const
 {
     print_indent(indent);
-    outln("{}{} '{}'", class_name, m_is_generator ? "*" : "", name());
+    outln("{}{} '{}'", class_name, m_kind == FunctionKind::Generator ? "*" : "", name());
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
         outln("(Parameters)");
