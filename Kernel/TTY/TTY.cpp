@@ -22,23 +22,10 @@ namespace Kernel {
 TTY::TTY(unsigned major, unsigned minor)
     : CharacterDevice(major, minor)
 {
-    set_default_termios();
 }
 
 TTY::~TTY()
 {
-}
-
-void TTY::set_default_termios()
-{
-    memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_iflag = TTYDEF_IFLAG;
-    m_termios.c_oflag = TTYDEF_OFLAG;
-    m_termios.c_cflag = TTYDEF_CFLAG;
-    m_termios.c_lflag = TTYDEF_LFLAG;
-    m_termios.c_ispeed = TTYDEF_SPEED;
-    m_termios.c_ospeed = TTYDEF_SPEED;
-    memcpy(m_termios.c_cc, ttydefchars, sizeof(ttydefchars));
 }
 
 KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, size_t size)
@@ -376,10 +363,9 @@ void TTY::flush_output()
 }
 
 // Subclasses can call this once they're ready to setup the various serial parameters.
-void TTY::load_termios()
+void TTY::reload_termios()
 {
-    set_default_termios();
-    set_termios(m_termios);
+    set_termios(m_termios, true);
 }
 
 int TTY::set_termios(const termios& new_termios, bool force_set)

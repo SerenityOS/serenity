@@ -13,6 +13,8 @@
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/ProcessGroup.h>
 #include <Kernel/UnixTypes.h>
+#define TTYDEFCHARS
+#include <LibC/sys/ttydefaults.h>
 
 #define TTY_BUFFER_SIZE 1024
 
@@ -47,12 +49,21 @@ public:
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
-    void set_default_termios();
     const termios& get_termios() const { return m_termios; }
     void hang_up();
 
     // ^Device
     virtual mode_t required_mode() const override { return 0620; }
+
+    static constexpr termios DEFAULT_TERMIOS = {
+        .c_iflag = TTYDEF_IFLAG,
+        .c_oflag = TTYDEF_OFLAG,
+        .c_cflag = TTYDEF_CFLAG,
+        .c_lflag = TTYDEF_LFLAG,
+        .c_cc = { TTYDEF_CC },
+        .c_ispeed = TTYDEF_SPEED,
+        .c_ospeed = TTYDEF_SPEED
+    };
 
 protected:
     enum class Parity {
@@ -97,7 +108,7 @@ protected:
     void flush_input();
     void flush_output();
 
-    void load_termios();
+    void reload_termios();
 
     bool is_eol(u8) const;
     bool is_eof(u8) const;
@@ -124,7 +135,7 @@ private:
 
     WeakPtr<Process> m_original_process_parent;
     WeakPtr<ProcessGroup> m_pg;
-    termios m_termios;
+    termios m_termios { DEFAULT_TERMIOS };
     unsigned short m_rows { 0 };
     unsigned short m_columns { 0 };
 };
