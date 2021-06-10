@@ -62,5 +62,17 @@ void Generator::end_continuable_scope()
 {
     m_continuable_scopes.take_last();
 }
+Label Generator::nearest_breakable_scope() const
+{
+    return m_breakable_scopes.last();
+}
+void Generator::begin_breakable_scope(Label breakable_target)
+{
+    m_breakable_scopes.append(breakable_target);
+}
 
+void Generator::end_breakable_scope()
+{
+    m_breakable_scopes.take_last();
+}
 }
