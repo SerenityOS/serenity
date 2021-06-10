@@ -227,14 +227,16 @@ public:
     const Vector<Parameter>& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
     bool is_strict_mode() const { return m_is_strict_mode; }
+    bool is_generator() const { return m_is_generator; }
 
 protected:
-    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode)
+    FunctionNode(const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
         , m_variables(move(variables))
         , m_function_length(function_length)
+        , m_is_generator(is_generator)
         , m_is_strict_mode(is_strict_mode)
     {
     }
@@ -256,6 +258,7 @@ private:
     const Vector<Parameter> m_parameters;
     NonnullRefPtrVector<VariableDeclaration> m_variables;
     const i32 m_function_length;
+    bool m_is_generator;
     bool m_is_strict_mode;
 };
 
@@ -265,9 +268,9 @@ class FunctionDeclaration final
 public:
     static bool must_have_name() { return true; }
 
-    FunctionDeclaration(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode = false)
+    FunctionDeclaration(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode = false)
         : Declaration(move(source_range))
-        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode)
     {
     }
 
@@ -282,9 +285,9 @@ class FunctionExpression final
 public:
     static bool must_have_name() { return false; }
 
-    FunctionExpression(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_strict_mode, bool is_arrow_function = false)
+    FunctionExpression(SourceRange source_range, const FlyString& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_strict_mode)
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode)
         , m_is_arrow_function(is_arrow_function)
     {
     }
@@ -316,6 +319,24 @@ public:
     }
 
     Value execute(Interpreter&, GlobalObject&) const override { return {}; }
+};
+
+class YieldExpression final : public Expression {
+public:
+    explicit YieldExpression(SourceRange source_range, RefPtr<Expression> argument)
+        : Expression(move(source_range))
+        , m_argument(move(argument))
+    {
+    }
+
+    const Expression* argument() const { return m_argument; }
+
+    virtual Value execute(Interpreter&, GlobalObject&) const override;
+    virtual void dump(int indent) const override;
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
+
+private:
+    RefPtr<Expression> m_argument;
 };
 
 class ReturnStatement final : public Statement {

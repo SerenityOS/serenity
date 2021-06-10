@@ -30,10 +30,23 @@ public:
     GlobalObject& global_object() { return m_global_object; }
     VM& vm() { return m_vm; }
 
-    Value run(Bytecode::Executable const&);
+    Value run(Bytecode::Executable const&, Bytecode::BasicBlock const* entry_point = nullptr);
 
     ALWAYS_INLINE Value& accumulator() { return reg(Register::accumulator()); }
     Value& reg(Register const& r) { return registers()[r.index()]; }
+    [[nodiscard]] RegisterWindow snapshot_frame() const { return m_register_windows.last(); }
+
+    void enter_frame(RegisterWindow const& frame)
+    {
+        ++m_manually_entered_frames;
+        m_register_windows.append(make<RegisterWindow>(frame));
+    }
+    void leave_frame()
+    {
+        VERIFY(m_manually_entered_frames);
+        --m_manually_entered_frames;
+        m_register_windows.take_last();
+    }
 
     void jump(Label const& label)
     {
@@ -55,6 +68,7 @@ private:
     NonnullOwnPtrVector<RegisterWindow> m_register_windows;
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
+    size_t m_manually_entered_frames { 0 };
     Executable const* m_current_executable { nullptr };
     Vector<UnwindInfo> m_unwind_contexts;
     Handle<Exception> m_saved_exception;

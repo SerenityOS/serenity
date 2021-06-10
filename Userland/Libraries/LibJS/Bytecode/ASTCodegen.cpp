@@ -668,7 +668,23 @@ void ReturnStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_argument)
         m_argument->generate_bytecode(generator);
-    generator.emit<Bytecode::Op::Return>();
+
+    if (generator.is_in_generator_function())
+        generator.emit<Bytecode::Op::Yield>(nullptr);
+    else
+        generator.emit<Bytecode::Op::Return>();
+}
+
+void YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    VERIFY(generator.is_in_generator_function());
+
+    if (m_argument)
+        m_argument->generate_bytecode(generator);
+
+    auto& continuation_block = generator.make_block();
+    generator.emit<Bytecode::Op::Yield>(Bytecode::Label { continuation_block });
+    generator.switch_to_basic_block(continuation_block);
 }
 
 void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
