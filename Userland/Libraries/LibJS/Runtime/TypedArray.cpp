@@ -33,7 +33,12 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
         if (vm.exception())
             return;
     }
-    // FIXME: 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+    if (array_buffer.is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return;
+    }
+
     auto buffer_byte_length = array_buffer.byte_length();
     Checked<size_t> new_byte_length;
     if (length.is_undefined()) {
@@ -81,8 +86,12 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
     if (vm.exception())
         return;
 
-    // FIXME: 4. If IsDetachedBuffer(src_data) is true, throw a TypeError exception.
-    VERIFY(src_array.viewed_array_buffer());
+    auto* source_array_buffer = src_array.viewed_array_buffer();
+    VERIFY(source_array_buffer);
+    if (source_array_buffer->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return;
+    }
 
     auto src_array_length = src_array.array_length();
     auto dest_element_size = dest_array.element_size();

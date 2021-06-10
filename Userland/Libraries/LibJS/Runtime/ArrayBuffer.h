@@ -27,17 +27,24 @@ public:
     ByteBuffer& buffer() { return buffer_impl(); }
     const ByteBuffer& buffer() const { return buffer_impl(); }
 
+    Value detach_key() const { return m_detach_key; }
+    void detach_buffer() { m_buffer = Empty {}; }
+    bool is_detached() const { return m_buffer.has<Empty>(); }
+
 private:
     ByteBuffer& buffer_impl()
     {
         ByteBuffer* ptr { nullptr };
-        m_buffer.visit([&](auto* pointer) { ptr = pointer; }, [&](auto& value) { ptr = &value; });
+        m_buffer.visit([&](Empty) { VERIFY_NOT_REACHED(); }, [&](auto* pointer) { ptr = pointer; }, [&](auto& value) { ptr = &value; });
         return *ptr;
     }
 
     const ByteBuffer& buffer_impl() const { return const_cast<ArrayBuffer*>(this)->buffer_impl(); }
 
-    Variant<ByteBuffer, ByteBuffer*> m_buffer;
+    Variant<Empty, ByteBuffer, ByteBuffer*> m_buffer;
+    // The various detach related members of ArrayBuffer are not used by any ECMA262 functionality,
+    // but are required to be available for the use of various harnesses like the Test262 test runner.
+    Value m_detach_key;
 };
 
 }
