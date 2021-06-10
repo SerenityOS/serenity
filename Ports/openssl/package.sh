@@ -11,7 +11,7 @@ auth_import_key="8657ABB260F056B1E5190839D9C4D26D0E604491"
 auth_opts="openssl-${version}.tar.gz.asc openssl-${version}.tar.gz"
 
 depends="zlib"
-configopts="--prefix=${SERENITY_INSTALL_ROOT}/usr/local -DOPENSSL_SYS_SERENITY=1 --openssldir=${SERENITY_INSTALL_ROOT}/usr/local/ssl linux-elf zlib no-tests no-threads no-asm"
+configopts="--prefix=/usr/local --install_prefix=${SERENITY_INSTALL_ROOT} -DOPENSSL_SYS_SERENITY=1 linux-elf zlib no-tests no-threads no-asm"
 
 configure() {
     run ./"$configscript" $configopts
