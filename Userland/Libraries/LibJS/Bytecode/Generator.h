@@ -11,6 +11,7 @@
 #include <AK/SinglyLinkedList.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Label.h>
+#include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
 #include <LibJS/Forward.h>
@@ -31,10 +32,26 @@ public:
 
     Register allocate_register();
 
+    void ensure_enough_space(size_t size)
+    {
+        // Make sure there's always enough space for a single jump at the end.
+        if (!m_current_basic_block->can_grow(size + sizeof(Op::Jump))) {
+            auto& new_block = make_block();
+            emit<Op::Jump>().set_targets(
+                Label { new_block },
+                {});
+            switch_to_basic_block(new_block);
+        }
+    }
+
     template<typename OpType, typename... Args>
     OpType& emit(Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
+        // If the block doesn't have enough space, switch to another block
+        if constexpr (!OpType::IsTerminator)
+            ensure_enough_space(sizeof(OpType));
+
         void* slot = next_slot();
         grow(sizeof(OpType));
         new (slot) OpType(forward<Args>(args)...);
@@ -47,6 +64,10 @@ public:
     OpType& emit_with_extra_register_slots(size_t extra_register_slots, Args&&... args)
     {
         VERIFY(!is_current_block_terminated());
+        // If the block doesn't have enough space, switch to another block
+        if constexpr (!OpType::IsTerminator)
+            ensure_enough_space(sizeof(OpType) + extra_register_slots * sizeof(Register));
+
         void* slot = next_slot();
         grow(sizeof(OpType) + extra_register_slots * sizeof(Register));
         new (slot) OpType(forward<Args>(args)...);
