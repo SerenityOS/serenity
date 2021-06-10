@@ -378,15 +378,16 @@ Reference VM::get_reference(const FlyString& name)
     return { Reference::GlobalVariable, name };
 }
 
-Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
+Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
 {
+    auto& global_object = function.global_object();
     CallFrame call_frame;
     call_frame.callee = &function;
     if (auto* interpreter = interpreter_if_exists())
         call_frame.current_node = interpreter->current_node();
     call_frame.is_strict_mode = function.is_strict_mode();
 
-    push_call_frame(call_frame, function.global_object());
+    push_call_frame(call_frame, global_object);
     if (exception())
         return {};
     ArmedScopeGuard call_frame_popper = [&] {

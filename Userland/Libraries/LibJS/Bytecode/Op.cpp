@@ -209,7 +209,7 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
         if (m_type == CallType::Call)
             return_value = interpreter.vm().call(function, this_value, move(argument_values));
         else
-            return_value = interpreter.vm().construct(function, function, move(argument_values), interpreter.global_object());
+            return_value = interpreter.vm().construct(function, function, move(argument_values));
     }
 
     interpreter.accumulator() = return_value;
