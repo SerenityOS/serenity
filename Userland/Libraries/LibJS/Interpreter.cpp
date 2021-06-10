@@ -79,7 +79,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
 {
     ScopeGuard guard([&] {
         for (auto& declaration : scope_node.functions()) {
-            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_generator(), declaration.is_strict_mode());
+            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.kind(), declaration.is_strict_mode());
             vm().set_variable(declaration.name(), function, global_object);
         }
     });
