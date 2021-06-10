@@ -42,7 +42,6 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
-    m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
     send_packet({ (const u8*)eth, size_in_bytes });
 }
