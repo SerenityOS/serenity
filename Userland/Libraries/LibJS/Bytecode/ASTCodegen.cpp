@@ -376,13 +376,14 @@ void WhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
+    generator.begin_breakable_scope(Bytecode::Label { end_block });
     m_body->generate_bytecode(generator);
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
         generator.end_continuable_scope();
-
+        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
@@ -418,13 +419,14 @@ void DoWhileStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.switch_to_basic_block(body_block);
     generator.begin_continuable_scope(Bytecode::Label { test_block });
+    generator.begin_breakable_scope(Bytecode::Label { end_block });
     m_body->generate_bytecode(generator);
     if (!generator.is_current_block_terminated()) {
         generator.emit<Bytecode::Op::Jump>().set_targets(
             Bytecode::Label { test_block },
             {});
         generator.end_continuable_scope();
-
+        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
@@ -484,6 +486,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 
     generator.switch_to_basic_block(*body_block_ptr);
     generator.begin_continuable_scope(Bytecode::Label { *update_block_ptr });
+    generator.begin_breakable_scope(Bytecode::Label { end_block });
     m_body->generate_bytecode(generator);
     generator.end_continuable_scope();
 
@@ -501,6 +504,7 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
             Bytecode::Label { *test_block_ptr },
             {});
 
+        generator.end_breakable_scope();
         generator.switch_to_basic_block(end_block);
         generator.emit<Bytecode::Op::Load>(result_reg);
     }
@@ -785,6 +789,13 @@ void ThrowStatement::generate_bytecode(Bytecode::Generator& generator) const
 {
     m_argument->generate_bytecode(generator);
     generator.emit<Bytecode::Op::Throw>();
+}
+
+void BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::Jump>().set_targets(
+        generator.nearest_breakable_scope(),
+        {});
 }
 
 }
