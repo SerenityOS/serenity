@@ -45,9 +45,11 @@ Value ArrayBufferConstructor::construct(Function&)
     auto& vm = this->vm();
     auto byte_length = vm.argument(0).to_index(global_object());
     if (vm.exception()) {
-        // Re-throw more specific RangeError
-        vm.clear_exception();
-        vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
+        if (vm.exception()->value().is_object() && is<RangeError>(vm.exception()->value().as_object())) {
+            // Re-throw more specific RangeError
+            vm.clear_exception();
+            vm.throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array buffer");
+        }
         return {};
     }
     return ArrayBuffer::create(global_object(), byte_length);
