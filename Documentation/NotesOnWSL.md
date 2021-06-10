@@ -87,6 +87,15 @@ Comment out the `if ((ecx & bit_OSXSAVE))` block in `Toolchain/Tarballs/gcc-<ver
 
 Rebuild the toolchain using `Toolchain/BuildIt.sh` as normal, then rebuild Serenity.
 
+##### Slow boot on HiDPI systems
+
+On some Windows systems running with >100% scaling, the booting phase of Serenity might slow to a crawl. Changing the zoom settings of the QEMU window
+will speed up the emulation, but you'll have to squint harder to read the smaller display.
+
+A quick workaround is opening the properties of the QEMU executable at `C:\Program Files\qemu\qemu-system-i386.exe`, and in the Compatibility tab changing the DPI settings to force the scaling to be performed by the System, by changing the setting at at the bottom of the window. The QEMU window will now render at normal size while retaining acceptable emulation speeds.
+
+This is being tracked as issue [#7657](https://github.com/SerenityOS/serenity/issues/7657).
+
 ### Note on filesystems
 
 WSL2 filesystem performance for IO heavy tasks (such as compiling a large C++ project) on the host Windows filesystem is terrible.
