@@ -8,6 +8,8 @@ Ensure your CMake version is >= 3.16 with `cmake --version`. If your system does
 
 Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
 
+Ensure your [QEMU](https://www.qemu.org/) version is >= 5 with `qemu-system-i386 -version`. Otherwise, install it. You can also build it using the `Toolchain/BuildQemu.sh` script.
+
 On Ubuntu it's in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 
 ```console
