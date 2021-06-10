@@ -35,7 +35,7 @@ Interpreter::~Interpreter()
     s_current = nullptr;
 }
 
-Value Interpreter::run(Executable const& executable)
+Value Interpreter::run(Executable const& executable, BasicBlock const* entry_point)
 {
     dbgln_if(JS_BYTECODE_DEBUG, "Bytecode::Interpreter will run unit {:p}", &executable);
 
@@ -56,10 +56,14 @@ Value Interpreter::run(Executable const& executable)
         VERIFY(!vm().exception());
     }
 
-    auto block = &executable.basic_blocks.first();
-    m_register_windows.append(make<RegisterWindow>());
-    registers().resize(executable.number_of_registers);
-    registers()[Register::global_object_index] = Value(&global_object());
+    auto block = entry_point ?: &executable.basic_blocks.first();
+    if (m_manually_entered_frames) {
+        VERIFY(registers().size() >= executable.number_of_registers);
+    } else {
+        m_register_windows.append(make<RegisterWindow>());
+        registers().resize(executable.number_of_registers);
+        registers()[Register::global_object_index] = Value(&global_object());
+    }
 
     for (;;) {
         Bytecode::InstructionStreamIterator pc(block->instruction_stream());
@@ -124,7 +128,8 @@ Value Interpreter::run(Executable const& executable)
 
     vm().set_last_value(Badge<Interpreter> {}, accumulator());
 
-    m_register_windows.take_last();
+    if (!m_manually_entered_frames)
+        m_register_windows.take_last();
 
     auto return_value = m_return_value.value_or(js_undefined());
     m_return_value = {};
