@@ -11,6 +11,8 @@
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/Cell.h>
+#include <LibJS/Heap/Handle.h>
+#include <LibJS/Runtime/Exception.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode {
@@ -39,6 +41,10 @@ public:
     }
     void do_return(Value return_value) { m_return_value = return_value; }
 
+    void enter_unwind_context(Optional<Label> handler_target, Optional<Label> finalizer_target);
+    void leave_unwind_context();
+    void continue_pending_unwind(Label const& resume_label);
+
     Executable const& current_executable() { return *m_current_executable; }
 
 private:
@@ -50,6 +56,8 @@ private:
     Optional<BasicBlock const*> m_pending_jump;
     Value m_return_value;
     Executable const* m_current_executable { nullptr };
+    Vector<UnwindInfo> m_unwind_contexts;
+    Handle<Exception> m_saved_exception;
 };
 
 }

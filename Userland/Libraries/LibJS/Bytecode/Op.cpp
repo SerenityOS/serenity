@@ -261,6 +261,21 @@ void Throw::execute(Bytecode::Interpreter& interpreter) const
     interpreter.vm().throw_exception(interpreter.global_object(), interpreter.accumulator());
 }
 
+void EnterUnwindContext::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
+}
+
+void LeaveUnwindContext::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.leave_unwind_context();
+}
+
+void ContinuePendingUnwind::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.continue_pending_unwind(m_resume_target);
+}
+
 String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -392,6 +407,23 @@ String Decrement::to_string(Bytecode::Executable const&) const
 String Throw::to_string(Bytecode::Executable const&) const
 {
     return "Throw";
+}
+
+String EnterUnwindContext::to_string(Bytecode::Executable const&) const
+{
+    auto handler_string = m_handler_target.has_value() ? String::formatted("{}", *m_handler_target) : "<empty>";
+    auto finalizer_string = m_finalizer_target.has_value() ? String::formatted("{}", *m_finalizer_target) : "<empty>";
+    return String::formatted("EnterUnwindContext handler:{} finalizer:{}", handler_string, finalizer_string);
+}
+
+String LeaveUnwindContext::to_string(Bytecode::Executable const&) const
+{
+    return "LeaveUnwindContext";
+}
+
+String ContinuePendingUnwind::to_string(Bytecode::Executable const&) const
+{
+    return String::formatted("ContinuePendingUnwind resume:{}", m_resume_target);
 }
 
 }
