@@ -409,6 +409,50 @@ public:
     String to_string(Bytecode::Executable const&) const;
 };
 
+class EnterUnwindContext final : public Instruction {
+public:
+    EnterUnwindContext(Optional<Label> handler_target, Optional<Label> finalizer_target)
+        : Instruction(Type::EnterUnwindContext)
+        , m_handler_target(handler_target)
+        , m_finalizer_target(finalizer_target)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+private:
+    Optional<Label> m_handler_target;
+    Optional<Label> m_finalizer_target;
+};
+
+class LeaveUnwindContext final : public Instruction {
+public:
+    LeaveUnwindContext()
+        : Instruction(Type::LeaveUnwindContext)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+};
+
+class ContinuePendingUnwind final : public Instruction {
+public:
+    constexpr static bool IsTerminator = true;
+
+    ContinuePendingUnwind(Label const& resume_target)
+        : Instruction(Type::ContinuePendingUnwind)
+        , m_resume_target(resume_target)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+private:
+    Label m_resume_target;
+};
 }
 
 namespace JS::Bytecode {

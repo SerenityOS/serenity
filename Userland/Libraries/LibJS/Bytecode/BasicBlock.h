@@ -38,6 +38,11 @@ private:
     size_t m_offset { 0 };
 };
 
+struct UnwindInfo {
+    BasicBlock const* handler;
+    BasicBlock const* finalizer;
+};
+
 class BasicBlock {
 public:
     static NonnullOwnPtr<BasicBlock> create(String name);

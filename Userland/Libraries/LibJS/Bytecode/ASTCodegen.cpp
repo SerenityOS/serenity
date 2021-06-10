@@ -798,4 +798,58 @@ void BreakStatement::generate_bytecode(Bytecode::Generator& generator) const
         {});
 }
 
+void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto& saved_block = generator.current_block();
+
+    Optional<Bytecode::Label> handler_target;
+    Optional<Bytecode::Label> finalizer_target;
+
+    Bytecode::BasicBlock* next_block { nullptr };
+
+    if (m_finalizer) {
+        auto& finalizer_block = generator.make_block();
+        generator.switch_to_basic_block(finalizer_block);
+        m_finalizer->generate_bytecode(generator);
+        if (!generator.is_current_block_terminated()) {
+            next_block = &generator.make_block();
+            auto next_target = Bytecode::Label { *next_block };
+            generator.emit<Bytecode::Op::ContinuePendingUnwind>(next_target);
+        }
+        finalizer_target = Bytecode::Label { finalizer_block };
+    }
+
+    if (m_handler) {
+        auto& handler_block = generator.make_block();
+        generator.switch_to_basic_block(handler_block);
+        if (!m_finalizer)
+            generator.emit<Bytecode::Op::LeaveUnwindContext>();
+        if (!m_handler->parameter().is_empty()) {
+            // FIXME: We need a separate LexicalEnvironment here
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(m_handler->parameter()));
+        }
+        m_handler->body().generate_bytecode(generator);
+        handler_target = Bytecode::Label { handler_block };
+        if (!generator.is_current_block_terminated()) {
+            if (m_finalizer) {
+                generator.emit<Bytecode::Op::LeaveUnwindContext>();
+                generator.emit<Bytecode::Op::Jump>(finalizer_target);
+            } else {
+                VERIFY(!next_block);
+                next_block = &generator.make_block();
+                auto next_target = Bytecode::Label { *next_block };
+                generator.emit<Bytecode::Op::Jump>(next_target);
+            }
+        }
+    }
+
+    generator.switch_to_basic_block(saved_block);
+    generator.emit<Bytecode::Op::EnterUnwindContext>(handler_target, finalizer_target);
+    m_block->generate_bytecode(generator);
+    if (m_finalizer && !generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::Jump>(finalizer_target);
+
+    generator.switch_to_basic_block(next_block ? *next_block : saved_block);
+}
+
 }
