@@ -37,14 +37,11 @@ static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object
 {
     // ArrayBuffer.prototype.* deliberately don't coerce |this| value to object.
     auto this_value = vm.this_value(global_object);
-    if (!this_value.is_object())
-        return nullptr;
-    auto& this_object = this_value.as_object();
-    if (!is<ArrayBuffer>(this_object)) {
+    if (!this_value.is_object() || !is<ArrayBuffer>(this_value.as_object())) {
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAn, "ArrayBuffer");
         return nullptr;
     }
-    return static_cast<ArrayBuffer*>(&this_object);
+    return static_cast<ArrayBuffer*>(&this_value.as_object());
 }
 
 // 25.1.5.3 ArrayBuffer.prototype.slice, https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
