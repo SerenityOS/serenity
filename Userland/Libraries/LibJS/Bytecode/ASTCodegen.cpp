@@ -11,6 +11,8 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
+#include <LibJS/Bytecode/StringTable.h>
+#include <LibJS/Runtime/ScopeObject.h>
 
 namespace JS {
 
@@ -25,6 +27,41 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
     for (auto& function : functions()) {
         generator.emit<Bytecode::Op::NewFunction>(function);
         generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(function.name()));
+    }
+
+    HashMap<u32, Variable> scope_variables_with_declaration_kind;
+
+    bool is_program_node = is<Program>(*this);
+    for (auto& declaration : variables()) {
+        for (auto& declarator : declaration.declarations()) {
+            if (is_program_node && declaration.declaration_kind() == DeclarationKind::Var) {
+                declarator.target().visit(
+                    [&](const NonnullRefPtr<Identifier>& id) {
+                        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                        generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(id->string()));
+                    },
+                    [&](const NonnullRefPtr<BindingPattern>& binding) {
+                        binding->for_each_assigned_name([&](const auto& name) {
+                            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+                            generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(name));
+                        });
+                    });
+            } else {
+                declarator.target().visit(
+                    [&](const NonnullRefPtr<Identifier>& id) {
+                        scope_variables_with_declaration_kind.set((size_t)generator.intern_string(id->string()).value(), { js_undefined(), declaration.declaration_kind() });
+                    },
+                    [&](const NonnullRefPtr<BindingPattern>& binding) {
+                        binding->for_each_assigned_name([&](const auto& name) {
+                            scope_variables_with_declaration_kind.set((size_t)generator.intern_string(name).value(), { js_undefined(), declaration.declaration_kind() });
+                        });
+                    });
+            }
+        }
+    }
+
+    if (!scope_variables_with_declaration_kind.is_empty()) {
+        generator.emit<Bytecode::Op::PushLexicalEnvironment>(move(scope_variables_with_declaration_kind));
     }
 
     for (auto& child : children()) {
@@ -560,8 +597,21 @@ void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
 {
 }
 
-void VariableDeclaration::generate_bytecode(Bytecode::Generator&) const
+void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
+    for (auto& declarator : m_declarations) {
+        if (declarator.init())
+            declarator.init()->generate_bytecode(generator);
+        else
+            generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        declarator.target().visit(
+            [&](const NonnullRefPtr<Identifier>& id) {
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(id->string()));
+            },
+            [&](const NonnullRefPtr<BindingPattern>&) {
+                TODO();
+            });
+    }
 }
 
 void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
