@@ -325,10 +325,16 @@ public:
 // NOTE: This instruction is variable-width depending on the number of arguments!
 class Call final : public Instruction {
 public:
-    Call(Register callee, Register this_value, Vector<Register> const& arguments)
+    enum class CallType {
+        Call,
+        Construct,
+    };
+
+    Call(CallType type, Register callee, Register this_value, Vector<Register> const& arguments)
         : Instruction(Type::Call)
         , m_callee(callee)
         , m_this_value(this_value)
+        , m_type(type)
         , m_argument_count(arguments.size())
     {
         for (size_t i = 0; i < m_argument_count; ++i)
@@ -343,6 +349,7 @@ public:
 private:
     Register m_callee;
     Register m_this_value;
+    CallType m_type;
     size_t m_argument_count { 0 };
     Register m_arguments[];
 };
