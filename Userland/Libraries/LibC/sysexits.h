@@ -21,7 +21,7 @@
 #define EX_OSERR 71
 #define EX_OSFILE 72
 #define EX_CANTCREAT 73
-#define EX_IOER 74
+#define EX_IOERR 74
 #define EX_TEMPFAIL 75
 #define EX_PROTOCOL 76
 #define EX_NOPERM 77
