@@ -266,6 +266,38 @@ private:
     StringTableIndex m_property;
 };
 
+class GetByValue final : public Instruction {
+public:
+    explicit GetByValue(Register base)
+        : Instruction(Type::GetByValue)
+        , m_base(base)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+private:
+    Register m_base;
+};
+
+class PutByValue final : public Instruction {
+public:
+    PutByValue(Register base, Register property)
+        : Instruction(Type::PutByValue)
+        , m_base(base)
+        , m_property(property)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+private:
+    Register m_base;
+    Register m_property;
+};
+
 class Jump : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
