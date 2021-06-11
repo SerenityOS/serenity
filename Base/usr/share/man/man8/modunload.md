@@ -20,6 +20,6 @@ $ modunload TestModule
 
 ## See also
 
-* [`modload`(1)](modload.md)
+* [`modload`(8)](modload.md)
 * [`module_unload`(2)](../man2/module_unload.md)
 * [`kernel_modules`(7)](../man7/kernel_modules.md)
