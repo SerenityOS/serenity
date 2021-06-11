@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Find.h>
 #include <AK/Iterator.h>
 
 namespace AK {
@@ -16,12 +17,7 @@ constexpr bool any_of(
     const SimpleIterator<Container, ValueType>& end,
     const auto& predicate)
 {
-    for (auto iter = begin; iter != end; ++iter) {
-        if (predicate(*iter)) {
-            return true;
-        }
-    }
-    return false;
+    return find_if(begin, end, predicate) != end;
 }
 
 }
