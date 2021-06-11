@@ -30,7 +30,7 @@ public:
         FlatPtr eip;
         String object_name;
         String function_name;
-        Optional<Debug::DebugInfo::SourcePosition> source_position;
+        Debug::DebugInfo::SourcePositionWithInlines source_position_with_inlines;
 
         String to_string(bool color = false) const;
     };
