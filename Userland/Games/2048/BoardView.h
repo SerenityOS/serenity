@@ -45,4 +45,5 @@ private:
     static constexpr int animation_duration = 5;
 
     int pop_in_animation_frame = 0;
+    int slide_animation_frame = 0;
 };
