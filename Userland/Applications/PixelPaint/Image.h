@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,9 +36,9 @@ protected:
 
 class Image : public RefCounted<Image> {
 public:
-    static RefPtr<Image> create_with_size(Gfx::IntSize const&);
-    static RefPtr<Image> create_from_file(String const& file_path);
-    static RefPtr<Image> create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap);
+    static RefPtr<Image> try_create_with_size(Gfx::IntSize const&);
+    static RefPtr<Image> try_create_from_file(String const& file_path);
+    static RefPtr<Image> try_create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap);
 
     size_t layer_count() const { return m_layers.size(); }
     Layer const& layer(size_t index) const { return m_layers.at(index); }
@@ -75,7 +75,7 @@ public:
 private:
     explicit Image(Gfx::IntSize const&);
 
-    static RefPtr<Image> create_from_pixel_paint_file(String const& file_path);
+    static RefPtr<Image> try_create_from_pixel_paint_file(String const& file_path);
 
     void did_change();
     void did_modify_layer_stack();

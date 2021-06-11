@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -22,7 +22,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Image> Image::create_with_size(Gfx::IntSize const& size)
+RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
 {
     if (size.is_empty())
         return nullptr;
@@ -52,9 +52,9 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect)
     }
 }
 
-RefPtr<Image> Image::create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
+RefPtr<Image> Image::try_create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
 {
-    auto image = create_with_size({ bitmap->width(), bitmap->height() });
+    auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
     if (image.is_null())
         return nullptr;
 
@@ -67,7 +67,7 @@ RefPtr<Image> Image::create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
     return image;
 }
 
-RefPtr<Image> Image::create_from_pixel_paint_file(String const& file_path)
+RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
 {
     auto file = fopen(file_path.characters(), "r");
     fseek(file, 0L, SEEK_END);
@@ -83,7 +83,7 @@ RefPtr<Image> Image::create_from_pixel_paint_file(String const& file_path)
         return nullptr;
 
     auto json = json_or_error.value().as_object();
-    auto image = create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
+    auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
     json.get("layers").as_array().for_each([&](JsonValue json_layer) {
         auto json_layer_object = json_layer.as_object();
         auto width = json_layer_object.get("width").to_i32();
@@ -105,14 +105,11 @@ RefPtr<Image> Image::create_from_pixel_paint_file(String const& file_path)
     return image;
 }
 
-RefPtr<Image> Image::create_from_file(String const& file_path)
+RefPtr<Image> Image::try_create_from_file(String const& file_path)
 {
-    auto bitmap = Gfx::Bitmap::load_from_file(file_path);
-    if (bitmap) {
-        return create_from_bitmap(bitmap);
-    }
-
-    return create_from_pixel_paint_file(file_path);
+    if (auto bitmap = Gfx::Bitmap::load_from_file(file_path))
+        return try_create_from_bitmap(bitmap);
+    return try_create_from_pixel_paint_file(file_path);
 }
 
 void Image::save(String const& file_path) const
@@ -188,7 +185,9 @@ void Image::add_layer(NonnullRefPtr<Layer> layer)
 
 RefPtr<Image> Image::take_snapshot() const
 {
-    auto snapshot = create_with_size(m_size);
+    auto snapshot = try_create_with_size(m_size);
+    if (!snapshot)
+        return nullptr;
     for (const auto& layer : m_layers)
         snapshot->add_layer(*Layer::create_snapshot(*snapshot, layer));
     return snapshot;
