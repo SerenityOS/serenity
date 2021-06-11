@@ -100,6 +100,7 @@ namespace JS {
     P(entries)                               \
     P(enumerable)                            \
     P(error)                                 \
+    P(errors)                                \
     P(escape)                                \
     P(eval)                                  \
     P(every)                                 \

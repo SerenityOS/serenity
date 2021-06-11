@@ -17,6 +17,9 @@ set(SOURCES
     Lexer.cpp
     MarkupGenerator.cpp
     Parser.cpp
+    Runtime/AggregateError.cpp
+    Runtime/AggregateErrorConstructor.cpp
+    Runtime/AggregateErrorPrototype.cpp
     Runtime/Array.cpp
     Runtime/ArrayBuffer.cpp
     Runtime/ArrayBufferConstructor.cpp
