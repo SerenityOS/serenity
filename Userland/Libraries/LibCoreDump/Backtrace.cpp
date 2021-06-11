@@ -84,8 +84,10 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
     auto* object_info = object_info_for_region(*region);
     if (!object_info)
         return;
-    auto function_name = object_info->debug_info.elf().symbolicate(eip - region->region_start);
-    auto source_position = object_info->debug_info.get_source_position(eip - region->region_start);
+
+    auto function_name = object_info->debug_info->elf().symbolicate(eip - region->region_start);
+    auto source_position = object_info->debug_info->get_source_position_with_inlines(eip - region->region_start);
+
     m_entries.append({ eip, object_name, function_name, source_position });
 }
 
@@ -98,11 +100,30 @@ String Backtrace::Entry::to_string(bool color) const
         return builder.build();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
-    if (source_position.has_value()) {
-        auto& source_position = this->source_position.value();
-        auto fmt = color ? " (\033[34;1m{}\033[0m:{})" : " ({}:{})";
-        builder.appendff(fmt, LexicalPath(source_position.file_path).basename(), source_position.line_number);
+    builder.append(" (");
+
+    Vector<Debug::DebugInfo::SourcePosition> source_positions;
+
+    for (auto& position : source_position_with_inlines.inline_chain) {
+        if (!source_positions.contains_slow(position))
+            source_positions.append(position);
     }
+
+    if (source_position_with_inlines.source_position.has_value() && !source_positions.contains_slow(source_position_with_inlines.source_position.value())) {
+        source_positions.insert(0, source_position_with_inlines.source_position.value());
+    }
+
+    for (size_t i = 0; i < source_positions.size(); ++i) {
+        auto& position = source_positions[i];
+        auto fmt = color ? "\033[34;1m{}\033[0m:{}" : "{}:{}";
+        builder.appendff(fmt, LexicalPath(position.file_path).basename(), position.line_number);
+        if (i != source_positions.size() - 1) {
+            builder.append(" => ");
+        }
+    }
+
+    builder.append(")");
+
     return builder.build();
 }
 
