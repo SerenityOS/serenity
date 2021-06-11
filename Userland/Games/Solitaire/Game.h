@@ -137,6 +137,7 @@ private:
         __Count
     };
     static constexpr Array piles = { Pile1, Pile2, Pile3, Pile4, Pile5, Pile6, Pile7 };
+    static constexpr Array foundations = { Foundation1, Foundation2, Foundation3, Foundation4 };
 
     ALWAYS_INLINE const WasteRecycleRules& recycle_rules()
     {
@@ -161,7 +162,6 @@ private:
     void remember_move_for_undo(CardStack& from, CardStack& to, NonnullRefPtrVector<Card> moved_cards);
     void remember_flip_for_undo(Card& card);
     void update_score(int to_add);
-    void move_card(CardStack& from, CardStack& to);
     void draw_cards();
     void pop_waste_to_play_stack();
     bool attempt_to_move_card_to_foundations(CardStack& from);
