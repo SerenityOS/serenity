@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -151,7 +151,7 @@ void GlobalObject::initialize_global_object()
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     add_constructor(vm.names.ClassName, m_##snake_name##_constructor, m_##snake_name##_prototype);
-    JS_ENUMERATE_ERROR_SUBCLASSES
+    JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 }
@@ -172,7 +172,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
     visitor.visit(m_##snake_name##_prototype);
-    JS_ENUMERATE_ERROR_SUBCLASSES
+    JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 

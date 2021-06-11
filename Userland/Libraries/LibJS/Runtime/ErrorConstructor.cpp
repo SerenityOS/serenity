@@ -73,7 +73,7 @@ Value ErrorConstructor::construct(Function&)
         return ClassName::create(global_object(), message);                              \
     }
 
-JS_ENUMERATE_ERROR_SUBCLASSES
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 
 }

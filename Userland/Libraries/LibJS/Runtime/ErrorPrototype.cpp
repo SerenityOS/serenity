@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         define_property(vm.names.message, js_string(vm, ""), attr);                      \
     }
 
-JS_ENUMERATE_ERROR_SUBCLASSES
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 
 }

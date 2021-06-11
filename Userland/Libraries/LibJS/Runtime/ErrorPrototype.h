@@ -22,19 +22,19 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(to_string);
 };
 
-#define DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
-    class PrototypeName final : public Object {                                                 \
-        JS_OBJECT(PrototypeName, Object);                                                       \
-                                                                                                \
-    public:                                                                                     \
-        explicit PrototypeName(GlobalObject&);                                                  \
-        virtual void initialize(GlobalObject&) override;                                        \
-        virtual ~PrototypeName() override = default;                                            \
+#define DECLARE_NATIVE_ERROR_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class PrototypeName final : public Object {                                               \
+        JS_OBJECT(PrototypeName, Object);                                                     \
+                                                                                              \
+    public:                                                                                   \
+        explicit PrototypeName(GlobalObject&);                                                \
+        virtual void initialize(GlobalObject&) override;                                      \
+        virtual ~PrototypeName() override = default;                                          \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    DECLARE_ERROR_SUBCLASS_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName)
-JS_ENUMERATE_ERROR_SUBCLASSES
+    DECLARE_NATIVE_ERROR_PROTOTYPE(ClassName, snake_name, PrototypeName, ConstructorName)
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 
 }

@@ -26,24 +26,24 @@ private:
     virtual bool has_constructor() const override { return true; }
 };
 
-#define DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
-    class ConstructorName final : public NativeFunction {                                         \
-        JS_OBJECT(ConstructorName, NativeFunction);                                               \
-                                                                                                  \
-    public:                                                                                       \
-        explicit ConstructorName(GlobalObject&);                                                  \
-        virtual void initialize(GlobalObject&) override;                                          \
-        virtual ~ConstructorName() override;                                                      \
-        virtual Value call() override;                                                            \
-        virtual Value construct(Function& new_target) override;                                   \
-                                                                                                  \
-    private:                                                                                      \
-        virtual bool has_constructor() const override { return true; }                            \
+#define DECLARE_NATIVE_ERROR_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class ConstructorName final : public NativeFunction {                                       \
+        JS_OBJECT(ConstructorName, NativeFunction);                                             \
+                                                                                                \
+    public:                                                                                     \
+        explicit ConstructorName(GlobalObject&);                                                \
+        virtual void initialize(GlobalObject&) override;                                        \
+        virtual ~ConstructorName() override;                                                    \
+        virtual Value call() override;                                                          \
+        virtual Value construct(Function& new_target) override;                                 \
+                                                                                                \
+    private:                                                                                    \
+        virtual bool has_constructor() const override { return true; }                          \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    DECLARE_ERROR_SUBCLASS_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName)
-JS_ENUMERATE_ERROR_SUBCLASSES
+    DECLARE_NATIVE_ERROR_CONSTRUCTOR(ClassName, snake_name, PrototypeName, ConstructorName)
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 
 }
