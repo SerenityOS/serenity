@@ -23,7 +23,7 @@ void RegExpConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.prototype, global_object.regexp_prototype(), 0);
     define_property(vm.names.length, Value(2), Attribute::Configurable);
 
-    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 RegExpConstructor::~RegExpConstructor()
