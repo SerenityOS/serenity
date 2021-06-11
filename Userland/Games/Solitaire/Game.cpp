@@ -326,8 +326,6 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
                         to_check.push(move(card));
                     }
                 }
-
-                update_score(10);
             }
             break;
         }
@@ -359,6 +357,8 @@ void Game::move_card(CardStack& from, CardStack& to)
     to.push(card);
 
     remember_move_for_undo(from, to, m_focused_cards);
+
+    score_move(from, to);
 
     update(to.bounding_box());
 }
