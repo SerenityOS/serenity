@@ -58,14 +58,7 @@ void FlexFormattingContext::run(Box& box, LayoutMode)
     auto is_row = (flex_direction == CSS::FlexDirection::Row || flex_direction == CSS::FlexDirection::RowReverse);
     auto main_size_is_infinite = false;
     auto get_pixel_size = [](Box& box, const CSS::Length& length) {
-        if (length.is_undefined())
-            return 0.0f;
-
-        if (!length.is_percentage())
-            return length.to_px(box);
-
-        auto percent = length.raw_value() / 100.0f;
-        return box.containing_block()->width() * percent;
+        return length.resolved(CSS::Length::make_px(0), box, box.containing_block()->width()).to_px(box);
     };
     auto layout_for_maximum_main_size = [&](Box& box) {
         if (is_row)
