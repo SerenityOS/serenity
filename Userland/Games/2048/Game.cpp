@@ -7,6 +7,7 @@
 #include "Game.h"
 #include <AK/Array.h>
 #include <AK/NumericLimits.h>
+#include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <stdlib.h>
 
@@ -21,8 +22,8 @@ Game::Game(size_t grid_size, size_t target_tile, bool evil_ai)
     else
         m_target_tile = target_tile;
 
-    m_board.tiles.resize(grid_size);
-    for (auto& row : m_board.tiles) {
+    m_board.m_tiles.resize(grid_size);
+    for (auto& row : m_board.m_tiles) {
         row.ensure_capacity(grid_size);
         for (size_t i = 0; i < grid_size; i++)
             row.append(0);
@@ -39,93 +40,84 @@ void Game::add_random_tile()
     do {
         row = rand() % m_grid_size;
         column = rand() % m_grid_size;
-    } while (m_board.tiles[row][column] != 0);
+    } while (m_board.m_tiles[row][column] != 0);
 
     size_t value = rand() < RAND_MAX * 0.9 ? 2 : 4;
     m_board.add_tile(row, column, value);
 }
 
-static Game::Board::Tiles transpose(Game::Board::Tiles const& tiles)
+void Game::Board::transpose()
 {
-    Game::Board::Tiles new_tiles;
-    auto result_row_count = tiles[0].size();
-    auto result_column_count = tiles.size();
-
-    new_tiles.resize(result_row_count);
-
-    for (size_t i = 0; i < tiles.size(); ++i) {
-        auto& row = new_tiles[i];
-        row.clear_with_capacity();
-        row.ensure_capacity(result_column_count);
-        for (auto& entry : tiles) {
-            row.append(entry[i]);
-        }
+    for (size_t i = 1; i < m_tiles.size(); ++i) {
+        for (size_t j = 0; j < i; j++)
+            swap(m_tiles[i][j], m_tiles[j][i]);
     }
-
-    return new_tiles;
 }
 
-static Game::Board::Tiles reverse(Game::Board::Tiles const& tiles)
+void Game::Board::reverse()
 {
-    auto new_tiles = tiles;
-    for (auto& row : new_tiles) {
+    for (auto& row : m_tiles) {
         for (size_t i = 0; i < row.size() / 2; ++i)
             swap(row[i], row[row.size() - i - 1]);
     }
-
-    return new_tiles;
 }
 
-static Game::Board::Row slide_row(Game::Board::Row const& row, size_t& successful_merge_score)
+size_t Game::Board::slide_row(size_t row_index)
 {
-    if (row.size() < 2)
-        return row;
+    Game::Board::Row& row = m_tiles[row_index];
+    size_t successful_merge_score = 0;
 
-    auto x = row[0];
-    auto y = row[1];
+    auto next_nonempty = [&](size_t start_index) {
+        size_t next = start_index;
+        for (; next < row.size(); next++) {
+            if (row[next] != 0)
+                break;
+        }
+        return next;
+    };
 
-    auto result = row;
-    result.take_first();
+    size_t current_index = 0;
 
-    if (x == 0) {
-        result = slide_row(result, successful_merge_score);
-        result.append(0);
-        return result;
+    size_t first = next_nonempty(0);
+    if (first == row.size()) // empty row
+        return 0;
+
+    while (first < row.size()) {
+        auto second = next_nonempty(first + 1);
+        if (second == row.size() || row[first] != row[second]) {
+            row[current_index] = row[first];
+            current_index++;
+            first = second;
+        } else {
+            VERIFY(row[first] == row[second]);
+
+
+            row[current_index] = 2 * row[first];
+            current_index++;
+            successful_merge_score += 2 * row[first];
+            first = next_nonempty(second + 1);
+        }
     }
 
-    if (y == 0) {
-        result[0] = x;
-        result = slide_row(result, successful_merge_score);
-        result.append(0);
-        return result;
-    }
+    for (; current_index < row.size(); current_index++)
+        row[current_index] = 0;
 
-    if (x == y) {
-        result.take_first();
-        result = slide_row(result, successful_merge_score);
-        result.append(0);
-        result.prepend(x + x);
-        successful_merge_score += x * 2;
-        return result;
-    }
-
-    result = slide_row(result, successful_merge_score);
-    result.prepend(x);
-    return result;
+    return successful_merge_score;
 }
 
-static Game::Board::Tiles slide_left(Game::Board::Tiles const& tiles, size_t& successful_merge_score)
+size_t Game::Board::slide_left()
 {
-    Game::Board::Tiles new_tiles;
-    for (auto& row : tiles)
-        new_tiles.append(slide_row(row, successful_merge_score));
+    size_t successful_merge_score = 0;
 
-    return new_tiles;
+    for (size_t row_index = 0; row_index < m_tiles.size(); row_index++)
+        successful_merge_score += slide_row(row_index);
+
+    return successful_merge_score;
 }
 
 static bool is_complete(Game::Board const& board, size_t target)
 {
-    for (auto& row : board.tiles) {
+    for (auto& row : board.tiles()) {
         if (row.contains_slow(target))
             return true;
     }
@@ -147,17 +139,19 @@ static bool has_no_neighbors(Span<u32 const> const& row)
     return has_no_neighbors(row.slice(1, row.size() - 1));
 };
 
-static bool is_stalled(Game::Board const& board)
+bool Game::Board::is_stalled()
 {
     static auto stalled = [](auto& row) {
         return !row.contains_slow(0) && has_no_neighbors(row.span());
     };
 
-    for (auto& row : board.tiles)
+    for (auto& row : m_tiles)
         if (!stalled(row))
             return false;
 
-    for (auto& row : transpose(board.tiles))
+    transpose();
+    auto scope_guard = ScopeGuard([&]() { transpose(); });
+    for (auto& row : m_tiles)
         if (!stalled(row))
             return false;
 
@@ -167,53 +161,61 @@ static bool is_stalled(Game::Board const& board)
 static size_t get_number_of_free_cells(Game::Board const& board)
 {
     size_t accumulator = 0;
-    for (auto& row : board.tiles) {
+    for (auto& row : board.tiles()) {
         for (auto& cell : row)
             accumulator += cell == 0;
     }
     return accumulator;
 }
 
-bool Game::slide_tiles(Direction direction)
+Game::Board::SlideResult Game::Board::slide_tiles(Direction direction)
 {
     size_t successful_merge_score = 0;
-    Game::Board::Tiles new_tiles;
+    Tiles new_tiles;
 
     switch (direction) {
     case Direction::Left:
-        new_tiles = slide_left(m_board.tiles, successful_merge_score);
+        successful_merge_score = slide_left();
         break;
+
     case Direction::Right:
-        new_tiles = reverse(slide_left(reverse(m_board.tiles), successful_merge_score));
+        reverse();
+        successful_merge_score = slide_left();
+        reverse();
         break;
+
     case Direction::Up:
-        new_tiles = transpose(slide_left(transpose(m_board.tiles), successful_merge_score));
+        transpose();
+        successful_merge_score = slide_left();
+        transpose();
         break;
+
     case Direction::Down:
-        new_tiles = transpose(reverse(slide_left(reverse(transpose(m_board.tiles)), successful_merge_score)));
+        transpose();
+        reverse();
+        successful_merge_score = slide_left();
+        reverse();
+        transpose();
         break;
     }
 
-    bool moved = new_tiles != m_board.tiles;
-    if (moved) {
-        m_board.tiles = new_tiles;
-        m_score += successful_merge_score;
-    }
+    bool moved = new_tiles != m_tiles;
 
-    return moved;
+    return { moved, successful_merge_score };
 }
 
 Game::MoveOutcome Game::attempt_move(Direction direction)
 {
-    bool moved = slide_tiles(direction);
+    auto [moved, successful_merge_score] = m_board.slide_tiles(direction);
     if (moved) {
         m_turns++;
+        m_score += successful_merge_score;
         add_tile();
     }
 
     if (is_complete(m_board, m_target_tile))
         return MoveOutcome::Won;
-    if (is_stalled(m_board))
+    if (m_board.is_stalled())
         return MoveOutcome::GameOver;
     if (moved)
         return MoveOutcome::OK;
@@ -231,14 +233,14 @@ void Game::add_evil_tile()
 
     for (size_t row = 0; row < m_grid_size; row++) {
         for (size_t column = 0; column < m_grid_size; column++) {
-            if (m_board.tiles[row][column] != 0)
+            if (m_board.m_tiles[row][column] != 0)
                 continue;
 
             for (u32 value : Array { 2, 4 }) {
                 Game saved_state = *this;
-                saved_state.m_board.tiles[row][column] = value;
+                saved_state.m_board.m_tiles[row][column] = value;
 
-                if (is_stalled(saved_state.board())) {
+                if (saved_state.m_board.is_stalled()) {
                     // We can stall the board now, instant game over.
                     worst_row = row;
                     worst_column = column;
@@ -253,11 +255,11 @@ void Game::add_evil_tile()
                 size_t best_score = 0;
                 for (auto direction : Array { Direction::Down, Direction::Left, Direction::Right, Direction::Up }) {
                     Game moved_state = saved_state;
-                    bool moved = moved_state.slide_tiles(direction);
+                    auto [moved, score_delta] = moved_state.m_board.slide_tiles(direction);
                     if (!moved) // invalid move
                         continue;
                     best_outcome = max(best_outcome, get_number_of_free_cells(moved_state.board()));
-                    best_score = max(best_score, moved_state.score());
+                    best_score = max(best_score, score_delta);
                 }
 
                 // We already know a worse cell placement; discard.
@@ -285,7 +287,7 @@ found_worst_tile:
 u32 Game::largest_tile() const
 {
     u32 tile = 0;
-    for (auto& row : m_board.tiles) {
+    for (auto& row : m_board.m_tiles) {
         for (auto& cell : row)
             tile = max(tile, cell);
     }

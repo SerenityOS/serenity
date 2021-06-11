@@ -35,11 +35,14 @@ public:
     u32 target_tile() const { return m_target_tile; }
     u32 largest_tile() const;
 
-    struct Board {
+    class Board {
+    public:
         using Row = Vector<u32>;
         using Tiles = Vector<Row>;
 
-        Tiles tiles;
+        Tiles const& tiles() const { return m_tiles; }
+
+        bool is_stalled();
 
         struct Position {
             size_t row;
@@ -53,11 +56,29 @@ public:
 
         void add_tile(size_t row, size_t column, u32 value)
         {
-            tiles[row][column] = value;
-            last_added_position = Position { row, column };
+            m_tiles[row][column] = value;
+            m_last_added_position = Position { row, column };
         }
+        Position const& last_added_position() const { return m_last_added_position; }
 
-        Position last_added_position { 0, 0 };
+        struct SlideResult {
+            bool has_moved;
+            size_t score_delta;
+        };
+        SlideResult slide_tiles(Direction);
+
+    private:
+        void reverse();
+        void transpose();
+
+        size_t slide_row(size_t row_index);
+        size_t slide_left();
+
+        friend Game;
+
+        Tiles m_tiles;
+
+        Position m_last_added_position { 0, 0 };
     };
 
     Board const& board() const { return m_board; }
@@ -71,8 +92,6 @@ public:
     }
 
 private:
-    bool slide_tiles(Direction);
-
     void add_tile()
     {
         if (m_evil_ai)
