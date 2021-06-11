@@ -35,7 +35,7 @@ void BoardView::set_board(Game::Board const* board)
         return;
     }
 
-    bool must_resize = !m_board || m_board->tiles.size() != board->tiles.size();
+    bool must_resize = !m_board || m_board->tiles().size() != board->tiles().size();
 
     m_board = board;
 
@@ -70,16 +70,16 @@ size_t BoardView::rows() const
 {
     if (!m_board)
         return 0;
-    return m_board->tiles.size();
+    return m_board->tiles().size();
 }
 
 size_t BoardView::columns() const
 {
     if (!m_board)
         return 0;
-    if (m_board->tiles.is_empty())
+    if (m_board->tiles().is_empty())
         return 0;
-    return m_board->tiles[0].size();
+    return m_board->tiles()[0].size();
 }
 
 void BoardView::resize_event(GUI::ResizeEvent&)
@@ -190,7 +190,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(rect(), background_color);
         return;
     }
-    auto& tiles = m_board->tiles;
+    auto& tiles = m_board->tiles();
 
     Gfx::IntRect field_rect {
         0,
@@ -208,7 +208,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
                 field_rect.y() + m_padding + (m_cell_size + m_padding) * row + m_cell_size / 2,
             };
             auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
-            if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position) {
+            if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position()) {
                 float pop_in_size = m_min_cell_size + (m_cell_size - m_min_cell_size) * (pop_in_animation_frame / (float)animation_duration);
                 tile_size = Gfx::IntSize { pop_in_size, pop_in_size };
             }
