@@ -560,9 +560,33 @@ void ForStatement::generate_bytecode(Bytecode::Generator& generator) const
 void ObjectExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     generator.emit<Bytecode::Op::NewObject>();
+    if (m_properties.is_empty())
+        return;
 
-    if (!m_properties.is_empty())
-        TODO();
+    auto object_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Store>(object_reg);
+
+    for (auto& property : m_properties) {
+        if (property.type() != ObjectProperty::Type::KeyValue)
+            TODO();
+
+        if (is<StringLiteral>(property.key())) {
+            auto& string_literal = static_cast<StringLiteral const&>(property.key());
+            Bytecode::StringTableIndex key_name = generator.intern_string(string_literal.value());
+
+            property.value().generate_bytecode(generator);
+            generator.emit<Bytecode::Op::PutById>(object_reg, key_name);
+        } else {
+            property.key().generate_bytecode(generator);
+            auto property_reg = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(property_reg);
+
+            property.value().generate_bytecode(generator);
+            generator.emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
+        }
+    }
+
+    generator.emit<Bytecode::Op::Load>(object_reg);
 }
 
 void ArrayExpression::generate_bytecode(Bytecode::Generator& generator) const
