@@ -35,7 +35,17 @@ public:
     u32 target_tile() const { return m_target_tile; }
     u32 largest_tile() const;
 
-    using Board = Vector<Vector<u32>>;
+    struct Board {
+        using Row = Vector<u32>;
+        using Tiles = Vector<Row>;
+
+        Tiles tiles;
+
+        void add_tile(size_t row, size_t column, u32 value)
+        {
+            tiles[row][column] = value;
+        }
+    };
 
     Board const& board() const { return m_board; }
 
