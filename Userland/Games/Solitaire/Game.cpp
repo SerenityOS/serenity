@@ -338,13 +338,12 @@ void Game::move_card(CardStack& from, CardStack& to)
 
     auto card = from.pop();
 
-    card->set_moving(true);
-    m_focused_cards.clear();
-    m_focused_cards.append(card);
     mark_intersecting_stacks_dirty(card);
     to.push(card);
 
-    remember_move_for_undo(from, to, m_focused_cards);
+    NonnullRefPtrVector<Card> moved_card;
+    moved_card.append(card);
+    remember_move_for_undo(from, to, moved_card);
 
     score_move(from, to);
 
