@@ -10,6 +10,12 @@ die() {
 
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
+DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+ARCH=${ARCH:-"i686"}
+TOOLCHAIN=$(realpath "$DIR/../Toolchain")
+SERENITY_QEMU_TARGET_ARCH="i386"
+SERENITY_QEMU_BUILD_DIR=$(realpath "$TOOLCHAIN/Build")
+
 [ -e /dev/kvm ] && [ -r /dev/kvm ] && [ -w /dev/kvm ] && SERENITY_VIRT_TECH_ARG="-enable-kvm"
 
 [ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
@@ -43,9 +49,14 @@ SERENITY_RUN="${SERENITY_RUN:-$1}"
     fi
 }
 
+[ -e "$SERENITY_QEMU_BUILD_DIR/$ARCH/qemu/qemu-system-$SERENITY_QEMU_TARGET_ARCH" ] && SERENITY_QEMU_BIN="$SERENITY_QEMU_BUILD_DIR/$ARCH/qemu/qemu-system-$SERENITY_QEMU_TARGET_ARCH"
+
 SERENITY_QEMU_MIN_REQ_VERSION=5
 installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | grep -Po "(?<=QEMU emulator version )([1-9]\d*|0)")
-[ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
+if [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ]; then
+    "$TOOLCHAIN/BuildQemu.sh" || die "Could not install QEMU"
+    SERENITY_QEMU_BIN="$SERENITY_QEMU_BUILD_DIR/$ARCH/qemu/qemu-system-$SERENITY_QEMU_TARGET_ARCH"
+fi
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
