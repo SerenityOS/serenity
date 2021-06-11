@@ -81,6 +81,7 @@ private:
     NonnullRefPtr<GUI::Action> create_remove_current_editor_action();
     NonnullRefPtr<GUI::Action> create_open_action();
     NonnullRefPtr<GUI::Action> create_save_action();
+    NonnullRefPtr<GUI::Action> create_show_in_file_manager_action();
     NonnullRefPtr<GUI::Action> create_add_editor_action();
     NonnullRefPtr<GUI::Action> create_add_terminal_action();
     NonnullRefPtr<GUI::Action> create_remove_current_terminal_action();
@@ -150,6 +151,7 @@ private:
     RefPtr<GUI::Action> m_new_file_action;
     RefPtr<GUI::Action> m_new_directory_action;
     RefPtr<GUI::Action> m_open_selected_action;
+    RefPtr<GUI::Action> m_show_in_file_manager_action;
     RefPtr<GUI::Action> m_delete_action;
     RefPtr<GUI::Action> m_new_project_action;
     RefPtr<GUI::Action> m_switch_to_next_editor;
