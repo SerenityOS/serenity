@@ -41,10 +41,10 @@ public:
     static RefPtr<Image> create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap);
 
     size_t layer_count() const { return m_layers.size(); }
-    const Layer& layer(size_t index) const { return m_layers.at(index); }
+    Layer const& layer(size_t index) const { return m_layers.at(index); }
     Layer& layer(size_t index) { return m_layers.at(index); }
 
-    const Gfx::IntSize& size() const { return m_size; }
+    Gfx::IntSize const& size() const { return m_size; }
     Gfx::IntRect rect() const { return { {}, m_size }; }
 
     void add_layer(NonnullRefPtr<Layer>);
@@ -70,10 +70,10 @@ public:
     void layer_did_modify_bitmap(Badge<Layer>, Layer const&);
     void layer_did_modify_properties(Badge<Layer>, Layer const&);
 
-    size_t index_of(const Layer&) const;
+    size_t index_of(Layer const&) const;
 
 private:
-    explicit Image(const Gfx::IntSize&);
+    explicit Image(Gfx::IntSize const&);
 
     static RefPtr<Image> create_from_pixel_paint_file(String const& file_path);
 

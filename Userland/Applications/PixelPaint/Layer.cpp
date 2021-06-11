@@ -10,7 +10,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, const String& name)
+RefPtr<Layer> Layer::create_with_size(Image& image, Gfx::IntSize const& size, String const& name)
 {
     if (size.is_empty())
         return nullptr;
@@ -21,7 +21,7 @@ RefPtr<Layer> Layer::create_with_size(Image& image, const Gfx::IntSize& size, co
     return adopt_ref(*new Layer(image, size, name));
 }
 
-RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap, const String& name)
+RefPtr<Layer> Layer::create_with_bitmap(Image& image, Gfx::Bitmap const& bitmap, String const& name)
 {
     if (bitmap.size().is_empty())
         return nullptr;
@@ -32,7 +32,7 @@ RefPtr<Layer> Layer::create_with_bitmap(Image& image, const Gfx::Bitmap& bitmap,
     return adopt_ref(*new Layer(image, bitmap, name));
 }
 
-RefPtr<Layer> Layer::create_snapshot(Image& image, const Layer& layer)
+RefPtr<Layer> Layer::create_snapshot(Image& image, Layer const& layer)
 {
     auto snapshot = create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
     /*
@@ -49,14 +49,14 @@ RefPtr<Layer> Layer::create_snapshot(Image& image, const Layer& layer)
     return snapshot;
 }
 
-Layer::Layer(Image& image, const Gfx::IntSize& size, const String& name)
+Layer::Layer(Image& image, Gfx::IntSize const& size, String const& name)
     : m_image(image)
     , m_name(name)
 {
     m_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, size);
 }
 
-Layer::Layer(Image& image, const Gfx::Bitmap& bitmap, const String& name)
+Layer::Layer(Image& image, Gfx::Bitmap const& bitmap, String const& name)
     : m_image(image)
     , m_name(name)
     , m_bitmap(bitmap)
@@ -84,7 +84,7 @@ void Layer::set_opacity_percent(int opacity_percent)
     m_image.layer_did_modify_properties({}, *this);
 }
 
-void Layer::set_name(const String& name)
+void Layer::set_name(String const& name)
 {
     if (m_name == name)
         return;

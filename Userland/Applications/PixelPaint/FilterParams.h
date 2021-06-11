@@ -31,7 +31,7 @@ class GenericConvolutionFilterInputDialog : public GUI::Dialog {
     C_OBJECT(GenericConvolutionFilterInputDialog);
 
 public:
-    const Matrix<N, float>& matrix() const { return m_matrix; }
+    Matrix<N, float> const& matrix() const { return m_matrix; }
     bool should_wrap() const { return m_should_wrap; }
 
 private:
