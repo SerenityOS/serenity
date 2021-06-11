@@ -21,6 +21,12 @@ BoardView::~BoardView()
 
 void BoardView::set_board(Game::Board const* board)
 {
+    if (has_timer())
+        stop_timer();
+
+    pop_in_animation_frame = 0;
+    start_timer(frame_duration_ms);
+
     if (m_board == board)
         return;
 
@@ -56,6 +62,8 @@ void BoardView::pick_font()
 
     auto font = font_database.get_by_name(best_font_name);
     set_font(font);
+
+    m_min_cell_size = best_font_size;
 }
 
 size_t BoardView::rows() const
@@ -157,6 +165,16 @@ Gfx::Color BoardView::text_color_for_cell(u32 value)
     return Color::from_rgb(0xf9f6f2);
 }
 
+void BoardView::timer_event(Core::TimerEvent&)
+{
+    if (pop_in_animation_frame < animation_duration) {
+        pop_in_animation_frame++;
+        update();
+        if (pop_in_animation_frame == animation_duration)
+            stop_timer();
+    }
+}
+
 void BoardView::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
@@ -185,12 +203,16 @@ void BoardView::paint_event(GUI::PaintEvent& event)
 
     for (size_t column = 0; column < columns(); ++column) {
         for (size_t row = 0; row < rows(); ++row) {
-            auto rect = Gfx::IntRect {
-                field_rect.x() + m_padding + (m_cell_size + m_padding) * column,
-                field_rect.y() + m_padding + (m_cell_size + m_padding) * row,
-                m_cell_size,
-                m_cell_size,
+            auto center = Gfx::IntPoint {
+                field_rect.x() + m_padding + (m_cell_size + m_padding) * column + m_cell_size / 2,
+                field_rect.y() + m_padding + (m_cell_size + m_padding) * row + m_cell_size / 2,
             };
+            auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+            if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position) {
+                float pop_in_size = m_min_cell_size + (m_cell_size - m_min_cell_size) * (pop_in_animation_frame / (float)animation_duration);
+                tile_size = Gfx::IntSize { pop_in_size, pop_in_size };
+            }
+            auto rect = Gfx::IntRect::centered_on(center, tile_size);
             auto entry = tiles[row][column];
             painter.fill_rect(rect, background_color_for_cell(entry));
             if (entry > 0)

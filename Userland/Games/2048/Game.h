@@ -41,10 +41,23 @@ public:
 
         Tiles tiles;
 
+        struct Position {
+            size_t row;
+            size_t column;
+
+            bool operator==(Position const& other) const
+            {
+                return row == other.row && column == other.column;
+            }
+        };
+
         void add_tile(size_t row, size_t column, u32 value)
         {
             tiles[row][column] = value;
+            last_added_position = Position { row, column };
         }
+
+        Position last_added_position { 0, 0 };
     };
 
     Board const& board() const { return m_board; }
