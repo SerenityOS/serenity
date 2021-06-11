@@ -128,7 +128,7 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
     if (target_address < m_sorted_lines[0].address)
         return {};
 
-    // TODO: We can do a binray search here
+    // TODO: We can do a binary search here
     for (size_t i = 0; i < m_sorted_lines.size() - 1; ++i) {
         if (m_sorted_lines[i + 1].address > target_address) {
             return SourcePosition::from_line_info(m_sorted_lines[i]);
