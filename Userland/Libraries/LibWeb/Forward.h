@@ -14,6 +14,7 @@ enum class Source;
 }
 
 namespace Web::CSS {
+class CalculatedStyleValue;
 class CSSRule;
 class CSSImportRule;
 class CSSStyleDeclaration;
