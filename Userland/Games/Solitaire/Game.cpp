@@ -332,24 +332,6 @@ void Game::check_for_game_over()
     start_game_over_animation();
 }
 
-void Game::move_card(CardStack& from, CardStack& to)
-{
-    update(from.bounding_box());
-
-    auto card = from.pop();
-
-    mark_intersecting_stacks_dirty(card);
-    to.push(card);
-
-    NonnullRefPtrVector<Card> moved_card;
-    moved_card.append(card);
-    remember_move_for_undo(from, to, moved_card);
-
-    score_move(from, to);
-
-    update(to.bounding_box());
-}
-
 void Game::draw_cards()
 {
     auto& waste = stack(Waste);
@@ -441,18 +423,28 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
 
     bool card_was_moved = false;
 
-    if (stack(Foundation1).is_allowed_to_push(top_card)) {
-        move_card(from, stack(Foundation1));
-        card_was_moved = true;
-    } else if (stack(Foundation2).is_allowed_to_push(top_card)) {
-        move_card(from, stack(Foundation2));
-        card_was_moved = true;
-    } else if (stack(Foundation3).is_allowed_to_push(top_card)) {
-        move_card(from, stack(Foundation3));
-        card_was_moved = true;
-    } else if (stack(Foundation4).is_allowed_to_push(top_card)) {
-        move_card(from, stack(Foundation4));
-        card_was_moved = true;
+    for (auto foundationID : foundations) {
+        auto& foundation = stack(foundationID);
+
+        if (foundation.is_allowed_to_push(top_card)) {
+            update(from.bounding_box());
+
+            auto card = from.pop();
+
+            mark_intersecting_stacks_dirty(card);
+            foundation.push(card);
+
+            NonnullRefPtrVector<Card> moved_card;
+            moved_card.append(card);
+            remember_move_for_undo(from, foundation, moved_card);
+
+            score_move(from, foundation);
+
+            update(foundation.bounding_box());
+
+            card_was_moved = true;
+            break;
+        }
     }
 
     if (card_was_moved && (from.type() == CardStack::Type::Play))
