@@ -46,7 +46,7 @@
     JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES \
     __JS_ENUMERATE(TypedArray, typed_array, TypedArrayPrototype, TypedArrayConstructor, void)
 
-#define JS_ENUMERATE_ERROR_SUBCLASSES                                                                                                      \
+#define JS_ENUMERATE_NATIVE_ERRORS                                                                                                         \
     __JS_ENUMERATE(EvalError, eval_error, EvalErrorPrototype, EvalErrorConstructor, void)                                                  \
     __JS_ENUMERATE(InternalError, internal_error, InternalErrorPrototype, InternalErrorConstructor, void)                                  \
     __JS_ENUMERATE(InvalidCharacterError, invalid_character_error, InvalidCharacterErrorPrototype, InvalidCharacterErrorConstructor, void) \
@@ -75,7 +75,7 @@
 
 #define JS_ENUMERATE_BUILTIN_TYPES \
     JS_ENUMERATE_NATIVE_OBJECTS    \
-    JS_ENUMERATE_ERROR_SUBCLASSES  \
+    JS_ENUMERATE_NATIVE_ERRORS     \
     JS_ENUMERATE_TYPED_ARRAYS
 
 #define JS_ENUMERATE_WELL_KNOWN_SYMBOLS                      \
@@ -160,7 +160,7 @@ struct ClampedU8;
     class ConstructorName;                                                               \
     class PrototypeName;
 JS_ENUMERATE_NATIVE_OBJECTS_EXCLUDING_TEMPLATES
-JS_ENUMERATE_ERROR_SUBCLASSES
+JS_ENUMERATE_NATIVE_ERRORS
 JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
 
