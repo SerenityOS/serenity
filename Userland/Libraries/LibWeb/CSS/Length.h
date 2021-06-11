@@ -16,6 +16,7 @@ public:
     enum class Type {
         Undefined,
         Percentage,
+        Calculated,
         Auto,
         Cm,
         In,
@@ -54,6 +55,8 @@ public:
             return fallback_for_undefined;
         if (is_percentage())
             return make_px(raw_value() / 100.0f * reference_for_percent);
+        if (is_calculated())
+            return {};
         if (is_relative())
             return make_px(to_px(layout_node));
         return *this;
@@ -71,8 +74,9 @@ public:
 
     bool is_undefined_or_auto() const { return m_type == Type::Undefined || m_type == Type::Auto; }
     bool is_undefined() const { return m_type == Type::Undefined; }
-    bool is_percentage() const { return m_type == Type::Percentage; }
+    bool is_percentage() const { return m_type == Type::Percentage || m_type == Type::Calculated; }
     bool is_auto() const { return m_type == Type::Auto; }
+    bool is_calculated() const { return m_type == Type::Calculated; }
 
     bool is_absolute() const
     {
@@ -122,6 +126,7 @@ public:
             return m_value * ((1.0f / 40.0f) * centimeter_pixels); // 1Q = 1/40th of 1cm
         case Type::Undefined:
         case Type::Percentage:
+        case Type::Calculated:
         default:
             VERIFY_NOT_REACHED();
         }
@@ -144,6 +149,8 @@ public:
         return !(*this == other);
     }
 
+    void set_calculated_style(CalculatedStyleValue* value) { m_calculated_style = value; }
+
 private:
     float relative_length_to_px(const Layout::Node&) const;
 
@@ -151,6 +158,8 @@ private:
 
     Type m_type { Type::Undefined };
     float m_value { 0 };
+
+    CalculatedStyleValue* m_calculated_style { nullptr };
 };
 
 }

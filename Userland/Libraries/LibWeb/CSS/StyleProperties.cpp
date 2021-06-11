@@ -55,6 +55,13 @@ Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fal
     auto value = property(id);
     if (!value.has_value())
         return fallback;
+
+    if (value.value()->is_calculated()) {
+        Length length = Length(0, Length::Type::Calculated);
+        length.set_calculated_style(verify_cast<CalculatedStyleValue>(value.value().ptr()));
+        return length;
+    }
+
     return value.value()->to_length();
 }
 
