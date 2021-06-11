@@ -146,66 +146,107 @@ static Optional<float> try_parse_float(const StringView& string)
     return is_negative ? -value : value;
 }
 
+static CSS::Length::Type length_type_from_unit(const StringView& view)
+{
+    if (view.ends_with('%'))
+        return CSS::Length::Type::Percentage;
+    if (view.ends_with("px", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Px;
+    if (view.ends_with("pt", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Pt;
+    if (view.ends_with("pc", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Pc;
+    if (view.ends_with("mm", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Mm;
+    if (view.ends_with("rem", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Rem;
+    if (view.ends_with("em", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Em;
+    if (view.ends_with("ex", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Ex;
+    if (view.ends_with("vw", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Vw;
+    if (view.ends_with("vh", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Vh;
+    if (view.ends_with("vmax", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Vmax;
+    if (view.ends_with("vmin", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Vmin;
+    if (view.ends_with("cm", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Cm;
+    if (view.ends_with("in", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::In;
+    if (view.ends_with("Q", CaseSensitivity::CaseInsensitive))
+        return CSS::Length::Type::Q;
+    if (view == "0")
+        return CSS::Length::Type::Px;
+
+    return CSS::Length::Type::Undefined;
+}
+
 static CSS::Length parse_length(const CSS::DeprecatedParsingContext& context, const StringView& view, bool& is_bad_length)
 {
-    CSS::Length::Type type = CSS::Length::Type::Undefined;
+    CSS::Length::Type type = length_type_from_unit(view);
     Optional<float> value;
 
-    if (view.ends_with('%')) {
-        type = CSS::Length::Type::Percentage;
+    switch (type) {
+    case CSS::Length::Type::Percentage:
         value = try_parse_float(view.substring_view(0, view.length() - 1));
-    } else if (view.ends_with("px", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Px;
+        break;
+    case CSS::Length::Type::Px:
+        if (view == "0")
+            value = 0;
+        else
+            value = try_parse_float(view.substring_view(0, view.length() - 2));
+        break;
+    case CSS::Length::Type::Pt:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("pt", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Pt;
+        break;
+    case CSS::Length::Type::Pc:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("pc", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Pc;
+        break;
+    case CSS::Length::Type::Mm:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("mm", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Mm;
-        value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("rem", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Rem;
+        break;
+    case CSS::Length::Type::Rem:
         value = try_parse_float(view.substring_view(0, view.length() - 3));
-    } else if (view.ends_with("em", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Em;
+        break;
+    case CSS::Length::Type::Em:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("ex", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Ex;
+        break;
+    case CSS::Length::Type::Ex:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("vw", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Vw;
+        break;
+    case CSS::Length::Type::Vw:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("vh", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Vh;
+        break;
+    case CSS::Length::Type::Vh:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("vmax", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Vmax;
+        break;
+    case CSS::Length::Type::Vmax:
         value = try_parse_float(view.substring_view(0, view.length() - 4));
-    } else if (view.ends_with("vmin", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Vmin;
+        break;
+    case CSS::Length::Type::Vmin:
         value = try_parse_float(view.substring_view(0, view.length() - 4));
-    } else if (view.ends_with("cm", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Cm;
+        break;
+    case CSS::Length::Type::Cm:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("in", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::In;
+        break;
+    case CSS::Length::Type::In:
         value = try_parse_float(view.substring_view(0, view.length() - 2));
-    } else if (view.ends_with("Q", CaseSensitivity::CaseInsensitive)) {
-        type = CSS::Length::Type::Q;
+        break;
+    case CSS::Length::Type::Q:
         value = try_parse_float(view.substring_view(0, view.length() - 1));
-    } else if (view == "0") {
-        type = CSS::Length::Type::Px;
-        value = 0;
-    } else if (context.in_quirks_mode()) {
-        type = CSS::Length::Type::Px;
-        value = try_parse_float(view);
-    } else {
-        value = try_parse_float(view);
-        if (value.has_value())
-            is_bad_length = true;
+        break;
+    default:
+        if (context.in_quirks_mode()) {
+            type = CSS::Length::Type::Px;
+            value = try_parse_float(view);
+        } else {
+            value = try_parse_float(view);
+            if (value.has_value())
+                is_bad_length = true;
+        }
     }
 
     if (!value.has_value())
