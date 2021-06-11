@@ -222,6 +222,8 @@ public:
         bool is_rest { false };
     };
 
+    virtual ~FunctionNode() { }
+
     FlyString const& name() const { return m_name; }
     Statement const& body() const { return *m_body; }
     Vector<Parameter> const& parameters() const { return m_parameters; };
@@ -294,6 +296,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
     void set_name_if_possible(FlyString new_name)
     {
@@ -305,6 +308,8 @@ public:
     }
     bool cannot_auto_rename() const { return m_cannot_auto_rename; }
     void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
+
+    bool is_arrow_function() const { return m_is_arrow_function; }
 
 private:
     bool m_cannot_auto_rename { false };

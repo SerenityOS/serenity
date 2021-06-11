@@ -218,7 +218,13 @@ void Call::execute(Bytecode::Interpreter& interpreter) const
 void NewFunction::execute(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_scope(), m_function_node.is_generator(), m_function_node.is_strict_mode());
+
+    if (!is<FunctionExpression>(m_function_node)) {
+        interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_scope(), m_function_node.is_generator(), m_function_node.is_strict_mode());
+    } else {
+        auto& function_expression_node = downcast<FunctionExpression>(m_function_node);
+        interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_scope(), m_function_node.is_generator(), m_function_node.is_strict_mode() || vm.in_strict_mode(), function_expression_node.is_arrow_function());
+    }
 }
 
 void Return::execute(Bytecode::Interpreter& interpreter) const
