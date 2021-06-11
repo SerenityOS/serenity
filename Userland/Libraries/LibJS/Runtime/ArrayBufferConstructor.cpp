@@ -26,7 +26,7 @@ void ArrayBufferConstructor::initialize(GlobalObject& global_object)
     define_property(vm.names.length, Value(1), Attribute::Configurable);
     define_native_function(vm.names.isView, is_view, 1, attr);
 
-    define_native_property(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 ArrayBufferConstructor::~ArrayBufferConstructor()
