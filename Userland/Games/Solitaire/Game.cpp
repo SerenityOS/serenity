@@ -139,7 +139,7 @@ void Game::start_timer_if_necessary()
     }
 }
 
-void Game::score_move(CardStack& from, CardStack& to, bool inverse = false)
+void Game::score_move(CardStack& from, CardStack& to, bool inverse)
 {
     if (from.type() == CardStack::Type::Play && to.type() == CardStack::Type::Normal) {
         update_score(5 * (inverse ? -1 : 1));
@@ -150,6 +150,11 @@ void Game::score_move(CardStack& from, CardStack& to, bool inverse = false)
     } else if (from.type() == CardStack::Type::Foundation && to.type() == CardStack::Type::Normal) {
         update_score(-15 * (inverse ? -1 : 1));
     }
+}
+
+void Game::score_flip(bool inverse)
+{
+    update_score(5 * (inverse ? -1 : 1));
 }
 
 void Game::update_score(int to_add)
@@ -200,7 +205,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                 if (top_card.is_upside_down()) {
                     if (top_card.rect().contains(click_location)) {
                         top_card.set_upside_down(false);
-                        update_score(5);
+                        score_flip();
                         update(top_card.rect());
                         remember_flip_for_undo(top_card);
                     }
@@ -600,6 +605,7 @@ void Game::perform_undo()
         if (on_undo_availability_change)
             on_undo_availability_change(false);
         invalidate_layout();
+        score_flip(true);
         return;
     }
 

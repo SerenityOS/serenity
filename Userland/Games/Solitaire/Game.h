@@ -155,7 +155,8 @@ private:
     }
 
     void mark_intersecting_stacks_dirty(Card& intersecting_card);
-    void score_move(CardStack& from, CardStack& to, bool inverse);
+    void score_move(CardStack& from, CardStack& to, bool inverse = false);
+    void score_flip(bool inverse = false);
     void remember_move_for_undo(CardStack& from, CardStack& to, NonnullRefPtrVector<Card> moved_cards);
     void remember_flip_for_undo(Card& card);
     void update_score(int to_add);
