@@ -227,10 +227,11 @@ public:
     Vector<Parameter> const& parameters() const { return m_parameters; };
     i32 function_length() const { return m_function_length; }
     bool is_strict_mode() const { return m_is_strict_mode; }
+    bool is_arrow_function() const { return m_is_arrow_function; }
     bool is_generator() const { return m_is_generator; }
 
 protected:
-    FunctionNode(FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode)
+    FunctionNode(FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode, bool is_arrow_function)
         : m_name(name)
         , m_body(move(body))
         , m_parameters(move(parameters))
@@ -238,6 +239,7 @@ protected:
         , m_function_length(function_length)
         , m_is_generator(is_generator)
         , m_is_strict_mode(is_strict_mode)
+        , m_is_arrow_function(is_arrow_function)
     {
     }
 
@@ -260,6 +262,7 @@ private:
     const i32 m_function_length;
     bool m_is_generator;
     bool m_is_strict_mode;
+    bool m_is_arrow_function { false };
 };
 
 class FunctionDeclaration final
@@ -270,7 +273,7 @@ public:
 
     FunctionDeclaration(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode = false)
         : Declaration(move(source_range))
-        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode)
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode, false)
     {
     }
 
@@ -287,8 +290,7 @@ public:
 
     FunctionExpression(SourceRange source_range, FlyString const& name, NonnullRefPtr<Statement> body, Vector<Parameter> parameters, i32 function_length, NonnullRefPtrVector<VariableDeclaration> variables, bool is_generator, bool is_strict_mode, bool is_arrow_function = false)
         : Expression(source_range)
-        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode)
-        , m_is_arrow_function(is_arrow_function)
+        , FunctionNode(name, move(body), move(parameters), function_length, move(variables), is_generator, is_strict_mode, is_arrow_function)
     {
     }
 
@@ -308,7 +310,6 @@ public:
 
 private:
     bool m_cannot_auto_rename { false };
-    bool m_is_arrow_function { false };
 };
 
 class ErrorExpression final : public Expression {

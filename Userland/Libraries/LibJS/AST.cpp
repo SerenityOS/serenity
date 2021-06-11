@@ -100,7 +100,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_generator(), is_strict_mode() || interpreter.vm().in_strict_mode(), m_is_arrow_function);
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_generator(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
