@@ -23,7 +23,7 @@ RectangleTool::~RectangleTool()
 {
 }
 
-void RectangleTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& rect)
+void RectangleTool::draw_using(GUI::Painter& painter, Gfx::IntRect const& rect)
 {
     switch (m_mode) {
     case Mode::Fill:
@@ -75,7 +75,7 @@ void RectangleTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent
     m_editor->update();
 }
 
-void RectangleTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
+void RectangleTool::on_second_paint(Layer const& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;

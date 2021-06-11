@@ -23,7 +23,7 @@ EllipseTool::~EllipseTool()
 {
 }
 
-void EllipseTool::draw_using(GUI::Painter& painter, const Gfx::IntRect& ellipse_intersecting_rect)
+void EllipseTool::draw_using(GUI::Painter& painter, Gfx::IntRect const& ellipse_intersecting_rect)
 {
     switch (m_mode) {
     case Mode::Outline:
@@ -71,7 +71,7 @@ void EllipseTool::on_mousemove(Layer&, GUI::MouseEvent& event, GUI::MouseEvent&)
     m_editor->update();
 }
 
-void EllipseTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
+void EllipseTool::on_second_paint(Layer const& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;

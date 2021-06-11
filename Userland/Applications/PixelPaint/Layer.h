@@ -24,24 +24,24 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> create_with_size(Image&, const Gfx::IntSize&, const String& name);
-    static RefPtr<Layer> create_with_bitmap(Image&, const Gfx::Bitmap&, const String& name);
-    static RefPtr<Layer> create_snapshot(Image&, const Layer&);
+    static RefPtr<Layer> create_with_size(Image&, Gfx::IntSize const&, String const& name);
+    static RefPtr<Layer> create_with_bitmap(Image&, Gfx::Bitmap const&, String const& name);
+    static RefPtr<Layer> create_snapshot(Image&, Layer const&);
 
     ~Layer() { }
 
-    const Gfx::IntPoint& location() const { return m_location; }
-    void set_location(const Gfx::IntPoint& location) { m_location = location; }
+    Gfx::IntPoint const& location() const { return m_location; }
+    void set_location(Gfx::IntPoint const& location) { m_location = location; }
 
-    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
+    Gfx::Bitmap const& bitmap() const { return *m_bitmap; }
     Gfx::Bitmap& bitmap() { return *m_bitmap; }
     Gfx::IntSize size() const { return bitmap().size(); }
 
     Gfx::IntRect relative_rect() const { return { location(), size() }; }
     Gfx::IntRect rect() const { return { {}, size() }; }
 
-    const String& name() const { return m_name; }
-    void set_name(const String&);
+    String const& name() const { return m_name; }
+    void set_name(String const&);
 
     void set_bitmap(Gfx::Bitmap& bitmap) { m_bitmap = bitmap; }
 
@@ -57,8 +57,8 @@ public:
     void set_opacity_percent(int);
 
 private:
-    Layer(Image&, const Gfx::IntSize&, const String& name);
-    Layer(Image&, const Gfx::Bitmap&, const String& name);
+    Layer(Image&, Gfx::IntSize const&, String const& name);
+    Layer(Image&, Gfx::Bitmap const&, String const& name);
 
     Image& m_image;
 

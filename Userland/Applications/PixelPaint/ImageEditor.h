@@ -24,7 +24,7 @@ class ImageEditor final
 public:
     virtual ~ImageEditor() override;
 
-    const Image* image() const { return m_image; }
+    Image const* image() const { return m_image; }
     Image* image() { return m_image; }
 
     void set_image(RefPtr<Image>);
@@ -41,9 +41,9 @@ public:
 
     void layers_did_change();
 
-    Layer* layer_at_editor_position(const Gfx::IntPoint&);
+    Layer* layer_at_editor_position(Gfx::IntPoint const&);
 
-    void scale_centered_on_position(const Gfx::IntPoint&, float);
+    void scale_centered_on_position(Gfx::IntPoint const&, float);
     void reset_scale_and_position();
     void scale_by(float);
 
@@ -53,7 +53,7 @@ public:
     Color secondary_color() const { return m_secondary_color; }
     void set_secondary_color(Color);
 
-    Color color_for(const GUI::MouseEvent&) const;
+    Color color_for(GUI::MouseEvent const&) const;
     Color color_for(GUI::MouseButton) const;
 
     Function<void(Color)> on_primary_color_change;
@@ -61,12 +61,12 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
-    Gfx::FloatRect layer_rect_to_editor_rect(const Layer&, const Gfx::IntRect&) const;
-    Gfx::FloatRect image_rect_to_editor_rect(const Gfx::IntRect&) const;
-    Gfx::FloatRect editor_rect_to_image_rect(const Gfx::IntRect&) const;
-    Gfx::FloatPoint layer_position_to_editor_position(const Layer&, const Gfx::IntPoint&) const;
-    Gfx::FloatPoint image_position_to_editor_position(const Gfx::IntPoint&) const;
-    Gfx::FloatPoint editor_position_to_image_position(const Gfx::IntPoint&) const;
+    Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
+    Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
+    Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;
+    Gfx::FloatPoint layer_position_to_editor_position(Layer const&, Gfx::IntPoint const&) const;
+    Gfx::FloatPoint image_position_to_editor_position(Gfx::IntPoint const&) const;
+    Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
 private:
     ImageEditor();
@@ -85,8 +85,8 @@ private:
     virtual void image_did_change() override;
     virtual void image_select_layer(Layer*) override;
 
-    GUI::MouseEvent event_adjusted_for_layer(const GUI::MouseEvent&, const Layer&) const;
-    GUI::MouseEvent event_with_pan_and_scale_applied(const GUI::MouseEvent&) const;
+    GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
+    GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
 
     void clamped_scale(float);
     void relayout();
