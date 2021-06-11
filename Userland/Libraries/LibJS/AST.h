@@ -308,6 +308,8 @@ public:
     bool cannot_auto_rename() const { return m_cannot_auto_rename; }
     void set_cannot_auto_rename() { m_cannot_auto_rename = true; }
 
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
+
 private:
     bool m_cannot_auto_rename { false };
 };

@@ -605,6 +605,11 @@ void FunctionDeclaration::generate_bytecode(Bytecode::Generator&) const
 {
 }
 
+void FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
+{
+    generator.emit<Bytecode::Op::NewFunction>(*this);
+}
+
 void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
