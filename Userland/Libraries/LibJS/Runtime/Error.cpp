@@ -10,14 +10,17 @@
 
 namespace JS {
 
-Error* Error::create(GlobalObject& global_object, const String& message)
+Error* Error::create(GlobalObject& global_object)
+{
+    return global_object.heap().allocate<Error>(global_object, *global_object.error_prototype());
+}
+
+Error* Error::create(GlobalObject& global_object, String const& message)
 {
     auto& vm = global_object.vm();
-    auto* error = global_object.heap().allocate<Error>(global_object, *global_object.error_prototype());
-    if (!message.is_null()) {
-        u8 attr = Attribute::Writable | Attribute::Configurable;
-        error->define_property(vm.names.message, js_string(vm, message), attr);
-    }
+    auto* error = Error::create(global_object);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    error->define_property(vm.names.message, js_string(vm, message), attr);
     return error;
 }
 
@@ -26,21 +29,24 @@ Error::Error(Object& prototype)
 {
 }
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                                \
-    ClassName* ClassName::create(GlobalObject& global_object, const String& message)                                    \
-    {                                                                                                                   \
-        auto& vm = global_object.vm();                                                                                  \
-        auto* error = global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype()); \
-        if (!message.is_null()) {                                                                                       \
-            u8 attr = Attribute::Writable | Attribute::Configurable;                                                    \
-            error->define_property(vm.names.message, js_string(vm, message), attr);                                     \
-        }                                                                                                               \
-        return error;                                                                                                   \
-    }                                                                                                                   \
-                                                                                                                        \
-    ClassName::ClassName(Object& prototype)                                                                             \
-        : Error(prototype)                                                                                              \
-    {                                                                                                                   \
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
+    ClassName* ClassName::create(GlobalObject& global_object)                                                    \
+    {                                                                                                            \
+        return global_object.heap().allocate<ClassName>(global_object, *global_object.snake_name##_prototype()); \
+    }                                                                                                            \
+                                                                                                                 \
+    ClassName* ClassName::create(GlobalObject& global_object, String const& message)                             \
+    {                                                                                                            \
+        auto& vm = global_object.vm();                                                                           \
+        auto* error = ClassName::create(global_object);                                                          \
+        u8 attr = Attribute::Writable | Attribute::Configurable;                                                 \
+        error->define_property(vm.names.message, js_string(vm, message), attr);                                  \
+        return error;                                                                                            \
+    }                                                                                                            \
+                                                                                                                 \
+    ClassName::ClassName(Object& prototype)                                                                      \
+        : Error(prototype)                                                                                       \
+    {                                                                                                            \
     }
 
 JS_ENUMERATE_NATIVE_ERRORS

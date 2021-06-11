@@ -6,6 +6,7 @@
 
 #include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
+#include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -34,17 +35,29 @@ Value AggregateErrorConstructor::call()
 Value AggregateErrorConstructor::construct(Function&)
 {
     auto& vm = this->vm();
-    String message;
+    // FIXME: Use OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%")
+    auto* aggregate_error = AggregateError::create(global_object());
+
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+
     if (!vm.argument(1).is_undefined()) {
-        message = vm.argument(1).to_string(global_object());
+        auto message = vm.argument(1).to_string(global_object());
         if (vm.exception())
             return {};
+        aggregate_error->define_property(vm.names.message, js_string(vm, message), attr);
     }
+
+    aggregate_error->install_error_cause(vm.argument(2));
+    if (vm.exception())
+        return {};
+
     auto errors_list = iterable_to_list(global_object(), vm.argument(0));
     if (vm.exception())
         return {};
-    // FIXME: 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]] »).
-    return AggregateError::create(global_object(), message, errors_list);
+
+    aggregate_error->define_property(vm.names.errors, Array::create_from(global_object(), errors_list), attr);
+
+    return aggregate_error;
 }
 
 }

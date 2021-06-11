@@ -14,7 +14,7 @@ class AggregateError : public Object {
     JS_OBJECT(Error, Object);
 
 public:
-    static AggregateError* create(GlobalObject&, String const& message, Vector<Value> const& errors);
+    static AggregateError* create(GlobalObject&);
 
     explicit AggregateError(Object& prototype);
     virtual ~AggregateError() override = default;

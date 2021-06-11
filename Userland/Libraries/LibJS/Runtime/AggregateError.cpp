@@ -10,15 +10,9 @@
 
 namespace JS {
 
-AggregateError* AggregateError::create(GlobalObject& global_object, String const& message, Vector<Value> const& errors)
+AggregateError* AggregateError::create(GlobalObject& global_object)
 {
-    auto& vm = global_object.vm();
-    auto* error = global_object.heap().allocate<AggregateError>(global_object, *global_object.aggregate_error_prototype());
-    u8 attr = Attribute::Writable | Attribute::Configurable;
-    if (!message.is_null())
-        error->define_property(vm.names.message, js_string(vm, message), attr);
-    error->define_property(vm.names.errors, Array::create_from(global_object, errors), attr);
-    return error;
+    return global_object.heap().allocate<AggregateError>(global_object, *global_object.aggregate_error_prototype());
 }
 
 AggregateError::AggregateError(Object& prototype)
