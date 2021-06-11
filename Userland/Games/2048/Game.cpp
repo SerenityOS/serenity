@@ -187,7 +187,6 @@ static size_t get_number_of_free_cells(Game::Board const& board)
 Game::Board::SlideResult Game::Board::slide_tiles(Direction direction)
 {
     size_t successful_merge_score = 0;
-    Tiles new_tiles;
 
     switch (direction) {
     case Direction::Left:
@@ -215,7 +214,11 @@ Game::Board::SlideResult Game::Board::slide_tiles(Direction direction)
         break;
     }
 
-    bool moved = new_tiles != m_tiles;
+    bool moved = false;
+    for (auto& t : m_sliding_tiles) {
+        if (t.row_from != t.row_to || t.column_from != t.column_to)
+            moved = true;
+    }
 
     return { moved, successful_merge_score };
 }
