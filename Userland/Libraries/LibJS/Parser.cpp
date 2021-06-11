@@ -415,7 +415,7 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         state_rollback_guard.disarm();
         discard_saved_state();
         auto body = function_body_result.release_nonnull();
-        return create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), is_strict, true);
+        return create_ast_node<FunctionExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, "", move(body), move(parameters), function_length, m_parser_state.m_var_scopes.take_last(), false, is_strict, true);
     }
 
     return nullptr;
