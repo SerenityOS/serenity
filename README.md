@@ -134,6 +134,7 @@ Join our Discord server: [SerenityOS Discord](https://discord.com/invite/29gCcKs
 * **Tim Flynn** - [trflynn89](https://github.com/trflynn89)
 * **Jean-Baptiste Boric** - [boricj](https://github.com/boricj)
 * **Stephan Unverwerth** - [sunverwerth](https://github.com/sunverwerth)
+* **Max Wipfli** - [MaxWipfli](https://github.com/MaxWipfli)
 
 (And many more!) The people listed above have landed more than 100 commits in the project. :^)
 
