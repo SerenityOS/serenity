@@ -783,7 +783,7 @@ NonnullRefPtr<Expression> Parser::parse_property_key()
         return create_ast_node<BigIntLiteral>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, consume().value());
     } else if (match(TokenType::BracketOpen)) {
         consume(TokenType::BracketOpen);
-        auto result = parse_expression(0);
+        auto result = parse_expression(2);
         consume(TokenType::BracketClose);
         return result;
     } else {
