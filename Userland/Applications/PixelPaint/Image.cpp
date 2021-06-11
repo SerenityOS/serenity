@@ -55,15 +55,14 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect)
 RefPtr<Image> Image::try_create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
 {
     auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
-    if (image.is_null())
+    if (!image)
         return nullptr;
 
-    auto layer = Layer::create_with_bitmap(*image, *bitmap, "Background");
-    if (layer.is_null())
+    auto layer = Layer::try_create_with_bitmap(*image, *bitmap, "Background");
+    if (!layer)
         return nullptr;
 
     image->add_layer(layer.release_nonnull());
-
     return image;
 }
 
@@ -89,7 +88,8 @@ RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
         auto width = json_layer_object.get("width").to_i32();
         auto height = json_layer_object.get("height").to_i32();
         auto name = json_layer_object.get("name").as_string();
-        auto layer = Layer::create_with_size(*image, { width, height }, name);
+        auto layer = Layer::try_create_with_size(*image, { width, height }, name);
+        VERIFY(layer);
         layer->set_location({ json_layer_object.get("locationx").to_i32(), json_layer_object.get("locationy").to_i32() });
         layer->set_opacity_percent(json_layer_object.get("opacity_percent").to_i32());
         layer->set_visible(json_layer_object.get("visible").as_bool());
@@ -188,8 +188,12 @@ RefPtr<Image> Image::take_snapshot() const
     auto snapshot = try_create_with_size(m_size);
     if (!snapshot)
         return nullptr;
-    for (const auto& layer : m_layers)
-        snapshot->add_layer(*Layer::create_snapshot(*snapshot, layer));
+    for (const auto& layer : m_layers) {
+        auto layer_snapshot = Layer::try_create_snapshot(*snapshot, layer);
+        if (!layer_snapshot)
+            return nullptr;
+        snapshot->add_layer(layer_snapshot.release_nonnull());
+    }
     return snapshot;
 }
 
@@ -198,7 +202,8 @@ void Image::restore_snapshot(Image const& snapshot)
     m_layers.clear();
     select_layer(nullptr);
     for (const auto& snapshot_layer : snapshot.m_layers) {
-        auto layer = Layer::create_snapshot(*this, snapshot_layer);
+        auto layer = Layer::try_create_snapshot(*this, snapshot_layer);
+        VERIFY(layer);
         if (layer->is_selected())
             select_layer(layer.ptr());
         add_layer(*layer);
