@@ -8,29 +8,47 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/Types.h>
 
 namespace AK {
 
 template<typename T>
 class Ptr32 {
 public:
-    Ptr32() = default;
-    Ptr32(T* ptr)
-        : m_ptr((u32) reinterpret_cast<uintptr_t>(ptr))
+    constexpr Ptr32() = default;
+    Ptr32(T* const ptr)
+        : m_ptr((u32) reinterpret_cast<FlatPtr>(ptr))
     {
-        VERIFY((reinterpret_cast<uintptr_t>(ptr) & 0xFFFFFFFF) == m_ptr);
+        VERIFY((reinterpret_cast<FlatPtr>(ptr) & 0xFFFFFFFFULL) == reinterpret_cast<FlatPtr>(m_ptr));
     }
-    // inline T* operator*() { return (T*)m_ptr; }
-    // inline const T* operator*() const { return (T*)m_ptr; }
+    T& operator*() { return *static_cast<T*>(*this); }
+    T const& operator*() const { return *static_cast<T const*>(*this); }
 
-    inline T* operator->()
+    T* operator->() { return *this; }
+    T const* operator->() const { return *this; }
+
+    operator T*() { return reinterpret_cast<T*>(static_cast<FlatPtr>(m_ptr)); }
+    operator T const *() const { return reinterpret_cast<T const*>(static_cast<FlatPtr>(m_ptr)); }
+
+    T& operator[](size_t index) { return static_cast<T*>(*this)[index]; }
+    T const& operator[](size_t index) const { return static_cast<T const*>(*this)[index]; }
+
+    constexpr explicit operator bool() { return m_ptr; }
+    template<typename U>
+    constexpr bool operator==(Ptr32<U> other) { return m_ptr == other.m_ptr; }
+
+    constexpr Ptr32<T> operator+(u32 other) const
     {
-        VERIFY(m_ptr);
-        return m_ptr;
+        Ptr32<T> ptr {};
+        ptr.m_ptr = m_ptr + other;
+        return ptr;
     }
-
-    inline operator T*() { return (T*)static_cast<uintptr_t>(m_ptr); }
-    inline operator const T*() const { return (T*)static_cast<uintptr_t>(m_ptr); }
+    constexpr Ptr32<T> operator-(u32 other) const
+    {
+        Ptr32<T> ptr {};
+        ptr.m_ptr = m_ptr - other;
+        return ptr;
+    }
 
 private:
     u32 m_ptr { 0 };
