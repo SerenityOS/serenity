@@ -377,7 +377,6 @@ int strerror_r(int errnum, char* buf, size_t buflen)
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
-        dbgln("strerror() missing string for errnum={}", errnum);
         return const_cast<char*>("Unknown error");
     }
     return const_cast<char*>(sys_errlist[errnum]);
