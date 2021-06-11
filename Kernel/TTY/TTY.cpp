@@ -43,9 +43,7 @@ KResultOr<size_t> TTY::read(FileDescription&, u64, UserOrKernelBuffer& buffer, s
     auto result = buffer.write_buffered<512>(size, [&](u8* data, size_t data_size) {
         size_t bytes_written = 0;
         for (; bytes_written < data_size; ++bytes_written) {
-            auto bit_index = m_input_buffer.head_index();
-            bool is_special_character = m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
-            if (in_canonical_mode() && is_special_character) {
+            if (in_canonical_mode() && is_special_character_at(m_input_buffer.head_index())) {
                 u8 ch = m_input_buffer.dequeue();
                 if (ch == '\0') {
                     // EOF
@@ -142,6 +140,16 @@ bool TTY::can_write(const FileDescription&, size_t) const
     return true;
 }
 
+constexpr static bool is_utf8_continuation_byte(u8 byte)
+{
+    return (byte & 0xc0) == 0x80;
+}
+
+bool TTY::should_skip_erasing_byte(u8 ch) const
+{
+    return (m_termios.c_iflag & IUTF8) && is_utf8_continuation_byte(ch);
+}
+
 bool TTY::is_eol(u8 ch) const
 {
     return ch == m_termios.c_cc[VEOL];
@@ -233,11 +241,11 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             m_input_buffer.enqueue('\0');
             return;
         }
-        if (is_kill(ch) && m_termios.c_lflag & ECHOK) {
+        if (is_kill(ch)) {
             kill_line();
             return;
         }
-        if (is_erase(ch) && m_termios.c_lflag & ECHOE) {
+        if (is_erase(ch)) {
             do_backspace();
             return;
         }
@@ -269,59 +277,78 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
 
 bool TTY::can_do_backspace() const
 {
-    // can't do back space if we're empty. Plus, we don't want to
+    // Can't do backspace if we're empty. Plus, we don't want to
     // remove any lines "committed" by newlines or ^D.
-    if (!m_input_buffer.is_empty() && !is_eol(m_input_buffer.last()) && m_input_buffer.last() != '\0') {
-        return true;
-    }
-    return false;
+    size_t tail_index = (m_input_buffer.head_index() + m_input_buffer.size() - 1) % TTY_BUFFER_SIZE;
+    return !m_input_buffer.is_empty() && !is_special_character_at(tail_index);
 }
 
+// Erase a character by removing it from the input buffer.
+// If ECHOE is set, a space surrounded '\b' characters is echoed.
+// Otherwise, the ERASE character is echoed.
 void TTY::do_backspace()
 {
-    if (can_do_backspace()) {
+    // If we have a multibyte UTF-8 sequence, we want to remove all bytes of it
+    // from the buffer, but only want to emit a single erase character.
+    while (can_do_backspace() && should_skip_erasing_byte(m_input_buffer.last()))
         m_input_buffer.dequeue_end();
-        // We deliberately don't process the output here.
-        echo(8);
-        echo(' ');
-        echo(8);
 
-        evaluate_block_conditions();
-    }
+    if (!can_do_backspace())
+        return;
+
+    m_input_buffer.dequeue_end();
+    if (m_termios.c_lflag & ECHOE)
+        erase_character();
+    else
+        echo(m_termios.c_cc[VERASE]);
+    evaluate_block_conditions();
 }
 
-// TODO: Currently, both erase_word() and kill_line work by sending
-// a lot of VERASE characters; this is done because Terminal.cpp
-// doesn't currently support VWERASE and VKILL. When these are
-// implemented we could just send a VKILL or VWERASE.
-
+// Erase a word by removing it from the input buffer.
+// The echoing works as in do_backspace().
 void TTY::erase_word()
 {
-    //Note: if we have leading whitespace before the word
-    //we want to delete we have to also delete that.
-    bool first_char = false;
+    // If we have leading whitespace before the word, we have to also delete that.
+    bool is_trailing_whitespace = true;
     bool did_dequeue = false;
     while (can_do_backspace()) {
         u8 ch = m_input_buffer.last();
-        if (ch == ' ' && first_char)
+        if (ch == ' ' && !is_trailing_whitespace)
             break;
         if (ch != ' ')
-            first_char = true;
+            is_trailing_whitespace = false;
         m_input_buffer.dequeue_end();
         did_dequeue = true;
-        erase_character();
+
+        // Handle multibyte UTF-8 sequences correctly.
+        if (!should_skip_erasing_byte(ch)) {
+            if (m_termios.c_lflag & ECHOE)
+                erase_character();
+            else
+                echo(m_termios.c_cc[VERASE]);
+        }
     }
     if (did_dequeue)
         evaluate_block_conditions();
 }
 
+// Erase an entire line of input by removing it from the input buffer.
+// If ECHOKE is set, a space surrounded by '\b' is emitted for each character we delete.
+// If ECHOK is set, the ECHOK is emitted once, followed by a newline.
 void TTY::kill_line()
 {
     bool did_dequeue = false;
     while (can_do_backspace()) {
-        m_input_buffer.dequeue_end();
+        u8 ch = m_input_buffer.dequeue_end();
         did_dequeue = true;
-        erase_character();
+        if (!should_skip_erasing_byte(ch) && m_termios.c_lflag & ECHOKE)
+            erase_character();
+    }
+
+    if (!(m_termios.c_lflag & ECHOKE)) {
+        echo(m_termios.c_cc[VKILL]);
+        if (m_termios.c_lflag & ECHOK)
+            echo_with_processing('\n');
     }
     if (did_dequeue)
         evaluate_block_conditions();
@@ -330,9 +357,9 @@ void TTY::kill_line()
 void TTY::erase_character()
 {
     // We deliberately don't process the output here.
-    echo(m_termios.c_cc[VERASE]);
+    echo('\b');
     echo(' ');
-    echo(m_termios.c_cc[VERASE]);
+    echo('\b');
 }
 
 void TTY::generate_signal(int signal)
@@ -414,8 +441,7 @@ int TTY::set_termios(const termios& new_termios, bool force_set)
         { IXON, "IXON" },
         { IXANY, "IXANY" },
         { IXOFF, "IXOFF" },
-        { IMAXBEL, "IMAXBEL" },
-        { IUTF8, "IUTF8" }
+        { IMAXBEL, "IMAXBEL" }
     };
     for (auto flag : unimplemented_iflags) {
         if (new_termios.c_iflag & flag.value) {

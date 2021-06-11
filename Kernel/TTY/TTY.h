@@ -111,6 +111,8 @@ protected:
 
     void reload_termios();
 
+    bool should_skip_erasing_byte(u8) const;
+
     bool is_eol(u8) const;
     bool is_eol2(u8) const;
     bool is_eof(u8) const;
@@ -130,6 +132,11 @@ private:
 
     template<typename Functor>
     void process_output(u8, Functor put_char);
+
+    bool is_special_character_at(size_t bit_index) const
+    {
+        return m_special_character_bitmask[bit_index / 8] & (1 << (bit_index % 8));
+    }
 
     CircularDeque<u8, TTY_BUFFER_SIZE> m_input_buffer;
     // FIXME: use something like AK::Bitmap but which takes a size template parameter
