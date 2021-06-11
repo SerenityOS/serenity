@@ -24,6 +24,7 @@ void BoardView::set_board(Game::Board const* board)
     if (has_timer())
         stop_timer();
 
+    slide_animation_frame = 0;
     pop_in_animation_frame = 0;
     start_timer(frame_duration_ms);
 
@@ -167,7 +168,10 @@ Gfx::Color BoardView::text_color_for_cell(u32 value)
 
 void BoardView::timer_event(Core::TimerEvent&)
 {
-    if (pop_in_animation_frame < animation_duration) {
+    if (slide_animation_frame < animation_duration) {
+        slide_animation_frame++;
+        update();
+    } else if (pop_in_animation_frame < animation_duration) {
         pop_in_animation_frame++;
         update();
         if (pop_in_animation_frame == animation_duration)
@@ -201,22 +205,51 @@ void BoardView::paint_event(GUI::PaintEvent& event)
     field_rect.center_within(rect());
     painter.fill_rect(field_rect, background_color);
 
-    for (size_t column = 0; column < columns(); ++column) {
-        for (size_t row = 0; row < rows(); ++row) {
-            auto center = Gfx::IntPoint {
-                field_rect.x() + m_padding + (m_cell_size + m_padding) * column + m_cell_size / 2,
-                field_rect.y() + m_padding + (m_cell_size + m_padding) * row + m_cell_size / 2,
-            };
-            auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
-            if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position()) {
-                float pop_in_size = m_min_cell_size + (m_cell_size - m_min_cell_size) * (pop_in_animation_frame / (float)animation_duration);
-                tile_size = Gfx::IntSize { pop_in_size, pop_in_size };
+    auto tile_center = [&](size_t row, size_t column) {
+        return Gfx::IntPoint {
+            field_rect.x() + m_padding + (m_cell_size + m_padding) * column + m_cell_size / 2,
+            field_rect.y() + m_padding + (m_cell_size + m_padding) * row + m_cell_size / 2,
+        };
+    };
+
+    if (slide_animation_frame < animation_duration) {
+        // background
+        for (size_t column = 0; column < columns(); ++column) {
+            for (size_t row = 0; row < rows(); ++row) {
+                auto center = tile_center(row, column);
+                auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+                auto rect = Gfx::IntRect::centered_on(center, tile_size);
+                painter.fill_rect(rect, background_color_for_cell(0));
             }
+        }
+
+        for (auto& sliding_tile : m_board->sliding_tiles()) {
+            auto center_from = tile_center(sliding_tile.row_from, sliding_tile.column_from);
+            auto center_to = tile_center(sliding_tile.row_to, sliding_tile.column_to);
+            auto offset = Gfx::FloatPoint(center_to - center_from);
+            auto center = center_from + Gfx::IntPoint(offset * (slide_animation_frame / (float)animation_duration));
+
+            auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
             auto rect = Gfx::IntRect::centered_on(center, tile_size);
-            auto entry = tiles[row][column];
-            painter.fill_rect(rect, background_color_for_cell(entry));
-            if (entry > 0)
-                painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+
+            painter.fill_rect(rect, background_color_for_cell(sliding_tile.value_from));
+            painter.draw_text(rect, String::number(sliding_tile.value_from), font(), Gfx::TextAlignment::Center, text_color_for_cell(sliding_tile.value_from));
+        }
+    } else {
+        for (size_t column = 0; column < columns(); ++column) {
+            for (size_t row = 0; row < rows(); ++row) {
+                auto center = tile_center(row, column);
+                auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+                if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position()) {
+                    float pop_in_size = m_min_cell_size + (m_cell_size - m_min_cell_size) * (pop_in_animation_frame / (float)animation_duration);
+                    tile_size = Gfx::IntSize { pop_in_size, pop_in_size };
+                }
+                auto rect = Gfx::IntRect::centered_on(center, tile_size);
+                auto entry = tiles[row][column];
+                painter.fill_rect(rect, background_color_for_cell(entry));
+                if (entry > 0)
+                    painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+            }
         }
     }
 }
