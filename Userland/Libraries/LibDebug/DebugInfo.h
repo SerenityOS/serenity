@@ -100,20 +100,6 @@ public:
 
     Optional<SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
 
-    template<typename Callback>
-    void for_each_source_position(Callback callback) const
-    {
-        FlyString previous_file = "";
-        size_t previous_line = 0;
-        for (const auto& line_info : m_sorted_lines) {
-            if (line_info.file == previous_file && line_info.line == previous_line)
-                continue;
-            previous_file = line_info.file;
-            previous_line = line_info.line;
-            callback({ line_info.file, line_info.line, line_info.address });
-        }
-    }
-
     String name_of_containing_function(u32 address) const;
     Vector<SourcePosition> source_lines_in_scope(const VariablesScope&) const;
     Optional<VariablesScope> get_containing_function(u32 address) const;
