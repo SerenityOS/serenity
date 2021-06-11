@@ -584,6 +584,9 @@ bool TCPSocket::can_write(const FileDescription& file_description, size_t size) 
     if (!IPv4Socket::can_write(file_description, size))
         return false;
 
+    if (m_state == State::SynSent || m_state == State::SynReceived)
+        return false;
+
     if (!file_description.is_blocking())
         return true;
 
