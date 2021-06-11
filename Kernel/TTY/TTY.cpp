@@ -424,16 +424,6 @@ int TTY::set_termios(const termios& new_termios, bool force_set)
         }
     }
 
-    static constexpr FlagDescription always_on_iflags[] = {
-        { IGNBRK, "IGNBRK" },
-        { IGNPAR, "IGNPAR" },
-    };
-    for (auto flag : always_on_iflags) {
-        if (!(new_termios.c_iflag & flag.value)) {
-            dbgln("FIXME: disabling iflag {} is not implemented", flag.name);
-        }
-    }
-
     static constexpr FlagDescription unimplemented_oflags[] = {
         { OLCUC, "OLCUC" },
         { ONOCR, "ONOCR" },
