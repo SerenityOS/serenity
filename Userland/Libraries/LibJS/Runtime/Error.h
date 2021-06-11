@@ -16,7 +16,8 @@ class Error : public Object {
     JS_OBJECT(Error, Object);
 
 public:
-    static Error* create(GlobalObject&, const String& message = {});
+    static Error* create(GlobalObject&);
+    static Error* create(GlobalObject&, String const& message);
 
     explicit Error(Object& prototype);
     virtual ~Error() override = default;
@@ -30,7 +31,8 @@ public:
         JS_OBJECT(ClassName, Error);                                                \
                                                                                     \
     public:                                                                         \
-        static ClassName* create(GlobalObject&, const String& message = {});        \
+        static ClassName* create(GlobalObject&);                                    \
+        static ClassName* create(GlobalObject&, String const& message);             \
                                                                                     \
         explicit ClassName(Object& prototype);                                      \
         virtual ~ClassName() override = default;                                    \

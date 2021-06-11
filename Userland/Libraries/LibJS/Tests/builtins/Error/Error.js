@@ -31,4 +31,31 @@ describe("normal behavior", () => {
         expect(TypeError()).toBeInstanceOf(TypeError);
         expect(new TypeError()).toBeInstanceOf(TypeError);
     });
+
+    test("supports options object with cause", () => {
+        const errors = [Error, EvalError, RangeError, ReferenceError, SyntaxError, TypeError];
+        const cause = new Error();
+        errors.forEach(T => {
+            const error = new T("test", { cause });
+            expect(error.hasOwnProperty("cause")).toBeTrue();
+            expect(error.cause).toBe(cause);
+        });
+    });
+
+    test("supports options object with cause (chained)", () => {
+        let error;
+        try {
+            try {
+                throw new Error("foo");
+            } catch (e) {
+                throw new Error("bar", { cause: e });
+            }
+        } catch (e) {
+            error = new Error("baz", { cause: e });
+        }
+        expect(error.message).toBe("baz");
+        expect(error.cause.message).toBe("bar");
+        expect(error.cause.cause.message).toBe("foo");
+        expect(error.cause.cause.cause).toBe(undefined);
+    });
 });
