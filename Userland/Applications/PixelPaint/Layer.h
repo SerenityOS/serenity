@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -24,9 +24,9 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> create_with_size(Image&, Gfx::IntSize const&, String const& name);
-    static RefPtr<Layer> create_with_bitmap(Image&, Gfx::Bitmap const&, String const& name);
-    static RefPtr<Layer> create_snapshot(Image&, Layer const&);
+    static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String const& name);
+    static RefPtr<Layer> try_create_with_bitmap(Image&, Gfx::Bitmap const&, String const& name);
+    static RefPtr<Layer> try_create_snapshot(Image&, Layer const&);
 
     ~Layer() { }
 

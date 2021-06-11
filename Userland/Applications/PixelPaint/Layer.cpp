@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -10,7 +10,7 @@
 
 namespace PixelPaint {
 
-RefPtr<Layer> Layer::create_with_size(Image& image, Gfx::IntSize const& size, String const& name)
+RefPtr<Layer> Layer::try_create_with_size(Image& image, Gfx::IntSize const& size, String const& name)
 {
     if (size.is_empty())
         return nullptr;
@@ -21,7 +21,7 @@ RefPtr<Layer> Layer::create_with_size(Image& image, Gfx::IntSize const& size, St
     return adopt_ref(*new Layer(image, size, name));
 }
 
-RefPtr<Layer> Layer::create_with_bitmap(Image& image, Gfx::Bitmap const& bitmap, String const& name)
+RefPtr<Layer> Layer::try_create_with_bitmap(Image& image, Gfx::Bitmap const& bitmap, String const& name)
 {
     if (bitmap.size().is_empty())
         return nullptr;
@@ -32,9 +32,9 @@ RefPtr<Layer> Layer::create_with_bitmap(Image& image, Gfx::Bitmap const& bitmap,
     return adopt_ref(*new Layer(image, bitmap, name));
 }
 
-RefPtr<Layer> Layer::create_snapshot(Image& image, Layer const& layer)
+RefPtr<Layer> Layer::try_create_snapshot(Image& image, Layer const& layer)
 {
-    auto snapshot = create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
+    auto snapshot = try_create_with_bitmap(image, *layer.bitmap().clone(), layer.name());
     /*
         We set these properties directly because calling the setters might 
         notify the image of an update on the newly created layer, but this 

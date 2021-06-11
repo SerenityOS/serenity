@@ -88,7 +88,8 @@ int main(int argc, char** argv)
             auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
                 auto image = PixelPaint::Image::try_create_with_size(dialog->image_size());
-                auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
+                auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background");
+                VERIFY(bg_layer);
                 image->add_layer(*bg_layer);
                 bg_layer->bitmap().fill(Color::White);
 
@@ -170,7 +171,8 @@ int main(int argc, char** argv)
         if (!bitmap)
             return;
 
-        auto layer = PixelPaint::Layer::create_with_bitmap(*image_editor.image(), *bitmap, "Pasted layer");
+        auto layer = PixelPaint::Layer::try_create_with_bitmap(*image_editor.image(), *bitmap, "Pasted layer");
+        VERIFY(layer);
         image_editor.image()->add_layer(layer.release_nonnull());
     });
     GUI::Clipboard::the().on_change = [&](auto& mime_type) {
@@ -228,7 +230,7 @@ int main(int argc, char** argv)
         "New &Layer...", { Mod_Ctrl | Mod_Shift, Key_N }, [&](auto&) {
             auto dialog = PixelPaint::CreateNewLayerDialog::construct(image_editor.image()->size(), window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto layer = PixelPaint::Layer::create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
+                auto layer = PixelPaint::Layer::try_create_with_size(*image_editor.image(), dialog->layer_size(), dialog->layer_name());
                 if (!layer) {
                     GUI::MessageBox::show_error(window, String::formatted("Unable to create layer with size {}", dialog->size().to_string()));
                     return;
@@ -397,7 +399,8 @@ int main(int argc, char** argv)
     } else {
         auto image = PixelPaint::Image::try_create_with_size({ 480, 360 });
 
-        auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
+        auto bg_layer = PixelPaint::Layer::try_create_with_size(*image, image->size(), "Background");
+        VERIFY(bg_layer);
         image->add_layer(*bg_layer);
         bg_layer->bitmap().fill(Color::White);
 
