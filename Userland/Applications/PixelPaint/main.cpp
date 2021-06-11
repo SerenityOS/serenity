@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         "&New Image...", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [&](auto&) {
             auto dialog = PixelPaint::CreateNewImageDialog::construct(window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto image = PixelPaint::Image::create_with_size(dialog->image_size());
+                auto image = PixelPaint::Image::try_create_with_size(dialog->image_size());
                 auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
                 image->add_layer(*bg_layer);
                 bg_layer->bitmap().fill(Color::White);
@@ -100,7 +100,7 @@ int main(int argc, char** argv)
         window);
 
     auto open_image_file = [&](auto& path) {
-        auto image = PixelPaint::Image::create_from_file(path);
+        auto image = PixelPaint::Image::try_create_from_file(path);
         if (!image) {
             GUI::MessageBox::show_error(window, String::formatted("Invalid image file: {}", path));
             return;
@@ -395,7 +395,7 @@ int main(int argc, char** argv)
     if (Core::File::exists(image_file_real_path)) {
         open_image_file(image_file_real_path);
     } else {
-        auto image = PixelPaint::Image::create_with_size({ 480, 360 });
+        auto image = PixelPaint::Image::try_create_with_size({ 480, 360 });
 
         auto bg_layer = PixelPaint::Layer::create_with_size(*image, image->size(), "Background");
         image->add_layer(*bg_layer);
