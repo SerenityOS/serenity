@@ -29,7 +29,7 @@ void BoardView::set_board(Game::Board const* board)
         return;
     }
 
-    bool must_resize = !m_board || m_board->size() != board->size();
+    bool must_resize = !m_board || m_board->tiles.size() != board->tiles.size();
 
     m_board = board;
 
@@ -62,16 +62,16 @@ size_t BoardView::rows() const
 {
     if (!m_board)
         return 0;
-    return m_board->size();
+    return m_board->tiles.size();
 }
 
 size_t BoardView::columns() const
 {
     if (!m_board)
         return 0;
-    if (m_board->is_empty())
+    if (m_board->tiles.is_empty())
         return 0;
-    return (*m_board)[0].size();
+    return m_board->tiles[0].size();
 }
 
 void BoardView::resize_event(GUI::ResizeEvent&)
@@ -172,7 +172,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(rect(), background_color);
         return;
     }
-    auto& board = *m_board;
+    auto& tiles = m_board->tiles;
 
     Gfx::IntRect field_rect {
         0,
@@ -191,7 +191,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
                 m_cell_size,
                 m_cell_size,
             };
-            auto entry = board[row][column];
+            auto entry = tiles[row][column];
             painter.fill_rect(rect, background_color_for_cell(entry));
             if (entry > 0)
                 painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
