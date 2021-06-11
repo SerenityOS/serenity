@@ -147,6 +147,11 @@ bool TTY::is_eol(u8 ch) const
     return ch == m_termios.c_cc[VEOL];
 }
 
+bool TTY::is_eol2(u8 ch) const
+{
+    return extended_processing_enabled() && ch == m_termios.c_cc[VEOL2];
+}
+
 bool TTY::is_eof(u8 ch) const
 {
     return ch == m_termios.c_cc[VEOF];
@@ -164,7 +169,7 @@ bool TTY::is_erase(u8 ch) const
 
 bool TTY::is_werase(u8 ch) const
 {
-    return ch == m_termios.c_cc[VWERASE];
+    return extended_processing_enabled() && ch == m_termios.c_cc[VWERASE];
 }
 
 void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
@@ -251,7 +256,7 @@ void TTY::emit(u8 ch, bool do_evaluate_block_conditions)
             return;
         }
 
-        if (is_eol(ch)) {
+        if (is_eol(ch) || is_eol2(ch)) {
             set_special_bit();
             m_available_lines++;
         }
@@ -439,16 +444,6 @@ int TTY::set_termios(const termios& new_termios, bool force_set)
     for (auto flag : unimplemented_oflags) {
         if (new_termios.c_oflag & flag.value) {
             dbgln("FIXME: oflag {} unimplemented", flag.name);
-            rc = -ENOTIMPL;
-        }
-    }
-
-    static constexpr FlagDescription unimplemented_lflags[] = {
-        { IEXTEN, "IEXTEN" }
-    };
-    for (auto flag : unimplemented_lflags) {
-        if (new_termios.c_lflag & flag.value) {
-            dbgln("FIXME: lflag {} unimplemented", flag.name);
             rc = -ENOTIMPL;
         }
     }

@@ -48,6 +48,7 @@ public:
     bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
+    bool extended_processing_enabled() const { return m_termios.c_lflag & IEXTEN; }
 
     const termios& get_termios() const { return m_termios; }
     void hang_up();
@@ -111,6 +112,7 @@ protected:
     void reload_termios();
 
     bool is_eol(u8) const;
+    bool is_eol2(u8) const;
     bool is_eof(u8) const;
     bool is_kill(u8) const;
     bool is_erase(u8) const;
