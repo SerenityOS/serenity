@@ -22,7 +22,7 @@ EraseTool::~EraseTool()
 {
 }
 
-Gfx::IntRect EraseTool::build_rect(const Gfx::IntPoint& pos, const Gfx::IntRect& widget_rect)
+Gfx::IntRect EraseTool::build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect)
 {
     const int base_eraser_size = 10;
     const int eraser_size = (base_eraser_size * m_thickness);
