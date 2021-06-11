@@ -422,6 +422,11 @@ public:
 
     void intersect(const Rect<T>&);
 
+    static Rect<T> centered_on(const Point<T>& center, const Size<T>& size)
+    {
+        return { { center.x() - size.width() / 2, center.y() - size.height() / 2 }, size };
+    }
+
     static Rect<T> from_two_points(const Point<T>& a, const Point<T>& b)
     {
         return { min(a.x(), b.x()), min(a.y(), b.y()), abst(a.x() - b.x()), abst(a.y() - b.y()) };
