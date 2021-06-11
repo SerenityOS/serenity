@@ -67,6 +67,17 @@ public:
         };
         SlideResult slide_tiles(Direction);
 
+        struct SlidingTile {
+            size_t row_from;
+            size_t column_from;
+            u32 value_from;
+
+            size_t row_to;
+            size_t column_to;
+            u32 value_to;
+        };
+        Vector<SlidingTile> const& sliding_tiles() const { return m_sliding_tiles; }
+
     private:
         void reverse();
         void transpose();
@@ -79,6 +90,7 @@ public:
         Tiles m_tiles;
 
         Position m_last_added_position { 0, 0 };
+        Vector<SlidingTile> m_sliding_tiles;
     };
 
     Board const& board() const { return m_board; }

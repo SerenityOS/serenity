@@ -52,6 +52,10 @@ void Game::Board::transpose()
         for (size_t j = 0; j < i; j++)
             swap(m_tiles[i][j], m_tiles[j][i]);
     }
+    for (auto& t : m_sliding_tiles) {
+        swap(t.row_from, t.column_from);
+        swap(t.row_to, t.column_to);
+    }
 }
 
 void Game::Board::reverse()
@@ -59,6 +63,12 @@ void Game::Board::reverse()
     for (auto& row : m_tiles) {
         for (size_t i = 0; i < row.size() / 2; ++i)
             swap(row[i], row[row.size() - i - 1]);
+    }
+
+    auto const row_size = m_tiles[0].size();
+    for (auto& t : m_sliding_tiles) {
+        t.column_from = row_size - t.column_from - 1;
+        t.column_to = row_size - t.column_to - 1;
     }
 }
 
@@ -85,12 +95,16 @@ size_t Game::Board::slide_row(size_t row_index)
     while (first < row.size()) {
         auto second = next_nonempty(first + 1);
         if (second == row.size() || row[first] != row[second]) {
+            m_sliding_tiles.append({ row_index, first, row[first], row_index, current_index, row[first] });
+
             row[current_index] = row[first];
             current_index++;
             first = second;
         } else {
             VERIFY(row[first] == row[second]);
 
+            m_sliding_tiles.append({ row_index, first, row[first], row_index, current_index, 2 * row[first] });
+            m_sliding_tiles.append({ row_index, second, row[second], row_index, current_index, 2 * row[first] });
 
             row[current_index] = 2 * row[first];
             current_index++;
@@ -107,6 +121,8 @@ size_t Game::Board::slide_row(size_t row_index)
 
 size_t Game::Board::slide_left()
 {
+    m_sliding_tiles.clear();
+
     size_t successful_merge_score = 0;
 
     for (size_t row_index = 0; row_index < m_tiles.size(); row_index++)
