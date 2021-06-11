@@ -31,9 +31,6 @@ int main(int, char**)
         perror("unveil");
         return 1;
     }
-    if (unveil("/", "b") < 0) {
-        perror("unveil");
-        return 1;
-    }
+
     return event_loop.exec();
 }
