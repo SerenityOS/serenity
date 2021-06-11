@@ -76,6 +76,8 @@ const char* Length::unit_name() const
         return "vmax";
     case Type::Vmin:
         return "vmin";
+    case Type::Calculated:
+        return "calculated";
     }
     VERIFY_NOT_REACHED();
 }
