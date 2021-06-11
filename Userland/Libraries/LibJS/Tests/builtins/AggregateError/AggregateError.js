@@ -56,4 +56,11 @@ describe("normal behavior", () => {
             }).errors
         ).toEqual(errors);
     });
+
+    test("supports options object with cause", () => {
+        const cause = new Error();
+        const error = new AggregateError([], "test", { cause });
+        expect(error.hasOwnProperty("cause")).toBeTrue();
+        expect(error.cause).toBe(cause);
+    });
 });
