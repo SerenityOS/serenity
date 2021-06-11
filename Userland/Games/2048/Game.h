@@ -11,8 +11,8 @@
 class Game final {
 public:
     Game(size_t grid_size, size_t target_tile, bool evil_ai);
-    Game(const Game&) = default;
-    Game& operator=(const Game&) = default;
+    Game(Game const&) = default;
+    Game& operator=(Game const&) = default;
 
     enum class MoveOutcome {
         OK,
@@ -37,7 +37,7 @@ public:
 
     using Board = Vector<Vector<u32>>;
 
-    const Board& board() const { return m_board; }
+    Board const& board() const { return m_board; }
 
     static size_t max_power_for_board(size_t size)
     {

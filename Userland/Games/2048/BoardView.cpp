@@ -10,7 +10,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
-BoardView::BoardView(const Game::Board* board)
+BoardView::BoardView(Game::Board const* board)
     : m_board(board)
 {
 }
@@ -19,7 +19,7 @@ BoardView::~BoardView()
 {
 }
 
-void BoardView::set_board(const Game::Board* board)
+void BoardView::set_board(Game::Board const* board)
 {
     if (m_board == board)
         return;
@@ -44,7 +44,7 @@ void BoardView::pick_font()
     String best_font_name;
     int best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
-    font_database.for_each_font([&](const Gfx::Font& font) {
+    font_database.for_each_font([&](Gfx::Font const& font) {
         if (font.family() != "Liza" || font.weight() != 700)
             return;
         auto size = font.glyph_height();

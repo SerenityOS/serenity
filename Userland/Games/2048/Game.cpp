@@ -45,7 +45,7 @@ void Game::add_random_tile()
     m_board[row][column] = value;
 }
 
-static Game::Board transpose(const Game::Board& board)
+static Game::Board transpose(Game::Board const& board)
 {
     Vector<Vector<u32>> new_board;
     auto result_row_count = board[0].size();
@@ -65,7 +65,7 @@ static Game::Board transpose(const Game::Board& board)
     return new_board;
 }
 
-static Game::Board reverse(const Game::Board& board)
+static Game::Board reverse(Game::Board const& board)
 {
     auto new_board = board;
     for (auto& row : new_board) {
@@ -76,7 +76,7 @@ static Game::Board reverse(const Game::Board& board)
     return new_board;
 }
 
-static Vector<u32> slide_row(const Vector<u32>& row, size_t& successful_merge_score)
+static Vector<u32> slide_row(Vector<u32> const& row, size_t& successful_merge_score)
 {
     if (row.size() < 2)
         return row;
@@ -114,7 +114,7 @@ static Vector<u32> slide_row(const Vector<u32>& row, size_t& successful_merge_sc
     return result;
 }
 
-static Game::Board slide_left(const Game::Board& board, size_t& successful_merge_score)
+static Game::Board slide_left(Game::Board const& board, size_t& successful_merge_score)
 {
     Vector<Vector<u32>> new_board;
     for (auto& row : board)
@@ -123,7 +123,7 @@ static Game::Board slide_left(const Game::Board& board, size_t& successful_merge
     return new_board;
 }
 
-static bool is_complete(const Game::Board& board, size_t target)
+static bool is_complete(Game::Board const& board, size_t target)
 {
     for (auto& row : board) {
         if (row.contains_slow(target))
@@ -133,7 +133,7 @@ static bool is_complete(const Game::Board& board, size_t target)
     return false;
 }
 
-static bool has_no_neighbors(const Span<const u32>& row)
+static bool has_no_neighbors(Span<u32 const> const& row)
 {
     if (row.size() < 2)
         return true;
@@ -147,7 +147,7 @@ static bool has_no_neighbors(const Span<const u32>& row)
     return has_no_neighbors(row.slice(1, row.size() - 1));
 };
 
-static bool is_stalled(const Game::Board& board)
+static bool is_stalled(Game::Board const& board)
 {
     static auto stalled = [](auto& row) {
         return !row.contains_slow(0) && has_no_neighbors(row.span());
@@ -164,7 +164,7 @@ static bool is_stalled(const Game::Board& board)
     return true;
 }
 
-static size_t get_number_of_free_cells(const Game::Board& board)
+static size_t get_number_of_free_cells(Game::Board const& board)
 {
     size_t accumulator = 0;
     for (auto& row : board) {
