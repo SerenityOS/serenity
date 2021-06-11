@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -163,7 +164,8 @@ private:
     void move_card(CardStack& from, CardStack& to);
     void draw_cards();
     void pop_waste_to_play_stack();
-    void auto_move_eligible_cards_to_stacks();
+    bool attempt_to_move_card_to_foundations(CardStack& from);
+    void auto_move_eligible_cards_to_foundations();
     void start_timer_if_necessary();
     void start_game_over_animation();
     void stop_game_over_animation();

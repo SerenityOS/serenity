@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -173,7 +174,7 @@ void Game::keydown_event(GUI::KeyEvent& event)
     if (event.shift() && event.key() == KeyCode::Key_F12) {
         start_game_over_animation();
     } else if (event.key() == KeyCode::Key_Tab) {
-        auto_move_eligible_cards_to_stacks();
+        auto_move_eligible_cards_to_foundations();
     } else if (event.key() == KeyCode::Key_Space) {
         draw_cards();
         invalidate_layout(); // FIXME: Stock stack won't render properly after draw_cards() without this
@@ -306,32 +307,14 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 
     auto click_location = event.position();
     for (auto& to_check : m_stacks) {
-        if (to_check.type() == CardStack::Type::Foundation || to_check.type() == CardStack::Type::Stock || to_check.type() == CardStack::Type::Waste)
+        if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
             continue;
 
         if (to_check.bounding_box().contains(click_location) && !to_check.is_empty()) {
             auto& top_card = to_check.peek();
-            if (!top_card.is_upside_down() && top_card.rect().contains(click_location)) {
-                if (stack(Foundation1).is_allowed_to_push(top_card))
-                    move_card(to_check, stack(Foundation1));
-                else if (stack(Foundation2).is_allowed_to_push(top_card))
-                    move_card(to_check, stack(Foundation2));
-                else if (stack(Foundation3).is_allowed_to_push(top_card))
-                    move_card(to_check, stack(Foundation3));
-                else if (stack(Foundation4).is_allowed_to_push(top_card))
-                    move_card(to_check, stack(Foundation4));
-                else
-                    break;
+            if (!top_card.is_upside_down() && top_card.rect().contains(click_location))
+                attempt_to_move_card_to_foundations(to_check);
 
-                if (to_check.type() == CardStack::Type::Play) {
-                    auto& waste = this->stack(Waste);
-                    if (to_check.is_empty() && !waste.is_empty()) {
-                        auto card = waste.pop();
-                        m_focused_cards.append(card);
-                        to_check.push(move(card));
-                    }
-                }
-            }
             break;
         }
     }
@@ -448,7 +431,38 @@ void Game::pop_waste_to_play_stack()
     }
 }
 
-void Game::auto_move_eligible_cards_to_stacks()
+bool Game::attempt_to_move_card_to_foundations(CardStack& from)
+{
+    if (from.is_empty())
+        return false;
+
+    auto& top_card = from.peek();
+    if (top_card.is_upside_down())
+        return false;
+
+    bool card_was_moved = false;
+
+    if (stack(Foundation1).is_allowed_to_push(top_card)) {
+        move_card(from, stack(Foundation1));
+        card_was_moved = true;
+    } else if (stack(Foundation2).is_allowed_to_push(top_card)) {
+        move_card(from, stack(Foundation2));
+        card_was_moved = true;
+    } else if (stack(Foundation3).is_allowed_to_push(top_card)) {
+        move_card(from, stack(Foundation3));
+        card_was_moved = true;
+    } else if (stack(Foundation4).is_allowed_to_push(top_card)) {
+        move_card(from, stack(Foundation4));
+        card_was_moved = true;
+    }
+
+    if (card_was_moved && (from.type() == CardStack::Type::Play))
+        pop_waste_to_play_stack();
+
+    return card_was_moved;
+}
+
+void Game::auto_move_eligible_cards_to_foundations()
 {
     bool card_was_moved = false;
 
@@ -456,40 +470,14 @@ void Game::auto_move_eligible_cards_to_stacks()
         if (to_check.type() != CardStack::Type::Normal && to_check.type() != CardStack::Type::Play)
             continue;
 
-        if (to_check.is_empty())
-            continue;
-
-        auto& top_card = to_check.peek();
-        if (top_card.is_upside_down())
-            continue;
-
-        if (stack(Foundation1).is_allowed_to_push(top_card)) {
-            move_card(to_check, stack(Foundation1));
+        if (attempt_to_move_card_to_foundations(to_check))
             card_was_moved = true;
-            if (to_check.type() == CardStack::Type::Play)
-                pop_waste_to_play_stack();
-        } else if (stack(Foundation2).is_allowed_to_push(top_card)) {
-            move_card(to_check, stack(Foundation2));
-            card_was_moved = true;
-            if (to_check.type() == CardStack::Type::Play)
-                pop_waste_to_play_stack();
-        } else if (stack(Foundation3).is_allowed_to_push(top_card)) {
-            move_card(to_check, stack(Foundation3));
-            card_was_moved = true;
-            if (to_check.type() == CardStack::Type::Play)
-                pop_waste_to_play_stack();
-        } else if (stack(Foundation4).is_allowed_to_push(top_card)) {
-            move_card(to_check, stack(Foundation4));
-            card_was_moved = true;
-            if (to_check.type() == CardStack::Type::Play)
-                pop_waste_to_play_stack();
-        }
     }
 
     // If at least one card was moved, check again to see if now any additional cards can now be moved
     if (card_was_moved) {
         start_timer_if_necessary();
-        auto_move_eligible_cards_to_stacks();
+        auto_move_eligible_cards_to_foundations();
     }
 }
 
