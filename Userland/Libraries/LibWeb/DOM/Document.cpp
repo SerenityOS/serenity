@@ -655,6 +655,8 @@ JS::Interpreter& Document::interpreter()
                     dbgln("  {} at {}:{}:{}", function_name, source_range.filename, source_range.start.line, source_range.start.column);
                 }
             }
+
+            vm.finish_execution_generation();
         };
         m_interpreter = JS::Interpreter::create<Bindings::WindowObject>(vm, *m_window);
     }
