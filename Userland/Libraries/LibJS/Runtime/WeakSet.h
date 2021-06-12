@@ -9,10 +9,13 @@
 #include <AK/HashTable.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/WeakContainer.h>
 
 namespace JS {
 
-class WeakSet : public Object {
+class WeakSet final
+    : public Object
+    , public WeakContainer {
     JS_OBJECT(WeakSet, Object);
 
 public:
@@ -24,7 +27,7 @@ public:
     HashTable<Cell*> const& values() const { return m_values; };
     HashTable<Cell*>& values() { return m_values; };
 
-    void remove_sweeped_cells(Badge<Heap>, Vector<Cell*>&);
+    virtual void remove_sweeped_cells(Badge<Heap>, Vector<Cell*>&) override;
 
 private:
     HashTable<Cell*> m_values; // This stores Cell pointers instead of Object pointers to aide with sweeping

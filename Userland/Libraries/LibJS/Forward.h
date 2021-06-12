@@ -141,6 +141,7 @@ class Symbol;
 class Token;
 class VM;
 class Value;
+class WeakContainer;
 enum class DeclarationKind;
 struct AlreadyResolved;
 struct JobCallback;

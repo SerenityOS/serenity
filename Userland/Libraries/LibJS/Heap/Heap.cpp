@@ -16,7 +16,7 @@
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/WeakSet.h>
+#include <LibJS/Runtime/WeakContainer.h>
 #include <setjmp.h>
 
 namespace JS {
@@ -190,7 +190,7 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     size_t collected_cell_bytes = 0;
     size_t live_cell_bytes = 0;
 
-    auto should_store_sweeped_cells = !m_weak_sets.is_empty();
+    auto should_store_sweeped_cells = !m_weak_containers.is_empty();
     for_each_block([&](auto& block) {
         bool block_has_live_cells = false;
         bool block_was_full = block.is_full();
@@ -226,8 +226,8 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
 
-    for (auto* weak_set : m_weak_sets)
-        weak_set->remove_sweeped_cells({}, sweeped_cells);
+    for (auto* weak_container : m_weak_containers)
+        weak_container->remove_sweeped_cells({}, sweeped_cells);
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {
@@ -280,16 +280,16 @@ void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList
     m_marked_value_lists.remove(&list);
 }
 
-void Heap::did_create_weak_set(Badge<WeakSet>, WeakSet& set)
+void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)
 {
-    VERIFY(!m_weak_sets.contains(&set));
-    m_weak_sets.set(&set);
+    VERIFY(!m_weak_containers.contains(&set));
+    m_weak_containers.set(&set);
 }
 
-void Heap::did_destroy_weak_set(Badge<WeakSet>, WeakSet& set)
+void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
 {
-    VERIFY(m_weak_sets.contains(&set));
-    m_weak_sets.remove(&set);
+    VERIFY(m_weak_containers.contains(&set));
+    m_weak_containers.remove(&set);
 }
 
 void Heap::defer_gc(Badge<DeferGC>)
