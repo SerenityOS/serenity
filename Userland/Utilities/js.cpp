@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -278,6 +279,24 @@ static void print_proxy_object(const JS::Object& object, HashTable<JS::Object*>&
     print_value(&proxy_object.handler(), seen_objects);
 }
 
+static void print_map(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& map = static_cast<const JS::Map&>(object);
+    auto& entries = map.entries();
+    print_type("Map");
+    out(" {{");
+    bool first = true;
+    for (auto& entry : entries) {
+        print_separator(first);
+        print_value(entry.key, seen_objects);
+        out(" => ");
+        print_value(entry.value, seen_objects);
+    }
+    if (!first)
+        out(" ");
+    out("}}");
+}
+
 static void print_set(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& set = static_cast<const JS::Set&>(object);
@@ -415,6 +434,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_error(object, seen_objects);
         if (is<JS::RegExpObject>(object))
             return print_regexp_object(object, seen_objects);
+        if (is<JS::Map>(object))
+            return print_map(object, seen_objects);
         if (is<JS::Set>(object))
             return print_set(object, seen_objects);
         if (is<JS::ProxyObject>(object))
