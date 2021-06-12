@@ -26,6 +26,7 @@ public:
 
     virtual bool is_hardware_paged_capable() const override { return false; }
     virtual bool has_hardware_cursor() const override { return false; }
+    virtual void flush(size_t, size_t, size_t, size_t) override { }
 
     virtual ~VGAConsole() = default;
 

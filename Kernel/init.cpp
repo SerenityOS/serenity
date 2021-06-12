@@ -167,9 +167,6 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
 
-    GraphicsManagement::the().initialize();
-    ConsoleManagement::the().initialize();
-
     Thread::initialize();
     Process::initialize();
     Scheduler::initialize();
@@ -229,6 +226,9 @@ void init_stage2(void*)
         // exhausted
         APIC::the().boot_aps();
     }
+
+    GraphicsManagement::the().initialize();
+    ConsoleManagement::the().initialize();
 
     SyncTask::spawn();
     FinalizerTask::spawn();

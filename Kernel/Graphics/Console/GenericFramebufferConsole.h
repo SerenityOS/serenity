@@ -37,7 +37,6 @@ public:
     virtual void disable() override;
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) = 0;
-    virtual void flush() = 0;
 
 protected:
     GenericFramebufferConsole(size_t width, size_t height, size_t pitch)

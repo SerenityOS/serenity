@@ -58,6 +58,7 @@ public:
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) = 0;
     virtual void write(size_t x, size_t y, char ch, bool critical = false) = 0;
     virtual void write(char ch, bool critical = false) = 0;
+    virtual void flush(size_t x, size_t y, size_t width, size_t height) = 0;
 
     virtual ~Console() { }
 
