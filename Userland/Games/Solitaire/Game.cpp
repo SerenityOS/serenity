@@ -52,6 +52,7 @@ void Game::timer_event(Core::TimerEvent&)
     if (m_start_game_over_animation_next_frame) {
         m_start_game_over_animation_next_frame = false;
         m_game_over_animation = true;
+        set_background_fill_enabled(false);
     } else if (m_game_over_animation) {
         VERIFY(!m_animation.card().is_null());
         if (m_animation.card()->position().x() >= Game::width || m_animation.card()->rect().right() <= 0)
@@ -71,6 +72,15 @@ void Game::create_new_animation_card()
 
     int x_sgn = card->position().x() > (Game::width / 2) ? -1 : 1;
     m_animation = Animation(card, rand_float() + .4f, x_sgn * ((rand() % 3) + 2), .6f + rand_float() * .4f);
+}
+
+void Game::set_background_fill_enabled(bool enabled)
+{
+    Widget* widget = this;
+    while (widget) {
+        widget->set_fill_with_background_color(enabled);
+        widget = widget->parent_widget();
+    }
 }
 
 void Game::start_game_over_animation()
@@ -100,6 +110,7 @@ void Game::stop_game_over_animation()
     if (!m_game_over_animation)
         return;
 
+    set_background_fill_enabled(true);
     m_game_over_animation = false;
     update();
 
@@ -188,7 +199,6 @@ void Game::keydown_event(GUI::KeyEvent& event)
         auto_move_eligible_cards_to_foundations();
     } else if (event.key() == KeyCode::Key_Space) {
         draw_cards();
-        invalidate_layout(); // FIXME: Stock stack won't render properly after draw_cards() without this
     } else if (event.shift() && event.key() == KeyCode::Key_F11) {
         dump_layout();
     }
