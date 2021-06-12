@@ -33,8 +33,11 @@ public:
 
     ValueWithShadow(const ValueAndShadowReference<T>&);
 
-    T value() const { return m_value; }
-    T shadow() const { return m_shadow; }
+    T& value() { return m_value; }
+    T& shadow() { return m_shadow; }
+
+    T const& value() const { return m_value; }
+    T const& shadow() const { return m_shadow; }
 
     bool is_uninitialized() const
     {
