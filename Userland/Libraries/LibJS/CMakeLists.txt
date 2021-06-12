@@ -55,6 +55,9 @@ set(SOURCES
     Runtime/IteratorPrototype.cpp
     Runtime/JSONObject.cpp
     Runtime/LexicalEnvironment.cpp
+    Runtime/Map.cpp
+    Runtime/MapConstructor.cpp
+    Runtime/MapPrototype.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
     Runtime/NativeFunction.cpp

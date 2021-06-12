@@ -36,6 +36,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
+#include <LibJS/Runtime/MapConstructor.h>
+#include <LibJS/Runtime/MapPrototype.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberConstructor.h>
@@ -150,6 +152,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
     add_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
     add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
+    add_constructor(vm.names.Map, m_map_constructor, m_map_prototype);
     add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);
     add_constructor(vm.names.Object, m_object_constructor, m_object_prototype);
     add_constructor(vm.names.Promise, m_promise_constructor, m_promise_prototype);
