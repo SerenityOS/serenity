@@ -62,6 +62,8 @@
 #include <LibJS/Runtime/TypedArrayConstructor.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
 #include <LibJS/Runtime/Value.h>
+#include <LibJS/Runtime/WeakMapConstructor.h>
+#include <LibJS/Runtime/WeakMapPrototype.h>
 #include <LibJS/Runtime/WeakSetConstructor.h>
 #include <LibJS/Runtime/WeakSetPrototype.h>
 
@@ -154,6 +156,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.Set, m_set_constructor, m_set_prototype);
     add_constructor(vm.names.String, m_string_constructor, m_string_prototype);
     add_constructor(vm.names.Symbol, m_symbol_constructor, m_symbol_prototype);
+    add_constructor(vm.names.WeakMap, m_weak_map_constructor, m_weak_map_prototype);
     add_constructor(vm.names.WeakSet, m_weak_set_constructor, m_weak_set_prototype);
 
     initialize_constructor(vm.names.TypedArray, m_typed_array_constructor, m_typed_array_prototype);
