@@ -1397,6 +1397,10 @@ void WindowManager::set_active_window(Window* window, bool make_input)
     auto* previously_active_window = m_active_window.ptr();
 
     if (previously_active_window) {
+        for (auto& child_window : previously_active_window->child_windows()) {
+            if (child_window && child_window->type() == WindowType::Tooltip)
+                child_window->request_close();
+        }
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
         previously_active_window->invalidate(true, true);
         m_active_window = nullptr;
