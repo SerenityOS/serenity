@@ -9,7 +9,6 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/IntelNativeGraphicsAdapter.h>

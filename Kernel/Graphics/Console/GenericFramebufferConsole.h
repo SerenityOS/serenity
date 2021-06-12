@@ -12,12 +12,9 @@
 #include <Kernel/PhysicalAddress.h>
 
 namespace Kernel::Graphics {
-class FramebufferConsole final : public Console {
+
+class GenericFramebufferConsole : public Console {
 public:
-    static NonnullRefPtr<FramebufferConsole> initialize(PhysicalAddress, size_t width, size_t height, size_t pitch);
-
-    void set_resolution(size_t width, size_t height, size_t pitch);
-
     virtual size_t bytes_per_base_glyph() const override;
     virtual size_t chars_per_line() const override;
 
@@ -31,19 +28,25 @@ public:
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
 
-    virtual void clear(size_t x, size_t y, size_t length) const override;
-    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) const override;
-    virtual void write(size_t x, size_t y, char ch, bool critical = false) const override;
-    virtual void write(char ch, bool critical = false) const override;
+    virtual void clear(size_t x, size_t y, size_t length) override;
+    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
+    virtual void write(size_t x, size_t y, char ch, bool critical = false) override;
+    virtual void write(char ch, bool critical = false) override;
 
     virtual void enable() override;
     virtual void disable() override;
 
+    virtual void set_resolution(size_t width, size_t height, size_t pitch) = 0;
+    virtual void flush() = 0;
+
 protected:
-    void clear_glyph(size_t x, size_t y) const;
-    FramebufferConsole(PhysicalAddress, size_t width, size_t height, size_t pitch);
-    OwnPtr<Region> m_framebuffer_region;
-    PhysicalAddress m_framebuffer_address;
+    GenericFramebufferConsole(size_t width, size_t height, size_t pitch)
+        : Console(width, height)
+        , m_pitch(pitch)
+    {
+    }
+    virtual u8* framebuffer_data() = 0;
+    void clear_glyph(size_t x, size_t y);
     size_t m_pitch;
     mutable SpinLock<u8> m_lock;
 };

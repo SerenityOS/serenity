@@ -112,7 +112,7 @@ void TextModeConsole::show_cursor()
     IO::out8(0x3D5, 0x20);
 }
 
-void TextModeConsole::clear(size_t x, size_t y, size_t length) const
+void TextModeConsole::clear(size_t x, size_t y, size_t length)
 {
     ScopedSpinLock lock(m_vga_lock);
     auto* buf = (u16*)(m_current_vga_window + (x * 2) + (y * width() * 2));
@@ -120,12 +120,12 @@ void TextModeConsole::clear(size_t x, size_t y, size_t length) const
         buf[index] = 0x0720;
     }
 }
-void TextModeConsole::write(size_t x, size_t y, char ch, bool critical) const
+void TextModeConsole::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical) const
+void TextModeConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
     ScopedSpinLock lock(m_vga_lock);
     // If we are in critical printing mode, we need to handle new lines here
@@ -172,7 +172,7 @@ void TextModeConsole::set_vga_start_row(u16 row)
     IO::out8(0x3d5, LSB(m_current_vga_start_address));
 }
 
-void TextModeConsole::write(char ch, bool critical) const
+void TextModeConsole::write(char ch, bool critical)
 {
     write(m_x, m_y, ch, critical);
 }
