@@ -31,5 +31,5 @@ returns -1 and sets `errno` to describe the error.
 ## See also
 
 * [`module_unload`(2)](module_unload.md)
-* [`modload`(1)](../man1/modload.md)
+* [`modload`(8)](../man8/modload.md)
 * [`kernel_modules`(7)](../man7/kernel_modules.md)
