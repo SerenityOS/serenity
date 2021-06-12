@@ -662,6 +662,7 @@ void Compositor::flush(Screen& screen)
             from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
             to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
         }
+        screen.flush_display(a_rect.intersected(screen.rect()));
     };
     for (auto& rect : screen_data.m_flush_rects.rects())
         do_flush(rect);

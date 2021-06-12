@@ -23,6 +23,13 @@ struct FBResolution {
     unsigned height;
 };
 
+struct FBRect {
+    unsigned x;
+    unsigned y;
+    unsigned width;
+    unsigned height;
+};
+
 __END_DECLS
 
 enum IOCtlNumber {
@@ -43,6 +50,7 @@ enum IOCtlNumber {
     FB_IOCTL_SET_RESOLUTION,
     FB_IOCTL_GET_BUFFER,
     FB_IOCTL_SET_BUFFER,
+    FB_IOCTL_FLUSH_BUFFER,
     SIOCSIFADDR,
     SIOCGIFADDR,
     SIOCGIFHWADDR,
@@ -75,6 +83,7 @@ enum IOCtlNumber {
 #define FB_IOCTL_SET_RESOLUTION FB_IOCTL_SET_RESOLUTION
 #define FB_IOCTL_GET_BUFFER FB_IOCTL_GET_BUFFER
 #define FB_IOCTL_SET_BUFFER FB_IOCTL_SET_BUFFER
+#define FB_IOCTL_FLUSH_BUFFER FB_IOCTL_FLUSH_BUFFER
 #define SIOCSIFADDR SIOCSIFADDR
 #define SIOCGIFADDR SIOCGIFADDR
 #define SIOCGIFHWADDR SIOCGIFHWADDR

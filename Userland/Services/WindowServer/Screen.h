@@ -160,6 +160,8 @@ public:
     Gfx::IntSize size() const { return { m_virtual_rect.width(), m_virtual_rect.height() }; }
     Gfx::IntRect rect() const { return m_virtual_rect; }
 
+    void flush_display(const Gfx::IntRect& rect);
+
 private:
     Screen(ScreenLayout::Screen&);
     bool open_device();
