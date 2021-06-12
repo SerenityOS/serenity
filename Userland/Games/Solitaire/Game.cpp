@@ -201,8 +201,6 @@ void Game::mousedown_event(GUI::MouseEvent& event)
     if (m_new_game_animation || m_game_over_animation)
         return;
 
-    start_timer_if_necessary();
-
     auto click_location = event.position();
     for (auto& to_check : m_stacks) {
         if (to_check.type() == CardStack::Type::Waste)
@@ -218,6 +216,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     if (top_card.rect().contains(click_location)) {
                         top_card.set_upside_down(false);
                         score_flip();
+                        start_timer_if_necessary();
                         update(top_card.rect());
                         remember_flip_for_undo(top_card);
                     }
@@ -227,6 +226,7 @@ void Game::mousedown_event(GUI::MouseEvent& event)
                     to_check.set_focused(true);
                     m_focused_stack = &to_check;
                     m_mouse_down = true;
+                    start_timer_if_necessary();
                 }
             }
             break;
@@ -410,6 +410,8 @@ void Game::draw_cards()
         else
             update(play_bounding_box);
     }
+
+    start_timer_if_necessary();
 }
 
 void Game::pop_waste_to_play_stack()
@@ -462,6 +464,7 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
         if (from.type() == CardStack::Type::Play)
             pop_waste_to_play_stack();
 
+        start_timer_if_necessary();
         check_for_game_over();
     }
 
@@ -481,10 +484,8 @@ void Game::auto_move_eligible_cards_to_foundations()
     }
 
     // If at least one card was moved, check again to see if now any additional cards can now be moved
-    if (card_was_moved) {
-        start_timer_if_necessary();
+    if (card_was_moved)
         auto_move_eligible_cards_to_foundations();
-    }
 }
 
 void Game::mark_intersecting_stacks_dirty(Card& intersecting_card)

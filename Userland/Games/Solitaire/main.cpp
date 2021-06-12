@@ -129,6 +129,7 @@ int main(int argc, char** argv)
     game.on_game_start = [&]() {
         seconds_elapsed = 0;
         timer->start();
+        statusbar.set_text(2, "Time: 00:00:00");
     };
     game.on_game_end = [&](Solitaire::GameOverReason reason, uint32_t score) {
         if (timer->is_active())
