@@ -121,6 +121,7 @@ void Editor::paint_event(GUI::PaintEvent& event)
     if (gutter_visible()) {
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
+
         for (size_t line : breakpoint_lines()) {
             if (line < first_visible_line || line > last_visible_line) {
                 continue;
@@ -131,6 +132,31 @@ void Editor::paint_event(GUI::PaintEvent& event)
         if (execution_position().has_value()) {
             const auto& icon = current_position_icon_bitmap();
             painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
+        }
+
+        if (wrapper().git_repo()) {
+            for (auto& hunk : wrapper().hunks()) {
+                auto start_line = hunk.target_start_line;
+                auto finish_line = start_line + hunk.added_lines.size();
+
+                auto additions = hunk.added_lines.size();
+                auto deletions = hunk.removed_lines.size();
+
+                for (size_t line_offset = 0; line_offset < additions; line_offset++) {
+                    auto line = start_line + line_offset;
+                    if (line < first_visible_line || line > last_visible_line) {
+                        continue;
+                    }
+                    char const* sign = (line_offset < deletions) ? "!" : "+";
+                    painter.draw_text(gutter_icon_rect(line), sign, font(), Gfx::TextAlignment::Center);
+                }
+                if (additions < deletions) {
+                    auto deletions_line = min(finish_line, line_count() - 1);
+                    if (deletions_line <= last_visible_line) {
+                        painter.draw_text(gutter_icon_rect(deletions_line), "-", font(), Gfx::TextAlignment::Center);
+                    }
+                }
+            }
         }
     }
 }
