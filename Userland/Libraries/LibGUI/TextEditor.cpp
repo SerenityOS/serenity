@@ -1358,10 +1358,6 @@ void TextEditor::leave_event(Core::Event&)
 {
     if (m_in_drag_select)
         m_automatic_selection_scroll_timer->start();
-    if (m_autocomplete_timer)
-        m_autocomplete_timer->stop();
-    if (m_autocomplete_box)
-        m_autocomplete_box->close();
 }
 
 void TextEditor::did_change()
