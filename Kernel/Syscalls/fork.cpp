@@ -87,8 +87,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
                 child->m_master_tls_region = child_region;
         }
 
-        ScopedSpinLock processes_lock(g_processes_lock);
-        g_processes->prepend(*child);
+        Process::register_new(*child);
     }
 
     PerformanceManager::add_process_created_event(*child);

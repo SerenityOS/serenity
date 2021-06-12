@@ -24,6 +24,7 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
@@ -129,6 +130,15 @@ void Process::kill_all_threads()
     });
 }
 
+void Process::register_new(Process& process)
+{
+    // Note: this is essentially the same like process->ref()
+    RefPtr<Process> new_process = process;
+    ScopedSpinLock lock(g_processes_lock);
+    g_processes->prepend(process);
+    ProcFSComponentsRegistrar::the().register_new_process(process);
+}
+
 RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t uid, gid_t gid, ProcessID parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     auto parts = path.split('/');
@@ -166,11 +176,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
         return {};
     }
 
-    {
-        process->ref();
-        ScopedSpinLock lock(g_processes_lock);
-        g_processes->prepend(*process);
-    }
+    register_new(*process);
     error = 0;
     return process;
 }
@@ -190,9 +196,7 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
 #endif
 
     if (process->pid() != 0) {
-        process->ref();
-        ScopedSpinLock lock(g_processes_lock);
-        g_processes->prepend(*process);
+        register_new(*process);
     }
 
     ScopedSpinLock lock(g_scheduler_lock);
@@ -378,6 +382,7 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
 
 RefPtr<FileDescription> Process::file_description(int fd) const
 {
+    ScopedSpinLock lock(m_fds_lock);
     if (fd < 0)
         return nullptr;
     if (static_cast<size_t>(fd) < m_fds.size())
@@ -387,6 +392,7 @@ RefPtr<FileDescription> Process::file_description(int fd) const
 
 int Process::fd_flags(int fd) const
 {
+    ScopedSpinLock lock(m_fds_lock);
     if (fd < 0)
         return -1;
     if (static_cast<size_t>(fd) < m_fds.size())
@@ -396,9 +402,10 @@ int Process::fd_flags(int fd) const
 
 int Process::number_of_open_file_descriptors() const
 {
+    ScopedSpinLock lock(m_fds_lock);
     int count = 0;
-    for (auto& description : m_fds) {
-        if (description)
+    for (size_t index = 0; index < m_fds.size(); index++) {
+        if (m_fds[index].is_valid())
             ++count;
     }
     return count;
@@ -406,6 +413,7 @@ int Process::number_of_open_file_descriptors() const
 
 int Process::alloc_fd(int first_candidate_fd)
 {
+    ScopedSpinLock lock(m_fds_lock);
     for (int i = first_candidate_fd; i < (int)m_max_open_file_descriptors; ++i) {
         if (!m_fds[i])
             return i;
@@ -521,6 +529,12 @@ void Process::finalize()
     m_root_directory_relative_to_global_root = nullptr;
     m_arguments.clear();
     m_environment.clear();
+
+    // Note: We need to remove the references from the ProcFS registrar
+    // If we don't do it here, we can't drop the object later, and we can't
+    // do this from the destructor because the state of the object doesn't
+    // allow us to take references anymore.
+    ProcFSComponentsRegistrar::the().unregister_process(*this);
 
     m_dead = true;
 
@@ -664,14 +678,24 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
 
 void Process::FileDescriptionAndFlags::clear()
 {
+    // FIXME: Verify Process::m_fds_lock is locked!
     m_description = nullptr;
     m_flags = 0;
+    m_global_procfs_inode_index = 0;
+}
+
+void Process::FileDescriptionAndFlags::refresh_inode_index()
+{
+    // FIXME: Verify Process::m_fds_lock is locked!
+    m_global_procfs_inode_index = ProcFSComponentsRegistrar::the().allocate_inode_index();
 }
 
 void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& description, u32 flags)
 {
+    // FIXME: Verify Process::m_fds_lock is locked!
     m_description = move(description);
     m_flags = flags;
+    m_global_procfs_inode_index = ProcFSComponentsRegistrar::the().allocate_inode_index();
 }
 
 Custody& Process::root_directory()
