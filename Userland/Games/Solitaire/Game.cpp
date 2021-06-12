@@ -49,7 +49,10 @@ static float rand_float()
 
 void Game::timer_event(Core::TimerEvent&)
 {
-    if (m_game_over_animation) {
+    if (m_start_game_over_animation_next_frame) {
+        m_start_game_over_animation_next_frame = false;
+        m_game_over_animation = true;
+    } else if (m_game_over_animation) {
         VERIFY(!m_animation.card().is_null());
         if (m_animation.card()->position().x() >= Game::width || m_animation.card()->rect().right() <= 0)
             create_new_animation_card();
@@ -76,7 +79,11 @@ void Game::start_game_over_animation()
         return;
 
     create_new_animation_card();
-    m_game_over_animation = true;
+
+    // We wait one frame, to make sure that the foundation stacks are repainted before we start.
+    // Otherwise, if the game ended from an attempt_to_move_card_to_foundations() move, the
+    // foundations could appear empty or otherwise incorrect.
+    m_start_game_over_animation_next_frame = true;
 
     start_timer(s_timer_interval_ms);
 
@@ -322,10 +329,10 @@ void Game::doubleclick_event(GUI::MouseEvent& event)
 
 void Game::check_for_game_over()
 {
-    for (auto& stack : m_stacks) {
-        if (stack.type() != CardStack::Type::Foundation)
-            continue;
-        if (stack.count() != Card::card_count)
+    for (auto foundationID : foundations) {
+        auto& foundation = stack(foundationID);
+
+        if (foundation.count() != Card::card_count)
             return;
     }
 
@@ -447,8 +454,12 @@ bool Game::attempt_to_move_card_to_foundations(CardStack& from)
         }
     }
 
-    if (card_was_moved && (from.type() == CardStack::Type::Play))
-        pop_waste_to_play_stack();
+    if (card_was_moved) {
+        if (from.type() == CardStack::Type::Play)
+            pop_waste_to_play_stack();
+
+        check_for_game_over();
+    }
 
     return card_was_moved;
 }

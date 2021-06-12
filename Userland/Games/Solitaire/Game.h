@@ -198,6 +198,7 @@ private:
     bool m_mouse_down { false };
 
     Animation m_animation;
+    bool m_start_game_over_animation_next_frame { false };
     bool m_game_over_animation { false };
     bool m_waiting_for_new_game { true };
     bool m_new_game_animation { false };
