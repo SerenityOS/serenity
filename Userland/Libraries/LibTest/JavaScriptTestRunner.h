@@ -27,6 +27,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/WeakMap.h>
 #include <LibJS/Runtime/WeakSet.h>
 #include <LibTest/Results.h>
 #include <fcntl.h>

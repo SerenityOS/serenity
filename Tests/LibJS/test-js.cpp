@@ -45,6 +45,19 @@ TESTJS_GLOBAL_FUNCTION(get_weak_set_size, getWeakSetSize)
     return JS::Value(weak_set->values().size());
 }
 
+TESTJS_GLOBAL_FUNCTION(get_weak_map_size, getWeakMapSize)
+{
+    auto* object = vm.argument(0).to_object(global_object);
+    if (!object)
+        return {};
+    if (!is<JS::WeakMap>(object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "WeakMap");
+        return {};
+    }
+    auto* weak_map = static_cast<JS::WeakMap*>(object);
+    return JS::Value(weak_map->values().size());
+}
+
 TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
 {
     if (!test262_parser_tests)
