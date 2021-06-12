@@ -33,6 +33,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.is, is, 2, attr);
     define_native_function(vm.names.getOwnPropertyDescriptor, get_own_property_descriptor, 2, attr);
     define_native_function(vm.names.getOwnPropertyNames, get_own_property_names, 1, attr);
+    define_native_function(vm.names.getOwnPropertySymbols, get_own_property_symbols, 1, attr);
     define_native_function(vm.names.getPrototypeOf, get_prototype_of, 1, attr);
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
     define_native_function(vm.names.isExtensible, is_extensible, 1, attr);
@@ -72,6 +73,14 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
     if (vm.exception())
         return {};
     return Array::create_from(global_object, object->get_own_properties(PropertyKind::Key, false, GetOwnPropertyReturnType::StringOnly));
+}
+
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_symbols)
+{
+    auto* object = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+    return Array::create_from(global_object, object->get_own_properties(PropertyKind::Key, false, GetOwnPropertyReturnType::SymbolOnly));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
