@@ -68,7 +68,7 @@ private:
     void on_navigatable_link_click(const GUI::TextDocumentSpan&);
     void on_identifier_click(const GUI::TextDocumentSpan&);
 
-    Gfx::IntRect breakpoint_icon_rect(size_t line_number) const;
+    Gfx::IntRect gutter_icon_rect(size_t line_number) const;
     static const Gfx::Bitmap& breakpoint_icon_bitmap();
     static const Gfx::Bitmap& current_position_icon_bitmap();
 

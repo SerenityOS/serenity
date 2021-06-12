@@ -90,6 +90,9 @@ public:
     bool is_ruler_visible() const { return m_ruler_visible; }
     void set_ruler_visible(bool);
 
+    bool is_gutter_visible() const { return m_gutter_visible; }
+    void set_gutter_visible(bool);
+
     void set_icon(const Gfx::Bitmap*);
     const Gfx::Bitmap* icon() const { return m_icon; }
 
@@ -209,11 +212,14 @@ protected:
     virtual void theme_change_event(ThemeChangeEvent&) override;
     virtual void cursor_did_change() { }
     Gfx::IntRect ruler_content_rect(size_t line) const;
+    Gfx::IntRect gutter_content_rect(size_t line) const;
 
     TextPosition text_position_at(const Gfx::IntPoint&) const;
     bool ruler_visible() const { return m_ruler_visible; }
+    bool gutter_visible() const { return m_gutter_visible; }
     Gfx::IntRect content_rect_for_position(const TextPosition&) const;
     int ruler_width() const;
+    int gutter_width() const;
 
 private:
     friend class TextDocumentLine;
@@ -272,6 +278,7 @@ private:
     void delete_selection();
     int content_x_for_position(const TextPosition&) const;
     Gfx::IntRect ruler_rect_in_inner_coordinates() const;
+    Gfx::IntRect gutter_rect_in_inner_coordinates() const;
     Gfx::IntRect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
@@ -302,6 +309,7 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };
+    bool m_gutter_visible { false };
     bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     WrappingMode m_wrapping_mode { WrappingMode::NoWrap };
