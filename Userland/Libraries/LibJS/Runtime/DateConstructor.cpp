@@ -134,9 +134,10 @@ void DateConstructor::initialize(GlobalObject& global_object)
 
     define_property(vm.names.length, Value(7), Attribute::Configurable);
 
-    define_native_function(vm.names.now, now, 0, Attribute::Writable | Attribute::Configurable);
-    define_native_function(vm.names.parse, parse, 1, Attribute::Writable | Attribute::Configurable);
-    define_native_function(vm.names.UTC, utc, 1, Attribute::Writable | Attribute::Configurable);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.now, now, 0, attr);
+    define_native_function(vm.names.parse, parse, 1, attr);
+    define_native_function(vm.names.UTC, utc, 1, attr);
 }
 
 DateConstructor::~DateConstructor()
