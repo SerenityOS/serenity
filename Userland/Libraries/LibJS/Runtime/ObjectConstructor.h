@@ -43,6 +43,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(entries);
     JS_DECLARE_NATIVE_FUNCTION(create);
     JS_DECLARE_NATIVE_FUNCTION(has_own);
+    JS_DECLARE_NATIVE_FUNCTION(assign);
 };
 
 }

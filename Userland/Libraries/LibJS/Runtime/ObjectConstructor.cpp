@@ -46,6 +46,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.entries, entries, 1, attr);
     define_native_function(vm.names.create, create, 2, attr);
     define_native_function(vm.names.hasOwn, has_own, 2, attr);
+    define_native_function(vm.names.assign, assign, 2, attr);
 }
 
 ObjectConstructor::~ObjectConstructor()
@@ -320,6 +321,39 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::has_own)
     if (vm.exception())
         return {};
     return Value(object->has_own_property(property_key));
+}
+
+// 20.1.2.1 Object.assign, https://tc39.es/ecma262/#sec-object.assign
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::assign)
+{
+    auto* to = vm.argument(0).to_object(global_object);
+    if (vm.exception())
+        return {};
+    if (vm.argument_count() == 1)
+        return to;
+    for (size_t i = 1; i < vm.argument_count(); ++i) {
+        auto next_source = vm.argument(i);
+        if (next_source.is_nullish())
+            continue;
+        auto from = next_source.to_object(global_object);
+        VERIFY(!vm.exception());
+        auto keys = from->get_own_properties(PropertyKind::Key);
+        if (vm.exception())
+            return {};
+        for (auto& key : keys) {
+            auto property_name = PropertyName::from_value(global_object, key);
+            auto property_descriptor = from->get_own_property_descriptor(property_name);
+            if (!property_descriptor.has_value() || !property_descriptor->attributes.is_enumerable())
+                continue;
+            auto value = from->get(property_name);
+            if (vm.exception())
+                return {};
+            to->put(property_name, value);
+            if (vm.exception())
+                return {};
+        }
+    }
+    return to;
 }
 
 }
