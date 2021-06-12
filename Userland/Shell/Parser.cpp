@@ -175,8 +175,8 @@ RefPtr<AST::Node> Parser::parse_toplevel()
         if (result.entries.is_empty())
             break;
 
-        sequence.append(move(result.entries));
-        positions.append(move(result.separator_positions));
+        sequence.extend(move(result.entries));
+        positions.extend(move(result.separator_positions));
     } while (result.decision == ShouldReadMoreSequences::Yes);
 
     if (sequence.is_empty())
@@ -353,7 +353,7 @@ RefPtr<AST::Node> Parser::parse_variable_decls()
     VERIFY(rest->is_variable_decls());
     auto* rest_decl = static_cast<AST::VariableDeclarations*>(rest.ptr());
 
-    variables.append(rest_decl->variables());
+    variables.extend(rest_decl->variables());
 
     return create<AST::VariableDeclarations>(move(variables));
 }

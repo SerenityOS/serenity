@@ -119,7 +119,7 @@ KResult Space::unmap_mmap_range(VirtualAddress addr, size_t size)
         region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
 
         // Otherwise just split the regions and collect them for future mapping
-        if (new_regions.try_append(split_region_around_range(*region, range_to_unmap)))
+        if (new_regions.try_extend(split_region_around_range(*region, range_to_unmap)))
             return ENOMEM;
     }
     // Instead we give back the unwanted VM manually at the end.

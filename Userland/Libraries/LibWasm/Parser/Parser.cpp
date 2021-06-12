@@ -111,7 +111,7 @@ static ParseResult<ParseUntilAnyOfResult<T>> parse_until_any_of(InputStream& str
         if (parse_result.is_error())
             return parse_result.error();
 
-        result.values.append(parse_result.release_value());
+        result.values.extend(parse_result.release_value());
     }
 }
 
@@ -312,7 +312,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
 
             // Transform op(..., instr*, instr*) -> op(...) instr* op(else(ip) instr* op(end(ip))
             VERIFY(result.value().terminator == 0x05);
-            instructions.append(result.release_value().values);
+            instructions.extend(result.release_value().values);
             instructions.append(Instruction { Instructions::structured_else });
             ++ip;
             else_ip = ip.value();
@@ -322,7 +322,7 @@ ParseResult<Vector<Instruction>> Instruction::parse(InputStream& stream, Instruc
             auto result = parse_until_any_of<Instruction, 0x0b>(stream, ip);
             if (result.is_error())
                 return result.error();
-            instructions.append(result.release_value().values);
+            instructions.extend(result.release_value().values);
             instructions.append(Instruction { Instructions::structured_end });
             ++ip;
             end_ip = ip.value();

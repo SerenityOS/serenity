@@ -113,7 +113,7 @@ int parse_args(int argc, char** argv, Vector<String>& files, DuOption& du_option
         const auto buff = file->read_all();
         if (!buff.is_empty()) {
             String patterns = String::copy(buff, Chomp);
-            du_option.excluded_patterns.append(patterns.split('\n'));
+            du_option.excluded_patterns.extend(patterns.split('\n'));
         }
     }
 

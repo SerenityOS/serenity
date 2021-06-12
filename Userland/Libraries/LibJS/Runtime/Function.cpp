@@ -61,7 +61,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
         constructor_prototype = &prototype_property.as_object();
 
     auto all_bound_arguments = bound_arguments();
-    all_bound_arguments.append(move(arguments));
+    all_bound_arguments.extend(move(arguments));
 
     return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
 }

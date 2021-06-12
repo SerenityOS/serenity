@@ -209,7 +209,7 @@ BENCHMARK_CASE(vector_append_trivial)
     }
     for (int i = 0; i < 100; ++i) {
         Vector<int> tmp;
-        tmp.append(ints);
+        tmp.extend(ints);
         EXPECT_EQ(tmp.size(), 1000000u);
     }
 }
@@ -450,7 +450,7 @@ TEST_CASE(can_store_references)
 
     {
         Vector<int&> other_references;
-        other_references.append(references);
+        other_references.extend(references);
         EXPECT_EQ(&other_references.first(), &my_integer);
     }
 

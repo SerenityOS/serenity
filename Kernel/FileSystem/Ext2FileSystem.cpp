@@ -920,7 +920,7 @@ KResult Ext2FSInode::resize(u64 new_size)
         auto blocks_or_error = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
         if (blocks_or_error.is_error())
             return blocks_or_error.error();
-        if (!m_block_list.try_append(blocks_or_error.release_value()))
+        if (!m_block_list.try_extend(blocks_or_error.release_value()))
             return ENOMEM;
     } else if (blocks_needed_after < blocks_needed_before) {
         if constexpr (EXT2_VERY_DEBUG) {

@@ -63,7 +63,7 @@ NonnullRefPtrVector<Declaration> FunctionDeclaration::declarations() const
     }
 
     if (m_definition)
-        declarations.append(m_definition->declarations());
+        declarations.extend(m_definition->declarations());
 
     return declarations;
 }
@@ -131,7 +131,7 @@ NonnullRefPtrVector<Declaration> FunctionDefinition::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& statement : m_statements) {
-        declarations.append(statement.declarations());
+        declarations.extend(statement.declarations());
     }
     return declarations;
 }
@@ -400,9 +400,9 @@ NonnullRefPtrVector<Declaration> ForStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     if (m_init)
-        declarations.append(m_init->declarations());
+        declarations.extend(m_init->declarations());
     if (m_body)
-        declarations.append(m_body->declarations());
+        declarations.extend(m_body->declarations());
     return declarations;
 }
 
@@ -410,7 +410,7 @@ NonnullRefPtrVector<Declaration> BlockStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& statement : m_statements) {
-        declarations.append(statement.declarations());
+        declarations.extend(statement.declarations());
     }
     return declarations;
 }
@@ -439,11 +439,11 @@ NonnullRefPtrVector<Declaration> IfStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     if (m_predicate)
-        declarations.append(m_predicate->declarations());
+        declarations.extend(m_predicate->declarations());
     if (m_then)
-        declarations.append(m_then->declarations());
+        declarations.extend(m_then->declarations());
     if (m_else)
-        declarations.append(m_else->declarations());
+        declarations.extend(m_else->declarations());
     return declarations;
 }
 

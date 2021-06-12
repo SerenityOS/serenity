@@ -279,23 +279,23 @@ Vector<Vector<float>> PathDataParser::parse_coordinate_pair_sequence()
 Vector<float> PathDataParser::parse_coordinate_pair_double()
 {
     Vector<float> coordinates;
-    coordinates.append(parse_coordinate_pair());
+    coordinates.extend(parse_coordinate_pair());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.append(parse_coordinate_pair());
+    coordinates.extend(parse_coordinate_pair());
     return coordinates;
 }
 
 Vector<float> PathDataParser::parse_coordinate_pair_triplet()
 {
     Vector<float> coordinates;
-    coordinates.append(parse_coordinate_pair());
+    coordinates.extend(parse_coordinate_pair());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.append(parse_coordinate_pair());
+    coordinates.extend(parse_coordinate_pair());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    coordinates.append(parse_coordinate_pair());
+    coordinates.extend(parse_coordinate_pair());
     return coordinates;
 }
 
@@ -316,7 +316,7 @@ Vector<float> PathDataParser::parse_elliptical_arg_argument()
     numbers.append(parse_flag());
     if (match_comma_whitespace())
         parse_comma_whitespace();
-    numbers.append(parse_coordinate_pair());
+    numbers.extend(parse_coordinate_pair());
 
     return numbers;
 }

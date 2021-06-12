@@ -123,8 +123,8 @@ void FileSystemModel::Node::traverse_if_needed()
             file_children.append(move(child));
     }
 
-    children.append(move(directory_children));
-    children.append(move(file_children));
+    children.extend(move(directory_children));
+    children.extend(move(file_children));
 
     if (!m_model.m_file_watcher->is_watching(full_path)) {
         // We are not already watching this file, watch it

@@ -58,7 +58,7 @@ public:
 
     void take_pending_events_from(EventLoop& other)
     {
-        m_queued_events.append(move(other.m_queued_events));
+        m_queued_events.extend(move(other.m_queued_events));
     }
 
     static void wake();

@@ -269,7 +269,7 @@ Vector<String> Shell::expand_globs(Vector<StringView> path_segments, const Strin
                 if (!base.ends_with('/'))
                     builder.append('/');
                 builder.append(path);
-                result.append(expand_globs(path_segments, builder.string_view()));
+                result.extend(expand_globs(path_segments, builder.string_view()));
             }
         }
 
@@ -589,7 +589,7 @@ RefPtr<Job> Shell::run_command(const AST::Command& command)
 
     // If the command is empty, store the redirections and apply them to all later commands.
     if (command.argv.is_empty() && !command.should_immediately_execute_next) {
-        m_global_redirections.append(command.redirections);
+        m_global_redirections.extend(command.redirections);
         for (auto& next_in_chain : command.next_chain)
             run_tail(command, next_in_chain, last_return_code);
         return nullptr;

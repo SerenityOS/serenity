@@ -133,11 +133,11 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     auto last_in_left = left.take_last();
     auto first_in_right = right.take_first();
 
-    command.argv.append(last_in_left.argv);
-    command.argv.append(first_in_right.argv);
+    command.argv.extend(last_in_left.argv);
+    command.argv.extend(first_in_right.argv);
 
-    command.redirections.append(last_in_left.redirections);
-    command.redirections.append(first_in_right.redirections);
+    command.redirections.extend(last_in_left.redirections);
+    command.redirections.extend(first_in_right.redirections);
 
     command.should_wait = first_in_right.should_wait && last_in_left.should_wait;
     command.is_pipe_source = first_in_right.is_pipe_source;
@@ -146,9 +146,9 @@ static inline Vector<Command> join_commands(Vector<Command> left, Vector<Command
     command.position = merge_positions(last_in_left.position, first_in_right.position);
 
     Vector<Command> commands;
-    commands.append(left);
+    commands.extend(left);
     commands.append(command);
-    commands.append(right);
+    commands.extend(right);
 
     return commands;
 }
@@ -463,7 +463,7 @@ RefPtr<Value> ListConcatenate::run(RefPtr<Shell> shell)
             NonnullRefPtrVector<Value> values;
 
             if (result->is_list_without_resolution()) {
-                values.append(static_cast<ListValue*>(result.ptr())->values());
+                values.extend(static_cast<ListValue*>(result.ptr())->values());
             } else {
                 for (auto& result : result->resolve_as_list(shell))
                     values.append(create<StringValue>(result));
@@ -1107,7 +1107,7 @@ Vector<Line::CompletionSuggestion> FunctionDeclaration::complete_for_editor(Shel
             results.append(arg.name);
     }
 
-    results.append(matching_node->complete_for_editor(shell, offset, hit_test_result));
+    results.extend(matching_node->complete_for_editor(shell, offset, hit_test_result));
 
     return results;
 }
@@ -2069,7 +2069,7 @@ RefPtr<Value> MatchExpr::run(RefPtr<Shell> shell)
         } else {
             auto list = option.run(shell);
             option.for_each_entry(shell, [&](auto&& value) {
-                pattern.append(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behaviour,
+                pattern.extend(value->resolve_as_list(nullptr)); // Note: 'nullptr' incurs special behaviour,
                                                                  //       asking the node for a 'raw' value.
                 return IterationDecision::Continue;
             });
@@ -2276,10 +2276,10 @@ RefPtr<Value> Pipe::run(RefPtr<Shell> shell)
     }
 
     Vector<Command> commands;
-    commands.append(left);
+    commands.extend(left);
     commands.append(last_in_left);
     commands.append(first_in_right);
-    commands.append(right);
+    commands.extend(right);
 
     return create<CommandSequenceValue>(move(commands));
 }
@@ -2556,7 +2556,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
     for (auto& entry : m_entries) {
         if (!last_command_in_sequence) {
             auto commands = entry.to_lazy_evaluated_commands(shell);
-            all_commands.append(move(commands));
+            all_commands.extend(move(commands));
             last_command_in_sequence = &all_commands.last();
             continue;
         }
@@ -2564,7 +2564,7 @@ RefPtr<Value> Sequence::run(RefPtr<Shell> shell)
         if (last_command_in_sequence->should_wait) {
             last_command_in_sequence->next_chain.append(NodeWithAction { entry, NodeWithAction::Sequence });
         } else {
-            all_commands.append(entry.to_lazy_evaluated_commands(shell));
+            all_commands.extend(entry.to_lazy_evaluated_commands(shell));
             last_command_in_sequence = &all_commands.last();
         }
     }
@@ -3274,7 +3274,7 @@ NonnullRefPtr<Value> Value::with_slices(NonnullRefPtr<Slice> slice) const&
 NonnullRefPtr<Value> Value::with_slices(NonnullRefPtrVector<Slice> slices) const&
 {
     auto value = clone();
-    value->m_slices.append(move(slices));
+    value->m_slices.extend(move(slices));
     return value;
 }
 
@@ -3286,7 +3286,7 @@ Vector<String> ListValue::resolve_as_list(RefPtr<Shell> shell)
 {
     Vector<String> values;
     for (auto& value : m_contained_values)
-        values.append(value.resolve_as_list(shell));
+        values.extend(value.resolve_as_list(shell));
 
     return resolve_slices(shell, move(values), m_slices);
 }

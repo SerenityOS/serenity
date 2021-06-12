@@ -28,7 +28,7 @@ public:
     MarkedValueList copy() const
     {
         MarkedValueList copy { m_heap };
-        copy.append(*this);
+        copy.extend(*this);
         return copy;
     }
 

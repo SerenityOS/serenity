@@ -321,7 +321,7 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
 
     NonnullRefPtrVector<Sheet> new_sheets;
     new_sheets.append(move(sheet));
-    m_workbook->sheets().append(new_sheets);
+    m_workbook->sheets().extend(new_sheets);
     setup_tabs(new_sheets);
 }
 

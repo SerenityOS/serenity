@@ -380,7 +380,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         // It's possible that there had been some calls to update() that
         // haven't been flushed. We can handle these right now, avoiding
         // another round trip.
-        rects.append(move(m_pending_paint_event_rects));
+        rects.extend(move(m_pending_paint_event_rects));
     }
     VERIFY(!rects.is_empty());
     if (m_back_store && m_back_store->size() != event.window_size()) {
