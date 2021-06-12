@@ -37,6 +37,7 @@
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/MapConstructor.h>
+#include <LibJS/Runtime/MapIteratorPrototype.h>
 #include <LibJS/Runtime/MapPrototype.h>
 #include <LibJS/Runtime/MathObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
