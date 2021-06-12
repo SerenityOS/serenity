@@ -170,6 +170,7 @@ private:
     void start_game_over_animation();
     void stop_game_over_animation();
     void create_new_animation_card();
+    void set_background_fill_enabled(bool);
     void check_for_game_over();
     void dump_layout() const;
 
