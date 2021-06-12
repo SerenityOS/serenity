@@ -74,6 +74,7 @@
 #define JS_ENUMERATE_ITERATOR_PROTOTYPES          \
     __JS_ENUMERATE(Iterator, iterator)            \
     __JS_ENUMERATE(ArrayIterator, array_iterator) \
+    __JS_ENUMERATE(MapIterator, map_iterator)     \
     __JS_ENUMERATE(SetIterator, set_iterator)     \
     __JS_ENUMERATE(StringIterator, string_iterator)
 
