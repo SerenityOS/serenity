@@ -98,7 +98,9 @@ RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
         auto bitmap_base64_encoded = json_layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
         auto image_decoder = Gfx::ImageDecoder::create(bitmap_data);
-        layer->set_bitmap(*image_decoder->bitmap());
+        auto bitmap = image_decoder->bitmap();
+        VERIFY(bitmap);
+        layer->set_bitmap(bitmap.release_nonnull());
         image->add_layer(*layer);
     });
 

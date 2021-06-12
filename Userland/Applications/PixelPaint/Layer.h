@@ -24,8 +24,8 @@ class Layer
     AK_MAKE_NONMOVABLE(Layer);
 
 public:
-    static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String const& name);
-    static RefPtr<Layer> try_create_with_bitmap(Image&, Gfx::Bitmap const&, String const& name);
+    static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String name);
+    static RefPtr<Layer> try_create_with_bitmap(Image&, Gfx::Bitmap const&, String name);
     static RefPtr<Layer> try_create_snapshot(Image&, Layer const&);
 
     ~Layer() { }
@@ -41,9 +41,9 @@ public:
     Gfx::IntRect rect() const { return { {}, size() }; }
 
     String const& name() const { return m_name; }
-    void set_name(String const&);
+    void set_name(String);
 
-    void set_bitmap(Gfx::Bitmap& bitmap) { m_bitmap = bitmap; }
+    void set_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap) { m_bitmap = move(bitmap); }
 
     void did_modify_bitmap(Image&);
 
@@ -57,8 +57,8 @@ public:
     void set_opacity_percent(int);
 
 private:
-    Layer(Image&, Gfx::IntSize const&, String const& name);
-    Layer(Image&, Gfx::Bitmap const&, String const& name);
+    Layer(Image&, Gfx::IntSize const&, String name);
+    Layer(Image&, Gfx::Bitmap const&, String name);
 
     Image& m_image;
 
