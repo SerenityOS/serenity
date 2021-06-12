@@ -11,8 +11,7 @@
 
 namespace JS {
 
-// Common iterator operations defined in ECMA262 7.4
-// https://tc39.es/ecma262/#sec-operations-on-iterator-objects
+// 7.4 Operations on Iterator Objects, https://tc39.es/ecma262/#sec-operations-on-iterator-objects
 
 enum class IteratorHint {
     Sync,

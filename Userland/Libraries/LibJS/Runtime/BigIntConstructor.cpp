@@ -23,7 +23,10 @@ void BigIntConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 21.2.2.3 BigInt.prototype, https://tc39.es/ecma262/#sec-bigint.prototype
     define_property(vm.names.prototype, global_object.bigint_prototype(), 0);
+
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     // TODO: Implement these functions below and uncomment this.
@@ -36,6 +39,7 @@ BigIntConstructor::~BigIntConstructor()
 {
 }
 
+// 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
 Value BigIntConstructor::call()
 {
     auto primitive = vm().argument(0).to_primitive(global_object(), Value::PreferredType::Number);
@@ -54,17 +58,20 @@ Value BigIntConstructor::call()
     return bigint;
 }
 
+// 21.2.1.1 BigInt ( value ), https://tc39.es/ecma262/#sec-bigint-constructor-number-value
 Value BigIntConstructor::construct(Function&)
 {
     vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "BigInt");
     return {};
 }
 
+// 21.2.2.1 BigInt.asIntN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asintn
 JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_int_n)
 {
     TODO();
 }
 
+// 21.2.2.2 BigInt.asUintN ( bits, bigint ), https://tc39.es/ecma262/#sec-bigint.asuintn
 JS_DEFINE_NATIVE_FUNCTION(BigIntConstructor::as_uint_n)
 {
     TODO();

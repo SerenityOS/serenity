@@ -59,6 +59,8 @@ void ReflectObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
     define_native_function(vm.names.set, set, 3, attr);
     define_native_function(vm.names.setPrototypeOf, set_prototype_of, 2, attr);
+
+    // 28.1.14 Reflect [ @@toStringTag ], https://tc39.es/ecma262/#sec-reflect-@@tostringtag
     Object::define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Reflect"), Attribute::Configurable);
 }
 
@@ -66,6 +68,7 @@ ReflectObject::~ReflectObject()
 {
 }
 
+// 28.1.1 Reflect.apply ( target, thisArgument, argumentsList ), https://tc39.es/ecma262/#sec-reflect.apply
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
 {
     auto* target = get_target_function_from(global_object, "apply");
@@ -78,6 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::apply)
     return vm.call(*target, this_arg, move(arguments));
 }
 
+// 28.1.2 Reflect.construct ( target, argumentsList [ , newTarget ] ), https://tc39.es/ecma262/#sec-reflect.construct
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
 {
     auto* target = get_target_function_from(global_object, "construct");
@@ -99,6 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::construct)
     return vm.construct(*target, *new_target, move(arguments));
 }
 
+// 28.1.3 Reflect.defineProperty ( target, propertyKey, attributes ), https://tc39.es/ecma262/#sec-reflect.defineproperty
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
 {
     auto* target = get_target_object_from(global_object, "defineProperty");
@@ -118,6 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::define_property)
     return Value(success);
 }
 
+// 28.1.4 Reflect.deleteProperty ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.deleteproperty
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
 {
     auto* target = get_target_object_from(global_object, "deleteProperty");
@@ -129,6 +135,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::delete_property)
     return Value(target->delete_property(property_key));
 }
 
+// 28.1.5 Reflect.get ( target, propertyKey [ , receiver ] ), https://tc39.es/ecma262/#sec-reflect.get
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
 {
     auto* target = get_target_object_from(global_object, "get");
@@ -143,6 +150,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get)
     return target->get(property_key, receiver).value_or(js_undefined());
 }
 
+// 28.1.6 Reflect.getOwnPropertyDescriptor ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
 {
     auto* target = get_target_object_from(global_object, "getOwnPropertyDescriptor");
@@ -154,6 +162,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_own_property_descriptor)
     return target->get_own_property_descriptor_object(property_key);
 }
 
+// 28.1.7 Reflect.getPrototypeOf ( target ), https://tc39.es/ecma262/#sec-reflect.getprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
 {
     auto* target = get_target_object_from(global_object, "getPrototypeOf");
@@ -162,6 +171,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::get_prototype_of)
     return target->prototype();
 }
 
+// 28.1.8 Reflect.has ( target, propertyKey ), https://tc39.es/ecma262/#sec-reflect.has
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
 {
     auto* target = get_target_object_from(global_object, "has");
@@ -173,6 +183,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::has)
     return Value(target->has_property(property_key));
 }
 
+// 28.1.9 Reflect.isExtensible ( target ), https://tc39.es/ecma262/#sec-reflect.isextensible
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
 {
     auto* target = get_target_object_from(global_object, "isExtensible");
@@ -181,6 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::is_extensible)
     return Value(target->is_extensible());
 }
 
+// 28.1.10 Reflect.ownKeys ( target ), https://tc39.es/ecma262/#sec-reflect.ownkeys
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
 {
     auto* target = get_target_object_from(global_object, "ownKeys");
@@ -189,6 +201,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::own_keys)
     return Array::create_from(global_object, target->get_own_properties(PropertyKind::Key));
 }
 
+// 28.1.11 Reflect.preventExtensions ( target ), https://tc39.es/ecma262/#sec-reflect.preventextensions
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
 {
     auto* target = get_target_object_from(global_object, "preventExtensions");
@@ -197,6 +210,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::prevent_extensions)
     return Value(target->prevent_extensions());
 }
 
+// 28.1.12 Reflect.set ( target, propertyKey, V [ , receiver ] ), https://tc39.es/ecma262/#sec-reflect.set
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
 {
     auto* target = get_target_object_from(global_object, "set");
@@ -212,6 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set)
     return Value(target->put(property_key, value, receiver));
 }
 
+// 28.1.13 Reflect.setPrototypeOf ( target, proto ), https://tc39.es/ecma262/#sec-reflect.setprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ReflectObject::set_prototype_of)
 {
     auto* target = get_target_object_from(global_object, "setPrototypeOf");

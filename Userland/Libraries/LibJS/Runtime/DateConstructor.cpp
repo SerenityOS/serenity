@@ -18,10 +18,11 @@
 
 namespace JS {
 
+// 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 static Value parse_simplified_iso8601(const String& iso_8601)
 {
     // Date.parse() is allowed to accept many formats. We strictly only accept things matching
-    // http://www.ecma-international.org/ecma-262/#sec-date-time-string-format
+    // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
     auto lex_n_digits = [&](size_t n, int& out) {
         if (lexer.tell_remaining() < n)
@@ -98,7 +99,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     tm.tm_min = minutes == -1 ? 0 : minutes;
     tm.tm_sec = seconds == -1 ? 0 : seconds;
 
-    // http://www.ecma-international.org/ecma-262/#sec-date.parse:
+    // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
     time_t timestamp;
     if (timezone != -1 || hours == -1)
@@ -127,7 +128,10 @@ void DateConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
     define_property(vm.names.prototype, global_object.date_prototype(), 0);
+
     define_property(vm.names.length, Value(7), Attribute::Configurable);
 
     define_native_function(vm.names.now, now, 0, Attribute::Writable | Attribute::Configurable);
@@ -139,11 +143,13 @@ DateConstructor::~DateConstructor()
 {
 }
 
+// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
 Value DateConstructor::call()
 {
     return js_string(heap(), Date::now(global_object())->string());
 }
 
+// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
 Value DateConstructor::construct(Function&)
 {
     auto& vm = this->vm();
@@ -255,6 +261,7 @@ Value DateConstructor::construct(Function&)
     return date;
 }
 
+// 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
@@ -262,6 +269,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
     return Value(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
 }
 
+// 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 {
     if (!vm.argument_count())
@@ -274,6 +282,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     return parse_simplified_iso8601(iso_8601);
 }
 
+// 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback; };
@@ -293,4 +302,5 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
     int milliseconds = arg_or(6, 0);
     return Value(1000.0 * timegm(&tm) + milliseconds);
 }
+
 }

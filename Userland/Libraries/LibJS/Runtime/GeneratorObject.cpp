@@ -29,6 +29,9 @@ GeneratorObject::GeneratorObject(GlobalObject& global_object)
 
 void GeneratorObject::initialize(GlobalObject& global_object)
 {
+    // FIXME: These should be on a separate Generator prototype object!
+    // https://tc39.es/ecma262/#sec-generator-objects
+
     auto& vm = this->vm();
     Object::initialize(global_object);
     define_native_function(vm.names.next, next);

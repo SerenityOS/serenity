@@ -20,7 +20,10 @@ void WeakRefConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 26.1.2.1 WeakRef.prototype, https://tc39.es/ecma262/#sec-weak-ref.prototype
     define_property(vm.names.prototype, global_object.weak_ref_prototype(), 0);
+
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
@@ -28,6 +31,7 @@ WeakRefConstructor::~WeakRefConstructor()
 {
 }
 
+// 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
 Value WeakRefConstructor::call()
 {
     auto& vm = this->vm();

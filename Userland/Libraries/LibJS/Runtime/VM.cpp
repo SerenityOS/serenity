@@ -551,13 +551,13 @@ void VM::run_queued_promise_jobs()
     VERIFY(!m_exception);
 }
 
-// 9.4.4 HostEnqueuePromiseJob, https://tc39.es/ecma262/#sec-hostenqueuepromisejob
+// 9.5.4 HostEnqueuePromiseJob ( job, realm ), https://tc39.es/ecma262/#sec-hostenqueuepromisejob
 void VM::enqueue_promise_job(NativeFunction& job)
 {
     m_promise_jobs.append(&job);
 }
 
-// 27.2.1.9 HostPromiseRejectionTracker, https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
+// 27.2.1.9 HostPromiseRejectionTracker ( promise, operation ), https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
 void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOperation operation) const
 {
     switch (operation) {
