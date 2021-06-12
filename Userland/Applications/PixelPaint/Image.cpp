@@ -52,7 +52,7 @@ void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect)
     }
 }
 
-RefPtr<Image> Image::try_create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap)
+RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
 {
     auto image = try_create_with_size({ bitmap->width(), bitmap->height() });
     if (!image)
@@ -110,7 +110,7 @@ RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
 RefPtr<Image> Image::try_create_from_file(String const& file_path)
 {
     if (auto bitmap = Gfx::Bitmap::load_from_file(file_path))
-        return try_create_from_bitmap(bitmap);
+        return try_create_from_bitmap(bitmap.release_nonnull());
     return try_create_from_pixel_paint_file(file_path);
 }
 
