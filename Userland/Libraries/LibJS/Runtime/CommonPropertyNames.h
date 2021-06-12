@@ -137,6 +137,7 @@ namespace JS {
     P(getMonth)                              \
     P(getOwnPropertyDescriptor)              \
     P(getOwnPropertyNames)                   \
+    P(getOwnPropertySymbols)                 \
     P(getPrototypeOf)                        \
     P(getSeconds)                            \
     P(getTime)                               \
