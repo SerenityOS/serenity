@@ -42,11 +42,6 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
 
-    if (pledge("stdio thread recvfd sendfd rpath wpath cpath", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
-
     const char* image_file = nullptr;
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(image_file, "Image file to open", "path", Core::ArgsParser::Required::No);
