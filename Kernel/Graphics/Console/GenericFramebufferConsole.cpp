@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel::Graphics {
@@ -200,65 +200,39 @@ static inline BGRColor convert_standard_color_to_bgr_color(Console::Color color)
     }
 }
 
-NonnullRefPtr<FramebufferConsole> FramebufferConsole::initialize(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
-{
-    return adopt_ref(*new FramebufferConsole(framebuffer_address, width, height, pitch));
-}
-
-void FramebufferConsole::set_resolution(size_t width, size_t height, size_t pitch)
-{
-    m_width = width;
-    m_height = height;
-    m_pitch = pitch;
-
-    dbgln("Framebuffer Console: taking {} bytes", page_round_up(pitch * height));
-    m_framebuffer_region = MM.allocate_kernel_region(m_framebuffer_address, page_round_up(pitch * height), "Framebuffer Console", Region::Access::Read | Region::Access::Write, Region::Cacheable::Yes);
-    VERIFY(m_framebuffer_region);
-
-    // Just to start cleanly, we clean the entire framebuffer
-    memset(m_framebuffer_region->vaddr().as_ptr(), 0, pitch * height);
-
-    ConsoleManagement::the().resolution_was_changed();
-}
-
-FramebufferConsole::FramebufferConsole(PhysicalAddress framebuffer_address, size_t width, size_t height, size_t pitch)
-    : Console(width, height)
-    , m_framebuffer_address(framebuffer_address)
-    , m_pitch(pitch)
-{
-    set_resolution(width, height, pitch);
-}
-
-size_t FramebufferConsole::bytes_per_base_glyph() const
+size_t GenericFramebufferConsole::bytes_per_base_glyph() const
 {
     // FIXME: We assume we have 32 bit bpp framebuffer.
     return 8 * 32;
 }
-size_t FramebufferConsole::chars_per_line() const
+size_t GenericFramebufferConsole::chars_per_line() const
 {
     return width() / bytes_per_base_glyph();
 }
 
-void FramebufferConsole::set_cursor(size_t, size_t)
-{
-}
-void FramebufferConsole::hide_cursor()
-{
-}
-void FramebufferConsole::show_cursor()
+void GenericFramebufferConsole::set_cursor(size_t, size_t)
 {
 }
 
-void FramebufferConsole::clear(size_t x, size_t y, size_t length) const
+void GenericFramebufferConsole::hide_cursor()
+{
+}
+
+void GenericFramebufferConsole::show_cursor()
+{
+}
+
+void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
 {
     ScopedSpinLock lock(m_lock);
     if (x == 0 && length == max_column()) {
         // if we need to clear the entire row, just clean it with quick memset :)
-        auto* offset_in_framebuffer = (u32*)m_framebuffer_region->vaddr().offset(x * sizeof(u32) * 8).offset(y * 8 * sizeof(u32) * width()).as_ptr();
+        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
         for (size_t current_x = 0; current_x < 8; current_x++) {
             memset(offset_in_framebuffer, 0, width() * sizeof(u32));
             offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * 4);
         }
+        flush();
         return;
     }
     for (size_t index = 0; index < length; index++) {
@@ -268,33 +242,39 @@ void FramebufferConsole::clear(size_t x, size_t y, size_t length) const
             if (y >= max_row())
                 y = 0;
         }
-        clear_glyph(x, y);
+        auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
+        for (size_t current_x = 0; current_x < 8; current_x++) {
+            memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
+            offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
+        }
     }
+    flush();
 }
 
-void FramebufferConsole::clear_glyph(size_t x, size_t y) const
+void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
 {
     VERIFY(m_lock.is_locked());
-    auto* offset_in_framebuffer = (u32*)m_framebuffer_region->vaddr().offset(x * sizeof(u32) * 8).offset(y * 8 * sizeof(u32) * width()).as_ptr();
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
     for (size_t current_x = 0; current_x < 8; current_x++) {
         memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
         offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
     }
+    flush();
 }
 
-void FramebufferConsole::enable()
+void GenericFramebufferConsole::enable()
 {
     ScopedSpinLock lock(m_lock);
-    memset(m_framebuffer_region->vaddr().as_ptr(), 0, height() * width() * sizeof(u32));
+    memset(framebuffer_data(), 0, height() * width() * sizeof(u32));
     m_enabled.store(true);
 }
-void FramebufferConsole::disable()
+void GenericFramebufferConsole::disable()
 {
     ScopedSpinLock lock(m_lock);
     m_enabled.store(false);
 }
 
-void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical) const
+void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical)
 {
     ScopedSpinLock lock(m_lock);
     if (!m_enabled.load())
@@ -315,7 +295,7 @@ void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Co
         return;
     }
     clear_glyph(x, y);
-    auto* offset_in_framebuffer = (u32*)m_framebuffer_region->vaddr().offset(x * sizeof(u32) * 8).offset(y * 8 * sizeof(u32) * width()).as_ptr();
+    auto* offset_in_framebuffer = (u32*)&framebuffer_data()[x * sizeof(u32) * 8 + y * 8 * sizeof(u32) * width()];
     int current_bitpixels = 0;
     int current_bitpixel = 0;
     auto bitmap = font8x8_basic[(int)ch];
@@ -340,14 +320,15 @@ void FramebufferConsole::write(size_t x, size_t y, char ch, Color background, Co
         if (m_y >= max_row())
             m_y = 0;
     }
+    flush();
 }
 
-void FramebufferConsole::write(size_t x, size_t y, char ch, bool critical) const
+void GenericFramebufferConsole::write(size_t x, size_t y, char ch, bool critical)
 {
     write(x, y, ch, m_default_background_color, m_default_foreground_color, critical);
 }
 
-void FramebufferConsole::write(char ch, bool critical) const
+void GenericFramebufferConsole::write(char ch, bool critical)
 {
     write(m_x, m_y, ch, m_default_background_color, m_default_foreground_color, critical);
 }

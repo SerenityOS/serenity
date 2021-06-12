@@ -59,7 +59,8 @@ set(KERNEL_SOURCES
     Devices/HID/PS2KeyboardDevice.cpp
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
-    Graphics/Console/FramebufferConsole.cpp
+    Graphics/Console/GenericFramebufferConsole.cpp
+    Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
     Graphics/Console/VGAConsole.cpp
     Graphics/BochsGraphicsAdapter.cpp

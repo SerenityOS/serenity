@@ -24,10 +24,10 @@ public:
     virtual void set_cursor(size_t x, size_t y) override;
     virtual void hide_cursor() override;
     virtual void show_cursor() override;
-    virtual void clear(size_t x, size_t y, size_t length) const override;
-    virtual void write(size_t x, size_t y, char ch, bool critical = false) const override;
-    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) const override;
-    virtual void write(char ch, bool critical = false) const override;
+    virtual void clear(size_t x, size_t y, size_t length) override;
+    virtual void write(size_t x, size_t y, char ch, bool critical = false) override;
+    virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
+    virtual void write(char ch, bool critical = false) override;
 
     virtual void enable() override { }
     virtual void disable() override { VERIFY_NOT_REACHED(); }

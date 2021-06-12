@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/Console/GenericFramebufferConsole.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/PCI/DeviceController.h>
@@ -56,7 +56,7 @@ private:
 
     PhysicalAddress m_mmio_registers;
     RefPtr<FramebufferDevice> m_framebuffer_device;
-    RefPtr<Graphics::FramebufferConsole> m_framebuffer_console;
+    RefPtr<Graphics::GenericFramebufferConsole> m_framebuffer_console;
     SpinLock<u8> m_console_mode_switch_lock;
     bool m_console_enabled { false };
     bool m_io_required { false };

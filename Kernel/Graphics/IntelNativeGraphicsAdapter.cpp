@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Definitions.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/IntelNativeGraphicsAdapter.h>
@@ -206,7 +206,7 @@ IntelNativeGraphicsAdapter::IntelNativeGraphicsAdapter(PCI::Address address)
     VERIFY(m_framebuffer_pitch != 0);
     VERIFY(m_framebuffer_height != 0);
     VERIFY(m_framebuffer_width != 0);
-    m_framebuffer_console = Graphics::FramebufferConsole::initialize(framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(framebuffer_address, m_framebuffer_width, m_framebuffer_height, m_framebuffer_pitch);
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
 }
