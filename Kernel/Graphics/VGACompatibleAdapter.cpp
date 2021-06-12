@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
@@ -53,7 +53,7 @@ UNMAP_AFTER_INIT VGACompatibleAdapter::VGACompatibleAdapter(PCI::Address address
     , m_framebuffer_height(framebuffer_height)
     , m_framebuffer_pitch(framebuffer_pitch)
 {
-    m_framebuffer_console = Graphics::FramebufferConsole::initialize(framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch);
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(framebuffer_address, framebuffer_width, framebuffer_height, framebuffer_pitch);
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
 }

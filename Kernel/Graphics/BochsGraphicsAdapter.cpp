@@ -10,7 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
-#include <Kernel/Graphics/Console/FramebufferConsole.h>
+#include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
@@ -55,7 +55,7 @@ UNMAP_AFTER_INIT BochsGraphicsAdapter::BochsGraphicsAdapter(PCI::Address pci_add
     , m_mmio_registers(PCI::get_BAR2(pci_address) & 0xfffffff0)
 {
     // We assume safe resolutio is 1024x768x32
-    m_framebuffer_console = Graphics::FramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
+    m_framebuffer_console = Graphics::ContiguousFramebufferConsole::initialize(PhysicalAddress(PCI::get_BAR0(pci_address) & 0xfffffff0), 1024, 768, 1024 * sizeof(u32));
     // FIXME: This is a very wrong way to do this...
     GraphicsManagement::the().m_console = m_framebuffer_console;
 
