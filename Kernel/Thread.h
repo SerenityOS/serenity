@@ -22,6 +22,7 @@
 #include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 #include <Kernel/Debug.h>
+#include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/Forward.h>
 #include <Kernel/KResult.h>
 #include <Kernel/LockMode.h>
@@ -1184,6 +1185,7 @@ public:
 
     bool may_die_immediately() const { return m_may_die_immediately; }
     void set_may_die_immediately(bool flag) { m_may_die_immediately = flag; }
+    InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
 
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>);
@@ -1327,6 +1329,10 @@ private:
     Atomic<u32> m_nested_profiler_calls { 0 };
 
     RefPtr<Timer> m_block_timer;
+
+    // Note: This is needed so when we generate thread stack inodes for ProcFS, we know that
+    // we assigned a global Inode index to it so we can use it later
+    InodeIndex m_global_procfs_inode_index;
 
     bool m_is_profiling_suppressed { false };
 
