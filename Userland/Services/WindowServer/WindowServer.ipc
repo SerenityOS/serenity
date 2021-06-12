@@ -26,6 +26,7 @@ endpoint WindowServer
     update_menu_item(i32 menu_id, i32 identifier, i32 submenu_id, [UTF8] String text, bool enabled, bool checkable, bool checked, bool is_default, [UTF8] String shortcut) =|
 
     create_window(
+        i32 window_id,
         Gfx::IntRect rect,
         bool auto_position,
         bool has_alpha_channel,
@@ -43,7 +44,7 @@ endpoint WindowServer
         Optional<Gfx::IntSize> resize_aspect_ratio,
         i32 type,
         [UTF8] String title,
-        i32 parent_window_id) => (i32 window_id)
+        i32 parent_window_id) =|
 
     destroy_window(i32 window_id) => (Vector<i32> destroyed_window_ids)
 
