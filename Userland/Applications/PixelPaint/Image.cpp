@@ -10,17 +10,33 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibGUI/Painter.h>
-#include <LibGfx/BMPLoader.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
-#include <LibGfx/ImageDecoder.h>
-#include <LibGfx/PNGLoader.h>
 #include <LibGfx/PNGWriter.h>
+#include <LibImageDecoderClient/Client.h>
 #include <stdio.h>
 
 namespace PixelPaint {
+
+static RefPtr<Gfx::Bitmap> try_decode_bitmap(ByteBuffer const& bitmap_data)
+{
+    // Spawn a new ImageDecoder service process and connect to it.
+    auto client = ImageDecoderClient::Client::construct();
+
+    // FIXME: Find a way to avoid the memory copying here.
+    auto decoded_image_or_error = client->decode_image(bitmap_data);
+    if (!decoded_image_or_error.has_value())
+        return nullptr;
+
+    // FIXME: Support multi-frame images?
+    auto decoded_image = decoded_image_or_error.release_value();
+    if (decoded_image.frames.is_empty())
+        return nullptr;
+    return move(decoded_image.frames[0].bitmap);
+}
 
 RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
 {
@@ -97,8 +113,8 @@ RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
 
         auto bitmap_base64_encoded = json_layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
-        auto image_decoder = Gfx::ImageDecoder::create(bitmap_data);
-        auto bitmap = image_decoder->bitmap();
+
+        auto bitmap = try_decode_bitmap(bitmap_data);
         VERIFY(bitmap);
         layer->set_bitmap(bitmap.release_nonnull());
         image->add_layer(*layer);
@@ -109,9 +125,19 @@ RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
 
 RefPtr<Image> Image::try_create_from_file(String const& file_path)
 {
-    if (auto bitmap = Gfx::Bitmap::load_from_file(file_path))
-        return try_create_from_bitmap(bitmap.release_nonnull());
-    return try_create_from_pixel_paint_file(file_path);
+    if (auto image = try_create_from_pixel_paint_file(file_path))
+        return image;
+
+    auto file_or_error = MappedFile::map(file_path);
+    if (file_or_error.is_error())
+        return nullptr;
+
+    auto& mapped_file = *file_or_error.value();
+    // FIXME: Find a way to avoid the memory copy here.
+    auto bitmap = try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
+    if (!bitmap)
+        return nullptr;
+    return Image::try_create_from_bitmap(bitmap.release_nonnull());
 }
 
 void Image::save(String const& file_path) const
