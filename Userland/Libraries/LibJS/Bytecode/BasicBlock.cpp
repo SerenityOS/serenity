@@ -11,18 +11,18 @@
 
 namespace JS::Bytecode {
 
-NonnullOwnPtr<BasicBlock> BasicBlock::create(String name)
+NonnullOwnPtr<BasicBlock> BasicBlock::create(String name, size_t size)
 {
-    return adopt_own(*new BasicBlock(move(name)));
+    return adopt_own(*new BasicBlock(move(name), max(size, static_cast<size_t>(4 * KiB))));
 }
 
-BasicBlock::BasicBlock(String name)
+BasicBlock::BasicBlock(String name, size_t size)
     : m_name(move(name))
 {
     // FIXME: This is not the smartest solution ever. Find something cleverer!
     // The main issue we're working around here is that we don't want pointers into the bytecode stream to become invalidated
     // during code generation due to dynamic buffer resizing. Otherwise we could just use a Vector.
-    m_buffer_capacity = 4 * KiB;
+    m_buffer_capacity = size;
     m_buffer = (u8*)mmap(nullptr, m_buffer_capacity, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
     VERIFY(m_buffer != MAP_FAILED);
 }
