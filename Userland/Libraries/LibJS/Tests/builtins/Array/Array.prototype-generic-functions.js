@@ -110,6 +110,26 @@ describe("ability to work with generic non-array objects", () => {
         expect(o).toEqual({ length: 4, 0: "b", 2: "c" });
     });
 
+    test("unshift", () => {
+        {
+            const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+            const front = "z";
+            Array.prototype.unshift.call(o, front);
+            expect(o[0]).toEqual(front);
+            expect(o[1]).toEqual("a");
+            expect(o.length).toEqual(6);
+        }
+        {
+            const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+            const front = "z";
+            Array.prototype.unshift.call(o, front, front);
+            expect(o[0]).toEqual(front);
+            expect(o[1]).toEqual(front);
+            expect(o[2]).toEqual("a");
+            expect(o.length).toEqual(7);
+        }
+    });
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     test("every", () => {

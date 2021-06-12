@@ -203,12 +203,52 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::push)
 // 23.1.3.31 Array.prototype.unshift ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.unshift
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
 {
-    auto* array = Array::typed_this(vm, global_object);
-    if (!array)
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
         return {};
-    for (size_t i = 0; i < vm.argument_count(); ++i)
-        array->indexed_properties().insert(i, vm.argument(i));
-    return Value(static_cast<i32>(array->indexed_properties().array_like_size()));
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
+        return {};
+    auto arg_count = vm.argument_count();
+    size_t new_length = length + arg_count;
+    if (arg_count > 0) {
+        if (new_length > MAX_ARRAY_LIKE_INDEX) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
+            return {};
+        }
+
+        for (size_t k = length; k > 0; --k) {
+            auto from = k - 1;
+            auto to = k + arg_count - 1;
+
+            bool from_present = this_object->has_property(from);
+            if (vm.exception())
+                return {};
+            if (from_present) {
+                auto from_value = this_object->get(from).value_or(js_undefined());
+                if (vm.exception())
+                    return {};
+                this_object->put(to, from_value);
+                if (vm.exception())
+                    return {};
+            } else {
+                this_object->delete_property(to);
+                if (vm.exception())
+                    return {};
+            }
+        }
+
+        for (size_t j = 0; j < arg_count; j++) {
+            this_object->put(j, vm.argument(j));
+            if (vm.exception())
+                return {};
+        }
+    }
+
+    this_object->put(vm.names.length, Value(new_length));
+    if (vm.exception())
+        return {};
+    return Value(new_length);
 }
 
 // 23.1.3.19 Array.prototype.pop ( ), https://tc39.es/ecma262/#sec-array.prototype.pop
