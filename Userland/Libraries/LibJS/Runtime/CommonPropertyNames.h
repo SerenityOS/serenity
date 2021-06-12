@@ -93,6 +93,7 @@ namespace JS {
     P(defineProperties)                      \
     P(defineProperty)                        \
     P(deleteProperty)                        \
+    P(deref)                                 \
     P(description)                           \
     P(done)                                  \
     P(dotAll)                                \
