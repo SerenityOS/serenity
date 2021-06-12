@@ -57,6 +57,8 @@ set(SOURCES
     Runtime/LexicalEnvironment.cpp
     Runtime/Map.cpp
     Runtime/MapConstructor.cpp
+    Runtime/MapIterator.cpp
+    Runtime/MapIteratorPrototype.cpp
     Runtime/MapPrototype.cpp
     Runtime/MarkedValueList.cpp
     Runtime/MathObject.cpp
