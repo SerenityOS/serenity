@@ -111,7 +111,7 @@ const Object* Object::prototype() const
     return shape().prototype();
 }
 
-// 10.1.2.1 OrdinarySetPrototypeOf, https://tc39.es/ecma262/#sec-ordinarysetprototypeof
+// 10.1.2.1 OrdinarySetPrototypeOf ( O, V ), https://tc39.es/ecma262/#sec-ordinarysetprototypeof
 bool Object::set_prototype(Object* new_prototype)
 {
     if (prototype() == new_prototype)
@@ -157,7 +157,7 @@ bool Object::prevent_extensions()
     return true;
 }
 
-// 7.3.15 SetIntegrityLevel, https://tc39.es/ecma262/#sec-setintegritylevel
+// 7.3.15 SetIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-setintegritylevel
 bool Object::set_integrity_level(IntegrityLevel level)
 {
     // FIXME: This feels clunky and should get nicer abstractions.
@@ -225,7 +225,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
     return true;
 }
 
-// 7.3.16 TestIntegrityLevel, https://tc39.es/ecma262/#sec-testintegritylevel
+// 7.3.16 TestIntegrityLevel ( O, level ), https://tc39.es/ecma262/#sec-testintegritylevel
 bool Object::test_integrity_level(IntegrityLevel level)
 {
     auto& vm = this->vm();
@@ -369,7 +369,7 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
     return properties;
 }
 
-// 7.3.23 EnumerableOwnPropertyNames, https://tc39.es/ecma262/#sec-enumerableownpropertynames
+// 7.3.23 EnumerableOwnPropertyNames ( O, kind ), https://tc39.es/ecma262/#sec-enumerableownpropertynames
 MarkedValueList Object::get_enumerable_own_property_names(PropertyKind kind) const
 {
     return get_own_properties(kind, true, Object::GetOwnPropertyReturnType::StringOnly);
@@ -419,7 +419,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
 }
 
 // Equivalent to:
-// 6.2.5.4 FromPropertyDescriptor, https://tc39.es/ecma262/#sec-frompropertydescriptor
+// 6.2.5.4 FromPropertyDescriptor ( Desc ), https://tc39.es/ecma262/#sec-frompropertydescriptor
 Value Object::get_own_property_descriptor_object(const PropertyName& property_name) const
 {
     VERIFY(property_name.is_valid());
@@ -934,7 +934,7 @@ bool Object::define_native_property(const StringOrSymbol& property_name, AK::Fun
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
 
-// 20.1.2.3.1 ObjectDefineProperties, https://tc39.es/ecma262/#sec-objectdefineproperties
+// 20.1.2.3.1 ObjectDefineProperties ( O, Properties ), https://tc39.es/ecma262/#sec-objectdefineproperties
 void Object::define_properties(Value properties)
 {
     auto& vm = this->vm();
@@ -1051,7 +1051,7 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
     return {};
 }
 
-// 20.5.8.1 InstallErrorCause, https://tc39.es/proposal-error-cause/#sec-errorobjects-install-error-cause
+// 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/proposal-error-cause/#sec-errorobjects-install-error-cause
 void Object::install_error_cause(Value options)
 {
     auto& vm = this->vm();

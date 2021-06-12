@@ -60,6 +60,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_native_function(vm.names.cosh, cosh, 1, attr);
     define_native_function(vm.names.tanh, tanh, 1, attr);
 
+    // 21.3.1 Value Properties of the Math Object, https://tc39.es/ecma262/#sec-value-properties-of-the-math-object
     define_property(vm.names.E, Value(M_E), 0);
     define_property(vm.names.LN2, Value(M_LN2), 0);
     define_property(vm.names.LN10, Value(M_LN10), 0);
@@ -69,6 +70,7 @@ void MathObject::initialize(GlobalObject& global_object)
     define_property(vm.names.SQRT1_2, Value(M_SQRT1_2), 0);
     define_property(vm.names.SQRT2, Value(M_SQRT2), 0);
 
+    // 21.3.1.9 Math [ @@toStringTag ], https://tc39.es/ecma262/#sec-math-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Math"), Attribute::Configurable);
 }
 
@@ -76,6 +78,7 @@ MathObject::~MathObject()
 {
 }
 
+// 21.3.2.1 Math.abs ( x ), https://tc39.es/ecma262/#sec-math.abs
 JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -90,6 +93,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::abs)
     return Value(number.as_double() < 0 ? -number.as_double() : number.as_double());
 }
 
+// 21.3.2.27 Math.random ( ), https://tc39.es/ecma262/#sec-math.random
 JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
 {
 #ifdef __serenity__
@@ -100,6 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::random)
     return Value(r);
 }
 
+// 21.3.2.32 Math.sqrt ( x ), https://tc39.es/ecma262/#sec-math.sqrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -110,6 +115,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sqrt)
     return Value(::sqrt(number.as_double()));
 }
 
+// 21.3.2.16 Math.floor ( x ), https://tc39.es/ecma262/#sec-math.floor
 JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -120,6 +126,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::floor)
     return Value(::floor(number.as_double()));
 }
 
+// 21.3.2.10 Math.ceil ( x ), https://tc39.es/ecma262/#sec-math.ceil
 JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -133,6 +140,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::ceil)
     return Value(::ceil(number.as_double()));
 }
 
+// 21.3.2.28 Math.round ( x ), https://tc39.es/ecma262/#sec-math.round
 JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -152,6 +160,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
     return Value(intpart);
 }
 
+// 21.3.2.24 Math.max ( ...args ), https://tc39.es/ecma262/#sec-math.max
 JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
 {
     Vector<Value> coerced;
@@ -172,6 +181,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::max)
     return highest;
 }
 
+// 21.3.2.25 Math.min ( ...args ), https://tc39.es/ecma262/#sec-math.min
 JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
 {
     Vector<Value> coerced;
@@ -192,6 +202,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::min)
     return lowest;
 }
 
+// 21.3.2.35 Math.trunc ( x ), https://tc39.es/ecma262/#sec-math.trunc
 JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -204,6 +215,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::trunc)
     return MathObject::floor(vm, global_object);
 }
 
+// 21.3.2.30 Math.sin ( x ), https://tc39.es/ecma262/#sec-math.sin
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -214,6 +226,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sin)
     return Value(::sin(number.as_double()));
 }
 
+// 21.3.2.12 Math.cos ( x ), https://tc39.es/ecma262/#sec-math.cos
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -224,6 +237,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cos)
     return Value(::cos(number.as_double()));
 }
 
+// 21.3.2.33 Math.tan ( x ), https://tc39.es/ecma262/#sec-math.tan
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -234,6 +248,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::tan)
     return Value(::tan(number.as_double()));
 }
 
+// 21.3.2.26 Math.pow ( base, exponent ), https://tc39.es/ecma262/#sec-math.pow
 JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
 {
     auto base = vm.argument(0).to_number(global_object);
@@ -291,6 +306,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
     return Value(::pow(base.as_double(), exponent.as_double()));
 }
 
+// 21.3.2.14 Math.exp ( x ), https://tc39.es/ecma262/#sec-math.exp
 JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -301,6 +317,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::exp)
     return Value(::exp(number.as_double()));
 }
 
+// 21.3.2.15 Math.expm1 ( x ), https://tc39.es/ecma262/#sec-math.expm1
 JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -311,6 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::expm1)
     return Value(::expm1(number.as_double()));
 }
 
+// 21.3.2.29 Math.sign ( x ), https://tc39.es/ecma262/#sec-math.sign
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -327,6 +345,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sign)
     return js_nan();
 }
 
+// 21.3.2.11 Math.clz32 ( x ), https://tc39.es/ecma262/#sec-math.clz32
 JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -337,6 +356,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::clz32)
     return Value(__builtin_clz((unsigned)number.as_double()));
 }
 
+// 21.3.2.2 Math.acos ( x ), https://tc39.es/ecma262/#sec-math.acos
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -349,6 +369,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acos)
     return Value(::acos(number.as_double()));
 }
 
+// 21.3.2.3 Math.acosh ( x ), https://tc39.es/ecma262/#sec-math.acosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -359,6 +380,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::acosh)
     return Value(::acosh(number.as_double()));
 }
 
+// 21.3.2.4 Math.asin ( x ), https://tc39.es/ecma262/#sec-math.asin
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -369,6 +391,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::asin)
     return Value(::asin(number.as_double()));
 }
 
+// 21.3.2.5 Math.asinh ( x ), https://tc39.es/ecma262/#sec-math.asinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -377,6 +400,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::asinh)
     return Value(::asinh(number.as_double()));
 }
 
+// 21.3.2.6 Math.atan ( x ), https://tc39.es/ecma262/#sec-math.atan
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -391,6 +415,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan)
     return Value(::atan(number.as_double()));
 }
 
+// 21.3.2.7 Math.atanh ( x ), https://tc39.es/ecma262/#sec-math.atanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -401,6 +426,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atanh)
     return Value(::atanh(number.as_double()));
 }
 
+// 21.3.2.21 Math.log1p ( x ), https://tc39.es/ecma262/#sec-math.log1p
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -411,6 +437,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log1p)
     return Value(::log1p(number.as_double()));
 }
 
+// 21.3.2.9 Math.cbrt ( x ), https://tc39.es/ecma262/#sec-math.cbrt
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -419,6 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cbrt)
     return Value(::cbrt(number.as_double()));
 }
 
+// 21.3.2.8 Math.atan2 ( y, x ), https://tc39.es/ecma262/#sec-math.atan2
 JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
 {
     auto constexpr three_quarters_pi = M_PI_4 + M_PI_2;
@@ -481,6 +509,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::atan2)
     return Value(::atan2(y.as_double(), x.as_double()));
 }
 
+// 21.3.2.17 Math.fround ( x ), https://tc39.es/ecma262/#sec-math.fround
 JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -491,6 +520,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::fround)
     return Value((float)number.as_double());
 }
 
+// 21.3.2.18 Math.hypot ( ...args ), https://tc39.es/ecma262/#sec-math.hypot
 JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
 {
     Vector<Value> coerced;
@@ -522,6 +552,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::hypot)
     return Value(::sqrt(sum_of_squares));
 }
 
+// 21.3.2.19 Math.imul ( x, y ), https://tc39.es/ecma262/#sec-math.imul
 JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
 {
     auto a = vm.argument(0).to_u32(global_object);
@@ -533,6 +564,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::imul)
     return Value(static_cast<i32>(a * b));
 }
 
+// 21.3.2.20 Math.log ( x ), https://tc39.es/ecma262/#sec-math.log
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -543,6 +575,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log)
     return Value(::log(number.as_double()));
 }
 
+// 21.3.2.23 Math.log2 ( x ), https://tc39.es/ecma262/#sec-math.log2
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -553,6 +586,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log2)
     return Value(::log2(number.as_double()));
 }
 
+// 21.3.2.22 Math.log10 ( x ), https://tc39.es/ecma262/#sec-math.log10
 JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -563,6 +597,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::log10)
     return Value(::log10(number.as_double()));
 }
 
+// 21.3.2.31 Math.sinh ( x ), https://tc39.es/ecma262/#sec-math.sinh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -573,6 +608,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::sinh)
     return Value(::sinh(number.as_double()));
 }
 
+// 21.3.2.13 Math.cosh ( x ), https://tc39.es/ecma262/#sec-math.cosh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
 {
     auto number = vm.argument(0).to_number(global_object);
@@ -583,6 +619,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::cosh)
     return Value(::cosh(number.as_double()));
 }
 
+// 21.3.2.34 Math.tanh ( x ), https://tc39.es/ecma262/#sec-math.tanh
 JS_DEFINE_NATIVE_FUNCTION(MathObject::tanh)
 {
     auto number = vm.argument(0).to_number(global_object);

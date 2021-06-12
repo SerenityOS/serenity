@@ -25,7 +25,7 @@ PromiseReactionJob::PromiseReactionJob(PromiseReaction& reaction, Value argument
 {
 }
 
-// 27.2.2.1 NewPromiseReactionJob, https://tc39.es/ecma262/#sec-newpromisereactionjob
+// 27.2.2.1 NewPromiseReactionJob ( reaction, argument ), https://tc39.es/ecma262/#sec-newpromisereactionjob
 Value PromiseReactionJob::call()
 {
     auto& vm = this->vm();
@@ -91,7 +91,7 @@ PromiseResolveThenableJob::PromiseResolveThenableJob(Promise& promise_to_resolve
 {
 }
 
-// 27.2.2.2 NewPromiseResolveThenableJob, https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
+// 27.2.2.2 NewPromiseResolveThenableJob ( promiseToResolve, thenable, then ), https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob
 Value PromiseResolveThenableJob::call()
 {
     auto& vm = this->vm();

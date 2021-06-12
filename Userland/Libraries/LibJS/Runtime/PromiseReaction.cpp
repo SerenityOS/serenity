@@ -11,7 +11,7 @@
 
 namespace JS {
 
-// 27.2.1.5 NewPromiseCapability, https://tc39.es/ecma262/#sec-newpromisecapability
+// 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability
 PromiseCapability new_promise_capability(GlobalObject& global_object, Value constructor)
 {
     auto& vm = global_object.vm();

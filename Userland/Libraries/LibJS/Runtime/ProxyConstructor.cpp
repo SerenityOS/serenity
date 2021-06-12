@@ -13,6 +13,7 @@
 
 namespace JS {
 
+// 10.5.14 ProxyCreate ( target, handler ), https://tc39.es/ecma262/#sec-proxycreate
 static ProxyObject* proxy_create(GlobalObject& global_object, Value target, Value handler)
 {
     auto& vm = global_object.vm();
@@ -45,6 +46,7 @@ ProxyConstructor::~ProxyConstructor()
 {
 }
 
+// 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
 Value ProxyConstructor::call()
 {
     auto& vm = this->vm();
@@ -52,20 +54,21 @@ Value ProxyConstructor::call()
     return {};
 }
 
+// 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
 Value ProxyConstructor::construct(Function&)
 {
     auto& vm = this->vm();
     return proxy_create(global_object(), vm.argument(0), vm.argument(1));
 }
 
-// 28.2.2.1 Proxy.revocable, https://tc39.es/ecma262/multipage/reflection.html#sec-proxy.revocable
+// 28.2.2.1 Proxy.revocable ( target, handler ), https://tc39.es/ecma262/#sec-proxy.revocable
 JS_DEFINE_NATIVE_FUNCTION(ProxyConstructor::revocable)
 {
     auto* proxy = proxy_create(global_object, vm.argument(0), vm.argument(1));
     if (vm.exception())
         return {};
 
-    // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/multipage/reflection.html#sec-proxy-revocation-functions
+    // 28.2.2.1.1 Proxy Revocation Functions, https://tc39.es/ecma262/#sec-proxy-revocation-functions
     auto* revoker = NativeFunction::create(global_object, "", [proxy_handle = make_handle(proxy)](auto&, auto&) -> Value {
         auto& proxy = const_cast<ProxyObject&>(*proxy_handle.cell());
         if (proxy.is_revoked())
