@@ -1673,12 +1673,6 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
             target = create_ast_node<Identifier>(
                 { m_parser_state.m_current_token.filename(), rule_start.position(), position() },
                 consume(TokenType::Identifier).value());
-        } else if (match(TokenType::TripleDot)) {
-            consume();
-            if (auto pattern = parse_binding_pattern())
-                target = pattern.release_nonnull();
-            else
-                syntax_error("Expected a binding pattern after ... in variable declaration");
         } else if (auto pattern = parse_binding_pattern()) {
             target = pattern.release_nonnull();
         }
