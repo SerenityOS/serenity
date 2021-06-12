@@ -32,3 +32,11 @@ describe("normal behavior", () => {
         expect(a instanceof WeakMap).toBeTrue();
     });
 });
+
+describe("regressions", () => {
+    test("missing key/value properties on iterable entry", () => {
+        expect(() => {
+            new WeakMap([{}]);
+        }).toThrowWithMessage(TypeError, "undefined is not an object");
+    });
+});
