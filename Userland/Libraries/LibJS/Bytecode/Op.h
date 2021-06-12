@@ -21,7 +21,7 @@ namespace JS::Bytecode::Op {
 
 class Load final : public Instruction {
 public:
-    Load(Register src)
+    explicit Load(Register src)
         : Instruction(Type::Load)
         , m_src(src)
     {
@@ -36,7 +36,7 @@ private:
 
 class LoadImmediate final : public Instruction {
 public:
-    LoadImmediate(Value value)
+    explicit LoadImmediate(Value value)
         : Instruction(Type::LoadImmediate)
         , m_value(value)
     {
@@ -51,7 +51,7 @@ private:
 
 class Store final : public Instruction {
 public:
-    Store(Register dst)
+    explicit Store(Register dst)
         : Instruction(Type::Store)
         , m_dst(dst)
     {
@@ -91,7 +91,7 @@ private:
 #define JS_DECLARE_COMMON_BINARY_OP(OpTitleCase, op_snake_case) \
     class OpTitleCase final : public Instruction {              \
     public:                                                     \
-        OpTitleCase(Register lhs_reg)                           \
+        explicit OpTitleCase(Register lhs_reg)                  \
             : Instruction(Type::OpTitleCase)                    \
             , m_lhs_reg(lhs_reg)                                \
         {                                                       \
@@ -131,9 +131,9 @@ JS_ENUMERATE_COMMON_UNARY_OPS(JS_DECLARE_COMMON_UNARY_OP)
 
 class NewString final : public Instruction {
 public:
-    NewString(StringTableIndex string)
+    explicit NewString(StringTableIndex string)
         : Instruction(Type::NewString)
-        , m_string(move(string))
+        , m_string(string)
     {
     }
 
@@ -173,7 +173,7 @@ private:
 // NOTE: This instruction is variable-width depending on the number of elements!
 class NewArray final : public Instruction {
 public:
-    NewArray(Vector<Register> const& elements)
+    explicit NewArray(Vector<Register> const& elements)
         : Instruction(Type::NewArray)
         , m_element_count(elements.size())
     {
@@ -193,7 +193,7 @@ private:
 
 class ConcatString final : public Instruction {
 public:
-    ConcatString(Register lhs)
+    explicit ConcatString(Register lhs)
         : Instruction(Type::ConcatString)
         , m_lhs(lhs)
     {
@@ -208,9 +208,9 @@ private:
 
 class SetVariable final : public Instruction {
 public:
-    SetVariable(StringTableIndex identifier)
+    explicit SetVariable(StringTableIndex identifier)
         : Instruction(Type::SetVariable)
-        , m_identifier(move(identifier))
+        , m_identifier(identifier)
     {
     }
 
@@ -223,9 +223,9 @@ private:
 
 class GetVariable final : public Instruction {
 public:
-    GetVariable(StringTableIndex identifier)
+    explicit GetVariable(StringTableIndex identifier)
         : Instruction(Type::GetVariable)
-        , m_identifier(move(identifier))
+        , m_identifier(identifier)
     {
     }
 
@@ -238,9 +238,9 @@ private:
 
 class GetById final : public Instruction {
 public:
-    GetById(StringTableIndex property)
+    explicit GetById(StringTableIndex property)
         : Instruction(Type::GetById)
-        , m_property(move(property))
+        , m_property(property)
     {
     }
 
@@ -253,10 +253,10 @@ private:
 
 class PutById final : public Instruction {
 public:
-    PutById(Register base, StringTableIndex property)
+    explicit PutById(Register base, StringTableIndex property)
         : Instruction(Type::PutById)
         , m_base(base)
-        , m_property(move(property))
+        , m_property(property)
     {
     }
 
@@ -453,8 +453,8 @@ class EnterUnwindContext final : public Instruction {
 public:
     EnterUnwindContext(Optional<Label> handler_target, Optional<Label> finalizer_target)
         : Instruction(Type::EnterUnwindContext)
-        , m_handler_target(handler_target)
-        , m_finalizer_target(finalizer_target)
+        , m_handler_target(move(handler_target))
+        , m_finalizer_target(move(finalizer_target))
     {
     }
 
@@ -481,7 +481,7 @@ class ContinuePendingUnwind final : public Instruction {
 public:
     constexpr static bool IsTerminator = true;
 
-    ContinuePendingUnwind(Label const& resume_target)
+    explicit ContinuePendingUnwind(Label resume_target)
         : Instruction(Type::ContinuePendingUnwind)
         , m_resume_target(resume_target)
     {
@@ -518,7 +518,7 @@ private:
 
 class PushLexicalEnvironment final : public Instruction {
 public:
-    PushLexicalEnvironment(HashMap<u32, Variable> variables)
+    explicit PushLexicalEnvironment(HashMap<u32, Variable> variables)
         : Instruction(Type::PushLexicalEnvironment)
         , m_variables(move(variables))
     {
