@@ -5,6 +5,7 @@
  */
 
 #include <AK/HashMap.h>
+#include <LibJS/Runtime/MapIterator.h>
 #include <LibJS/Runtime/MapPrototype.h>
 
 namespace JS {
@@ -22,13 +23,17 @@ void MapPrototype::initialize(GlobalObject& global_object)
 
     define_native_function(vm.names.clear, clear, 0, attr);
     define_native_function(vm.names.delete_, delete_, 1, attr);
+    define_native_function(vm.names.entries, entries, 0, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.get, get, 1, attr);
     define_native_function(vm.names.has, has, 1, attr);
+    define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.set, set, 2, attr);
+    define_native_function(vm.names.values, values, 0, attr);
 
     define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
+    define_property(vm.well_known_symbol_iterator(), Object::get(vm.names.entries), attr);
     define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Map), Attribute::Configurable);
 }
 
@@ -65,6 +70,16 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::delete_)
     if (!map)
         return {};
     return Value(map->entries().remove(vm.argument(0)));
+}
+
+// 24.1.3.4 Map.prototype.entries ( ), https://tc39.es/ecma262/#sec-map.prototype.entries
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::entries)
+{
+    auto* map = typed_this(vm, global_object);
+    if (!map)
+        return {};
+
+    return MapIterator::create(global_object, *map, Object::PropertyKind::KeyAndValue);
 }
 
 // 24.1.3.5 Map.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-map.prototype.foreach
@@ -108,6 +123,16 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::has)
     return Value(entries.find(vm.argument(0)) != entries.end());
 }
 
+// 24.1.3.8 Map.prototype.keys ( ), https://tc39.es/ecma262/#sec-map.prototype.keys
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::keys)
+{
+    auto* map = typed_this(vm, global_object);
+    if (!map)
+        return {};
+
+    return MapIterator::create(global_object, *map, Object::PropertyKind::Key);
+}
+
 // 24.1.3.9 Map.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-map.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
 {
@@ -119,6 +144,16 @@ JS_DEFINE_NATIVE_FUNCTION(MapPrototype::set)
         key = Value(0);
     map->entries().set(key, vm.argument(1));
     return map;
+}
+
+// 24.1.3.11 Map.prototype.values ( ), https://tc39.es/ecma262/#sec-map.prototype.values
+JS_DEFINE_NATIVE_FUNCTION(MapPrototype::values)
+{
+    auto* map = typed_this(vm, global_object);
+    if (!map)
+        return {};
+
+    return MapIterator::create(global_object, *map, Object::PropertyKind::Value);
 }
 
 // 24.1.3.10 get Map.prototype.size, https://tc39.es/ecma262/#sec-get-map.prototype.size
