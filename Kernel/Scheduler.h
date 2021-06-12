@@ -51,6 +51,7 @@ public:
     static bool dequeue_runnable_thread(Thread&, bool = false);
     static void queue_runnable_thread(Thread&);
     static void dump_scheduler_state();
+    static bool is_initialized();
 };
 
 }
