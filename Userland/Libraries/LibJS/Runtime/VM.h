@@ -166,6 +166,9 @@ public:
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
     void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
 
+    u32 execution_generation() const { return m_execution_generation; }
+    void finish_execution_generation() { ++m_execution_generation; }
+
     void unwind(ScopeType type, FlyString label = {})
     {
         m_unwind_until = type;
@@ -279,6 +282,8 @@ private:
     Shape* m_scope_object_shape { nullptr };
 
     bool m_underscore_is_last_value { false };
+
+    u32 m_execution_generation { 0 };
 };
 
 template<>

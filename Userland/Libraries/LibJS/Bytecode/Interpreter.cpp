@@ -141,6 +141,8 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
     if (vm().call_stack().size() == 1)
         vm().pop_call_frame();
 
+    vm().finish_execution_generation();
+
     return return_value;
 }
 

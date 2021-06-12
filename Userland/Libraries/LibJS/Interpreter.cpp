@@ -63,6 +63,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     // At this point we may have already run any queued promise jobs via on_call_stack_emptied,
     // in which case this is a no-op.
     vm.run_queued_promise_jobs();
+
+    vm.finish_execution_generation();
 }
 
 GlobalObject& Interpreter::global_object()
