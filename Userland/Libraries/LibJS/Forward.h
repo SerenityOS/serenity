@@ -42,6 +42,7 @@
     __JS_ENUMERATE(StringObject, string, StringPrototype, StringConstructor, void)                            \
     __JS_ENUMERATE(SymbolObject, symbol, SymbolPrototype, SymbolConstructor, void)                            \
     __JS_ENUMERATE(WeakMap, weak_map, WeakMapPrototype, WeakMapConstructor, void)                             \
+    __JS_ENUMERATE(WeakRef, weak_ref, WeakRefPrototype, WeakRefConstructor, void)                             \
     __JS_ENUMERATE(WeakSet, weak_set, WeakSetPrototype, WeakSetConstructor, void)
 
 #define JS_ENUMERATE_NATIVE_OBJECTS                 \
