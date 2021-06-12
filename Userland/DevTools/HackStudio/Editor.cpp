@@ -66,6 +66,8 @@ Editor::Editor()
     });
     add_custom_context_menu_action(*m_evaluate_expression_action);
     add_custom_context_menu_action(*m_move_execution_to_line_action);
+
+    set_gutter_visible(true);
 }
 
 Editor::~Editor()
@@ -95,15 +97,9 @@ void Editor::focusout_event(GUI::FocusEvent& event)
     GUI::TextEditor::focusout_event(event);
 }
 
-Gfx::IntRect Editor::breakpoint_icon_rect(size_t line_number) const
+Gfx::IntRect Editor::gutter_icon_rect(size_t line_number) const
 {
-    auto ruler_line_rect = ruler_content_rect(line_number);
-
-    auto scroll_value = vertical_scrollbar().value();
-    ruler_line_rect = ruler_line_rect.translated({ 0, -scroll_value });
-    auto center = ruler_line_rect.center().translated({ ruler_line_rect.width() - 10, -line_spacing() - 3 });
-    constexpr int size = 32;
-    return { center.x() - size / 2, center.y() - size / 2, size, size };
+    return gutter_content_rect(line_number).translated(ruler_width() + gutter_width() + frame_thickness(), -vertical_scrollbar().value());
 }
 
 void Editor::paint_event(GUI::PaintEvent& event)
@@ -122,7 +118,7 @@ void Editor::paint_event(GUI::PaintEvent& event)
         painter.draw_rect(rect, palette().selection());
     }
 
-    if (ruler_visible()) {
+    if (gutter_visible()) {
         size_t first_visible_line = text_position_at(event.rect().top_left()).line();
         size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
         for (size_t line : breakpoint_lines()) {
@@ -130,11 +126,11 @@ void Editor::paint_event(GUI::PaintEvent& event)
                 continue;
             }
             const auto& icon = breakpoint_icon_bitmap();
-            painter.blit(breakpoint_icon_rect(line).center(), icon, icon.rect());
+            painter.blit(gutter_icon_rect(line).top_left(), icon, icon.rect());
         }
         if (execution_position().has_value()) {
             const auto& icon = current_position_icon_bitmap();
-            painter.blit(breakpoint_icon_rect(execution_position().value()).center(), icon, icon.rect());
+            painter.blit(gutter_icon_rect(execution_position().value()).top_left(), icon, icon.rect());
         }
     }
 }
@@ -379,7 +375,7 @@ void Editor::set_execution_position(size_t line_number)
 {
     code_document().set_execution_position(line_number);
     scroll_position_into_view({ line_number, 0 });
-    update(breakpoint_icon_rect(line_number));
+    update(gutter_icon_rect(line_number));
 }
 
 void Editor::clear_execution_position()
@@ -389,7 +385,7 @@ void Editor::clear_execution_position()
     }
     size_t previous_position = execution_position().value();
     code_document().clear_execution_position();
-    update(breakpoint_icon_rect(previous_position));
+    update(gutter_icon_rect(previous_position));
 }
 
 const Gfx::Bitmap& Editor::breakpoint_icon_bitmap()
