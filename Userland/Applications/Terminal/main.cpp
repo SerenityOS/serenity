@@ -320,7 +320,6 @@ int main(int argc, char** argv)
         window->resize(size);
     };
     terminal.apply_size_increments_to_window(*window);
-    window->show();
     window->set_icon(app_icon.bitmap_for_size(16));
 
     auto bell = config->read_entry("Window", "Bell", "Visible");
@@ -460,6 +459,7 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
+    window->show();
     config->sync();
     int result = app->exec();
     dbgln("Exiting terminal, updating utmp");
