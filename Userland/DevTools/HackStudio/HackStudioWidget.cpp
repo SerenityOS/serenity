@@ -196,6 +196,8 @@ void HackStudioWidget::open_project(const String& root_path)
         debugger.reset_breakpoints();
         debugger.set_source_root(m_project->root_path());
     }
+    for (auto& editor_wrapper : m_all_editor_wrappers)
+        editor_wrapper.set_project_root(LexicalPath(m_project->root_path()));
 }
 
 Vector<String> HackStudioWidget::selected_file_paths() const
@@ -498,6 +500,7 @@ void HackStudioWidget::add_new_editor(GUI::Widget& parent)
     m_current_editor_wrapper = wrapper;
     m_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
+    wrapper->set_project_root(LexicalPath(m_project->root_path()));
 }
 
 NonnullRefPtr<GUI::Action> HackStudioWidget::create_switch_to_next_editor_action()
