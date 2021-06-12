@@ -38,4 +38,9 @@ ALWAYS_INLINE int fb_set_buffer(int fd, int index)
     return ioctl(fd, FB_IOCTL_SET_BUFFER, index);
 }
 
+ALWAYS_INLINE int fb_flush_buffer(int fd, FBRect* rect)
+{
+    return ioctl(fd, FB_IOCTL_FLUSH_BUFFER, rect);
+}
+
 __END_DECLS
