@@ -325,7 +325,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
 
         auto new_scope = scope;
         new_scope.append(decl.name());
-        symbols.append(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
+        symbols.extend(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
     }
 
     return symbols;

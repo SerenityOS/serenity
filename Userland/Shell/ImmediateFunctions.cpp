@@ -366,7 +366,7 @@ RefPtr<AST::Node> Shell::immediate_concat_lists(AST::ImmediateExpression& invoki
 
     for (auto& argument : arguments) {
         if (auto* list = dynamic_cast<const AST::ListConcatenate*>(&argument)) {
-            result.append(list->list());
+            result.extend(list->list());
         } else {
             auto list_of_values = const_cast<AST::Node&>(argument).run(this)->resolve_without_cast(this);
             if (auto* list = dynamic_cast<AST::ListValue*>(list_of_values.ptr())) {

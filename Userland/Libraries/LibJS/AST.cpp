@@ -2230,12 +2230,12 @@ Value DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) const
 
 void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
 {
-    m_variables.append(move(variables));
+    m_variables.extend(move(variables));
 }
 
 void ScopeNode::add_functions(NonnullRefPtrVector<FunctionDeclaration> functions)
 {
-    m_functions.append(move(functions));
+    m_functions.extend(move(functions));
 }
 
 }

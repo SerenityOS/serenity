@@ -227,15 +227,15 @@ public:
         VERIFY(did_allocate);
     }
 
-    void append(Vector&& other)
+    void extend(Vector&& other)
     {
-        auto did_allocate = try_append(move(other));
+        auto did_allocate = try_extend(move(other));
         VERIFY(did_allocate);
     }
 
-    void append(Vector const& other)
+    void extend(Vector const& other)
     {
-        auto did_allocate = try_append(other);
+        auto did_allocate = try_extend(other);
         VERIFY(did_allocate);
     }
 
@@ -506,7 +506,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool try_append(Vector&& other)
+    [[nodiscard]] bool try_extend(Vector&& other)
     {
         if (is_empty()) {
             *this = move(other);
@@ -521,7 +521,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] bool try_append(Vector const& other)
+    [[nodiscard]] bool try_extend(Vector const& other)
     {
         if (!try_grow_capacity(size() + other.size()))
             return false;

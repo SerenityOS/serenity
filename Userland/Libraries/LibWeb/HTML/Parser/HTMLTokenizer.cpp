@@ -1560,8 +1560,7 @@ _StartOfFunction:
                         log_parse_error();
                     }
 
-                    m_temporary_buffer.clear();
-                    m_temporary_buffer.append(match.value().code_points);
+                    m_temporary_buffer = match.value().code_points;
 
                     FLUSH_CODEPOINTS_CONSUMED_AS_A_CHARACTER_REFERENCE;
                     SWITCH_TO_RETURN_STATE;

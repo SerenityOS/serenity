@@ -87,7 +87,7 @@ void DebugInfo::prepare_lines()
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
     while (!stream.eof()) {
         Dwarf::LineProgram program(m_dwarf_info, stream);
-        all_lines.append(program.lines());
+        all_lines.extend(program.lines());
     }
 
     HashMap<FlyString, Optional<String>> memoized_full_paths;

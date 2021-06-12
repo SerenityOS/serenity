@@ -155,9 +155,9 @@ public:
         }
 
         bytecode.empend(arguments.size()); // size of arguments
-        bytecode.append(move(arguments));
+        bytecode.extend(move(arguments));
 
-        append(move(bytecode));
+        extend(move(bytecode));
     }
 
     void insert_bytecode_check_boundary(BoundaryCheckType type)
@@ -166,7 +166,7 @@ public:
         bytecode.empend((ByteCodeValueType)OpCodeId::CheckBoundary);
         bytecode.empend((ByteCodeValueType)type);
 
-        append(move(bytecode));
+        extend(move(bytecode));
     }
 
     void insert_bytecode_compare_string(StringView view)
@@ -182,9 +182,9 @@ public:
         arguments.insert_string(view);
 
         bytecode.empend(arguments.size()); // size of arguments
-        bytecode.append(move(arguments));
+        bytecode.extend(move(arguments));
 
-        append(move(bytecode));
+        extend(move(bytecode));
     }
 
     void insert_bytecode_compare_named_reference(StringView name)
@@ -201,9 +201,9 @@ public:
         arguments.empend(name.length());
 
         bytecode.empend(arguments.size()); // size of arguments
-        bytecode.append(move(arguments));
+        bytecode.extend(move(arguments));
 
-        append(move(bytecode));
+        extend(move(bytecode));
     }
 
     void insert_bytecode_group_capture_left(size_t capture_groups_count)
@@ -248,7 +248,7 @@ public:
             // REGEXP BODY
             // RESTORE
             empend((ByteCodeValueType)OpCodeId::Save);
-            append(move(lookaround_body));
+            extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         }
@@ -264,7 +264,7 @@ public:
             auto body_length = lookaround_body.size();
             empend((ByteCodeValueType)OpCodeId::Jump);
             empend((ByteCodeValueType)body_length + 2); // JUMP to label _A
-            append(move(lookaround_body));
+            extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::FailForks);
             empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
@@ -281,7 +281,7 @@ public:
             empend((ByteCodeValueType)OpCodeId::Save);
             empend((ByteCodeValueType)OpCodeId::GoBack);
             empend((ByteCodeValueType)match_length);
-            append(move(lookaround_body));
+            extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::Restore);
             return;
         case LookAroundType::NegatedLookBehind: {
@@ -299,7 +299,7 @@ public:
             empend((ByteCodeValueType)body_length + 4); // JUMP to label _A
             empend((ByteCodeValueType)OpCodeId::GoBack);
             empend((ByteCodeValueType)match_length);
-            append(move(lookaround_body));
+            extend(move(lookaround_body));
             empend((ByteCodeValueType)OpCodeId::FailForks);
             empend((ByteCodeValueType)2); // Fail two forks
             empend((ByteCodeValueType)OpCodeId::Save);
@@ -355,7 +355,7 @@ public:
                 new_bytecode.empend(diff * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
 
                 for (size_t i = 0; i < diff; ++i) {
-                    new_bytecode.append(bytecode_to_repeat);
+                    new_bytecode.extend(bytecode_to_repeat);
                     new_bytecode.empend(jump_kind);
                     new_bytecode.empend((diff - i - 1) * (bytecode_to_repeat.size() + 2)); // Jump to the _END label
                 }
@@ -373,7 +373,7 @@ public:
     void insert_bytecode_repetition_n(ByteCode& bytecode_to_repeat, size_t n)
     {
         for (size_t i = 0; i < n; ++i)
-            append(bytecode_to_repeat);
+            extend(bytecode_to_repeat);
     }
 
     void insert_bytecode_repetition_min_one(ByteCode& bytecode_to_repeat, bool greedy)
