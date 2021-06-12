@@ -68,8 +68,6 @@ Value ObjectConstructor::construct(Function&)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 {
-    if (!vm.argument_count())
-        return {};
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
@@ -78,8 +76,6 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_own_property_names)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 {
-    if (!vm.argument_count())
-        return {};
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
@@ -88,10 +84,6 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
-    if (vm.argument_count() < 2) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfTwoArgs);
-        return {};
-    }
     auto* object = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
@@ -247,11 +239,6 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::is)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 {
-    if (!vm.argument_count()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
-        return {};
-    }
-
     auto* obj_arg = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
@@ -261,10 +248,6 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::keys)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 {
-    if (!vm.argument_count()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
-        return {};
-    }
     auto* obj_arg = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};
@@ -274,10 +257,6 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::values)
 
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::entries)
 {
-    if (!vm.argument_count()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::ConvertUndefinedToObject);
-        return {};
-    }
     auto* obj_arg = vm.argument(0).to_object(global_object);
     if (vm.exception())
         return {};

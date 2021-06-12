@@ -21,7 +21,6 @@
     M(ClassIsAbstract, "Abstract class {} cannot be constructed directly")                                                              \
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
-    M(ConvertUndefinedToObject, "Cannot convert undefined to object")                                                                   \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
@@ -59,7 +58,6 @@
     M(ObjectFreezeFailed, "Could not freeze object")                                                                                    \
     M(ObjectSealFailed, "Could not seal object")                                                                                        \
     M(ObjectSetPrototypeOfReturnedFalse, "Object's [[SetPrototypeOf]] method returned false")                                           \
-    M(ObjectSetPrototypeOfTwoArgs, "Object.setPrototypeOf requires at least two arguments")                                             \
     M(ObjectPreventExtensionsReturnedFalse, "Object's [[PreventExtensions]] method returned false")                                     \
     M(ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess,                                                                              \
         "Object prototype must not be {} on a super property access")                                                                   \

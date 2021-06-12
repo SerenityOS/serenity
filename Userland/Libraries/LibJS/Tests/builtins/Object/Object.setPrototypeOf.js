@@ -12,16 +12,6 @@ describe("correct behavior", () => {
 });
 
 describe("errors", () => {
-    test("requires two arguments", () => {
-        expect(() => {
-            Object.setPrototypeOf();
-        }).toThrowWithMessage(TypeError, "Object.setPrototypeOf requires at least two arguments");
-
-        expect(() => {
-            Object.setPrototypeOf({});
-        }).toThrowWithMessage(TypeError, "Object.setPrototypeOf requires at least two arguments");
-    });
-
     test("prototype must be an object", () => {
         expect(() => {
             Object.setPrototypeOf({}, "foo");
