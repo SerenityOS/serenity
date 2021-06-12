@@ -246,15 +246,50 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
 // 23.1.3.24 Array.prototype.shift ( ), https://tc39.es/ecma262/#sec-array.prototype.shift
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
 {
-    auto* array = Array::typed_this(vm, global_object);
-    if (!array)
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
         return {};
-    if (array->indexed_properties().is_empty())
-        return js_undefined();
-    auto result = array->indexed_properties().take_first(array);
+    auto length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
-    return result.value.value_or(js_undefined());
+    if (length == 0) {
+        this_object->put(vm.names.length, Value(0));
+        if (vm.exception())
+            return {};
+        return js_undefined();
+    }
+    auto first = this_object->get(0).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+
+    for (size_t k = 1; k < length; ++k) {
+        size_t from = k;
+        size_t to = k - 1;
+        bool from_present = this_object->has_property(from);
+        if (vm.exception())
+            return {};
+        if (from_present) {
+            auto from_value = this_object->get(from).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+            this_object->put(to, from_value);
+            if (vm.exception())
+                return {};
+        } else {
+            this_object->delete_property(to);
+            if (vm.exception())
+                return {};
+        }
+    }
+
+    this_object->delete_property(length - 1);
+    if (vm.exception())
+        return {};
+
+    this_object->put(vm.names.length, Value(length - 1));
+    if (vm.exception())
+        return {};
+    return first;
 }
 
 // 23.1.3.30 Array.prototype.toString ( ), https://tc39.es/ecma262/#sec-array.prototype.tostring

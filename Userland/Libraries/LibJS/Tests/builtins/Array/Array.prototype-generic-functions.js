@@ -100,6 +100,16 @@ describe("ability to work with generic non-array objects", () => {
         expect(Array.prototype.includes.call({ length: 5, 2: "foo" }, "foo")).toBeTrue();
     });
 
+    test("shift", () => {
+        expect(Array.prototype.shift.call({})).toBeUndefined();
+        expect(Array.prototype.shift.call({ length: 0 })).toBeUndefined();
+
+        const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+        const front = Array.prototype.shift.call(o);
+        expect(front).toEqual("a");
+        expect(o).toEqual({ length: 4, 0: "b", 2: "c" });
+    });
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     test("every", () => {
