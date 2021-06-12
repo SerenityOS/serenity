@@ -570,6 +570,12 @@ void Scheduler::dump_scheduler_state()
     dump_thread_list();
 }
 
+bool Scheduler::is_initialized()
+{
+    // The scheduler is initalized iff the idle thread exists
+    return Processor::idle_thread() != nullptr;
+}
+
 void dump_thread_list()
 {
     dbgln("Scheduler thread list for processor {}:", Processor::id());
