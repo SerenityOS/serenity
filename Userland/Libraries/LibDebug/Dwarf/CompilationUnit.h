@@ -22,6 +22,7 @@ public:
     u32 size() const { return m_header.length() + sizeof(u32); }
 
     DIE root_die() const;
+    DIE get_die_at_offset(u32 offset) const;
 
     const DwarfInfo& dwarf_info() const { return m_dwarf_info; }
     const AbbreviationsMap& abbreviations_map() const { return m_abbreviations; }
