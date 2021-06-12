@@ -184,6 +184,8 @@ public:
     void execute(Bytecode::Interpreter&) const;
     String to_string(Bytecode::Executable const&) const;
 
+    size_t length() const { return sizeof(*this) + sizeof(Register) * m_element_count; }
+
 private:
     size_t m_element_count { 0 };
     Register m_elements[];
