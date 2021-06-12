@@ -19,12 +19,22 @@ public:
     }
     virtual ~WeakContainer()
     {
-        m_heap.did_destroy_weak_container({}, *this);
+        deregister();
     }
 
     virtual void remove_sweeped_cells(Badge<Heap>, Vector<Cell*>&) = 0;
 
+protected:
+    void deregister()
+    {
+        if (!m_registered)
+            return;
+        m_heap.did_destroy_weak_container({}, *this);
+        m_registered = false;
+    }
+
 private:
+    bool m_registered { true };
     Heap& m_heap;
 };
 
