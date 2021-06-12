@@ -25,8 +25,9 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
 
     define_property(vm.names.length, Value(0), Attribute::Configurable);
 
-    define_native_function(vm.names.for_, for_, 1, Attribute::Writable | Attribute::Configurable);
-    define_native_function(vm.names.keyFor, key_for, 1, Attribute::Writable | Attribute::Configurable);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.for_, for_, 1, attr);
+    define_native_function(vm.names.keyFor, key_for, 1, attr);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     define_property(vm.names.SymbolName, vm.well_known_symbol_##snake_name(), 0);
