@@ -8,8 +8,8 @@
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/ACPI/Initialize.h>
 #include <Kernel/ACPI/MultiProcessorParser.h>
-#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -40,6 +40,7 @@
 #include <Kernel/PCI/Initializer.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Random.h>
 #include <Kernel/Scheduler.h>
@@ -148,6 +149,7 @@ extern "C" [[noreturn]] UNMAP_AFTER_INIT void init()
 
     // Initialize the PCI Bus as early as possible, for early boot (PCI based) serial logging
     SystemRegistrar::initialize();
+    ProcFSComponentsRegistrar::initialize();
     PCI::initialize();
     PCISerialDevice::detect();
 

@@ -5,12 +5,17 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/JsonArray.h>
+#include <AK/JsonArraySerializer.h>
+#include <AK/JsonObjectSerializer.h>
 #include <AK/Platform.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/USB/USBRequest.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/Process.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Time/TimeManagement.h>
@@ -65,6 +70,144 @@ static constexpr u16 UHCI_PORTSC_SUSPEND = 0x1000;
 static constexpr u8 UHCI_NUMBER_OF_ISOCHRONOUS_TDS = 128;
 static constexpr u16 UHCI_NUMBER_OF_FRAMES = 1024;
 
+class ProcFSUSBBusFolder;
+static ProcFSUSBBusFolder* s_procfs_usb_bus_folder;
+
+class ProcFSUSBDeviceInformation : public ProcFSGlobalInformation {
+    friend class ProcFSUSBBusFolder;
+
+public:
+    virtual ~ProcFSUSBDeviceInformation() override {};
+
+    static NonnullRefPtr<ProcFSUSBDeviceInformation> create(USB::Device&);
+
+    RefPtr<USB::Device> device() const { return m_device; }
+
+protected:
+    explicit ProcFSUSBDeviceInformation(USB::Device& device)
+        : ProcFSGlobalInformation(String::formatted("{}", device.address()))
+        , m_device(device)
+    {
+    }
+    virtual bool output(KBufferBuilder& builder) override
+    {
+        VERIFY(m_device); // Something has gone very wrong if this isn't true
+
+        JsonArraySerializer array { builder };
+
+        auto obj = array.add_object();
+        obj.add("usb_spec_compliance_bcd", m_device->device_descriptor().usb_spec_compliance_bcd);
+        obj.add("device_class", m_device->device_descriptor().device_class);
+        obj.add("device_sub_class", m_device->device_descriptor().device_sub_class);
+        obj.add("device_protocol", m_device->device_descriptor().device_protocol);
+        obj.add("max_packet_size", m_device->device_descriptor().max_packet_size);
+        obj.add("vendor_id", m_device->device_descriptor().vendor_id);
+        obj.add("product_id", m_device->device_descriptor().product_id);
+        obj.add("device_release_bcd", m_device->device_descriptor().device_release_bcd);
+        obj.add("manufacturer_id_descriptor_index", m_device->device_descriptor().manufacturer_id_descriptor_index);
+        obj.add("product_string_descriptor_index", m_device->device_descriptor().product_string_descriptor_index);
+        obj.add("serial_number_descriptor_index", m_device->device_descriptor().serial_number_descriptor_index);
+        obj.add("num_configurations", m_device->device_descriptor().num_configurations);
+        obj.finish();
+        array.finish();
+        return true;
+    }
+    IntrusiveListNode<ProcFSUSBDeviceInformation, RefPtr<ProcFSUSBDeviceInformation>> m_list_node;
+    RefPtr<USB::Device> m_device;
+};
+
+class ProcFSUSBBusFolder final : public ProcFSExposedFolder {
+    friend class ProcFSComponentsRegistrar;
+
+public:
+    static void initialize();
+    void plug(USB::Device&);
+    void unplug(USB::Device&);
+
+    virtual KResultOr<size_t> entries_count() const override;
+    virtual KResult traverse_as_directory(unsigned, Function<bool(const FS::DirectoryEntryView&)>) const override;
+    virtual RefPtr<ProcFSExposedComponent> lookup(StringView name) override;
+
+private:
+    ProcFSUSBBusFolder(const ProcFSBusDirectory&);
+
+    RefPtr<ProcFSUSBDeviceInformation> device_node_for(USB::Device& device);
+
+    IntrusiveList<ProcFSUSBDeviceInformation, RefPtr<ProcFSUSBDeviceInformation>, &ProcFSUSBDeviceInformation::m_list_node> m_device_nodes;
+    mutable SpinLock<u8> m_lock;
+};
+
+KResultOr<size_t> ProcFSUSBBusFolder::entries_count() const
+{
+    ScopedSpinLock lock(m_lock);
+    return m_device_nodes.size_slow();
+}
+KResult ProcFSUSBBusFolder::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
+{
+    ScopedSpinLock lock(m_lock);
+    VERIFY(m_parent_folder);
+    callback({ ".", { fsid, component_index() }, 0 });
+    callback({ "..", { fsid, m_parent_folder->component_index() }, 0 });
+
+    for (auto& device_node : m_device_nodes) {
+        InodeIdentifier identifier = { fsid, device_node.component_index() };
+        callback({ device_node.name(), identifier, 0 });
+    }
+    return KSuccess;
+}
+RefPtr<ProcFSExposedComponent> ProcFSUSBBusFolder::lookup(StringView name)
+{
+    ScopedSpinLock lock(m_lock);
+    for (auto& device_node : m_device_nodes) {
+        if (device_node.name() == name) {
+            return device_node;
+        }
+    }
+    return {};
+}
+
+RefPtr<ProcFSUSBDeviceInformation> ProcFSUSBBusFolder::device_node_for(USB::Device& device)
+{
+    RefPtr<USB::Device> checked_device = device;
+    for (auto& device_node : m_device_nodes) {
+        if (device_node.device().ptr() == checked_device.ptr())
+            return device_node;
+    }
+    return {};
+}
+
+void ProcFSUSBBusFolder::plug(USB::Device& new_device)
+{
+    ScopedSpinLock lock(m_lock);
+    auto device_node = device_node_for(new_device);
+    VERIFY(!device_node);
+    m_device_nodes.append(ProcFSUSBDeviceInformation::create(new_device));
+}
+void ProcFSUSBBusFolder::unplug(USB::Device& deleted_device)
+{
+    ScopedSpinLock lock(m_lock);
+    auto device_node = device_node_for(deleted_device);
+    VERIFY(device_node);
+    device_node->m_list_node.remove();
+}
+
+UNMAP_AFTER_INIT ProcFSUSBBusFolder::ProcFSUSBBusFolder(const ProcFSBusDirectory& buses_folder)
+    : ProcFSExposedFolder("usb"sv, buses_folder)
+{
+}
+
+UNMAP_AFTER_INIT void ProcFSUSBBusFolder::initialize()
+{
+    auto folder = adopt_ref(*new ProcFSUSBBusFolder(ProcFSComponentsRegistrar::the().buses_folder()));
+    ProcFSComponentsRegistrar::the().register_new_bus_folder(folder);
+    s_procfs_usb_bus_folder = folder;
+}
+
+NonnullRefPtr<ProcFSUSBDeviceInformation> ProcFSUSBDeviceInformation::create(USB::Device& device)
+{
+    return adopt_ref(*new ProcFSUSBDeviceInformation(device));
+}
+
 UHCIController& UHCIController::the()
 {
     return *s_the;
@@ -74,6 +217,10 @@ UNMAP_AFTER_INIT void UHCIController::detect()
 {
     if (kernel_command_line().disable_uhci_controller())
         return;
+
+    // FIXME: We create the /proc/bus/usb representation here, but it should really be handled
+    // in a more broad singleton than this once we refactor things in USB subsystem.
+    ProcFSUSBBusFolder::initialize();
 
     PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
         if (address.is_null())
@@ -569,8 +716,14 @@ void UHCIController::spawn_port_proc()
                                 dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
 
                             m_devices.at(0) = device.value();
+                            VERIFY(s_procfs_usb_bus_folder);
+                            s_procfs_usb_bus_folder->plug(device.value());
                         } else {
+                            // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
+                            VERIFY(s_procfs_usb_bus_folder);
+                            VERIFY(m_devices.at(0));
                             dmesgln("UHCI: Device detach detected on Root Port 1");
+                            s_procfs_usb_bus_folder->unplug(*m_devices.at(0));
                         }
                     }
                 } else {
@@ -601,8 +754,14 @@ void UHCIController::spawn_port_proc()
                                 dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());
 
                             m_devices.at(1) = device.value();
+                            VERIFY(s_procfs_usb_bus_folder);
+                            s_procfs_usb_bus_folder->plug(device.value());
                         } else {
+                            // FIXME: Clean up (and properly) the RefPtr to the device in m_devices
+                            VERIFY(s_procfs_usb_bus_folder);
+                            VERIFY(m_devices.at(1));
                             dmesgln("UHCI: Device detach detected on Root Port 2");
+                            s_procfs_usb_bus_folder->unplug(*m_devices.at(1));
                         }
                     }
                 }
