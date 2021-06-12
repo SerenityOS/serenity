@@ -232,7 +232,7 @@ void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
             memset(offset_in_framebuffer, 0, width() * sizeof(u32));
             offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * 4);
         }
-        flush();
+        flush(0, 8 * y, 8 * length, 1);
         return;
     }
     for (size_t index = 0; index < length; index++) {
@@ -247,8 +247,8 @@ void GenericFramebufferConsole::clear(size_t x, size_t y, size_t length)
             memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
             offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
         }
+        flush(8 * x, 8 * y, 8, 8);
     }
-    flush();
 }
 
 void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
@@ -259,7 +259,7 @@ void GenericFramebufferConsole::clear_glyph(size_t x, size_t y)
         memset(offset_in_framebuffer, 0, 8 * sizeof(u32));
         offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * sizeof(u32));
     }
-    flush();
+    flush(8 * x, 8 * y, 8, 8);
 }
 
 void GenericFramebufferConsole::enable()
@@ -313,6 +313,7 @@ void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color backgro
         }
         offset_in_framebuffer = (u32*)((u8*)offset_in_framebuffer + width() * 4);
     }
+    flush(8 * x, 8 * y, 8, 8);
     m_x = x + 1;
     if (m_x >= max_column()) {
         m_x = 0;
@@ -320,7 +321,6 @@ void GenericFramebufferConsole::write(size_t x, size_t y, char ch, Color backgro
         if (m_y >= max_row())
             m_y = 0;
     }
-    flush();
 }
 
 void GenericFramebufferConsole::write(size_t x, size_t y, char ch, bool critical)

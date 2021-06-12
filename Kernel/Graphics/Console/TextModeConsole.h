@@ -28,6 +28,7 @@ public:
     virtual void write(size_t x, size_t y, char ch, bool critical = false) override;
     virtual void write(size_t x, size_t y, char ch, Color background, Color foreground, bool critical = false) override;
     virtual void write(char ch, bool critical = false) override;
+    virtual void flush(size_t, size_t, size_t, size_t) override { }
 
     virtual void enable() override { }
     virtual void disable() override { VERIFY_NOT_REACHED(); }

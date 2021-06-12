@@ -13,6 +13,7 @@
 #include <Kernel/Graphics/Console/Console.h>
 #include <Kernel/Graphics/GraphicsDevice.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
+#include <Kernel/Graphics/VirtIOGPU/VirtIOGraphicsAdapter.h>
 #include <Kernel/PCI/Definitions.h>
 #include <Kernel/VM/Region.h>
 
@@ -25,6 +26,7 @@ class GraphicsManagement {
     friend class BochsGraphicsAdapter;
     friend class IntelNativeGraphicsAdapter;
     friend class VGACompatibleAdapter;
+    friend class Graphics::VirtIOGraphicsAdapter;
     AK_MAKE_ETERNAL
 
 public:
