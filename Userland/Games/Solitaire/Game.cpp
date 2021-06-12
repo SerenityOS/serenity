@@ -78,6 +78,10 @@ void Game::start_game_over_animation()
     if (m_game_over_animation)
         return;
 
+    m_last_move = {};
+    if (on_undo_availability_change)
+        on_undo_availability_change(false);
+
     create_new_animation_card();
 
     // We wait one frame, to make sure that the foundation stacks are repainted before we start.
