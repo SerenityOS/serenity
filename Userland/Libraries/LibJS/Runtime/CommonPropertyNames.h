@@ -56,6 +56,7 @@ namespace JS {
     P(asin)                                  \
     P(asinh)                                 \
     P(assert)                                \
+    P(assign)                                \
     P(at)                                    \
     P(atan)                                  \
     P(atan2)                                 \
