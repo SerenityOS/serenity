@@ -59,7 +59,7 @@ void Mixer::mix()
         if (active_mix_queues.is_empty() || m_added_queue) {
             pthread_mutex_lock(&m_pending_mutex);
             pthread_cond_wait(&m_pending_cond, &m_pending_mutex);
-            active_mix_queues.append(move(m_pending_mixing));
+            active_mix_queues.extend(move(m_pending_mixing));
             pthread_mutex_unlock(&m_pending_mutex);
             m_added_queue = false;
         }

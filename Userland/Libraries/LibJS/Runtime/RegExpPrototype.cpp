@@ -373,7 +373,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         if (replace_value.is_function()) {
             MarkedValueList replacer_args(vm.heap());
             replacer_args.append(js_string(vm, matched));
-            replacer_args.append(move(captures));
+            replacer_args.extend(move(captures));
             replacer_args.append(Value(position));
             replacer_args.append(js_string(vm, string));
             if (!named_captures.is_undefined()) {

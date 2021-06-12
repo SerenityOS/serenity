@@ -36,7 +36,7 @@ namespace Spreadsheet {
 CSVExportDialogPage::CSVExportDialogPage(const Sheet& sheet)
     : m_data(sheet.to_xsv())
 {
-    m_headers.append(m_data.take_first());
+    m_headers.extend(m_data.take_first());
 
     auto temp_template = String::formatted("{}/spreadsheet-csv-export.{}.XXXXXX", Core::StandardPaths::tempfile_directory(), getpid());
     auto temp_path = ByteBuffer::create_uninitialized(temp_template.length() + 1);

@@ -286,7 +286,7 @@ void TreeMapWidget::mousedown_event(GUI::MouseEvent& event)
         Vector<int> path = path_to_position(event.position());
         if (!path.is_empty()) {
             m_path.shrink(m_viewpoint);
-            m_path.append(path);
+            m_path.extend(path);
             if (on_path_change) {
                 on_path_change();
             }
@@ -303,7 +303,7 @@ void TreeMapWidget::doubleclick_event(GUI::MouseEvent& event)
     if (node && !node_is_leaf(*node)) {
         Vector<int> path = path_to_position(event.position());
         m_path.shrink(m_viewpoint);
-        m_path.append(path);
+        m_path.extend(path);
         m_viewpoint = m_path.size();
         if (on_path_change) {
             on_path_change();

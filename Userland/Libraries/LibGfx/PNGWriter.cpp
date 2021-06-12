@@ -129,7 +129,7 @@ void PNGWriter::add_chunk(PNGChunk const& png_chunk)
     for (auto character : png_chunk.type()) {
         combined.append(character);
     }
-    combined.append(png_chunk.data());
+    combined.extend(png_chunk.data());
 
     auto crc = BigEndian(Crypto::Checksum::CRC32({ (const u8*)combined.data(), combined.size() }).digest());
     auto data_len = BigEndian(png_chunk.data().size());
