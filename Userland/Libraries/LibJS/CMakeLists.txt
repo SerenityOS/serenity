@@ -104,6 +104,9 @@ set(SOURCES
     Runtime/WeakMap.cpp
     Runtime/WeakMapConstructor.cpp
     Runtime/WeakMapPrototype.cpp
+    Runtime/WeakRef.cpp
+    Runtime/WeakRefConstructor.cpp
+    Runtime/WeakRefPrototype.cpp
     Runtime/WeakSet.cpp
     Runtime/WeakSetConstructor.cpp
     Runtime/WeakSetPrototype.cpp
