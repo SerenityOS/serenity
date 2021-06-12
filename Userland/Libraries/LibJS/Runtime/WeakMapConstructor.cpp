@@ -36,6 +36,7 @@ Value WeakMapConstructor::call()
     return {};
 }
 
+// 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
 Value WeakMapConstructor::construct(Function&)
 {
     auto& vm = this->vm();
@@ -57,10 +58,10 @@ Value WeakMapConstructor::construct(Function&)
             vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
-        auto key = iterator_value.as_object().get(0);
+        auto key = iterator_value.as_object().get(0).value_or(js_undefined());
         if (vm.exception())
             return IterationDecision::Break;
-        auto value = iterator_value.as_object().get(1);
+        auto value = iterator_value.as_object().get(1).value_or(js_undefined());
         if (vm.exception())
             return IterationDecision::Break;
         (void)vm.call(adder.as_function(), Value(weak_map), key, value);
