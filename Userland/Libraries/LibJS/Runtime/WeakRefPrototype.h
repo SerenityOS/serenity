@@ -17,6 +17,9 @@ public:
     WeakRefPrototype(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~WeakRefPrototype() override;
+
+private:
+    JS_DECLARE_NATIVE_FUNCTION(deref);
 };
 
 }
