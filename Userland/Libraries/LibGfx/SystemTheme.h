@@ -27,6 +27,8 @@ namespace Gfx {
     C(ButtonText)                  \
     C(DesktopBackground)           \
     C(FocusOutline)                \
+    C(Gutter)                      \
+    C(GutterBorder)                \
     C(HighlightWindowBorder1)      \
     C(HighlightWindowBorder2)      \
     C(HighlightWindowTitle)        \
