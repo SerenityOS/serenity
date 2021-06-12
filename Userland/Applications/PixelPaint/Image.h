@@ -38,7 +38,7 @@ class Image : public RefCounted<Image> {
 public:
     static RefPtr<Image> try_create_with_size(Gfx::IntSize const&);
     static RefPtr<Image> try_create_from_file(String const& file_path);
-    static RefPtr<Image> try_create_from_bitmap(RefPtr<Gfx::Bitmap> bitmap);
+    static RefPtr<Image> try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap>);
 
     size_t layer_count() const { return m_layers.size(); }
     Layer const& layer(size_t index) const { return m_layers.at(index); }
