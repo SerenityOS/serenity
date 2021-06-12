@@ -193,7 +193,9 @@ void GlobalObject::visit_edges(Visitor& visitor)
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
 {
+#ifdef __serenity__
     dbgln("Forced garbage collection requested!");
+#endif
     vm.heap().collect_garbage();
     return js_undefined();
 }
