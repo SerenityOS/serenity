@@ -194,7 +194,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
 
     VERIFY(type_die_offset.value().type == Dwarf::AttributeValue::Type::DieReference);
 
-    auto type_die = variable_die.get_die_at_offset(type_die_offset.value().data.as_u32);
+    auto type_die = variable_die.compilation_unit().get_die_at_offset(type_die_offset.value().data.as_u32);
     auto type_name = type_die.get_attribute(Dwarf::Attribute::Name);
     if (type_name.has_value()) {
         variable_info.type_name = type_name.value().data.as_string;

@@ -33,8 +33,7 @@ public:
     void for_each_child(Function<void(const DIE& child)> callback) const;
 
     bool is_null() const { return m_tag == EntryTag::None; }
-
-    DIE get_die_at_offset(u32 offset) const;
+    const CompilationUnit& compilation_unit() const { return m_compilation_unit; }
 
 private:
     const CompilationUnit& m_compilation_unit;

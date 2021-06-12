@@ -88,10 +88,4 @@ void DIE::for_each_child(Function<void(const DIE& child)> callback) const
     }
 }
 
-DIE DIE::get_die_at_offset(u32 offset) const
-{
-    VERIFY(offset >= m_compilation_unit.offset() && offset < m_compilation_unit.offset() + m_compilation_unit.size());
-    return DIE(m_compilation_unit, offset);
-}
-
 }

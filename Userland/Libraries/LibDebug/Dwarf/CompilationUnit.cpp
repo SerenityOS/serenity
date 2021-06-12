@@ -23,4 +23,10 @@ DIE CompilationUnit::root_die() const
     return DIE(*this, m_offset + m_header.header_size());
 }
 
+DIE CompilationUnit::get_die_at_offset(u32 die_offset) const
+{
+    VERIFY(die_offset >= offset() && die_offset < offset() + size());
+    return DIE(*this, die_offset);
+}
+
 }
