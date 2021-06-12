@@ -307,23 +307,25 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
         return properties;
     }
 
-    for (auto& entry : m_indexed_properties) {
-        auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(this));
-        if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
-            continue;
+    if (return_type != GetOwnPropertyReturnType::SymbolOnly) {
+        for (auto& entry : m_indexed_properties) {
+            auto value_and_attributes = entry.value_and_attributes(const_cast<Object*>(this));
+            if (only_enumerable_properties && !value_and_attributes.attributes.is_enumerable())
+                continue;
 
-        if (kind == PropertyKind::Key) {
-            properties.append(js_string(vm(), String::number(entry.index())));
-        } else if (kind == PropertyKind::Value) {
-            properties.append(value_and_attributes.value);
-        } else {
-            auto* entry_array = Array::create(global_object());
-            entry_array->define_property(0, js_string(vm(), String::number(entry.index())));
-            entry_array->define_property(1, value_and_attributes.value);
-            properties.append(entry_array);
+            if (kind == PropertyKind::Key) {
+                properties.append(js_string(vm(), String::number(entry.index())));
+            } else if (kind == PropertyKind::Value) {
+                properties.append(value_and_attributes.value);
+            } else {
+                auto* entry_array = Array::create(global_object());
+                entry_array->define_property(0, js_string(vm(), String::number(entry.index())));
+                entry_array->define_property(1, value_and_attributes.value);
+                properties.append(entry_array);
+            }
+            if (vm().exception())
+                return MarkedValueList { heap() };
         }
-        if (vm().exception())
-            return MarkedValueList { heap() };
     }
 
     auto add_property_to_results = [&](auto& property) {
