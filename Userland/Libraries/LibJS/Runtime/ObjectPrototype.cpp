@@ -41,6 +41,7 @@ ObjectPrototype::~ObjectPrototype()
 {
 }
 
+// 20.1.3.2 Object.prototype.hasOwnProperty ( V ), https://tc39.es/ecma262/#sec-object.prototype.hasownproperty
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
 {
     auto property_key = vm.argument(0).to_property_key(global_object);
@@ -52,6 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::has_own_property)
     return Value(this_object->has_own_property(property_key));
 }
 
+// 20.1.3.6 Object.prototype.toString ( ), https://tc39.es/ecma262/#sec-object.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
@@ -93,6 +95,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     return js_string(vm, String::formatted("[object {}]", tag));
 }
 
+// 20.1.3.5 Object.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-object.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -101,6 +104,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_locale_string)
     return this_object->invoke(vm.names.toString);
 }
 
+// 20.1.3.7 Object.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-object.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -109,6 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::value_of)
     return this_object->value_of();
 }
 
+// 20.1.3.4 Object.prototype.propertyIsEnumerable ( V ), https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
 {
     auto property_key = vm.argument(0).to_property_key(global_object);
@@ -123,6 +128,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::property_is_enumerable)
     return Value(property_descriptor.value().attributes.is_enumerable());
 }
 
+// 20.1.3.3 Object.prototype.isPrototypeOf ( V ), https://tc39.es/ecma262/#sec-object.prototype.isprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
 {
     auto object_argument = vm.argument(0);

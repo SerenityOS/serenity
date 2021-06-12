@@ -27,6 +27,7 @@ void ArrayBufferPrototype::initialize(GlobalObject& global_object)
     // FIXME: This should be an accessor property
     define_native_property(vm.names.byteLength, byte_length_getter, {}, Attribute::Configurable);
 
+    // 25.1.5.4 ArrayBuffer.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-arraybuffer.prototype-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "ArrayBuffer"), Attribute::Configurable);
 }
 
@@ -45,7 +46,7 @@ static ArrayBuffer* array_buffer_object_from(VM& vm, GlobalObject& global_object
     return static_cast<ArrayBuffer*>(&this_value.as_object());
 }
 
-// 25.1.5.3 ArrayBuffer.prototype.slice, https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
+// 25.1.5.3 ArrayBuffer.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
 {
     auto array_buffer_object = array_buffer_object_from(vm, global_object);

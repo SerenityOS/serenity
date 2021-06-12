@@ -25,6 +25,7 @@ void WeakMapPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.has, has, 1, attr);
     define_native_function(vm.names.set, set, 2, attr);
 
+    // 24.3.3.6 WeakMap.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-weakmap.prototype-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.WeakMap), Attribute::Configurable);
 }
 
@@ -44,6 +45,7 @@ WeakMap* WeakMapPrototype::typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<WeakMap*>(this_object);
 }
 
+// 24.3.3.2 WeakMap.prototype.delete ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.delete
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
 {
     auto* weak_map = typed_this(vm, global_object);
@@ -55,6 +57,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::delete_)
     return Value(weak_map->values().remove(&value.as_object()));
 }
 
+// 24.3.3.3 WeakMap.prototype.get ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.get
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
 {
     auto* weak_map = typed_this(vm, global_object);
@@ -70,6 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::get)
     return result->value;
 }
 
+// 24.3.3.4 WeakMap.prototype.has ( key ), https://tc39.es/ecma262/#sec-weakmap.prototype.has
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
 {
     auto* weak_map = typed_this(vm, global_object);
@@ -82,6 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::has)
     return Value(values.find(&value.as_object()) != values.end());
 }
 
+// 24.3.3.5 WeakMap.prototype.set ( key, value ), https://tc39.es/ecma262/#sec-weakmap.prototype.set
 JS_DEFINE_NATIVE_FUNCTION(WeakMapPrototype::set)
 {
     auto* weak_map = typed_this(vm, global_object);

@@ -84,12 +84,13 @@ void DatePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toString, to_string, 0, attr);
     define_native_function(vm.names.toJSON, to_json, 1, attr);
 
+    // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
     define_native_function(vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
 
     // Aliases.
     define_native_function(vm.names.valueOf, get_time, 0, attr);
 
-    // https://tc39.es/ecma262/#sec-date.prototype.togmtstring
+    // B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
     // The function object that is the initial value of Date.prototype.toGMTString
     // is the same function object that is the initial value of Date.prototype.toUTCString.
     define_property(vm.names.toGMTString, get(vm.names.toUTCString), attr);
@@ -99,6 +100,7 @@ DatePrototype::~DatePrototype()
 {
 }
 
+// 21.4.4.2 Date.prototype.getDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -111,6 +113,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_date)
     return Value(this_object->date());
 }
 
+// 21.4.4.20 Date.prototype.setDate ( date ), https://tc39.es/ecma262/#sec-date.prototype.setdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -138,6 +141,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_date)
     return Value(this_object->time());
 }
 
+// 21.4.4.3 Date.prototype.getDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getday
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -150,6 +154,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_day)
     return Value(this_object->day());
 }
 
+// 21.4.4.4 Date.prototype.getFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -162,6 +167,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_full_year)
     return Value(this_object->year());
 }
 
+// 21.4.4.21 Date.prototype.setFullYear ( year [ , month [ , date ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -210,6 +216,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_full_year)
     return Value(this_object->time());
 }
 
+// B.2.4.1 Date.prototype.getYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -222,6 +229,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_year)
     return Value(this_object->year() - 1900);
 }
 
+// B.2.4.2 Date.prototype.setYear ( year ), https://tc39.es/ecma262/#sec-date.prototype.setyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -252,6 +260,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_year)
     return Value(this_object->time());
 }
 
+// 21.4.4.5 Date.prototype.getHours ( ), https://tc39.es/ecma262/#sec-date.prototype.gethours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -264,6 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_hours)
     return Value(this_object->hours());
 }
 
+// 21.4.4.22 Date.prototype.setHours ( hour [ , min [ , sec [ , ms ] ] ] ), https://tc39.es/ecma262/#sec-date.prototype.sethours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -323,6 +333,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_hours)
     return Value(this_object->time());
 }
 
+// 21.4.4.23 Date.prototype.setMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -335,6 +346,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_milliseconds)
     return Value(this_object->milliseconds());
 }
 
+// 21.4.4.23 Date.prototype.setMilliseconds ( ms ), https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -370,6 +382,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_milliseconds)
     return Value(this_object->time());
 }
 
+// 21.4.4.7 Date.prototype.getMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -382,6 +395,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_minutes)
     return Value(this_object->minutes());
 }
 
+// 21.4.4.24 Date.prototype.setMinutes ( min [ , sec [ , ms ] ] ), https://tc39.es/ecma262/#sec-date.prototype.setminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -432,6 +446,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_minutes)
     return Value(this_object->time());
 }
 
+// 21.4.4.8 Date.prototype.getMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -444,6 +459,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_month)
     return Value(this_object->month());
 }
 
+// 21.4.4.25 Date.prototype.setMonth ( month [ , date ] ), https://tc39.es/ecma262/#sec-date.prototype.setmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -482,6 +498,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_month)
     return Value(this_object->time());
 }
 
+// 21.4.4.9 Date.prototype.getSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -494,6 +511,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_seconds)
     return Value(this_object->seconds());
 }
 
+// 21.4.4.26 Date.prototype.setSeconds ( sec [ , ms ] ), https://tc39.es/ecma262/#sec-date.prototype.setseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -535,6 +553,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_seconds)
     return Value(this_object->time());
 }
 
+// 21.4.4.10 Date.prototype.getTime ( ), https://tc39.es/ecma262/#sec-date.prototype.gettime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -547,6 +566,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_time)
     return Value(this_object->time());
 }
 
+// 21.4.4.27 Date.prototype.setTime ( time ), https://tc39.es/ecma262/#sec-date.prototype.settime
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -575,6 +595,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::set_time)
     return Value(this_object->time());
 }
 
+// 21.4.4.11 Date.prototype.getTimezoneOffset ( ), https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -588,6 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_timezone_offset)
     return Value(0);
 }
 
+// 21.4.4.12 Date.prototype.getUTCDate ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcdate
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -600,6 +622,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_date)
     return Value(this_object->utc_date());
 }
 
+// 21.4.4.13 Date.prototype.getUTCDay ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcday
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -612,6 +635,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_day)
     return Value(this_object->utc_day());
 }
 
+// 21.4.4.14 Date.prototype.getUTCFullYear ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -624,6 +648,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_full_year)
     return Value(this_object->utc_full_year());
 }
 
+// 21.4.4.15 Date.prototype.getUTCHours ( ), https://tc39.es/ecma262/#sec-date.prototype.getutchours
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -636,6 +661,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_hours)
     return Value(this_object->utc_hours());
 }
 
+// 21.4.4.16 Date.prototype.getUTCMilliseconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -648,6 +674,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_milliseconds)
     return Value(this_object->utc_milliseconds());
 }
 
+// 21.4.4.18 Date.prototype.getUTCMonth ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcmonth
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -660,6 +687,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_month)
     return Value(this_object->utc_month());
 }
 
+// 21.4.4.17 Date.prototype.getUTCMinutes ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcminutes
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -672,6 +700,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_minutes)
     return Value(this_object->utc_minutes());
 }
 
+// 21.4.4.19 Date.prototype.getUTCSeconds ( ), https://tc39.es/ecma262/#sec-date.prototype.getutcseconds
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -684,6 +713,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::get_utc_seconds)
     return Value(this_object->utc_seconds());
 }
 
+// 21.4.4.35 Date.prototype.toDateString ( ), https://tc39.es/ecma262/#sec-date.prototype.todatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -697,13 +727,14 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_date_string)
     return js_string(vm, move(string));
 }
 
+// B.2.4.3 Date.prototype.toGMTString ( ), https://tc39.es/ecma262/#sec-date.prototype.togmtstring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_gmt_string)
 {
-    // toGMTString is deprecated but kept for compatibility.
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toGMTString
+    // NOTE: The toUTCString method is preferred. The toGMTString method is provided principally for compatibility with old code.
     return to_utc_string(vm, global_object);
 }
 
+// 21.4.4.43 Date.prototype.toUTCString ( ), https://tc39.es/ecma262/#sec-date.prototype.toutcstring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -718,6 +749,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_utc_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.36 Date.prototype.toISOString ( ), https://tc39.es/ecma262/#sec-date.prototype.toisostring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -733,6 +765,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_iso_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.38 Date.prototype.toLocaleDateString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -747,6 +780,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_date_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.39 Date.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -761,6 +795,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.40 Date.prototype.toLocaleTimeString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -775,6 +810,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_locale_time_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.42 Date.prototype.toTimeString ( ), https://tc39.es/ecma262/#sec-date.prototype.totimestring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -788,6 +824,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_time_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.41 Date.prototype.toString ( ), https://tc39.es/ecma262/#sec-date.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
 {
     auto* this_object = typed_this(vm, global_object);
@@ -801,6 +838,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_string)
     return js_string(vm, move(string));
 }
 
+// 21.4.4.37 Date.prototype.toJSON ( key ), https://tc39.es/ecma262/#sec-date.prototype.tojson
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -814,6 +852,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
     return this_object->invoke(vm.names.toISOString);
 }
 
+// 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
 JS_DEFINE_NATIVE_FUNCTION(DatePrototype::symbol_to_primitive)
 {
     auto this_value = vm.this_value(global_object);

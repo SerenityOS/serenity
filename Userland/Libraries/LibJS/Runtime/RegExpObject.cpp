@@ -149,9 +149,9 @@ JS_DEFINE_NATIVE_SETTER(RegExpObject::set_last_index)
     regexp_object->regex().start_offset = index;
 }
 
+// 22.2.3.2.4 RegExpCreate ( P, F ), https://tc39.es/ecma262/#sec-regexpcreate
 RegExpObject* regexp_create(GlobalObject& global_object, Value pattern, Value flags)
 {
-    // https://tc39.es/ecma262/#sec-regexpcreate
     String p;
     if (pattern.is_undefined()) {
         p = String::empty();

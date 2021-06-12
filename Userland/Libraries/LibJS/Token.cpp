@@ -203,7 +203,7 @@ bool Token::is_identifier_name() const
 {
     // IdentifierNames are Identifiers + ReservedWords
     // The standard defines this reversed: Identifiers are IdentifierNames except reserved words
-    // https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+    // https://tc39.es/ecma262/#prod-Identifier
     return m_type == TokenType::Identifier
         || m_type == TokenType::Await
         || m_type == TokenType::BoolLiteral

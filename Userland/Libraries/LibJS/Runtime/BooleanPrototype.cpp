@@ -28,6 +28,7 @@ BooleanPrototype::~BooleanPrototype()
 {
 }
 
+// 20.3.3.2 Boolean.prototype.toString ( ), https://tc39.es/ecma262/#sec-boolean.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
@@ -42,6 +43,7 @@ JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::to_string)
     return js_string(vm, bool_value ? "true" : "false");
 }
 
+// 20.3.3.3 Boolean.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-boolean.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(BooleanPrototype::value_of)
 {
     auto this_value = vm.this_value(global_object);

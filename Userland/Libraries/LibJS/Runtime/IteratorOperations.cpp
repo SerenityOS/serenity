@@ -10,6 +10,7 @@
 
 namespace JS {
 
+// 7.4.1 GetIterator ( obj [ , hint [ , method ] ] ), https://tc39.es/ecma262/#sec-getiterator
 Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint, Value method)
 {
     auto& vm = global_object.vm();
@@ -37,6 +38,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
     return &iterator.as_object();
 }
 
+// 7.4.2 IteratorNext ( iteratorRecord [ , value ] ), https://tc39.es/ecma262/#sec-iteratornext
 Object* iterator_next(Object& iterator, Value value)
 {
     auto& vm = iterator.vm();
@@ -66,11 +68,13 @@ Object* iterator_next(Object& iterator, Value value)
     return &result.as_object();
 }
 
+// 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
 void iterator_close([[maybe_unused]] Object& iterator)
 {
     TODO();
 }
 
+// 7.4.10 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
 MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
 {
     auto& vm = global_object.vm();
@@ -86,6 +90,7 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
     return values;
 }
 
+// 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
 Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();

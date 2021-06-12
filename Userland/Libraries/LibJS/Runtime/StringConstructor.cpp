@@ -23,7 +23,10 @@ void StringConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 22.1.2.3 String.prototype, https://tc39.es/ecma262/#sec-string.prototype
     define_property(vm.names.prototype, global_object.string_prototype(), 0);
+
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -35,6 +38,7 @@ StringConstructor::~StringConstructor()
 {
 }
 
+// 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
 Value StringConstructor::call()
 {
     if (!vm().argument_count())
@@ -47,6 +51,7 @@ Value StringConstructor::call()
     return string;
 }
 
+// 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
 Value StringConstructor::construct(Function&)
 {
     PrimitiveString* primitive_string = nullptr;
@@ -59,6 +64,7 @@ Value StringConstructor::construct(Function&)
     return StringObject::create(global_object(), *primitive_string);
 }
 
+// 22.1.2.4 String.raw ( template, ...substitutions ), https://tc39.es/ecma262/#sec-string.raw
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
 {
     auto* template_object = vm.argument(0).to_object(global_object);
@@ -99,6 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::raw)
     return js_string(vm, builder.build());
 }
 
+// 22.1.2.1 String.fromCharCode ( ...codeUnits ), https://tc39.es/ecma262/#sec-string.fromcharcode
 JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
 {
     StringBuilder builder;

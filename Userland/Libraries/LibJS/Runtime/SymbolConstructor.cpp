@@ -19,7 +19,10 @@ void SymbolConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 20.4.2.9 Symbol.prototype, https://tc39.es/ecma262/#sec-symbol.prototype
     define_property(vm.names.prototype, global_object.symbol_prototype(), 0);
+
     define_property(vm.names.length, Value(0), Attribute::Configurable);
 
     define_native_function(vm.names.for_, for_, 1, Attribute::Writable | Attribute::Configurable);
@@ -35,6 +38,7 @@ SymbolConstructor::~SymbolConstructor()
 {
 }
 
+// 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 Value SymbolConstructor::call()
 {
     if (!vm().argument_count())
@@ -42,12 +46,14 @@ Value SymbolConstructor::call()
     return js_symbol(heap(), vm().argument(0).to_string(global_object()), false);
 }
 
+// 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 Value SymbolConstructor::construct(Function&)
 {
     vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
     return {};
 }
 
+// 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
     String description;
@@ -60,6 +66,7 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
     return global_object.vm().get_global_symbol(description);
 }
 
+// 20.4.2.6 Symbol.keyFor ( sym ), https://tc39.es/ecma262/#sec-symbol.keyfor
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::key_for)
 {
     auto argument = vm.argument(0);

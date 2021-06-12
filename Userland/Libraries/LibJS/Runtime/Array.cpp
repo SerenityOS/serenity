@@ -12,9 +12,10 @@
 
 namespace JS {
 
-// 10.4.2.2 ArrayCreate, https://tc39.es/ecma262/#sec-arraycreate
+// 10.4.2.2 ArrayCreate ( length [ , proto ] ), https://tc39.es/ecma262/#sec-arraycreate
 Array* Array::create(GlobalObject& global_object, size_t length)
 {
+    // FIXME: Support proto parameter
     if (length > NumericLimits<u32>::max()) {
         auto& vm = global_object.vm();
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "array");
@@ -25,12 +26,12 @@ Array* Array::create(GlobalObject& global_object, size_t length)
     return array;
 }
 
-// 7.3.17 CreateArrayFromList, https://tc39.es/ecma262/#sec-createarrayfromlist
-Array* Array::create_from(GlobalObject& global_object, const Vector<Value>& values)
+// 7.3.17 CreateArrayFromList ( elements ), https://tc39.es/ecma262/#sec-createarrayfromlist
+Array* Array::create_from(GlobalObject& global_object, const Vector<Value>& elements)
 {
     auto* array = Array::create(global_object);
-    for (size_t i = 0; i < values.size(); ++i)
-        array->define_property(i, values[i]);
+    for (size_t i = 0; i < elements.size(); ++i)
+        array->define_property(i, elements[i]);
     return array;
 }
 

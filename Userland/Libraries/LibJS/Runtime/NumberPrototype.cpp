@@ -42,7 +42,7 @@ NumberPrototype::~NumberPrototype()
 {
 }
 
-// thisNumberValue, https://tc39.es/ecma262/#thisnumbervalue
+// thisNumberValue ( value ), https://tc39.es/ecma262/#thisnumbervalue
 static Value this_number_value(GlobalObject& global_object, Value value)
 {
     if (value.is_number())
@@ -54,6 +54,7 @@ static Value this_number_value(GlobalObject& global_object, Value value)
     return {};
 }
 
+// 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
 {
     auto number_value = this_number_value(global_object, vm.this_value(global_object));
@@ -131,6 +132,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_string)
     return js_string(vm, String(characters.data(), characters.size()));
 }
 
+// 21.1.3.7 Number.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-number.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::value_of)
 {
     return this_number_value(global_object, vm.this_value(global_object));

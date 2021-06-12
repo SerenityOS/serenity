@@ -24,7 +24,9 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
 
+    // 27.2.4.4 Promise.prototype, https://tc39.es/ecma262/#sec-promise.prototype
     define_property(vm.names.prototype, global_object.promise_prototype(), 0);
+
     define_property(vm.names.length, Value(1));
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -39,6 +41,7 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
+// 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
 Value PromiseConstructor::call()
 {
     auto& vm = this->vm();
@@ -46,7 +49,7 @@ Value PromiseConstructor::call()
     return {};
 }
 
-// 27.2.3.1 Promise, https://tc39.es/ecma262/#sec-promise-executor
+// 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
 Value PromiseConstructor::construct(Function&)
 {
     auto& vm = this->vm();
@@ -67,31 +70,31 @@ Value PromiseConstructor::construct(Function&)
     return promise;
 }
 
-// 27.2.4.1 Promise.all, https://tc39.es/ecma262/#sec-promise.all
+// 27.2.4.1 Promise.all ( iterable ), https://tc39.es/ecma262/#sec-promise.all
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all)
 {
     TODO();
 }
 
-// 27.2.4.2 Promise.allSettled, https://tc39.es/ecma262/#sec-promise.allsettled
+// 27.2.4.2 Promise.allSettled ( iterable ), https://tc39.es/ecma262/#sec-promise.allsettled
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::all_settled)
 {
     TODO();
 }
 
-// 27.2.4.3 Promise.any, https://tc39.es/ecma262/#sec-promise.any
+// 27.2.4.3 Promise.any ( iterable ), https://tc39.es/ecma262/#sec-promise.any
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::any)
 {
     TODO();
 }
 
-// 27.2.4.5 Promise.race, https://tc39.es/ecma262/#sec-promise.race
+// 27.2.4.5 Promise.race ( iterable ), https://tc39.es/ecma262/#sec-promise.race
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::race)
 {
     TODO();
 }
 
-// 27.2.4.6 Promise.reject, https://tc39.es/ecma262/#sec-promise.reject
+// 27.2.4.6 Promise.reject ( r ), https://tc39.es/ecma262/#sec-promise.reject
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
 {
     auto* constructor = vm.this_value(global_object).to_object(global_object);
@@ -105,7 +108,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::reject)
     return promise_capability.promise;
 }
 
-// 27.2.4.7 Promise.resolve, https://tc39.es/ecma262/#sec-promise.resolve
+// 27.2.4.7 Promise.resolve ( x ), https://tc39.es/ecma262/#sec-promise.resolve
 JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
 {
     auto* constructor = vm.this_value(global_object).to_object(global_object);
@@ -115,6 +118,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromiseConstructor::resolve)
     return promise_resolve(global_object, *constructor, value);
 }
 
+// 27.2.4.8 get Promise [ @@species ], https://tc39.es/ecma262/#sec-get-promise-@@species
 JS_DEFINE_NATIVE_GETTER(PromiseConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);

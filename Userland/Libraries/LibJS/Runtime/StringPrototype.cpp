@@ -99,7 +99,7 @@ StringPrototype::~StringPrototype()
 {
 }
 
-// thisStringValue, https://tc39.es/ecma262/#thisstringvalue
+// thisStringValue ( value ), https://tc39.es/ecma262/#thisstringvalue
 static Value this_string_value(GlobalObject& global_object, Value value)
 {
     if (value.is_string())
@@ -111,6 +111,7 @@ static Value this_string_value(GlobalObject& global_object, Value value)
     return {};
 }
 
+// 22.1.3.1 String.prototype.charAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
 {
     auto string = ak_string_from(vm, global_object);
@@ -128,6 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     return js_string(vm, string.substring(index, 1));
 }
 
+// 22.1.3.2 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
 {
     auto string = ak_string_from(vm, global_object);
@@ -145,6 +147,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
     return Value((i32)string[index]);
 }
 
+// 22.1.3.16 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
 {
     auto string = ak_string_from(vm, global_object);
@@ -169,6 +172,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::repeat)
     return js_string(vm, builder.to_string());
 }
 
+// 22.1.3.22 String.prototype.startsWith ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.startswith
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
 {
     auto string = ak_string_from(vm, global_object);
@@ -205,6 +209,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::starts_with)
     return Value(string.substring(start, search_string_length) == search_string);
 }
 
+// 22.1.3.6 String.prototype.endsWith ( searchString [ , endPosition ] ), https://tc39.es/ecma262/#sec-string.prototype.endswith
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
 {
     auto string = ak_string_from(vm, global_object);
@@ -247,6 +252,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::ends_with)
     return Value(string.substring(start, search_string_length) == search_string);
 }
 
+// 22.1.3.8 String.prototype.indexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.indexof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
 {
     auto string = ak_string_from(vm, global_object);
@@ -258,6 +264,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     return Value((i32)string.find(needle).value_or(-1));
 }
 
+// 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
 {
     auto string = ak_string_from(vm, global_object);
@@ -266,6 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_lowercase)
     return js_string(vm, string.to_lowercase());
 }
 
+// 22.1.3.28 String.prototype.toUpperCase ( ), https://tc39.es/ecma262/#sec-string.prototype.touppercase
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
 {
     auto string = ak_string_from(vm, global_object);
@@ -274,11 +282,13 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_uppercase)
     return js_string(vm, string.to_uppercase());
 }
 
+// 22.1.3.27 String.prototype.toString ( ), https://tc39.es/ecma262/#sec-string.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::to_string)
 {
     return this_string_value(global_object, vm.this_value(global_object));
 }
 
+// 22.1.3.32 String.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-string.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::value_of)
 {
     return this_string_value(global_object, vm.this_value(global_object));
@@ -289,6 +299,7 @@ enum class PadPlacement {
     End,
 };
 
+// 22.1.3.15.1 StringPad ( O, maxLength, fillString, placement ), https://tc39.es/ecma262/#sec-stringpad
 static Value pad_string(GlobalObject& global_object, const String& string, PadPlacement placement)
 {
     auto& vm = global_object.vm();
@@ -320,6 +331,7 @@ static Value pad_string(GlobalObject& global_object, const String& string, PadPl
     return js_string(vm, formatted);
 }
 
+// 22.1.3.15 String.prototype.padStart ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padstart
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
 {
     auto string = ak_string_from(vm, global_object);
@@ -328,6 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_start)
     return pad_string(global_object, string, PadPlacement::Start);
 }
 
+// 22.1.3.14 String.prototype.padEnd ( maxLength [ , fillString ] ), https://tc39.es/ecma262/#sec-string.prototype.padend
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
 {
     auto string = ak_string_from(vm, global_object);
@@ -336,6 +349,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
     return pad_string(global_object, string, PadPlacement::End);
 }
 
+// 22.1.3.29 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
     auto string = ak_string_from(vm, global_object);
@@ -344,6 +358,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
     return js_string(vm, string.trim_whitespace(TrimMode::Both));
 }
 
+// 22.1.3.31 String.prototype.trimStart ( ), https://tc39.es/ecma262/#sec-string.prototype.trimstart
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
 {
     auto string = ak_string_from(vm, global_object);
@@ -352,6 +367,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
     return js_string(vm, string.trim_whitespace(TrimMode::Left));
 }
 
+// 22.1.3.30 String.prototype.trimEnd ( ), https://tc39.es/ecma262/#sec-string.prototype.trimend
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
 {
     auto string = ak_string_from(vm, global_object);
@@ -360,6 +376,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
     return js_string(vm, string.trim_whitespace(TrimMode::Right));
 }
 
+// 22.1.3.23 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
 {
     auto string = ak_string_from(vm, global_object);
@@ -376,6 +393,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::concat)
     return js_string(vm, builder.to_string());
 }
 
+// 22.1.3.23 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
 {
     auto string = ak_string_from(vm, global_object);
@@ -414,6 +432,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substring)
     return js_string(vm, string_part);
 }
 
+// B.2.3.1 String.prototype.substr ( start, length ), https://tc39.es/ecma262/#sec-string.prototype.substr
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
 {
     auto string = ak_string_from(vm, global_object);
@@ -451,6 +470,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::substr)
     return js_string(vm, string_part);
 }
 
+// 22.1.3.7 String.prototype.includes ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.includes
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
 {
     auto string = ak_string_from(vm, global_object);
@@ -475,6 +495,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::includes)
     return Value(substring_search.contains(search_string));
 }
 
+// 22.1.3.20 String.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 {
     auto string = ak_string_from(vm, global_object);
@@ -519,6 +540,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
     return js_string(vm, string_part);
 }
 
+// 22.1.3.21 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
     // FIXME Implement the @@split part
@@ -587,6 +609,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     return result;
 }
 
+// 22.1.3.9 String.prototype.lastIndexOf ( searchString [ , position ] ), https://tc39.es/ecma262/#sec-string.prototype.lastindexof
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
 {
     auto string = ak_string_from(vm, global_object);
@@ -619,6 +642,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::last_index_of)
     return Value(-1);
 }
 
+// 3.1 String.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-string.prototype.at
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
 {
     auto string = ak_string_from(vm, global_object);
@@ -642,6 +666,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::at)
     return js_string(vm, String::formatted("{}", string[index.value()]));
 }
 
+// 22.1.3.33 String.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-string.prototype-@@iterator
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
 {
     auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
@@ -653,9 +678,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::symbol_iterator)
     return StringIterator::create(global_object, string);
 }
 
+// 22.1.3.11 String.prototype.match ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.match
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
 {
-    // https://tc39.es/ecma262/#sec-string.prototype.match
     auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
@@ -673,9 +698,9 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     return rx->invoke(vm.well_known_symbol_match(), js_string(vm, s));
 }
 
+// 22.1.3.17 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
 {
-    // https://tc39.es/ecma262/#sec-string.prototype.replace
     auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
@@ -723,7 +748,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     return js_string(vm, builder.build());
 }
 
-// B.2.3.2.1
+// B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
 static Value create_html(GlobalObject& global_object, Value string, const String& tag, const String& attribute, Value value)
 {
     auto& vm = global_object.vm();
@@ -755,66 +780,79 @@ static Value create_html(GlobalObject& global_object, Value string, const String
     return js_string(vm, builder.build());
 }
 
+// B.2.3.2 String.prototype.anchor ( name ), https://tc39.es/ecma262/#sec-string.prototype.anchor
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::anchor)
 {
     return create_html(global_object, vm.this_value(global_object), "a", "name", vm.argument(0));
 }
 
+// B.2.3.3 String.prototype.big ( ), https://tc39.es/ecma262/#sec-string.prototype.big
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::big)
 {
     return create_html(global_object, vm.this_value(global_object), "big", String::empty(), Value());
 }
 
+// B.2.3.4 String.prototype.blink ( ), https://tc39.es/ecma262/#sec-string.prototype.blink
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::blink)
 {
     return create_html(global_object, vm.this_value(global_object), "blink", String::empty(), Value());
 }
 
+// B.2.3.5 String.prototype.bold ( ), https://tc39.es/ecma262/#sec-string.prototype.bold
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::bold)
 {
     return create_html(global_object, vm.this_value(global_object), "b", String::empty(), Value());
 }
 
+// B.2.3.6 String.prototype.fixed ( ), https://tc39.es/ecma262/#sec-string.prototype.fixed
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fixed)
 {
     return create_html(global_object, vm.this_value(global_object), "tt", String::empty(), Value());
 }
 
+// B.2.3.7 String.prototype.fontcolor ( color ), https://tc39.es/ecma262/#sec-string.prototype.fontcolor
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontcolor)
 {
     return create_html(global_object, vm.this_value(global_object), "font", "color", vm.argument(0));
 }
 
+// B.2.3.8 String.prototype.fontsize ( size ), https://tc39.es/ecma262/#sec-string.prototype.fontsize
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::fontsize)
 {
     return create_html(global_object, vm.this_value(global_object), "font", "size", vm.argument(0));
 }
 
+// B.2.3.9 String.prototype.italics ( ), https://tc39.es/ecma262/#sec-string.prototype.italics
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::italics)
 {
     return create_html(global_object, vm.this_value(global_object), "i", String::empty(), Value());
 }
 
+// B.2.3.10 String.prototype.link ( url ), https://tc39.es/ecma262/#sec-string.prototype.link
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::link)
 {
     return create_html(global_object, vm.this_value(global_object), "a", "href", vm.argument(0));
 }
 
+// B.2.3.11 String.prototype.small ( ), https://tc39.es/ecma262/#sec-string.prototype.small
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::small)
 {
     return create_html(global_object, vm.this_value(global_object), "small", String::empty(), Value());
 }
 
+// B.2.3.12 String.prototype.strike ( ), https://tc39.es/ecma262/#sec-string.prototype.strike
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::strike)
 {
     return create_html(global_object, vm.this_value(global_object), "strike", String::empty(), Value());
 }
 
+// B.2.3.13 String.prototype.sub ( ), https://tc39.es/ecma262/#sec-string.prototype.sub
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sub)
 {
     return create_html(global_object, vm.this_value(global_object), "sub", String::empty(), Value());
 }
 
+// B.2.3.14 String.prototype.sup ( ), https://tc39.es/ecma262/#sec-string.prototype.sup
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::sup)
 {
     return create_html(global_object, vm.this_value(global_object), "sup", String::empty(), Value());

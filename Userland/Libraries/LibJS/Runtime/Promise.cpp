@@ -17,7 +17,7 @@
 
 namespace JS {
 
-// 27.2.4.7.1 PromiseResolve, https://tc39.es/ecma262/#sec-promise-resolve
+// 27.2.4.7.1 PromiseResolve ( C, x ), https://tc39.es/ecma262/#sec-promise-resolve
 Object* promise_resolve(GlobalObject& global_object, Object& constructor, Value value)
 {
     auto& vm = global_object.vm();
@@ -47,7 +47,7 @@ Promise::Promise(Object& prototype)
 {
 }
 
-// 27.2.1.3 CreateResolvingFunctions, https://tc39.es/ecma262/#sec-createresolvingfunctions
+// 27.2.1.3 CreateResolvingFunctions ( promise ), https://tc39.es/ecma262/#sec-createresolvingfunctions
 Promise::ResolvingFunctions Promise::create_resolving_functions()
 {
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / create_resolving_functions()]", this);
@@ -107,7 +107,7 @@ Promise::ResolvingFunctions Promise::create_resolving_functions()
     return { *resolve_function, *reject_function };
 }
 
-// 27.2.1.4 FulfillPromise, https://tc39.es/ecma262/#sec-fulfillpromise
+// 27.2.1.4 FulfillPromise ( promise, value ), https://tc39.es/ecma262/#sec-fulfillpromise
 Value Promise::fulfill(Value value)
 {
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / fulfill()]: Fulfilling promise with value {}", this, value);
@@ -121,7 +121,7 @@ Value Promise::fulfill(Value value)
     return js_undefined();
 }
 
-// 27.2.1.7 RejectPromise, https://tc39.es/ecma262/#sec-rejectpromise
+// 27.2.1.7 RejectPromise ( promise, reason ), https://tc39.es/ecma262/#sec-rejectpromise
 Value Promise::reject(Value reason)
 {
     dbgln_if(PROMISE_DEBUG, "[Promise @ {} / reject()]: Rejecting promise with reason {}", this, reason);
@@ -138,7 +138,7 @@ Value Promise::reject(Value reason)
     return js_undefined();
 }
 
-// 27.2.1.8 TriggerPromiseReactions, https://tc39.es/ecma262/#sec-triggerpromisereactions
+// 27.2.1.8 TriggerPromiseReactions ( reactions, argument ), https://tc39.es/ecma262/#sec-triggerpromisereactions
 void Promise::trigger_reactions() const
 {
     VERIFY(is_settled());
@@ -158,7 +158,7 @@ void Promise::trigger_reactions() const
     }
 }
 
-// 27.2.5.4.1 PerformPromiseThen, https://tc39.es/ecma262/#sec-performpromisethen
+// 27.2.5.4.1 PerformPromiseThen ( promise, onFulfilled, onRejected [ , resultCapability ] ), https://tc39.es/ecma262/#sec-performpromisethen
 Value Promise::perform_then(Value on_fulfilled, Value on_rejected, Optional<PromiseCapability> result_capability)
 {
     auto& vm = this->vm();

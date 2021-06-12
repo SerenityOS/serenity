@@ -29,6 +29,8 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.then, then, 2, attr);
     define_native_function(vm.names.catch_, catch_, 1, attr);
     define_native_function(vm.names.finally, finally, 1, attr);
+
+    // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Promise"), Attribute::Configurable);
 }
 
@@ -44,7 +46,7 @@ static Promise* promise_from(VM& vm, GlobalObject& global_object)
     return static_cast<Promise*>(this_object);
 }
 
-// 27.2.5.4 Promise.prototype.then, https://tc39.es/ecma262/#sec-promise.prototype.then
+// 27.2.5.4 Promise.prototype.then ( onFulfilled, onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.then
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
 {
     auto* promise = promise_from(vm, global_object);
@@ -61,7 +63,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::then)
     return promise->perform_then(on_fulfilled, on_rejected, result_capability);
 }
 
-// 27.2.5.1 Promise.prototype.catch, https://tc39.es/ecma262/#sec-promise.prototype.catch
+// 27.2.5.1 Promise.prototype.catch ( onRejected ), https://tc39.es/ecma262/#sec-promise.prototype.catch
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -71,7 +73,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
     return this_object->invoke(vm.names.then, js_undefined(), on_rejected);
 }
 
-// 27.2.5.3 Promise.prototype.finally, https://tc39.es/ecma262/#sec-promise.prototype.finally
+// 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
 JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 {
     auto* promise = vm.this_value(global_object).to_object(global_object);

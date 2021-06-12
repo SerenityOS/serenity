@@ -30,6 +30,8 @@ void SymbolPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toString, to_string, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function(vm.names.valueOf, value_of, 0, Attribute::Writable | Attribute::Configurable);
     define_native_function(vm.well_known_symbol_to_primitive(), symbol_to_primitive, 1, Attribute::Configurable);
+
+    // 20.4.3.6 Symbol.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-symbol.prototype-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Symbol"), Attribute::Configurable);
 }
 
@@ -37,7 +39,7 @@ SymbolPrototype::~SymbolPrototype()
 {
 }
 
-// thisSymbolValue, https://tc39.es/ecma262/#thissymbolvalue
+// thisSymbolValue ( value ), https://tc39.es/ecma262/#thissymbolvalue
 static Value this_symbol_value(GlobalObject& global_object, Value value)
 {
     if (value.is_symbol())
@@ -49,6 +51,7 @@ static Value this_symbol_value(GlobalObject& global_object, Value value)
     return {};
 }
 
+// 20.4.3.2 get Symbol.prototype.description, https://tc39.es/ecma262/#sec-symbol.prototype.description
 JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
 {
     auto symbol_value = this_symbol_value(global_object, vm.this_value(global_object));
@@ -57,6 +60,7 @@ JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
     return js_string(vm, symbol_value.as_symbol().description());
 }
 
+// 20.4.3.3 Symbol.prototype.toString ( ), https://tc39.es/ecma262/#sec-symbol.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
 {
     auto symbol_value = this_symbol_value(global_object, vm.this_value(global_object));
@@ -65,11 +69,13 @@ JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::to_string)
     return js_string(vm, symbol_value.as_symbol().to_string());
 }
 
+// 20.4.3.4 Symbol.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-symbol.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::value_of)
 {
     return this_symbol_value(global_object, vm.this_value(global_object));
 }
 
+// 20.4.3.5 Symbol.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive
 JS_DEFINE_NATIVE_FUNCTION(SymbolPrototype::symbol_to_primitive)
 {
     // The hint argument is ignored.
