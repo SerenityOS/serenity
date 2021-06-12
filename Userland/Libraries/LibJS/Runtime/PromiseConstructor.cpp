@@ -24,7 +24,7 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
 
-    define_property(vm.names.prototype, global_object.promise_prototype());
+    define_property(vm.names.prototype, global_object.promise_prototype(), 0);
     define_property(vm.names.length, Value(1));
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
