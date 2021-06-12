@@ -188,4 +188,19 @@ describe("ability to work with generic non-array objects", () => {
         );
         expect(visited).toEqual(["baz", "bar", "foo"]);
     });
+
+    test("reverse", () => {
+        expect(Array.prototype.reverse.call(o)).toEqual({
+            length: 5,
+            4: "foo",
+            3: "bar",
+            1: "baz",
+        });
+        expect(Array.prototype.reverse.call({})).toEqual({});
+        expect(Array.prototype.reverse.call({ length: 10 })).toEqual({ length: 10 });
+        expect(Array.prototype.reverse.call({ length: 1, 0: "foo" })).toEqual({
+            length: 1,
+            0: "foo",
+        });
+    });
 });

@@ -680,26 +680,62 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reduce_right)
 // 23.1.3.23 Array.prototype.reverse ( ), https://tc39.es/ecma262/#sec-array.prototype.reverse
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
 {
-    auto* array = Array::typed_this(vm, global_object);
-    if (!array)
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
         return {};
 
-    if (array->indexed_properties().is_empty())
-        return array;
+    auto middle = length / 2;
+    for (size_t lower = 0; lower < middle; ++lower) {
+        auto upper = length - lower - 1;
 
-    MarkedValueList array_reverse(vm.heap());
-    auto size = array->indexed_properties().array_like_size();
-    array_reverse.ensure_capacity(size);
-
-    for (ssize_t i = size - 1; i >= 0; --i) {
-        array_reverse.append(array->get(i));
+        auto lower_exists = this_object->has_property(lower);
         if (vm.exception())
             return {};
+        Value lower_value;
+        if (lower_exists) {
+            lower_value = this_object->get(lower).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+        }
+
+        auto upper_exists = this_object->has_property(upper);
+        if (vm.exception())
+            return {};
+        Value upper_value;
+        if (upper_exists) {
+            upper_value = this_object->get(upper).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+        }
+
+        if (lower_exists && upper_exists) {
+            this_object->put(lower, upper_value);
+            if (vm.exception())
+                return {};
+            this_object->put(upper, lower_value);
+            if (vm.exception())
+                return {};
+        } else if (!lower_exists && upper_exists) {
+            this_object->put(lower, upper_value);
+            if (vm.exception())
+                return {};
+            this_object->delete_property(upper);
+            if (vm.exception())
+                return {};
+        } else if (lower_exists && !upper_exists) {
+            this_object->delete_property(lower);
+            if (vm.exception())
+                return {};
+            this_object->put(upper, lower_value);
+            if (vm.exception())
+                return {};
+        }
     }
 
-    array->set_indexed_property_elements(move(array_reverse));
-
-    return array;
+    return this_object;
 }
 
 static void array_merge_sort(VM& vm, GlobalObject& global_object, Function* compare_func, MarkedValueList& arr_to_sort)
