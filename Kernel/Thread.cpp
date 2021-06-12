@@ -16,6 +16,7 @@
 #include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
+#include <Kernel/ProcessExposed.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
@@ -59,6 +60,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     , m_kernel_stack_region(move(kernel_stack_region))
     , m_name(m_process->name())
     , m_block_timer(block_timer)
+    , m_global_procfs_inode_index(ProcFSComponentsRegistrar::the().allocate_inode_index())
 {
     bool is_first_thread = m_process->add_thread(*this);
     if (is_first_thread) {

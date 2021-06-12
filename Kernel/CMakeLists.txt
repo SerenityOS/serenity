@@ -148,6 +148,7 @@ set(KERNEL_SOURCES
     Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp
+    ProcessExposed.cpp
     ProcessGroup.cpp
     RTC.cpp
     Random.cpp

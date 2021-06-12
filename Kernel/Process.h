@@ -17,6 +17,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <Kernel/API/Syscall.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/Forward.h>
 #include <Kernel/FutexQueue.h>
@@ -129,6 +130,7 @@ class Process
 
     friend class Thread;
     friend class CoreDump;
+    friend class ProcFSProcessFileDescriptions;
 
     // Helper class to temporarily unprotect a process's protected data so you can write to it.
     class ProtectedDataMutationScope {
@@ -169,6 +171,7 @@ public:
 
     static RefPtr<Process> create_kernel_process(RefPtr<Thread>& first_thread, String&& name, void (*entry)(void*), void* entry_data = nullptr, u32 affinity = THREAD_AFFINITY_DEFAULT);
     static RefPtr<Process> create_user_process(RefPtr<Thread>& first_thread, const String& path, uid_t, gid_t, ProcessID ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static void register_new(Process&);
     ~Process();
 
     static Vector<ProcessID> all_pids();
@@ -585,23 +588,41 @@ private:
 
     static constexpr int m_max_open_file_descriptors { FD_SETSIZE };
 
+public:
     class FileDescriptionAndFlags {
+        friend class FileDescriptionRegistrar;
+
     public:
         operator bool() const { return !!m_description; }
 
+        bool is_valid() const { return !m_description.is_null(); }
+
         FileDescription* description() { return m_description; }
         const FileDescription* description() const { return m_description; }
-
+        InodeIndex global_procfs_inode_index() const { return m_global_procfs_inode_index; }
         u32 flags() const { return m_flags; }
         void set_flags(u32 flags) { m_flags = flags; }
 
         void clear();
         void set(NonnullRefPtr<FileDescription>&&, u32 flags = 0);
+        void refresh_inode_index();
 
     private:
         RefPtr<FileDescription> m_description;
         u32 m_flags { 0 };
+
+        // Note: This is needed so when we generate inodes for ProcFS, we know that
+        // we assigned a global Inode index to it so we can use it later
+        InodeIndex m_global_procfs_inode_index;
     };
+
+    // FIXME: We create a copy when trying to iterate the Vector because
+    // we don't want to put lots of locking when accessing this Vector.
+    // Maybe try to encapsulate the Vector inside a protective class with locking
+    // mechanism.
+    Vector<FileDescriptionAndFlags> fds() const { return m_fds; }
+
+private:
     Vector<FileDescriptionAndFlags> m_fds;
 
     mutable RecursiveSpinLock m_thread_list_lock;
@@ -638,6 +659,7 @@ private:
 
     FutexQueues m_futex_queues;
     SpinLock<u8> m_futex_lock;
+    mutable SpinLock<u8> m_fds_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall
