@@ -25,7 +25,7 @@ class Layer
 
 public:
     static RefPtr<Layer> try_create_with_size(Image&, Gfx::IntSize const&, String name);
-    static RefPtr<Layer> try_create_with_bitmap(Image&, Gfx::Bitmap const&, String name);
+    static RefPtr<Layer> try_create_with_bitmap(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
     static RefPtr<Layer> try_create_snapshot(Image&, Layer const&);
 
     ~Layer() { }
@@ -57,14 +57,13 @@ public:
     void set_opacity_percent(int);
 
 private:
-    Layer(Image&, Gfx::IntSize const&, String name);
-    Layer(Image&, Gfx::Bitmap const&, String name);
+    Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
 
     Image& m_image;
 
     String m_name;
     Gfx::IntPoint m_location;
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    NonnullRefPtr<Gfx::Bitmap> m_bitmap;
 
     bool m_selected { false };
     bool m_visible { true };
