@@ -14,14 +14,14 @@ namespace JS::Bytecode {
 class Label {
 public:
     explicit Label(BasicBlock const& block)
-        : m_block(block)
+        : m_block(&block)
     {
     }
 
-    auto& block() const { return m_block; }
+    auto& block() const { return *m_block; }
 
 private:
-    BasicBlock const& m_block;
+    BasicBlock const* m_block { nullptr };
 };
 
 }
