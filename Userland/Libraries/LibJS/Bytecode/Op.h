@@ -451,8 +451,11 @@ public:
 
 class EnterUnwindContext final : public Instruction {
 public:
-    EnterUnwindContext(Optional<Label> handler_target, Optional<Label> finalizer_target)
+    constexpr static bool IsTerminator = true;
+
+    EnterUnwindContext(Label entry_point, Optional<Label> handler_target, Optional<Label> finalizer_target)
         : Instruction(Type::EnterUnwindContext)
+        , m_entry_point(move(entry_point))
         , m_handler_target(move(handler_target))
         , m_finalizer_target(move(finalizer_target))
     {
@@ -462,6 +465,7 @@ public:
     String to_string(Bytecode::Executable const&) const;
 
 private:
+    Label m_entry_point;
     Optional<Label> m_handler_target;
     Optional<Label> m_finalizer_target;
 };

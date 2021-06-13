@@ -258,6 +258,7 @@ void Throw::execute(Bytecode::Interpreter& interpreter) const
 void EnterUnwindContext::execute(Bytecode::Interpreter& interpreter) const
 {
     interpreter.enter_unwind_context(m_handler_target, m_finalizer_target);
+    interpreter.jump(m_entry_point);
 }
 
 void LeaveUnwindContext::execute(Bytecode::Interpreter& interpreter) const
@@ -453,7 +454,7 @@ String EnterUnwindContext::to_string(Bytecode::Executable const&) const
 {
     auto handler_string = m_handler_target.has_value() ? String::formatted("{}", *m_handler_target) : "<empty>";
     auto finalizer_string = m_finalizer_target.has_value() ? String::formatted("{}", *m_finalizer_target) : "<empty>";
-    return String::formatted("EnterUnwindContext handler:{} finalizer:{}", handler_string, finalizer_string);
+    return String::formatted("EnterUnwindContext handler:{} finalizer:{} entry:{}", handler_string, finalizer_string, m_entry_point);
 }
 
 String LeaveUnwindContext::to_string(Bytecode::Executable const&) const
