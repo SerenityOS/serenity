@@ -123,6 +123,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayBufferPrototype::slice)
     return new_array_buffer_object;
 }
 
+// 25.1.5.1 get ArrayBuffer.prototype.byteLength, https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength
 JS_DEFINE_NATIVE_GETTER(ArrayBufferPrototype::byte_length_getter)
 {
     auto array_buffer_object = array_buffer_object_from(vm, global_object);
