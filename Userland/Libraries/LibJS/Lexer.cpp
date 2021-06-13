@@ -466,12 +466,24 @@ Token Lexer::next()
             } else if (m_current_char == 'o' || m_current_char == 'O') {
                 // octal
                 is_invalid_numeric_literal = !consume_octal_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'b' || m_current_char == 'B') {
                 // binary
                 is_invalid_numeric_literal = !consume_binary_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'x' || m_current_char == 'X') {
                 // hexadecimal
                 is_invalid_numeric_literal = !consume_hexadecimal_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'n') {
                 consume();
                 token_type = TokenType::BigIntLiteral;
