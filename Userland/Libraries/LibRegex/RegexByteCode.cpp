@@ -528,15 +528,13 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, Match
         auto str_view1 = StringView(str, length);
         auto str_view2 = StringView(&input.view.u8view()[state.string_position], length);
 
-        String str1, str2;
-        if (input.regex_options & AllFlags::Insensitive) {
-            str1 = str_view1.to_string().to_lowercase();
-            str2 = str_view2.to_string().to_lowercase();
-            str_view1 = str1.view();
-            str_view2 = str2.view();
-        }
+        bool string_equals;
+        if (input.regex_options & AllFlags::Insensitive)
+            string_equals = str_view1.equals_ignoring_case(str_view2);
+        else
+            string_equals = str_view1 == str_view2;
 
-        if (str_view1 == str_view2) {
+        if (string_equals) {
             state.string_position += length;
             if (length == 0)
                 had_zero_length_match = true;
