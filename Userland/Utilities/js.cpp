@@ -17,6 +17,7 @@
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Console.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
@@ -81,6 +82,7 @@ private:
 static bool s_dump_ast = false;
 static bool s_dump_bytecode = false;
 static bool s_run_bytecode = false;
+static bool s_opt_bytecode = false;
 static bool s_print_last_result = false;
 static RefPtr<Line::Editor> s_editor;
 static String s_history_path = String::formatted("{}/.js-history", Core::StandardPaths::home_directory());
@@ -558,6 +560,12 @@ static bool parse_and_run(JS::Interpreter& interpreter, const StringView& source
     } else {
         if (s_dump_bytecode || s_run_bytecode) {
             auto unit = JS::Bytecode::Generator::generate(*program);
+            if (s_opt_bytecode) {
+                auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
+                passes.perform(unit);
+                dbgln("Optimisation passes took {}us", passes.elapsed());
+            }
+
             if (s_dump_bytecode) {
                 for (auto& block : unit.basic_blocks)
                     block.dump(unit);
@@ -825,6 +833,7 @@ int main(int argc, char** argv)
     args_parser.add_option(s_dump_ast, "Dump the AST", "dump-ast", 'A');
     args_parser.add_option(s_dump_bytecode, "Dump the bytecode", "dump-bytecode", 'd');
     args_parser.add_option(s_run_bytecode, "Run the bytecode", "run-bytecode", 'b');
+    args_parser.add_option(s_opt_bytecode, "Optimize the bytecode", "optimize-bytecode", 'p');
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');

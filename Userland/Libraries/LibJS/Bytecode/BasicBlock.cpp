@@ -66,6 +66,7 @@ void BasicBlock::grow(size_t additional_size)
 
 void InstructionStreamIterator::operator++()
 {
+    VERIFY(!at_end());
     m_offset += dereference().length();
 }
 

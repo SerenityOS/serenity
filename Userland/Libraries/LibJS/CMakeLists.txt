@@ -6,6 +6,11 @@ set(SOURCES
     Bytecode/Instruction.cpp
     Bytecode/Interpreter.cpp
     Bytecode/Op.cpp
+    Bytecode/Pass/DumpCFG.cpp
+    Bytecode/Pass/GenerateCFG.cpp
+    Bytecode/Pass/MergeBlocks.cpp
+    Bytecode/Pass/PlaceBlocks.cpp
+    Bytecode/Pass/UnifySameBlocks.cpp
     Bytecode/StringTable.cpp
     Console.cpp
     Heap/CellAllocator.cpp
