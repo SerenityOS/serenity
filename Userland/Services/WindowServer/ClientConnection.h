@@ -40,7 +40,7 @@ public:
     static ClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(ClientConnection&)>);
 
-    void notify_about_new_screen_rect(const Gfx::IntRect&);
+    void notify_about_new_screen_rects(const Vector<Gfx::IntRect, 4>&, size_t);
     void post_paint_message(Window&, bool ignore_occlusion = false);
 
     Menu* find_menu_by_id(int menu_id)
@@ -125,7 +125,7 @@ private:
     virtual void set_background_color(String const&) override;
     virtual void set_wallpaper_mode(String const&) override;
     virtual Messages::WindowServer::GetWallpaperResponse get_wallpaper() override;
-    virtual Messages::WindowServer::SetResolutionResponse set_resolution(Gfx::IntSize const&, int) override;
+    virtual Messages::WindowServer::SetResolutionResponse set_resolution(u32, Gfx::IntSize const&, int) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;
     virtual void popup_menu(i32, Gfx::IntPoint const&) override;
@@ -153,7 +153,7 @@ private:
     virtual Messages::WindowServer::GetDoubleClickSpeedResponse get_double_click_speed() override;
     virtual void set_window_modified(i32, bool) override;
     virtual Messages::WindowServer::IsWindowModifiedResponse is_window_modified(i32) override;
-    virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale() override;
+    virtual Messages::WindowServer::GetDesktopDisplayScaleResponse get_desktop_display_scale(u32) override;
 
     Window* window_from_id(i32 window_id);
 

@@ -79,7 +79,7 @@ public:
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
 
-    Gfx::IntRect maximized_window_rect(Window const&) const;
+    Gfx::IntRect maximized_window_rect(Window const&, bool relative_to_window_screen = false) const;
 
     ClientConnection const* dnd_client() const { return m_dnd_client.ptr(); }
     String const& dnd_text() const { return m_dnd_text; }
@@ -105,8 +105,8 @@ public:
 
     void move_to_front_and_make_active(Window&);
 
-    Gfx::IntRect desktop_rect() const;
-    Gfx::IntRect arena_rect_for_type(WindowType) const;
+    Gfx::IntRect desktop_rect(Screen&) const;
+    Gfx::IntRect arena_rect_for_type(Screen&, WindowType) const;
 
     Cursor const& active_cursor() const;
     Cursor const& hidden_cursor() const { return *m_hidden_cursor; }
@@ -129,9 +129,7 @@ public:
     Gfx::Font const& font() const;
     Gfx::Font const& window_title_font() const;
 
-    bool set_resolution(int width, int height, int scale);
-    Gfx::IntSize resolution() const;
-    int scale_factor() const;
+    bool set_resolution(Screen&, int width, int height, int scale);
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);

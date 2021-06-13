@@ -48,12 +48,12 @@ WindowServerConnection::WindowServerConnection()
     //       All we have to do is wait for it to arrive. This avoids a round-trip during application startup.
     auto message = wait_for_specific_message<Messages::WindowClient::FastGreet>();
     set_system_theme_from_anonymous_buffer(message->theme_buffer());
-    Desktop::the().did_receive_screen_rect({}, message->screen_rect());
+    Desktop::the().did_receive_screen_rects({}, message->screen_rects(), message->main_screen_index());
     Gfx::FontDatabase::set_default_font_query(message->default_font_query());
     Gfx::FontDatabase::set_fixed_width_font_query(message->fixed_width_font_query());
 }
 
-void WindowServerConnection::fast_greet(Gfx::IntRect const&, Core::AnonymousBuffer const&, String const&, String const&)
+void WindowServerConnection::fast_greet(Vector<Gfx::IntRect> const&, u32, Core::AnonymousBuffer const&, String const&, String const&)
 {
     // NOTE: This message is handled in the constructor.
 }
@@ -311,11 +311,11 @@ void WindowServerConnection::menu_item_left(i32 menu_id, u32 identifier)
     Core::EventLoop::current().post_event(*app, make<ActionEvent>(GUI::Event::ActionLeave, *action));
 }
 
-void WindowServerConnection::screen_rect_changed(Gfx::IntRect const& rect)
+void WindowServerConnection::screen_rects_changed(Vector<Gfx::IntRect> const& rects, u32 main_screen_index)
 {
-    Desktop::the().did_receive_screen_rect({}, rect);
-    Window::for_each_window({}, [rect](auto& window) {
-        Core::EventLoop::current().post_event(window, make<ScreenRectChangeEvent>(rect));
+    Desktop::the().did_receive_screen_rects({}, rects, main_screen_index);
+    Window::for_each_window({}, [&](auto& window) {
+        Core::EventLoop::current().post_event(window, make<ScreenRectsChangeEvent>(rects, main_screen_index));
     });
 }
 
