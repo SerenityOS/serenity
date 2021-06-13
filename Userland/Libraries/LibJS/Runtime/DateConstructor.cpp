@@ -6,13 +6,13 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <LibCore/DateTime.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
-#include <ctype.h>
 #include <sys/time.h>
 #include <time.h>
 
@@ -30,7 +30,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
         int r = 0;
         for (size_t i = 0; i < n; ++i) {
             char ch = lexer.consume();
-            if (!isdigit(ch))
+            if (!is_ascii_digit(ch))
                 return false;
             r = 10 * r + ch - '0';
         }

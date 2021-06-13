@@ -33,7 +33,6 @@
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
-#include <ctype.h>
 #include <math.h>
 
 namespace JS {

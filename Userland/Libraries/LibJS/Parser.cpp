@@ -6,11 +6,11 @@
  */
 
 #include "Parser.h"
+#include <AK/CharacterTypes.h>
 #include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/TemporaryChange.h>
-#include <ctype.h>
 
 namespace JS {
 
@@ -2213,7 +2213,7 @@ Token Parser::consume(TokenType expected_type)
 Token Parser::consume_and_validate_numeric_literal()
 {
     auto is_unprefixed_octal_number = [](const StringView& value) {
-        return value.length() > 1 && value[0] == '0' && isdigit(value[1]);
+        return value.length() > 1 && value[0] == '0' && is_ascii_digit(value[1]);
     };
     auto literal_start = position();
     auto token = consume(TokenType::NumericLiteral);
