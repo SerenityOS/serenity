@@ -61,6 +61,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.fill, fill, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
     define_native_function(vm.names.flat, flat, 0, attr);
+    define_native_function(vm.names.flatMap, flat_map, 1, attr);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
 
@@ -1273,29 +1274,48 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
     return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Key);
 }
 
-static void recursive_array_flat(VM& vm, GlobalObject& global_object, Array& new_array, Object& array, double depth)
+// 23.1.3.10.1 FlattenIntoArray ( target, source, sourceLen, start, depth [ , mapperFunction [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-flattenintoarray
+static size_t flatten_into_array(VM& vm, GlobalObject& global_object, Array& new_array, Object& array, size_t target_index, double depth, Function* mapper_func = {}, Value this_arg = {})
 {
+    VERIFY(!mapper_func || (!this_arg.is_empty() && depth == 1));
     auto array_length = length_of_array_like(global_object, array);
     if (vm.exception())
-        return;
+        return {};
 
     for (size_t j = 0; j < array_length; ++j) {
-        auto value = array.get(j);
+        auto value_exists = array.has_property(j);
         if (vm.exception())
-            return;
+            return {};
+
+        if (!value_exists)
+            continue;
+        auto value = array.get(j).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+
+        if (mapper_func) {
+            value = vm.call(*mapper_func, this_arg, value, Value(j), &array);
+            if (vm.exception())
+                return {};
+        }
 
         if (depth > 0 && value.is_array(global_object)) {
-            recursive_array_flat(vm, global_object, new_array, value.as_array(), depth - 1);
+            target_index = flatten_into_array(vm, global_object, new_array, value.as_array(), target_index, depth - 1);
+            if (vm.exception())
+                return {};
             continue;
         }
         if (vm.exception())
-            return;
+            return {};
         if (!value.is_empty()) {
-            new_array.indexed_properties().append(value);
+            new_array.put(target_index, value);
             if (vm.exception())
-                return;
+                return {};
+
+            ++target_index;
         }
     }
+    return target_index;
 }
 
 // 23.1.3.10 Array.prototype.flat ( [ depth ] ), https://tc39.es/ecma262/#sec-array.prototype.flat
@@ -1318,9 +1338,32 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
         }
     }
 
-    recursive_array_flat(vm, global_object, *new_array, *this_object, depth);
+    flatten_into_array(vm, global_object, *new_array, *this_object, 0, depth);
     if (vm.exception())
         return {};
+    return new_array;
+}
+
+// 23.1.3.11 Array.prototype.flatMap ( mapperFunction [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.flatmap
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto* mapper_function = callback_from_args(global_object, "flatMap");
+    if (!mapper_function)
+        return {};
+
+    auto this_argument = vm.argument(1);
+
+    // FIXME: Use ArraySpeciesCreate.
+    auto new_array = Array::create(global_object);
+
+    flatten_into_array(vm, global_object, *new_array, *this_object, 0, 1, mapper_function, this_argument);
+    if (vm.exception())
+        return {};
+
     return new_array;
 }
 
