@@ -37,6 +37,9 @@ set(SOURCES
     Runtime/BooleanPrototype.cpp
     Runtime/BoundFunction.cpp
     Runtime/ConsoleObject.cpp
+    Runtime/DataView.cpp
+    Runtime/DataViewConstructor.cpp
+    Runtime/DataViewPrototype.cpp
     Runtime/DateConstructor.cpp
     Runtime/Date.cpp
     Runtime/DatePrototype.cpp
