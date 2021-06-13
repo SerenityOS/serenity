@@ -26,14 +26,18 @@ public:
     String wallpaper() const;
     bool set_wallpaper(const StringView& path, bool save_config = true);
 
-    Gfx::IntRect rect() const { return m_rect; }
+    Gfx::IntRect rect() const { return m_bounding_rect; }
+    const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }
+    size_t main_screen_index() const { return m_main_screen_index; }
 
     int taskbar_height() const { return TaskbarWindow::taskbar_height(); }
 
-    void did_receive_screen_rect(Badge<WindowServerConnection>, const Gfx::IntRect&);
+    void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>&, size_t);
 
 private:
-    Gfx::IntRect m_rect;
+    Vector<Gfx::IntRect, 4> m_rects;
+    size_t m_main_screen_index { 0 };
+    Gfx::IntRect m_bounding_rect;
 };
 
 }

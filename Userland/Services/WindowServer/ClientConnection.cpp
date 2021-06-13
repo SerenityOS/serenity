@@ -53,7 +53,7 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
         s_connections = new HashMap<int, NonnullRefPtr<ClientConnection>>;
     s_connections->set(client_id, *this);
 
-    async_fast_greet(Screen::the().rect(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
+    async_fast_greet(Screen::rects(), Screen::main().index(), Gfx::current_system_theme_buffer(), Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
 }
 
 ClientConnection::~ClientConnection()
@@ -77,9 +77,9 @@ void ClientConnection::die()
     });
 }
 
-void ClientConnection::notify_about_new_screen_rect(Gfx::IntRect const& rect)
+void ClientConnection::notify_about_new_screen_rects(Vector<Gfx::IntRect, 4> const& rects, size_t main_screen_index)
 {
-    async_screen_rect_changed(rect);
+    async_screen_rects_changed(rects, main_screen_index);
 }
 
 void ClientConnection::create_menubar(i32 menubar_id)
@@ -297,9 +297,14 @@ Messages::WindowServer::GetWallpaperResponse ClientConnection::get_wallpaper()
     return Compositor::the().wallpaper_path();
 }
 
-Messages::WindowServer::SetResolutionResponse ClientConnection::set_resolution(Gfx::IntSize const& resolution, int scale_factor)
+Messages::WindowServer::SetResolutionResponse ClientConnection::set_resolution(u32 screen_index, Gfx::IntSize const& resolution, int scale_factor)
 {
-    return { WindowManager::the().set_resolution(resolution.width(), resolution.height(), scale_factor), WindowManager::the().resolution(), WindowManager::the().scale_factor() };
+    if (auto* screen = Screen::find_by_index(screen_index)) {
+        bool success = WindowManager::the().set_resolution(*screen, resolution.width(), resolution.height(), scale_factor);
+        return { success, screen->size(), screen->scale_factor() };
+    }
+    dbgln("Setting resolution: Invalid screen index {}", screen_index);
+    return { false, {}, 0 };
 }
 
 void ClientConnection::set_window_title(i32 window_id, String const& title)
@@ -384,7 +389,7 @@ Messages::WindowServer::SetWindowRectResponse ClientConnection::set_window_rect(
     auto new_rect = rect;
     window.apply_minimum_size(new_rect);
     window.set_rect(new_rect);
-    window.nudge_into_desktop();
+    window.nudge_into_desktop(nullptr);
     window.request_update(window.rect());
     return window.rect();
 }
@@ -419,7 +424,7 @@ void ClientConnection::set_window_minimum_size(i32 window_id, Gfx::IntSize const
         auto new_rect = window.rect();
         bool did_size_clamp = window.apply_minimum_size(new_rect);
         window.set_rect(new_rect);
-        window.nudge_into_desktop();
+        window.nudge_into_desktop(nullptr);
         window.request_update(window.rect());
 
         if (did_size_clamp)
@@ -498,13 +503,13 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
         window->set_minimum_size(minimum_size);
         bool did_size_clamp = window->apply_minimum_size(new_rect);
         window->set_rect(new_rect);
-        window->nudge_into_desktop();
+        window->nudge_into_desktop(nullptr);
 
         if (did_size_clamp)
             window->refresh_client_size();
     }
     if (window->type() == WindowType::Desktop) {
-        window->set_rect(WindowManager::the().desktop_rect());
+        window->set_rect(Screen::bounding_rect());
         window->recalculate_rect();
     }
     window->set_opacity(opacity);
@@ -706,7 +711,7 @@ void ClientConnection::start_window_resize(i32 window_id)
     }
     // FIXME: We are cheating a bit here by using the current cursor location and hard-coding the left button.
     //        Maybe the client should be allowed to specify what initiated this request?
-    WindowManager::the().start_window_resize(window, Screen::the().cursor_location(), MouseButton::Left);
+    WindowManager::the().start_window_resize(window, ScreenInput::the().cursor_location(), MouseButton::Left);
 }
 
 Messages::WindowServer::StartDragResponse ClientConnection::start_drag(String const& text, HashMap<String, ByteBuffer> const& mime_data, Gfx::ShareableBitmap const& drag_bitmap)
@@ -830,7 +835,7 @@ void ClientConnection::pong()
 
 Messages::WindowServer::GetGlobalCursorPositionResponse ClientConnection::get_global_cursor_position()
 {
-    return Screen::the().cursor_location();
+    return ScreenInput::the().cursor_location();
 }
 
 void ClientConnection::set_mouse_acceleration(float factor)
@@ -845,7 +850,7 @@ void ClientConnection::set_mouse_acceleration(float factor)
 
 Messages::WindowServer::GetMouseAccelerationResponse ClientConnection::get_mouse_acceleration()
 {
-    return Screen::the().acceleration_factor();
+    return ScreenInput::the().acceleration_factor();
 }
 
 void ClientConnection::set_scroll_step_size(u32 step_size)
@@ -859,7 +864,7 @@ void ClientConnection::set_scroll_step_size(u32 step_size)
 
 Messages::WindowServer::GetScrollStepSizeResponse ClientConnection::get_scroll_step_size()
 {
-    return Screen::the().scroll_step_size();
+    return ScreenInput::the().scroll_step_size();
 }
 
 void ClientConnection::set_double_click_speed(i32 speed)
@@ -909,25 +914,27 @@ void ClientConnection::did_become_responsive()
 
 Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap(Optional<Gfx::IntRect> const& rect)
 {
+    auto& screen = Screen::main(); // TODO: implement screenshots from other screens or areas spanning multiple screens
     if (rect.has_value()) {
-        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}).cropped(rect.value());
+        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect.value());
         return bitmap->to_shareable_bitmap();
     }
-    auto& bitmap = Compositor::the().front_bitmap_for_screenshot({});
+    auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
     return bitmap.to_shareable_bitmap();
 }
 
 Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::get_screen_bitmap_around_cursor(Gfx::IntSize const& size)
 {
-    auto scale_factor = WindowManager::the().scale_factor();
-    auto cursor_location = Screen::the().cursor_location();
+    auto& screen = Screen::main(); // TODO: implement getting screen bitmaps from other screens or areas spanning multiple screens
+    auto scale_factor = screen.scale_factor();
+    auto cursor_location = ScreenInput::the().cursor_location();
     Gfx::Rect rect { (cursor_location.x() * scale_factor) - (size.width() / 2), (cursor_location.y() * scale_factor) - (size.height() / 2), size.width(), size.height() };
 
     // Recompose the screen to make sure the cursor is painted in the location we think it is.
     // FIXME: This is rather wasteful. We can probably think of a way to avoid this.
     Compositor::the().compose();
 
-    auto bitmap = Compositor::the().front_bitmap_for_screenshot({}).cropped(rect);
+    auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect);
     return bitmap->to_shareable_bitmap();
 }
 
@@ -942,9 +949,12 @@ Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_mod
     return window.is_modified();
 }
 
-Messages::WindowServer::GetDesktopDisplayScaleResponse ClientConnection::get_desktop_display_scale()
+Messages::WindowServer::GetDesktopDisplayScaleResponse ClientConnection::get_desktop_display_scale(u32 screen_index)
 {
-    return WindowManager::the().scale_factor();
+    if (auto* screen = Screen::find_by_index(screen_index))
+        return screen->scale_factor();
+    dbgln("GetDesktopDisplayScale: Screen {} does not exist", screen_index);
+    return 0;
 }
 
 void ClientConnection::set_window_modified(i32 window_id, bool modified)

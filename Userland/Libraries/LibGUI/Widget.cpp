@@ -506,7 +506,7 @@ void Widget::theme_change_event(ThemeChangeEvent&)
 {
 }
 
-void Widget::screen_rect_change_event(ScreenRectChangeEvent&)
+void Widget::screen_rects_change_event(ScreenRectsChangeEvent&)
 {
 }
 

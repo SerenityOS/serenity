@@ -174,12 +174,25 @@ bool Window::apply_minimum_size(Gfx::IntRect& rect)
     return did_size_clamp;
 }
 
-void Window::nudge_into_desktop(bool force_titlebar_visible)
+void Window::nudge_into_desktop(Screen* target_screen, bool force_titlebar_visible)
 {
-    Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(type());
+    if (!target_screen) {
+        // If no explicit target screen was supplied,
+        // guess based on the current frame rectangle
+        target_screen = &Screen::closest_to_rect(rect());
+    }
+    Gfx::IntRect arena = WindowManager::the().arena_rect_for_type(*target_screen, type());
     auto min_visible = 1;
-    if (type() == WindowType::Normal)
+    switch (type()) {
+    case WindowType::Normal:
         min_visible = 30;
+        break;
+    case WindowType::Desktop:
+        set_rect(arena);
+        return;
+    default:
+        break;
+    }
 
     // Push the frame around such that at least `min_visible` pixels of the *frame* are in the desktop rect.
     auto old_frame_rect = frame().rect();
@@ -203,6 +216,7 @@ void Window::nudge_into_desktop(bool force_titlebar_visible)
         width(),
         height(),
     };
+
     set_rect(new_window_rect);
 }
 
@@ -684,7 +698,7 @@ void Window::handle_window_menu_action(WindowMenuAction action)
         WindowManager::the().move_to_front_and_make_active(*this);
         break;
     case WindowMenuAction::Move:
-        WindowManager::the().start_window_move(*this, Screen::the().cursor_location());
+        WindowManager::the().start_window_move(*this, ScreenInput::the().cursor_location());
         break;
     case WindowMenuAction::Close:
         request_close();
@@ -746,7 +760,7 @@ void Window::set_fullscreen(bool fullscreen)
     Gfx::IntRect new_window_rect = m_rect;
     if (m_fullscreen) {
         m_saved_nonfullscreen_rect = m_rect;
-        new_window_rect = Screen::the().rect();
+        new_window_rect = Screen::main().rect(); // TODO: We should support fullscreen on any screen
     } else if (!m_saved_nonfullscreen_rect.is_empty()) {
         new_window_rect = m_saved_nonfullscreen_rect;
     }
@@ -755,56 +769,73 @@ void Window::set_fullscreen(bool fullscreen)
     set_rect(new_window_rect);
 }
 
-Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
+Gfx::IntRect Window::tiled_rect(Screen* target_screen, WindowTileType tiled) const
 {
+    if (!target_screen) {
+        // If no explicit target screen was supplied,
+        // guess based on the current frame rectangle
+        target_screen = &Screen::closest_to_rect(frame().rect());
+    }
+
     VERIFY(tiled != WindowTileType::None);
 
     int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
     int titlebar_height = m_frame.titlebar_rect().height();
-    int menu_height = WindowManager::the().maximized_window_rect(*this).y();
-    int max_height = WindowManager::the().maximized_window_rect(*this).height();
+    auto maximized_rect_relative_to_window_screen = WindowManager::the().maximized_window_rect(*this, true);
+    int menu_height = maximized_rect_relative_to_window_screen.y();
+    int max_height = maximized_rect_relative_to_window_screen.height();
 
+    auto& screen = *target_screen;
+    auto screen_location = screen.rect().location();
     switch (tiled) {
     case WindowTileType::Left:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
-            max_height);
+            screen.width() / 2 - frame_width,
+            max_height)
+            .translated(screen_location);
     case WindowTileType::Right:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(screen.width() / 2 + frame_width,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
-            max_height);
+            screen.width() / 2 - frame_width,
+            max_height)
+            .translated(screen_location);
     case WindowTileType::Top:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width(),
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width(),
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     case WindowTileType::Bottom:
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width(),
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width(),
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     case WindowTileType::TopLeft:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width() / 2 - frame_width,
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     case WindowTileType::TopRight:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(screen.width() / 2 + frame_width,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width() / 2 - frame_width,
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     case WindowTileType::BottomLeft:
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width() / 2 - frame_width,
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     case WindowTileType::BottomRight:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(screen.width() / 2 + frame_width,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width() / 2 - frame_width,
-            (max_height - titlebar_height) / 2 - frame_width);
+            screen.width() / 2 - frame_width,
+            (max_height - titlebar_height) / 2 - frame_width)
+            .translated(screen_location);
     default:
         VERIFY_NOT_REACHED();
     }
@@ -831,7 +862,7 @@ bool Window::set_untiled(Optional<Gfx::IntPoint> fixed_point)
     return true;
 }
 
-void Window::set_tiled(WindowTileType tiled)
+void Window::set_tiled(Screen* screen, WindowTileType tiled)
 {
     VERIFY(tiled != WindowTileType::None);
 
@@ -845,7 +876,7 @@ void Window::set_tiled(WindowTileType tiled)
         m_untiled_rect = m_rect;
     m_tiled = tiled;
 
-    set_rect(tiled_rect(tiled));
+    set_rect(tiled_rect(screen, tiled));
     Core::EventLoop::current().post_event(*this, make<ResizeEvent>(m_rect));
 }
 
@@ -861,11 +892,11 @@ void Window::recalculate_rect()
 
     bool send_event = true;
     if (m_tiled != WindowTileType::None) {
-        set_rect(tiled_rect(m_tiled));
+        set_rect(tiled_rect(nullptr, m_tiled));
     } else if (is_maximized()) {
         set_rect(WindowManager::the().maximized_window_rect(*this));
     } else if (type() == WindowType::Desktop) {
-        set_rect(WindowManager::the().desktop_rect());
+        set_rect(WindowManager::the().arena_rect_for_type(Screen::main(), WindowType::Desktop));
     } else {
         send_event = false;
     }
@@ -953,7 +984,7 @@ bool Window::is_descendant_of(Window& window) const
     return false;
 }
 
-Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool include_frame) const
+Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool include_frame)
 {
     if (!m_hit_testing_enabled)
         return {};

@@ -74,7 +74,7 @@ private:
     virtual void mousewheel_event(GUI::MouseEvent&) override;
     virtual void keydown_event(GUI::KeyEvent&) override;
     virtual void theme_change_event(GUI::ThemeChangeEvent&) override;
-    virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
+    virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
 
     // ^AbstractScrollableWidget
     virtual void did_scroll() override;

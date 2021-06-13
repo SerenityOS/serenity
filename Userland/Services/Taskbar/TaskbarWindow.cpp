@@ -58,7 +58,7 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
     set_window_type(GUI::WindowType::Taskbar);
     set_title("Taskbar");
 
-    on_screen_rect_change(GUI::Desktop::the().rect());
+    on_screen_rects_change(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 
     auto& main_widget = set_main_widget<TaskbarWidget>();
     main_widget.set_layout<GUI::HorizontalBoxLayout>();
@@ -148,8 +148,9 @@ void TaskbarWindow::create_quick_launch_bar()
     quick_launch_bar.set_fixed_size(total_width, 24);
 }
 
-void TaskbarWindow::on_screen_rect_change(const Gfx::IntRect& rect)
+void TaskbarWindow::on_screen_rects_change(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
 {
+    const auto& rect = rects[main_screen_index];
     Gfx::IntRect new_rect { rect.x(), rect.bottom() - taskbar_height() + 1, rect.width(), taskbar_height() };
     set_rect(new_rect);
     update_applet_area();
@@ -332,7 +333,7 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
     }
 }
 
-void TaskbarWindow::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
+void TaskbarWindow::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
-    on_screen_rect_change(event.rect());
+    on_screen_rects_change(event.rects(), event.main_screen_index());
 }

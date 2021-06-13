@@ -136,7 +136,7 @@ Window& Menu::ensure_menu_window()
         next_item_location.translate_by(0, height);
     }
 
-    int window_height_available = Screen::the().height() - frame_thickness() * 2;
+    int window_height_available = Screen::main().height() - frame_thickness() * 2; // TODO: we don't know yet on what screen!
     int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
     int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
     int window_height = min(max_window_height, content_height);
@@ -584,14 +584,15 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
     redraw_if_theme_changed();
 
     const int margin = 30;
+    auto& screen = Screen::closest_to_location(position);
     Gfx::IntPoint adjusted_pos = position;
 
-    if (adjusted_pos.x() + window.width() >= Screen::the().width() - margin) {
+    if (adjusted_pos.x() + window.width() >= screen.width() - margin) {
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     } else {
         adjusted_pos.set_x(adjusted_pos.x() + 1);
     }
-    if (adjusted_pos.y() + window.height() >= Screen::the().height() - margin) {
+    if (adjusted_pos.y() + window.height() >= screen.height() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());

@@ -116,7 +116,8 @@ void MonitorSettingsWidget::apply_settings()
     }
 
     if (current_resolution != m_monitor_widget->desktop_resolution() || current_scale_factor != m_monitor_widget->desktop_scale_factor()) {
-        auto result = GUI::WindowServerConnection::the().set_resolution(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
+        u32 display_index = 0; // TODO: implement multiple display support
+        auto result = GUI::WindowServerConnection::the().set_resolution(display_index, m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
         if (!result.success()) {
             GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                 "Unable to set resolution", GUI::MessageBox::Type::Error);
@@ -134,7 +135,7 @@ void MonitorSettingsWidget::apply_settings()
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() != GUI::MessageBox::ExecYes) {
-                result = GUI::WindowServerConnection::the().set_resolution(current_resolution, current_scale_factor);
+                result = GUI::WindowServerConnection::the().set_resolution(display_index, current_resolution, current_scale_factor);
                 if (!result.success()) {
                     GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
                         "Unable to set resolution", GUI::MessageBox::Type::Error);
