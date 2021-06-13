@@ -450,7 +450,8 @@ private:
     }
 
     ALWAYS_INLINE OpCode* get_opcode_by_id(OpCodeId id) const;
-    static HashMap<u32, OwnPtr<OpCode>> s_opcodes;
+    static OwnPtr<OpCode> s_opcodes[(size_t)OpCodeId::Last + 1];
+    static bool s_opcodes_initialized;
 };
 
 #define ENUMERATE_EXECUTION_RESULTS                          \
