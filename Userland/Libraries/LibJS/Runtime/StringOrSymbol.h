@@ -18,15 +18,13 @@ public:
     StringOrSymbol() = default;
 
     StringOrSymbol(char const* chars)
-        : m_ptr(StringImpl::create(chars).leak_ref())
+        : StringOrSymbol(FlyString(chars))
     {
     }
 
     StringOrSymbol(String const& string)
-        : m_ptr(string.impl())
+        : StringOrSymbol(FlyString(string))
     {
-        VERIFY(!string.is_null());
-        as_string_impl().ref();
     }
 
     StringOrSymbol(FlyString const& string)
@@ -64,10 +62,10 @@ public:
     ALWAYS_INLINE bool is_symbol() const { return is_valid() && (bits() & 1ul); }
     ALWAYS_INLINE bool is_string() const { return is_valid() && !(bits() & 1ul); }
 
-    ALWAYS_INLINE String as_string() const
+    ALWAYS_INLINE FlyString as_string() const
     {
         VERIFY(is_string());
-        return as_string_impl();
+        return FlyString::from_fly_impl(as_string_impl());
     }
 
     ALWAYS_INLINE Symbol const* as_symbol() const
@@ -103,7 +101,7 @@ public:
     ALWAYS_INLINE bool operator==(StringOrSymbol const& other) const
     {
         if (is_string())
-            return other.is_string() && as_string_impl() == other.as_string_impl();
+            return other.is_string() && &as_string_impl() == &other.as_string_impl();
         if (is_symbol())
             return other.is_symbol() && as_symbol() == other.as_symbol();
         return true;

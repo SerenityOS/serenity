@@ -1003,7 +1003,7 @@ int main(int argc, char** argv)
                     if (key.view().starts_with(property_pattern)) {
                         Line::CompletionSuggestion completion { key, Line::CompletionSuggestion::ForSearch };
                         if (!results.contains_slow(completion)) { // hide duplicates
-                            results.append(key);
+                            results.append(String(key));
                         }
                     }
                 }
