@@ -653,6 +653,11 @@ bool MainWidget::open_file(const String& path)
         return false;
     }
 
+    if (file->is_directory()) {
+        GUI::MessageBox::show(window(), String::formatted("Opening \"{}\" failed: Can't open directories", path), "Error", GUI::MessageBox::Type::Error);
+        return false;
+    }
+
     m_editor->set_text(file->read_all());
 
     set_path(LexicalPath(path));
