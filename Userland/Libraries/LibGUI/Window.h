@@ -203,7 +203,7 @@ public:
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
-    virtual void screen_rect_change_event(ScreenRectChangeEvent&);
+    virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
 
 private:
     void update_cursor();
@@ -218,7 +218,7 @@ private:
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
     void handle_theme_change_event(ThemeChangeEvent&);
-    void handle_screen_rect_change_event(ScreenRectChangeEvent&);
+    void handle_screen_rects_change_event(ScreenRectsChangeEvent&);
     void handle_drag_move_event(DragEvent&);
     void handle_left_event();
 

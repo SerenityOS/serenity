@@ -129,9 +129,9 @@ void NotificationWindow::set_image(const Gfx::ShareableBitmap& image)
     }
 }
 
-void NotificationWindow::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
+void NotificationWindow::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
-    update_notification_window_locations(event.rect());
+    update_notification_window_locations(event.rects()[event.main_screen_index()]);
 }
 
 }

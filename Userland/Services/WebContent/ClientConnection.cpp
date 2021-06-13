@@ -72,9 +72,9 @@ void ClientConnection::update_system_fonts(String const& default_font_query, Str
     Gfx::FontDatabase::set_fixed_width_font_query(fixed_width_font_query);
 }
 
-void ClientConnection::update_screen_rect(const Gfx::IntRect& rect)
+void ClientConnection::update_screen_rects(const Vector<Gfx::IntRect>& rects, u32 main_screen)
 {
-    m_page_host->set_screen_rect(rect);
+    m_page_host->set_screen_rects(rects, main_screen);
 }
 
 void ClientConnection::load_url(const URL& url)

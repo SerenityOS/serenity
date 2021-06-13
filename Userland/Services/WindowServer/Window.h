@@ -14,6 +14,7 @@
 #include <LibGfx/DisjointRectSet.h>
 #include <LibGfx/Rect.h>
 #include <WindowServer/Cursor.h>
+#include <WindowServer/Screen.h>
 #include <WindowServer/WindowFrame.h>
 #include <WindowServer/WindowType.h>
 
@@ -97,7 +98,7 @@ public:
     void set_fullscreen(bool);
 
     WindowTileType tiled() const { return m_tiled; }
-    void set_tiled(WindowTileType);
+    void set_tiled(Screen*, WindowTileType);
     bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_occluded() const { return m_occluded; }
@@ -139,7 +140,8 @@ public:
     {
         m_alpha_hit_threshold = threshold;
     }
-    Optional<HitTestResult> hit_test(const Gfx::IntPoint&, bool include_frame = true) const;
+
+    Optional<HitTestResult> hit_test(const Gfx::IntPoint&, bool include_frame = true);
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
@@ -159,7 +161,7 @@ public:
     void set_rect(int x, int y, int width, int height) { set_rect({ x, y, width, height }); }
     void set_rect_without_repaint(const Gfx::IntRect&);
     bool apply_minimum_size(Gfx::IntRect&);
-    void nudge_into_desktop(bool force_titlebar_visible = true);
+    void nudge_into_desktop(Screen*, bool force_titlebar_visible = true);
 
     Gfx::IntSize minimum_size() const { return m_minimum_size; }
     void set_minimum_size(const Gfx::IntSize&);
@@ -260,7 +262,7 @@ public:
     void start_minimize_animation();
     void end_minimize_animation() { m_minimize_animation_step = -1; }
 
-    Gfx::IntRect tiled_rect(WindowTileType) const;
+    Gfx::IntRect tiled_rect(Screen*, WindowTileType) const;
     void recalculate_rect();
 
     IntrusiveListNode<Window> m_list_node;
@@ -319,6 +321,14 @@ public:
     WindowStack const* outer_stack() const { return m_outer_stack; }
     void set_outer_stack(Badge<WindowStack>, WindowStack* stack) { m_outer_stack = stack; }
 
+    const Vector<Screen*, default_screen_count>& screens() const { return m_screens; }
+    Vector<Screen*, default_screen_count>& screens() { return m_screens; }
+
+    void did_construct()
+    {
+        frame().window_was_constructed({});
+    }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -344,6 +354,7 @@ private:
     Gfx::IntRect m_rect;
     Gfx::IntRect m_saved_nonfullscreen_rect;
     Gfx::IntRect m_taskbar_rect;
+    Vector<Screen*, default_screen_count> m_screens;
     Gfx::DisjointRectSet m_dirty_rects;
     Gfx::DisjointRectSet m_opaque_rects;
     Gfx::DisjointRectSet m_transparency_rects;

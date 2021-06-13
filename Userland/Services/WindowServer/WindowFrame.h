@@ -20,21 +20,46 @@ class Button;
 class Menu;
 class MouseEvent;
 class Window;
+class Screen;
 
 class WindowFrame {
 public:
+    class RenderedCache {
+        friend class WindowFrame;
+
+    public:
+        void paint(WindowFrame&, Gfx::Painter&, const Gfx::IntRect&);
+        void render(WindowFrame&, Screen&);
+        Optional<HitTestResult> hit_test(WindowFrame&, Gfx::IntPoint const&, Gfx::IntPoint const&);
+
+    private:
+        RefPtr<Gfx::Bitmap> m_top_bottom;
+        RefPtr<Gfx::Bitmap> m_left_right;
+        int m_bottom_y { 0 }; // y-offset in m_top_bottom for the bottom half
+        int m_right_x { 0 };  // x-offset in m_left_right for the right half
+        bool m_shadow_dirty { true };
+        bool m_dirty { true };
+    };
+    friend class RenderedCache;
+
     static void reload_config();
 
     explicit WindowFrame(Window&);
     ~WindowFrame();
 
+    void window_was_constructed(Badge<Window>);
+
+    Window& window() { return m_window; }
+    const Window& window() const { return m_window; }
+
     Gfx::IntRect rect() const;
     Gfx::IntRect render_rect() const;
     Gfx::DisjointRectSet opaque_render_rects() const;
     Gfx::DisjointRectSet transparent_render_rects() const;
-    void paint(Gfx::Painter&, const Gfx::IntRect&);
-    void render(Gfx::Painter&);
-    void render_to_cache();
+
+    void paint(Screen&, Gfx::Painter&, const Gfx::IntRect&);
+    void render(Screen&, Gfx::Painter&);
+    RenderedCache* render_to_cache(Screen&);
 
     void handle_mouse_event(MouseEvent const&);
     void handle_titlebar_mouse_event(MouseEvent const&);
@@ -78,13 +103,16 @@ public:
 
     void set_dirty(bool re_render_shadow = false)
     {
-        m_dirty = true;
-        m_shadow_dirty |= re_render_shadow;
+        for (auto& it : m_rendered_cache) {
+            auto& cached = *it.value;
+            cached.m_dirty = true;
+            cached.m_shadow_dirty |= re_render_shadow;
+        }
     }
 
     void theme_changed();
 
-    Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
+    Optional<HitTestResult> hit_test(Gfx::IntPoint const&);
 
     void open_menubar_menu(Menu&);
 
@@ -109,17 +137,12 @@ private:
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
 
-    RefPtr<Gfx::Bitmap> m_top_bottom;
-    RefPtr<Gfx::Bitmap> m_left_right;
-    int m_bottom_y { 0 }; // y-offset in m_top_bottom for the bottom half
-    int m_right_x { 0 };  // x-offset in m_left_right for the right half
+    HashMap<int, NonnullOwnPtr<RenderedCache>> m_rendered_cache;
 
     RefPtr<Core::Timer> m_flash_timer;
     size_t m_flash_counter { 0 };
     float m_opacity { 1 };
     bool m_has_alpha_channel { false };
-    bool m_shadow_dirty { false };
-    bool m_dirty { false };
 };
 
 }

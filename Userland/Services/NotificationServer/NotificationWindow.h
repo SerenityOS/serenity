@@ -27,7 +27,7 @@ public:
 private:
     NotificationWindow(i32 client_id, const String& text, const String& title, const Gfx::ShareableBitmap&);
 
-    virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
+    virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
 
     Gfx::IntRect m_original_rect;
     i32 m_id;

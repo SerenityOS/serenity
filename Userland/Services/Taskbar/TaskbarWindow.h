@@ -21,7 +21,7 @@ public:
 private:
     explicit TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu);
     void create_quick_launch_bar();
-    void on_screen_rect_change(const Gfx::IntRect&);
+    void on_screen_rects_change(const Vector<Gfx::IntRect, 4>&, size_t);
     NonnullRefPtr<GUI::Button> create_button(const WindowIdentifier&);
     void add_window_button(::Window&, const WindowIdentifier&);
     void remove_window_button(::Window&, bool);
@@ -29,7 +29,7 @@ private:
     ::Window* find_window_owner(::Window&) const;
 
     virtual void wm_event(GUI::WMEvent&) override;
-    virtual void screen_rect_change_event(GUI::ScreenRectChangeEvent&) override;
+    virtual void screen_rects_change_event(GUI::ScreenRectsChangeEvent&) override;
 
     void update_applet_area();
 
