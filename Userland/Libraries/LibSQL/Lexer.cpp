@@ -121,7 +121,8 @@ void Lexer::consume()
     auto did_reach_eof = [this] {
         if (m_position != m_source.length())
             return false;
-        m_current_char = EOF;
+        m_eof = true;
+        m_current_char = '\0';
         ++m_line_column;
         ++m_position;
         return true;
@@ -325,7 +326,7 @@ bool Lexer::is_line_break() const
 
 bool Lexer::is_eof() const
 {
-    return m_current_char == EOF;
+    return m_eof;
 }
 
 }

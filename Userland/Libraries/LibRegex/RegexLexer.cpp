@@ -36,11 +36,11 @@ Lexer::Lexer(const StringView source)
 {
 }
 
-ALWAYS_INLINE char Lexer::peek(size_t offset) const
+ALWAYS_INLINE int Lexer::peek(size_t offset) const
 {
     if ((m_position + offset) >= m_source.length())
         return EOF;
-    return m_source[m_position + offset];
+    return (unsigned char)m_source[m_position + offset];
 }
 
 void Lexer::back(size_t offset)
@@ -90,6 +90,7 @@ char Lexer::skip()
 {
     auto c = peek();
     consume();
+    VERIFY(c != EOF);
     return c;
 }
 

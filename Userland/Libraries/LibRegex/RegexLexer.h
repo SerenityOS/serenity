@@ -76,7 +76,7 @@ public:
     const auto& source() const { return m_source; }
 
 private:
-    ALWAYS_INLINE char peek(size_t offset = 0) const;
+    ALWAYS_INLINE int peek(size_t offset = 0) const;
     ALWAYS_INLINE void consume();
 
     StringView m_source {};

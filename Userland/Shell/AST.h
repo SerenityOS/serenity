@@ -388,7 +388,7 @@ public:
     }
 
 private:
-    char m_name { -1 };
+    char m_name { 0 };
 };
 
 class TildeValue final : public Value {
@@ -1290,7 +1290,7 @@ private:
     virtual Vector<Line::CompletionSuggestion> complete_for_editor(Shell&, size_t, const HitTestResult&) override;
     virtual HitTestResult hit_test_position(size_t) const override;
 
-    char m_name { -1 };
+    char m_name { 0 };
 };
 
 class Juxtaposition final : public Node {
