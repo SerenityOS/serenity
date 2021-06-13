@@ -44,7 +44,7 @@ SERENITY_RUN="${SERENITY_RUN:-$1}"
 }
 
 SERENITY_QEMU_MIN_REQ_VERSION=5
-installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | grep -Po "(?<=QEMU emulator version )([1-9]\d*|0)")
+installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version ([1-9][0-9]*|0).*/\1/')
 [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
 
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
