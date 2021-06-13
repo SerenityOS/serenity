@@ -45,7 +45,7 @@
                 @GUI::Button {
                     name: "clear_error_button"
                     text: "CE"
-                    fixed_width: 55
+                    fixed_width: 56
                     fixed_height: 28
                     foreground_color: "brown"
                 }
