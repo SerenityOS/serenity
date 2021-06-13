@@ -56,6 +56,8 @@ public:
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;
 
+    u64 to_u64() const;
+
     const Vector<Word, STARTING_WORD_SIZE>& words() const { return m_words; }
 
     void set_to_0();

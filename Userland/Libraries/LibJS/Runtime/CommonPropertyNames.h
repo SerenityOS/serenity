@@ -234,15 +234,25 @@ namespace JS {
     P(round)                                 \
     P(seal)                                  \
     P(set)                                   \
+    P(setBigInt64)                           \
+    P(setBigUint64)                          \
     P(setDate)                               \
+    P(setFloat32)                            \
+    P(setFloat64)                            \
     P(setFullYear)                           \
     P(setHours)                              \
+    P(setInt8)                               \
+    P(setInt16)                              \
+    P(setInt32)                              \
     P(setMilliseconds)                       \
     P(setMinutes)                            \
     P(setMonth)                              \
     P(setPrototypeOf)                        \
     P(setSeconds)                            \
     P(setTime)                               \
+    P(setUint8)                              \
+    P(setUint16)                             \
+    P(setUint32)                             \
     P(setUTCDate)                            \
     P(setUTCFullYear)                        \
     P(setUTCHours)                           \
