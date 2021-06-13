@@ -64,6 +64,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.flatMap, flat_map, 1, attr);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
+    define_native_function(vm.names.entries, entries, 0, attr);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -1262,6 +1263,16 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::values)
         return {};
 
     return ArrayIterator::create(global_object, this_object, Object::PropertyKind::Value);
+}
+
+// 23.1.3.16 Array.prototype.entries ( ), https://tc39.es/ecma262/#sec-array.prototype.entries
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::entries)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    return ArrayIterator::create(global_object, this_object, Object::PropertyKind::KeyAndValue);
 }
 
 // 23.1.3.16 Array.prototype.keys ( ), https://tc39.es/ecma262/#sec-array.prototype.keys
