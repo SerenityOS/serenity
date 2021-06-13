@@ -19,6 +19,17 @@ public:
     virtual ~DataViewPrototype() override;
 
 private:
+    JS_DECLARE_NATIVE_FUNCTION(get_big_int_64);
+    JS_DECLARE_NATIVE_FUNCTION(get_big_uint_64);
+    JS_DECLARE_NATIVE_FUNCTION(get_float_32);
+    JS_DECLARE_NATIVE_FUNCTION(get_float_64);
+    JS_DECLARE_NATIVE_FUNCTION(get_int_8);
+    JS_DECLARE_NATIVE_FUNCTION(get_int_16);
+    JS_DECLARE_NATIVE_FUNCTION(get_int_32);
+    JS_DECLARE_NATIVE_FUNCTION(get_uint_8);
+    JS_DECLARE_NATIVE_FUNCTION(get_uint_16);
+    JS_DECLARE_NATIVE_FUNCTION(get_uint_32);
+
     JS_DECLARE_NATIVE_GETTER(buffer_getter);
     JS_DECLARE_NATIVE_GETTER(byte_length_getter);
     JS_DECLARE_NATIVE_GETTER(byte_offset_getter);
