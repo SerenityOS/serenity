@@ -130,6 +130,35 @@ describe("ability to work with generic non-array objects", () => {
         }
     });
 
+    test("copyWithin", () => {
+        const initial_o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            // returns value and modifies
+            expect(Array.prototype.copyWithin.call(o, 0, 0)).toEqual(o);
+            expect(o).toEqual(initial_o);
+        }
+
+        {
+            const o = {};
+            expect(Array.prototype.copyWithin.call(o, 1, 16, 32)).toEqual(o);
+            expect(o).toEqual({});
+        }
+
+        {
+            const o = { length: 100 };
+            expect(Array.prototype.copyWithin.call(o, 1, 16, 32)).toEqual(o);
+            expect(o).toEqual({ length: 100 });
+        }
+
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            // returns value and modifies
+            expect(Array.prototype.copyWithin.call(o, 2, 0)).toEqual(o);
+            expect(o).toEqual({ length: 5, 0: "foo", 1: "bar", 2: "foo", 3: "bar" });
+        }
+    });
+
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
 
     test("every", () => {
