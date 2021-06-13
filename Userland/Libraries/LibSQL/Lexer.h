@@ -50,6 +50,7 @@ private:
     size_t m_line_number { 1 };
     size_t m_line_column { 0 };
     char m_current_char { 0 };
+    bool m_eof { false };
     size_t m_position { 0 };
 };
 
