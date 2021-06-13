@@ -2,6 +2,7 @@
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  * Copyright (c) 2020, Marcin Gasperowicz <xnooga@gmail.com>
+ * Copyright (c) 2021, David Tuin <david.tuin@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -72,6 +73,22 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // evaluates to true
     // 23.1.3.33 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
     define_property(vm.well_known_symbol_iterator(), get(vm.names.values), attr);
+
+    // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
+    Object* unscopable_list = create_empty(global_object);
+    unscopable_list->set_prototype(nullptr);
+    unscopable_list->put(vm.names.copyWithin, Value(true));
+    unscopable_list->put(vm.names.entries, Value(true));
+    unscopable_list->put(vm.names.fill, Value(true));
+    unscopable_list->put(vm.names.find, Value(true));
+    unscopable_list->put(vm.names.findIndex, Value(true));
+    unscopable_list->put(vm.names.flat, Value(true));
+    unscopable_list->put(vm.names.flatMap, Value(true));
+    unscopable_list->put(vm.names.includes, Value(true));
+    unscopable_list->put(vm.names.keys, Value(true));
+    unscopable_list->put(vm.names.values, Value(true));
+
+    define_property(vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
 }
 
 ArrayPrototype::~ArrayPrototype()
