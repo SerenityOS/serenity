@@ -190,7 +190,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Sealed:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
-            if (property_name.is_string()) {
+            if (property_name.is_string() && property_name.string_may_be_number()) {
                 i32 property_index = property_name.as_string().to_int().value_or(-1);
                 if (property_index >= 0)
                     property_name = property_index;
@@ -203,7 +203,7 @@ bool Object::set_integrity_level(IntegrityLevel level)
     case IntegrityLevel::Frozen:
         for (auto& key : keys) {
             auto property_name = PropertyName::from_value(global_object(), key);
-            if (property_name.is_string()) {
+            if (property_name.is_string() && property_name.string_may_be_number()) {
                 i32 property_index = property_name.as_string().to_int().value_or(-1);
                 if (property_index >= 0)
                     property_name = property_index;
@@ -389,7 +389,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
         value = existing_value.value().value;
         attributes = existing_value.value().attributes;
     } else {
-        if (property_name.is_string()) {
+        if (property_name.is_string() && property_name.string_may_be_number()) {
             i32 property_index = property_name.as_string().to_int().value_or(-1);
             if (property_index >= 0)
                 return get_own_property_descriptor(property_index);
@@ -537,7 +537,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     if (property_name.is_number())
         return put_own_property_by_index(property_name.as_number(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 
-    if (property_name.is_string()) {
+    if (property_name.is_string() && property_name.string_may_be_number()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
             return put_own_property_by_index(property_index, value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
@@ -545,7 +545,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::define_native_accessor(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+bool Object::define_native_accessor(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String formatted_property_name;
@@ -749,7 +749,7 @@ bool Object::delete_property(const PropertyName& property_name)
     if (property_name.is_number())
         return m_indexed_properties.remove(property_name.as_number());
 
-    if (property_name.is_string()) {
+    if (property_name.is_string() && property_name.string_may_be_number()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
             return m_indexed_properties.remove(property_index);
@@ -807,7 +807,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
     if (property_name.is_number())
         return get_by_index(property_name.as_number());
 
-    if (property_name.is_string()) {
+    if (property_name.is_string() && property_name.string_may_be_number()) {
         auto& property_string = property_name.as_string();
         i32 property_index = property_string.to_int().value_or(-1);
         if (property_index >= 0)
@@ -875,7 +875,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
 
     VERIFY(!value.is_empty());
 
-    if (property_name.is_string()) {
+    if (property_name.is_string() && property_name.string_may_be_number()) {
         auto& property_string = property_name.as_string();
         i32 property_index = property_string.to_int().value_or(-1);
         if (property_index >= 0)
@@ -910,7 +910,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
     return put_own_property(string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
 }
 
-bool Object::define_native_function(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+bool Object::define_native_function(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String function_name;
@@ -929,7 +929,7 @@ bool Object::define_native_function(const StringOrSymbol& property_name, AK::Fun
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(const StringOrSymbol& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
+bool Object::define_native_property(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }
@@ -1016,7 +1016,7 @@ bool Object::has_own_property(const PropertyName& property_name) const
     if (property_name.is_number())
         return has_indexed_property(property_name.as_number());
 
-    if (property_name.is_string()) {
+    if (property_name.is_string() && property_name.string_may_be_number()) {
         i32 property_index = property_name.as_string().to_int().value_or(-1);
         if (property_index >= 0)
             return has_indexed_property(property_index);
@@ -1033,9 +1033,9 @@ Value Object::ordinary_to_primitive(Value::PreferredType preferred_type) const
 
     Vector<FlyString, 2> method_names;
     if (preferred_type == Value::PreferredType::String)
-        method_names = { vm.names.toString, vm.names.valueOf };
+        method_names = { vm.names.toString.as_string(), vm.names.valueOf.as_string() };
     else
-        method_names = { vm.names.valueOf, vm.names.toString };
+        method_names = { vm.names.valueOf.as_string(), vm.names.toString.as_string() };
 
     for (auto& method_name : method_names) {
         auto method = get(method_name);

@@ -209,7 +209,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     PrototypeName::~PrototypeName() { }                                                                                                \
                                                                                                                                        \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                                      \
-        : TypedArrayConstructor(vm().names.ClassName, *global_object.typed_array_constructor())                                        \
+        : TypedArrayConstructor(vm().names.ClassName.as_string(), *global_object.typed_array_constructor())                            \
     {                                                                                                                                  \
     }                                                                                                                                  \
     ConstructorName::~ConstructorName() { }                                                                                            \

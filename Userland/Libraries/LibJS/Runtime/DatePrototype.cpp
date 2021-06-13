@@ -849,7 +849,7 @@ JS_DEFINE_NATIVE_FUNCTION(DatePrototype::to_json)
     if (time_value.is_number() && !time_value.is_finite_number())
         return js_null();
 
-    return this_object->invoke(vm.names.toISOString);
+    return this_object->invoke(vm.names.toISOString.as_string());
 }
 
 // 21.4.4.45 Date.prototype [ @@toPrimitive ] ( hint ), https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive
