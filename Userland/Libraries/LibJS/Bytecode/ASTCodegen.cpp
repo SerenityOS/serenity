@@ -43,7 +43,7 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
                         generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(id->string()));
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
                             generator.emit<Bytecode::Op::PutById>(Bytecode::Register::global_object(), generator.intern_string(name));
                         });
@@ -54,7 +54,7 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
                         scope_variables_with_declaration_kind.set((size_t)generator.intern_string(id->string()).value(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             scope_variables_with_declaration_kind.set((size_t)generator.intern_string(name).value(), { js_undefined(), declaration.declaration_kind() });
                         });
                     });

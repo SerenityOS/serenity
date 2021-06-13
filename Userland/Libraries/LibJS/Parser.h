@@ -86,6 +86,7 @@ public:
     NonnullRefPtr<YieldExpression> parse_yield_expression();
     NonnullRefPtr<Expression> parse_property_key();
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(AssignmentOp, NonnullRefPtr<Expression> lhs, int min_precedence, Associativity);
+    NonnullRefPtr<Identifier> parse_identifier();
 
     RefPtr<FunctionExpression> try_parse_arrow_function_expression(bool expect_parens);
     RefPtr<Statement> try_parse_labelled_statement();
