@@ -270,6 +270,10 @@
 #cmakedefine01 MARKDOWN_DEBUG
 #endif
 
+#ifndef MATRIX_DEBUG
+#cmakedefine01 MATRIX_DEBUG
+#endif
+
 #ifndef MATROSKA_DEBUG
 #cmakedefine01 MATROSKA_DEBUG
 #endif
