@@ -77,7 +77,7 @@ int main(int argc, char** argv)
 
     Core::ArgsParser args_parser;
     args_parser.add_option(map_size_limit, "Maximum chunk size to map", "map-size-limit", 0, "size");
-    args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'o', "path");
+    args_parser.add_option(output_directory_path, "Directory to receive the archive content", "output-directory", 'd', "path");
     args_parser.add_positional_argument(path, "File to unzip", "path", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
