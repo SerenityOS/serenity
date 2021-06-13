@@ -203,4 +203,43 @@ describe("ability to work with generic non-array objects", () => {
             0: "foo",
         });
     });
+
+    test("concat", () => {
+        expect(Array.prototype.concat.call(o)).toEqual([o]);
+        expect(Array.prototype.concat.call(o, true)).toEqual([o, true]);
+        expect(Array.prototype.concat.call({}, o)).toEqual([{}, o]);
+
+        const spreadable = {
+            length: 5,
+            0: "foo",
+            1: "bar",
+            3: "baz",
+            [Symbol.isConcatSpreadable]: true,
+        };
+        expect(Array.prototype.concat.call(spreadable)).toEqual([
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+        ]);
+        expect(Array.prototype.concat.call(spreadable, [1, 2])).toEqual([
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+            1,
+            2,
+        ]);
+        expect(Array.prototype.concat.call([1], spreadable, [2])).toEqual([
+            1,
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+            2,
+        ]);
+    });
 });

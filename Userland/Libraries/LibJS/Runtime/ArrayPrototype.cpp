@@ -435,27 +435,87 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::join)
 // 23.1.3.1 Array.prototype.concat ( ...items ), https://tc39.es/ecma262/#sec-array.prototype.concat
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 {
-    auto* array = Array::typed_this(vm, global_object);
-    if (!array)
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
         return {};
 
-    auto* new_array = Array::create(global_object);
-    new_array->indexed_properties().append_all(array, array->indexed_properties());
+    // FIXME: Use ArraySpeciesCreate.
+    auto new_array = Array::create(global_object);
+
+    size_t n = 0;
+
+    // 23.1.3.1.1 IsConcatSpreadable ( O ), https://tc39.es/ecma262/#sec-isconcatspreadable
+    auto is_concat_spreadable = [&vm, &global_object](Value const& val) {
+        if (!val.is_object()) {
+            return false;
+        }
+        auto* object = val.to_object(global_object);
+        if (vm.exception())
+            return false;
+
+        auto spreadable = object->get(vm.well_known_symbol_is_concat_spreadable()).value_or(js_undefined());
+        if (vm.exception())
+            return false;
+
+        if (!spreadable.is_undefined())
+            return spreadable.to_boolean();
+
+        return object->is_array();
+    };
+
+    auto append_to_new_array = [&vm, &is_concat_spreadable, &new_array, &global_object, &n](Value arg) {
+        auto spreadable = is_concat_spreadable(arg);
+        if (vm.exception())
+            return;
+        if (spreadable) {
+            VERIFY(arg.is_object());
+            Object& obj = arg.as_object();
+            size_t k = 0;
+            auto length = length_of_array_like(global_object, obj);
+            if (vm.exception())
+                return;
+
+            if (length + k > MAX_ARRAY_LIKE_INDEX) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                return;
+            }
+            while (k < length) {
+                auto k_exists = obj.has_property(k);
+                if (vm.exception())
+                    return;
+                if (k_exists) {
+                    auto k_value = obj.get(k).value_or(js_undefined());
+                    if (vm.exception())
+                        return;
+                    new_array->put(n, k_value);
+                }
+                ++n;
+                ++k;
+            }
+        } else {
+            if (n >= MAX_ARRAY_LIKE_INDEX) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
+                return;
+            }
+            new_array->put(n, arg);
+            ++n;
+        }
+    };
+
+    append_to_new_array(this_object);
     if (vm.exception())
         return {};
 
     for (size_t i = 0; i < vm.argument_count(); ++i) {
         auto argument = vm.argument(i);
-        if (argument.is_array(global_object)) {
-            auto& argument_object = argument.as_object();
-            new_array->indexed_properties().append_all(&argument_object, argument_object.indexed_properties());
-            continue;
-        }
+        append_to_new_array(argument);
         if (vm.exception())
             return {};
-        new_array->indexed_properties().append(argument);
     }
 
+    new_array->put(vm.names.length, Value(n));
+    if (vm.exception())
+        return {};
     return Value(new_array);
 }
 
