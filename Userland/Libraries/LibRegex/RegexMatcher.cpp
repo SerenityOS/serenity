@@ -301,15 +301,10 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
 
     for (;;) {
         ++output.operations;
-        auto* opcode = bytecode.get_opcode(state);
-
-        if (!opcode) {
-            dbgln("Wrong opcode... failed!");
-            return {};
-        }
+        auto& opcode = bytecode.get_opcode(state);
 
 #if REGEX_DEBUG
-        s_regex_dbg.print_opcode("VM", *opcode, state, recursion_level, false);
+        s_regex_dbg.print_opcode("VM", opcode, state, recursion_level, false);
 #endif
 
         ExecutionResult result;
@@ -317,14 +312,14 @@ Optional<bool> Matcher<Parser>::execute(const MatchInput& input, MatchState& sta
             --input.fail_counter;
             result = ExecutionResult::Failed_ExecuteLowPrioForks;
         } else {
-            result = opcode->execute(input, state, output);
+            result = opcode.execute(input, state, output);
         }
 
 #if REGEX_DEBUG
-        s_regex_dbg.print_result(*opcode, bytecode, input, state, result);
+        s_regex_dbg.print_result(opcode, bytecode, input, state, result);
 #endif
 
-        state.instruction_position += opcode->size();
+        state.instruction_position += opcode.size();
 
         switch (result) {
         case ExecutionResult::Fork_PrioLow:

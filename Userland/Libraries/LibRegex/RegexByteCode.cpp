@@ -90,7 +90,7 @@ static const char* character_class_name(CharClass ch_class)
 OwnPtr<OpCode> ByteCode::s_opcodes[(size_t)OpCodeId::Last + 1];
 bool ByteCode::s_opcodes_initialized { false };
 
-ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
+ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
 {
     if (!s_opcodes_initialized) {
         for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
@@ -148,27 +148,24 @@ ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
         s_opcodes_initialized = true;
     }
 
-    if (id > OpCodeId::Last)
-        return nullptr;
+    VERIFY(id >= OpCodeId::First && id <= OpCodeId::Last);
 
-    auto* opcode = &*s_opcodes[(u32)id];
+    auto& opcode = s_opcodes[(u32)id];
     opcode->set_bytecode(*const_cast<ByteCode*>(this));
-    return opcode;
+    return *opcode;
 }
 
-OpCode* ByteCode::get_opcode(MatchState& state) const
+OpCode& ByteCode::get_opcode(MatchState& state) const
 {
-    OpCode* op_code;
+    OpCodeId opcode_id;
+    if (state.instruction_position >= size())
+        opcode_id = OpCodeId::Exit;
+    else
+        opcode_id = (OpCodeId)at(state.instruction_position);
 
-    if (state.instruction_position >= size()) {
-        op_code = get_opcode_by_id(OpCodeId::Exit);
-    } else
-        op_code = get_opcode_by_id((OpCodeId)at(state.instruction_position));
-
-    if (op_code)
-        op_code->set_state(state);
-
-    return op_code;
+    auto& opcode = get_opcode_by_id(opcode_id);
+    opcode.set_state(state);
+    return opcode;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(const MatchInput& input, MatchState& state, MatchOutput&) const

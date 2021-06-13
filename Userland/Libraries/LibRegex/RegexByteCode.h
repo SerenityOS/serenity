@@ -439,7 +439,7 @@ public:
         bytecode_to_repeat = move(bytecode);
     }
 
-    OpCode* get_opcode(MatchState& state) const;
+    OpCode& get_opcode(MatchState& state) const;
 
 private:
     void insert_string(const StringView& view)
@@ -449,7 +449,7 @@ private:
             empend((ByteCodeValueType)view[i]);
     }
 
-    ALWAYS_INLINE OpCode* get_opcode_by_id(OpCodeId id) const;
+    ALWAYS_INLINE OpCode& get_opcode_by_id(OpCodeId id) const;
     static OwnPtr<OpCode> s_opcodes[(size_t)OpCodeId::Last + 1];
     static bool s_opcodes_initialized;
 };

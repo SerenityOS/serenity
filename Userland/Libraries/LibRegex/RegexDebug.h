@@ -39,19 +39,14 @@ public:
         auto& bytecode = regex.parser_result.bytecode;
 
         for (;;) {
-            auto* opcode = bytecode.get_opcode(state);
-            if (!opcode) {
-                dbgln("Wrong opcode... failed!");
-                return;
-            }
-
-            print_opcode("PrintBytecode", *opcode, state);
+            auto& opcode = bytecode.get_opcode(state);
+            print_opcode("PrintBytecode", opcode, state);
             out(m_file, "{}", m_debug_stripline);
 
-            if (is<OpCode_Exit>(*opcode))
+            if (is<OpCode_Exit>(opcode))
                 break;
 
-            state.instruction_position += opcode->size();
+            state.instruction_position += opcode.size();
         }
 
         fflush(m_file);
