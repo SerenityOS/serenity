@@ -317,18 +317,19 @@ Optional<Wasm::Value> to_webassembly_value(JS::Value value, const Wasm::ValueTyp
 
 JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String name, JS::GlobalObject& global_object)
 {
+    Optional<Wasm::FunctionType> type;
+    WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
     // FIXME: Cache these.
     return JS::NativeFunction::create(
         global_object,
         name,
-        [address](JS::VM& vm, JS::GlobalObject& global_object) -> JS::Value {
+        [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::Value {
             Vector<Wasm::Value> values;
-            Optional<Wasm::FunctionType> type;
-            WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
+            values.ensure_capacity(type.parameters().size());
 
             // Grab as many values as needed and convert them.
             size_t index = 0;
-            for (auto& type : type.value().parameters()) {
+            for (auto& type : type.parameters()) {
                 auto result = to_webassembly_value(vm.argument(index++), type, global_object);
                 if (result.has_value())
                     values.append(result.release_value());
