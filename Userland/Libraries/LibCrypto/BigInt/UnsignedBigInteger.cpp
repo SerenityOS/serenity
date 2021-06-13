@@ -5,6 +5,7 @@
  */
 
 #include "UnsignedBigInteger.h"
+#include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
@@ -71,7 +72,40 @@ UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
     UnsignedBigInteger ten { 10 };
 
     for (auto& c : str) {
-        result = result.multiplied_by(ten).plus(c - '0');
+        result = result.multiplied_by(ten).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base2(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger two { 2 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(two).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base8(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger eight { 8 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(eight).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base16(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger sixteen { 16 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(sixteen).plus(parse_ascii_hex_digit(c));
     }
     return result;
 }

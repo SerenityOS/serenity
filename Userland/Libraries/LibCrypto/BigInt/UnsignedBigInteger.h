@@ -53,8 +53,11 @@ public:
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
+    static UnsignedBigInteger from_base2(const String& str);
+    static UnsignedBigInteger from_base8(const String& str);
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;
+    static UnsignedBigInteger from_base16(const String& str);
 
     u64 to_u64() const;
 

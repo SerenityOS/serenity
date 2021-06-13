@@ -62,8 +62,11 @@ public:
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
+    static SignedBigInteger from_base2(StringView str);
+    static SignedBigInteger from_base8(StringView str);
     static SignedBigInteger from_base10(StringView str);
     String to_base10() const;
+    static SignedBigInteger from_base16(StringView str);
 
     u64 to_u64() const;
 
