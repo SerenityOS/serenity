@@ -331,7 +331,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (!m_call_stack.is_empty()) {
-        if (name == names.arguments && !call_frame().callee.is_empty()) {
+        if (name == names.arguments.as_string() && !call_frame().callee.is_empty()) {
             // HACK: Special handling for the name "arguments":
             //       If the name "arguments" is defined in the current scope, for example via
             //       a function parameter, or by a local var declaration, we use that.

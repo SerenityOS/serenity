@@ -295,18 +295,18 @@ namespace JS {
     P(writable)
 
 struct CommonPropertyNames {
-    FlyString catch_ { "catch" };
-    FlyString delete_ { "delete" };
-    FlyString for_ { "for" };
-    FlyString return_ { "return" };
-    FlyString throw_ { "throw" };
-#define __ENUMERATE(x) FlyString x { #x };
+    PropertyName catch_ { "catch", PropertyName::StringMayBeNumber::No };
+    PropertyName delete_ { "delete", PropertyName::StringMayBeNumber::No };
+    PropertyName for_ { "for", PropertyName::StringMayBeNumber::No };
+    PropertyName return_ { "return", PropertyName::StringMayBeNumber::No };
+    PropertyName throw_ { "throw", PropertyName::StringMayBeNumber::No };
+#define __ENUMERATE(x) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     ENUMERATE_STANDARD_PROPERTY_NAMES(__ENUMERATE)
 #undef __ENUMERATE
-#define __JS_ENUMERATE(x, a, b, c, t) FlyString x { #x };
+#define __JS_ENUMERATE(x, a, b, c, t) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
-#define __JS_ENUMERATE(x, a) FlyString x { #x };
+#define __JS_ENUMERATE(x, a) PropertyName x { #x, PropertyName::StringMayBeNumber::No };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
 };

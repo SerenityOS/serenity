@@ -13,11 +13,16 @@ namespace JS {
 
 class PropertyName {
 public:
-    enum class Type {
+    enum class Type : u8 {
         Invalid,
         Number,
         String,
         Symbol,
+    };
+
+    enum class StringMayBeNumber {
+        Yes,
+        No,
     };
 
     static PropertyName from_value(GlobalObject& global_object, Value value)
@@ -56,8 +61,9 @@ public:
         VERIFY(!string.is_null());
     }
 
-    PropertyName(FlyString const& string)
+    PropertyName(FlyString const& string, StringMayBeNumber string_may_be_number = StringMayBeNumber::Yes)
         : m_type(Type::String)
+        , m_string_may_be_number(string_may_be_number == StringMayBeNumber::Yes)
         , m_string(string)
     {
         VERIFY(!string.is_null());
@@ -85,6 +91,7 @@ public:
     bool is_number() const { return m_type == Type::Number; }
     bool is_string() const { return m_type == Type::String; }
     bool is_symbol() const { return m_type == Type::Symbol; }
+    bool string_may_be_number() const { return m_string_may_be_number; }
 
     u32 as_number() const
     {
@@ -135,9 +142,22 @@ public:
 
 private:
     Type m_type { Type::Invalid };
+    bool m_string_may_be_number { true };
     FlyString m_string;
     Symbol* m_symbol { nullptr };
     u32 m_number { 0 };
+};
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<JS::PropertyName> : Formatter<StringView> {
+    void format(FormatBuilder& builder, JS::PropertyName const& value)
+    {
+        Formatter<StringView>::format(builder, value.to_string());
+    }
 };
 
 }

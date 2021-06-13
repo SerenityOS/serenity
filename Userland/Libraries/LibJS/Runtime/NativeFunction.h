@@ -17,7 +17,7 @@ class NativeFunction : public Function {
 public:
     static NativeFunction* create(GlobalObject&, const FlyString& name, AK::Function<Value(VM&, GlobalObject&)>);
 
-    explicit NativeFunction(const FlyString& name, AK::Function<Value(VM&, GlobalObject&)>, Object& prototype);
+    explicit NativeFunction(PropertyName const& name, AK::Function<Value(VM&, GlobalObject&)>, Object& prototype);
     virtual void initialize(GlobalObject&) override { }
     virtual ~NativeFunction() override;
 
@@ -30,7 +30,7 @@ public:
     virtual bool is_strict_mode() const override;
 
 protected:
-    NativeFunction(const FlyString& name, Object& prototype);
+    NativeFunction(PropertyName const& name, Object& prototype);
     explicit NativeFunction(Object& prototype);
 
 private:

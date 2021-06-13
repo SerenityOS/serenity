@@ -214,4 +214,9 @@ void Shape::add_property_without_transition(const StringOrSymbol& property_name,
         ++m_property_count;
 }
 
+FLATTEN void Shape::add_property_without_transition(PropertyName const& property_name, PropertyAttributes attributes)
+{
+    add_property_without_transition(StringOrSymbol(property_name.as_string()), attributes);
+}
+
 }
