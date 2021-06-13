@@ -181,6 +181,12 @@ private:
 // NOTE: This instruction is variable-width depending on the number of elements!
 class NewArray final : public Instruction {
 public:
+    NewArray()
+        : Instruction(Type::NewArray)
+        , m_element_count(0)
+    {
+    }
+
     explicit NewArray(Vector<Register> const& elements)
         : Instruction(Type::NewArray)
         , m_element_count(elements.size())
@@ -201,6 +207,18 @@ public:
 private:
     size_t m_element_count { 0 };
     Register m_elements[];
+};
+
+class IteratorToArray final : public Instruction {
+public:
+    IteratorToArray()
+        : Instruction(Type::IteratorToArray)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
 class ConcatString final : public Instruction {

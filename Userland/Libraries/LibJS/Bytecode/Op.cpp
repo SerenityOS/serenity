@@ -124,6 +124,40 @@ void NewArray::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.accumulator() = Array::create_from(interpreter.global_object(), elements);
 }
 
+void IteratorToArray::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto& global_object = interpreter.global_object();
+    auto& vm = interpreter.vm();
+    auto iterator = interpreter.accumulator().to_object(global_object);
+    if (vm.exception())
+        return;
+
+    auto array = Array::create(global_object);
+    size_t index = 0;
+
+    while (true) {
+        auto iterator_result = iterator_next(*iterator);
+        if (!iterator_result)
+            return;
+
+        auto complete = iterator_complete(global_object, *iterator_result);
+        if (vm.exception())
+            return;
+
+        if (complete) {
+            interpreter.accumulator() = array;
+            return;
+        }
+
+        auto value = iterator_value(global_object, *iterator_result);
+        if (vm.exception())
+            return;
+
+        array->put(index, value);
+        index++;
+    }
+}
+
 void NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = js_string(interpreter.vm(), interpreter.current_executable().get_string(m_string));
@@ -416,6 +450,11 @@ String NewArray::to_string_impl(Bytecode::Executable const&) const
         builder.append(']');
     }
     return builder.to_string();
+}
+
+String IteratorToArray::to_string_impl(const Bytecode::Executable&) const
+{
+    return "IteratorToArray";
 }
 
 String NewString::to_string_impl(Bytecode::Executable const& executable) const
