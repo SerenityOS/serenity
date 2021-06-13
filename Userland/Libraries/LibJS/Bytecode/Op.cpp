@@ -6,6 +6,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/HashTable.h>
 #include <LibJS/AST.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
@@ -166,6 +167,36 @@ void NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 void NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+}
+
+void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto* from_object = interpreter.reg(m_from_object).to_object(interpreter.global_object());
+    if (interpreter.vm().exception())
+        return;
+
+    auto* to_object = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+
+    HashTable<Value, ValueTraits> excluded_names;
+    for (size_t i = 0; i < m_excluded_names_count; ++i) {
+        excluded_names.set(interpreter.reg(m_excluded_names[i]));
+        if (interpreter.vm().exception())
+            return;
+    }
+
+    auto own_keys = from_object->get_own_properties(Object::PropertyKind::Key, true);
+
+    for (auto& key : own_keys) {
+        if (!excluded_names.contains(key)) {
+            auto property_name = PropertyName(key.to_property_key(interpreter.global_object()));
+            auto property_value = from_object->get(property_name);
+            if (interpreter.vm().exception())
+                return;
+            to_object->define_property(property_name, property_value);
+        }
+    }
+
+    interpreter.accumulator() = to_object;
 }
 
 void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -465,6 +496,22 @@ String NewString::to_string_impl(Bytecode::Executable const& executable) const
 String NewObject::to_string_impl(Bytecode::Executable const&) const
 {
     return "NewObject";
+}
+
+String CopyObjectExcludingProperties::to_string_impl(const Bytecode::Executable&) const
+{
+    StringBuilder builder;
+    builder.appendff("CopyObjectExcludingProperties from:{}", m_from_object);
+    if (m_excluded_names_count != 0) {
+        builder.append(" excluding:[");
+        for (size_t i = 0; i < m_excluded_names_count; ++i) {
+            builder.appendff("{}", m_excluded_names[i]);
+            if (i != m_excluded_names_count - 1)
+                builder.append(',');
+        }
+        builder.append(']');
+    }
+    return builder.to_string();
 }
 
 String ConcatString::to_string_impl(Bytecode::Executable const&) const

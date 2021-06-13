@@ -643,20 +643,51 @@ static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, Bi
 
 static void generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
 {
+    Vector<Bytecode::Register> excluded_property_names;
+    auto has_rest = false;
+    if (pattern.entries.size() > 0)
+        has_rest = pattern.entries[pattern.entries.size() - 1].is_rest;
+
     for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
-        if (is_rest)
-            TODO();
+        if (is_rest) {
+            VERIFY(name.has<NonnullRefPtr<Identifier>>());
+            VERIFY(alias.has<Empty>());
+            VERIFY(!initializer);
+
+            auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+            auto interned_identifier = generator.intern_string(identifier);
+
+            generator.emit_with_extra_register_slots<Bytecode::Op::CopyObjectExcludingProperties>(excluded_property_names.size(), value_reg, excluded_property_names);
+            generator.emit<Bytecode::Op::SetVariable>(interned_identifier);
+
+            return;
+        }
 
         Bytecode::StringTableIndex name_index;
 
         if (name.has<NonnullRefPtr<Identifier>>()) {
             auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
             name_index = generator.intern_string(identifier);
+
+            if (has_rest) {
+                auto excluded_name_reg = generator.allocate_register();
+                excluded_property_names.append(excluded_name_reg);
+                generator.emit<Bytecode::Op::NewString>(name_index);
+                generator.emit<Bytecode::Op::Store>(excluded_name_reg);
+            }
+
             generator.emit<Bytecode::Op::Load>(value_reg);
             generator.emit<Bytecode::Op::GetById>(name_index);
         } else {
             auto expression = name.get<NonnullRefPtr<Expression>>();
             expression->generate_bytecode(generator);
+
+            if (has_rest) {
+                auto excluded_name_reg = generator.allocate_register();
+                excluded_property_names.append(excluded_name_reg);
+                generator.emit<Bytecode::Op::Store>(excluded_name_reg);
+            }
+
             generator.emit<Bytecode::Op::GetByValue>(value_reg);
         }
 

@@ -162,6 +162,30 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+// NOTE: This instruction is variable-width depending on the number of excluded names
+class CopyObjectExcludingProperties final : public Instruction {
+public:
+    CopyObjectExcludingProperties(Register from_object, Vector<Register> const& excluded_names)
+        : Instruction(Type::CopyObjectExcludingProperties)
+        , m_from_object(from_object)
+        , m_excluded_names_count(excluded_names.size())
+    {
+        for (size_t i = 0; i < m_excluded_names_count; i++)
+            m_excluded_names[i] = excluded_names[i];
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+    size_t length_impl() const { return sizeof(*this) + sizeof(Register) * m_excluded_names_count; }
+
+private:
+    Register m_from_object;
+    size_t m_excluded_names_count { 0 };
+    Register m_excluded_names[];
+};
+
 class NewBigInt final : public Instruction {
 public:
     explicit NewBigInt(Crypto::SignedBigInteger bigint)
@@ -713,6 +737,8 @@ ALWAYS_INLINE size_t Instruction::length() const
         return static_cast<Op::Call const&>(*this).length_impl();
     else if (type() == Type::NewArray)
         return static_cast<Op::NewArray const&>(*this).length_impl();
+    else if (type() == Type::CopyObjectExcludingProperties)
+        return static_cast<Op::CopyObjectExcludingProperties const&>(*this).length_impl();
 
 #define __BYTECODE_OP(op) \
     case Type::op:        \
