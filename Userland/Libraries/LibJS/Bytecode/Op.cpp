@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -358,6 +359,29 @@ void LoadArgument::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.accumulator() = interpreter.vm().argument(m_index);
 }
 
+void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = get_iterator(interpreter.global_object(), interpreter.accumulator());
+}
+
+void IteratorNext::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* object = interpreter.accumulator().to_object(interpreter.global_object()))
+        interpreter.accumulator() = iterator_next(*object);
+}
+
+void IteratorResultDone::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* iterator_result = interpreter.accumulator().to_object(interpreter.global_object()))
+        interpreter.accumulator() = Value(iterator_complete(interpreter.global_object(), *iterator_result));
+}
+
+void IteratorResultValue::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    if (auto* iterator_result = interpreter.accumulator().to_object(interpreter.global_object()))
+        interpreter.accumulator() = iterator_value(interpreter.global_object(), *iterator_result);
+}
+
 String Load::to_string_impl(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -550,6 +574,26 @@ String PutByValue::to_string_impl(const Bytecode::Executable&) const
 String LoadArgument::to_string_impl(const Bytecode::Executable&) const
 {
     return String::formatted("LoadArgument {}", m_index);
+}
+
+String GetIterator::to_string_impl(Executable const&) const
+{
+    return "GetIterator";
+}
+
+String IteratorNext::to_string_impl(Executable const&) const
+{
+    return "IteratorNext";
+}
+
+String IteratorResultDone::to_string_impl(Executable const&) const
+{
+    return "IteratorResultDone";
+}
+
+String IteratorResultValue::to_string_impl(Executable const&) const
+{
+    return "IteratorResultValue";
 }
 
 }
