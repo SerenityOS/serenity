@@ -28,8 +28,7 @@ void SetPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.has, has, 1, attr);
     define_native_function(vm.names.values, values, 0, attr);
-
-    define_native_property(vm.names.size, size_getter, {}, attr);
+    define_native_accessor(vm.names.size, size_getter, {}, Attribute::Configurable);
 
     define_property(vm.names.keys, get(vm.names.values), attr);
 
