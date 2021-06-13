@@ -65,6 +65,8 @@ public:
     static SignedBigInteger from_base10(StringView str);
     String to_base10() const;
 
+    u64 to_u64() const;
+
     const UnsignedBigInteger& unsigned_value() const { return m_unsigned_data; }
     const Vector<u32, STARTING_WORD_SIZE> words() const { return m_unsigned_data.words(); }
     bool is_negative() const { return m_sign; }

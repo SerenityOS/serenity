@@ -40,6 +40,8 @@ public:
     };
     template<typename type>
     Value get_value(size_t byte_index, bool is_typed_array, Order, bool is_little_endian = true);
+    template<typename type>
+    Value set_value(size_t byte_index, Value value, bool is_typed_array, Order, bool is_little_endian = true);
 
 private:
     virtual void visit_edges(Visitor&) override;
@@ -106,6 +108,61 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 
     auto raw_value = buffer_impl().slice(byte_index, element_size);
     return raw_bytes_to_numeric<T>(global_object(), move(raw_value), is_little_endian);
+}
+
+// 25.1.2.11 NumericToRawBytes ( type, value, isLittleEndian ), https://tc39.es/ecma262/#sec-numerictorawbytes
+template<typename T>
+static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value, bool is_little_endian)
+{
+    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(T));
+    auto flip_if_needed = [&]() {
+        if (is_little_endian)
+            return;
+        VERIFY(sizeof(T) % 2 == 0);
+        for (size_t i = 0; i < sizeof(T) / 2; ++i)
+            swap(raw_bytes[i], raw_bytes[sizeof(T) - 1 - i]);
+    };
+    if constexpr (IsSame<T, float>) {
+        float raw_value = value.to_double(global_object);
+        ReadonlyBytes { &raw_value, sizeof(float) }.copy_to(raw_bytes);
+        flip_if_needed();
+        return raw_bytes;
+    }
+    if constexpr (IsSame<T, double>) {
+        double raw_value = value.to_double(global_object);
+        ReadonlyBytes { &raw_value, sizeof(double) }.copy_to(raw_bytes);
+        flip_if_needed();
+        return raw_bytes;
+    }
+    if constexpr (!IsIntegral<T>)
+        VERIFY_NOT_REACHED();
+    if constexpr (sizeof(T) == 8) {
+        u64 int_value = value.as_bigint().big_integer().to_u64();
+        ReadonlyBytes { &int_value, sizeof(u64) }.copy_to(raw_bytes);
+        flip_if_needed();
+        return raw_bytes;
+    } else {
+        T int_value;
+        if constexpr (IsSigned<T>)
+            int_value = value.to_i32(global_object);
+        else
+            int_value = value.to_u32(global_object);
+        ReadonlyBytes { &int_value, sizeof(T) }.copy_to(raw_bytes);
+        flip_if_needed();
+        return raw_bytes;
+    }
+}
+
+// 25.1.2.12 SetValueInBuffer ( arrayBuffer, byteIndex, type, value, isTypedArray, order [ , isLittleEndian ] ), https://tc39.es/ecma262/#sec-setvalueinbuffer
+template<typename T>
+Value ArrayBuffer::set_value(size_t byte_index, Value value, [[maybe_unused]] bool is_typed_array, Order, bool is_little_endian)
+{
+    auto raw_bytes = numeric_to_raw_bytes<T>(global_object(), value, is_little_endian);
+
+    // FIXME: Check for shared buffer
+
+    raw_bytes.span().copy_to(buffer_impl().span().slice(byte_index));
+    return js_undefined();
 }
 
 }
