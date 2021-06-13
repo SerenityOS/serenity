@@ -50,6 +50,7 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(flat_map);
     JS_DECLARE_NATIVE_FUNCTION(at);
     JS_DECLARE_NATIVE_FUNCTION(keys);
+    JS_DECLARE_NATIVE_FUNCTION(entries);
 };
 
 }
