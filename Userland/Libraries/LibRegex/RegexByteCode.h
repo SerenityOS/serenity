@@ -496,17 +496,9 @@ public:
     ALWAYS_INLINE const char* name() const;
     static const char* name(const OpCodeId);
 
-    ALWAYS_INLINE OpCode* set_state(MatchState& state)
-    {
-        m_state = &state;
-        return this;
-    }
+    ALWAYS_INLINE void set_state(MatchState& state) { m_state = &state; }
 
-    ALWAYS_INLINE OpCode* set_bytecode(ByteCode& bytecode)
-    {
-        m_bytecode = &bytecode;
-        return this;
-    }
+    ALWAYS_INLINE void set_bytecode(ByteCode& bytecode) { m_bytecode = &bytecode; }
 
     ALWAYS_INLINE void reset_state() { m_state.clear(); }
 
