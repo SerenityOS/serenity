@@ -46,6 +46,11 @@ public:
     // You must call sync to apply changes.
     void set_password(const char* password);
     void set_password_enabled(bool enabled);
+    void set_home_directory(const char* home_directory) { m_home_directory = home_directory; }
+    void set_uid(uid_t uid) { m_uid = uid; }
+    void set_gid(gid_t gid) { m_gid = gid; }
+    void set_shell(const char* shell) { m_shell = shell; }
+    void set_gecos(const char* gecos) { m_gecos = gecos; }
     void delete_password();
 
     // A null password means that this account was missing from /etc/shadow.
