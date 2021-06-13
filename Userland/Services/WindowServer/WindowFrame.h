@@ -54,6 +54,7 @@ public:
 
     Gfx::IntRect rect() const;
     Gfx::IntRect render_rect() const;
+    Gfx::IntRect unconstrained_render_rect() const;
     Gfx::DisjointRectSet opaque_render_rects() const;
     Gfx::DisjointRectSet transparent_render_rects() const;
 
@@ -130,6 +131,8 @@ private:
 
     Gfx::WindowTheme::WindowState window_state_for_theme() const;
     String computed_title() const;
+
+    Gfx::IntRect constrained_render_rect_to_screen(const Gfx::IntRect&) const;
 
     Window& m_window;
     NonnullOwnPtrVector<Button> m_buttons;

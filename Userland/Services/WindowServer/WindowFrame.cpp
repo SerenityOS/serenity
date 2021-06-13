@@ -319,7 +319,7 @@ void WindowFrame::paint(Screen& screen, Gfx::Painter& painter, const Gfx::IntRec
 
 void WindowFrame::RenderedCache::paint(WindowFrame& frame, Gfx::Painter& painter, const Gfx::IntRect& rect)
 {
-    auto frame_rect = frame.render_rect();
+    auto frame_rect = frame.unconstrained_render_rect();
     auto window_rect = frame.window().rect();
     if (m_top_bottom) {
         auto top_bottom_height = frame_rect.height() - window_rect.height();
@@ -546,7 +546,19 @@ Gfx::IntRect WindowFrame::rect() const
     return frame_rect_for_window(m_window, m_window.rect());
 }
 
+Gfx::IntRect WindowFrame::constrained_render_rect_to_screen(const Gfx::IntRect& render_rect) const
+{
+    if (m_window.is_maximized() || m_window.tiled() != WindowTileType::None)
+        return render_rect.intersected(Screen::closest_to_rect(rect()).rect());
+    return render_rect;
+}
+
 Gfx::IntRect WindowFrame::render_rect() const
+{
+    return constrained_render_rect_to_screen(inflated_for_shadow(rect()));
+}
+
+Gfx::IntRect WindowFrame::unconstrained_render_rect() const
 {
     return inflated_for_shadow(rect());
 }
@@ -555,13 +567,13 @@ Gfx::DisjointRectSet WindowFrame::opaque_render_rects() const
 {
     if (has_alpha_channel()) {
         if (m_window.is_opaque())
-            return m_window.rect();
+            return constrained_render_rect_to_screen(m_window.rect());
         return {};
     }
     if (m_window.is_opaque())
-        return rect();
+        return constrained_render_rect_to_screen(rect());
     Gfx::DisjointRectSet opaque_rects;
-    opaque_rects.add_many(rect().shatter(m_window.rect()));
+    opaque_rects.add_many(constrained_render_rect_to_screen(rect()).shatter(m_window.rect()));
     return opaque_rects;
 }
 
@@ -576,11 +588,12 @@ Gfx::DisjointRectSet WindowFrame::transparent_render_rects() const
         return render_rect();
     }
 
+    auto total_render_rect = render_rect();
     Gfx::DisjointRectSet transparent_rects;
     if (has_shadow())
-        transparent_rects.add_many(render_rect().shatter(rect()));
+        transparent_rects.add_many(total_render_rect.shatter(rect()));
     if (!m_window.is_opaque())
-        transparent_rects.add(m_window.rect());
+        transparent_rects.add(m_window.rect().intersected(total_render_rect));
     return transparent_rects;
 }
 
@@ -634,11 +647,15 @@ void WindowFrame::layout_buttons()
 
 Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position)
 {
-    if (m_window.is_frameless())
+    if (m_window.is_frameless() || m_window.is_fullscreen())
         return {};
-    auto frame_rect = rect();
-    if (!frame_rect.contains(position))
+    if (!constrained_render_rect_to_screen(rect()).contains(position)) {
+        // Checking just frame_rect is not enough. If we constrain rendering
+        // a window to one screen (e.g. when it's maximized or tiled) so that
+        // the frame doesn't bleed into the adjacent screen(s), then we need
+        // to also check that we're within these bounds.
         return {};
+    }
     auto window_rect = m_window.rect();
     if (window_rect.contains(position))
         return {};
@@ -650,7 +667,7 @@ Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position)
     if (!cached)
         return {};
 
-    auto window_relative_position = position.translated(-render_rect().location());
+    auto window_relative_position = position.translated(-unconstrained_render_rect().location());
     return cached->hit_test(*this, position, window_relative_position);
 }
 
