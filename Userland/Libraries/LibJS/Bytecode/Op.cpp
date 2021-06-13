@@ -195,6 +195,17 @@ void JumpNullish::execute_impl(Bytecode::Interpreter& interpreter) const
         interpreter.jump(m_false_target.value());
 }
 
+void JumpUndefined::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    VERIFY(m_true_target.has_value());
+    VERIFY(m_false_target.has_value());
+    auto result = interpreter.accumulator();
+    if (result.is_undefined())
+        interpreter.jump(m_true_target.value());
+    else
+        interpreter.jump(m_false_target.value());
+}
+
 void Call::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto callee = interpreter.reg(m_callee);
@@ -437,6 +448,13 @@ String JumpNullish::to_string_impl(Bytecode::Executable const&) const
     auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
     auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
     return String::formatted("JumpNullish null:{} nonnull:{}", true_string, false_string);
+}
+
+String JumpUndefined::to_string_impl(Bytecode::Executable const&) const
+{
+    auto true_string = m_true_target.has_value() ? String::formatted("{}", *m_true_target) : "<empty>";
+    auto false_string = m_false_target.has_value() ? String::formatted("{}", *m_false_target) : "<empty>";
+    return String::formatted("JumpUndefined undefined:{} not undefined:{}", true_string, false_string);
 }
 
 String Call::to_string_impl(Bytecode::Executable const&) const
