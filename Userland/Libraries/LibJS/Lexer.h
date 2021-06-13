@@ -46,6 +46,7 @@ private:
     size_t m_position { 0 };
     Token m_current_token;
     char m_current_char { 0 };
+    bool m_eof { false };
 
     StringView m_filename;
     size_t m_line_number { 1 };

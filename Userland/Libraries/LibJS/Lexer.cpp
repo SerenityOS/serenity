@@ -139,9 +139,10 @@ void Lexer::consume()
     auto did_reach_eof = [this] {
         if (m_position != m_source.length())
             return false;
+        m_eof = true;
+        m_current_char = '\0';
         m_position++;
         m_line_column++;
-        m_current_char = EOF;
         return true;
     };
 
@@ -276,7 +277,7 @@ bool Lexer::match(char a, char b, char c, char d) const
 
 bool Lexer::is_eof() const
 {
-    return m_current_char == EOF;
+    return m_eof;
 }
 
 bool Lexer::is_line_terminator() const
@@ -540,7 +541,7 @@ Token Lexer::next()
         } else {
             consume();
         }
-    } else if (m_current_char == EOF) {
+    } else if (m_eof) {
         if (unterminated_comment) {
             token_type = TokenType::Invalid;
             token_message = "Unterminated multi-line comment";
