@@ -72,11 +72,17 @@ class CircularQueue;
 template<typename T>
 struct Traits;
 
-template<typename T, typename = Traits<T>>
+template<typename T, typename TraitsForT = Traits<T>, bool IsOrdered = false>
 class HashTable;
 
-template<typename K, typename V, typename = Traits<K>>
+template<typename T, typename TraitsForT = Traits<T>>
+using OrderedHashTable = HashTable<T, TraitsForT, true>;
+
+template<typename K, typename V, typename KeyTraits = Traits<K>, bool IsOrdered = false>
 class HashMap;
+
+template<typename K, typename V, typename KeyTraits>
+using OrderedHashMap = HashMap<K, V, KeyTraits, true>;
 
 template<typename T>
 class Badge;
