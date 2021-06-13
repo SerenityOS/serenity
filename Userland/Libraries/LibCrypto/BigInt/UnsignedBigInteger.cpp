@@ -102,6 +102,17 @@ String UnsignedBigInteger::to_base10() const
     return builder.to_string();
 }
 
+u64 UnsignedBigInteger::to_u64() const
+{
+    VERIFY(sizeof(Word) == 4);
+    if (!length())
+        return 0;
+    u64 value = m_words[0];
+    if (length() > 1)
+        value |= static_cast<u64>(m_words[1]) << 32;
+    return value;
+}
+
 void UnsignedBigInteger::set_to_0()
 {
     m_words.clear_with_capacity();
