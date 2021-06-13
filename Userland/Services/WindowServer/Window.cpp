@@ -988,7 +988,10 @@ Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool inc
 {
     if (!m_hit_testing_enabled)
         return {};
-    if (!frame().rect().contains(position))
+    // We need to check the (possibly constrained) render rect to make sure
+    // we don't hit-test on a window that is constrained to a screen, but somehow
+    // (partially) moved into another screen where it's not rendered
+    if (!frame().rect().intersected(frame().render_rect()).contains(position))
         return {};
     if (!rect().contains(position)) {
         if (include_frame)
