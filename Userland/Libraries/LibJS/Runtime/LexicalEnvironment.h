@@ -66,6 +66,7 @@ public:
     EnvironmentRecordType type() const { return m_environment_record_type; }
 
 private:
+    virtual bool is_lexical_environment() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
     EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
@@ -77,5 +78,8 @@ private:
     // Corresponds to [[FunctionObject]]
     Function* m_current_function { nullptr };
 };
+
+template<>
+inline bool Object::fast_is<LexicalEnvironment>() const { return is_lexical_environment(); }
 
 }

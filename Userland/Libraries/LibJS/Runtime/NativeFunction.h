@@ -35,9 +35,13 @@ protected:
 
 private:
     virtual LexicalEnvironment* create_environment() override final;
+    virtual bool is_native_function() const final { return true; }
 
     FlyString m_name;
     AK::Function<Value(VM&, GlobalObject&)> m_native_function;
 };
+
+template<>
+inline bool Object::fast_is<NativeFunction>() const { return is_native_function(); }
 
 }
