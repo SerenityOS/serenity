@@ -108,7 +108,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
                         global_object.put(id->string(), js_undefined());
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             global_object.put(name, js_undefined());
                         });
                     });
@@ -120,7 +120,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
                         scope_variables_with_declaration_kind.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             scope_variables_with_declaration_kind.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });

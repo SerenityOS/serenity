@@ -215,12 +215,15 @@ public:
 };
 
 struct BindingPattern : RefCounted<BindingPattern> {
-    struct BindingProperty {
-        RefPtr<Identifier> name;
-        RefPtr<Identifier> alias;
-        RefPtr<BindingPattern> pattern;
-        RefPtr<Expression> initializer;
+    // This covers both BindingProperty and BindingElement, hence the more generic name
+    struct BindingEntry {
+        // If this entry represents a BindingElement, then name will be Empty
+        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<Expression>, Empty> name { Empty {} };
+        Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>, Empty> alias { Empty {} };
+        RefPtr<Expression> initializer {};
         bool is_rest { false };
+
+        bool is_elision() const { return name.has<Empty>() && alias.has<Empty>(); }
     };
 
     enum class Kind {
@@ -229,10 +232,11 @@ struct BindingPattern : RefCounted<BindingPattern> {
     };
 
     void dump(int indent) const;
-    template<typename C>
-    void for_each_assigned_name(C&& callback) const;
 
-    Vector<BindingProperty> properties;
+    template<typename C>
+    void for_each_bound_name(C&& callback) const;
+
+    Vector<BindingEntry> entries;
     Kind kind { Kind::Object };
 };
 
@@ -1398,14 +1402,15 @@ public:
 };
 
 template<typename C>
-void BindingPattern::for_each_assigned_name(C&& callback) const
+void BindingPattern::for_each_bound_name(C&& callback) const
 {
-    for (auto& property : properties) {
-        if (property.name) {
-            callback(property.name->string());
-            continue;
+    for (auto& entry : entries) {
+        auto& alias = entry.alias;
+        if (alias.has<NonnullRefPtr<Identifier>>()) {
+            callback(alias.get<NonnullRefPtr<Identifier>>()->string());
+        } else if (alias.has<NonnullRefPtr<BindingPattern>>()) {
+            alias.get<NonnullRefPtr<BindingPattern>>()->for_each_bound_name(forward<C>(callback));
         }
-        property.pattern->template for_each_assigned_name(forward<C>(callback));
     }
 }
 

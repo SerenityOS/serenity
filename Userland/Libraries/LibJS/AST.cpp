@@ -1133,29 +1133,41 @@ void BindingPattern::dump(int indent) const
 {
     print_indent(indent);
     outln("BindingPattern {}", kind == Kind::Array ? "Array" : "Object");
-    print_indent(++indent);
-    outln("(Properties)");
-    for (auto& property : properties) {
+
+    for (auto& entry : entries) {
         print_indent(indent + 1);
-        outln("(Identifier)");
-        if (property.name) {
-            property.name->dump(indent + 2);
-        } else {
+        outln("(Property)");
+
+        if (kind == Kind::Object) {
             print_indent(indent + 2);
-            outln("(None)");
+            outln("(Identifier)");
+            if (entry.name.has<NonnullRefPtr<Identifier>>()) {
+                entry.name.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
+            } else {
+                entry.name.get<NonnullRefPtr<Expression>>()->dump(indent + 3);
+            }
+        } else if (entry.is_elision()) {
+            print_indent(indent + 2);
+            outln("(Elision)");
+            continue;
         }
 
-        print_indent(indent + 1);
-        outln("(Pattern)");
-        if (property.pattern) {
-            property.pattern->dump(indent + 2);
+        print_indent(indent + 2);
+        outln("(Pattern{})", entry.is_rest ? " rest=true" : "");
+        if (entry.alias.has<NonnullRefPtr<Identifier>>()) {
+            entry.alias.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
+        } else if (entry.alias.has<NonnullRefPtr<BindingPattern>>()) {
+            entry.alias.get<NonnullRefPtr<BindingPattern>>()->dump(indent + 3);
         } else {
-            print_indent(indent + 2);
-            outln("(None)");
+            print_indent(indent + 3);
+            outln("<empty>");
         }
 
-        print_indent(indent + 1);
-        outln("(Is Rest = {})", property.is_rest);
+        if (entry.initializer) {
+            print_indent(indent + 2);
+            outln("(Initializer)");
+            entry.initializer->dump(indent + 3);
+        }
     }
 }
 

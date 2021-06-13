@@ -87,6 +87,8 @@ public:
         }
     }
 
+    ALWAYS_INLINE Type type() const { return m_type; }
+
     bool is_valid() const { return m_type != Type::Invalid; }
     bool is_number() const
     {
@@ -174,6 +176,35 @@ private:
     FlyString m_string;
     Symbol* m_symbol { nullptr };
     u32 m_number { 0 };
+};
+
+struct PropertyNameTraits : public Traits<PropertyName> {
+    static unsigned hash(PropertyName const& name)
+    {
+        VERIFY(name.is_valid());
+        if (name.is_string())
+            return name.as_string().hash();
+        if (name.is_number())
+            return int_hash(name.as_number());
+        return ptr_hash(name.as_symbol());
+    }
+
+    static bool equals(PropertyName const& a, PropertyName const& b)
+    {
+        if (a.type() != b.type())
+            return false;
+
+        switch (a.type()) {
+        case PropertyName::Type::Number:
+            return a.as_number() == b.as_number();
+        case PropertyName::Type::String:
+            return a.as_string() == b.as_string();
+        case PropertyName::Type::Symbol:
+            return a.as_symbol() == b.as_symbol();
+        default:
+            VERIFY_NOT_REACHED();
+        }
+    }
 };
 
 }

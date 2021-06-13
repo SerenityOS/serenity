@@ -100,7 +100,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
         parameter.binding.visit(
             [&](const FlyString& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
             [&](const NonnullRefPtr<BindingPattern>& binding) {
-                binding->for_each_assigned_name([&](const auto& name) {
+                binding->for_each_bound_name([&](const auto& name) {
                     variables.set(name, { js_undefined(), DeclarationKind::Var });
                 });
             });
@@ -114,7 +114,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
                         variables.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             variables.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });
