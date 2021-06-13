@@ -177,7 +177,8 @@ URL URLParser::parse(Badge<URL>, StringView const& raw_input, URL const* base_ur
     size_t start_index = 0;
     size_t end_index = raw_input.length();
     for (size_t i = 0; i < raw_input.length(); ++i) {
-        if (0 <= raw_input[i] && raw_input[i] <= 0x20) {
+        i8 ch = raw_input[i];
+        if (0 <= ch && ch <= 0x20) {
             ++start_index;
             has_validation_error = true;
         } else {
@@ -185,7 +186,8 @@ URL URLParser::parse(Badge<URL>, StringView const& raw_input, URL const* base_ur
         }
     }
     for (ssize_t i = raw_input.length() - 1; i >= 0; --i) {
-        if (0 <= raw_input[i] && raw_input[i] <= 0x20) {
+        i8 ch = raw_input[i];
+        if (0 <= ch && ch <= 0x20) {
             --end_index;
             has_validation_error = true;
         } else {
