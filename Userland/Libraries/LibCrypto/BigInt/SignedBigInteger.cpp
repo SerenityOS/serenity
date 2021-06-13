@@ -27,7 +27,7 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
     return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
-SignedBigInteger SignedBigInteger::from_base10(StringView str)
+static bool parse_sign(StringView& str)
 {
     bool sign = false;
     if (str.length() > 1) {
@@ -39,7 +39,34 @@ SignedBigInteger SignedBigInteger::from_base10(StringView str)
         if (maybe_sign == '+')
             str = str.substring_view(1, str.length() - 1);
     }
+    return sign;
+}
+
+SignedBigInteger SignedBigInteger::from_base10(StringView str)
+{
+    auto sign = parse_sign(str);
     auto unsigned_data = UnsignedBigInteger::from_base10(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base2(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base2(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base8(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base8(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base16(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base16(str);
     return { move(unsigned_data), sign };
 }
 
