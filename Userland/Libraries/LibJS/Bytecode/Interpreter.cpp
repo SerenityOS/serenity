@@ -165,4 +165,38 @@ void Interpreter::continue_pending_unwind(Label const& resume_label)
         jump(resume_label);
     }
 }
+
+AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> Interpreter::s_optimization_pipelines {};
+
+Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::OptimizationLevel level)
+{
+    auto underlying_level = to_underlying(level);
+    VERIFY(underlying_level <= to_underlying(Interpreter::OptimizationLevel::__Count));
+    auto& entry = s_optimization_pipelines[underlying_level];
+
+    if (entry)
+        return *entry;
+
+    auto pm = make<PassManager>();
+    if (level == OptimizationLevel::Default) {
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::UnifySameBlocks>();
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::MergeBlocks>();
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::UnifySameBlocks>();
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::MergeBlocks>();
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::PlaceBlocks>();
+    } else {
+        VERIFY_NOT_REACHED();
+    }
+
+    auto& passes = *pm;
+    entry = move(pm);
+
+    return passes;
+}
+
 }
