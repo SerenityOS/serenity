@@ -28,6 +28,14 @@ public:
     {
     }
 
+    static FlyString from_fly_impl(NonnullRefPtr<StringImpl> impl)
+    {
+        VERIFY(impl->is_fly());
+        FlyString string;
+        string.m_impl = move(impl);
+        return string;
+    }
+
     FlyString& operator=(const FlyString& other)
     {
         m_impl = other.m_impl;
