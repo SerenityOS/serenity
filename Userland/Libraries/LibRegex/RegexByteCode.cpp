@@ -87,69 +87,71 @@ static const char* character_class_name(CharClass ch_class)
     }
 }
 
-HashMap<u32, OwnPtr<OpCode>> ByteCode::s_opcodes {};
+OwnPtr<OpCode> ByteCode::s_opcodes[(size_t)OpCodeId::Last + 1];
+bool ByteCode::s_opcodes_initialized { false };
 
 ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
 {
-    if (!s_opcodes.size()) {
+    if (!s_opcodes_initialized) {
         for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
             switch ((OpCodeId)i) {
             case OpCodeId::Exit:
-                s_opcodes.set(i, make<OpCode_Exit>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_Exit>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::Jump:
-                s_opcodes.set(i, make<OpCode_Jump>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_Jump>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::Compare:
-                s_opcodes.set(i, make<OpCode_Compare>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_Compare>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::CheckEnd:
-                s_opcodes.set(i, make<OpCode_CheckEnd>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_CheckEnd>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::CheckBoundary:
-                s_opcodes.set(i, make<OpCode_CheckBoundary>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_CheckBoundary>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::ForkJump:
-                s_opcodes.set(i, make<OpCode_ForkJump>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_ForkJump>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::ForkStay:
-                s_opcodes.set(i, make<OpCode_ForkStay>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_ForkStay>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::FailForks:
-                s_opcodes.set(i, make<OpCode_FailForks>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_FailForks>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::Save:
-                s_opcodes.set(i, make<OpCode_Save>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_Save>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::Restore:
-                s_opcodes.set(i, make<OpCode_Restore>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_Restore>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::GoBack:
-                s_opcodes.set(i, make<OpCode_GoBack>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_GoBack>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::CheckBegin:
-                s_opcodes.set(i, make<OpCode_CheckBegin>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_CheckBegin>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::SaveLeftCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveLeftCaptureGroup>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_SaveLeftCaptureGroup>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::SaveRightCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveRightCaptureGroup>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_SaveRightCaptureGroup>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::SaveLeftNamedCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveLeftNamedCaptureGroup>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_SaveLeftNamedCaptureGroup>(*const_cast<ByteCode*>(this));
                 break;
             case OpCodeId::SaveRightNamedCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveRightNamedCaptureGroup>(*const_cast<ByteCode*>(this)));
+                s_opcodes[i] = make<OpCode_SaveRightNamedCaptureGroup>(*const_cast<ByteCode*>(this));
                 break;
             }
         }
+        s_opcodes_initialized = true;
     }
 
     if (id > OpCodeId::Last)
         return nullptr;
 
-    return const_cast<OpCode*>(s_opcodes.get((u32)id).value())->set_bytecode(*const_cast<ByteCode*>(this));
+    return const_cast<OpCode*>(s_opcodes[(u32)id]->set_bytecode(*const_cast<ByteCode*>(this)));
 }
 
 OpCode* ByteCode::get_opcode(MatchState& state) const
