@@ -32,6 +32,7 @@
     O(IteratorToArray)               \
     O(NewString)                     \
     O(NewObject)                     \
+    O(CopyObjectExcludingProperties) \
     O(GetVariable)                   \
     O(SetVariable)                   \
     O(PutById)                       \
@@ -103,5 +104,4 @@ protected:
 private:
     Type m_type {};
 };
-
 }
