@@ -40,15 +40,48 @@ describe("ability to work with generic non-array objects", () => {
     });
 
     test("slice", () => {
-        const o = { length: 3, 0: "hello", 2: "serenity" };
-        const slice = Array.prototype.slice.call(o, 0, 2);
-        expect(o).toHaveLength(3);
-        expect(o[0]).toBe("hello");
-        expect(o[1]).toBeUndefined();
-        expect(o[2]).toBe("serenity");
-        expect(slice).toHaveLength(2);
-        expect(slice[0]).toBe("hello");
-        expect(slice[1]).toBeUndefined();
+        {
+            const o = { length: 3, 0: "hello", 2: "serenity" };
+            const slice = Array.prototype.slice.call(o, 0, 2);
+            expect(o).toHaveLength(3);
+            expect(o[0]).toBe("hello");
+            expect(o[1]).toBeUndefined();
+            expect(o[2]).toBe("serenity");
+            expect(slice).toHaveLength(2);
+            expect(slice[0]).toBe("hello");
+            expect(slice[1]).toBeUndefined();
+        }
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            expect(Array.prototype.slice.call(o)).toEqual([
+                "foo",
+                "bar",
+                undefined,
+                "baz",
+                undefined,
+            ]);
+            expect(Array.prototype.slice.call(o, 0, 3)).toEqual(["foo", "bar", undefined]);
+            expect(Array.prototype.slice.call(o, 0, 15)).toEqual([
+                "foo",
+                "bar",
+                undefined,
+                "baz",
+                undefined,
+            ]);
+
+            expect(Array.prototype.slice.call(o, 1)).toEqual(["bar", undefined, "baz", undefined]);
+            expect(Array.prototype.slice.call(o, 15)).toEqual([]);
+
+            expect(Array.prototype.slice.call(o, -1)).toEqual([undefined]);
+            expect(Array.prototype.slice.call(o, -2)).toEqual(["baz", undefined]);
+
+            expect(Array.prototype.slice.call(o, 1, -1)).toEqual(["bar", undefined, "baz"]);
+            expect(Array.prototype.slice.call(o, 2, -2)).toEqual([undefined]);
+
+            expect(Array.prototype.slice.call(o, 3, -3)).toEqual([]);
+            expect(Array.prototype.slice.call(o, 0, 0)).toEqual([]);
+            expect(Array.prototype.slice.call(o, 10, 10)).toEqual([]);
+        }
     });
 
     test("join", () => {
