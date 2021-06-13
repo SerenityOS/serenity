@@ -40,6 +40,7 @@
     O(Jump)                       \
     O(JumpConditional)            \
     O(JumpNullish)                \
+    O(JumpUndefined)              \
     O(Call)                       \
     O(NewFunction)                \
     O(Return)                     \
