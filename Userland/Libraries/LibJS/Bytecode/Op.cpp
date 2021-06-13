@@ -165,6 +165,14 @@ void Jump::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.jump(*m_true_target);
 }
 
+void Jump::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (m_true_target.has_value() && &m_true_target->block() == &from)
+        m_true_target = Label { to };
+    if (m_false_target.has_value() && &m_false_target->block() == &from)
+        m_false_target = Label { to };
+}
+
 void JumpConditional::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     VERIFY(m_true_target.has_value());
@@ -261,6 +269,16 @@ void EnterUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
     interpreter.jump(m_entry_point);
 }
 
+void EnterUnwindContext::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (&m_entry_point.block() == &from)
+        m_entry_point = Label { to };
+    if (m_handler_target.has_value() && &m_handler_target->block() == &from)
+        m_handler_target = Label { to };
+    if (m_finalizer_target.has_value() && &m_finalizer_target->block() == &from)
+        m_finalizer_target = Label { to };
+}
+
 void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.leave_unwind_context();
@@ -269,6 +287,12 @@ void LeaveUnwindContext::execute_impl(Bytecode::Interpreter& interpreter) const
 void ContinuePendingUnwind::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.continue_pending_unwind(m_resume_target);
+}
+
+void ContinuePendingUnwind::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (&m_resume_target.block() == &from)
+        m_resume_target = Label { to };
 }
 
 void PushLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -290,6 +314,12 @@ void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
     else
         object->put("continuation", Value(0));
     interpreter.do_return(object);
+}
+
+void Yield::replace_references_impl(BasicBlock const& from, BasicBlock const& to)
+{
+    if (m_continuation_label.has_value() && &m_continuation_label->block() == &from)
+        m_continuation_label = Label { to };
 }
 
 void GetByValue::execute_impl(Bytecode::Interpreter& interpreter) const

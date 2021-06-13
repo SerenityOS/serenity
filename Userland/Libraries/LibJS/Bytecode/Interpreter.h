@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Generator.h"
+#include "PassManager.h"
 #include <LibJS/Bytecode/Label.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Forward.h>
@@ -60,8 +61,16 @@ public:
 
     Executable const& current_executable() { return *m_current_executable; }
 
+    enum class OptimizationLevel {
+        Default,
+        __Count,
+    };
+    static Bytecode::PassManager& optimization_pipeline(OptimizationLevel = OptimizationLevel::Default);
+
 private:
     RegisterWindow& registers() { return m_register_windows.last(); }
+
+    static AK::Array<OwnPtr<PassManager>, static_cast<UnderlyingType<Interpreter::OptimizationLevel>>(Interpreter::OptimizationLevel::__Count)> s_optimization_pipelines;
 
     VM& m_vm;
     GlobalObject& m_global_object;
