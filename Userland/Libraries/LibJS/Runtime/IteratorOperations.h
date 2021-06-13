@@ -19,12 +19,11 @@ enum class IteratorHint {
 };
 
 Object* get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
-bool is_iterator_complete(Object& iterator_result);
-Value create_iterator_result_object(GlobalObject&, Value value, bool done);
-
 Object* iterator_next(Object& iterator, Value value = {});
+bool iterator_complete(GlobalObject&, Object& iterator_result);
+Value iterator_value(GlobalObject&, Object& iterator_result);
 void iterator_close(Object& iterator);
-
+Value create_iterator_result_object(GlobalObject&, Value value, bool done);
 MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
 enum class CloseOnAbrupt {

@@ -69,6 +69,18 @@ Object* iterator_next(Object& iterator, Value value)
     return &result.as_object();
 }
 
+// 7.4.3 IteratorComplete ( iterResult ), https://tc39.es/ecma262/#sec-iteratorcomplete
+bool iterator_complete(GlobalObject& global_object, Object& iterator_result)
+{
+    return iterator_result.get(global_object.vm().names.done).value_or(Value(false)).to_boolean();
+}
+
+// 7.4.4 IteratorValue ( iterResult ), https://tc39.es/ecma262/#sec-iteratorvalue
+Value iterator_value(GlobalObject& global_object, Object& iterator_result)
+{
+    return iterator_result.get(global_object.vm().names.value).value_or(js_undefined());
+}
+
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
 void iterator_close(Object& iterator)
 {
@@ -104,6 +116,16 @@ void iterator_close(Object& iterator)
     restore_completion(); // Return Completion(completion).
 }
 
+// 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
+Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
+{
+    auto& vm = global_object.vm();
+    auto* object = Object::create(global_object, global_object.object_prototype());
+    object->define_property(vm.names.value, value);
+    object->define_property(vm.names.done, Value(done));
+    return object;
+}
+
 // 7.4.10 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
 MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Value method)
 {
@@ -118,16 +140,6 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
         },
         method, CloseOnAbrupt::No);
     return values;
-}
-
-// 7.4.8 CreateIterResultObject ( value, done ), https://tc39.es/ecma262/#sec-createiterresultobject
-Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
-{
-    auto& vm = global_object.vm();
-    auto* object = Object::create(global_object, global_object.object_prototype());
-    object->define_property(vm.names.value, value);
-    object->define_property(vm.names.done, Value(done));
-    return object;
 }
 
 void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback, Value method, CloseOnAbrupt close_on_abrupt)
