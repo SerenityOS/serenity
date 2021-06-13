@@ -21,6 +21,7 @@
     M(ClassIsAbstract, "Abstract class {} cannot be constructed directly")                                                              \
     M(ConstructorWithoutNew, "{} constructor must be called with 'new'")                                                                \
     M(Convert, "Cannot convert {} to {}")                                                                                               \
+    M(DataViewOutOfRangeByteOffset, "Data view byte offset {} is out of range for buffer with length {}")                               \
     M(DescChangeNonConfigurable, "Cannot change attributes of non-configurable property '{}'")                                          \
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
@@ -36,6 +37,7 @@
     M(InvalidTimeValue, "Invalid time value")                                                                                           \
     M(InvalidRadix, "Radix must be an integer no less than 2, and no greater than 36")                                                  \
     M(IsNotA, "{} is not a {}")                                                                                                         \
+    M(IsNotAn, "{} is not an {}")                                                                                                       \
     M(IsNotAEvaluatedFrom, "{} is not a {} (evaluated from '{}')")                                                                      \
     M(IterableNextBadReturn, "iterator.next() returned a non-object value")                                                             \
     M(IterableNextNotAFunction, "'next' property on returned object from Symbol.iterator method is "                                    \

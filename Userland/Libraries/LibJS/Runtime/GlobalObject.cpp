@@ -27,6 +27,8 @@
 #include <LibJS/Runtime/BooleanConstructor.h>
 #include <LibJS/Runtime/BooleanPrototype.h>
 #include <LibJS/Runtime/ConsoleObject.h>
+#include <LibJS/Runtime/DataViewConstructor.h>
+#include <LibJS/Runtime/DataViewPrototype.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
@@ -150,6 +152,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.ArrayBuffer, m_array_buffer_constructor, m_array_buffer_prototype);
     add_constructor(vm.names.BigInt, m_bigint_constructor, m_bigint_prototype);
     add_constructor(vm.names.Boolean, m_boolean_constructor, m_boolean_prototype);
+    add_constructor(vm.names.DataView, m_data_view_constructor, m_data_view_prototype);
     add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
     add_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
     add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);

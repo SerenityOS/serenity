@@ -31,6 +31,7 @@
     __JS_ENUMERATE(ArrayBuffer, array_buffer, ArrayBufferPrototype, ArrayBufferConstructor, void)             \
     __JS_ENUMERATE(BigIntObject, bigint, BigIntPrototype, BigIntConstructor, void)                            \
     __JS_ENUMERATE(BooleanObject, boolean, BooleanPrototype, BooleanConstructor, void)                        \
+    __JS_ENUMERATE(DataView, data_view, DataViewPrototype, DataViewConstructor, void)                         \
     __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                          \
     __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                      \
     __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor, void)                          \
