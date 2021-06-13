@@ -98,6 +98,7 @@ protected:
 
 private:
     void layout_headers();
+    bool is_navigation(GUI::KeyEvent&);
 
     RefPtr<HeaderView> m_column_header;
     RefPtr<HeaderView> m_row_header;
@@ -110,6 +111,7 @@ private:
 
     int m_vertical_padding { 8 };
     int m_horizontal_padding { font().glyph_height() / 2 };
+    int m_tab_moves { 0 };
 };
 
 }

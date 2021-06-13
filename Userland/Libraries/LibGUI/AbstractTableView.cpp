@@ -194,6 +194,7 @@ void AbstractTableView::set_column_header_alignment(int column, Gfx::TextAlignme
 
 void AbstractTableView::mousedown_event(MouseEvent& event)
 {
+    m_tab_moves = 0;
     if (!model())
         return AbstractView::mousedown_event(event);
 
@@ -403,13 +404,20 @@ void AbstractTableView::layout_headers()
 void AbstractTableView::keydown_event(KeyEvent& event)
 {
     if (is_tab_key_navigation_enabled()) {
-        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab) {
-            move_cursor(CursorMovement::Left, SelectionUpdate::Set);
-            event.accept();
-            return;
-        }
         if (!event.modifiers() && event.key() == KeyCode::Key_Tab) {
             move_cursor(CursorMovement::Right, SelectionUpdate::Set);
+            event.accept();
+            ++m_tab_moves;
+            return;
+        } else if (is_navigation(event)) {
+            if (event.key() == KeyCode::Key_Return) {
+                move_cursor_relative(0, -m_tab_moves, SelectionUpdate::Set);
+            }
+            m_tab_moves = 0;
+        }
+
+        if (event.modifiers() == KeyModifier::Mod_Shift && event.key() == KeyCode::Key_Tab) {
+            move_cursor(CursorMovement::Left, SelectionUpdate::Set);
             event.accept();
             return;
         }
@@ -418,4 +426,22 @@ void AbstractTableView::keydown_event(KeyEvent& event)
     AbstractView::keydown_event(event);
 }
 
+bool AbstractTableView::is_navigation(GUI::KeyEvent& event)
+{
+    switch (event.key()) {
+    case KeyCode::Key_Tab:
+    case KeyCode::Key_Left:
+    case KeyCode::Key_Right:
+    case KeyCode::Key_Up:
+    case KeyCode::Key_Down:
+    case KeyCode::Key_Return:
+    case KeyCode::Key_Home:
+    case KeyCode::Key_End:
+    case KeyCode::Key_PageUp:
+    case KeyCode::Key_PageDown:
+        return true;
+    default:
+        return false;
+    }
+}
 }
