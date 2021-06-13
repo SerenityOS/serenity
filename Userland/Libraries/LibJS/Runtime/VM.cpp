@@ -208,18 +208,15 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
         if (!iterator)
             return;
 
-        size_t index = 0;
-        while (true) {
+        for (size_t i = 0; i < binding.entries.size(); i++) {
             if (exception())
                 return;
 
-            if (index >= binding.properties.size())
-                break;
+            auto& entry = binding.entries[i];
 
-            auto pattern_property = binding.properties[index];
-            ++index;
+            if (entry.is_rest) {
+                VERIFY(i == binding.entries.size() - 1);
 
-            if (pattern_property.is_rest) {
                 auto* array = Array::create(global_object);
                 for (;;) {
                     auto next_object = iterator_next(*iterator);
@@ -240,7 +237,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                     array->indexed_properties().append(next_value);
                 }
                 value = array;
-            } else {
+            } else if (iterator) {
                 auto next_object = iterator_next(*iterator);
                 if (!next_object)
                     return;
@@ -249,65 +246,83 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                 if (exception())
                     return;
 
-                if (!done_property.is_empty() && done_property.to_boolean())
-                    break;
+                if (!done_property.is_empty() && done_property.to_boolean()) {
+                    iterator = nullptr;
+                    value = js_undefined();
+                } else {
+                    value = next_object->get(names.value);
+                    if (exception())
+                        return;
+                }
+            } else {
+                value = js_undefined();
+            }
 
-                value = next_object->get(names.value);
+            if (value.is_undefined() && entry.initializer) {
+                value = entry.initializer->execute(interpreter(), global_object);
                 if (exception())
                     return;
             }
 
-            if (value.is_undefined() && pattern_property.initializer)
-                value = pattern_property.initializer->execute(interpreter(), global_object);
+            entry.alias.visit(
+                [&](Empty) {},
+                [&](NonnullRefPtr<Identifier> const& identifier) {
+                    set_variable(identifier->string(), value, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                    assign(pattern, value, global_object, first_assignment, specific_scope);
+                });
 
-            if (exception())
-                return;
-
-            if (pattern_property.name) {
-                set_variable(pattern_property.name->string(), value, global_object, first_assignment, specific_scope);
-                if (pattern_property.is_rest)
-                    break;
-                continue;
-            }
-
-            if (pattern_property.pattern) {
-                assign(NonnullRefPtr(*pattern_property.pattern), value, global_object, first_assignment, specific_scope);
-                if (pattern_property.is_rest)
-                    break;
-                continue;
-            }
+            if (entry.is_rest)
+                break;
         }
+
         break;
     }
     case BindingPattern::Kind::Object: {
         auto object = value.to_object(global_object);
-        HashTable<FlyString> seen_names;
-        for (auto& property : binding.properties) {
-            VERIFY(!property.pattern);
+        HashTable<PropertyName, PropertyNameTraits> seen_names;
+        for (auto& property : binding.entries) {
+            VERIFY(!property.is_elision());
+
+            PropertyName assignment_name;
             JS::Value value_to_assign;
             if (property.is_rest) {
-                auto* rest_object = Object::create(global_object, nullptr);
-                for (auto& property : object->shape().property_table()) {
-                    if (!property.value.attributes.has_enumerable())
+                VERIFY(property.name.has<NonnullRefPtr<Identifier>>());
+                assignment_name = property.name.get<NonnullRefPtr<Identifier>>()->string();
+
+                auto* rest_object = Object::create(global_object, global_object.object_prototype());
+                for (auto& object_property : object->shape().property_table()) {
+                    if (!object_property.value.attributes.has_enumerable())
                         continue;
-                    if (seen_names.contains(property.key.to_display_string()))
+                    if (seen_names.contains(object_property.key.to_display_string()))
                         continue;
-                    rest_object->put(property.key, object->get(property.key));
+                    rest_object->put(object_property.key, object->get(object_property.key));
                     if (exception())
                         return;
                 }
+
                 value_to_assign = rest_object;
             } else {
-                value_to_assign = object->get(property.name->string());
+                property.name.visit(
+                    [&](Empty) { VERIFY_NOT_REACHED(); },
+                    [&](NonnullRefPtr<Identifier> const& identifier) {
+                        assignment_name = identifier->string();
+                    },
+                    [&](NonnullRefPtr<Expression> const& expression) {
+                        auto result = expression->execute(interpreter(), global_object);
+                        if (exception())
+                            return;
+                        assignment_name = result.to_property_key(global_object);
+                    });
+
+                if (exception())
+                    break;
+
+                value_to_assign = object->get(assignment_name);
             }
 
-            seen_names.set(property.name->string());
-            if (exception())
-                break;
-
-            auto assignment_name = property.name->string();
-            if (property.alias)
-                assignment_name = property.alias->string();
+            seen_names.set(assignment_name);
 
             if (value_to_assign.is_empty())
                 value_to_assign = js_undefined();
@@ -318,7 +333,18 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             if (exception())
                 break;
 
-            set_variable(assignment_name, value_to_assign, global_object, first_assignment, specific_scope);
+            property.alias.visit(
+                [&](Empty) {
+                    set_variable(assignment_name.to_string(), value_to_assign, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<Identifier> const& identifier) {
+                    VERIFY(!property.is_rest);
+                    set_variable(identifier->string(), value_to_assign, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                    VERIFY(!property.is_rest);
+                    assign(pattern, value_to_assign, global_object, first_assignment, specific_scope);
+                });
 
             if (property.is_rest)
                 break;

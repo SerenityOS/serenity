@@ -1248,6 +1248,15 @@ NonnullRefPtr<AssignmentExpression> Parser::parse_assignment_expression(Assignme
     return create_ast_node<AssignmentExpression>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, assignment_op, move(lhs), move(rhs));
 }
 
+NonnullRefPtr<Identifier> Parser::parse_identifier()
+{
+    auto identifier_start = position();
+    auto token = consume(TokenType::Identifier);
+    return create_ast_node<Identifier>(
+        { m_parser_state.m_current_token.filename(), identifier_start, position() },
+        token.value());
+}
+
 NonnullRefPtr<CallExpression> Parser::parse_call_expression(NonnullRefPtr<Expression> lhs)
 {
     auto rule_start = push_start();
@@ -1522,36 +1531,28 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
 {
     auto rule_start = push_start();
 
-    auto pattern_ptr = adopt_ref(*new BindingPattern);
-    auto& pattern = *pattern_ptr;
     TokenType closing_token;
-    auto allow_named_property = false;
-    auto elide_extra_commas = false;
-    auto allow_nested_pattern = false;
+    bool is_object = true;
 
     if (match(TokenType::BracketOpen)) {
         consume();
-        pattern.kind = BindingPattern::Kind::Array;
         closing_token = TokenType::BracketClose;
-        elide_extra_commas = true;
-        allow_nested_pattern = true;
+        is_object = false;
     } else if (match(TokenType::CurlyOpen)) {
         consume();
-        pattern.kind = BindingPattern::Kind::Object;
         closing_token = TokenType::CurlyClose;
-        allow_named_property = true;
     } else {
         return {};
     }
 
-    while (!match(closing_token)) {
-        if (elide_extra_commas && match(TokenType::Comma))
-            consume();
+    Vector<BindingPattern::BindingEntry> entries;
 
-        ScopeGuard consume_commas { [&] {
-            if (match(TokenType::Comma))
-                consume();
-        } };
+    while (!match(closing_token)) {
+        if (!is_object && match(TokenType::Comma)) {
+            consume();
+            entries.append(BindingPattern::BindingEntry {});
+            continue;
+        }
 
         auto is_rest = false;
 
@@ -1560,89 +1561,88 @@ RefPtr<BindingPattern> Parser::parse_binding_pattern()
             is_rest = true;
         }
 
-        if (match(TokenType::Identifier)) {
-            auto identifier_start = position();
-            auto token = consume(TokenType::Identifier);
-            auto name = create_ast_node<Identifier>(
-                { m_parser_state.m_current_token.filename(), identifier_start, position() },
-                token.value());
+        decltype(BindingPattern::BindingEntry::name) name = Empty {};
+        decltype(BindingPattern::BindingEntry::alias) alias = Empty {};
+        RefPtr<Expression> initializer = {};
 
-            if (!is_rest && allow_named_property && match(TokenType::Colon)) {
+        if (is_object) {
+            if (match(TokenType::Identifier)) {
+                name = parse_identifier();
+            } else if (match(TokenType::BracketOpen)) {
                 consume();
-                if (!match(TokenType::Identifier)) {
-                    syntax_error("Expected a binding pattern as the value of a named element in destructuring object");
-                    break;
-                } else {
-                    auto identifier_start = position();
-                    auto token = consume(TokenType::Identifier);
-                    auto alias_name = create_ast_node<Identifier>(
-                        { m_parser_state.m_current_token.filename(), identifier_start, position() },
-                        token.value());
-                    pattern.properties.append(BindingPattern::BindingProperty {
-                        .name = move(name),
-                        .alias = move(alias_name),
-                        .pattern = nullptr,
-                        .initializer = nullptr,
-                        .is_rest = false,
-                    });
-                }
-                continue;
-            }
-
-            RefPtr<Expression> initializer;
-            if (match(TokenType::Equals)) {
-                consume();
-                initializer = parse_expression(2);
-            }
-            pattern.properties.append(BindingPattern::BindingProperty {
-                .name = move(name),
-                .alias = nullptr,
-                .pattern = nullptr,
-                .initializer = move(initializer),
-                .is_rest = is_rest,
-            });
-            if (is_rest)
-                break;
-            continue;
-        }
-
-        if (allow_nested_pattern) {
-            auto binding_pattern = parse_binding_pattern();
-            if (!binding_pattern) {
-                if (is_rest)
-                    syntax_error("Expected a binding pattern after ... in destructuring list");
-                else
-                    syntax_error("Expected a binding pattern or identifier in destructuring list");
-                break;
+                name = parse_expression(0);
+                consume(TokenType::BracketOpen);
             } else {
-                RefPtr<Expression> initializer;
-                if (match(TokenType::Equals)) {
-                    consume();
-                    initializer = parse_expression(2);
-                }
-                pattern.properties.append(BindingPattern::BindingProperty {
-                    .name = nullptr,
-                    .alias = nullptr,
-                    .pattern = move(binding_pattern),
-                    .initializer = move(initializer),
-                    .is_rest = is_rest,
-                });
-                if (is_rest)
-                    break;
-                continue;
+                syntax_error("Expected identifier or computed property name");
+                return {};
             }
 
-            continue;
+            if (!is_rest && match(TokenType::Colon)) {
+                consume();
+                if (match(TokenType::CurlyOpen) || match(TokenType::BracketOpen)) {
+                    auto binding_pattern = parse_binding_pattern();
+                    if (!binding_pattern)
+                        return {};
+                    alias = binding_pattern.release_nonnull();
+                } else if (match_identifier_name()) {
+                    alias = parse_identifier();
+                } else {
+                    syntax_error("Expected identifier or binding pattern");
+                    return {};
+                }
+            }
+        } else {
+            if (match(TokenType::Identifier)) {
+                // BindingElement must always have an Empty name field
+                alias = parse_identifier();
+            } else if (match(TokenType::BracketOpen) || match(TokenType::CurlyOpen)) {
+                auto pattern = parse_binding_pattern();
+                if (!pattern) {
+                    syntax_error("Expected binding pattern");
+                    return {};
+                }
+                alias = pattern.release_nonnull();
+            } else {
+                syntax_error("Expected identifier or binding pattern");
+                return {};
+            }
         }
 
-        break;
+        if (match(TokenType::Equals)) {
+            if (is_rest) {
+                syntax_error("Unexpected initializer after rest element");
+                return {};
+            }
+
+            consume();
+
+            initializer = parse_expression(2);
+            if (!initializer) {
+                syntax_error("Expected initialization expression");
+                return {};
+            }
+        }
+
+        entries.append(BindingPattern::BindingEntry { move(name), move(alias), move(initializer), is_rest });
+
+        if (match(TokenType::Comma)) {
+            if (is_rest) {
+                syntax_error("Rest element may not be followed by a comma");
+                return {};
+            }
+            consume();
+        }
     }
 
-    while (elide_extra_commas && match(TokenType::Comma))
+    while (!is_object && match(TokenType::Comma))
         consume();
 
     consume(closing_token);
 
+    auto kind = is_object ? BindingPattern::Kind::Object : BindingPattern::Kind::Array;
+    auto pattern = adopt_ref(*new BindingPattern);
+    pattern->entries = move(entries);
+    pattern->kind = kind;
     return pattern;
 }
 
