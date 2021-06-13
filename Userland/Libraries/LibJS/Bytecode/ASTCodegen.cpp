@@ -991,8 +991,11 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
         }
     }
 
+    auto& target_block = generator.make_block();
     generator.switch_to_basic_block(saved_block);
-    generator.emit<Bytecode::Op::EnterUnwindContext>(handler_target, finalizer_target);
+    generator.emit<Bytecode::Op::EnterUnwindContext>(Bytecode::Label { target_block }, handler_target, finalizer_target);
+
+    generator.switch_to_basic_block(target_block);
     m_block->generate_bytecode(generator);
     if (m_finalizer && !generator.is_current_block_terminated())
         generator.emit<Bytecode::Op::Jump>(finalizer_target);
