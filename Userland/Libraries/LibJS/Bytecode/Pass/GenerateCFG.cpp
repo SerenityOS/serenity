@@ -58,7 +58,7 @@ void GenerateCFG::perform(PassPipelineExecutable& executable)
             continue;
         }
 
-        if (instruction.type() == Instruction::Type::JumpConditional || instruction.type() == Instruction::Type::JumpNullish) {
+        if (instruction.type() == Instruction::Type::JumpConditional || instruction.type() == Instruction::Type::JumpNullish || instruction.type() == Instruction::Type::JumpUndefined) {
             auto& true_target = static_cast<Op::Jump const&>(instruction).true_target();
             enter_label(true_target, current_block);
             auto& false_target = static_cast<Op::Jump const&>(instruction).false_target();

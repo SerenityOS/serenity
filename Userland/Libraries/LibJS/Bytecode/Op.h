@@ -377,6 +377,17 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
 };
 
+class JumpUndefined final : public Jump {
+public:
+    explicit JumpUndefined(Optional<Label> true_target = {}, Optional<Label> false_target = {})
+        : Jump(Type::JumpUndefined, move(true_target), move(false_target))
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+};
+
 // NOTE: This instruction is variable-width depending on the number of arguments!
 class Call final : public Instruction {
 public:
