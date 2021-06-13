@@ -232,7 +232,7 @@ String Account::generate_passwd_file() const
     struct passwd* p;
     errno = 0;
     while ((p = getpwent())) {
-        if (p->pw_uid == m_uid) {
+        if (p->pw_name == m_username) {
             builder.appendff("{}:!:{}:{}:{}:{}:{}\n",
                 m_username,
                 m_uid, m_gid,
