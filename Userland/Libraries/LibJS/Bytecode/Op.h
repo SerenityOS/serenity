@@ -582,6 +582,7 @@ public:
         , m_variables(move(variables))
     {
     }
+
     void execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
@@ -604,6 +605,54 @@ public:
 
 private:
     size_t m_index { 0 };
+};
+
+class GetIterator final : public Instruction {
+public:
+    GetIterator()
+        : Instruction(Type::GetIterator)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
+class IteratorNext final : public Instruction {
+public:
+    IteratorNext()
+        : Instruction(Type::IteratorNext)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
+class IteratorResultDone final : public Instruction {
+public:
+    IteratorResultDone()
+        : Instruction(Type::IteratorResultDone)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+};
+
+class IteratorResultValue final : public Instruction {
+public:
+    IteratorResultValue()
+        : Instruction(Type::IteratorResultValue)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
 }

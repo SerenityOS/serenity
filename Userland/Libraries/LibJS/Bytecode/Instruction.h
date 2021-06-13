@@ -66,7 +66,11 @@
     O(EnterUnwindContext)         \
     O(LeaveUnwindContext)         \
     O(ContinuePendingUnwind)      \
-    O(Yield)
+    O(Yield)                      \
+    O(GetIterator)                \
+    O(IteratorNext)               \
+    O(IteratorResultDone)         \
+    O(IteratorResultValue)
 
 namespace JS::Bytecode {
 

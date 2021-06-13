@@ -639,62 +639,182 @@ void FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::NewFunction>(*this);
 }
 
-static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value, bool object_pattern)
+static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg);
+
+static void generate_object_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
 {
     for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
         if (is_rest)
             TODO();
 
-        if (object_pattern) {
-            Bytecode::StringTableIndex name_index;
+        Bytecode::StringTableIndex name_index;
 
-            if (name.has<NonnullRefPtr<Identifier>>()) {
-                auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
-                name_index = generator.intern_string(identifier);
-                generator.emit<Bytecode::Op::Load>(value);
-                generator.emit<Bytecode::Op::GetById>(name_index);
-            } else {
-                auto expression = name.get<NonnullRefPtr<Expression>>();
-                expression->generate_bytecode(generator);
-                generator.emit<Bytecode::Op::GetByValue>(value);
-            }
-
-            if (initializer) {
-                auto& if_undefined_block = generator.make_block();
-                auto& if_not_undefined_block = generator.make_block();
-
-                generator.emit<Bytecode::Op::JumpUndefined>().set_targets(
-                    Bytecode::Label { if_undefined_block },
-                    Bytecode::Label { if_not_undefined_block });
-
-                generator.switch_to_basic_block(if_undefined_block);
-                initializer->generate_bytecode(generator);
-                generator.emit<Bytecode::Op::Jump>().set_targets(
-                    Bytecode::Label { if_not_undefined_block },
-                    {});
-
-                generator.switch_to_basic_block(if_not_undefined_block);
-            }
-
-            if (alias.has<NonnullRefPtr<BindingPattern>>()) {
-                auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern>>();
-                auto nested_value_reg = generator.allocate_register();
-                generator.emit<Bytecode::Op::Store>(nested_value_reg);
-                generate_binding_pattern_bytecode(generator, binding_pattern, nested_value_reg, binding_pattern.kind == BindingPattern::Kind::Object);
-            } else if (alias.has<Empty>()) {
-                if (name.has<NonnullRefPtr<Expression>>()) {
-                    // This needs some sort of SetVariableByValue opcode, as it's a runtime binding
-                    TODO();
-                }
-
-                generator.emit<Bytecode::Op::SetVariable>(name_index);
-            } else {
-                auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
-                generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier));
-            }
+        if (name.has<NonnullRefPtr<Identifier>>()) {
+            auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+            name_index = generator.intern_string(identifier);
+            generator.emit<Bytecode::Op::Load>(value_reg);
+            generator.emit<Bytecode::Op::GetById>(name_index);
         } else {
-            TODO();
+            auto expression = name.get<NonnullRefPtr<Expression>>();
+            expression->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::GetByValue>(value_reg);
         }
+
+        if (initializer) {
+            auto& if_undefined_block = generator.make_block();
+            auto& if_not_undefined_block = generator.make_block();
+
+            generator.emit<Bytecode::Op::JumpUndefined>().set_targets(
+                Bytecode::Label { if_undefined_block },
+                Bytecode::Label { if_not_undefined_block });
+
+            generator.switch_to_basic_block(if_undefined_block);
+            initializer->generate_bytecode(generator);
+            generator.emit<Bytecode::Op::Jump>().set_targets(
+                Bytecode::Label { if_not_undefined_block },
+                {});
+
+            generator.switch_to_basic_block(if_not_undefined_block);
+        }
+
+        if (alias.has<NonnullRefPtr<BindingPattern>>()) {
+            auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern>>();
+            auto nested_value_reg = generator.allocate_register();
+            generator.emit<Bytecode::Op::Store>(nested_value_reg);
+            generate_binding_pattern_bytecode(generator, binding_pattern, nested_value_reg);
+        } else if (alias.has<Empty>()) {
+            if (name.has<NonnullRefPtr<Expression>>()) {
+                // This needs some sort of SetVariableByValue opcode, as it's a runtime binding
+                TODO();
+            }
+
+            generator.emit<Bytecode::Op::SetVariable>(name_index);
+        } else {
+            auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
+            generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier));
+        }
+    }
+}
+
+static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
+{
+    /*
+     * Consider the following destructuring assignment:
+     *
+     *     let [a, b, c, d, e] = o;
+     *
+     * It would be fairly trivial to just loop through this iterator, getting the value
+     * at each step and assigning them to the binding sequentially. However, this is not
+     * correct: once an iterator is exhausted, it must not be called again. This complicates
+     * the bytecode. In order to accomplish this, we do the following:
+     *
+     * - Reserve a special boolean register which holds 'true' if the iterator is exhausted,
+     *   and false otherwise
+     * - When we are retrieving the value which should be bound, we first check this register.
+     *   If it is 'true', we load undefined into the accumulator. Otherwise, we grab the next
+     *   value from the iterator and store it into the accumulator.
+     *
+     * Note that the is_exhausted register does not need to be loaded with false because the
+     * first IteratorNext bytecode is _not_ proceeded by an exhausted check, as it is
+     * unnecessary.
+     */
+
+    auto is_iterator_exhausted_register = generator.allocate_register();
+
+    auto iterator_reg = generator.allocate_register();
+    generator.emit<Bytecode::Op::Load>(value_reg);
+    generator.emit<Bytecode::Op::GetIterator>();
+    generator.emit<Bytecode::Op::Store>(iterator_reg);
+    bool first = true;
+
+    auto temp_iterator_result_reg = generator.allocate_register();
+
+    for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
+        VERIFY(name.has<Empty>());
+
+        if (is_rest)
+            TODO();
+
+        // In the first iteration of the loop, a few things are true which can save
+        // us some bytecode:
+        //  - the iterator result is still in the accumulator, so we can avoid a load
+        //  - the iterator is not yet exhausted, which can save us a jump and some
+        //    creation
+
+        auto& iterator_is_exhausted_block = generator.make_block();
+
+        if (!first) {
+            auto& iterator_is_not_exhausted_block = generator.make_block();
+
+            generator.emit<Bytecode::Op::Load>(is_iterator_exhausted_register);
+            generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+                Bytecode::Label { iterator_is_exhausted_block },
+                Bytecode::Label { iterator_is_not_exhausted_block });
+
+            generator.switch_to_basic_block(iterator_is_not_exhausted_block);
+            generator.emit<Bytecode::Op::Load>(iterator_reg);
+        }
+
+        generator.emit<Bytecode::Op::IteratorNext>();
+        generator.emit<Bytecode::Op::Store>(temp_iterator_result_reg);
+        generator.emit<Bytecode::Op::IteratorResultDone>();
+        generator.emit<Bytecode::Op::Store>(is_iterator_exhausted_register);
+
+        // We still have to check for exhaustion here. If the iterator is exhausted,
+        // we need to bail before trying to get the value
+        auto& no_bail_block = generator.make_block();
+        generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+            Bytecode::Label { iterator_is_exhausted_block },
+            Bytecode::Label { no_bail_block });
+
+        generator.switch_to_basic_block(no_bail_block);
+
+        // Get the next value in the iterator
+        generator.emit<Bytecode::Op::Load>(temp_iterator_result_reg);
+        generator.emit<Bytecode::Op::IteratorResultValue>();
+
+        auto& create_binding_block = generator.make_block();
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { create_binding_block },
+            {});
+
+        // The iterator is exhausted, so we just load undefined and continue binding
+        generator.switch_to_basic_block(iterator_is_exhausted_block);
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        generator.emit<Bytecode::Op::Jump>().set_targets(
+            Bytecode::Label { create_binding_block },
+            {});
+
+        // Create the actual binding. The value which this entry must bind is now in the
+        // accumulator. We can proceed, processing the alias as a nested  destructuring
+        // pattern if necessary.
+        generator.switch_to_basic_block(create_binding_block);
+
+        alias.visit(
+            [&](Empty) {
+                // This element is an elision
+            },
+            [&](NonnullRefPtr<Identifier> const& identifier) {
+                auto interned_index = generator.intern_string(identifier->string());
+                generator.emit<Bytecode::Op::SetVariable>(interned_index);
+            },
+            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                // Store the accumulator value in a permanent register
+                auto target_reg = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(target_reg);
+                generate_binding_pattern_bytecode(generator, pattern, target_reg);
+            });
+
+        first = false;
+    }
+}
+
+static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value_reg)
+{
+    if (pattern.kind == BindingPattern::Kind::Object) {
+        generate_object_binding_pattern_bytecode(generator, pattern, value_reg);
+    } else {
+        generate_array_binding_pattern_bytecode(generator, pattern, value_reg);
     }
 };
 
@@ -712,7 +832,7 @@ void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) cons
             [&](NonnullRefPtr<BindingPattern> const& pattern) {
                 auto value_register = generator.allocate_register();
                 generator.emit<Bytecode::Op::Store>(value_register);
-                generate_binding_pattern_bytecode(generator, pattern, value_register, pattern->kind == BindingPattern::Kind::Object);
+                generate_binding_pattern_bytecode(generator, pattern, value_register);
             });
     }
 }
