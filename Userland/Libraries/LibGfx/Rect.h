@@ -444,6 +444,131 @@ public:
         return intersection(*this, other);
     }
 
+    [[nodiscard]] Vector<Point<T>, 2> intersected(Line<T> const&) const;
+    [[nodiscard]] float center_point_distance_to(Rect<T> const&) const;
+    [[nodiscard]] Vector<Point<T>, 2> closest_outside_center_points(Rect<T> const&) const;
+    [[nodiscard]] float outside_center_point_distance_to(Rect<T> const&) const;
+    [[nodiscard]] Rect<T> constrained_to(Rect<T> const&) const;
+    [[nodiscard]] Rect<T> aligned_within(Size<T> const&, Point<T> const&, TextAlignment = TextAlignment::Center) const;
+    [[nodiscard]] Point<T> closest_to(Point<T> const&) const;
+
+    class RelativeLocation {
+        friend class Rect<T>;
+
+        RelativeLocation(Rect<T> const& base_rect, Rect<T> const& other_rect);
+
+    public:
+        RelativeLocation() = default;
+
+        bool top_left() const { return m_top_left; }
+        bool top() const { return m_top; }
+        bool top_right() const { return m_top_right; }
+        bool left() const { return m_left; }
+        bool right() const { return m_right; }
+        bool bottom_left() const { return m_bottom_left; }
+        bool bottom() const { return m_bottom; }
+        bool bottom_right() const { return m_bottom_right; }
+        bool anywhere_above() const { return m_top_left || m_top || m_top_right; }
+        bool anywhere_below() const { return m_bottom_left || m_bottom || m_bottom_right; }
+        bool anywhere_left() const { return m_top_left || m_left || m_bottom_left; }
+        bool anywhere_right() const { return m_top_right || m_right || m_bottom_right; }
+
+    private:
+        bool m_top_left : 1 { false };
+        bool m_top : 1 { false };
+        bool m_top_right : 1 { false };
+        bool m_left : 1 { false };
+        bool m_right : 1 { false };
+        bool m_bottom_left : 1 { false };
+        bool m_bottom : 1 { false };
+        bool m_bottom_right : 1 { false };
+    };
+    [[nodiscard]] RelativeLocation relative_location_to(Rect<T> const& other) const
+    {
+        return RelativeLocation(*this, other);
+    }
+
+    enum class Side {
+        None = 0,
+        Left,
+        Top,
+        Right,
+        Bottom
+    };
+    [[nodiscard]] Side side(Point<T> const& point) const
+    {
+        if (is_empty())
+            return Side::None;
+        if (point.y() == y() || point.y() == bottom())
+            return (point.x() >= x() && point.x() <= right()) ? (point.y() == y() ? Side::Top : Side::Bottom) : Side::None;
+        if (point.x() == x() || point.x() == right())
+            return (point.y() > y() && point.y() < bottom()) ? (point.x() == x() ? Side::Left : Side::Right) : Side::None;
+        return Side::None;
+    }
+
+    [[nodiscard]] Rect<T> rect_on_side(Side side, Rect<T> const& other) const
+    {
+        switch (side) {
+        case Side::None:
+            break;
+        case Side::Left:
+            // Return the area in other that is to the left of this rect
+            if (other.x() < x()) {
+                if (other.right() >= x())
+                    return { other.location(), { x() - other.x(), other.height() } };
+                else
+                    return other;
+            }
+            break;
+        case Side::Top:
+            // Return the area in other that is above this rect
+            if (other.y() < y()) {
+                if (other.bottom() >= y())
+                    return { other.location(), { other.width(), y() - other.y() } };
+                else
+                    return other;
+            }
+            break;
+        case Side::Right:
+            // Return the area in other that is to the right of this rect
+            if (other.right() >= x()) {
+                if (other.x() <= right())
+                    return { { right() + 1, other.y() }, { other.width() - (right() - other.x()), other.height() } };
+                else
+                    return other;
+            }
+            break;
+        case Side::Bottom:
+            // Return the area in other that is below this rect
+            if (other.bottom() >= y()) {
+                if (other.y() <= bottom())
+                    return { { other.x(), bottom() + 1 }, { other.width(), other.height() - (bottom() - other.y()) } };
+                else
+                    return other;
+            }
+            break;
+        }
+        return {};
+    }
+
+    [[nodiscard]] bool is_adjacent(Rect<T> const& other) const
+    {
+        if (is_empty() || other.is_empty())
+            return false;
+        if (intersects(other))
+            return false;
+        if (other.x() + other.width() == x() || other.x() == x() + width())
+            return max(top(), other.top()) <= min(bottom(), other.bottom());
+        if (other.y() + other.height() == y() || other.y() == y() + height())
+            return max(left(), other.left()) <= min(right(), other.right());
+        return false;
+    }
+
+    [[nodiscard]] static Rect<T> centered_at(Point<T> const& point, Size<T> const& size)
+    {
+        return { { point.x() - size.width() / 2, point.y() - size.height() / 2 }, size };
+    }
+
     [[nodiscard]] Rect<T> united(Rect<T> const&) const;
 
     [[nodiscard]] Point<T> top_left() const { return { left(), top() }; }
