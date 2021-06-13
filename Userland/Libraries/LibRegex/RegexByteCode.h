@@ -501,8 +501,6 @@ public:
 
     ALWAYS_INLINE void set_bytecode(ByteCode& bytecode) { m_bytecode = &bytecode; }
 
-    ALWAYS_INLINE void reset_state() { m_state = nullptr; }
-
     ALWAYS_INLINE const MatchState& state() const
     {
         VERIFY(m_state);
