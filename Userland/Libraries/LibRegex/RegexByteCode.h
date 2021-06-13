@@ -501,12 +501,12 @@ public:
 
     ALWAYS_INLINE void set_bytecode(ByteCode& bytecode) { m_bytecode = &bytecode; }
 
-    ALWAYS_INLINE void reset_state() { m_state.clear(); }
+    ALWAYS_INLINE void reset_state() { m_state = nullptr; }
 
     ALWAYS_INLINE const MatchState& state() const
     {
-        VERIFY(m_state.has_value());
-        return *m_state.value();
+        VERIFY(m_state);
+        return *m_state;
     }
 
     const String to_string() const
@@ -520,7 +520,7 @@ public:
 
 protected:
     ByteCode* m_bytecode { nullptr };
-    Optional<MatchState*> m_state;
+    MatchState* m_state { nullptr };
 };
 
 class OpCode_Exit final : public OpCode {
