@@ -39,6 +39,18 @@ describe("ability to work with generic non-array objects", () => {
         expect(removed[1]).toBeUndefined();
     });
 
+    test("slice", () => {
+        const o = { length: 3, 0: "hello", 2: "serenity" };
+        const slice = Array.prototype.slice.call(o, 0, 2);
+        expect(o).toHaveLength(3);
+        expect(o[0]).toBe("hello");
+        expect(o[1]).toBeUndefined();
+        expect(o[2]).toBe("serenity");
+        expect(slice).toHaveLength(2);
+        expect(slice[0]).toBe("hello");
+        expect(slice[1]).toBeUndefined();
+    });
+
     test("join", () => {
         expect(Array.prototype.join.call({})).toBe("");
         expect(Array.prototype.join.call({ length: "foo" })).toBe("");

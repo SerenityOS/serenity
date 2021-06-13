@@ -387,45 +387,77 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
 // 23.1.3.25 Array.prototype.slice ( start, end ), https://tc39.es/ecma262/#sec-array.prototype.slice
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 {
-    auto* array = Array::typed_this(vm, global_object);
-    if (!array)
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
         return {};
 
-    auto* new_array = Array::create(global_object);
-    if (vm.argument_count() == 0) {
-        new_array->indexed_properties().append_all(array, array->indexed_properties());
-        if (vm.exception())
-            return {};
-        return new_array;
-    }
-
-    ssize_t array_size = static_cast<ssize_t>(array->indexed_properties().array_like_size());
-    auto start_slice = vm.argument(0).to_i32(global_object);
+    auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
-    auto end_slice = array_size;
 
-    if (start_slice > array_size)
-        return new_array;
+    auto relative_start = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
 
-    if (start_slice < 0)
-        start_slice = end_slice + start_slice;
+    double actual_start;
 
-    if (vm.argument_count() >= 2) {
-        end_slice = vm.argument(1).to_i32(global_object);
+    if (Value(relative_start).is_negative_infinity())
+        actual_start = 0.0;
+    else if (relative_start < 0.0)
+        actual_start = max((double)initial_length + relative_start, 0.0);
+    else
+        actual_start = min(relative_start, (double)initial_length);
+
+    double relative_end;
+
+    if (vm.argument(1).is_undefined() || vm.argument(1).is_empty()) {
+        relative_end = (double)initial_length;
+    } else {
+        relative_end = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        if (end_slice < 0)
-            end_slice = array_size + end_slice;
-        else if (end_slice > array_size)
-            end_slice = array_size;
     }
 
-    for (ssize_t i = start_slice; i < end_slice; ++i) {
-        new_array->indexed_properties().append(array->get(i));
+    double final;
+
+    if (Value(relative_end).is_negative_infinity())
+        final = 0.0;
+    else if (relative_end < 0.0)
+        final = max((double)initial_length + relative_end, 0.0);
+    else
+        final = min(relative_end, (double)initial_length);
+
+    auto count = max(final - actual_start, 0.0);
+
+    // FIXME: Use ArraySpeciesCreate.
+    auto* new_array = Array::create(global_object, (size_t)count);
+    if (vm.exception())
+        return {};
+
+    size_t index = 0;
+
+    while (actual_start < final) {
+        bool present = this_object->has_property(actual_start);
         if (vm.exception())
             return {};
+
+        if (present) {
+            auto value = this_object->get(actual_start).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+
+            new_array->define_property(index, value);
+            if (vm.exception())
+                return {};
+        }
+
+        ++actual_start;
+        ++index;
     }
+
+    new_array->put(vm.names.length, Value(index));
+    if (vm.exception())
+        return {};
 
     return new_array;
 }
