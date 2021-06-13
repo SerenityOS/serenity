@@ -729,11 +729,61 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
 
     auto temp_iterator_result_reg = generator.allocate_register();
 
+    auto assign_accumulator_to_alias = [&](auto& alias) {
+        alias.visit(
+            [&](Empty) {
+                // This element is an elision
+            },
+            [&](NonnullRefPtr<Identifier> const& identifier) {
+                auto interned_index = generator.intern_string(identifier->string());
+                generator.emit<Bytecode::Op::SetVariable>(interned_index);
+            },
+            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                // Store the accumulator value in a permanent register
+                auto target_reg = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(target_reg);
+                generate_binding_pattern_bytecode(generator, pattern, target_reg);
+            });
+    };
+
     for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
         VERIFY(name.has<Empty>());
 
-        if (is_rest)
-            TODO();
+        if (is_rest) {
+            if (first) {
+                // The iterator has not been called, and is thus known to be not exhausted
+                generator.emit<Bytecode::Op::Load>(iterator_reg);
+                generator.emit<Bytecode::Op::IteratorToArray>();
+            } else {
+                auto& if_exhausted_block = generator.make_block();
+                auto& if_not_exhausted_block = generator.make_block();
+                auto& continuation_block = generator.make_block();
+
+                generator.emit<Bytecode::Op::Load>(is_iterator_exhausted_register);
+                generator.emit<Bytecode::Op::JumpConditional>().set_targets(
+                    Bytecode::Label { if_exhausted_block },
+                    Bytecode::Label { if_not_exhausted_block });
+
+                generator.switch_to_basic_block(if_exhausted_block);
+                generator.emit<Bytecode::Op::NewArray>();
+                generator.emit<Bytecode::Op::Jump>().set_targets(
+                    Bytecode::Label { continuation_block },
+                    {});
+
+                generator.switch_to_basic_block(if_not_exhausted_block);
+                generator.emit<Bytecode::Op::Load>(iterator_reg);
+                generator.emit<Bytecode::Op::IteratorToArray>();
+                generator.emit<Bytecode::Op::Jump>().set_targets(
+                    Bytecode::Label { continuation_block },
+                    {});
+
+                generator.switch_to_basic_block(continuation_block);
+            }
+
+            assign_accumulator_to_alias(alias);
+
+            return;
+        }
 
         // In the first iteration of the loop, a few things are true which can save
         // us some bytecode:
@@ -790,20 +840,7 @@ static void generate_array_binding_pattern_bytecode(Bytecode::Generator& generat
         // pattern if necessary.
         generator.switch_to_basic_block(create_binding_block);
 
-        alias.visit(
-            [&](Empty) {
-                // This element is an elision
-            },
-            [&](NonnullRefPtr<Identifier> const& identifier) {
-                auto interned_index = generator.intern_string(identifier->string());
-                generator.emit<Bytecode::Op::SetVariable>(interned_index);
-            },
-            [&](NonnullRefPtr<BindingPattern> const& pattern) {
-                // Store the accumulator value in a permanent register
-                auto target_reg = generator.allocate_register();
-                generator.emit<Bytecode::Op::Store>(target_reg);
-                generate_binding_pattern_bytecode(generator, pattern, target_reg);
-            });
+        assign_accumulator_to_alias(alias);
 
         first = false;
     }
