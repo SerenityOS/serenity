@@ -65,6 +65,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
     define_native_function(vm.names.entries, entries, 0, attr);
+    define_native_function(vm.names.copyWithin, copy_within, 2, attr);
 
     // Use define_property here instead of define_native_function so that
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
@@ -1376,6 +1377,90 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
         return {};
 
     return new_array;
+}
+
+// 23.1.3.3 Array.prototype.copyWithin ( target, start [ , end ] ), https://tc39.es/ecma262/#sec-array.prototype.copywithin
+JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+    auto length = length_of_array_like(global_object, *this_object);
+    if (vm.exception())
+        return {};
+
+    auto relative_target = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    double to;
+    if (relative_target < 0)
+        to = max(length + relative_target, 0.0);
+    else
+        to = min(relative_target, (double)length);
+
+    auto relative_start = vm.argument(1).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    double from;
+    if (relative_start < 0)
+        from = max(length + relative_start, 0.0);
+    else
+        from = min(relative_start, (double)length);
+
+    auto relative_end = vm.argument(2).is_undefined() ? length : vm.argument(2).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    double final;
+    if (relative_end < 0)
+        final = max(length + relative_end, 0.0);
+    else
+        final = min(relative_end, (double)length);
+
+    double count = min(final - from, length - to);
+
+    i32 direction = 1;
+
+    if (from < to && to < from + count) {
+        direction = -1;
+        from = from + count - 1;
+        to = to + count - 1;
+    }
+
+    if (count < 0) {
+        return this_object;
+    }
+
+    size_t from_i = from;
+    size_t to_i = to;
+    size_t count_i = count;
+
+    while (count_i > 0) {
+        auto from_present = this_object->has_property(from_i);
+        if (vm.exception())
+            return {};
+
+        if (from_present) {
+            auto from_value = this_object->get(from_i).value_or(js_undefined());
+            if (vm.exception())
+                return {};
+            this_object->put(to_i, from_value);
+            if (vm.exception())
+                return {};
+        } else {
+            this_object->delete_property(to_i);
+            if (vm.exception())
+                return {};
+        }
+
+        from_i += direction;
+        to_i += direction;
+        --count_i;
+    }
+
+    return this_object;
 }
 
 // 1.1 Array.prototype.at ( index ), https://tc39.es/proposal-relative-indexing-method/#sec-array.prototype.at
