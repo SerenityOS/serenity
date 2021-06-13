@@ -1486,7 +1486,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::at)
     }
     if (index.has_overflow() || index.value() >= length)
         return js_undefined();
-    return this_object->get(index.value());
+    return this_object->get(index.value()).value_or(js_undefined());
 }
 
 }
