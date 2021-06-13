@@ -206,7 +206,7 @@ void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* wi
     }
 
     if (!unzip_pid) {
-        int rc = execlp("/bin/unzip", "/bin/unzip", "-o", output_directory_path.characters(), archive_file_path.characters(), nullptr);
+        int rc = execlp("/bin/unzip", "/bin/unzip", "-d", output_directory_path.characters(), archive_file_path.characters(), nullptr);
         if (rc < 0) {
             perror("execlp");
             _exit(1);
