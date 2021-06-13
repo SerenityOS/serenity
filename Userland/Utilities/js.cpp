@@ -23,6 +23,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
 #include <LibJS/Runtime/BooleanObject.h>
+#include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -397,6 +398,19 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
     VERIFY_NOT_REACHED();
 }
 
+static void print_data_view(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
+{
+    auto& data_view = static_cast<const JS::DataView&>(object);
+    print_type("DataView");
+    out("\n  byteLength: ");
+    print_value(JS::Value(data_view.byte_length()), seen_objects);
+    out("\n  byteOffset: ");
+    print_value(JS::Value(data_view.byte_offset()), seen_objects);
+    out("\n  buffer: ");
+    print_type("ArrayBuffer");
+    out(" @ {:p}", data_view.viewed_array_buffer());
+}
+
 static void print_primitive_wrapper_object(const FlyString& name, const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     // BooleanObject, NumberObject, StringObject
@@ -438,6 +452,8 @@ static void print_value(JS::Value value, HashTable<JS::Object*>& seen_objects)
             return print_map(object, seen_objects);
         if (is<JS::Set>(object))
             return print_set(object, seen_objects);
+        if (is<JS::DataView>(object))
+            return print_data_view(object, seen_objects);
         if (is<JS::ProxyObject>(object))
             return print_proxy_object(object, seen_objects);
         if (is<JS::Promise>(object))
