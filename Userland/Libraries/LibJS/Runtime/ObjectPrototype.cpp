@@ -64,8 +64,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
         return js_string(vm, "[object Null]");
 
     auto* this_object = this_value.to_object(global_object);
-    if (!this_object)
-        return {};
+    VERIFY(this_object);
 
     String tag;
     auto to_string_tag = this_object->get(vm.well_known_symbol_to_string_tag());
