@@ -17,19 +17,19 @@ class StringOrSymbol {
 public:
     StringOrSymbol() = default;
 
-    StringOrSymbol(const char* chars)
+    StringOrSymbol(char const* chars)
         : m_ptr(StringImpl::create(chars).leak_ref())
     {
     }
 
-    StringOrSymbol(const String& string)
+    StringOrSymbol(String const& string)
         : m_ptr(string.impl())
     {
         VERIFY(!string.is_null());
         as_string_impl().ref();
     }
 
-    StringOrSymbol(const FlyString& string)
+    StringOrSymbol(FlyString const& string)
         : m_ptr(string.impl())
     {
         VERIFY(!string.is_null());
@@ -42,13 +42,13 @@ public:
             as_string_impl().unref();
     }
 
-    StringOrSymbol(const Symbol* symbol)
+    StringOrSymbol(Symbol const* symbol)
         : m_ptr(symbol)
     {
         set_symbol_flag();
     }
 
-    StringOrSymbol(const StringOrSymbol& other)
+    StringOrSymbol(StringOrSymbol const& other)
     {
         m_ptr = other.m_ptr;
         if (is_string())
@@ -70,10 +70,10 @@ public:
         return as_string_impl();
     }
 
-    ALWAYS_INLINE const Symbol* as_symbol() const
+    ALWAYS_INLINE Symbol const* as_symbol() const
     {
         VERIFY(is_symbol());
-        return reinterpret_cast<const Symbol*>(bits() & ~1ul);
+        return reinterpret_cast<Symbol const*>(bits() & ~1ul);
     }
 
     String to_display_string() const
@@ -100,7 +100,7 @@ public:
             visitor.visit(const_cast<Symbol*>(as_symbol()));
     }
 
-    ALWAYS_INLINE bool operator==(const StringOrSymbol& other) const
+    ALWAYS_INLINE bool operator==(StringOrSymbol const& other) const
     {
         if (is_string())
             return other.is_string() && as_string_impl() == other.as_string_impl();
@@ -109,7 +109,7 @@ public:
         return true;
     }
 
-    StringOrSymbol& operator=(const StringOrSymbol& other)
+    StringOrSymbol& operator=(StringOrSymbol const& other)
     {
         if (this == &other)
             return *this;
@@ -141,23 +141,23 @@ private:
 
     ALWAYS_INLINE void set_symbol_flag()
     {
-        m_ptr = reinterpret_cast<const void*>(bits() | 1ul);
+        m_ptr = reinterpret_cast<void const*>(bits() | 1ul);
     }
 
-    ALWAYS_INLINE const StringImpl& as_string_impl() const
+    ALWAYS_INLINE StringImpl const& as_string_impl() const
     {
         VERIFY(is_string());
-        return *reinterpret_cast<const StringImpl*>(m_ptr);
+        return *reinterpret_cast<StringImpl const*>(m_ptr);
     }
 
-    const void* m_ptr { nullptr };
+    void const* m_ptr { nullptr };
 };
 
 }
 
 template<>
 struct AK::Traits<JS::StringOrSymbol> : public GenericTraits<JS::StringOrSymbol> {
-    static unsigned hash(const JS::StringOrSymbol& key)
+    static unsigned hash(JS::StringOrSymbol const& key)
     {
         return key.hash();
     }

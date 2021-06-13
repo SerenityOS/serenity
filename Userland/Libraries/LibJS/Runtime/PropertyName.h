@@ -43,20 +43,20 @@ public:
         VERIFY(index >= 0);
     }
 
-    PropertyName(const char* chars)
+    PropertyName(char const* chars)
         : m_type(Type::String)
         , m_string(FlyString(chars))
     {
     }
 
-    PropertyName(const String& string)
+    PropertyName(String const& string)
         : m_type(Type::String)
         , m_string(FlyString(string))
     {
         VERIFY(!string.is_null());
     }
 
-    PropertyName(const FlyString& string)
+    PropertyName(FlyString const& string)
         : m_type(Type::String)
         , m_string(string)
     {
@@ -70,7 +70,7 @@ public:
         VERIFY(symbol);
     }
 
-    PropertyName(const StringOrSymbol& string_or_symbol)
+    PropertyName(StringOrSymbol const& string_or_symbol)
     {
         if (string_or_symbol.is_string()) {
             m_string = string_or_symbol.as_string();
@@ -92,13 +92,13 @@ public:
         return m_number;
     }
 
-    const FlyString& as_string() const
+    FlyString const& as_string() const
     {
         VERIFY(is_string());
         return m_string;
     }
 
-    const Symbol* as_symbol() const
+    Symbol const* as_symbol() const
     {
         VERIFY(is_symbol());
         return m_symbol;
