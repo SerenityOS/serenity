@@ -42,7 +42,6 @@ namespace {
 class OptionParser {
 public:
     OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index = nullptr);
-    ~OptionParser();
     int getopt();
 
 private:
@@ -56,7 +55,7 @@ private:
     bool find_next_option();
 
     size_t m_argc { 0 };
-    char** m_argv { nullptr };
+    char* const* m_argv { nullptr };
     StringView m_short_options;
     const option* m_long_options { nullptr };
     int* m_out_long_option_index { nullptr };
@@ -68,12 +67,11 @@ private:
 
 OptionParser::OptionParser(int argc, char* const* argv, const StringView& short_options, const option* long_options, int* out_long_option_index)
     : m_argc(argc)
+    , m_argv(argv)
     , m_short_options(short_options)
     , m_long_options(long_options)
     , m_out_long_option_index(out_long_option_index)
 {
-    m_argv = new char*[m_argc + 1];
-    memmove(m_argv, argv, sizeof(char*) * (m_argc + 1));
     // In the following case:
     // $ foo bar -o baz
     // we want to parse the option (-o baz) first, and leave the argument (bar)
@@ -92,11 +90,6 @@ OptionParser::OptionParser(int argc, char* const* argv, const StringView& short_
 
     optopt = 0;
     optarg = nullptr;
-}
-
-OptionParser::~OptionParser()
-{
-    delete[] m_argv;
 }
 
 int OptionParser::getopt()
@@ -308,10 +301,11 @@ void OptionParser::shift_argv()
         return;
     }
 
+    auto new_argv = const_cast<char**>(m_argv);
     char* buffer[m_consumed_args];
-    memcpy(buffer, &m_argv[m_arg_index], sizeof(char*) * m_consumed_args);
-    memmove(&m_argv[optind + m_consumed_args], &m_argv[optind], sizeof(char*) * (m_arg_index - optind));
-    memcpy(&m_argv[optind], buffer, sizeof(char*) * m_consumed_args);
+    memcpy(buffer, &new_argv[m_arg_index], sizeof(char*) * m_consumed_args);
+    memmove(&new_argv[optind + m_consumed_args], &new_argv[optind], sizeof(char*) * (m_arg_index - optind));
+    memcpy(&new_argv[optind], buffer, sizeof(char*) * m_consumed_args);
 }
 
 bool OptionParser::find_next_option()
