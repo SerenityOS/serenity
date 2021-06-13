@@ -118,6 +118,7 @@ namespace JS {
     P(fixed)                                 \
     P(flags)                                 \
     P(flat)                                  \
+    P(flatMap)                               \
     P(floor)                                 \
     P(fontcolor)                             \
     P(fontsize)                              \
