@@ -851,7 +851,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
         auto shebang_path = shebang_words.first();
         if (!arguments.try_prepend(move(shebang_words)))
             return ENOMEM;
-        return exec(shebang_path, move(arguments), move(environment), ++recursion_depth);
+        return exec(move(shebang_path), move(arguments), move(environment), ++recursion_depth);
     }
 
     // #2) ELF32 for i386
