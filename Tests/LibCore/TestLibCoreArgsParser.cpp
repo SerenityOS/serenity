@@ -333,7 +333,7 @@ TEST_CASE(stop_on_first_non_option)
         EXPECT_EQ(positionals[0], "one");
 
     // Do not stop on first non-option; arguments in wrong order
-    // Expected: parser chokes on the positional argument
+    // Expected: bool options are set and one positional argument is filled
     bool_opt1 = false;
     bool_opt2 = false;
     positionals = {};
@@ -343,7 +343,12 @@ TEST_CASE(stop_on_first_non_option)
         parser.add_option(bool_opt2, "bool_opt2", nullptr, 'c');
         parser.add_positional_argument(positionals, "pos", "pos", Core::ArgsParser::Required::Yes);
     });
-    EXPECT_EQ(parser_result, false);
+    EXPECT_EQ(parser_result, true);
+    EXPECT_EQ(bool_opt1, true);
+    EXPECT_EQ(bool_opt2, true);
+    EXPECT_EQ(positionals.size(), 1u);
+    if (positionals.size() == 1u)
+        EXPECT_EQ(positionals[0], "one");
 
     // Stop on first non-option; arguments in correct order
     // Expected: bool options are set and one positional argument is filled
