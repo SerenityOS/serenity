@@ -128,10 +128,17 @@ namespace JS {
     P(fround)                                \
     P(gc)                                    \
     P(get)                                   \
+    P(getBigInt64)                           \
+    P(getBigUint64)                          \
     P(getDate)                               \
     P(getDay)                                \
+    P(getFloat32)                            \
+    P(getFloat64)                            \
     P(getFullYear)                           \
     P(getHours)                              \
+    P(getInt8)                               \
+    P(getInt16)                              \
+    P(getInt32)                              \
     P(getMilliseconds)                       \
     P(getMinutes)                            \
     P(getMonth)                              \
@@ -142,6 +149,9 @@ namespace JS {
     P(getSeconds)                            \
     P(getTime)                               \
     P(getTimezoneOffset)                     \
+    P(getUint8)                              \
+    P(getUint16)                             \
+    P(getUint32)                             \
     P(getUTCDate)                            \
     P(getUTCDay)                             \
     P(getUTCFullYear)                        \

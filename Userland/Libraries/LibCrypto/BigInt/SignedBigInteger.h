@@ -47,6 +47,19 @@ public:
     static SignedBigInteger import_data(const StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static SignedBigInteger import_data(const u8* ptr, size_t length);
 
+    static SignedBigInteger create_from(i64 value)
+    {
+        auto sign = false;
+        u64 unsigned_value;
+        if (value < 0) {
+            unsigned_value = static_cast<u64>(-(value + 1)) + 1;
+            sign = true;
+        } else {
+            unsigned_value = value;
+        }
+        return SignedBigInteger { UnsignedBigInteger::create_from(unsigned_value), sign };
+    }
+
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
     static SignedBigInteger from_base10(StringView str);
