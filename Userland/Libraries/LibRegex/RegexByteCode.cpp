@@ -151,7 +151,9 @@ ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
     if (id > OpCodeId::Last)
         return nullptr;
 
-    return const_cast<OpCode*>(s_opcodes[(u32)id]->set_bytecode(*const_cast<ByteCode*>(this)));
+    auto* opcode = &*s_opcodes[(u32)id];
+    opcode->set_bytecode(*const_cast<ByteCode*>(this));
+    return opcode;
 }
 
 OpCode* ByteCode::get_opcode(MatchState& state) const
