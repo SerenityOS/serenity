@@ -446,6 +446,7 @@ public:
                 parameter_generator.set("parameter.name", parameter.name);
                 parameter_generator.append(R"~~~(
     const @parameter.type@& @parameter.name@() const { return m_@parameter.name@; }
+    @parameter.type@ take_@parameter.name@() { return move(m_@parameter.name@); }
 )~~~");
             }
 
@@ -571,7 +572,7 @@ public:
                     }
 
                     if (message.outputs.size() == 1) {
-                        message_generator.append("->");
+                        message_generator.append("->take_");
                         message_generator.append(message.outputs[0].name);
                         message_generator.append("()");
                     } else
