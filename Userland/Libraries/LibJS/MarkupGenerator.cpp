@@ -144,8 +144,8 @@ void MarkupGenerator::date_to_html(const Object& date, StringBuilder& html_outpu
 
 void MarkupGenerator::error_to_html(const Object& object, StringBuilder& html_output, HashTable<Object*>&)
 {
-    auto name = object.get_without_side_effects("name").value_or(JS::js_undefined());
-    auto message = object.get_without_side_effects("message").value_or(JS::js_undefined());
+    auto name = object.get_without_side_effects(PropertyName("name")).value_or(JS::js_undefined());
+    auto message = object.get_without_side_effects(PropertyName("message")).value_or(JS::js_undefined());
     if (name.is_accessor() || name.is_native_property() || message.is_accessor() || message.is_native_property()) {
         html_output.append(wrap_string_in_style(JS::Value(&object).to_string_without_side_effects(), StyleType::Invalid));
     } else {

@@ -31,7 +31,7 @@ void PromisePrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.finally, finally, 1, attr);
 
     // 27.2.5.5 Promise.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-promise.prototype-@@tostringtag
-    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), "Promise"), Attribute::Configurable);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), vm.names.Promise.as_string()), Attribute::Configurable);
 }
 
 static Promise* promise_from(VM& vm, GlobalObject& global_object)
@@ -70,7 +70,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::catch_)
     if (!this_object)
         return {};
     auto on_rejected = vm.argument(0);
-    return this_object->invoke(vm.names.then, js_undefined(), on_rejected);
+    return this_object->invoke(vm.names.then.as_string(), js_undefined(), on_rejected);
 }
 
 // 27.2.5.3 Promise.prototype.finally ( onFinally ), https://tc39.es/ecma262/#sec-promise.prototype.finally
@@ -103,7 +103,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             auto* value_thunk = NativeFunction::create(global_object, "", [value](auto&, auto&) -> Value {
                 return value;
             });
-            return promise->invoke(vm.names.then, value_thunk);
+            return promise->invoke(vm.names.then.as_string(), value_thunk);
         });
         then_finally_function->define_property(vm.names.length, Value(1));
 
@@ -122,14 +122,14 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
                 vm.throw_exception(global_object, reason);
                 return {};
             });
-            return promise->invoke(vm.names.then, thrower);
+            return promise->invoke(vm.names.then.as_string(), thrower);
         });
         catch_finally_function->define_property(vm.names.length, Value(1));
 
         then_finally = Value(then_finally_function);
         catch_finally = Value(catch_finally_function);
     }
-    return promise->invoke(vm.names.then, then_finally, catch_finally);
+    return promise->invoke(vm.names.then.as_string(), then_finally, catch_finally);
 }
 
 }

@@ -37,7 +37,7 @@ void SetPrototype::initialize(GlobalObject& global_object)
     define_property(vm.well_known_symbol_iterator(), get(vm.names.values), attr);
 
     // 24.2.3.12 Set.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-set.prototype-@@tostringtag
-    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.Set), Attribute::Configurable);
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm.heap(), vm.names.Set.as_string()), Attribute::Configurable);
 }
 
 SetPrototype::~SetPrototype()

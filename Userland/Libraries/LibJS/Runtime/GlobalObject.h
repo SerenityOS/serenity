@@ -52,9 +52,9 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void initialize_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
+    void initialize_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
     template<typename ConstructorType>
-    void add_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
+    void add_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
 
 private:
     virtual bool is_global_object() const final { return true; }
@@ -94,11 +94,11 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
-    constructor->define_property(vm.names.name, js_string(heap(), property_name), Attribute::Configurable);
+    constructor->define_property(vm.names.name, js_string(heap(), property_name.as_string()), Attribute::Configurable);
     if (vm.exception())
         return;
     if (prototype) {
@@ -109,7 +109,7 @@ inline void GlobalObject::initialize_constructor(const FlyString& property_name,
 }
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::add_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
 {
     // Some constructors are pre-initialized separately.
     if (!constructor)
