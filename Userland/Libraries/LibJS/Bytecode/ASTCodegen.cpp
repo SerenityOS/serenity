@@ -639,6 +639,65 @@ void FunctionExpression::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::NewFunction>(*this);
 }
 
+static void generate_binding_pattern_bytecode(Bytecode::Generator& generator, BindingPattern const& pattern, Bytecode::Register const& value, bool object_pattern)
+{
+    for (auto& [name, alias, initializer, is_rest] : pattern.entries) {
+        if (is_rest)
+            TODO();
+
+        if (object_pattern) {
+            Bytecode::StringTableIndex name_index;
+
+            if (name.has<NonnullRefPtr<Identifier>>()) {
+                auto identifier = name.get<NonnullRefPtr<Identifier>>()->string();
+                name_index = generator.intern_string(identifier);
+                generator.emit<Bytecode::Op::Load>(value);
+                generator.emit<Bytecode::Op::GetById>(name_index);
+            } else {
+                auto expression = name.get<NonnullRefPtr<Expression>>();
+                expression->generate_bytecode(generator);
+                generator.emit<Bytecode::Op::GetByValue>(value);
+            }
+
+            if (initializer) {
+                auto& if_undefined_block = generator.make_block();
+                auto& if_not_undefined_block = generator.make_block();
+
+                generator.emit<Bytecode::Op::JumpUndefined>().set_targets(
+                    Bytecode::Label { if_undefined_block },
+                    Bytecode::Label { if_not_undefined_block });
+
+                generator.switch_to_basic_block(if_undefined_block);
+                initializer->generate_bytecode(generator);
+                generator.emit<Bytecode::Op::Jump>().set_targets(
+                    Bytecode::Label { if_not_undefined_block },
+                    {});
+
+                generator.switch_to_basic_block(if_not_undefined_block);
+            }
+
+            if (alias.has<NonnullRefPtr<BindingPattern>>()) {
+                auto& binding_pattern = *alias.get<NonnullRefPtr<BindingPattern>>();
+                auto nested_value_reg = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(nested_value_reg);
+                generate_binding_pattern_bytecode(generator, binding_pattern, nested_value_reg, binding_pattern.kind == BindingPattern::Kind::Object);
+            } else if (alias.has<Empty>()) {
+                if (name.has<NonnullRefPtr<Expression>>()) {
+                    // This needs some sort of SetVariableByValue opcode, as it's a runtime binding
+                    TODO();
+                }
+
+                generator.emit<Bytecode::Op::SetVariable>(name_index);
+            } else {
+                auto& identifier = alias.get<NonnullRefPtr<Identifier>>()->string();
+                generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier));
+            }
+        } else {
+            TODO();
+        }
+    }
+};
+
 void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) const
 {
     for (auto& declarator : m_declarations) {
@@ -647,11 +706,13 @@ void VariableDeclaration::generate_bytecode(Bytecode::Generator& generator) cons
         else
             generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
         declarator.target().visit(
-            [&](const NonnullRefPtr<Identifier>& id) {
+            [&](NonnullRefPtr<Identifier> const& id) {
                 generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(id->string()));
             },
-            [&](const NonnullRefPtr<BindingPattern>&) {
-                TODO();
+            [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                auto value_register = generator.allocate_register();
+                generator.emit<Bytecode::Op::Store>(value_register);
+                generate_binding_pattern_bytecode(generator, pattern, value_register, pattern->kind == BindingPattern::Kind::Object);
             });
     }
 }
