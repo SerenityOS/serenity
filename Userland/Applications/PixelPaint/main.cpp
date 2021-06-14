@@ -183,7 +183,9 @@ int main(int argc, char** argv)
 
         auto layer = PixelPaint::Layer::try_create_with_bitmap(*image_editor.image(), *bitmap, "Pasted layer");
         VERIFY(layer);
-        image_editor.image()->add_layer(layer.release_nonnull());
+        image_editor.image()->add_layer(*layer);
+        image_editor.set_active_layer(layer);
+        image_editor.selection().clear();
     });
     GUI::Clipboard::the().on_change = [&](auto& mime_type) {
         paste_action->set_enabled(mime_type == "image/x-serenityos");
