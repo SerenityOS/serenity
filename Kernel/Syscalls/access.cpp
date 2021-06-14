@@ -10,13 +10,19 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$access(Userspace<const char*> user_path, size_t path_length, int mode)
+KResultOr<int> Process::sys$access(Userspace<const Syscall::SC_access_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
-    auto path = get_syscall_path_argument(user_path, path_length);
+    Syscall::SC_access_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+    auto dirfd = get_syscall_fd_argument(params.dirfd);
+    if (dirfd.is_error())
+        return dirfd.error();
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().access(path.value()->view(), mode, current_directory());
+    return VFS::the().access({ *dirfd.value(), path.value()->view() }, params.mode, params.flags);
 }
 
 }

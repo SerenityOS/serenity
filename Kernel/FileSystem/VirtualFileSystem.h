@@ -90,7 +90,7 @@ public:
     KResult chmod(Custody&, mode_t);
     KResult chown(PathWithBase, uid_t, gid_t, int flags);
     KResult chown(Custody&, uid_t, gid_t);
-    KResult access(StringView path, int mode, Custody& base);
+    KResult access(PathWithBase, int mode, AtFlags flags);
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
     KResult rename(StringView oldpath, StringView newpath, Custody& base);

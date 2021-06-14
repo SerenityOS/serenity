@@ -423,27 +423,37 @@ KResult VFS::mkdir(PathWithBase path_with_base, mode_t mode)
     return parent_inode.create_child(p.basename(), S_IFDIR | mode, 0, current_process->euid(), current_process->egid()).result();
 }
 
-KResult VFS::access(StringView path, int mode, Custody& base)
+KResult VFS::access(PathWithBase path_with_base, int mode, AtFlags flags)
 {
-    auto custody_or_error = resolve_path(path, base);
+    if (flags & ~(AT_EACCESS | AT_SYMLINK_NOFOLLOW))
+        return EINVAL;
+
+    auto custody_or_error = resolve_path(path_with_base, nullptr, (flags & AT_SYMLINK_NOFOLLOW) ? O_NOFOLLOW_NOERROR : 0);
+    // The mode & F_OK check is implicitly handled by this.
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
     auto& inode = custody.inode();
     auto metadata = inode.metadata();
     auto current_process = Process::current();
+
+    // POSIX says that we have to validate against real user and group IDs, unless AT_EACCESS is specified.
+    const auto check_uid = (flags & AT_EACCESS) ? current_process->euid() : current_process->uid();
+    const auto check_gid = (flags & AT_EACCESS) ? current_process->egid() : current_process->gid();
+    const Vector<gid_t>& extra_check_gids = current_process->extra_gids();
+
     if (mode & R_OK) {
-        if (!metadata.may_read(*current_process))
+        if (!metadata.may_read(check_uid, check_gid, extra_check_gids))
             return EACCES;
     }
     if (mode & W_OK) {
-        if (!metadata.may_write(*current_process))
+        if (!metadata.may_write(check_uid, check_gid, extra_check_gids))
             return EACCES;
         if (custody.is_readonly())
             return EROFS;
     }
     if (mode & X_OK) {
-        if (!metadata.may_execute(*current_process))
+        if (!metadata.may_execute(check_uid, check_gid, extra_check_gids))
             return EACCES;
     }
     return KSuccess;
