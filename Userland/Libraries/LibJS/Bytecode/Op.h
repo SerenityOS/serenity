@@ -529,6 +529,22 @@ public:
 private:
     HashMap<u32, Variable> m_variables;
 };
+
+class LoadArgument final : public Instruction {
+public:
+    explicit LoadArgument(size_t index)
+        : Instruction(Type::LoadArgument)
+        , m_index(index)
+    {
+    }
+
+    void execute(Bytecode::Interpreter&) const;
+    String to_string(Bytecode::Executable const&) const;
+
+private:
+    size_t m_index { 0 };
+};
+
 }
 
 namespace JS::Bytecode {

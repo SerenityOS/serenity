@@ -311,6 +311,11 @@ void PutByValue::execute(Bytecode::Interpreter& interpreter) const
     }
 }
 
+void LoadArgument::execute(Bytecode::Interpreter& interpreter) const
+{
+    interpreter.accumulator() = interpreter.vm().argument(m_index);
+}
+
 String Load::to_string(Bytecode::Executable const&) const
 {
     return String::formatted("Load {}", m_src);
@@ -491,6 +496,11 @@ String GetByValue::to_string(const Bytecode::Executable&) const
 String PutByValue::to_string(const Bytecode::Executable&) const
 {
     return String::formatted("PutByValue base:{}, property:{}", m_base, m_property);
+}
+
+String LoadArgument::to_string(const Bytecode::Executable&) const
+{
+    return String::formatted("LoadArgument {}", m_index);
 }
 
 }
