@@ -38,11 +38,18 @@ int mkdirat(int dirfd, const char* pathname, mode_t mode)
 
 int chmod(const char* pathname, mode_t mode)
 {
+    return fchmodat(AT_FDCWD, pathname, mode, 0);
+}
+
+int fchmodat(int dirfd, const char* pathname, mode_t mode, int flags)
+{
     if (!pathname) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_chmod, pathname, strlen(pathname), mode);
+
+    Syscall::SC_chmod_params params { dirfd, { pathname, strlen(pathname) }, mode, flags };
+    int rc = syscall(SC_chmod, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

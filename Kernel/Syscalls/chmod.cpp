@@ -11,13 +11,19 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$chmod(Userspace<const char*> user_path, size_t path_length, mode_t mode)
+KResultOr<int> Process::sys$chmod(Userspace<const Syscall::SC_chmod_params*> user_params)
 {
     REQUIRE_PROMISE(fattr);
-    auto path = get_syscall_path_argument(user_path, path_length);
+    Syscall::SC_chmod_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+    auto dirfd = get_syscall_fd_argument(params.dirfd);
+    if (dirfd.is_error())
+        return dirfd.error();
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().chmod(path.value()->view(), mode, current_directory());
+    return VFS::the().chmod({ *dirfd.value(), path.value()->view() }, params.mode, params.flags);
 }
 
 KResultOr<int> Process::sys$fchmod(int fd, mode_t mode)

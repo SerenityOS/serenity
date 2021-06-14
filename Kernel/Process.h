@@ -357,7 +357,7 @@ public:
     KResultOr<int> sys$rmdir(Userspace<const char*> pathname, size_t path_length);
     KResultOr<int> sys$mount(Userspace<const Syscall::SC_mount_params*>);
     KResultOr<int> sys$umount(Userspace<const char*> mountpoint, size_t mountpoint_length);
-    KResultOr<int> sys$chmod(Userspace<const char*> pathname, size_t path_length, mode_t);
+    KResultOr<int> sys$chmod(Userspace<const Syscall::SC_chmod_params*>);
     KResultOr<int> sys$fchmod(int fd, mode_t);
     KResultOr<int> sys$chown(Userspace<const Syscall::SC_chown_params*>);
     KResultOr<int> sys$fchown(int fd, uid_t, gid_t);

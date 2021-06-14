@@ -478,9 +478,12 @@ KResult VFS::chmod(Custody& custody, mode_t mode)
     return inode.chmod(mode);
 }
 
-KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
+KResult VFS::chmod(PathWithBase path_with_base, mode_t mode, AtFlags flags)
 {
-    auto custody_or_error = resolve_path(path, base);
+    if (flags & ~(AT_SYMLINK_NOFOLLOW))
+        return EINVAL;
+
+    auto custody_or_error = resolve_path(path_with_base, nullptr, (flags & AT_SYMLINK_NOFOLLOW) ? O_NOFOLLOW_NOERROR : 0);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();

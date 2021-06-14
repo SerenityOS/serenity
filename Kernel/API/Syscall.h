@@ -471,6 +471,13 @@ struct SC_statvfs_params {
     struct statvfs* buf;
 };
 
+struct SC_chmod_params {
+    int dirfd;
+    StringArgument path;
+    u16 mode;
+    int flags;
+};
+
 struct SC_mkdir_params {
     int dirfd;
     StringArgument path;

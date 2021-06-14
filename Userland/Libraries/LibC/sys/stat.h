@@ -71,6 +71,7 @@ struct stat {
 
 mode_t umask(mode_t);
 int chmod(const char* pathname, mode_t);
+int fchmodat(int dirfd, const char* pathname, mode_t mode, int flags);
 int fchmod(int fd, mode_t);
 int mkdir(const char* pathname, mode_t);
 int mkdirat(int dirfd, const char* pathname, mode_t);

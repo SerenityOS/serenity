@@ -117,7 +117,7 @@ private:
     int virt$clock_nanosleep(FlatPtr);
     int virt$dbgputstr(FlatPtr characters, int length);
     int virt$dbgputch(char);
-    int virt$chmod(FlatPtr, size_t, mode_t);
+    int virt$chmod(FlatPtr);
     int virt$fchmod(int, mode_t);
     int virt$chown(FlatPtr);
     int virt$fchown(int, uid_t, gid_t);
