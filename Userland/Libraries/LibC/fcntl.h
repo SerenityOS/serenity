@@ -39,8 +39,12 @@ __BEGIN_DECLS
 
 int creat(const char* path, mode_t);
 int open(const char* path, int options, ...);
-#define AT_FDCWD -100
+#define AT_FDCWD (-100)
 #define AT_SYMLINK_NOFOLLOW 0x100
+#define AT_REMOVEDIR 0x200
+#define AT_SYMLINK_FOLLOW 0x300
+#define AT_EACCESS 0x200
+#define AT_EMPTY_PATH 0x1000
 int openat(int dirfd, const char* path, int options, ...);
 
 int fcntl(int fd, int cmd, ...);

@@ -685,8 +685,12 @@ struct rtentry {
 #define RTF_UP 0x1      /* do not delete the route */
 #define RTF_GATEWAY 0x2 /* the route is a gateway and not an end host */
 
-#define AT_FDCWD -100
+#define AT_FDCWD (-100)
 #define AT_SYMLINK_NOFOLLOW 0x100
+#define AT_REMOVEDIR 0x200
+#define AT_SYMLINK_FOLLOW 0x300
+#define AT_EACCESS 0x200
+#define AT_EMPTY_PATH 0x1000
 
 #define PURGE_ALL_VOLATILE 0x1
 #define PURGE_ALL_CLEAN_INODE 0x2
