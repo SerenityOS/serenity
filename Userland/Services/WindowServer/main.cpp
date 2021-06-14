@@ -96,6 +96,20 @@ int main(int, char**)
             wm_config->read_num_entry(group_name, "Width", 1024 / scale),
             wm_config->read_num_entry("Screen", "Height", 768 / scale)
         };
+
+        // Check if the screen would be overlapping with another one
+        if (WindowServer::Screen::for_each([&](auto& screen) {
+                if (screen.rect().intersects(virtual_rect)) {
+                    dbgln("Screen {} rect {} overlaps with screen {} rect {}: Ignoring configuration", screen.index(), screen.rect(), screen_index, virtual_rect);
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            })
+            == IterationDecision::Break) {
+            // Ignore the configuration
+            break;
+        }
+
         auto* screen = WindowServer::Screen::create(device_path, virtual_rect, scale);
         if (!screen) {
             dbgln("Screen {} failed to be created", screen_index);
@@ -107,6 +121,35 @@ int main(int, char**)
 
         // Remember that we used this device for a screen already
         fb_devices_configured.set(device_path);
+    }
+
+    // Check that all screens are contiguous and can be "reached" from the main screen
+    {
+        Vector<WindowServer::Screen*, 16> reachable_screens { &WindowServer::Screen::main() };
+        bool did_reach_another_screen;
+        do {
+            did_reach_another_screen = false;
+            auto* latest_reachable_screen = reachable_screens[reachable_screens.size() - 1];
+            WindowServer::Screen::for_each([&](auto& screen) {
+                if (&screen == latest_reachable_screen || reachable_screens.contains_slow(&screen))
+                    return IterationDecision::Continue;
+                if (screen.rect().is_adjacent(latest_reachable_screen->rect())) {
+                    reachable_screens.append(&screen);
+                    did_reach_another_screen = true;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        } while (did_reach_another_screen);
+        if (reachable_screens.size() != WindowServer::Screen::count()) {
+            WindowServer::Screen::for_each([&](auto& screen) {
+                if (!reachable_screens.contains_slow(&screen))
+                    dbgln("Screen {} cannot be reached from main screen {}: Bad configuration!", screen.index(), WindowServer::Screen::main().index());
+                return IterationDecision::Continue;
+            });
+            dbgln("At least one screen is not adjacent to another screen, exiting!");
+            return 1;
+        }
     }
 
     // TODO: Enumerate the /dev/fbX devices and set up any ones we find that we haven't already used
