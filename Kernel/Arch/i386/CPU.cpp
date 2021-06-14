@@ -1003,15 +1003,16 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
-    VERIFY(max_extended_leaf >= 0x80000001);
-    CPUID extended_processor_info(0x80000001);
-    if (extended_processor_info.edx() & (1 << 20))
-        set_feature(CPUFeature::NX);
-    if (extended_processor_info.edx() & (1 << 27))
-        set_feature(CPUFeature::RDTSCP);
-    if (extended_processor_info.edx() & (1 << 11)) {
-        // Only available in 64 bit mode
-        set_feature(CPUFeature::SYSCALL);
+    if (max_extended_leaf >= 0x80000001) {
+        CPUID extended_processor_info(0x80000001);
+        if (extended_processor_info.edx() & (1 << 20))
+            set_feature(CPUFeature::NX);
+        if (extended_processor_info.edx() & (1 << 27))
+            set_feature(CPUFeature::RDTSCP);
+        if (extended_processor_info.edx() & (1 << 11)) {
+            // Only available in 64 bit mode
+            set_feature(CPUFeature::SYSCALL);
+        }
     }
 
     if (max_extended_leaf >= 0x80000007) {
