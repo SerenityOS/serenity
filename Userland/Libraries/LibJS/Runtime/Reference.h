@@ -40,6 +40,15 @@ public:
     {
     }
 
+    enum CallFrameArgumentTag { CallFrameArgument };
+    Reference(CallFrameArgumentTag, size_t index, FlyString const& name)
+        : m_base(js_null())
+        , m_name(name)
+        , m_call_frame_argument_index(index)
+        , m_local_variable(true)
+    {
+    }
+
     Value base() const { return m_base; }
     const PropertyName& name() const { return m_name; }
     bool is_strict() const { return m_strict; }
@@ -74,6 +83,7 @@ private:
 
     Value m_base;
     PropertyName m_name;
+    Optional<size_t> m_call_frame_argument_index;
     bool m_strict { false };
     bool m_local_variable { false };
     bool m_global_variable { false };
