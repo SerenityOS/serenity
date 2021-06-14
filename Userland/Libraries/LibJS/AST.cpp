@@ -668,6 +668,8 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
 
 Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
+    if (m_argument_index.has_value())
+        return Reference(Reference::CallFrameArgument, m_argument_index.value(), string());
     return interpreter.vm().get_reference(string());
 }
 

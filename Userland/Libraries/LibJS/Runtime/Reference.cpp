@@ -19,6 +19,11 @@ void Reference::put(GlobalObject& global_object, Value value)
         return;
     }
 
+    if (m_call_frame_argument_index.has_value()) {
+        global_object.vm().call_frame().arguments[m_call_frame_argument_index.value()] = value;
+        return;
+    }
+
     if (is_local_variable() || is_global_variable()) {
         if (is_local_variable())
             vm.set_variable(m_name.to_string(), value, global_object);
@@ -67,6 +72,9 @@ Value Reference::get(GlobalObject& global_object)
         throw_reference_error(global_object);
         return {};
     }
+
+    if (m_call_frame_argument_index.has_value())
+        return global_object.vm().argument(m_call_frame_argument_index.value());
 
     if (is_local_variable() || is_global_variable()) {
         Value value;
