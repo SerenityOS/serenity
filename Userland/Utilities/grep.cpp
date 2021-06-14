@@ -177,6 +177,8 @@ int main(int argc, char** argv)
         ScopeGuard free_line = [line] { free(line); };
         while ((nread = getline(&line, &line_len, stdin)) != -1) {
             VERIFY(nread > 0);
+            if (line[nread - 1] == '\n')
+                --nread;
             StringView line_view(line, nread);
             bool is_binary = line_view.contains(0);
 
