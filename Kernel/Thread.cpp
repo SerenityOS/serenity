@@ -468,9 +468,6 @@ void Thread::check_dispatch_pending_signal()
     case DispatchSignalResult::Yield:
         yield_while_not_holding_big_lock();
         break;
-    case DispatchSignalResult::Terminate:
-        process().die();
-        break;
     default:
         break;
     }
