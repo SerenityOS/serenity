@@ -19,7 +19,7 @@ public:
     explicit Selection(ImageEditor&);
 
     bool is_empty() const { return m_rect.is_empty(); }
-    void clear() { m_rect = {}; }
+    void clear();
     void set(Gfx::IntRect const& rect) { m_rect = rect; }
     Gfx::IntRect bounding_rect() const { return m_rect; }
 

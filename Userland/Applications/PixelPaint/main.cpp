@@ -207,6 +207,19 @@ int main(int argc, char** argv)
     });
     edit_menu.add_action(redo_action);
 
+    edit_menu.add_separator();
+    edit_menu.add_action(GUI::CommonActions::make_select_all_action([&](auto&) {
+        VERIFY(image_editor.image());
+        if (!image_editor.active_layer())
+            return;
+        image_editor.selection().set(image_editor.active_layer()->relative_rect());
+    }));
+    edit_menu.add_action(GUI::Action::create(
+        "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, [&](auto&) {
+            image_editor.selection().clear();
+        },
+        window));
+
     auto& view_menu = menubar->add_menu("&View");
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
