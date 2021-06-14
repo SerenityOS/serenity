@@ -12,6 +12,7 @@
 #include <AK/JsonValue.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/File.h>
 #include <LibGUI/Painter.h>
 #include <LibGfx/BMPWriter.h>
 #include <LibGfx/Bitmap.h>
@@ -140,9 +141,8 @@ RefPtr<Image> Image::try_create_from_file(String const& file_path)
     return Image::try_create_from_bitmap(bitmap.release_nonnull());
 }
 
-void Image::save(String const& file_path) const
+Result<void, String> Image::write_to_file(const String& file_path) const
 {
-    // Build json file
     StringBuilder builder;
     JsonObjectSerializer json(builder);
     json.add("width", m_size.width());
@@ -165,11 +165,13 @@ void Image::save(String const& file_path) const
     }
     json.finish();
 
-    // Write json to disk
-    auto file = fopen(file_path.characters(), "w");
-    auto byte_buffer = builder.to_byte_buffer();
-    fwrite(byte_buffer.data(), sizeof(u8), byte_buffer.size(), file);
-    fclose(file);
+    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+    if (file_or_error.is_error())
+        return file_or_error.error();
+
+    if (!file_or_error.value()->write(builder.string_view()))
+        return String { file_or_error.value()->error_string() };
+    return {};
 }
 
 void Image::export_bmp(String const& file_path)

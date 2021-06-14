@@ -115,10 +115,14 @@ int main(int argc, char** argv)
     auto save_image_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         if (!image_editor.image())
             return;
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
+        auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
         if (!save_path.has_value())
             return;
-        image_editor.image()->save(save_path.value());
+        auto result = image_editor.image()->write_to_file(save_path.value());
+        if (result.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", save_path.value(), result.error()));
+            return;
+        }
     });
 
     auto menubar = GUI::Menubar::construct();
