@@ -6,6 +6,7 @@
 
 #include "Layer.h"
 #include "Image.h"
+#include "Selection.h"
 #include <LibGfx/Bitmap.h>
 
 namespace PixelPaint {
@@ -87,6 +88,13 @@ void Layer::set_name(String name)
         return;
     m_name = move(name);
     m_image.layer_did_modify_properties({}, *this);
+}
+
+RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
+{
+    auto bounding_rect = selection.bounding_rect().translated(-m_location);
+    // FIXME: This needs to be smarter once we add more complex selections.
+    return m_bitmap->cropped(bounding_rect);
 }
 
 }
