@@ -24,10 +24,13 @@ KResultOr<int> Process::sys$chown(Userspace<const Syscall::SC_chown_params*> use
     Syscall::SC_chown_params params;
     if (!copy_from_user(&params, user_params))
         return EFAULT;
+    auto dirfd = get_syscall_fd_argument(params.dirfd);
+    if (dirfd.is_error())
+        return dirfd.error();
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().chown(path.value()->view(), params.uid, params.gid, current_directory());
+    return VFS::the().chown({ *dirfd.value(), path.value()->view() }, params.uid, params.gid, params.flags);
 }
 
 }

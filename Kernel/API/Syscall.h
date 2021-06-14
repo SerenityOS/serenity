@@ -390,9 +390,11 @@ struct SC_link_params {
 };
 
 struct SC_chown_params {
+    int dirfd;
     StringArgument path;
     u32 uid;
     u32 gid;
+    int flags;
 };
 
 struct SC_mknod_params {

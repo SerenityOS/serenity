@@ -88,7 +88,7 @@ public:
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(PathWithBase, mode_t mode, AtFlags flags);
     KResult chmod(Custody&, mode_t);
-    KResult chown(StringView path, uid_t, gid_t, Custody& base);
+    KResult chown(PathWithBase, uid_t, gid_t, int flags);
     KResult chown(Custody&, uid_t, gid_t);
     KResult access(StringView path, int mode, Custody& base);
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);

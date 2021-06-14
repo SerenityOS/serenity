@@ -117,6 +117,8 @@ long pathconf(const char* path, int name);
 char* getlogin();
 int chown(const char* pathname, uid_t, gid_t);
 int fchown(int fd, uid_t, gid_t);
+int lchown(const char* pathname, uid_t, gid_t);
+int fchownat(int dirfd, const char* pathname, uid_t, gid_t, int flags);
 int ftruncate(int fd, off_t length);
 int truncate(const char* path, off_t length);
 int halt();

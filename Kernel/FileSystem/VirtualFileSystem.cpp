@@ -600,13 +600,20 @@ KResult VFS::chown(Custody& custody, uid_t a_uid, gid_t a_gid)
     return inode.chown(new_uid, new_gid);
 }
 
-KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+KResult VFS::chown(PathWithBase path_with_base, uid_t a_uid, gid_t a_gid, AtFlags flags)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    return chown(custody, a_uid, a_gid);
+    if (flags & ~(AT_EMPTY_PATH | AT_SYMLINK_NOFOLLOW))
+        return EINVAL;
+
+    if ((flags & AT_EMPTY_PATH) && path_with_base.path.is_empty()) {
+        return chown(path_with_base.base, a_uid, a_gid);
+    } else {
+        auto custody_or_error = resolve_path(path_with_base, nullptr, (flags & AT_SYMLINK_NOFOLLOW) ? O_NOFOLLOW_NOERROR : 0);
+        if (custody_or_error.is_error())
+            return custody_or_error.error();
+        auto& custody = *custody_or_error.value();
+        return chown(custody, a_uid, a_gid);
+    }
 }
 
 static bool hard_link_allowed(const Inode& inode)
