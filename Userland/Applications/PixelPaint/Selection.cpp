@@ -23,7 +23,7 @@ Selection::Selection(ImageEditor& editor)
     m_marching_ants_timer = Core::Timer::create_repeating(80, [this] {
         ++m_marching_ants_offset;
         m_marching_ants_offset %= marching_ant_length;
-        if (!is_empty())
+        if (!is_empty() || m_in_interactive_selection)
             m_editor.update();
     });
     m_marching_ants_timer->start();
