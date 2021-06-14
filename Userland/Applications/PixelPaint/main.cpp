@@ -96,13 +96,14 @@ int main(int argc, char** argv)
         window);
 
     auto open_image_file = [&](auto& path) {
-        auto image = PixelPaint::Image::try_create_from_file(path);
-        if (!image) {
-            GUI::MessageBox::show_error(window, String::formatted("Invalid image file: {}", path));
+        auto image_or_error = PixelPaint::Image::try_create_from_file(path);
+        if (image_or_error.is_error()) {
+            GUI::MessageBox::show_error(window, String::formatted("Unable to open file: {}", path));
             return;
         }
+        auto& image = *image_or_error.value();
         image_editor.set_image(image);
-        layer_list_widget.set_image(image);
+        layer_list_widget.set_image(&image);
     };
 
     auto open_image_action = GUI::CommonActions::make_open_action([&](auto&) {
