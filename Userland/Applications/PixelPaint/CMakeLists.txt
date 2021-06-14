@@ -20,6 +20,7 @@ set(SOURCES
     PickerTool.cpp
     PixelPaintWindowGML.h
     RectangleTool.cpp
+    RectangleSelectTool.cpp
     SprayTool.cpp
     ToolboxWidget.cpp
     ToolPropertiesWidget.cpp
