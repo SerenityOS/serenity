@@ -242,7 +242,7 @@ Glyph BitmapFont::glyph(u32 code_point) const
         m_glyph_height);
 }
 
-int BitmapFont::glyph_or_emoji_width(u32 code_point) const
+int BitmapFont::glyph_or_emoji_width_for_variable_width_font(u32 code_point) const
 {
     if (code_point < m_glyph_count) {
         if (m_glyph_widths[code_point] > 0)
@@ -250,9 +250,6 @@ int BitmapFont::glyph_or_emoji_width(u32 code_point) const
         else
             return glyph_width('?');
     }
-
-    if (m_fixed_width)
-        return m_glyph_width;
 
     auto* emoji = Emoji::emoji_for_code_point(code_point);
     if (emoji == nullptr)

@@ -46,7 +46,12 @@ public:
     bool contains_glyph(u32 code_point) const { return code_point < (u32)glyph_count() && m_glyph_widths[code_point] > 0; }
 
     u8 glyph_width(size_t ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[ch]; }
-    int glyph_or_emoji_width(u32 code_point) const;
+    ALWAYS_INLINE int glyph_or_emoji_width(u32 code_point) const
+    {
+        if (m_fixed_width)
+            return m_glyph_width;
+        return glyph_or_emoji_width_for_variable_width_font(code_point);
+    }
     u8 glyph_height() const { return m_glyph_height; }
     int x_height() const { return m_x_height; }
 
@@ -111,6 +116,7 @@ private:
     static RefPtr<BitmapFont> load_from_memory(const u8*);
 
     void update_x_height() { m_x_height = m_baseline - m_mean_line; };
+    int glyph_or_emoji_width_for_variable_width_font(u32 code_point) const;
 
     String m_name;
     String m_family;
