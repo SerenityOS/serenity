@@ -15,6 +15,7 @@
 namespace PixelPaint {
 
 class Image;
+class Selection;
 
 class Layer
     : public RefCounted<Layer>
@@ -55,6 +56,8 @@ public:
 
     int opacity_percent() const { return m_opacity_percent; }
     void set_opacity_percent(int);
+
+    RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
 
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);

@@ -21,6 +21,7 @@ public:
     bool is_empty() const { return m_rect.is_empty(); }
     void clear() { m_rect = {}; }
     void set(Gfx::IntRect const& rect) { m_rect = rect; }
+    Gfx::IntRect bounding_rect() const { return m_rect; }
 
     void paint(Gfx::Painter&, ImageEditor const&);
 
