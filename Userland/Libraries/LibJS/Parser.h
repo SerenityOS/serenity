@@ -196,6 +196,9 @@ private:
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
         Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
         Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
+
+        Vector<Vector<FunctionNode::Parameter>&> function_parameters;
+
         HashTable<StringView> m_labels_in_scope;
         bool m_strict_mode { false };
         bool m_allow_super_property_lookup { false };
