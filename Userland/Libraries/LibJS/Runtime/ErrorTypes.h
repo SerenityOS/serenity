@@ -40,8 +40,8 @@
     M(IsNotAn, "{} is not an {}")                                                                                                       \
     M(IsNotAEvaluatedFrom, "{} is not a {} (evaluated from '{}')")                                                                      \
     M(IterableNextBadReturn, "iterator.next() returned a non-object value")                                                             \
-    M(IterableNextNotAFunction, "'next' property on returned object from Symbol.iterator method is "                                    \
-                                "not a function")                                                                                       \
+    M(IterableNextNotAFunction, "'next' property on returned object from Symbol.iterator method is not a function")                     \
+    M(IterableReturnBadReturn, "iterator.return() returned a non-object value")                                                         \
     M(JsonBigInt, "Cannot serialize BigInt value to JSON")                                                                              \
     M(JsonCircular, "Cannot stringify circular object")                                                                                 \
     M(JsonMalformed, "Malformed JSON string")                                                                                           \
