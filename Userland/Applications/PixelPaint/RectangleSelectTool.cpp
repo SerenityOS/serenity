@@ -58,6 +58,9 @@ void RectangleSelectTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent& 
 
     m_selecting = false;
     m_editor->update();
+
+    auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
+    m_editor->selection().set(rect_in_image);
 }
 
 void RectangleSelectTool::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& rect) const
