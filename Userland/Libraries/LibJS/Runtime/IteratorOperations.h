@@ -27,6 +27,10 @@ void iterator_close(Object& iterator);
 
 MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
-void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {});
+enum class CloseOnAbrupt {
+    No,
+    Yes
+};
+void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {}, CloseOnAbrupt close_on_abrupt = CloseOnAbrupt::Yes);
 
 }
