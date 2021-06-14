@@ -56,4 +56,10 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& re
         draw_pixel(rect.left(), y);
 }
 
+void Selection::clear()
+{
+    m_rect = {};
+    m_editor.update();
+}
+
 }
