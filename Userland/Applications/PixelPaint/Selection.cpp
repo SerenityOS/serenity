@@ -12,9 +12,9 @@ namespace PixelPaint {
 
 constexpr int marching_ant_length = 4;
 
-void Selection::paint(Gfx::Painter& painter, ImageEditor const& editor)
+void Selection::paint(Gfx::Painter& painter)
 {
-    draw_marching_ants(painter, editor.image_rect_to_editor_rect(m_rect).to_type<int>());
+    draw_marching_ants(painter, m_editor.image_rect_to_editor_rect(m_rect).to_type<int>());
 }
 
 Selection::Selection(ImageEditor& editor)

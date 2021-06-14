@@ -23,7 +23,7 @@ public:
     void set(Gfx::IntRect const& rect) { m_rect = rect; }
     Gfx::IntRect bounding_rect() const { return m_rect; }
 
-    void paint(Gfx::Painter&, ImageEditor const&);
+    void paint(Gfx::Painter&);
 
     void draw_marching_ants(Gfx::Painter&, Gfx::IntRect const&) const;
 
