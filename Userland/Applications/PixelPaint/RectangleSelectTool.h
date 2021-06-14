@@ -21,13 +21,9 @@ public:
     virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
 
 private:
-    void draw_marching_ants(Gfx::Painter&, Gfx::IntRect const&) const;
-
     bool m_selecting { false };
     Gfx::IntPoint m_selection_start;
     Gfx::IntPoint m_selection_end;
-    RefPtr<Core::Timer> m_marching_ants_timer;
-    int m_marching_ants_offset { 0 };
 };
 
 }

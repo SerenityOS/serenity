@@ -20,6 +20,7 @@ namespace PixelPaint {
 
 ImageEditor::ImageEditor()
     : m_undo_stack(make<GUI::UndoStack>())
+    , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
 }
