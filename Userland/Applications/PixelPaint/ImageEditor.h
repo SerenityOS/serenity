@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Image.h"
+#include "Selection.h"
 #include <LibGUI/Frame.h>
 #include <LibGUI/UndoStack.h>
 #include <LibGfx/Point.h>
@@ -52,6 +53,9 @@ public:
 
     Color secondary_color() const { return m_secondary_color; }
     void set_secondary_color(Color);
+
+    Selection& selection() { return m_selection; }
+    Selection const& selection() const { return m_selection; }
 
     Color color_for(GUI::MouseEvent const&) const;
     Color color_for(GUI::MouseButton) const;
@@ -105,6 +109,8 @@ private:
     Gfx::FloatPoint m_pan_origin;
     Gfx::FloatPoint m_saved_pan_origin;
     Gfx::IntPoint m_click_position;
+
+    Selection m_selection;
 };
 
 }

@@ -95,6 +95,9 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
     if (m_active_layer) {
         painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
     }
+
+    if (!m_selection.is_empty())
+        m_selection.paint(painter, *this);
 }
 
 Gfx::FloatRect ImageEditor::layer_rect_to_editor_rect(Layer const& layer, Gfx::IntRect const& layer_rect) const
