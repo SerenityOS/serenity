@@ -42,8 +42,8 @@ SymbolConstructor::~SymbolConstructor()
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
 Value SymbolConstructor::call()
 {
-    if (!vm().argument_count())
-        return js_symbol(heap(), "", false);
+    if (vm().argument(0).is_undefined())
+        return js_symbol(heap(), {}, false);
     return js_symbol(heap(), vm().argument(0).to_string(global_object()), false);
 }
 
@@ -57,13 +57,7 @@ Value SymbolConstructor::construct(Function&)
 // 20.4.2.2 Symbol.for ( key ), https://tc39.es/ecma262/#sec-symbol.for
 JS_DEFINE_NATIVE_FUNCTION(SymbolConstructor::for_)
 {
-    String description;
-    if (!vm.argument_count()) {
-        description = "undefined";
-    } else {
-        description = vm.argument(0).to_string(global_object);
-    }
-
+    String description = vm.argument(0).to_string(global_object);
     return global_object.vm().get_global_symbol(description);
 }
 
