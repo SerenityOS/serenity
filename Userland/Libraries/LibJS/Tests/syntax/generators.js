@@ -21,3 +21,21 @@ describe("parsing freestanding generators", () => {
             *bar; }`).toEval();
     });
 });
+
+describe("parsing object literal generator functions", () => {
+    test("simple", () => {
+        expect(`x = { *foo() { } }`).toEval();
+        expect(`x = { * foo() { } }`).toEval();
+        expect(`x = { *
+                foo() { } }`).toEval();
+    });
+    test("yield", () => {
+        expect(`x = { foo() { yield; } }`).toEval();
+        expect(`x = { *foo() { yield; } }`).toEval();
+        expect(`x = { *foo() { yield 42; } }`).toEval();
+        expect(`x = { foo() { yield 42; } }`).not.toEval();
+        expect(`x = { *foo() { yield (yield); } }`).toEval();
+        expect(`x = { *
+                foo() { yield (yield); } }`).toEval();
+    });
+});
