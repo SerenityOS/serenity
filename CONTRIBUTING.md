@@ -2,7 +2,7 @@
 
 When contributing to SerenityOS, make sure that the changes you wish to make are in line with the project direction. If you are not sure about this, open an issue first, so we can discuss it.
 
-For your first PR, start with something small to get familiar with the project and its development processes.
+**For your first couple of PR's, start with something small to get familiar with the project and its development processes. Please do not start by adding a new application, library or other large component.**
 
 Everyone is welcome to work on the project, and while we have lots of fun, it's a serious kind of fun. :^)
 
