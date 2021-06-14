@@ -1313,7 +1313,10 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    outln("Identifier \"{}\"", m_string);
+    if (m_argument_index.has_value())
+        outln("Identifier \"{}\" (argument #{})", m_string, m_argument_index.value());
+    else
+        outln("Identifier \"{}\"", m_string);
 }
 
 void SpreadExpression::dump(int indent) const

@@ -382,6 +382,8 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
     if (function_length == -1)
         function_length = parameters.size();
 
+    m_parser_state.function_parameters.append(parameters);
+
     auto old_labels_in_scope = move(m_parser_state.m_labels_in_scope);
     ScopeGuard guard([&]() {
         m_parser_state.m_labels_in_scope = move(old_labels_in_scope);
@@ -410,6 +412,8 @@ RefPtr<FunctionExpression> Parser::try_parse_arrow_function_expression(bool expe
         // Invalid arrow function body
         return nullptr;
     }();
+
+    m_parser_state.function_parameters.take_last();
 
     if (!function_body_result.is_null()) {
         state_rollback_guard.disarm();
@@ -651,7 +655,23 @@ NonnullRefPtr<Expression> Parser::parse_primary_expression()
 
             set_try_parse_arrow_function_expression_failed_at_position(position(), true);
         }
-        return create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, consume().value());
+        auto string = consume().value();
+        Optional<size_t> argument_index;
+        if (!m_parser_state.function_parameters.is_empty()) {
+            size_t i = 0;
+            for (auto& parameter : m_parser_state.function_parameters.last()) {
+                parameter.binding.visit(
+                    [&](FlyString const& name) {
+                        if (name == string) {
+                            argument_index = i;
+                        }
+                    },
+                    [&](BindingPattern const&) {
+                    });
+                ++i;
+            }
+        }
+        return create_ast_node<Identifier>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, string, argument_index);
     }
     case TokenType::NumericLiteral:
         return create_ast_node<NumericLiteral>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, consume_and_validate_numeric_literal().double_value());
@@ -1386,8 +1406,13 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         m_parser_state.m_labels_in_scope = move(old_labels_in_scope);
     });
 
+    m_parser_state.function_parameters.append(parameters);
+
     bool is_strict = false;
     auto body = parse_block_statement(is_strict);
+
+    m_parser_state.function_parameters.take_last();
+
     body->add_variables(m_parser_state.m_var_scopes.last());
     body->add_functions(m_parser_state.m_function_scopes.last());
     return create_ast_node<FunctionNodeType>(
