@@ -23,7 +23,7 @@ public:
     Symbol& primitive_symbol() { return m_symbol; }
     const Symbol& primitive_symbol() const { return m_symbol; }
 
-    const String& description() const { return m_symbol.description(); }
+    String description() const { return m_symbol.description(); }
     bool is_global() const { return m_symbol.is_global(); }
 
     virtual Value value_of() const override

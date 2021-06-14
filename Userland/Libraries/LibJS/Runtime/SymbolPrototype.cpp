@@ -58,7 +58,10 @@ JS_DEFINE_NATIVE_GETTER(SymbolPrototype::description_getter)
     auto symbol_value = this_symbol_value(global_object, vm.this_value(global_object));
     if (vm.exception())
         return {};
-    return js_string(vm, symbol_value.as_symbol().description());
+    auto& description = symbol_value.as_symbol().raw_description();
+    if (!description.has_value())
+        return js_undefined();
+    return js_string(vm, *description);
 }
 
 // 20.4.3.3 Symbol.prototype.toString ( ), https://tc39.es/ecma262/#sec-symbol.prototype.tostring
