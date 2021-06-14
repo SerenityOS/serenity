@@ -25,6 +25,8 @@ void RectangleSelectTool::on_mousedown(Layer&, GUI::MouseEvent&, GUI::MouseEvent
         return;
 
     m_selecting = true;
+    m_editor->selection().begin_interactive_selection();
+
     m_selection_start = image_event.position();
     m_selection_end = image_event.position();
     m_editor->update();
@@ -45,6 +47,8 @@ void RectangleSelectTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent& 
         return;
 
     m_selecting = false;
+    m_editor->selection().end_interactive_selection();
+
     m_editor->update();
 
     auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
