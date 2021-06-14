@@ -348,13 +348,15 @@ public:
 
 class YieldExpression final : public Expression {
 public:
-    explicit YieldExpression(SourceRange source_range, RefPtr<Expression> argument)
+    explicit YieldExpression(SourceRange source_range, RefPtr<Expression> argument, bool is_yield_from)
         : Expression(move(source_range))
         , m_argument(move(argument))
+        , m_is_yield_from(is_yield_from)
     {
     }
 
     Expression const* argument() const { return m_argument; }
+    bool is_yield_from() const { return m_is_yield_from; }
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
@@ -362,6 +364,7 @@ public:
 
 private:
     RefPtr<Expression> m_argument;
+    bool m_is_yield_from { false };
 };
 
 class ReturnStatement final : public Statement {

@@ -721,6 +721,9 @@ void YieldExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     VERIFY(generator.is_in_generator_function());
 
+    if (m_is_yield_from)
+        TODO();
+
     if (m_argument)
         m_argument->generate_bytecode(generator);
 
