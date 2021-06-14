@@ -971,6 +971,8 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         set_feature(CPUFeature::PGE);
     if (processor_info.edx() & (1 << 23))
         set_feature(CPUFeature::MMX);
+    if (processor_info.edx() & (1 << 24))
+        set_feature(CPUFeature::FXSR);
     if (processor_info.edx() & (1 << 25))
         set_feature(CPUFeature::SSE);
     if (processor_info.edx() & (1 << 26))
@@ -1137,6 +1139,8 @@ String Processor::features_string() const
             return "syscall";
         case CPUFeature::MMX:
             return "mmx";
+        case CPUFeature::FXSR:
+            return "fxsr";
         case CPUFeature::SSE2:
             return "sse2";
         case CPUFeature::SSE3:
