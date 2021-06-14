@@ -93,7 +93,7 @@ public:
     KResult access(PathWithBase, int mode, AtFlags flags);
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
-    KResult rename(StringView oldpath, StringView newpath, Custody& base);
+    KResult rename(PathWithBase oldpath, PathWithBase newpath);
     KResult mknod(PathWithBase, mode_t, dev_t);
     KResultOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 

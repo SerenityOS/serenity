@@ -1138,15 +1138,20 @@ int fclose(FILE* stream)
     return ok ? 0 : EOF;
 }
 
-int rename(const char* oldpath, const char* newpath)
+int renameat(int olddirfd, const char* oldpath, int newdirfd, const char* newpath)
 {
     if (!oldpath || !newpath) {
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_rename_params params { { oldpath, strlen(oldpath) }, { newpath, strlen(newpath) } };
+    Syscall::SC_rename_params params { olddirfd, { oldpath, strlen(oldpath) }, newdirfd, { newpath, strlen(newpath) }, 0 };
     int rc = syscall(SC_rename, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int rename(const char* oldpath, const char* newpath)
+{
+    return renameat(AT_FDCWD, oldpath, AT_FDCWD, newpath);
 }
 
 void dbgputch(char ch)

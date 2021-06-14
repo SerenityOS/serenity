@@ -500,17 +500,17 @@ KResult VFS::chmod(PathWithBase path_with_base, mode_t mode, AtFlags flags)
     return chmod(custody, mode);
 }
 
-KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
+KResult VFS::rename(PathWithBase old_path_with_base, PathWithBase new_path_with_base)
 {
     RefPtr<Custody> old_parent_custody;
-    auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody, O_NOFOLLOW_NOERROR);
+    auto old_custody_or_error = resolve_path(old_path_with_base, &old_parent_custody, O_NOFOLLOW_NOERROR);
     if (old_custody_or_error.is_error())
         return old_custody_or_error.error();
     auto& old_custody = *old_custody_or_error.value();
     auto& old_inode = old_custody.inode();
 
     RefPtr<Custody> new_parent_custody;
-    auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
+    auto new_custody_or_error = resolve_path(new_path_with_base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error() != -ENOENT || !new_parent_custody)
             return new_custody_or_error.error();
@@ -546,7 +546,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (old_parent_custody->is_readonly() || new_parent_custody->is_readonly())
         return EROFS;
 
-    auto new_basename = LexicalPath(new_path).basename();
+    auto new_basename = LexicalPath(new_path_with_base.path).basename();
 
     if (!new_custody_or_error.is_error()) {
         auto& new_custody = *new_custody_or_error.value();
@@ -567,7 +567,7 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     if (auto result = new_parent_inode.add_child(old_inode, new_basename, old_inode.mode()); result.is_error())
         return result;
 
-    if (auto result = old_parent_inode.remove_child(LexicalPath(old_path).basename()); result.is_error())
+    if (auto result = old_parent_inode.remove_child(LexicalPath(old_path_with_base.path).basename()); result.is_error())
         return result;
 
     return KSuccess;

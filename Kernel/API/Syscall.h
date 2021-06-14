@@ -411,8 +411,11 @@ struct SC_symlink_params {
 };
 
 struct SC_rename_params {
+    int old_dirfd;
     StringArgument old_path;
+    int new_dirfd;
     StringArgument new_path;
+    int flags;
 };
 
 struct SC_mount_params {

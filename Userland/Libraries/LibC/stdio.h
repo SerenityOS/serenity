@@ -96,6 +96,7 @@ int setvbuf(FILE*, char* buf, int mode, size_t);
 void setbuf(FILE*, char* buf);
 void setlinebuf(FILE*);
 int rename(const char* oldpath, const char* newpath);
+int renameat(int olddirfd, const char* oldpath, int newdirfd, const char* newpath);
 FILE* tmpfile();
 char* tmpnam(char*);
 FILE* popen(const char* command, const char* type);
