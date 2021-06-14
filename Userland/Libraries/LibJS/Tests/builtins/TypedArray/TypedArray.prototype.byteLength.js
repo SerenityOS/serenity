@@ -13,7 +13,7 @@ const TYPED_ARRAYS = [
 test("basic functionality", () => {
     TYPED_ARRAYS.forEach(T => {
         const typedArray = new T.array([1, 2, 3]);
-        expect(Object.hasOwn(typedArray, "byteOffset")).toBeFalse();
+        expect(Object.hasOwn(typedArray, "byteLength")).toBeFalse();
         expect(typedArray.byteLength).toBe(T.expected);
     });
 });
