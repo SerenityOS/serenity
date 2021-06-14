@@ -10,6 +10,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/Result.h>
 #include <AK/Vector.h>
 #include <LibGUI/Command.h>
 #include <LibGUI/Forward.h>
@@ -52,7 +53,7 @@ public:
     void restore_snapshot(Image const&);
 
     void paint_into(GUI::Painter&, Gfx::IntRect const& dest_rect);
-    void save(String const& file_path) const;
+    Result<void, String> write_to_file(String const& file_path) const;
     void export_bmp(String const& file_path);
     void export_png(String const& file_path);
 
