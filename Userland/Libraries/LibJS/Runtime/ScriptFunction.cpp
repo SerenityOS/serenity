@@ -144,6 +144,9 @@ Value ScriptFunction::execute_function_body()
                         argument_value = js_undefined();
                     }
 
+                    if (i >= call_frame_args.size())
+                        call_frame_args.resize(i + 1);
+                    call_frame_args[i] = argument_value;
                     vm.assign(param, argument_value, global_object(), true, vm.current_scope());
                 });
 
