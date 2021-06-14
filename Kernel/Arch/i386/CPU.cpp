@@ -1049,8 +1049,12 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     //       initialized yet!
     cpu_detect();
 
-    if (has_feature(CPUFeature::SSE))
+    if (has_feature(CPUFeature::SSE)) {
+        // enter_thread_context() assumes that if a x86 CPU supports SSE then it also supports FXSR.
+        // SSE support without FXSR is an extremely unlikely scenario, so let's be pragmatic about it.
+        VERIFY(has_feature(CPUFeature::FXSR));
         sse_init();
+    }
 
     write_cr0(read_cr0() | 0x00010000);
 
@@ -1233,8 +1237,12 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     if (cpu == 0) {
         VERIFY((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
-        asm volatile("fxsave %0"
-                     : "=m"(s_clean_fpu_state));
+        if (has_feature(CPUFeature::FXSR))
+            asm volatile("fxsave %0"
+                         : "=m"(s_clean_fpu_state));
+        else
+            asm volatile("fnsave %0"
+                         : "=m"(s_clean_fpu_state));
     }
 
     m_info = new ProcessorInfo(*this);
@@ -1412,12 +1420,18 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
     VERIFY(to_thread->state() == Thread::Running);
 
+    bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     Processor::set_current_thread(*to_thread);
 
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
-    asm volatile("fxsave %0"
-                 : "=m"(from_thread->fpu_state()));
+
+    if (has_fxsr)
+        asm volatile("fxsave %0"
+                     : "=m"(from_thread->fpu_state()));
+    else
+        asm volatile("fnsave %0"
+                     : "=m"(from_thread->fpu_state()));
 
     from_tss.fs = get_fs();
     from_tss.gs = get_gs();
@@ -1444,7 +1458,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
 
-    asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
+    if (has_fxsr)
+        asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
+    else
+        asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
 
     // TODO: ioperm?
 }
