@@ -565,6 +565,7 @@ void Process::die()
     // slave owner, we have to allow the PTY pair to be torn down.
     m_tty = nullptr;
 
+    VERIFY(m_threads_for_coredump.is_empty());
     for_each_thread([&](auto& thread) {
         m_threads_for_coredump.append(thread);
     });
