@@ -83,62 +83,71 @@ RefPtr<Image> Image::try_create_from_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap)
     return image;
 }
 
-RefPtr<Image> Image::try_create_from_pixel_paint_file(String const& file_path)
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(String const& file_path)
 {
-    auto file = fopen(file_path.characters(), "r");
-    fseek(file, 0L, SEEK_END);
-    auto length = ftell(file);
-    rewind(file);
+    auto file_or_error = Core::File::open(file_path, Core::OpenMode::ReadOnly);
+    if (file_or_error.is_error())
+        return file_or_error.error();
 
-    auto buffer = ByteBuffer::create_uninitialized(length);
-    fread(buffer.data(), sizeof(u8), length, file);
-    fclose(file);
+    auto& file = *file_or_error.value();
+    auto contents = file.read_all();
 
-    auto json_or_error = JsonValue::from_string(String::copy(buffer));
+    auto json_or_error = JsonValue::from_string(contents);
     if (!json_or_error.has_value())
-        return nullptr;
+        return String { "Not a valid PP file"sv };
 
-    auto json = json_or_error.value().as_object();
+    auto& json = json_or_error.value().as_object();
     auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
-    json.get("layers").as_array().for_each([&](JsonValue json_layer) {
-        auto json_layer_object = json_layer.as_object();
-        auto width = json_layer_object.get("width").to_i32();
-        auto height = json_layer_object.get("height").to_i32();
-        auto name = json_layer_object.get("name").as_string();
-        auto layer = Layer::try_create_with_size(*image, { width, height }, name);
-        VERIFY(layer);
-        layer->set_location({ json_layer_object.get("locationx").to_i32(), json_layer_object.get("locationy").to_i32() });
-        layer->set_opacity_percent(json_layer_object.get("opacity_percent").to_i32());
-        layer->set_visible(json_layer_object.get("visible").as_bool());
-        layer->set_selected(json_layer_object.get("selected").as_bool());
+    if (!image)
+        return String { "Image memory allocation failed" };
 
-        auto bitmap_base64_encoded = json_layer_object.get("bitmap").as_string();
+    auto layers_value = json.get("layers");
+    for (auto& layer_value : layers_value.as_array().values()) {
+        auto& layer_object = layer_value.as_object();
+        auto width = layer_object.get("width").to_i32();
+        auto height = layer_object.get("height").to_i32();
+        auto name = layer_object.get("name").as_string();
+        // FIXME: Delay Layer creation until we have the bitmap, to avoid an unnecessary temporary bitmap here!
+        auto layer = Layer::try_create_with_size(*image, { width, height }, name);
+        if (!layer)
+            return String { "Layer memory allocation failed" };
+        layer->set_location({ layer_object.get("locationx").to_i32(), layer_object.get("locationy").to_i32() });
+        layer->set_opacity_percent(layer_object.get("opacity_percent").to_i32());
+        layer->set_visible(layer_object.get("visible").as_bool());
+        layer->set_selected(layer_object.get("selected").as_bool());
+
+        auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
 
         auto bitmap = try_decode_bitmap(bitmap_data);
-        VERIFY(bitmap);
+        if (!bitmap)
+            return String { "Layer bitmap decode failed" };
         layer->set_bitmap(bitmap.release_nonnull());
         image->add_layer(*layer);
-    });
+    }
 
-    return image;
+    return image.release_nonnull();
 }
 
-RefPtr<Image> Image::try_create_from_file(String const& file_path)
+Result<NonnullRefPtr<Image>, String> Image::try_create_from_file(String const& file_path)
 {
-    if (auto image = try_create_from_pixel_paint_file(file_path))
-        return image;
+    auto image_or_error = try_create_from_pixel_paint_file(file_path);
+    if (!image_or_error.is_error())
+        return image_or_error.release_value();
 
     auto file_or_error = MappedFile::map(file_path);
     if (file_or_error.is_error())
-        return nullptr;
+        return String { "Unable to mmap file"sv };
 
     auto& mapped_file = *file_or_error.value();
     // FIXME: Find a way to avoid the memory copy here.
     auto bitmap = try_decode_bitmap(ByteBuffer::copy(mapped_file.bytes()));
     if (!bitmap)
-        return nullptr;
-    return Image::try_create_from_bitmap(bitmap.release_nonnull());
+        return String { "Unable to decode image"sv };
+    auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
+    if (!image)
+        return String { "Unable to allocate Image"sv };
+    return image.release_nonnull();
 }
 
 Result<void, String> Image::write_to_file(const String& file_path) const
