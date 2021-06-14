@@ -44,6 +44,11 @@ public:
     Vector<FunctionNode::Parameter> parse_formal_parameters(int& function_length, u8 parse_options = 0);
     RefPtr<BindingPattern> parse_binding_pattern();
 
+    struct PrimaryExpressionParseResult {
+        NonnullRefPtr<Expression> result;
+        bool should_continue_parsing_as_expression { true };
+    };
+
     NonnullRefPtr<Declaration> parse_declaration();
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<BlockStatement> parse_block_statement();
@@ -66,7 +71,7 @@ public:
     NonnullRefPtr<DebuggerStatement> parse_debugger_statement();
     NonnullRefPtr<ConditionalExpression> parse_conditional_expression(NonnullRefPtr<Expression> test);
     NonnullRefPtr<Expression> parse_expression(int min_precedence, Associativity associate = Associativity::Right, const Vector<TokenType>& forbidden = {});
-    NonnullRefPtr<Expression> parse_primary_expression();
+    PrimaryExpressionParseResult parse_primary_expression();
     NonnullRefPtr<Expression> parse_unary_prefixed_expression();
     NonnullRefPtr<RegExpLiteral> parse_regexp_literal();
     NonnullRefPtr<ObjectExpression> parse_object_expression();

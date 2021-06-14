@@ -12,7 +12,7 @@ describe("parsing freestanding generators", () => {
         expect(`function foo() { yield; }`).toEval();
         expect(`function foo() { yield 3; }`).not.toEval();
     });
-    test.skip("yield-from expression", () => {
+    test("yield-from expression", () => {
         expect(`function* foo() { yield *bar; }`).toEval();
         expect(`function* foo() { yield *(yield); }`).toEval();
         expect(`function* foo() { yield
