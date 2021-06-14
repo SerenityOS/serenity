@@ -29,6 +29,7 @@ struct FunctionNodeParseOptions {
         IsGetterFunction = 1 << 3,
         IsSetterFunction = 1 << 4,
         IsArrowFunction = 1 << 5,
+        IsGeneratorFunction = 1 << 6,
     };
 };
 

@@ -830,6 +830,7 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
         property_type = ObjectProperty::Type::KeyValue;
         RefPtr<Expression> property_name;
         RefPtr<Expression> property_value;
+        FunctionKind function_kind { FunctionKind::Regular };
 
         if (match(TokenType::TripleDot)) {
             consume();
@@ -841,7 +842,12 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
             continue;
         }
 
-        if (match(TokenType::Identifier)) {
+        if (match(TokenType::Asterisk)) {
+            consume();
+            property_type = ObjectProperty::Type::KeyValue;
+            property_name = parse_property_key();
+            function_kind = FunctionKind ::Generator;
+        } else if (match(TokenType::Identifier)) {
             auto identifier = consume().value();
             if (identifier == "get" && match_property_key()) {
                 property_type = ObjectProperty::Type::Getter;
@@ -872,6 +878,8 @@ NonnullRefPtr<ObjectExpression> Parser::parse_object_expression()
                 parse_options |= FunctionNodeParseOptions::IsGetterFunction;
             if (property_type == ObjectProperty::Type::Setter)
                 parse_options |= FunctionNodeParseOptions::IsSetterFunction;
+            if (function_kind == FunctionKind::Generator)
+                parse_options |= FunctionNodeParseOptions::IsGeneratorFunction;
             auto function = parse_function_node<FunctionExpression>(parse_options);
             properties.append(create_ast_node<ObjectProperty>({ m_parser_state.m_current_token.filename(), rule_start.position(), position() }, *property_name, function, property_type, true));
         } else if (match(TokenType::Colon)) {
@@ -1380,13 +1388,15 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
 
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Function);
 
-    auto is_generator = false;
+    auto is_generator = (parse_options & FunctionNodeParseOptions::IsGeneratorFunction) != 0;
     String name;
     if (parse_options & FunctionNodeParseOptions::CheckForFunctionAndName) {
         consume(TokenType::Function);
-        is_generator = match(TokenType::Asterisk);
-        if (is_generator)
-            consume(TokenType::Asterisk);
+        if (!is_generator) {
+            is_generator = match(TokenType::Asterisk);
+            if (is_generator)
+                consume(TokenType::Asterisk);
+        }
 
         if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
             name = consume(TokenType::Identifier).value();
