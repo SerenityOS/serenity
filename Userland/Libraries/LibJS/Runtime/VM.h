@@ -188,6 +188,7 @@ public:
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
     ScopeType unwind_until() const { return m_unwind_until; }
+    FlyString unwind_until_label() const { return m_unwind_until_label; }
 
     Value get_variable(const FlyString& name, GlobalObject&);
     void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);

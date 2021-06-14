@@ -43,6 +43,7 @@ Object* iterator_next(Object& iterator, Value value)
 {
     auto& vm = iterator.vm();
     auto& global_object = iterator.global_object();
+
     auto next_method = iterator.get(vm.names.next);
     if (vm.exception())
         return {};
@@ -69,9 +70,38 @@ Object* iterator_next(Object& iterator, Value value)
 }
 
 // 7.4.6 IteratorClose ( iteratorRecord, completion ), https://tc39.es/ecma262/#sec-iteratorclose
-void iterator_close([[maybe_unused]] Object& iterator)
+void iterator_close(Object& iterator)
 {
-    TODO();
+    auto& vm = iterator.vm();
+    auto& global_object = iterator.global_object();
+
+    // Emulates `completion` behaviour
+    auto* completion_exception = vm.exception();
+    vm.clear_exception();
+    auto unwind_until = vm.unwind_until();
+    auto unwind_until_label = vm.unwind_until_label();
+    vm.stop_unwind();
+    auto restore_completion = [&]() {
+        if (completion_exception)
+            vm.set_exception(*completion_exception);
+        if (unwind_until != ScopeType::None)
+            vm.unwind(unwind_until, unwind_until_label);
+    };
+
+    auto return_method = get_method(global_object, &iterator, vm.names.return_);
+    if (!return_method)
+        return restore_completion(); // If return is undefined, return Completion(completion).
+
+    auto result = vm.call(*return_method, &iterator);
+    if (completion_exception)
+        return restore_completion(); // If completion.[[Type]] is throw, return Completion(completion).
+    if (vm.exception())
+        return; // If innerResult.[[Type]] is throw, return Completion(innerResult).
+    if (!result.is_object()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::IterableReturnBadReturn);
+        return; // If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
+    }
+    restore_completion(); // Return Completion(completion).
 }
 
 // 7.4.10 IterableToList ( items [ , method ] ), https://tc39.es/ecma262/#sec-iterabletolist
@@ -86,7 +116,7 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
             values.append(value);
             return IterationDecision::Continue;
         },
-        method);
+        method, CloseOnAbrupt::No);
     return values;
 }
 
@@ -100,7 +130,7 @@ Value create_iterator_result_object(GlobalObject& global_object, Value value, bo
     return object;
 }
 
-void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback, Value method)
+void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback, Value method, CloseOnAbrupt close_on_abrupt)
 {
     auto& vm = global_object.vm();
 
@@ -125,8 +155,11 @@ void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<
             return;
 
         auto result = callback(next_value);
-        if (result == IterationDecision::Break)
+        if (result == IterationDecision::Break) {
+            if (close_on_abrupt == CloseOnAbrupt::Yes)
+                iterator_close(*iterator);
             return;
+        }
         VERIFY(result == IterationDecision::Continue);
     }
 }
