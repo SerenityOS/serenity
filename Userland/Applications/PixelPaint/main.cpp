@@ -220,6 +220,21 @@ int main(int argc, char** argv)
         },
         window));
 
+    edit_menu.add_separator();
+    edit_menu.add_action(GUI::Action::create(
+        "&Swap Colors", { Mod_None, Key_X }, [&](auto&) {
+            auto old_primary_color = image_editor.primary_color();
+            image_editor.set_primary_color(image_editor.secondary_color());
+            image_editor.set_secondary_color(old_primary_color);
+        },
+        window));
+    edit_menu.add_action(GUI::Action::create(
+        "&Default Colors", { Mod_None, Key_D }, [&](auto&) {
+            image_editor.set_primary_color(Color::Black);
+            image_editor.set_secondary_color(Color::White);
+        },
+        window));
+
     auto& view_menu = menubar->add_menu("&View");
 
     auto zoom_in_action = GUI::CommonActions::make_zoom_in_action(
