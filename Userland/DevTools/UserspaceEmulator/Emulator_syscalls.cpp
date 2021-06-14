@@ -1208,7 +1208,7 @@ int Emulator::virt$stat(FlatPtr params_addr)
     auto path = String::copy(mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length));
     struct stat host_statbuf;
     int rc;
-    if (params.follow_symlinks)
+    if (params.flags & AT_SYMLINK_NOFOLLOW)
         rc = stat(path.characters(), &host_statbuf);
     else
         rc = lstat(path.characters(), &host_statbuf);

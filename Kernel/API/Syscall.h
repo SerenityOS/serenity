@@ -446,7 +446,7 @@ struct SC_stat_params {
     int dirfd;
     StringArgument path;
     struct stat* statbuf;
-    int follow_symlinks;
+    int flags;
 };
 
 struct SC_ptrace_params {
