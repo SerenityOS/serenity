@@ -13,6 +13,7 @@
 #include "MoveTool.h"
 #include "PenTool.h"
 #include "PickerTool.h"
+#include "RectangleSelectTool.h"
 #include "RectangleTool.h"
 #include "SprayTool.h"
 #include "ZoomTool.h"
@@ -77,6 +78,7 @@ void ToolboxWidget::setup_tools()
     add_tool("Rectangle", "rectangle", { Mod_Ctrl | Mod_Shift, Key_R }, make<RectangleTool>());
     add_tool("Ellipse", "circle", { Mod_Ctrl | Mod_Shift, Key_E }, make<EllipseTool>());
     add_tool("Zoom", "zoom", { 0, Key_Z }, make<ZoomTool>());
+    add_tool("Rectangle Select", "rectangle-select", { 0, Key_R }, make<RectangleSelectTool>());
 }
 
 }
