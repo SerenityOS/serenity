@@ -21,7 +21,10 @@ KResultOr<int> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> use
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().mknod(path.value()->view(), params.mode & ~umask(), params.dev, current_directory());
+    auto dirfd = get_syscall_fd_argument(params.dirfd);
+    if (dirfd.is_error())
+        return dirfd.error();
+    return VFS::the().mknod({ *dirfd.value(), path.value()->view() }, params.mode & ~umask(), params.dev);
 }
 
 }

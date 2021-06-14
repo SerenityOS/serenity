@@ -646,7 +646,7 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_mknod_params params { { pathname, strlen(pathname) }, mode, dev };
+    Syscall::SC_mknod_params params { AT_FDCWD, { pathname, strlen(pathname) }, mode, dev };
     int rc = syscall(SC_mknod, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

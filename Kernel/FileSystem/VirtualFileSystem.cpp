@@ -332,13 +332,13 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
     return description;
 }
 
-KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
+KResult VFS::mknod(PathWithBase path_with_base, mode_t mode, dev_t dev)
 {
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return EINVAL;
 
     RefPtr<Custody> parent_custody;
-    auto existing_file_or_error = resolve_path(path, base, &parent_custody);
+    auto existing_file_or_error = resolve_path(path_with_base, &parent_custody);
     if (!existing_file_or_error.is_error())
         return EEXIST;
     if (!parent_custody)
@@ -352,7 +352,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    LexicalPath p(path);
+    LexicalPath p(path_with_base.path);
     dbgln("VFS::mknod: '{}' mode={} dev={} in {}", p.basename(), mode, dev, parent_inode.identifier());
     return parent_inode.create_child(p.basename(), mode, dev, current_process->euid(), current_process->egid()).result();
 }

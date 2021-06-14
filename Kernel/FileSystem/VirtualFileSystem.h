@@ -94,7 +94,7 @@ public:
     KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
     KResult rename(StringView oldpath, StringView newpath, Custody& base);
-    KResult mknod(StringView path, mode_t, dev_t, Custody& base);
+    KResult mknod(PathWithBase, mode_t, dev_t);
     KResultOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 
     size_t mount_count() const { return m_mounts.size(); }

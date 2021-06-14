@@ -398,6 +398,7 @@ struct SC_chown_params {
 };
 
 struct SC_mknod_params {
+    int dirfd;
     StringArgument path;
     u16 mode;
     u32 dev;
