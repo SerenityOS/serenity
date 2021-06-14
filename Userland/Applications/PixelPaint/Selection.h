@@ -27,11 +27,15 @@ public:
 
     void draw_marching_ants(Gfx::Painter&, Gfx::IntRect const&) const;
 
+    void begin_interactive_selection() { m_in_interactive_selection = true; }
+    void end_interactive_selection() { m_in_interactive_selection = false; }
+
 private:
     ImageEditor& m_editor;
     Gfx::IntRect m_rect;
     RefPtr<Core::Timer> m_marching_ants_timer;
     int m_marching_ants_offset { 0 };
+    bool m_in_interactive_selection { false };
 };
 
 }
