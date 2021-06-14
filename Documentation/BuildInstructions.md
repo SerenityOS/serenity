@@ -49,7 +49,7 @@ sudo apt update
 
 ##### QEMU 5
 
-QUEMU version 5 is available in Ubuntu 20.10. For earlier versions, you can build it using the `Toolchain/BuildQemu.sh` script.
+QEMU version 5 is available in Ubuntu 20.10. For earlier versions, you can build it using the `Toolchain/BuildQemu.sh` script.
 You may need the gtk+ 3.0 dev package:
 
 ```console
