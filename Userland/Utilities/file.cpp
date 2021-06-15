@@ -12,6 +12,7 @@
 #include <LibCore/MimeData.h>
 #include <LibGfx/ImageDecoder.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 static Optional<String> description_only(String description, [[maybe_unused]] const String& path)
@@ -121,8 +122,17 @@ int main(int argc, char** argv)
             continue;
         }
 
+        struct stat file_stat;
+        if (lstat(path, &file_stat) < 0) {
+            perror("lstat");
+            return 1;
+        }
+
+        auto file_size_in_bytes = file_stat.st_size;
         if (file->is_directory()) {
             outln("{}: directory", path);
+        } else if (!file_size_in_bytes) {
+            outln("{}: empty", path);
         } else {
             // Read accounts for longest possible offset + signature we currently match against.
             auto bytes = file->read(0x9006);
