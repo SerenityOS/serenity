@@ -30,14 +30,14 @@ void Track::fill_sample(Sample& sample)
     Audio::Frame new_sample;
 
     for (size_t note = 0; note < note_count; ++note) {
-        if (!m_roll_iters[note].is_end()) {
-            if (m_roll_iters[note]->on_sample == m_time) {
+        if (!m_roll_iterators[note].is_end()) {
+            if (m_roll_iterators[note]->on_sample == m_time) {
                 set_note(note, On);
-            } else if (m_roll_iters[note]->off_sample == m_time) {
+            } else if (m_roll_iterators[note]->off_sample == m_time) {
                 set_note(note, Off);
-                ++m_roll_iters[note];
-                if (m_roll_iters[note].is_end())
-                    m_roll_iters[note] = m_roll_notes[note].begin();
+                ++m_roll_iterators[note];
+                if (m_roll_iterators[note].is_end())
+                    m_roll_iterators[note] = m_roll_notes[note].begin();
             }
         }
 
@@ -118,7 +118,7 @@ void Track::reset()
     memset(m_envelope, 0, sizeof(m_envelope));
 
     for (size_t note = 0; note < note_count; ++note)
-        m_roll_iters[note] = m_roll_notes[note].begin();
+        m_roll_iterators[note] = m_roll_notes[note].begin();
 }
 
 String Track::set_recorded_sample(const StringView& path)
@@ -259,9 +259,9 @@ void Track::sync_roll(int note)
 {
     auto it = m_roll_notes[note].find_if([&](auto& roll_note) { return roll_note.off_sample > m_time; });
     if (it.is_end())
-        m_roll_iters[note] = m_roll_notes[note].begin();
+        m_roll_iterators[note] = m_roll_notes[note].begin();
     else
-        m_roll_iters[note] = it;
+        m_roll_iterators[note] = it;
 }
 
 void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
@@ -281,14 +281,14 @@ void Track::set_roll_note(int note, u32 on_sample, u32 off_sample)
         if (it->on_sample <= new_roll_note.on_sample && it->off_sample >= new_roll_note.on_sample) {
             if (m_time >= it->on_sample && m_time <= it->off_sample)
                 set_note(note, Off);
-            m_roll_notes[note].remove(it);
+            it.remove(m_roll_notes[note]);
             sync_roll(note);
             return;
         }
         if ((new_roll_note.on_sample == 0 || it->on_sample >= new_roll_note.on_sample - 1) && it->on_sample <= new_roll_note.off_sample) {
             if (m_time >= new_roll_note.off_sample && m_time <= it->off_sample)
                 set_note(note, Off);
-            m_roll_notes[note].remove(it);
+            it.remove(m_roll_notes[note]);
             it = m_roll_notes[note].begin();
             continue;
         }
