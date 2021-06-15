@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Scheduler.h>
