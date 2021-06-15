@@ -55,6 +55,7 @@ private:
     GUI::ActionGroup m_search_engine_actions;
     RefPtr<GUI::Action> m_disable_user_agent_spoofing;
     RefPtr<GUI::Action> m_disable_search_engine_action;
+    RefPtr<GUI::Action> m_change_homepage_action;
 };
 
 }
