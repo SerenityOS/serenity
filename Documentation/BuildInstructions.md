@@ -149,7 +149,7 @@ brew install coreutils qemu bash gcc@10 ninja cmake ccache rsync
 
 # (option 1) fuse + ext2
 brew install e2fsprogs m4 autoconf automake libtool
-brew install --cask osxfuse
+brew install --cask macfuse
 Toolchain/BuildFuseExt2.sh
 
 # (option 2) genext2fs
