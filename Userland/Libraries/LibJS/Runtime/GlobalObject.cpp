@@ -37,6 +37,9 @@
 #include <LibJS/Runtime/FinalizationRegistryPrototype.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
+#include <LibJS/Runtime/GeneratorFunctionConstructor.h>
+#include <LibJS/Runtime/GeneratorFunctionPrototype.h>
+#include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
@@ -110,16 +113,21 @@ void GlobalObject::initialize_global_object()
     // This must be initialized before allocating AggregateErrorPrototype, which uses ErrorPrototype as its prototype.
     m_error_prototype = heap().allocate<ErrorPrototype>(*this, *this);
 
-#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    if (!m_##snake_name##_prototype)                                                     \
-        m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, *this);
-    JS_ENUMERATE_BUILTIN_TYPES
-#undef __JS_ENUMERATE
-
 #define __JS_ENUMERATE(ClassName, snake_name) \
     if (!m_##snake_name##_prototype)          \
         m_##snake_name##_prototype = heap().allocate<ClassName##Prototype>(*this, *this);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
+#undef __JS_ENUMERATE
+
+    // %GeneratorFunction.prototype.prototype% must be initialized separately as it has no
+    // companion constructor
+    m_generator_object_prototype = heap().allocate<GeneratorObjectPrototype>(*this, *this);
+    m_generator_object_prototype->define_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
+
+#define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
+    if (!m_##snake_name##_prototype)                                                     \
+        m_##snake_name##_prototype = heap().allocate<PrototypeName>(*this, *this);
+    JS_ENUMERATE_BUILTIN_TYPES
 #undef __JS_ENUMERATE
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
@@ -179,6 +187,11 @@ void GlobalObject::initialize_global_object()
     JS_ENUMERATE_NATIVE_ERRORS
     JS_ENUMERATE_TYPED_ARRAYS
 #undef __JS_ENUMERATE
+
+    // The generator constructor cannot be initialized with add_constructor as it has no global binding
+    m_generator_function_constructor = heap().allocate<GeneratorFunctionConstructor>(*this, *this);
+    // 27.3.3.1 GeneratorFunction.prototype.constructor, https://tc39.es/ecma262/#sec-generatorfunction.prototype.constructor
+    m_generator_function_prototype->define_property(vm.names.constructor, m_generator_function_constructor, Attribute::Configurable);
 }
 
 GlobalObject::~GlobalObject()
@@ -193,6 +206,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_object_shape);
     visitor.visit(m_new_script_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
+    visitor.visit(m_generator_object_prototype);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \

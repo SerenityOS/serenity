@@ -31,11 +31,13 @@ FunctionConstructor::~FunctionConstructor()
 {
 }
 
+// 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
 Value FunctionConstructor::call()
 {
     return construct(*this);
 }
 
+// 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
 Value FunctionConstructor::construct(Function&)
 {
     auto& vm = this->vm();

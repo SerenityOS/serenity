@@ -37,6 +37,9 @@ public:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
 
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
+    GeneratorObjectPrototype* generator_object_prototype() { return m_generator_object_prototype; }
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
@@ -80,6 +83,9 @@ private:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* m_proxy_constructor { nullptr };
+
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
+    GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \
