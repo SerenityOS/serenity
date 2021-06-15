@@ -127,12 +127,10 @@ int main(int argc, char** argv)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        if (!editor->image())
-            return;
         auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "pp");
         if (!save_path.has_value())
             return;
-        auto result = editor->image()->write_to_file(save_path.value());
+        auto result = editor->image().write_to_file(save_path.value());
         if (result.is_error()) {
             GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", save_path.value(), result.error()));
             return;
@@ -152,12 +150,10 @@ int main(int argc, char** argv)
                 auto* editor = current_image_editor();
                 if (!editor)
                     return;
-                if (!editor->image())
-                    return;
                 auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
                 if (!save_path.has_value())
                     return;
-                auto result = editor->image()->export_bmp_to_file(save_path.value());
+                auto result = editor->image().export_bmp_to_file(save_path.value());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to BMP failed: {}", result.error()));
             },
@@ -166,12 +162,10 @@ int main(int argc, char** argv)
         GUI::Action::create(
             "As &PNG", [&](auto&) {
                 auto* editor = current_image_editor();
-                if (!editor->image())
-                    return;
                 auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
                 if (!save_path.has_value())
                     return;
-                auto result = editor->image()->export_bmp_to_file(save_path.value());
+                auto result = editor->image().export_bmp_to_file(save_path.value());
                 if (result.is_error())
                     GUI::MessageBox::show_error(window, String::formatted("Export to PNG failed: {}", result.error()));
             },
@@ -188,7 +182,6 @@ int main(int argc, char** argv)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        VERIFY(editor->image());
         if (!editor->active_layer()) {
             dbgln("Cannot copy with no active layer selected");
             return;
@@ -205,14 +198,13 @@ int main(int argc, char** argv)
         auto* editor = current_image_editor();
         if (!editor)
             return;
-        VERIFY(editor->image());
         auto bitmap = GUI::Clipboard::the().bitmap();
         if (!bitmap)
             return;
 
-        auto layer = PixelPaint::Layer::try_create_with_bitmap(*editor->image(), *bitmap, "Pasted layer");
+        auto layer = PixelPaint::Layer::try_create_with_bitmap(editor->image(), *bitmap, "Pasted layer");
         VERIFY(layer);
-        editor->image()->add_layer(*layer);
+        editor->image().add_layer(*layer);
         editor->set_active_layer(layer);
         editor->selection().clear();
     });
@@ -310,14 +302,14 @@ int main(int argc, char** argv)
             auto* editor = current_image_editor();
             if (!editor)
                 return;
-            auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image()->size(), window);
+            auto dialog = PixelPaint::CreateNewLayerDialog::construct(editor->image().size(), window);
             if (dialog->exec() == GUI::Dialog::ExecOK) {
-                auto layer = PixelPaint::Layer::try_create_with_size(*editor->image(), dialog->layer_size(), dialog->layer_name());
+                auto layer = PixelPaint::Layer::try_create_with_size(editor->image(), dialog->layer_size(), dialog->layer_name());
                 if (!layer) {
                     GUI::MessageBox::show_error(window, String::formatted("Unable to create layer with size {}", dialog->size().to_string()));
                     return;
                 }
-                editor->image()->add_layer(layer.release_nonnull());
+                editor->image().add_layer(layer.release_nonnull());
                 editor->layers_did_change();
             }
         },
@@ -353,7 +345,7 @@ int main(int argc, char** argv)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image()->move_layer_up(*active_layer);
+            editor->image().move_layer_up(*active_layer);
         },
         window));
     layer_menu.add_action(GUI::Action::create(
@@ -364,7 +356,7 @@ int main(int argc, char** argv)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image()->move_layer_down(*active_layer);
+            editor->image().move_layer_down(*active_layer);
         },
         window));
     layer_menu.add_separator();
@@ -376,7 +368,7 @@ int main(int argc, char** argv)
             auto active_layer = editor->active_layer();
             if (!active_layer)
                 return;
-            editor->image()->remove_layer(*active_layer);
+            editor->image().remove_layer(*active_layer);
             editor->set_active_layer(nullptr);
         },
         window));
@@ -524,7 +516,7 @@ int main(int argc, char** argv)
     tab_widget.on_change = [&](auto& widget) {
         auto& image_editor = downcast<PixelPaint::ImageEditor>(widget);
         palette_widget.set_image_editor(image_editor);
-        layer_list_widget.set_image(image_editor.image());
+        layer_list_widget.set_image(&image_editor.image());
         layer_properties_widget.set_layer(nullptr);
         // FIXME: This is badly factored. It transfers tools from the previously active editor to the new one.
         toolbox.template for_each_tool([&](auto& tool) {
