@@ -22,13 +22,13 @@ public:
     explicit Set(Object& prototype);
     virtual ~Set() override;
 
-    HashTable<Value, ValueTraits> const& values() const { return m_values; };
-    HashTable<Value, ValueTraits>& values() { return m_values; };
+    OrderedHashTable<Value, ValueTraits> const& values() const { return m_values; };
+    OrderedHashTable<Value, ValueTraits>& values() { return m_values; };
 
 private:
     virtual void visit_edges(Visitor& visitor) override;
 
-    HashTable<Value, ValueTraits> m_values; // FIXME: Replace with a HashTable that maintains a linked list of insertion order for correct iteration order
+    OrderedHashTable<Value, ValueTraits> m_values;
 };
 
 }
