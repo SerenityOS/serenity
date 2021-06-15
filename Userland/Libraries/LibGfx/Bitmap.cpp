@@ -485,7 +485,7 @@ RefPtr<Gfx::Bitmap> Bitmap::cropped(Gfx::IntRect crop) const
             int global_x = x + crop.left();
             int global_y = y + crop.top();
             if (global_x >= physical_width() || global_y >= physical_height() || global_x < 0 || global_y < 0) {
-                new_bitmap->set_pixel(x, y, Gfx::Color::Black);
+                new_bitmap->set_pixel(x, y, Gfx::Color::Transparent);
             } else {
                 new_bitmap->set_pixel(x, y, get_pixel(global_x, global_y));
             }
