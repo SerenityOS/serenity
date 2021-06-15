@@ -33,6 +33,8 @@
 #include <LibJS/Runtime/DatePrototype.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/ErrorPrototype.h>
+#include <LibJS/Runtime/FinalizationRegistryConstructor.h>
+#include <LibJS/Runtime/FinalizationRegistryPrototype.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -155,6 +157,7 @@ void GlobalObject::initialize_global_object()
     add_constructor(vm.names.DataView, m_data_view_constructor, m_data_view_prototype);
     add_constructor(vm.names.Date, m_date_constructor, m_date_prototype);
     add_constructor(vm.names.Error, m_error_constructor, m_error_prototype);
+    add_constructor(vm.names.FinalizationRegistry, m_finalization_registry_constructor, m_finalization_registry_prototype);
     add_constructor(vm.names.Function, m_function_constructor, m_function_prototype);
     add_constructor(vm.names.Map, m_map_constructor, m_map_prototype);
     add_constructor(vm.names.Number, m_number_constructor, m_number_prototype);

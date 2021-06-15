@@ -630,6 +630,7 @@ JS::Interpreter& Document::interpreter()
         vm.on_call_stack_emptied = [this] {
             auto& vm = m_interpreter->vm();
             vm.run_queued_promise_jobs();
+            vm.run_queued_finalization_registry_cleanup_jobs();
             // Note: This is not an exception check for the promise jobs, they will just leave any
             // exception that already exists intact and never throw a new one (without cleaning it
             // up, that is). Taking care of any previous unhandled exception just happens to be the

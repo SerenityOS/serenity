@@ -11,6 +11,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -555,6 +556,20 @@ void VM::run_queued_promise_jobs()
 void VM::enqueue_promise_job(NativeFunction& job)
 {
     m_promise_jobs.append(&job);
+}
+
+void VM::run_queued_finalization_registry_cleanup_jobs()
+{
+    while (!m_finalization_registry_cleanup_jobs.is_empty()) {
+        auto* registry = m_finalization_registry_cleanup_jobs.take_first();
+        registry->cleanup();
+    }
+}
+
+// 9.10.4.1 HostEnqueueFinalizationRegistryCleanupJob ( finalizationRegistry ), https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry
+void VM::enqueue_finalization_registry_cleanup_job(FinalizationRegistry& registry)
+{
+    m_finalization_registry_cleanup_jobs.append(&registry);
 }
 
 // 27.2.1.9 HostPromiseRejectionTracker ( promise, operation ), https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
