@@ -1,3 +1,8 @@
+serenity_component(
+    SpaceAnalyzer
+    TARGETS SpaceAnalyzer
+)
+
 compile_gml(SpaceAnalyzer.gml SpaceAnalyzerGML.h space_analyzer_gml)
 
 set(SOURCES

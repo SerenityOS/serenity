@@ -1,3 +1,9 @@
+serenity_component(
+    AudioServer
+    RECOMMENDED
+    TARGETS AudioServer
+)
+
 compile_ipc(AudioServer.ipc AudioServerEndpoint.h)
 compile_ipc(AudioClient.ipc AudioClientEndpoint.h)
 

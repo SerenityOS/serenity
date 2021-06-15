@@ -1,3 +1,8 @@
+serenity_component(
+    PDFViewer
+    TARGETS PDFViewer
+)
+
 set(SOURCES
     NumericInput.cpp
     OutlineModel.cpp

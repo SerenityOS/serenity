@@ -1,3 +1,8 @@
+serenity_component(
+    CppLanguageServer
+    TARGETS CppLanguageServer
+)
+
 set(SOURCES
     CppComprehensionEngine.cpp
     Tests.cpp

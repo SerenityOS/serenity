@@ -1,3 +1,8 @@
+serenity_component(
+    EchoServer
+    TARGETS EchoServer
+)
+
 set(SOURCES
     Client.cpp
     main.cpp

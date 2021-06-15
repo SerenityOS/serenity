@@ -1,3 +1,9 @@
+serenity_component(
+    Breakout
+    RECOMMENDED
+    TARGETS Breakout
+)
+
 set(SOURCES
     main.cpp
     Game.cpp

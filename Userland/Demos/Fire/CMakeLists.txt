@@ -1,3 +1,8 @@
+serenity_component(
+    Fire
+    TARGETS Fire
+)
+
 set(SOURCES
     Fire.cpp
 )

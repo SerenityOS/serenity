@@ -1,3 +1,9 @@
+serenity_component(
+    Help
+    RECOMMENDED
+    TARGETS Help
+)
+
 set(SOURCES
     History.cpp
     main.cpp

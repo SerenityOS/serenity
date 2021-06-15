@@ -1,3 +1,9 @@
+serenity_component(
+    Audio.Applet
+    REQUIRED
+    TARGETS Audio.Applet
+)
+
 set(SOURCES
     main.cpp
 )

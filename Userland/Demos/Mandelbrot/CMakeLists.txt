@@ -1,3 +1,8 @@
+serenity_component(
+    Mandelbrot
+    TARGETS Mandelbrot
+)
+
 set(SOURCES
     Mandelbrot.cpp
 )

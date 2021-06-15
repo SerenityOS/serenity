@@ -1,3 +1,8 @@
+serenity_component(
+    Screensaver
+    TARGETS Screensaver
+)
+
 set(SOURCES
     Screensaver.cpp
 )

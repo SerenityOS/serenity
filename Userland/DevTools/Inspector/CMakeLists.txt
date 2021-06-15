@@ -1,3 +1,9 @@
+serenity_component(
+    Inspector
+    RECOMMENDED
+    TARGETS Inspector
+)
+
 set(SOURCES
     main.cpp
     RemoteObject.cpp

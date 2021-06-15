@@ -1,3 +1,10 @@
+serenity_component(
+    Hearts
+    DESCRIPTION "Hearts game"
+    RECOMMENDED
+    TARGETS Hearts
+)
+
 compile_gml(Hearts.gml HeartsGML.h hearts_gml)
 
 set(SOURCES
