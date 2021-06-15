@@ -156,3 +156,4 @@ private:
 }
 
 using AK::HashMap;
+using AK::OrderedHashMap;
