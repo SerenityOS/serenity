@@ -80,7 +80,7 @@ void BucketTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEv
 
     flood_fill(layer.bitmap(), event.position(), target_color, m_editor->color_for(event), m_threshold);
 
-    layer.did_modify_bitmap(*m_editor->image());
+    layer.did_modify_bitmap();
     m_editor->did_complete_action();
 }
 

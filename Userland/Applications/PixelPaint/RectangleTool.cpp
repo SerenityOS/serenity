@@ -61,7 +61,7 @@ void RectangleTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseE
         auto rect = Gfx::IntRect::from_two_points(m_rectangle_start_position, m_rectangle_end_position);
         draw_using(painter, rect);
         m_drawing_button = GUI::MouseButton::None;
-        layer.did_modify_bitmap(*m_editor->image());
+        layer.did_modify_bitmap();
         m_editor->did_complete_action();
     }
 }

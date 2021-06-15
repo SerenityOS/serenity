@@ -28,8 +28,6 @@ public:
     Image const* image() const { return m_image; }
     Image* image() { return m_image; }
 
-    void set_image(RefPtr<Image>);
-
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
 
@@ -73,7 +71,7 @@ public:
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
 private:
-    ImageEditor();
+    explicit ImageEditor(NonnullRefPtr<Image>);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;
@@ -95,7 +93,7 @@ private:
     void clamped_scale(float);
     void relayout();
 
-    RefPtr<Image> m_image;
+    NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 
