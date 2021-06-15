@@ -93,7 +93,10 @@ endpoint WindowServer
     set_background_color(String background_color) =|
     set_wallpaper_mode(String mode) =|
 
-    set_resolution(u32 screen_index, Gfx::IntSize resolution, int scale_factor) => (bool success, Gfx::IntSize resolution, int scale_factor)
+    set_screen_layout(::WindowServer::ScreenLayout screen_layout, bool save) => (bool success, String error_msg)
+    get_screen_layout() => (::WindowServer::ScreenLayout screen_layout)
+    save_screen_layout() => (bool success, String error_msg)
+
     set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap icon) =|
 
     get_wallpaper() => (String path)

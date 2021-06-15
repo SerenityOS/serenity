@@ -815,6 +815,9 @@ void Compositor::step_animations()
 
 void Compositor::screen_resolution_changed()
 {
+    // Screens may be gone now, invalidate any references to them
+    m_current_cursor_screen = nullptr;
+
     init_bitmaps();
     invalidate_occlusions();
     compose();

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "ScreenLayout.h"
 #include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Color.h>
@@ -72,6 +73,9 @@ public:
     }
     ~Screen();
 
+    static bool apply_layout(ScreenLayout&&, String&);
+    static const ScreenLayout& layout() { return s_layout; }
+
     static Screen& main()
     {
         VERIFY(s_main_screen);
@@ -124,11 +128,6 @@ public:
     void make_main_screen() { s_main_screen = this; }
     bool is_main_screen() const { return s_main_screen == this; }
 
-    template<typename... Args>
-    bool set_resolution(Args&&... args)
-    {
-        return do_set_resolution(false, forward<Args>(args)...);
-    }
     bool can_set_buffer() { return m_can_set_buffer; }
     void set_buffer(int index);
 
@@ -138,7 +137,7 @@ public:
 
     int width() const { return m_virtual_rect.width(); }
     int height() const { return m_virtual_rect.height(); }
-    int scale_factor() const { return m_scale_factor; }
+    int scale_factor() const { return m_info.scale_factor; }
 
     Gfx::RGBA32* scanline(int y);
 
@@ -148,9 +147,11 @@ public:
     Gfx::IntRect rect() const { return m_virtual_rect; }
 
 private:
-    Screen(const String& device, const Gfx::IntRect& virtual_rect, int scale_factor);
+    Screen(ScreenLayout::Screen&);
+    bool open_device();
+    void close_device();
     void init();
-    bool do_set_resolution(bool initial, int width, int height, int scale_factor);
+    bool set_resolution(bool initial);
     static void update_indices()
     {
         for (size_t i = 0; i < s_screens.size(); i++)
@@ -160,11 +161,10 @@ private:
 
     bool is_opened() const { return m_framebuffer_fd >= 0; }
 
-    void on_change_resolution(bool initial, int pitch, int physical_width, int physical_height, int scale_factor, Screen& screen_with_cursor);
-
     static NonnullOwnPtrVector<Screen, default_screen_count> s_screens;
     static Screen* s_main_screen;
     static Gfx::IntRect s_bounding_screens_rect;
+    static ScreenLayout s_layout;
     size_t m_index { 0 };
 
     size_t m_size_in_bytes;
@@ -175,7 +175,8 @@ private:
     int m_pitch { 0 };
     Gfx::IntRect m_virtual_rect;
     int m_framebuffer_fd { -1 };
-    int m_scale_factor { 1 };
+
+    ScreenLayout::Screen& m_info;
 };
 
 inline Gfx::RGBA32* Screen::scanline(int y)

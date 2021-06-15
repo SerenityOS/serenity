@@ -26,9 +26,16 @@ int main(int argc, char** argv)
     // A Core::EventLoop is all we need, but WindowServerConnection needs a full Application object.
     char* dummy_argv[] = { argv[0] };
     auto app = GUI::Application::construct(1, dummy_argv);
-    auto result = GUI::WindowServerConnection::the().set_resolution(screen, Gfx::IntSize { width, height }, scale);
-    if (!result.success()) {
-        warnln("failed to set resolution");
+    auto screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    if (screen < 0 || (size_t)screen >= screen_layout.screens.size()) {
+        warnln("invalid screen index: {}", screen);
+        return 1;
+    }
+    auto& main_screen = screen_layout.screens[screen];
+    main_screen.resolution = { width, height };
+    auto set_result = GUI::WindowServerConnection::the().set_screen_layout(screen_layout, true);
+    if (!set_result.success()) {
+        warnln("failed to set resolution: {}", set_result.error_msg());
         return 1;
     }
 }

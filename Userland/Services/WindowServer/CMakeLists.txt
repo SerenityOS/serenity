@@ -22,6 +22,7 @@ set(SOURCES
     MenuItem.cpp
     MenuManager.cpp
     Screen.cpp
+    ScreenLayout.cpp
     Window.cpp
     WindowFrame.cpp
     WindowManager.cpp
