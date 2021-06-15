@@ -46,4 +46,25 @@ private:
     int m_right { 0 };
     int m_bottom { 0 };
 };
+
 }
+
+#define REGISTER_MARGINS_PROPERTY(property_name, getter, setter)   \
+    register_property(                                             \
+        property_name, [this]() {                                  \
+            auto m = getter();                                     \
+            JsonObject margins_object;                             \
+            margins_object.set("left", m.left());                  \
+            margins_object.set("right", m.right());                \
+            margins_object.set("top", m.top());                    \
+            margins_object.set("bottom", m.bottom());              \
+            return margins_object; },                               \
+        [this](auto& value) {                                      \
+            if (!value.is_array() || value.as_array().size() != 4) \
+                return false;                                      \
+            int m[4];                                              \
+            for (size_t i = 0; i < 4; ++i)                         \
+                m[i] = value.as_array().at(i).to_i32();            \
+            setter({ m[0], m[1], m[2], m[3] });                    \
+            return true;                                           \
+        });
