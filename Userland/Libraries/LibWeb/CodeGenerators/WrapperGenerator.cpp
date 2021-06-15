@@ -90,7 +90,7 @@ struct Parameter {
     Type type;
     String name;
     bool optional { false };
-    String optional_default_value {};
+    Optional<String> optional_default_value;
     HashMap<String, String> extended_attributes;
 };
 
@@ -508,7 +508,7 @@ static bool is_wrappable_type(const IDL::Type& type)
 }
 
 template<typename ParameterType>
-static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, String optional_default_value = {})
+static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter, const String& js_name, const String& js_suffix, const String& cpp_name, bool return_void = false, bool legacy_null_to_empty_string = false, bool optional = false, Optional<String> optional_default_value = {})
 {
     auto scoped_generator = generator.fork();
     scoped_generator.set("cpp_name", make_input_acceptable_cpp(cpp_name));
@@ -517,8 +517,8 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     scoped_generator.set("legacy_null_to_empty_string", legacy_null_to_empty_string ? "true" : "false");
     scoped_generator.set("parameter.type.name", parameter.type.name);
 
-    if (!optional_default_value.is_null())
-        scoped_generator.set("parameter.optional_default_value", optional_default_value);
+    if (optional_default_value.has_value())
+        scoped_generator.set("parameter.optional_default_value", *optional_default_value);
 
     if (return_void)
         scoped_generator.set("return_statement", "return;");
@@ -541,7 +541,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         if (vm.exception())
             @return_statement@
     })~~~");
-            if (!optional_default_value.is_null()) {
+            if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~( else {
         @cpp_name@ = @parameter.optional_default_value@;
     }
@@ -593,7 +593,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
         @return_statement@
 )~~~");
         } else {
-            if (!optional_default_value.is_null()) {
+            if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
     double @cpp_name@;
 )~~~");
@@ -609,7 +609,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             @return_statement@
     }
 )~~~");
-            if (!optional_default_value.is_null()) {
+            if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@;
@@ -625,7 +625,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
     bool @cpp_name@ = @js_name@@js_suffix@.to_boolean();
 )~~~");
         } else {
-            if (!optional_default_value.is_null()) {
+            if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
     bool @cpp_name@;
 )~~~");
@@ -637,7 +637,7 @@ static void generate_to_cpp(SourceGenerator& generator, ParameterType& parameter
             scoped_generator.append(R"~~~(
     if (!@js_name@@js_suffix@.is_undefined())
         @cpp_name@ = @js_name@@js_suffix@.to_boolean();)~~~");
-            if (!optional_default_value.is_null()) {
+            if (optional_default_value.has_value()) {
                 scoped_generator.append(R"~~~(
     else
         @cpp_name@ = @parameter.optional_default_value@;
