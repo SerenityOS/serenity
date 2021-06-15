@@ -8,13 +8,19 @@
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Runtime/GeneratorObject.h>
+#include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
 GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value initial_value, ScriptFunction* generating_function, ScopeObject* generating_scope, Bytecode::RegisterWindow frame)
 {
-    auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object);
+    // This is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
+    auto generating_function_proto_property = generating_function->get(global_object.vm().names.prototype).to_object(global_object);
+    if (!generating_function_proto_property)
+        return {};
+
+    auto object = global_object.heap().allocate<GeneratorObject>(global_object, global_object, *generating_function_proto_property);
     object->m_generating_function = generating_function;
     object->m_scope = generating_scope;
     object->m_frame = move(frame);
@@ -22,21 +28,13 @@ GeneratorObject* GeneratorObject::create(GlobalObject& global_object, Value init
     return object;
 }
 
-GeneratorObject::GeneratorObject(GlobalObject& global_object)
-    : Object(*global_object.object_prototype())
+GeneratorObject::GeneratorObject(GlobalObject&, Object& prototype)
+    : Object(prototype)
 {
 }
 
-void GeneratorObject::initialize(GlobalObject& global_object)
+void GeneratorObject::initialize(GlobalObject&)
 {
-    // FIXME: These should be on a separate Generator prototype object!
-    // https://tc39.es/ecma262/#sec-generator-objects
-
-    auto& vm = this->vm();
-    Object::initialize(global_object);
-    define_native_function(vm.names.next, next);
-    define_native_function(vm.names.return_, return_);
-    define_native_function(vm.names.throw_, throw_);
 }
 
 GeneratorObject::~GeneratorObject()
@@ -50,18 +48,6 @@ void GeneratorObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(m_generating_function);
     if (m_previous_value.is_object())
         visitor.visit(&m_previous_value.as_object());
-}
-
-GeneratorObject* GeneratorObject::typed_this(VM& vm, GlobalObject& global_object)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object)
-        return {};
-    if (!is<GeneratorObject>(this_object)) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Generator");
-        return nullptr;
-    }
-    return static_cast<GeneratorObject*>(this_object);
 }
 
 Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<Value> value_to_throw)
@@ -136,31 +122,6 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
         return {};
 
     return result;
-}
-
-JS_DEFINE_NATIVE_FUNCTION(GeneratorObject::next)
-{
-    auto object = typed_this(vm, global_object);
-    if (!object)
-        return {};
-    return object->next_impl(vm, global_object, {});
-}
-
-JS_DEFINE_NATIVE_FUNCTION(GeneratorObject::return_)
-{
-    auto object = typed_this(vm, global_object);
-    if (!object)
-        return {};
-    object->m_done = true;
-    return object->next_impl(vm, global_object, {});
-}
-
-JS_DEFINE_NATIVE_FUNCTION(GeneratorObject::throw_)
-{
-    auto object = typed_this(vm, global_object);
-    if (!object)
-        return {};
-    return object->next_impl(vm, global_object, vm.argument(0));
 }
 
 }
