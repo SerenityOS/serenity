@@ -136,7 +136,6 @@ constexpr char const* s_known_types[] = {
     "HashMap",
     "HashTable",
     "IPv4Address",
-    "InlineLinkedList",
     "IntrusiveList",
     "JsonArray",
     "JsonObject",
