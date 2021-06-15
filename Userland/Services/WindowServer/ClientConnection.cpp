@@ -297,14 +297,23 @@ Messages::WindowServer::GetWallpaperResponse ClientConnection::get_wallpaper()
     return Compositor::the().wallpaper_path();
 }
 
-Messages::WindowServer::SetResolutionResponse ClientConnection::set_resolution(u32 screen_index, Gfx::IntSize const& resolution, int scale_factor)
+Messages::WindowServer::SetScreenLayoutResponse ClientConnection::set_screen_layout(ScreenLayout const& screen_layout, bool save)
 {
-    if (auto* screen = Screen::find_by_index(screen_index)) {
-        bool success = WindowManager::the().set_resolution(*screen, resolution.width(), resolution.height(), scale_factor);
-        return { success, screen->size(), screen->scale_factor() };
-    }
-    dbgln("Setting resolution: Invalid screen index {}", screen_index);
-    return { false, {}, 0 };
+    String error_msg;
+    bool success = WindowManager::the().set_screen_layout(ScreenLayout(screen_layout), save, error_msg);
+    return { success, move(error_msg) };
+}
+
+Messages::WindowServer::GetScreenLayoutResponse ClientConnection::get_screen_layout()
+{
+    return { WindowManager::the().get_screen_layout() };
+}
+
+Messages::WindowServer::SaveScreenLayoutResponse ClientConnection::save_screen_layout()
+{
+    String error_msg;
+    bool success = WindowManager::the().save_screen_layout(error_msg);
+    return { success, move(error_msg) };
 }
 
 void ClientConnection::set_window_title(i32 window_id, String const& title)

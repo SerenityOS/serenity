@@ -76,83 +76,25 @@ int main(int, char**)
     }
 
     // First check which screens are explicitly configured
-    AK::HashTable<String> fb_devices_configured;
-    int main_screen_index = wm_config->read_num_entry("Screens", "MainScreen", 0);
-    for (int screen_index = 0;; screen_index++) {
-        auto group_name = String::formatted("Screen{}", screen_index);
-        if (!wm_config->has_group(group_name))
-            break;
-
-        int scale = wm_config->read_num_entry(group_name, "ScaleFactor", 1);
-        auto device_path = wm_config->read_entry(group_name, "Device", {});
-        if (device_path.is_null() || device_path.is_empty()) {
-            dbgln("Screen {} misses Device setting", screen_index);
-            break;
-        }
-
-        Gfx::IntRect virtual_rect {
-            wm_config->read_num_entry(group_name, "Left", 0 / scale),
-            wm_config->read_num_entry(group_name, "Top", 0 / scale),
-            wm_config->read_num_entry(group_name, "Width", 1024 / scale),
-            wm_config->read_num_entry("Screen", "Height", 768 / scale)
-        };
-
-        // Check if the screen would be overlapping with another one
-        if (WindowServer::Screen::for_each([&](auto& screen) {
-                if (screen.rect().intersects(virtual_rect)) {
-                    dbgln("Screen {} rect {} overlaps with screen {} rect {}: Ignoring configuration", screen.index(), screen.rect(), screen_index, virtual_rect);
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            })
-            == IterationDecision::Break) {
-            // Ignore the configuration
-            break;
-        }
-
-        auto* screen = WindowServer::Screen::create(device_path, virtual_rect, scale);
-        if (!screen) {
-            dbgln("Screen {} failed to be created", screen_index);
-            break;
-        }
-
-        if (main_screen_index == screen_index)
-            screen->make_main_screen();
-
-        // Remember that we used this device for a screen already
-        fb_devices_configured.set(device_path);
-    }
-
-    // Check that all screens are contiguous and can be "reached" from the main screen
     {
-        Vector<WindowServer::Screen*, 16> reachable_screens { &WindowServer::Screen::main() };
-        bool did_reach_another_screen;
-        do {
-            did_reach_another_screen = false;
-            auto* latest_reachable_screen = reachable_screens[reachable_screens.size() - 1];
-            WindowServer::Screen::for_each([&](auto& screen) {
-                if (&screen == latest_reachable_screen || reachable_screens.contains_slow(&screen))
-                    return IterationDecision::Continue;
-                if (screen.rect().is_adjacent(latest_reachable_screen->rect())) {
-                    reachable_screens.append(&screen);
-                    did_reach_another_screen = true;
-                    return IterationDecision::Break;
-                }
-                return IterationDecision::Continue;
-            });
-        } while (did_reach_another_screen);
-        if (reachable_screens.size() != WindowServer::Screen::count()) {
-            WindowServer::Screen::for_each([&](auto& screen) {
-                if (!reachable_screens.contains_slow(&screen))
-                    dbgln("Screen {} cannot be reached from main screen {}: Bad configuration!", screen.index(), WindowServer::Screen::main().index());
-                return IterationDecision::Continue;
-            });
-            dbgln("At least one screen is not adjacent to another screen, exiting!");
+        AK::HashTable<String> fb_devices_configured;
+        WindowServer::ScreenLayout screen_layout;
+        String error_msg;
+        if (!screen_layout.load_config(*wm_config, &error_msg)) {
+            dbgln("Error loading screen configuration: {}", error_msg);
+            return 1;
+        }
+
+        for (auto& screen_info : screen_layout.screens)
+            fb_devices_configured.set(screen_info.device);
+
+        // TODO: Enumerate the /dev/fbX devices and set up any ones we find that we haven't already used
+
+        if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
+            dbgln("Error applying screen layout: {}", error_msg);
             return 1;
         }
     }
-
-    // TODO: Enumerate the /dev/fbX devices and set up any ones we find that we haven't already used
 
     auto& screen_input = WindowServer::ScreenInput::the();
     screen_input.set_cursor_location(WindowServer::Screen::main().rect().center());
@@ -169,10 +111,9 @@ int main(int, char**)
         return 1;
     }
 
-    if (unveil("/dev", "") < 0) {
-        perror("unveil /dev");
-        return 1;
-    }
+    // NOTE: Because we dynamically need to be able to open new /dev/fb*
+    // devices we can't really unveil all of /dev unless we have some
+    // other mechanism that can hand us file descriptors for these.
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

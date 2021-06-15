@@ -11,11 +11,17 @@
 #include <LibGUI/Forward.h>
 #include <LibGfx/Rect.h>
 #include <Services/Taskbar/TaskbarWindow.h>
+#include <Services/WindowServer/ScreenLayout.h>
 
 namespace GUI {
 
+using ScreenLayout = WindowServer::ScreenLayout;
+
 class Desktop {
 public:
+    // Most people will probably have 4 screens or less
+    static constexpr size_t default_screen_rect_count = 4;
+
     static Desktop& the();
     Desktop();
 
@@ -35,7 +41,7 @@ public:
     void did_receive_screen_rects(Badge<WindowServerConnection>, const Vector<Gfx::IntRect, 4>&, size_t);
 
 private:
-    Vector<Gfx::IntRect, 4> m_rects;
+    Vector<Gfx::IntRect, default_screen_rect_count> m_rects;
     size_t m_main_screen_index { 0 };
     Gfx::IntRect m_bounding_rect;
 };

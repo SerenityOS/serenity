@@ -18,6 +18,7 @@
 #include <LibIPC/ClientConnection.h>
 #include <WindowServer/Event.h>
 #include <WindowServer/Menu.h>
+#include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
@@ -27,6 +28,7 @@ class Compositor;
 class Window;
 class Menu;
 class Menubar;
+class ScreenLayout;
 class WMClientConnection;
 
 class ClientConnection final
@@ -125,7 +127,9 @@ private:
     virtual void set_background_color(String const&) override;
     virtual void set_wallpaper_mode(String const&) override;
     virtual Messages::WindowServer::GetWallpaperResponse get_wallpaper() override;
-    virtual Messages::WindowServer::SetResolutionResponse set_resolution(u32, Gfx::IntSize const&, int) override;
+    virtual Messages::WindowServer::SetScreenLayoutResponse set_screen_layout(ScreenLayout const&, bool) override;
+    virtual Messages::WindowServer::GetScreenLayoutResponse get_screen_layout() override;
+    virtual Messages::WindowServer::SaveScreenLayoutResponse save_screen_layout() override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;
     virtual void popup_menu(i32, Gfx::IntPoint const&) override;

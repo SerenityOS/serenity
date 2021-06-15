@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibIPC/ServerConnection.h>
+#include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WindowManagerClientEndpoint.h>
 #include <WindowServer/WindowManagerServerEndpoint.h>
 

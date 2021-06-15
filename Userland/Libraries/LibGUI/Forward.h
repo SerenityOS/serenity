@@ -85,3 +85,7 @@ enum class ModelRole;
 enum class SortOrder;
 
 }
+
+namespace WindowServer {
+class ScreenLayout;
+}
