@@ -8,7 +8,6 @@
 
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>

@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <AK/InlineLinkedList.h>
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
