@@ -59,3 +59,14 @@ TEST_CASE(should_find_const_with_predicate)
 
     EXPECT_EQ(sut.end(), sut.find_if([](const auto v) { return v == 42; }));
 }
+
+TEST_CASE(removal_during_iteration)
+{
+    auto list = make_list();
+    auto size = list.size_slow();
+
+    for (auto it = list.begin(); it != list.end(); ++it, --size) {
+        VERIFY(list.size_slow() == size);
+        it.remove(list);
+    }
+}
