@@ -63,9 +63,6 @@ class SinglyLinkedList;
 template<typename T>
 class DoublyLinkedList;
 
-template<typename T>
-class InlineLinkedList;
-
 template<typename T, size_t capacity>
 class CircularQueue;
 
@@ -139,7 +136,6 @@ using AK::FlyString;
 using AK::Function;
 using AK::HashMap;
 using AK::HashTable;
-using AK::InlineLinkedList;
 using AK::InputBitStream;
 using AK::InputMemoryStream;
 using AK::InputStream;
