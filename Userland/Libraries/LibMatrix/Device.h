@@ -19,6 +19,11 @@ using Callback = Function<void(bool success)>;
 
 class Device {
 public:
+    enum class Poll {
+        No,
+        Yes
+    };
+
     static OwnPtr<Device> create(String user_id);
     void login(StringView const& password, Callback = nullptr);
     void logout(Callback = nullptr);
@@ -27,7 +32,7 @@ public:
     bool is_logged_in() const { return m_connection->access_token().has_value(); }
     HashMap<RoomId, NonnullOwnPtr<Room>> const& rooms() const { return m_rooms; }
 
-    void sync(Callback callback = nullptr);
+    void sync(Poll, Callback callback = nullptr);
 
 private:
     Device(UserId user_id, URL home_server_url)

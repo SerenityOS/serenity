@@ -63,12 +63,25 @@ void Device::logout(Callback callback)
     });
 }
 
-void Device::sync(Callback callback)
+// NOTE: If poll, the request will return as soon as new events are available, or if it times out (20000 ms).
+void Device::sync(Poll poll, Callback callback)
 {
+    constexpr u32 timeout = 20000;
+    dbgln_if(MATRIX_DEBUG, "[Matrix] sync() with Poll::{}", poll == Poll::Yes ? "Yes" : "No");
     VERIFY(is_logged_in());
-    // FIXME: Acutally support relative sync.
-    VERIFY(!m_sync_next_batch.has_value());
-    m_connection->send_request("GET", "sync", {}, move(callback), [this](auto result) {
+
+    // FIXME: This should use something like URLSearchParams.
+    StringBuilder builder;
+    builder.append("sync");
+    if (poll == Poll::Yes) {
+        builder.appendff("?timeout={}", timeout);
+        if (m_sync_next_batch.has_value())
+            builder.appendff("&since={}", *m_sync_next_batch);
+    } else if (m_sync_next_batch.has_value()) {
+        builder.appendff("?since={}", *m_sync_next_batch);
+    }
+
+    m_connection->send_request("GET", builder.to_string(), {}, move(callback), [this](auto result) {
         if (result.is_error())
             return;
         process_sync_data(result.value());
@@ -77,8 +90,6 @@ void Device::sync(Callback callback)
 
 void Device::process_sync_data(JsonObject const& data)
 {
-    // FIXME: This currently only supports absolute sync.
-    m_rooms.clear();
     m_sync_next_batch = data.get("next_batch").as_string();
 
     if (data.has("rooms")) {
