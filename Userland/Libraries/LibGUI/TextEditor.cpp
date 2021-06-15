@@ -80,6 +80,8 @@ void TextEditor::create_actions()
     m_redo_action->set_enabled(false);
     m_cut_action = CommonActions::make_cut_action([&](auto&) { cut(); }, this);
     m_copy_action = CommonActions::make_copy_action([&](auto&) { copy(); }, this);
+    m_cut_action->set_enabled(false);
+    m_copy_action->set_enabled(false);
     m_paste_action = CommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_delete_action = CommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
     if (is_multi_line()) {
