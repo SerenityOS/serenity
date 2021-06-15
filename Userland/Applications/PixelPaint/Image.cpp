@@ -55,7 +55,7 @@ Image::Image(Gfx::IntSize const& size)
 {
 }
 
-void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect)
+void Image::paint_into(GUI::Painter& painter, Gfx::IntRect const& dest_rect) const
 {
     float scale = (float)dest_rect.width() / (float)rect().width();
     Gfx::PainterStateSaver saver(painter);
@@ -188,30 +188,52 @@ Result<void, String> Image::write_to_file(const String& file_path) const
     return {};
 }
 
-void Image::export_bmp(String const& file_path)
+RefPtr<Gfx::Bitmap> Image::try_compose_bitmap() const
 {
     auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, m_size);
+    if (!bitmap)
+        return nullptr;
     GUI::Painter painter(*bitmap);
     paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
-
-    Gfx::BMPWriter dumper;
-    auto bmp = dumper.dump(bitmap);
-    auto file = fopen(file_path.characters(), "wb");
-    fwrite(bmp.data(), sizeof(u8), bmp.size(), file);
-    fclose(file);
+    return bitmap;
 }
 
-void Image::export_png(String const& file_path)
+Result<void, String> Image::export_bmp_to_file(String const& file_path)
 {
-    auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, m_size);
-    VERIFY(bitmap);
-    GUI::Painter painter(*bitmap);
-    paint_into(painter, { 0, 0, m_size.width(), m_size.height() });
+    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+    if (file_or_error.is_error())
+        return file_or_error.error();
 
-    auto png = Gfx::PNGWriter::encode(*bitmap);
-    auto file = fopen(file_path.characters(), "wb");
-    fwrite(png.data(), sizeof(u8), png.size(), file);
-    fclose(file);
+    auto bitmap = try_compose_bitmap();
+    if (!bitmap)
+        return String { "Failed to allocate bitmap for encoding"sv };
+
+    Gfx::BMPWriter dumper;
+    auto encoded_data = dumper.dump(bitmap);
+
+    auto& file = *file_or_error.value();
+    if (!file.write(encoded_data.data(), encoded_data.size()))
+        return String { "Failed to write encoded BMP data to file"sv };
+
+    return {};
+}
+
+Result<void, String> Image::export_png_to_file(String const& file_path)
+{
+    auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+    if (file_or_error.is_error())
+        return file_or_error.error();
+
+    auto bitmap = try_compose_bitmap();
+    if (!bitmap)
+        return String { "Failed to allocate bitmap for encoding"sv };
+
+    auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
+    auto& file = *file_or_error.value();
+    if (!file.write(encoded_data.data(), encoded_data.size()))
+        return String { "Failed to write encoded PNG data to file"sv };
+
+    return {};
 }
 
 void Image::add_layer(NonnullRefPtr<Layer> layer)

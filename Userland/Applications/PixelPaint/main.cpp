@@ -138,10 +138,12 @@ int main(int argc, char** argv)
             "As &BMP", [&](auto&) {
                 if (!image_editor.image())
                     return;
-                Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
+                auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "bmp");
                 if (!save_path.has_value())
                     return;
-                image_editor.image()->export_bmp(save_path.value());
+                auto result = image_editor.image()->export_bmp_to_file(save_path.value());
+                if (result.is_error())
+                    GUI::MessageBox::show_error(window, String::formatted("Export to BMP failed: {}", result.error()));
             },
             window));
     export_submenu.add_action(
@@ -149,13 +151,12 @@ int main(int argc, char** argv)
             "As &PNG", [&](auto&) {
                 if (!image_editor.image())
                     return;
-
-                Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
-
+                auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "png");
                 if (!save_path.has_value())
                     return;
-
-                image_editor.image()->export_png(save_path.value());
+                auto result = image_editor.image()->export_bmp_to_file(save_path.value());
+                if (result.is_error())
+                    GUI::MessageBox::show_error(window, String::formatted("Export to PNG failed: {}", result.error()));
             },
             window));
 
