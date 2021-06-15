@@ -48,6 +48,9 @@ set(SOURCES
     Runtime/ErrorPrototype.cpp
     Runtime/ErrorTypes.cpp
     Runtime/Exception.cpp
+    Runtime/FinalizationRegistry.cpp
+    Runtime/FinalizationRegistryConstructor.cpp
+    Runtime/FinalizationRegistryPrototype.cpp
     Runtime/FunctionConstructor.cpp
     Runtime/Function.cpp
     Runtime/FunctionPrototype.cpp

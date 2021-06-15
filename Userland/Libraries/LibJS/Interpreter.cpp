@@ -64,6 +64,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     // in which case this is a no-op.
     vm.run_queued_promise_jobs();
 
+    vm.run_queued_finalization_registry_cleanup_jobs();
+
     vm.finish_execution_generation();
 }
 
