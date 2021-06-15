@@ -248,10 +248,9 @@ inline void IntrusiveList<T, Container, member>::append(T& n)
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline void IntrusiveList<T, Container, member>::prepend(T& n)
 {
-    auto& nnode = n.*member;
-    if (nnode.m_storage)
-        nnode.remove();
+    remove(n);
 
+    auto& nnode = n.*member;
     nnode.m_storage = &m_storage;
     nnode.m_prev = nullptr;
     nnode.m_next = m_storage.m_first;
