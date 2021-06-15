@@ -163,6 +163,9 @@ int main(int argc, char* argv[])
 
     tree_view.on_selection_change = [&] {
         String path = model->page_path(tree_view.selection().first());
+        if (path.is_null())
+            return;
+
         history.push(path);
         update_actions();
         open_page(path);
