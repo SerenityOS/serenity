@@ -32,7 +32,10 @@ public:
     bool is_logged_in() const { return m_connection->access_token().has_value(); }
     HashMap<RoomId, NonnullOwnPtr<Room>> const& rooms() const { return m_rooms; }
 
-    void sync(Poll, Callback callback = nullptr);
+    void sync(Poll, Callback = nullptr);
+    // NOTE: When the callback is fired, a local echo has already been output to the rooms messages,
+    //       so the caller can refresh it's screen if necessary.
+    void send_text_message(RoomId const&, String content, Callback = nullptr);
 
 private:
     Device(UserId user_id, URL home_server_url)
@@ -46,6 +49,7 @@ private:
     UserId m_user_id;
     Optional<String> m_device_id;
     NonnullRefPtr<Connection> m_connection;
+    u32 m_next_transaction_id { 0 };
 
     HashMap<RoomId, NonnullOwnPtr<Room>> m_rooms;
     Optional<String> m_sync_next_batch;

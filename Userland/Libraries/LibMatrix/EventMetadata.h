@@ -17,13 +17,6 @@ class EventMetadata {
 public:
     static Optional<EventMetadata> create_from_json(JsonObject const&);
 
-    EventId const& id() const { return m_id; }
-    String const& type() const { return m_type; }
-    UserId const& sender() const { return m_sender; }
-    u64 timestamp_in_milliseconds() const { return m_timestamp_in_milliseconds; }
-    Core::DateTime date_time() const { return Core::DateTime::from_timestamp(m_timestamp_in_milliseconds / 1000); }
-
-private:
     EventMetadata(EventId id, String type, UserId sender, u64 timestamp_in_milliseconds)
         : m_id(move(id))
         , m_type(move(type))
@@ -32,6 +25,13 @@ private:
     {
     }
 
+    EventId const& id() const { return m_id; }
+    String const& type() const { return m_type; }
+    UserId const& sender() const { return m_sender; }
+    u64 timestamp_in_milliseconds() const { return m_timestamp_in_milliseconds; }
+    Core::DateTime date_time() const { return Core::DateTime::from_timestamp(m_timestamp_in_milliseconds / 1000); }
+
+private:
     EventId m_id;
     String m_type;
     UserId m_sender;

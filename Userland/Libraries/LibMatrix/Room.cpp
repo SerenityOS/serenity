@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
 #include <LibMatrix/Room.h>
 
 namespace Matrix {
@@ -17,7 +18,18 @@ u64 Room::last_message_timestamp_in_milliseconds() const
 
 void Room::add_message(NonnullOwnPtr<Message> message)
 {
-    // FIXME: Implement message deduplication.
+    // FIXME: Maybe m_messages should be an ordered HashMap instead of a Vector.
+    // NOTE: If the message we encounter already exists, we will replace it. This is needed for messages
+    //       that are emitted as "local echo", which need to be replaced by the proper event as soon as
+    //       it arrives.
+    for (size_t i = 0; i < m_messages.size(); ++i) {
+        if (m_messages[i].metadata().id() == message->metadata().id()) {
+            dbgln_if(MATRIX_DEBUG, "Message {} has been replaced by a new version.", message->metadata().id());
+            m_messages.ptr_at(i) = move(message);
+            return;
+        }
+    }
+
     m_messages.append(move(message));
 }
 

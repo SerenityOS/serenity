@@ -148,4 +148,34 @@ void Device::process_sync_data(JsonObject const& data)
     // FIXME: Parse everything else.
 }
 
+void Device::send_text_message(RoomId const& room_id, String message, Callback callback)
+{
+    VERIFY(m_rooms.contains(room_id));
+    VERIFY(!message.is_empty());
+
+    StringBuilder url_builder;
+    url_builder.append("rooms/");
+    url_builder.append(URL::percent_encode(room_id.value(), URL::PercentEncodeSet::Path));
+    url_builder.appendff("/send/m.room.message/{}", m_next_transaction_id++);
+
+    StringBuilder body_builder;
+    JsonObjectSerializer serializer { body_builder };
+    serializer.add("msgtype", "m.text");
+    serializer.add("body", message);
+    serializer.finish();
+
+    m_connection->send_request("PUT", url_builder.string_view(), body_builder.string_view(), move(callback), [&, message = move(message)](Result<JsonObject, ErrorResponse> result) mutable {
+        if (result.is_error())
+            return;
+        VERIFY(result.value().get("event_id").is_string());
+        EventId event_id { result.value().get("event_id").as_string() };
+        struct timeval tv;
+        VERIFY(gettimeofday(&tv, nullptr) >= 0);
+        u64 timestamp_in_milliseconds = ((u64)tv.tv_sec * 1000) + ((u64)tv.tv_usec / 1000);
+        EventMetadata metadata { event_id, "m.room.message", m_user_id, timestamp_in_milliseconds };
+        auto* room = *m_rooms.get(room_id);
+        room->add_message(make<TextMessage>(move(metadata), Message::Type::Text, move(message)));
+    });
+}
+
 }
