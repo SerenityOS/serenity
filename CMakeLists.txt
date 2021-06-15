@@ -260,10 +260,22 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
 endif()
 
+add_custom_target(components ALL)
+option(BUILD_EVERYTHING "Build all optional components" ON)
+
+include(${CMAKE_SOURCE_DIR}/Meta/CMake/utils.cmake)
+
+serenity_component(
+    Tests
+    RECOMMENDED
+)
+
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(Userland)
 add_subdirectory(Tests)
+
+export_components("${CMAKE_BINARY_DIR}/components.ini")
 
 set(PCI_IDS_GZ_URL https://pci-ids.ucw.cz/v2.2/pci.ids.gz)
 set(PCI_IDS_GZ_PATH ${CMAKE_BINARY_DIR}/pci.ids.gz)
