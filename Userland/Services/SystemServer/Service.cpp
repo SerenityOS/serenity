@@ -234,7 +234,8 @@ void Service::spawn(int socket_fd)
         argv[m_extra_arguments.size() + 1] = nullptr;
 
         rc = execv(argv[0], argv);
-        perror("exec");
+        warnln("Failed to execv({}, ...): {}", argv[0], strerror(errno));
+        dbgln("Failed to execv({}, ...): {}", argv[0], strerror(errno));
         VERIFY_NOT_REACHED();
     } else if (!m_multi_instance) {
         // We are the parent.
