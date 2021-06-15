@@ -104,25 +104,30 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
     auto layers_value = json.get("layers");
     for (auto& layer_value : layers_value.as_array().values()) {
         auto& layer_object = layer_value.as_object();
-        auto width = layer_object.get("width").to_i32();
-        auto height = layer_object.get("height").to_i32();
         auto name = layer_object.get("name").as_string();
-        // FIXME: Delay Layer creation until we have the bitmap, to avoid an unnecessary temporary bitmap here!
-        auto layer = Layer::try_create_with_size(*image, { width, height }, name);
-        if (!layer)
-            return String { "Layer memory allocation failed" };
-        layer->set_location({ layer_object.get("locationx").to_i32(), layer_object.get("locationy").to_i32() });
-        layer->set_opacity_percent(layer_object.get("opacity_percent").to_i32());
-        layer->set_visible(layer_object.get("visible").as_bool());
-        layer->set_selected(layer_object.get("selected").as_bool());
 
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
 
         auto bitmap = try_decode_bitmap(bitmap_data);
         if (!bitmap)
-            return String { "Layer bitmap decode failed" };
-        layer->set_bitmap(bitmap.release_nonnull());
+            return String { "Layer bitmap decode failed"sv };
+
+        auto layer = Layer::try_create_with_bitmap(*image, bitmap.release_nonnull(), name);
+        if (!layer)
+            return String { "Layer allocation failed"sv };
+
+        auto width = layer_object.get("width").to_i32();
+        auto height = layer_object.get("height").to_i32();
+
+        if (width != layer->size().width() || height != layer->size().height())
+            return String { "Decoded layer bitmap has wrong size"sv };
+
+        layer->set_location({ layer_object.get("locationx").to_i32(), layer_object.get("locationy").to_i32() });
+        layer->set_opacity_percent(layer_object.get("opacity_percent").to_i32());
+        layer->set_visible(layer_object.get("visible").as_bool());
+        layer->set_selected(layer_object.get("selected").as_bool());
+
         image->add_layer(*layer);
     }
 
