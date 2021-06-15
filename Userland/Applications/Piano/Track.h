@@ -86,5 +86,5 @@ private:
     const u32& m_time;
 
     SinglyLinkedList<RollNote> m_roll_notes[note_count];
-    RollIter m_roll_iters[note_count];
+    RollIter m_roll_iterators[note_count];
 };
