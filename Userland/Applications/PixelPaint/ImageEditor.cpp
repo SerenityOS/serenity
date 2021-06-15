@@ -377,13 +377,9 @@ void ImageEditor::reset_scale_and_position()
 
 void ImageEditor::relayout()
 {
-    if (!image())
-        return;
-    auto& image = *this->image();
-
     Gfx::IntSize new_size;
-    new_size.set_width(image.size().width() * m_scale);
-    new_size.set_height(image.size().height() * m_scale);
+    new_size.set_width(image().size().width() * m_scale);
+    new_size.set_height(image().size().height() * m_scale);
     m_editor_image_rect.set_size(new_size);
 
     Gfx::IntPoint new_location;

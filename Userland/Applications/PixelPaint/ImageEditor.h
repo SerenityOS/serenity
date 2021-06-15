@@ -25,8 +25,8 @@ class ImageEditor final
 public:
     virtual ~ImageEditor() override;
 
-    Image const* image() const { return m_image; }
-    Image* image() { return m_image; }
+    Image const& image() const { return m_image; }
+    Image& image() { return m_image; }
 
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
