@@ -95,11 +95,28 @@ void Device::process_sync_data(JsonObject const& data)
 
                 Room& current_room = *(m_rooms.get(room_id).value());
 
+                // NOTE: As long as the 'full_state' parameters is not set in the query, the 'state' object contains all
+                //       message events between 'since' and the start of 'timeline', so we need to parse them first.
+                if (value.as_object().has("state")) {
+                    auto events = value.as_object().get("state").as_object().get("events");
+                    events.as_array().for_each([&](JsonValue const& event) {
+                        auto state_event = StateEvent::create_from_json(event.as_object());
+                        if (state_event.has_value())
+                            current_room.process_state_event(*state_event, false);
+                        else
+                            dbgln("[Matrix] 'state' object contains invalid state event:\n{}", event.to_string());
+                    });
+                }
+
                 if (value.as_object().has("timeline")) {
                     auto events = value.as_object().get("timeline").as_object().get("events");
                     events.as_array().for_each([&](JsonValue const& event) {
                         if (event.as_object().has("state_key")) {
-                            // FIXME: Parse state events.
+                            auto state_event = StateEvent::create_from_json(event.as_object());
+                            if (state_event.has_value())
+                                current_room.process_state_event(*state_event, true);
+                            else
+                                dbgln("[Matrix] Invalid state event:\n{}", event.to_string());
                         } else {
                             auto message = Message::create_from_json(event.as_object());
                             if (message)
@@ -110,7 +127,7 @@ void Device::process_sync_data(JsonObject const& data)
                     });
                 }
 
-                // FIXME: Parse "summary", "state", "ephemeral", "account_data" and "unread_notifications", if necessary.
+                // FIXME: Parse "summary", "ephemeral", "account_data" and "unread_notifications", if necessary.
             });
         }
 

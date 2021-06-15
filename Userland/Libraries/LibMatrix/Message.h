@@ -59,4 +59,21 @@ private:
     String m_body;
 };
 
+// NOTE: The StateMessage class and the Message::Type::State are used for state changes which normally
+//       generate some output in the message log, for example: "anon has joined the chat.".
+//       They are not part of the specification and not every StateEvent will generate a StateMessage object.
+class StateMessage : public Message {
+public:
+    StateMessage(EventMetadata metadata, String content)
+        : Message(move(metadata), Message::Type::State)
+        , m_content(move(content))
+    {
+    }
+
+    String const& content() const { return m_content; }
+
+private:
+    String m_content;
+};
+
 }

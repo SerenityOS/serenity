@@ -4,6 +4,7 @@ set(SOURCES
         EventMetadata.cpp
         Message.cpp
         Room.cpp
+        StateEvent.cpp
         )
 
 serenity_lib(LibMatrix matrix)
