@@ -110,6 +110,12 @@ constexpr T exchange(T& slot, U&& value)
 template<typename T>
 using RawPtr = typename Detail::_RawPtr<T>::Type;
 
+template<typename V>
+constexpr decltype(auto) to_underlying(V value) requires(IsEnum<V>)
+{
+    return static_cast<UnderlyingType<V>>(value);
+}
+
 }
 
 using AK::array_size;
@@ -121,3 +127,4 @@ using AK::max;
 using AK::min;
 using AK::RawPtr;
 using AK::swap;
+using AK::to_underlying;
