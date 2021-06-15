@@ -20,4 +20,10 @@ public:
 
 private:
     static FinalizationRegistry* typed_this(VM&, GlobalObject&);
+
+    JS_DECLARE_NATIVE_FUNCTION(cleanup_some);
+    JS_DECLARE_NATIVE_FUNCTION(register_);
+    JS_DECLARE_NATIVE_FUNCTION(unregister);
+};
+
 }
