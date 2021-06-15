@@ -248,6 +248,23 @@ void BrowserWindow::build_menus()
 
     auto& settings_menu = menubar->add_menu("&Settings");
 
+    m_change_homepage_action = GUI::Action::create(
+        "Set Homepage URL", [this](auto&) {
+            auto config = Core::ConfigFile::get_for_app("Browser");
+            String homepage_url = config->read_entry("Preferences", "Home", "about:blank");
+            if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
+                if (URL(homepage_url).is_valid()) {
+                    config->write_entry("Preferences", "Home", homepage_url);
+                    Browser::g_home_url = homepage_url;
+                } else {
+                    GUI::MessageBox::show_error(this, "The URL you have entered is not valid");
+                }
+            }
+        },
+        this);
+
+    settings_menu.add_action(*m_change_homepage_action);
+
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");
 
