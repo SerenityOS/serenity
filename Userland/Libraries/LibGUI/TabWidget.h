@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include <LibGUI/Margins.h>
 #include <LibGUI/Widget.h>
 
 namespace GUI {
@@ -32,8 +33,8 @@ public:
 
     int bar_height() const { return m_bar_visible ? 21 : 0; }
 
-    int container_padding() const { return m_container_padding; }
-    void set_container_padding(int padding) { m_container_padding = padding; }
+    GUI::Margins const& container_margins() const { return m_container_margins; }
+    void set_container_margins(GUI::Margins const&);
 
     void add_widget(const StringView&, Widget&);
     void remove_widget(Widget&);
@@ -101,7 +102,7 @@ private:
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
     int m_hovered_tab_index { -1 };
-    int m_container_padding { 2 };
+    GUI::Margins m_container_margins { 2, 2, 2, 2 };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
