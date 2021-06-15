@@ -72,6 +72,7 @@ file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS
 file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
 file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
+file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
 file(GLOB LIBCRYPTO_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*.cpp")
 file(GLOB LIBCRYPTO_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*/*/*.cpp")
 file(GLOB LIBTLS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTLS/*.cpp")
@@ -84,6 +85,7 @@ file(GLOB LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cp
 list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SyntaxHighlighter.cpp")
 file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
 file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
+file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
 
 file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
 list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
@@ -244,6 +246,28 @@ if (BUILD_LAGOM)
                     NAME ${name}_lagom
                     COMMAND ${name}_lagom
                     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBCRYPTO_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBCRYPTO_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom Lagom LagomTest)
+            add_test(
+                    NAME ${name}_lagom
+                    COMMAND ${name}_lagom
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBTLS_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBTLS_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom Lagom LagomTest)
+            add_test(
+                    NAME ${name}_lagom
+                    COMMAND ${name}_lagom
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS
             )
         endforeach()
 
