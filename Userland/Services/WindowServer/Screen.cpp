@@ -22,6 +22,7 @@ namespace WindowServer {
 NonnullOwnPtrVector<Screen, default_screen_count> Screen::s_screens;
 Screen* Screen::s_main_screen { nullptr };
 Gfx::IntRect Screen::s_bounding_screens_rect {};
+ScreenLayout Screen::s_layout;
 
 ScreenInput& ScreenInput::the()
 {
@@ -43,19 +44,53 @@ const Screen& ScreenInput::cursor_location_screen() const
     return *screen;
 }
 
-Screen::Screen(const String& device, const Gfx::IntRect& virtual_rect, int scale_factor)
-    : m_virtual_rect(virtual_rect)
-    , m_scale_factor(scale_factor)
+bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
 {
-    m_framebuffer_fd = open(device.characters(), O_RDWR | O_CLOEXEC);
-    if (m_framebuffer_fd < 0) {
-        perror(String::formatted("failed to open {}", device).characters());
-        VERIFY_NOT_REACHED();
+    if (!screen_layout.is_valid(&error_msg))
+        return false;
+
+    auto screens_backup = move(s_screens);
+    auto layout_backup = move(s_layout);
+    for (auto& old_screen : screens_backup)
+        old_screen.close_device();
+
+    AK::ArmedScopeGuard rollback([&] {
+        for (auto& screen : s_screens)
+            screen.close_device();
+        s_screens = move(screens_backup);
+        s_layout = move(layout_backup);
+        for (auto& old_screen : screens_backup) {
+            if (!old_screen.open_device()) {
+                // Don't set error_msg here, it should already be set
+                dbgln("Rolling back screen layout failed: could not open device");
+            }
+        }
+        update_bounding_rect();
+    });
+    s_layout = move(screen_layout);
+    for (size_t index = 0; index < s_layout.screens.size(); index++) {
+        auto* screen = WindowServer::Screen::create(s_layout.screens[index]);
+        if (!screen) {
+            error_msg = String::formatted("Error creating screen #{}", index);
+            return false;
+        }
+
+        if (s_layout.main_screen_index == index)
+            screen->make_main_screen();
+
+        screen->open_device();
     }
 
-    if (fb_set_buffer(m_framebuffer_fd, 0) == 0) {
-        m_can_set_buffer = true;
-    }
+    rollback.disarm();
+    update_bounding_rect();
+    return true;
+}
+
+Screen::Screen(ScreenLayout::Screen& screen_info)
+    : m_virtual_rect(screen_info.location, { screen_info.resolution.width() / screen_info.scale_factor, screen_info.resolution.height() / screen_info.scale_factor })
+    , m_info(screen_info)
+{
+    open_device();
 
     // If the cursor is not in a valid screen (yet), force it into one
     dbgln("Screen() current physical cursor location: {} rect: {}", ScreenInput::the().cursor_location(), rect());
@@ -65,12 +100,41 @@ Screen::Screen(const String& device, const Gfx::IntRect& virtual_rect, int scale
 
 Screen::~Screen()
 {
-    close(m_framebuffer_fd);
+    close_device();
+}
+
+bool Screen::open_device()
+{
+    close_device();
+    m_framebuffer_fd = open(m_info.device.characters(), O_RDWR | O_CLOEXEC);
+    if (m_framebuffer_fd < 0) {
+        perror(String::formatted("failed to open {}", m_info.device).characters());
+        return false;
+    }
+
+    m_can_set_buffer = (fb_set_buffer(m_framebuffer_fd, 0) == 0);
+    set_resolution(true);
+    return true;
+}
+
+void Screen::close_device()
+{
+    if (m_framebuffer_fd >= 0) {
+        close(m_framebuffer_fd);
+        m_framebuffer_fd = -1;
+    }
+    if (m_framebuffer) {
+        int rc = munmap(m_framebuffer, m_size_in_bytes);
+        VERIFY(rc == 0);
+
+        m_framebuffer = nullptr;
+        m_size_in_bytes = 0;
+    }
 }
 
 void Screen::init()
 {
-    do_set_resolution(true, m_virtual_rect.width(), m_virtual_rect.height(), m_scale_factor);
+    set_resolution(true);
 }
 
 Screen& Screen::closest_to_rect(const Gfx::IntRect& rect)
@@ -113,62 +177,51 @@ void Screen::update_bounding_rect()
     }
 }
 
-bool Screen::do_set_resolution(bool initial, int width, int height, int new_scale_factor)
+bool Screen::set_resolution(bool initial)
 {
     // Remember the screen that the cursor is on. Make sure it stays on the same screen if we change its resolution...
-    auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();
+    Screen* screen_with_cursor = nullptr;
+    if (!initial)
+        screen_with_cursor = &ScreenInput::the().cursor_location_screen();
 
-    int new_physical_width = width * new_scale_factor;
-    int new_physical_height = height * new_scale_factor;
-    if (!initial && physical_width() == new_physical_width && physical_height() == new_physical_height) {
-        VERIFY(initial || scale_factor() != new_scale_factor);
-        on_change_resolution(initial, m_pitch, physical_width(), physical_height(), new_scale_factor, screen_with_cursor);
-        return true;
-    }
-
-    FBResolution physical_resolution { 0, (unsigned)new_physical_width, (unsigned)new_physical_height };
+    FBResolution physical_resolution { 0, (unsigned)m_info.resolution.width(), (unsigned)m_info.resolution.height() };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
     dbgln_if(WSSCREEN_DEBUG, "Screen #{}: fb_set_resolution() - return code {}", index(), rc);
 
+    auto on_change_resolution = [&]() {
+        if (initial || physical_resolution.width != (unsigned)m_info.resolution.width() || physical_resolution.height != (unsigned)m_info.resolution.height()) {
+            if (m_framebuffer) {
+                size_t previous_size_in_bytes = m_size_in_bytes;
+                int rc = munmap(m_framebuffer, previous_size_in_bytes);
+                VERIFY(rc == 0);
+            }
+
+            int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
+            VERIFY(rc == 0);
+
+            m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+            VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
+        }
+
+        m_info.resolution = { physical_resolution.width, physical_resolution.height };
+        m_pitch = physical_resolution.pitch;
+        if (this == screen_with_cursor) {
+            auto& screen_input = ScreenInput::the();
+            screen_input.set_cursor_location(screen_input.cursor_location().constrained(rect()));
+        }
+    };
+
     if (rc == 0) {
-        on_change_resolution(initial, physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor, screen_with_cursor);
+        on_change_resolution();
         return true;
     }
     if (rc == -1) {
         int err = errno;
-        dbgln("Screen #{}: Failed to set resolution {}x{}: {}", index(), width, height, strerror(err));
-        on_change_resolution(initial, physical_resolution.pitch, physical_resolution.width, physical_resolution.height, new_scale_factor, screen_with_cursor);
+        dbgln("Screen #{}: Failed to set resolution {}: {}", index(), m_info.resolution, strerror(err));
+        on_change_resolution();
         return false;
     }
     VERIFY_NOT_REACHED();
-}
-
-void Screen::on_change_resolution(bool initial, int pitch, int new_physical_width, int new_physical_height, int new_scale_factor, Screen& screen_with_cursor)
-{
-    if (initial || physical_width() != new_physical_width || physical_height() != new_physical_height) {
-        if (m_framebuffer) {
-            size_t previous_size_in_bytes = m_size_in_bytes;
-            int rc = munmap(m_framebuffer, previous_size_in_bytes);
-            VERIFY(rc == 0);
-        }
-
-        int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
-        VERIFY(rc == 0);
-
-        m_framebuffer = (Gfx::RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
-        VERIFY(m_framebuffer && m_framebuffer != (void*)-1);
-    }
-
-    m_pitch = pitch;
-    m_virtual_rect.set_width(new_physical_width / new_scale_factor);
-    m_virtual_rect.set_height(new_physical_height / new_scale_factor);
-    m_scale_factor = new_scale_factor;
-    update_bounding_rect();
-
-    if (this == &screen_with_cursor) {
-        auto& screen_input = ScreenInput::the();
-        screen_input.set_cursor_location(screen_input.cursor_location().constrained(rect()));
-    }
 }
 
 void Screen::set_buffer(int index)

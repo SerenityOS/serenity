@@ -11,6 +11,7 @@
 #include <LibGUI/ColorInput.h>
 #include <LibGUI/ComboBox.h>
 #include <LibGUI/RadioButton.h>
+#include <WindowServer/ScreenLayout.h>
 
 namespace DisplaySettings {
 
@@ -27,6 +28,7 @@ private:
     void create_resolution_list();
     void load_current_settings();
 
+    WindowServer::ScreenLayout m_screen_layout;
     Vector<Gfx::IntSize> m_resolutions;
 
     RefPtr<DisplaySettings::MonitorWidget> m_monitor_widget;

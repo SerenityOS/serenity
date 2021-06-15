@@ -21,6 +21,7 @@
 #include <WindowServer/Event.h>
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Menubar.h>
+#include <WindowServer/ScreenLayout.h>
 #include <WindowServer/WMClientConnection.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
@@ -129,7 +130,9 @@ public:
     Gfx::Font const& font() const;
     Gfx::Font const& window_title_font() const;
 
-    bool set_resolution(Screen&, int width, int height, int scale);
+    bool set_screen_layout(ScreenLayout&&, bool, String&);
+    ScreenLayout get_screen_layout() const;
+    bool save_screen_layout(String&);
 
     void set_acceleration_factor(double);
     void set_scroll_step_size(unsigned);

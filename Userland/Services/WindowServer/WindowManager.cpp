@@ -93,50 +93,42 @@ Gfx::Font const& WindowManager::window_title_font() const
     return Gfx::FontDatabase::default_font().bold_variant();
 }
 
-bool WindowManager::set_resolution(Screen& screen, int width, int height, int scale)
+bool WindowManager::set_screen_layout(ScreenLayout&& screen_layout, bool save, String& error_msg)
 {
-    auto screen_rect = screen.rect();
-    if (screen_rect.width() == width && screen_rect.height() == height && screen.scale_factor() == scale)
-        return true;
-
-    // Make sure it's impossible to set an invalid resolution
-    if (!(width >= 640 && height >= 480 && scale >= 1)) {
-        dbgln("Compositor: Tried to set invalid resolution: {}x{}", width, height);
+    if (!Screen::apply_layout(move(screen_layout), error_msg))
         return false;
-    }
 
-    auto old_scale_factor = screen.scale_factor();
-    bool success = screen.set_resolution(width, height, scale);
-    if (success && old_scale_factor != scale)
-        reload_icon_bitmaps_after_scale_change();
+    reload_icon_bitmaps_after_scale_change();
 
     Compositor::the().screen_resolution_changed();
 
     ClientConnection::for_each_client([&](ClientConnection& client) {
         client.notify_about_new_screen_rects(Screen::rects(), Screen::main().index());
     });
-    if (success) {
-        m_window_stack.for_each_window([](Window& window) {
-            window.recalculate_rect();
-            return IterationDecision::Continue;
-        });
+
+    m_window_stack.for_each_window([](Window& window) {
+        window.screens().clear_with_capacity();
+        window.recalculate_rect();
+        return IterationDecision::Continue;
+    });
+
+    if (save)
+        Screen::layout().save_config(*m_config);
+    return true;
+}
+
+ScreenLayout WindowManager::get_screen_layout() const
+{
+    return Screen::layout();
+}
+
+bool WindowManager::save_screen_layout(String& error_msg)
+{
+    if (!Screen::layout().save_config(*m_config)) {
+        error_msg = "Could not save";
+        return false;
     }
-    if (m_config) {
-        if (success) {
-            dbgln("Saving resolution: {} @ {}x to config file at {}", Gfx::IntSize(width, height), scale, m_config->filename());
-            m_config->write_num_entry("Screen", "Width", width);
-            m_config->write_num_entry("Screen", "Height", height);
-            m_config->write_num_entry("Screen", "ScaleFactor", scale);
-            m_config->sync();
-        } else {
-            dbgln("Saving fallback resolution: {} @1x to config file at {}", screen.size(), m_config->filename());
-            m_config->write_num_entry("Screen", "Width", screen.size().width());
-            m_config->write_num_entry("Screen", "Height", screen.size().height());
-            m_config->write_num_entry("Screen", "ScaleFactor", 1);
-            m_config->sync();
-        }
-    }
-    return success;
+    return true;
 }
 
 void WindowManager::set_acceleration_factor(double factor)
