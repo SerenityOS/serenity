@@ -39,7 +39,7 @@ void BrushTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
         return;
 
     draw_line(layer.bitmap(), m_editor->color_for(event), m_last_position, event.position());
-    layer.did_modify_bitmap(*m_editor->image());
+    layer.did_modify_bitmap();
     m_last_position = event.position();
     m_was_drawing = true;
 }

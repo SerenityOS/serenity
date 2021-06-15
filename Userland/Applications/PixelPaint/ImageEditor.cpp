@@ -14,51 +14,31 @@
 #include <LibGfx/Palette.h>
 #include <LibGfx/Rect.h>
 
-REGISTER_WIDGET(PixelPaint, ImageEditor);
-
 namespace PixelPaint {
 
-ImageEditor::ImageEditor()
-    : m_undo_stack(make<GUI::UndoStack>())
+ImageEditor::ImageEditor(NonnullRefPtr<Image> image)
+    : m_image(move(image))
+    , m_undo_stack(make<GUI::UndoStack>())
     , m_selection(*this)
 {
     set_focus_policy(GUI::FocusPolicy::StrongFocus);
+    m_undo_stack = make<GUI::UndoStack>();
+    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
+    m_image->add_client(*this);
 }
 
 ImageEditor::~ImageEditor()
 {
-    if (m_image)
-        m_image->remove_client(*this);
-}
-
-void ImageEditor::set_image(RefPtr<Image> image)
-{
-    if (m_image)
-        m_image->remove_client(*this);
-
-    m_selection.clear();
-    m_image = move(image);
-    m_active_layer = nullptr;
-    m_undo_stack = make<GUI::UndoStack>();
-    m_undo_stack->push(make<ImageUndoCommand>(*m_image));
-    update();
-    relayout();
-
-    if (m_image)
-        m_image->add_client(*this);
+    m_image->remove_client(*this);
 }
 
 void ImageEditor::did_complete_action()
 {
-    if (!m_image)
-        return;
     m_undo_stack->push(make<ImageUndoCommand>(*m_image));
 }
 
 bool ImageEditor::undo()
 {
-    if (!m_image)
-        return false;
     if (m_undo_stack->can_undo()) {
         m_undo_stack->undo();
         layers_did_change();
@@ -69,8 +49,6 @@ bool ImageEditor::undo()
 
 bool ImageEditor::redo()
 {
-    if (!m_image)
-        return false;
     if (m_undo_stack->can_redo()) {
         m_undo_stack->redo();
         layers_did_change();
@@ -89,10 +67,8 @@ void ImageEditor::paint_event(GUI::PaintEvent& event)
 
     Gfx::StylePainter::paint_transparency_grid(painter, rect(), palette());
 
-    if (m_image) {
-        painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);
-        m_image->paint_into(painter, m_editor_image_rect);
-    }
+    painter.draw_rect(m_editor_image_rect.inflated(2, 2), Color::Black);
+    m_image->paint_into(painter, m_editor_image_rect);
 
     if (m_active_layer) {
         painter.draw_rect(enclosing_int_rect(image_rect_to_editor_rect(m_active_layer->relative_rect())).inflated(2, 2), Color::Black);
@@ -271,6 +247,7 @@ void ImageEditor::set_active_layer(Layer* layer)
     m_active_layer = layer;
 
     if (m_active_layer) {
+        VERIFY(&m_active_layer->image() == m_image.ptr());
         size_t index = 0;
         for (; index < m_image->layer_count(); ++index) {
             if (&m_image->layer(index) == layer)
@@ -343,8 +320,6 @@ void ImageEditor::set_secondary_color(Color color)
 
 Layer* ImageEditor::layer_at_editor_position(Gfx::IntPoint const& editor_position)
 {
-    if (!m_image)
-        return nullptr;
     auto image_position = editor_position_to_image_position(editor_position);
     for (ssize_t i = m_image->layer_count() - 1; i >= 0; --i) {
         auto& layer = m_image->layer(i);

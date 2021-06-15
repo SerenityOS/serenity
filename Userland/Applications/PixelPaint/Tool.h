@@ -31,6 +31,9 @@ public:
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);
 
+    ImageEditor const* editor() const { return m_editor; }
+    ImageEditor* editor() { return m_editor; }
+
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);
 
