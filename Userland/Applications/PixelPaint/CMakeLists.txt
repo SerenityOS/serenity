@@ -1,3 +1,10 @@
+serenity_component(
+    PixelPaint
+    RECOMMENDED
+    TARGETS PixelPaint
+    DEPENDS ImageDecoder
+)
+
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
 
 set(SOURCES

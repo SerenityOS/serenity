@@ -1,3 +1,9 @@
+serenity_component(
+    LookupServer
+    REQUIRED
+    TARGETS LookupServer
+)
+
 compile_ipc(LookupServer.ipc LookupServerEndpoint.h)
 compile_ipc(LookupClient.ipc LookupClientEndpoint.h)
 

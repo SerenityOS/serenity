@@ -1,3 +1,9 @@
+serenity_component(
+    Run
+    REQUIRED
+    TARGETS Run
+)
+
 compile_gml(Run.gml RunGML.h run_gml)
 
 set(SOURCES

@@ -1,3 +1,9 @@
+serenity_component(
+    Calculator
+    RECOMMENDED
+    TARGETS Calculator
+)
+
 compile_gml(CalculatorWindow.gml CalculatorGML.h calculator_gml)
 set(SOURCES
     main.cpp

@@ -1,3 +1,8 @@
+serenity_component(
+    ShellLanguageServer
+    TARGETS ShellLanguageServer
+)
+
 set(SOURCES
     ShellComprehensionEngine.cpp
     main.cpp

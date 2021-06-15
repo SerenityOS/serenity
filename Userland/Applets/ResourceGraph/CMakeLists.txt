@@ -1,3 +1,9 @@
+serenity_component(
+    ResourceGraph.Applet
+    REQUIRED
+    TARGETS ResourceGraph.Applet
+)
+
 set(SOURCES
     main.cpp
 )

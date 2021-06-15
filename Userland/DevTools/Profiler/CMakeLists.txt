@@ -1,3 +1,9 @@
+serenity_component(
+    Profiler
+    RECOMMENDED
+    TARGETS Profiler
+)
+
 set(SOURCES
         DisassemblyModel.cpp
         main.cpp

@@ -1,17 +1,53 @@
 file(GLOB CMD_SOURCES  CONFIGURE_DEPENDS "*.cpp")
-list(APPEND SPECIAL_TARGETS "test" "install")
+list(APPEND SPECIAL_TARGETS test install)
+list(APPEND REQUIRED_TARGETS
+    arp base64 basename cat chmod chown chroot clear cp cut date dd df dirname dmesg du echo env expr false fgrep
+    file find grep groups head host hostname id ifconfig kill killall ln ls mkdir mount mv nproc
+    pidof ping pmap ps readlink realpath reboot rm rmdir seq shutdown sleep sort stat stty su tail test
+    touch tr true umount uname uniq uptime w wc which whoami xargs yes
+)
+list(APPEND RECOMMENDED_TARGETS
+    adjtime aplay avol bt checksum chres cksum copy fortune gunzip gzip init keymap lsirq lsof lspci man mknod mktemp
+    modload modunload more nc netstat notify ntpquery open pape passwd pls printf pro shot tar tt unzip zip
+)
+
+# FIXME: Support specifying component dependencies for utilities (e.g. WebSocket for telws)
 
 foreach(CMD_SRC ${CMD_SOURCES})
     get_filename_component(CMD_NAME ${CMD_SRC} NAME_WE)
     if (CMD_NAME IN_LIST SPECIAL_TARGETS)
-        add_executable("${CMD_NAME}-bin" ${CMD_SRC})
-        target_link_libraries("${CMD_NAME}-bin" LibCore)
-        install(TARGETS "${CMD_NAME}-bin" RUNTIME DESTINATION bin)
+        set(TARGET_NAME "${CMD_NAME}-bin")
+    else()
+        set(TARGET_NAME "${CMD_NAME}")
+    endif()
+    if(CMD_NAME IN_LIST REQUIRED_TARGETS)
+        serenity_component(
+            ${CMD_NAME}
+            REQUIRED
+            TARGETS ${TARGET_NAME}
+        )
+    elseif(CMD_NAME IN_LIST RECOMMENDED_TARGETS)
+        serenity_component(
+            ${CMD_NAME}
+            RECOMMENDED
+            TARGETS ${TARGET_NAME}
+        )
+    else()
+        serenity_component(
+            ${CMD_NAME}
+            TARGETS ${TARGET_NAME}
+        )
+    endif()
+    if (CMD_NAME IN_LIST SPECIAL_TARGETS)
+        add_executable(${TARGET_NAME} ${CMD_SRC})
+        target_link_libraries(${TARGET_NAME} LibCore)
+        install(TARGETS ${TARGET_NAME} RUNTIME DESTINATION bin)
         install(CODE "file(RENAME ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME}-bin ${CMAKE_INSTALL_PREFIX}/bin/${CMD_NAME})")
     else()
         add_executable(${CMD_NAME} ${CMD_SRC})
+        set_target_properties(${CMD_NAME} PROPERTIES EXCLUDE_FROM_ALL TRUE)
         target_link_libraries(${CMD_NAME} LibCore)
-        install(TARGETS ${CMD_NAME} RUNTIME DESTINATION bin)
+        install(TARGETS ${CMD_NAME} RUNTIME DESTINATION bin OPTIONAL)
     endif()
 endforeach()
 

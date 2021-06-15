@@ -1,3 +1,8 @@
+serenity_component(
+    Starfield
+    TARGETS Starfield
+)
+
 set(SOURCES
     Starfield.cpp
 )

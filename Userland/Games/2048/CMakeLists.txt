@@ -1,3 +1,9 @@
+serenity_component(
+    2048
+    RECOMMENDED
+    TARGETS 2048
+)
+
 set(SOURCES
     BoardView.cpp
     Game.cpp
