@@ -1,3 +1,9 @@
+serenity_component(
+    About
+    REQUIRED
+    TARGETS About
+)
+
 set(SOURCES
     main.cpp
 )

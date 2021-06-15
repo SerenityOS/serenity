@@ -1,3 +1,8 @@
+serenity_component(
+    ThemeEditor
+    TARGETS ThemeEditor
+)
+
 set(SOURCES
     PreviewWidget.cpp
     main.cpp

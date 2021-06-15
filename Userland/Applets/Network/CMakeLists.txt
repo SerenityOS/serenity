@@ -1,3 +1,9 @@
+serenity_component(
+    Network.Applet
+    REQUIRED
+    TARGETS Network.Applet
+)
+
 set(SOURCES
     main.cpp
 )

@@ -1,3 +1,9 @@
+serenity_component(
+    Shell
+    REQUIRED
+    TARGETS Shell
+)
+
 set(SOURCES
         AST.cpp
         Builtin.cpp

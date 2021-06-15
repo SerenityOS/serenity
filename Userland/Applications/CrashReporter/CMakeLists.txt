@@ -1,3 +1,9 @@
+serenity_component(
+    CrashReporter
+    REQUIRED
+    TARGETS CrashReporter
+)
+
 compile_gml(CrashReporterWindow.gml CrashReporterWindowGML.h crash_reporter_window_gml)
 
 

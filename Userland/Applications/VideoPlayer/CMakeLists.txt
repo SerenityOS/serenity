@@ -1,3 +1,9 @@
+serenity_component(
+    VideoPlayer
+    TARGETS VideoPlayer
+    DEPENDS AudioServer
+)
+
 set(SOURCES
     main.cpp
 )

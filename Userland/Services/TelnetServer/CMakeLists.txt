@@ -1,3 +1,8 @@
+serenity_component(
+    TelnetServer
+    TARGETS TelnetServer
+)
+
 set(SOURCES
     Client.cpp
     main.cpp

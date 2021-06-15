@@ -1,3 +1,8 @@
+serenity_component(
+    ImageDecoder
+    TARGETS ImageDecoder
+)
+
 compile_ipc(ImageDecoderServer.ipc ImageDecoderServerEndpoint.h)
 compile_ipc(ImageDecoderClient.ipc ImageDecoderClientEndpoint.h)
 

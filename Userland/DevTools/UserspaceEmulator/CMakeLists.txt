@@ -1,3 +1,9 @@
+serenity_component(
+    UserspaceEmulator
+    RECOMMENDED
+    TARGETS UserspaceEmulator
+)
+
 set(SOURCES
     Emulator.cpp
     Emulator_syscalls.cpp

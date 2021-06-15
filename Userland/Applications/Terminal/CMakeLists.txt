@@ -1,3 +1,9 @@
+serenity_component(
+    Terminal
+    REQUIRED
+    TARGETS Terminal utmpupdate
+)
+
 compile_gml(TerminalSettingsWindow.gml TerminalSettingsWindowGML.h terminal_settings_window_gml)
 
 set(SOURCES

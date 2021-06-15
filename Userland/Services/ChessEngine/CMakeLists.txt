@@ -1,3 +1,8 @@
+serenity_component(
+    ChessEngine
+    TARGETS ChessEngine
+)
+
 set(SOURCES
     ChessEngine.cpp
     main.cpp

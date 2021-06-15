@@ -1,3 +1,10 @@
+serenity_component(
+    HackStudio
+    RECOMMENDED
+    TARGETS HackStudio
+    DEPENDS CppLanguageServer ShellLanguageServer
+)
+
 add_subdirectory(LanguageServers)
 add_subdirectory(LanguageClients)
 

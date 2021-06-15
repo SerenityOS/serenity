@@ -1,3 +1,8 @@
+serenity_component(
+    Cube
+    TARGETS Cube
+)
+
 set(SOURCES
     Cube.cpp
 )

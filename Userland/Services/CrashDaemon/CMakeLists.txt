@@ -1,3 +1,9 @@
+serenity_component(
+    CrashDaemon
+    REQUIRED
+    TARGETS CrashDaemon
+)
+
 set(SOURCES
     main.cpp
 )

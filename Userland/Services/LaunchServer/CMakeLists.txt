@@ -1,3 +1,9 @@
+serenity_component(
+    LaunchServer
+    REQUIRED
+    TARGETS LaunchServer
+)
+
 compile_ipc(LaunchServer.ipc LaunchServerEndpoint.h)
 compile_ipc(LaunchClient.ipc LaunchClientEndpoint.h)
 

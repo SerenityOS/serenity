@@ -1,3 +1,8 @@
+serenity_component(
+    Debugger
+    TARGETS Debugger
+)
+
 set(SOURCES
     main.cpp
 )

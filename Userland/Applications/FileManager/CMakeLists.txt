@@ -1,3 +1,10 @@
+serenity_component(
+    FileManager
+    REQUIRED
+    TARGETS FileManager
+    DEPENDS FileOperation
+)
+
 compile_gml(FileManagerWindow.gml FileManagerWindowGML.h file_manager_window_gml)
 compile_gml(FileOperationProgress.gml FileOperationProgressGML.h file_operation_progress_gml)
 

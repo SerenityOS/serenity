@@ -1,3 +1,8 @@
+serenity_component(
+    LibGfxDemo
+    TARGETS LibGfxDemo
+)
+
 set(SOURCES
     main.cpp
 )

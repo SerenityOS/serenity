@@ -1,3 +1,8 @@
+serenity_component(
+    Spreadsheet
+    TARGETS Spreadsheet
+)
+
 compile_gml(CondFormatting.gml CondFormattingGML.h cond_fmt_gml)
 compile_gml(CondView.gml CondFormattingViewGML.h cond_fmt_view_gml)
 compile_gml(csv_import.gml CSVImportGML.h csv_import_gml)

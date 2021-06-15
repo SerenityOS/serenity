@@ -1,3 +1,9 @@
+serenity_component(
+    KeyboardSettings
+    REQUIRED
+    TARGETS KeyboardSettings
+)
+
 set(SOURCES
     main.cpp
 )

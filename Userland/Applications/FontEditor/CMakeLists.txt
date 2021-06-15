@@ -1,3 +1,9 @@
+serenity_component(
+    FontEditor
+    RECOMMENDED
+    TARGETS FontEditor
+)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 compile_gml(FontEditorWindow.gml FontEditorWindowGML.h font_editor_window_gml)
 compile_gml(NewFontDialogPage1.gml NewFontDialogPage1GML.h new_font_dialog_page_1_gml)

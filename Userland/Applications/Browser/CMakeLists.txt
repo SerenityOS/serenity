@@ -1,3 +1,10 @@
+serenity_component(
+    Browser
+    RECOMMENDED
+    TARGETS Browser
+    DEPENDS ImageDecoder RequestServer WebContent WebSocket
+)
+
 compile_gml(BrowserWindow.gml BrowserWindowGML.h browser_window_gml)
 compile_gml(EditBookmark.gml EditBookmarkGML.h edit_bookmark_gml)
 compile_gml(Tab.gml TabGML.h tab_gml)

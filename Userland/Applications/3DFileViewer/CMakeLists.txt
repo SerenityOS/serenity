@@ -1,3 +1,9 @@
+serenity_component(
+    3DFileViewer
+    RECOMMENDED
+    TARGETS 3DFileViewer
+)
+
 set(SOURCES
     Mesh.cpp
     WavefrontOBJLoader.cpp

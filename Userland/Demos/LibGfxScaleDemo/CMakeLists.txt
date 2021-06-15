@@ -1,3 +1,8 @@
+serenity_component(
+    LibGfxScaleDemo
+    TARGETS LibGfxScaleDemo
+)
+
 set(SOURCES
     main.cpp
 )

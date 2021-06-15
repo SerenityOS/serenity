@@ -1,3 +1,9 @@
+serenity_component(
+    SystemServer
+    REQUIRED
+    TARGETS SystemServer
+)
+
 set(SOURCES
     main.cpp
     Service.cpp

@@ -1,3 +1,9 @@
+serenity_component(
+    Minesweeper
+    RECOMMENDED
+    TARGETS Minesweeper
+)
+
 set(SOURCES
     Field.cpp
     main.cpp

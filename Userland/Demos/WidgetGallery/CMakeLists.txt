@@ -1,3 +1,8 @@
+serenity_component(
+    WidgetGallery
+    TARGETS WidgetGallery
+)
+
 compile_gml(./GalleryGML/Window.gml WindowGML.h window_gml)
 compile_gml(./GalleryGML/BasicsTab.gml BasicsTabGML.h basics_tab_gml)
 compile_gml(./GalleryGML/SlidersTab.gml SlidersTabGML.h sliders_tab_gml)

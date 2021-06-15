@@ -1,3 +1,9 @@
+serenity_component(
+    KeyboardMapper
+    RECOMMENDED
+    TARGETS KeyboardMapper
+)
+
 set(SOURCES
     KeyboardMapperWidget.cpp
     KeyButton.cpp

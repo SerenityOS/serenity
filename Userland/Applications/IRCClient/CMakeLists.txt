@@ -1,3 +1,8 @@
+serenity_component(
+    IRCClient
+    TARGETS IRCClient
+)
+
 set(SOURCES
     IRCAppWindow.cpp
     IRCChannel.cpp

@@ -1,3 +1,9 @@
+serenity_component(
+    NotificationServer
+    REQUIRED
+    TARGETS NotificationServer
+)
+
 compile_ipc(NotificationServer.ipc NotificationServerEndpoint.h)
 compile_ipc(NotificationClient.ipc NotificationClientEndpoint.h)
 

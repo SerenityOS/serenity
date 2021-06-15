@@ -1,3 +1,9 @@
+serenity_component(
+    Clipboard
+    REQUIRED
+    TARGETS Clipboard
+)
+
 compile_ipc(ClipboardServer.ipc ClipboardServerEndpoint.h)
 compile_ipc(ClipboardClient.ipc ClipboardClientEndpoint.h)
 
