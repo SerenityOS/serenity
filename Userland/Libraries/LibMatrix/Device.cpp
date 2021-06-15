@@ -9,6 +9,9 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <LibMatrix/Device.h>
+#include <LibMatrix/Id.h>
+#include <LibMatrix/Message.h>
+#include <LibMatrix/Room.h>
 
 namespace Matrix {
 
@@ -58,6 +61,63 @@ void Device::logout(Callback callback)
         m_connection->unset_access_token({});
         m_device_id = {};
     });
+}
+
+void Device::sync(Callback callback)
+{
+    VERIFY(is_logged_in());
+    // FIXME: Acutally support relative sync.
+    VERIFY(!m_sync_next_batch.has_value());
+    m_connection->send_request("GET", "sync", {}, move(callback), [this](auto result) {
+        if (result.is_error())
+            return;
+        process_sync_data(result.value());
+    });
+}
+
+void Device::process_sync_data(JsonObject const& data)
+{
+    // FIXME: This currently only supports absolute sync.
+    m_rooms.clear();
+    m_sync_next_batch = data.get("next_batch").as_string();
+
+    if (data.has("rooms")) {
+        auto rooms = data.get("rooms");
+
+        if (rooms.as_object().has("join")) {
+            auto joined_rooms = rooms.as_object().get("join");
+
+            joined_rooms.as_object().for_each_member([this](String const& key, JsonValue const& value) {
+                auto room_id = RoomId(key);
+                if (!m_rooms.contains(room_id)) {
+                    m_rooms.set(room_id, make<Room>(room_id));
+                }
+
+                Room& current_room = *(m_rooms.get(room_id).value());
+
+                if (value.as_object().has("timeline")) {
+                    auto events = value.as_object().get("timeline").as_object().get("events");
+                    events.as_array().for_each([&](JsonValue const& event) {
+                        if (event.as_object().has("state_key")) {
+                            // FIXME: Parse state events.
+                        } else {
+                            auto message = Message::create_from_json(event.as_object());
+                            if (message)
+                                current_room.add_message(message.release_nonnull());
+                            else
+                                dbgln_if(MATRIX_DEBUG, "[Matrix] Invalid or unimplemented message event ignored.");
+                        }
+                    });
+                }
+
+                // FIXME: Parse "summary", "state", "ephemeral", "account_data" and "unread_notifications", if necessary.
+            });
+        }
+
+        // FIXME: Also parse "invite" and "leave".
+    }
+
+    // FIXME: Parse everything else.
 }
 
 }

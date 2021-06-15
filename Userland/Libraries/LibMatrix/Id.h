@@ -11,6 +11,61 @@
 
 namespace Matrix {
 
+class EventId {
+public:
+    EventId() = default;
+    explicit EventId(String value)
+        : m_value(move(value))
+    {
+        VERIFY(!m_value.is_empty());
+        VERIFY(m_value[0] == '$');
+    }
+
+    String const& value() const { return m_value; }
+
+    bool operator==(EventId const& other) const
+    {
+        return m_value == other.m_value;
+    }
+
+    bool operator==(String const& other) const
+    {
+        return m_value == other;
+    }
+
+private:
+    String m_value;
+};
+
+class RoomId {
+public:
+    RoomId() = default;
+    explicit RoomId(String value)
+        : m_value(move(value))
+    {
+        VERIFY(!m_value.is_empty());
+        VERIFY(m_value[0] == '!');
+        VERIFY(m_value.contains(":"));
+    }
+
+    String const& value() const { return m_value; }
+    StringView local_part() const { return m_value.substring_view(1, m_value.find(':').value() - 1); }
+    StringView home_server() const { return m_value.substring_view(m_value.find(':').value() + 1); }
+
+    bool operator==(RoomId const& other) const
+    {
+        return m_value == other.m_value;
+    }
+
+    bool operator==(String const& other) const
+    {
+        return m_value == other;
+    }
+
+private:
+    String m_value;
+};
+
 class UserId {
 public:
     UserId() = default;
@@ -48,11 +103,37 @@ private:
 namespace AK {
 
 template<>
+struct Formatter<Matrix::EventId> : Formatter<StringView> {
+    void format(FormatBuilder& builder, Matrix::EventId const& value)
+    {
+        Formatter<StringView>::format(builder, value.value());
+    }
+};
+
+template<>
+struct Formatter<Matrix::RoomId> : Formatter<StringView> {
+    void format(FormatBuilder& builder, Matrix::RoomId const& value)
+    {
+        Formatter<StringView>::format(builder, value.value());
+    }
+};
+
+template<>
 struct Formatter<Matrix::UserId> : Formatter<StringView> {
     void format(FormatBuilder& builder, Matrix::UserId const& value)
     {
         Formatter<StringView>::format(builder, value.value());
     }
+};
+
+template<>
+struct Traits<Matrix::EventId> : public GenericTraits<Matrix::EventId> {
+    static unsigned hash(const Matrix::EventId& id) { return id.value().hash(); }
+};
+
+template<>
+struct Traits<Matrix::RoomId> : public GenericTraits<Matrix::RoomId> {
+    static unsigned hash(const Matrix::RoomId& id) { return id.value().hash(); }
 };
 
 template<>

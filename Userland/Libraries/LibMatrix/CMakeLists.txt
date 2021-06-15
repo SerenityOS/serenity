@@ -1,6 +1,9 @@
 set(SOURCES
         Connection.cpp
         Device.cpp
+        EventMetadata.cpp
+        Message.cpp
+        Room.cpp
         )
 
 serenity_lib(LibMatrix matrix)

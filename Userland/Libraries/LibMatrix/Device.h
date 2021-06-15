@@ -11,6 +11,7 @@
 #include <AK/URL.h>
 #include <LibMatrix/Connection.h>
 #include <LibMatrix/Id.h>
+#include <LibMatrix/Room.h>
 
 namespace Matrix {
 
@@ -24,6 +25,9 @@ public:
 
     UserId const& user_id() const { return m_user_id; }
     bool is_logged_in() const { return m_connection->access_token().has_value(); }
+    HashMap<RoomId, NonnullOwnPtr<Room>> const& rooms() const { return m_rooms; }
+
+    void sync(Callback callback = nullptr);
 
 private:
     Device(UserId user_id, URL home_server_url)
@@ -32,9 +36,14 @@ private:
     {
     }
 
+    void process_sync_data(JsonObject const&);
+
     UserId m_user_id;
     Optional<String> m_device_id;
     NonnullRefPtr<Connection> m_connection;
+
+    HashMap<RoomId, NonnullOwnPtr<Room>> m_rooms;
+    Optional<String> m_sync_next_batch;
 };
 
 }
