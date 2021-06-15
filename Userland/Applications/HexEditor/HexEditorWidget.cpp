@@ -72,14 +72,8 @@ HexEditorWidget::HexEditorWidget()
     };
 
     m_new_action = GUI::Action::create("New", { Mod_Ctrl, Key_N }, Gfx::Bitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GUI::Action&) {
-        if (m_document_dirty) {
-            if (GUI::MessageBox::show(window(), "Save changes to current file first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel) != GUI::Dialog::ExecResult::ExecOK)
-                return;
-            m_save_action->activate();
-        }
-
         String value;
-        if (GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
+        if (request_close() && GUI::InputBox::show(window(), value, "Enter new file size:", "New file size") == GUI::InputBox::ExecOK && !value.is_empty()) {
             auto file_size = value.to_int();
             if (file_size.has_value() && file_size.value() > 0) {
                 m_document_dirty = false;
@@ -117,8 +111,10 @@ HexEditorWidget::HexEditorWidget()
 
     m_save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
         Optional<String> save_path = GUI::FilePicker::get_save_filepath(window(), m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
-        if (!save_path.has_value())
+        if (!save_path.has_value()) {
+            dbgln("GUI::FilePicker: Cancel button clicked");
             return;
+        }
 
         if (!m_editor->write_to_file(save_path.value())) {
             GUI::MessageBox::show(window(), "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
@@ -342,8 +338,15 @@ bool HexEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    auto result = GUI::MessageBox::show(window(), "The file has been modified. Quit without saving?", "Quit without saving?", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::OKCancel);
-    return result == GUI::MessageBox::ExecOK;
+
+    auto result = GUI::MessageBox::show(window(), "The file has been modified. Save before closing?", "Save changes", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+    if (result == GUI::MessageBox::ExecCancel)
+        return false;
+    if (result == GUI::MessageBox::ExecYes) {
+        m_save_action->activate();
+        return m_document_dirty == false;
+    }
+    return true;
 }
 
 void HexEditorWidget::set_search_results_visible(bool visible)
