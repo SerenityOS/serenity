@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -23,7 +23,7 @@ TabWidget::TabWidget()
 {
     set_focus_policy(FocusPolicy::NoFocus);
 
-    REGISTER_INT_PROPERTY("container_padding", container_padding, set_container_padding);
+    REGISTER_MARGINS_PROPERTY("container_margins", container_margins, set_container_margins);
     REGISTER_BOOL_PROPERTY("uniform_tabs", uniform_tabs, set_uniform_tabs);
 
     register_property(
@@ -119,10 +119,10 @@ Gfx::IntRect TabWidget::child_rect_for_size(const Gfx::IntSize& size) const
     Gfx::IntRect rect;
     switch (m_tab_position) {
     case TabPosition::Top:
-        rect = { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        rect = { { m_container_margins.left(), bar_height() + m_container_margins.top() }, { size.width() - m_container_margins.left() - m_container_margins.right(), size.height() - bar_height() - m_container_margins.top() - m_container_margins.bottom() } };
         break;
     case TabPosition::Bottom:
-        rect = { { container_padding(), container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        rect = { { m_container_margins.left(), m_container_margins.top() }, { size.width() - m_container_margins.left() - m_container_margins.right(), size.height() - bar_height() - m_container_margins.top() - m_container_margins.bottom() } };
         break;
     }
     if (rect.is_empty())
@@ -183,15 +183,11 @@ void TabWidget::paint_event(PaintEvent& event)
     Painter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    auto container_rect = this->container_rect();
-    auto padding_rect = container_rect;
-    for (int i = 0; i < container_padding(); ++i) {
-        painter.draw_rect(padding_rect, palette().button());
-        padding_rect.shrink(2, 2);
-    }
+    painter.fill_rect(event.rect(), palette().button());
 
-    if (container_padding() > 0)
-        Gfx::StylePainter::paint_frame(painter, container_rect, palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
+    if (!m_container_margins.is_null()) {
+        Gfx::StylePainter::paint_frame(painter, container_rect(), palette(), Gfx::FrameShape::Container, Gfx::FrameShadow::Raised, 2);
+    }
 
     auto paint_tab_icon_if_needed = [&](auto& icon, auto& button_rect, auto& text_rect) {
         if (!icon)
@@ -450,6 +446,12 @@ void TabWidget::context_menu_event(ContextMenuEvent& context_menu_event)
         });
         return;
     }
+}
+
+void TabWidget::set_container_margins(GUI::Margins const& margins)
+{
+    m_container_margins = margins;
+    update();
 }
 
 }
