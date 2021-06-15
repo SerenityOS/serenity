@@ -9,6 +9,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/ObjectConstructor.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/Shape.h>
@@ -44,6 +45,7 @@ void ObjectConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.isSealed, is_sealed, 1, attr);
     define_native_function(vm.names.preventExtensions, prevent_extensions, 1, attr);
     define_native_function(vm.names.freeze, freeze, 1, attr);
+    define_native_function(vm.names.fromEntries, from_entries, 1, attr);
     define_native_function(vm.names.seal, seal, 1, attr);
     define_native_function(vm.names.keys, keys, 1, attr);
     define_native_function(vm.names.values, values, 1, attr);
@@ -180,6 +182,42 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::freeze)
         return {};
     }
     return argument;
+}
+
+// 20.1.2.7 Object.fromEntries ( iterable ), https://tc39.es/ecma262/#sec-object.fromentries
+JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
+{
+    auto iterable = require_object_coercible(global_object, vm.argument(0));
+    if (vm.exception())
+        return {};
+
+    auto* object = Object::create_empty(global_object);
+    object->set_prototype(global_object.object_prototype());
+
+    get_iterator_values(global_object, iterable, [&](Value iterator_value) {
+        if (vm.exception())
+            return IterationDecision::Break;
+        if (!iterator_value.is_object()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            return IterationDecision::Break;
+        }
+        auto key = iterator_value.as_object().get(0).value_or(js_undefined());
+        if (vm.exception())
+            return IterationDecision::Break;
+        auto value = iterator_value.as_object().get(1).value_or(js_undefined());
+        if (vm.exception())
+            return IterationDecision::Break;
+        auto property_key = key.to_property_key(global_object);
+        if (vm.exception())
+            return IterationDecision::Break;
+        object->define_property(property_key, value);
+        if (vm.exception())
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+    if (vm.exception())
+        return {};
+    return object;
 }
 
 // 20.1.2.20 Object.seal ( O ), https://tc39.es/ecma262/#sec-object.seal
