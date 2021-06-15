@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GeneratorObject.h>
+#include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -36,7 +37,16 @@ static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
 
 ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *global_object.function_prototype(), kind, is_strict, is_arrow_function);
+    Object* prototype = nullptr;
+    switch (kind) {
+    case FunctionKind::Regular:
+        prototype = global_object.function_prototype();
+        break;
+    case FunctionKind::Generator:
+        prototype = global_object.generator_function_prototype();
+        break;
+    }
+    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
 ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
@@ -57,8 +67,16 @@ void ScriptFunction::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Function::initialize(global_object);
     if (!m_is_arrow_function) {
-        Object* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
-        prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+        auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
+        switch (m_kind) {
+        case FunctionKind::Regular:
+            prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+            break;
+        case FunctionKind::Generator:
+            // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
+            prototype->set_prototype(global_object.generator_object_prototype());
+            break;
+        }
         define_property(vm.names.prototype, prototype, Attribute::Writable);
     }
     define_native_property(vm.names.length, length_getter, {}, Attribute::Configurable);
@@ -205,7 +223,7 @@ Value ScriptFunction::call()
 
 Value ScriptFunction::construct(Function&)
 {
-    if (m_is_arrow_function) {
+    if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
         return {};
     }
