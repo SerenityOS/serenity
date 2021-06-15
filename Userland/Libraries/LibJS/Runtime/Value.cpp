@@ -576,7 +576,7 @@ StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
         return {};
     if (key.is_symbol())
         return &key.as_symbol();
-    return to_string(global_object);
+    return key.to_string(global_object);
 }
 
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
