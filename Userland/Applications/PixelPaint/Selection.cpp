@@ -22,7 +22,7 @@ Selection::Selection(ImageEditor& editor)
 {
     m_marching_ants_timer = Core::Timer::create_repeating(80, [this] {
         ++m_marching_ants_offset;
-        m_marching_ants_offset %= marching_ant_length;
+        m_marching_ants_offset %= (marching_ant_length * 2);
         if (!is_empty() || m_in_interactive_selection)
             m_editor.update();
     });
@@ -34,8 +34,11 @@ void Selection::draw_marching_ants(Gfx::Painter& painter, Gfx::IntRect const& re
     int offset = m_marching_ants_offset;
 
     auto draw_pixel = [&](int x, int y) {
-        if ((offset % marching_ant_length) != 0)
+        if ((offset % (marching_ant_length * 2)) < marching_ant_length) {
             painter.set_pixel(x, y, Color::Black);
+        } else {
+            painter.set_pixel(x, y, Color::White);
+        }
         offset++;
     };
 
