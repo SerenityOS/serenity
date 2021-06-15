@@ -19,8 +19,11 @@ public:
     virtual void on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) override;
     virtual void on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) override;
     virtual void on_second_paint(Layer const&, GUI::PaintEvent&) override;
+    virtual GUI::Widget* get_properties_widget() override;
 
 private:
+    RefPtr<GUI::Widget> m_properties_widget;
+    bool m_active_layer_only { true };
     bool m_selecting { false };
     Gfx::IntPoint m_selection_start;
     Gfx::IntPoint m_selection_end;
