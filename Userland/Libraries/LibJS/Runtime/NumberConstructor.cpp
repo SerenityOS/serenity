@@ -86,7 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_finite)
 // 21.1.2.3 Number.isInteger ( number ), https://tc39.es/ecma262/#sec-number.isinteger
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_integer)
 {
-    return Value(vm.argument(0).is_integer());
+    return Value(vm.argument(0).is_integral_number());
 }
 
 // 21.1.2.4 Number.isNaN ( number ), https://tc39.es/ecma262/#sec-number.isnan

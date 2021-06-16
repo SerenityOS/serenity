@@ -1255,7 +1255,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
             return false;
-        if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
+        if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
             return Crypto::SignedBigInteger { lhs.to_i32(global_object) } == rhs.as_bigint().big_integer();
@@ -1368,11 +1368,11 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
 
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
-        x_lower_than_y = x_numeric.is_integer()
+        x_lower_than_y = x_numeric.is_integral_number()
             ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer()
             : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
-        x_lower_than_y = y_numeric.is_integer()
+        x_lower_than_y = y_numeric.is_integral_number()
             ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) }
             : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) + 1 });
     }

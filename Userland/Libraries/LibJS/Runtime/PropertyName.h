@@ -31,7 +31,7 @@ public:
             return {};
         if (value.is_symbol())
             return &value.as_symbol();
-        if (value.is_integer() && value.as_i32() >= 0)
+        if (value.is_integral_number() && value.as_i32() >= 0)
             return value.as_i32();
         auto string = value.to_string(global_object);
         if (string.is_null())
