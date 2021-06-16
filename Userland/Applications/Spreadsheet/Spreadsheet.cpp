@@ -209,8 +209,12 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name) const
 Optional<size_t> Sheet::column_index(const StringView& column_name) const
 {
     auto index = convert_from_string(column_name);
-    if (m_columns.size() <= index || m_columns[index] != column_name)
-        return {};
+    if (m_columns.size() <= index || m_columns[index] != column_name) {
+        auto it = m_columns.find(column_name);
+        if (it == m_columns.end())
+            return {};
+        index = it.index();
+    }
 
     return index;
 }
