@@ -78,6 +78,7 @@ namespace JS {
     P(cleanupSome)                           \
     P(clear)                                 \
     P(clz32)                                 \
+    P(codePointAt)                           \
     P(concat)                                \
     P(configurable)                          \
     P(console)                               \
