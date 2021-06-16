@@ -541,7 +541,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region, Scoped
     // Reading the page may block, so release the MM lock temporarily
     mm_lock.unlock();
 
-    KResultOr<ssize_t> result(KSuccess);
+    KResultOr<size_t> result(KSuccess);
     {
         ScopedLockRelease release_paging_lock(vmobject().m_paging_lock);
         auto buffer = UserOrKernelBuffer::for_kernel_buffer(page_buffer);

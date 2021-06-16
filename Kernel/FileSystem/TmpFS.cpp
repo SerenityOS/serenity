@@ -127,11 +127,10 @@ KResult TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry
     return KSuccess;
 }
 
-KResultOr<ssize_t> TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> TmpFSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     Locker locker(m_lock, Lock::Mode::Shared);
     VERIFY(!is_directory());
-    VERIFY(size >= 0);
     VERIFY(offset >= 0);
 
     if (!m_content)
@@ -148,7 +147,7 @@ KResultOr<ssize_t> TmpFSInode::read_bytes(off_t offset, ssize_t size, UserOrKern
     return size;
 }
 
-KResultOr<ssize_t> TmpFSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     Locker locker(m_lock);
     VERIFY(!is_directory());

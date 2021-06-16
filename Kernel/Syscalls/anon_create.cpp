@@ -21,6 +21,9 @@ KResultOr<int> Process::sys$anon_create(size_t size, int options)
     if (size % PAGE_SIZE)
         return EINVAL;
 
+    if (size > NumericLimits<ssize_t>::max())
+        return EINVAL;
+
     int new_fd = alloc_fd();
     if (new_fd < 0)
         return new_fd;
