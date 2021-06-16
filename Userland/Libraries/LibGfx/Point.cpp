@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -13,7 +13,7 @@
 namespace Gfx {
 
 template<typename T>
-void Point<T>::constrain(const Rect<T>& rect)
+void Point<T>::constrain(Rect<T> const& rect)
 {
     if (x() < rect.left()) {
         set_x(rect.left());
@@ -44,7 +44,7 @@ String FloatPoint::to_string() const
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::IntPoint& point)
+bool encode(Encoder& encoder, Gfx::IntPoint const& point)
 {
     encoder << point.x() << point.y();
     return true;
