@@ -781,8 +781,11 @@ bool Object::delete_property(const PropertyName& property_name)
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
         return true;
-    if (!metadata.value().attributes.is_configurable())
+    if (!metadata.value().attributes.is_configurable()) {
+        if (vm().in_strict_mode())
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_string_or_symbol().to_display_string());
         return false;
+    }
 
     size_t deleted_offset = metadata.value().offset;
 
