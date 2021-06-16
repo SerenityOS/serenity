@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -59,28 +59,28 @@ public:
     ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
     ALWAYS_INLINE void scale_by(Point<T> const& s) { scale_by(s.x(), s.y()); }
 
-    Size scaled_by(T dx, T dy) const
+    [[nodiscard]] Size scaled_by(T dx, T dy) const
     {
         Size<T> size = *this;
         size.scale_by(dx, dy);
         return size;
     }
 
-    Size scaled_by(T dboth) const
+    [[nodiscard]] Size scaled_by(T dboth) const
     {
         Size<T> size = *this;
         size.scale_by(dboth);
         return size;
     }
 
-    Size scaled_by(Point<T> const& s) const
+    [[nodiscard]] Size scaled_by(Point<T> const& s) const
     {
         Size<T> size = *this;
         size.scale_by(s);
         return size;
     }
 
-    Size transformed_by(AffineTransform const& transform) const
+    [[nodiscard]] Size transformed_by(AffineTransform const& transform) const
     {
         Size<T> size = *this;
         size.transform_by(transform);
@@ -88,19 +88,19 @@ public:
     }
 
     template<typename U>
-    bool contains(Size<U> const& other) const
+    [[nodiscard]] bool contains(Size<U> const& other) const
     {
         return other.m_width <= m_width && other.m_height <= m_height;
     }
 
     template<class U>
-    bool operator==(Size<U> const& other) const
+    [[nodiscard]] bool operator==(Size<U> const& other) const
     {
         return width() == other.width() && height() == other.height();
     }
 
     template<class U>
-    bool operator!=(Size<U> const& other) const
+    [[nodiscard]] bool operator!=(Size<U> const& other) const
     {
         return !(*this == other);
     }
@@ -119,7 +119,7 @@ public:
         return *this;
     }
 
-    Size<T> operator*(T factor) const { return { m_width * factor, m_height * factor }; }
+    [[nodiscard]] Size<T> operator*(T factor) const { return { m_width * factor, m_height * factor }; }
 
     Size<T>& operator*=(T factor)
     {
@@ -128,7 +128,7 @@ public:
         return *this;
     }
 
-    T primary_size_for_orientation(Orientation orientation) const
+    [[nodiscard]] T primary_size_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? height() : width();
     }
@@ -142,7 +142,7 @@ public:
         }
     }
 
-    T secondary_size_for_orientation(Orientation orientation) const
+    [[nodiscard]] T secondary_size_for_orientation(Orientation orientation) const
     {
         return orientation == Orientation::Vertical ? width() : height();
     }
@@ -157,12 +157,12 @@ public:
     }
 
     template<typename U>
-    ALWAYS_INLINE Size<U> to_type() const
+    [[nodiscard]] ALWAYS_INLINE Size<U> to_type() const
     {
         return Size<U>(*this);
     }
 
-    String to_string() const;
+    [[nodiscard]] String to_string() const;
 
 private:
     T m_width { 0 };
