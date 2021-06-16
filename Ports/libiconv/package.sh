@@ -2,7 +2,7 @@
 port=libiconv
 version=1.16
 useconfigure=true
-configopts=--enable-shared
+configopts="--enable-shared --disable-nls"
 files="https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz libiconv-${version}.tar.gz
 https://ftpmirror.gnu.org/gnu/libiconv/libiconv-${version}.tar.gz.sig libiconv-${version}.tar.gz.sig
 https://ftpmirror.gnu.org/gnu/gnu-keyring.gpg gnu-keyring.gpg"
