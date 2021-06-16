@@ -395,6 +395,12 @@ void ImageEditor::image_did_change()
     update();
 }
 
+void ImageEditor::image_did_change_title(String const& path)
+{
+    if (on_image_title_change)
+        on_image_title_change(path);
+}
+
 void ImageEditor::image_select_layer(Layer* layer)
 {
     set_active_layer(layer);

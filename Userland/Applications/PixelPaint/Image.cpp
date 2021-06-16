@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+#include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
@@ -51,7 +52,8 @@ RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
 }
 
 Image::Image(Gfx::IntSize const& size)
-    : m_size(size)
+    : m_title("Untitled")
+    , m_size(size)
 {
 }
 
@@ -131,6 +133,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
         image->add_layer(*layer);
     }
 
+    image->set_path(file_path);
     return image.release_nonnull();
 }
 
@@ -152,6 +155,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_file(String const& f
     auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
     if (!image)
         return String { "Unable to allocate Image"sv };
+    image->set_path(file_path);
     return image.release_nonnull();
 }
 
@@ -416,6 +420,19 @@ void ImageUndoCommand::undo()
 void ImageUndoCommand::redo()
 {
     undo();
+}
+
+void Image::set_title(String title)
+{
+    m_title = move(title);
+    for (auto* client : m_clients)
+        client->image_did_change_title(m_title);
+}
+
+void Image::set_path(String path)
+{
+    m_path = move(path);
+    set_title(LexicalPath(m_path).basename());
 }
 
 }

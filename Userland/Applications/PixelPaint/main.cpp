@@ -135,6 +135,7 @@ int main(int argc, char** argv)
             GUI::MessageBox::show_error(window, String::formatted("Could not save {}: {}", save_path.value(), result.error()));
             return;
         }
+        editor->image().set_path(save_path.value());
     });
 
     auto menubar = GUI::Menubar::construct();
@@ -505,6 +506,13 @@ int main(int argc, char** argv)
             layer_list_widget.set_selected_layer(layer);
             layer_properties_widget.set_layer(layer);
         };
+
+        image_editor.on_image_title_change = [&](auto const& title) {
+            tab_widget.set_tab_title(image_editor, title);
+        };
+
+        // NOTE: We invoke the above hook directly here to make sure the tab title is set up.
+        image_editor.on_image_title_change(image->title());
 
         if (image->layer_count())
             image_editor.set_active_layer(&image->layer(0));
