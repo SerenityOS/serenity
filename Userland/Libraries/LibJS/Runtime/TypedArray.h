@@ -44,9 +44,6 @@ private:
     virtual void visit_edges(Visitor&) override;
 };
 
-struct ClampedU8 {
-};
-
 template<typename T>
 class TypedArray : public TypedArrayBase {
     JS_OBJECT(TypedArray, TypedArrayBase);
