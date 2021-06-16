@@ -637,7 +637,11 @@ void EditingEngine::move_selected_lines_up()
         return;
 
     auto& lines = m_editor->document().lines();
-    lines.insert((int)last_line, lines.take((int)first_line - 1));
+    int moved_line_index = (int)first_line - 1;
+    auto moved_line = lines.take(moved_line_index);
+    m_editor->document_did_remove_line(moved_line_index);
+    lines.insert(last_line, move(moved_line));
+    m_editor->document_did_insert_line(last_line);
     m_editor->set_cursor({ first_line - 1, 0 });
 
     if (m_editor->has_selection()) {
@@ -662,7 +666,11 @@ void EditingEngine::move_selected_lines_down()
     if (last_line >= lines.size() - 1)
         return;
 
-    lines.insert((int)first_line, lines.take((int)last_line + 1));
+    int moved_line_index = (int)last_line + 1;
+    auto moved_line = lines.take(moved_line_index);
+    m_editor->document_did_remove_line(moved_line_index);
+    lines.insert(first_line, move(moved_line));
+    m_editor->document_did_insert_line(first_line);
     m_editor->set_cursor({ first_line + 1, 0 });
 
     if (m_editor->has_selection()) {
