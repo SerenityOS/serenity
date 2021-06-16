@@ -65,11 +65,13 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 WindowFrame::WindowFrame(Window& window)
     : m_window(window)
 {
-    auto button = make<Button>(*this, [this](auto&) {
-        m_window.handle_window_menu_action(WindowMenuAction::Close);
-    });
-    m_close_button = button.ptr();
-    m_buttons.append(move(button));
+    {
+        auto button = make<Button>(*this, [this](auto&) {
+            m_window.handle_window_menu_action(WindowMenuAction::Close);
+        });
+        m_close_button = button.ptr();
+        m_buttons.append(move(button));
+    }
 
     if (window.is_resizable()) {
         auto button = make<Button>(*this, [this](auto&) {
@@ -665,7 +667,6 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 // this click, and when we receive the MouseUp event check if
                 // it would have been considered a double click, if it weren't
                 // for the fact that we opened and closed a window in the meanwhile
-                auto& wm = WindowManager::the();
                 wm.start_menu_doubleclick(m_window, event);
 
                 m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
@@ -675,7 +676,6 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
                 // from the second click outside the menu wouldn't be considered
                 // a double click, so let's manually check if it would otherwise
                 // have been be considered to be one
-                auto& wm = WindowManager::the();
                 if (wm.is_menu_doubleclick(m_window, event)) {
                     // It is a double click, so perform activate the default item
                     m_window.window_menu_activate_default();
