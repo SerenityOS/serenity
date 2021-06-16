@@ -88,7 +88,7 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
     }
 
     constexpr size_t num_chars = 256;
-    return buffer.read_buffered<num_chars>(size, [&](u8 const* data, size_t buffer_bytes) {
+    return buffer.read_buffered<num_chars>(size, [&](u8 const* data, size_t buffer_bytes) -> KResultOr<size_t> {
         u8 modified_data[num_chars * 2];
         size_t modified_data_size = 0;
         for (size_t i = 0; i < buffer_bytes; ++i) {
@@ -96,18 +96,19 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
                 modified_data[modified_data_size++] = out_ch;
             });
         }
-        ssize_t bytes_written = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), modified_data_size);
-        VERIFY(bytes_written != 0);
-        if (bytes_written < 0 || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
-            return bytes_written;
-        if ((size_t)bytes_written == modified_data_size)
-            return (ssize_t)buffer_bytes;
+        auto bytes_written_or_error = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), modified_data_size);
+        VERIFY(bytes_written_or_error.is_error() || bytes_written_or_error.value() != 0);
+        if (bytes_written_or_error.is_error() || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
+            return bytes_written_or_error;
+        auto bytes_written = bytes_written_or_error.value();
+        if (bytes_written == modified_data_size)
+            return buffer_bytes;
 
         // Degenerate case where we converted some newlines and encountered a partial write
 
         // Calculate where in the input buffer the last character would have been
         size_t pos_data = 0;
-        for (ssize_t pos_modified_data = 0; pos_modified_data < bytes_written; ++pos_data) {
+        for (size_t pos_modified_data = 0; pos_modified_data < bytes_written; ++pos_data) {
             if (data[pos_data] == '\n')
                 pos_modified_data += 2;
             else
@@ -118,7 +119,7 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
             if (pos_modified_data > bytes_written)
                 --pos_data;
         }
-        return (ssize_t)pos_data;
+        return pos_data;
     });
 }
 
