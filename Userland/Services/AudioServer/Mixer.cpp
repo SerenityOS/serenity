@@ -14,6 +14,8 @@
 
 namespace AudioServer {
 
+u8 Mixer::m_zero_filled_buffer[4096];
+
 Mixer::Mixer()
     : m_device(Core::File::construct("/dev/audio", this))
     , m_sound_thread(Threading::Thread::construct(
@@ -31,8 +33,6 @@ Mixer::Mixer()
     pthread_mutex_init(&m_pending_mutex, nullptr);
     pthread_cond_init(&m_pending_cond, nullptr);
 
-    m_zero_filled_buffer = (u8*)malloc(4096);
-    bzero(m_zero_filled_buffer, 4096);
     m_sound_thread->start();
 }
 
@@ -86,7 +86,7 @@ void Mixer::mix()
         }
 
         if (m_muted) {
-            m_device->write(m_zero_filled_buffer, 4096);
+            m_device->write(m_zero_filled_buffer, sizeof(m_zero_filled_buffer));
         } else {
             Array<u8, 4096> buffer;
             OutputMemoryStream stream { buffer };

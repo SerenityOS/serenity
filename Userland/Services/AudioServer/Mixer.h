@@ -117,7 +117,7 @@ private:
     bool m_muted { false };
     int m_main_volume { 100 };
 
-    u8* m_zero_filled_buffer { nullptr };
+    static u8 m_zero_filled_buffer[4096];
 
     void mix();
 };
