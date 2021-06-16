@@ -591,13 +591,8 @@ bool Object::define_accessor(const PropertyName& property_name, Function* getter
 {
     VERIFY(property_name.is_valid());
 
-    Accessor* accessor { nullptr };
-    auto property_metadata = shape().lookup(property_name.to_string_or_symbol());
-    if (property_metadata.has_value()) {
-        auto existing_property = get_direct(property_metadata.value().offset);
-        if (existing_property.is_accessor())
-            accessor = &existing_property.as_accessor();
-    }
+    auto existing_property = get_own_property(property_name, this, true);
+    auto* accessor = existing_property.is_accessor() ? &existing_property.as_accessor() : nullptr;
     if (!accessor) {
         accessor = Accessor::create(vm(), getter, setter);
         bool definition_success = define_property(property_name, accessor, attributes, throw_exceptions);
