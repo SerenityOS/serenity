@@ -265,7 +265,7 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     });
 }
 
-ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
+KResultOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
 {
     ScopedSpinLock global_lock(ConsoleManagement::the().tty_write_lock());
     ScopedSpinLock lock(m_lock);
@@ -276,9 +276,7 @@ ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t siz
     });
     if (m_active)
         flush_dirty_lines();
-    if (result.is_error())
-        return result.error();
-    return (ssize_t)result.value();
+    return result;
 }
 
 void VirtualConsole::set_active(bool active)
