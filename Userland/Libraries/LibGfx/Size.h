@@ -32,7 +32,7 @@ public:
     }
 
     template<typename U>
-    explicit Size(const Size<U>& other)
+    explicit Size(Size<U> const& other)
         : m_width(other.width())
         , m_height(other.height())
     {
@@ -54,10 +54,10 @@ public:
         m_height *= dy;
     }
 
-    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
+    void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 
     ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE void scale_by(const Point<T>& s) { scale_by(s.x(), s.y()); }
+    ALWAYS_INLINE void scale_by(Point<T> const& s) { scale_by(s.x(), s.y()); }
 
     Size scaled_by(T dx, T dy) const
     {
@@ -73,14 +73,14 @@ public:
         return size;
     }
 
-    Size scaled_by(const Point<T>& s) const
+    Size scaled_by(Point<T> const& s) const
     {
         Size<T> size = *this;
         size.scale_by(s);
         return size;
     }
 
-    Size transformed_by(const AffineTransform& transform) const
+    Size transformed_by(AffineTransform const& transform) const
     {
         Size<T> size = *this;
         size.transform_by(transform);
@@ -88,31 +88,31 @@ public:
     }
 
     template<typename U>
-    bool contains(const Size<U>& other) const
+    bool contains(Size<U> const& other) const
     {
         return other.m_width <= m_width && other.m_height <= m_height;
     }
 
     template<class U>
-    bool operator==(const Size<U>& other) const
+    bool operator==(Size<U> const& other) const
     {
         return width() == other.width() && height() == other.height();
     }
 
     template<class U>
-    bool operator!=(const Size<U>& other) const
+    bool operator!=(Size<U> const& other) const
     {
         return !(*this == other);
     }
 
-    Size<T>& operator-=(const Size<T>& other)
+    Size<T>& operator-=(Size<T> const& other)
     {
         m_width -= other.m_width;
         m_height -= other.m_height;
         return *this;
     }
 
-    Size<T>& operator+=(const Size<T>& other)
+    Size<T>& operator+=(Size<T> const& other)
     {
         m_width += other.m_width;
         m_height += other.m_height;
@@ -178,7 +178,7 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const Gfx::Size<T>& value)
+    void format(FormatBuilder& builder, Gfx::Size<T> const& value)
     {
         Formatter<StringView>::format(builder, value.to_string());
     }
@@ -188,7 +188,7 @@ struct Formatter<Gfx::Size<T>> : Formatter<StringView> {
 
 namespace IPC {
 
-bool encode(Encoder&, const Gfx::IntSize&);
+bool encode(Encoder&, Gfx::IntSize const&);
 bool decode(Decoder&, Gfx::IntSize&);
 
 }
