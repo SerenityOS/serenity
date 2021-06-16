@@ -270,17 +270,17 @@ KResultOr<size_t> IPv4Socket::receive_byte_buffered(FileDescription& description
 
     VERIFY(!m_receive_buffer.is_empty());
 
-    int nreceived;
+    KResultOr<size_t> nreceived_or_error { 0 };
     if (flags & MSG_PEEK)
-        nreceived = m_receive_buffer.peek(buffer, buffer_length);
+        nreceived_or_error = m_receive_buffer.peek(buffer, buffer_length);
     else
-        nreceived = m_receive_buffer.read(buffer, buffer_length);
+        nreceived_or_error = m_receive_buffer.read(buffer, buffer_length);
 
-    if (nreceived > 0 && !(flags & MSG_PEEK))
-        Thread::current()->did_ipv4_socket_read((size_t)nreceived);
+    if (!nreceived_or_error.is_error() && nreceived_or_error.value() > 0 && !(flags & MSG_PEEK))
+        Thread::current()->did_ipv4_socket_read(nreceived_or_error.value());
 
     set_can_read(!m_receive_buffer.is_empty());
-    return nreceived;
+    return nreceived_or_error;
 }
 
 KResultOr<size_t> IPv4Socket::receive_packet_buffered(FileDescription& description, UserOrKernelBuffer& buffer, size_t buffer_length, int flags, Userspace<sockaddr*> addr, Userspace<socklen_t*> addr_length, Time& packet_timestamp)
@@ -418,8 +418,8 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
         auto nreceived_or_error = protocol_receive(ReadonlyBytes { packet.data(), packet.size() }, scratch_buffer, m_scratch_buffer.value().size(), 0);
         if (nreceived_or_error.is_error())
             return false;
-        ssize_t nwritten = m_receive_buffer.write(scratch_buffer, nreceived_or_error.value());
-        if (nwritten < 0)
+        auto nwritten_or_error = m_receive_buffer.write(scratch_buffer, nreceived_or_error.value());
+        if (nwritten_or_error.is_error())
             return false;
         set_can_read(!m_receive_buffer.is_empty());
     } else {
