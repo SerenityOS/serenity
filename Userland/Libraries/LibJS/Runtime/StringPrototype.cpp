@@ -79,6 +79,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.lastIndexOf, last_index_of, 1, attr);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.match, match, 1, attr);
+    define_native_function(vm.names.matchAll, match_all, 1, attr);
     define_native_function(vm.names.replace, replace, 2, attr);
     define_native_function(vm.names.anchor, anchor, 1, attr);
     define_native_function(vm.names.big, big, 0, attr);
@@ -709,6 +710,46 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
     if (!rx)
         return {};
     return rx->invoke(vm.well_known_symbol_match(), js_string(vm, s));
+}
+
+// 22.1.3.12 String.prototype.matchAll ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.matchall
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
+{
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+    auto regexp = vm.argument(0);
+    if (!regexp.is_nullish()) {
+        auto is_regexp = regexp.is_regexp(global_object);
+        if (vm.exception())
+            return {};
+        if (is_regexp) {
+            auto flags = regexp.as_object().get("flags").value_or(js_undefined());
+            if (vm.exception())
+                return {};
+            auto flags_object = require_object_coercible(global_object, flags);
+            if (vm.exception())
+                return {};
+            auto flags_string = flags_object.to_string(global_object);
+            if (vm.exception())
+                return {};
+            if (!flags_string.contains("g")) {
+                vm.throw_exception<TypeError>(global_object, ErrorType::StringMatchAllNonGlobalRegExp);
+                return {};
+            }
+        }
+        if (auto* matcher = get_method(global_object, regexp, vm.well_known_symbol_match_all()))
+            return vm.call(*matcher, regexp, this_object);
+        if (vm.exception())
+            return {};
+    }
+    auto s = this_object.to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto rx = regexp_create(global_object, regexp, js_string(vm, "g"));
+    if (!rx)
+        return {};
+    return rx->invoke(vm.well_known_symbol_match_all(), js_string(vm, s));
 }
 
 // 22.1.3.17 String.prototype.replace ( searchValue, replaceValue ), https://tc39.es/ecma262/#sec-string.prototype.replace

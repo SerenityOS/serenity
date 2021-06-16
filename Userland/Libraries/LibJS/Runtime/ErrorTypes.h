@@ -145,6 +145,7 @@
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
+    M(StringMatchAllNonGlobalRegExp, "RegExp argument is non-global")                                                                   \
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
