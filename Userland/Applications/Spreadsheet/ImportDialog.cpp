@@ -147,7 +147,7 @@ auto CSVImportDialogPage::make_reader() -> Optional<Reader::XSV>
     if (should_trim_trailing)
         behaviours = behaviours | Reader::ParserBehaviour::TrimTrailingFieldSpaces;
 
-    return Reader::XSV(m_csv, traits, behaviours);
+    return Reader::XSV(m_csv, move(traits), behaviours);
 };
 
 void CSVImportDialogPage::update_preview()
@@ -195,6 +195,7 @@ Result<NonnullRefPtrVector<Sheet>, String> ImportDialog::make_and_run_for(String
             NonnullRefPtrVector<Sheet> sheets;
 
             if (reader.has_value()) {
+                reader->parse();
                 if (reader.value().has_error())
                     return String::formatted("CSV Import failed: {}", reader.value().error_string());
 
