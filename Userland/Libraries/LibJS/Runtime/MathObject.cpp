@@ -266,7 +266,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
     if (base.is_positive_infinity())
         return exponent.as_double() > 0 ? js_infinity() : Value(0);
     if (base.is_negative_infinity()) {
-        auto is_odd_integral_number = exponent.is_integer() && (exponent.as_i32() % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
         if (exponent.as_double() > 0)
             return is_odd_integral_number ? js_negative_infinity() : js_infinity();
         else
@@ -275,7 +275,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
     if (base.is_positive_zero())
         return exponent.as_double() > 0 ? Value(0) : js_infinity();
     if (base.is_negative_zero()) {
-        auto is_odd_integral_number = exponent.is_integer() && (exponent.as_i32() % 2 != 0);
+        auto is_odd_integral_number = exponent.is_integral_number() && (exponent.as_i32() % 2 != 0);
         if (exponent.as_double() > 0)
             return is_odd_integral_number ? Value(-0.0) : Value(0);
         else
@@ -301,7 +301,7 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::pow)
             return js_infinity();
     }
     VERIFY(exponent.is_finite_number() && !exponent.is_positive_zero() && !exponent.is_negative_zero());
-    if (base.as_double() < 0 && !exponent.is_integer())
+    if (base.as_double() < 0 && !exponent.is_integral_number())
         return js_nan();
     return Value(::pow(base.as_double(), exponent.as_double()));
 }

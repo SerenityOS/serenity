@@ -129,7 +129,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
         auto next_code_point = vm.argument(i).to_number(global_object);
         if (vm.exception())
             return {};
-        if (!next_code_point.is_integer()) {
+        if (!next_code_point.is_integral_number()) {
             vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
             return {};
         }
