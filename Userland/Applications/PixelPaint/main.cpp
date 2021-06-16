@@ -517,6 +517,7 @@ int main(int argc, char** argv)
         if (image->layer_count())
             image_editor.set_active_layer(&image->layer(0));
 
+        tab_widget.set_active_widget(&image_editor);
         image_editor.set_focus(true);
         return image_editor;
     };
