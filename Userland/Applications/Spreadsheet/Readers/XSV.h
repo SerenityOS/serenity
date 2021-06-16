@@ -59,17 +59,18 @@ constexpr ParserBehaviour default_behaviours()
 
 class XSV {
 public:
-    XSV(StringView source, const ParserTraits& traits, ParserBehaviour behaviours = default_behaviours())
+    XSV(StringView source, ParserTraits traits, ParserBehaviour behaviours = default_behaviours())
         : m_source(source)
         , m_lexer(m_source)
         , m_traits(traits)
         , m_behaviours(behaviours)
     {
-        parse();
+        parse_preview();
     }
 
     virtual ~XSV() { }
 
+    void parse();
     bool has_error() const { return m_error != ReadError::None; }
     ReadError error() const { return m_error; }
     String error_string() const
@@ -180,8 +181,15 @@ private:
         }
     };
     void set_error(ReadError error);
-    void parse();
+    void parse_preview();
     void read_headers();
+    void reset()
+    {
+        m_lexer = GenericLexer { m_source };
+        m_rows.clear();
+        m_names.clear();
+        m_error = ReadError::None;
+    }
     Vector<Field> read_row(bool header_row = false);
     Field read_one_field();
     Field read_one_quoted_field();
@@ -189,7 +197,7 @@ private:
 
     StringView m_source;
     GenericLexer m_lexer;
-    const ParserTraits& m_traits;
+    ParserTraits m_traits;
     ParserBehaviour m_behaviours;
     Vector<Field> m_names;
     Vector<Vector<Field>> m_rows;
