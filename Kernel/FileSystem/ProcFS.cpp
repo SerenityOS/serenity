@@ -126,13 +126,13 @@ static inline ProcParentDirectory to_proc_parent_directory(const InodeIdentifier
 
 static inline ProcFileType to_proc_file_type(const InodeIdentifier& identifier)
 {
-    return (ProcFileType)(identifier.index().value() & 0xff);
+    return (ProcFileType)(identifier.index().value() & 0xfff);
 }
 
 static inline int to_fd(const InodeIdentifier& identifier)
 {
     VERIFY(to_proc_parent_directory(identifier) == PDI_PID_fd);
-    return (identifier.index().value() & 0xff) - FI_MaxStaticFileIndex;
+    return (identifier.index().value() & 0xfff) - FI_MaxStaticFileIndex;
 }
 
 static inline size_t to_sys_index(const InodeIdentifier& identifier)
