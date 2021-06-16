@@ -514,7 +514,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
 
     if (input.regex_options & AllFlags::Insensitive) {
         ch1 = to_ascii_lowercase(ch1);
-        ch2 = to_ascii_uppercase(ch2);
+        ch2 = to_ascii_lowercase(ch2);
     }
 
     if (ch1 == ch2) {
