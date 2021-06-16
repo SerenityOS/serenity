@@ -30,6 +30,7 @@ public:
     virtual void image_did_modify_layer_stack() { }
     virtual void image_did_change() { }
     virtual void image_select_layer(Layer*) { }
+    virtual void image_did_change_title(String const&) { }
 
 protected:
     virtual ~ImageClient() = default;
@@ -76,6 +77,12 @@ public:
 
     size_t index_of(Layer const&) const;
 
+    String const& path() const { return m_path; }
+    void set_path(String);
+
+    String const& title() const { return m_title; }
+    void set_title(String);
+
 private:
     explicit Image(Gfx::IntSize const&);
 
@@ -83,6 +90,9 @@ private:
 
     void did_change();
     void did_modify_layer_stack();
+
+    String m_path;
+    String m_title;
 
     Gfx::IntSize m_size;
     NonnullRefPtrVector<Layer> m_layers;

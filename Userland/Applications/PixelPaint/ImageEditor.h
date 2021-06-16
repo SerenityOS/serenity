@@ -63,6 +63,8 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
+    Function<void(String const&)> on_image_title_change;
+
     Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
     Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
     Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;
@@ -86,6 +88,7 @@ private:
 
     virtual void image_did_change() override;
     virtual void image_select_layer(Layer*) override;
+    virtual void image_did_change_title(String const&) override;
 
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
