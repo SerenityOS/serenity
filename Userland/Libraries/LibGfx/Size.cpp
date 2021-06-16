@@ -27,7 +27,7 @@ String FloatSize::to_string() const
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::IntSize& size)
+bool encode(Encoder& encoder, Gfx::IntSize const& size)
 {
     encoder << size.width() << size.height();
     return true;
