@@ -113,14 +113,9 @@ void Cell::update_data(Badge<Sheet>)
     m_evaluated_formats.background_color.clear();
     m_evaluated_formats.foreground_color.clear();
     if (!m_js_exception) {
-        StringBuilder builder;
         for (auto& fmt : m_conditional_formats) {
             if (!fmt.condition.is_empty()) {
-                builder.clear();
-                builder.append("return (");
-                builder.append(fmt.condition);
-                builder.append(')');
-                auto [value, exception] = m_sheet->evaluate(builder.string_view(), this);
+                auto [value, exception] = m_sheet->evaluate(fmt.condition, this);
                 if (exception) {
                     m_js_exception = move(exception);
                 } else {
