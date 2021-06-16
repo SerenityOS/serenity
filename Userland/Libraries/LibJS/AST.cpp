@@ -816,20 +816,24 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
 
+        auto property_key = key.to_property_key(global_object);
+        if (interpreter.exception())
+            return {};
+
         auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
         method_function.set_home_object(&target);
 
         switch (method.kind()) {
         case ClassMethod::Kind::Method:
-            target.define_property(key.to_property_key(global_object), method_value);
+            target.define_property(property_key, method_value);
             break;
         case ClassMethod::Kind::Getter:
             update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
-            target.define_accessor(key.to_property_key(global_object), &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(property_key, &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ClassMethod::Kind::Setter:
             update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
-            target.define_accessor(key.to_property_key(global_object), nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(property_key, nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
             break;
         default:
             VERIFY_NOT_REACHED();
