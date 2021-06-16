@@ -97,6 +97,8 @@ int main(int argc, char** argv)
                 VERIFY(bg_layer);
                 image->add_layer(*bg_layer);
                 bg_layer->bitmap().fill(Color::White);
+                auto image_title = dialog->image_name().trim_whitespace();
+                image->set_title(image_title.is_empty() ? "Untitled" : image_title);
 
                 auto& image_editor = create_new_editor(*image);
                 layer_list_widget.set_image(image);
