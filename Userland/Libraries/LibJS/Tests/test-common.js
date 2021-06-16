@@ -51,6 +51,8 @@ class ExpectationError extends Error {
         return true;
     };
 
+    const valueToString = value => Object.prototype.toString.call(value);
+
     class Expector {
         constructor(target, inverted) {
             this.target = target;
@@ -65,7 +67,10 @@ class ExpectationError extends Error {
             this.__doMatcher(() => {
                 this.__expect(
                     Object.is(this.target, value),
-                    () => `toBe: expected _${String(value)}_, got _${String(this.target)}_`
+                    () =>
+                        `toBe: expected _${valueToString(value)}_, got _${valueToString(
+                            this.target
+                        )}_`
                 );
             });
         }
@@ -167,7 +172,7 @@ class ExpectationError extends Error {
                 this.__expect(
                     this.target === undefined,
                     () =>
-                        `toBeUndefined: expected target to be undefined, got _${String(
+                        `toBeUndefined: expected target to be undefined, got _${valueToString(
                             this.target
                         )}_`
                 );
@@ -178,7 +183,7 @@ class ExpectationError extends Error {
             this.__doMatcher(() => {
                 this.__expect(
                     isNaN(this.target),
-                    () => `toBeNaN: expected target to be NaN, got _${String(this.target)}_`
+                    () => `toBeNaN: expected target to be NaN, got _${valueToString(this.target)}_`
                 );
             });
         }
@@ -187,7 +192,8 @@ class ExpectationError extends Error {
             this.__doMatcher(() => {
                 this.__expect(
                     this.target === true,
-                    () => `toBeTrue: expected target to be true, got _${String(this.target)}_`
+                    () =>
+                        `toBeTrue: expected target to be true, got _${valueToString(this.target)}_`
                 );
             });
         }
@@ -196,7 +202,8 @@ class ExpectationError extends Error {
             this.__doMatcher(() => {
                 this.__expect(
                     this.target === false,
-                    () => `toBeTrue: expected target to be false, got _${String(this.target)}_`
+                    () =>
+                        `toBeTrue: expected target to be false, got _${valueToString(this.target)}_`
                 );
             });
         }
@@ -318,16 +325,16 @@ class ExpectationError extends Error {
                     this.__expect(
                         e instanceof class_,
                         () =>
-                            `toThrowWithMessage: expected error to be instance of ${
+                            `toThrowWithMessage: expected error to be instance of ${valueToString(
                                 class_.name
-                            }, got ${String(e.name)}`
+                            )}, got ${valueToString(e.name)}`
                     );
                     this.__expect(
                         e.message.includes(message),
                         () =>
-                            `toThrowWithMessage: expected error message to include _${String(
+                            `toThrowWithMessage: expected error message to include _${valueToString(
                                 message
-                            )}_, got _${String(e.message)}_`
+                            )}_, got _${valueToString(e.message)}_`
                     );
                 }
             });
