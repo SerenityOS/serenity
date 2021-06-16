@@ -256,6 +256,7 @@ struct MatchInput {
 };
 
 struct MatchState {
+    size_t string_position_before_match { 0 };
     size_t string_position { 0 };
     size_t instruction_position { 0 };
     size_t fork_at_position { 0 };
