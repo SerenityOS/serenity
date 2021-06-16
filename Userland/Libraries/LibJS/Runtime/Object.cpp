@@ -812,7 +812,7 @@ void Object::ensure_shape_is_unique()
     m_shape = m_shape->create_unique_clone();
 }
 
-Value Object::get_by_index(u32 property_index) const
+Value Object::get_by_index(u32 property_index, bool without_side_effects) const
 {
     const Object* object = this;
     while (object) {
@@ -821,7 +821,7 @@ Value Object::get_by_index(u32 property_index) const
             if (property_index < string.length())
                 return js_string(heap(), string.substring(property_index, 1));
         } else if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
-            auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index);
+            auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index, !without_side_effects);
             if (vm().exception())
                 return {};
             if (result.has_value() && !result.value().value.is_empty())
@@ -839,13 +839,13 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
     VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
-        return get_by_index(property_name.as_number());
+        return get_by_index(property_name.as_number(), without_side_effects);
 
     if (property_name.is_string() && property_name.string_may_be_number()) {
         auto& property_string = property_name.as_string();
         i32 property_index = property_string.to_int().value_or(-1);
         if (property_index >= 0)
-            return get_by_index(property_index);
+            return get_by_index(property_index, without_side_effects);
     }
 
     if (receiver.is_empty())
