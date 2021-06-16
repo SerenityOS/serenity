@@ -26,6 +26,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`dmidecode`](dmidecode/)              | dmidecode                                                  | 3.3                      | https://github.com/mirror/dmidecode                                            |
 | [`doom`](doom/)                        | DOOM                                                       |                          | https://github.com/SerenityOS/SerenityDOOM                                     |
 | [`dropbear`](dropbear/)                | Dropbear SSH                                               | 2019.78                  | https://dropbear.nl/mirror/dropbear.html                                       |
+| [`dungeonrush`](dungeonrush/)          | DungeonRush                                                | 1.1-beta                 | https://github.com/Rapiz1/DungeonRush                                          |
 | [`ed`](ed/)                            | GNU ed                                                     | 1.15                     | https://www.gnu.org/software/ed/                                               |
 | [`emu2`](emu2/)                        | emu2 DOS emulator                                          | 2021.01                  | https://github.com/dmsc/emu2                                                   |
 | [`figlet`](figlet/)                    | FIGlet                                                     | 2.2.5                    | http://www.figlet.org/                                                         |
