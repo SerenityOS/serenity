@@ -75,6 +75,9 @@ public:
 
     bool is_empty() const { return m_string.is_empty(); }
     bool starts_with(const Utf8View&) const;
+    bool contains(u32) const;
+
+    Utf8View trim(const Utf8View& characters, TrimMode mode = TrimMode::Both) const;
 
     size_t iterator_offset(const Utf8CodePointIterator& it) const
     {
