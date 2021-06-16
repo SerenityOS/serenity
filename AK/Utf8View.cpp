@@ -173,6 +173,47 @@ bool Utf8View::starts_with(const Utf8View& start) const
     return true;
 }
 
+bool Utf8View::contains(u32 needle) const
+{
+    for (u32 code_point : *this) {
+        if (code_point == needle)
+            return true;
+    }
+    return false;
+}
+
+Utf8View Utf8View::trim(const Utf8View& characters, TrimMode mode) const
+{
+    size_t substring_start = 0;
+    size_t substring_length = length();
+
+    if (mode == TrimMode::Left || mode == TrimMode::Both) {
+        for (auto code_point : *this) {
+            if (substring_length == 0)
+                return {};
+            if (!characters.contains(code_point))
+                break;
+            ++substring_start;
+            --substring_length;
+        }
+    }
+
+    if (mode == TrimMode::Right || mode == TrimMode::Both) {
+        size_t seen_whitespace_length = 0;
+        for (auto code_point : *this) {
+            if (characters.contains(code_point))
+                seen_whitespace_length++;
+            else
+                seen_whitespace_length = 0;
+        }
+        if (seen_whitespace_length >= substring_length)
+            return {};
+        substring_length -= seen_whitespace_length;
+    }
+
+    return substring_view(substring_start, substring_length);
+}
+
 Utf8CodePointIterator::Utf8CodePointIterator(const unsigned char* ptr, size_t length)
     : m_ptr(ptr)
     , m_length(length)
