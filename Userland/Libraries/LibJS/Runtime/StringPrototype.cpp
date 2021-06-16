@@ -349,13 +349,15 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::pad_end)
     return pad_string(global_object, *string, PadPlacement::End);
 }
 
+static const Utf8View whitespace_characters = Utf8View("\x09\x0A\x0B\x0C\x0D\x20\xC2\xA0\xE1\x9A\x80\xE2\x80\x80\xE2\x80\x81\xE2\x80\x82\xE2\x80\x83\xE2\x80\x84\xE2\x80\x85\xE2\x80\x86\xE2\x80\x87\xE2\x80\x88\xE2\x80\x89\xE2\x80\x8A\xE2\x80\xAF\xE2\x81\x9F\xE3\x80\x80\xE2\x80\xA8\xE2\x80\xA9\xEF\xBB\xBF");
+
 // 22.1.3.29 String.prototype.trim ( ), https://tc39.es/ecma262/#sec-string.prototype.trim
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim)
 {
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    return js_string(vm, string->trim_whitespace(TrimMode::Both));
+    return js_string(vm, Utf8View(*string).trim(whitespace_characters, TrimMode::Both).as_string());
 }
 
 // 22.1.3.31 String.prototype.trimStart ( ), https://tc39.es/ecma262/#sec-string.prototype.trimstart
@@ -364,7 +366,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_start)
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    return js_string(vm, string->trim_whitespace(TrimMode::Left));
+    return js_string(vm, Utf8View(*string).trim(whitespace_characters, TrimMode::Left).as_string());
 }
 
 // 22.1.3.30 String.prototype.trimEnd ( ), https://tc39.es/ecma262/#sec-string.prototype.trimend
@@ -373,7 +375,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::trim_end)
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    return js_string(vm, string->trim_whitespace(TrimMode::Right));
+    return js_string(vm, Utf8View(*string).trim(whitespace_characters, TrimMode::Right).as_string());
 }
 
 // 22.1.3.23 String.prototype.substring ( start, end ), https://tc39.es/ecma262/#sec-string.prototype.substring
