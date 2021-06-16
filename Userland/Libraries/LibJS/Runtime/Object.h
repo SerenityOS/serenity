@@ -40,7 +40,7 @@ struct PropertyDescriptor {
 
 class Object : public Cell {
 public:
-    static Object* create_empty(GlobalObject&);
+    static Object* create(GlobalObject&, Object* prototype);
 
     explicit Object(Object& prototype);
     explicit Object(Shape&);
