@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -14,7 +14,7 @@
 namespace Gfx {
 
 template<typename T>
-void Rect<T>::intersect(const Rect<T>& other)
+void Rect<T>::intersect(Rect<T> const& other)
 {
     T l = max(left(), other.left());
     T r = min(right(), other.right());
@@ -34,7 +34,7 @@ void Rect<T>::intersect(const Rect<T>& other)
 }
 
 template<typename T>
-Rect<T> Rect<T>::united(const Rect<T>& other) const
+Rect<T> Rect<T>::united(Rect<T> const& other) const
 {
     if (is_null())
         return other;
@@ -49,7 +49,7 @@ Rect<T> Rect<T>::united(const Rect<T>& other) const
 }
 
 template<typename T>
-Vector<Rect<T>, 4> Rect<T>::shatter(const Rect<T>& hammer) const
+Vector<Rect<T>, 4> Rect<T>::shatter(Rect<T> const& hammer) const
 {
     Vector<Rect<T>, 4> pieces;
     if (!intersects(hammer)) {
@@ -93,7 +93,7 @@ Vector<Rect<T>, 4> Rect<T>::shatter(const Rect<T>& hammer) const
 }
 
 template<typename T>
-void Rect<T>::align_within(const Rect<T>& other, TextAlignment alignment)
+void Rect<T>::align_within(Rect<T> const& other, TextAlignment alignment)
 {
     switch (alignment) {
     case TextAlignment::Center:
@@ -126,7 +126,7 @@ void Rect<T>::align_within(const Rect<T>& other, TextAlignment alignment)
 }
 
 template<typename T>
-void Rect<T>::set_size_around(const Size<T>& new_size, const Point<T>& fixed_point)
+void Rect<T>::set_size_around(Size<T> const& new_size, Point<T> const& fixed_point)
 {
     const T new_x = fixed_point.x() - (T)(new_size.width() * ((float)(fixed_point.x() - x()) / width()));
     const T new_y = fixed_point.y() - (T)(new_size.height() * ((float)(fixed_point.y() - y()) / height()));
@@ -151,7 +151,7 @@ String FloatRect::to_string() const
 
 namespace IPC {
 
-bool encode(Encoder& encoder, const Gfx::IntRect& rect)
+bool encode(Encoder& encoder, Gfx::IntRect const& rect)
 {
     encoder << rect.location() << rect.size();
     return true;

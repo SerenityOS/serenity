@@ -40,21 +40,21 @@ public:
     {
     }
 
-    Rect(const Point<T>& location, const Size<T>& size)
+    Rect(Point<T> const& location, Size<T> const& size)
         : m_location(location)
         , m_size(size)
     {
     }
 
     template<typename U>
-    Rect(const Point<U>& location, const Size<U>& size)
+    Rect(Point<U> const& location, Size<U> const& size)
         : m_location(location)
         , m_size(size)
     {
     }
 
     template<typename U>
-    explicit Rect(const Rect<U>& other)
+    explicit Rect(Rect<U> const& other)
         : m_location(other.location())
         , m_size(other.size())
     {
@@ -70,15 +70,15 @@ public:
     ALWAYS_INLINE void set_width(T width) { m_size.set_width(width); }
     ALWAYS_INLINE void set_height(T height) { m_size.set_height(height); }
 
-    [[nodiscard]] ALWAYS_INLINE const Point<T>& location() const { return m_location; }
-    [[nodiscard]] ALWAYS_INLINE const Size<T>& size() const { return m_size; }
+    [[nodiscard]] ALWAYS_INLINE Point<T> const& location() const { return m_location; }
+    [[nodiscard]] ALWAYS_INLINE Size<T> const& size() const { return m_size; }
 
     [[nodiscard]] ALWAYS_INLINE bool is_null() const { return width() == 0 && height() == 0; }
     [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return width() <= 0 || height() <= 0; }
 
     ALWAYS_INLINE void translate_by(T dx, T dy) { m_location.translate_by(dx, dy); }
     ALWAYS_INLINE void translate_by(T dboth) { m_location.translate_by(dboth); }
-    ALWAYS_INLINE void translate_by(const Point<T>& delta) { m_location.translate_by(delta); }
+    ALWAYS_INLINE void translate_by(Point<T> const& delta) { m_location.translate_by(delta); }
 
     ALWAYS_INLINE void scale_by(T dx, T dy)
     {
@@ -86,26 +86,26 @@ public:
         m_size.scale_by(dx, dy);
     }
     ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE void scale_by(const Point<T>& delta) { scale_by(delta.x(), delta.y()); }
+    ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
 
-    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
+    void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 
     [[nodiscard]] Point<T> center() const
     {
         return { x() + width() / 2, y() + height() / 2 };
     }
 
-    ALWAYS_INLINE void set_location(const Point<T>& location)
+    ALWAYS_INLINE void set_location(Point<T> const& location)
     {
         m_location = location;
     }
 
-    ALWAYS_INLINE void set_size(const Size<T>& size)
+    ALWAYS_INLINE void set_size(Size<T> const& size)
     {
         m_size = size;
     }
 
-    void set_size_around(const Size<T>&, const Point<T>& fixed_point);
+    void set_size_around(Size<T> const&, Point<T> const& fixed_point);
 
     void set_size(T width, T height)
     {
@@ -121,7 +121,7 @@ public:
         set_height(height() + h);
     }
 
-    void inflate(const Size<T>& size)
+    void inflate(Size<T> const& size)
     {
         set_x(x() - size.width() / 2);
         set_width(width() + size.width());
@@ -137,7 +137,7 @@ public:
         set_height(height() - h);
     }
 
-    void shrink(const Size<T>& size)
+    void shrink(Size<T> const& size)
     {
         set_x(x() + size.width() / 2);
         set_width(width() - size.width());
@@ -267,12 +267,12 @@ public:
         return x >= m_location.x() && x <= right() && y >= m_location.y() && y <= bottom();
     }
 
-    [[nodiscard]] ALWAYS_INLINE bool contains(const Point<T>& point) const
+    [[nodiscard]] ALWAYS_INLINE bool contains(Point<T> const& point) const
     {
         return contains(point.x(), point.y());
     }
 
-    [[nodiscard]] bool contains(const Rect<T>& other) const
+    [[nodiscard]] bool contains(Rect<T> const& other) const
     {
         return left() <= other.left()
             && right() >= other.right()
@@ -281,10 +281,10 @@ public:
     }
 
     template<typename Container>
-    [[nodiscard]] bool contains(const Container& others) const
+    [[nodiscard]] bool contains(Container const& others) const
     {
         bool have_any = false;
-        for (const auto& other : others) {
+        for (auto const& other : others) {
             if (!contains(other))
                 return false;
             have_any = true;
@@ -374,7 +374,7 @@ public:
     template<typename Container>
     [[nodiscard]] bool intersects(Container const& others) const
     {
-        for (const auto& other : others) {
+        for (auto const& other : others) {
             if (intersects(other))
                 return true;
         }
@@ -382,11 +382,11 @@ public:
     }
 
     template<typename Container, typename Function>
-    IterationDecision for_each_intersected(const Container& others, Function f) const
+    IterationDecision for_each_intersected(Container const& others, Function f) const
     {
         if (is_empty())
             return IterationDecision::Continue;
-        for (const auto& other : others) {
+        for (auto const& other : others) {
             auto intersected_rect = intersected(other);
             if (!intersected_rect.is_empty()) {
                 IterationDecision decision = f(intersected_rect);
@@ -406,7 +406,7 @@ public:
     }
 
     template<class U>
-    [[nodiscard]] bool operator!=(const Rect<U>& other) const
+    [[nodiscard]] bool operator!=(Rect<U> const& other) const
     {
         return !(*this == other);
     }
@@ -420,14 +420,14 @@ public:
         return *this;
     }
 
-    void intersect(const Rect<T>&);
+    void intersect(Rect<T> const&);
 
-    [[nodiscard]] static Rect<T> centered_on(const Point<T>& center, const Size<T>& size)
+    [[nodiscard]] static Rect<T> centered_on(Point<T> const& center, Size<T> const& size)
     {
         return { { center.x() - size.width() / 2, center.y() - size.height() / 2 }, size };
     }
 
-    [[nodiscard]] static Rect<T> from_two_points(const Point<T>& a, const Point<T>& b)
+    [[nodiscard]] static Rect<T> from_two_points(Point<T> const& a, Point<T> const& b)
     {
         return { min(a.x(), b.x()), min(a.y(), b.y()), abst(a.x() - b.x()), abst(a.y() - b.y()) };
     }
@@ -444,27 +444,27 @@ public:
         return intersection(*this, other);
     }
 
-    [[nodiscard]] Rect<T> united(const Rect<T>&) const;
+    [[nodiscard]] Rect<T> united(Rect<T> const&) const;
 
     [[nodiscard]] Point<T> top_left() const { return { left(), top() }; }
     [[nodiscard]] Point<T> top_right() const { return { right(), top() }; }
     [[nodiscard]] Point<T> bottom_left() const { return { left(), bottom() }; }
     [[nodiscard]] Point<T> bottom_right() const { return { right(), bottom() }; }
 
-    void align_within(const Rect<T>&, TextAlignment);
+    void align_within(Rect<T> const&, TextAlignment);
 
-    void center_within(const Rect<T>& other)
+    void center_within(Rect<T> const& other)
     {
         center_horizontally_within(other);
         center_vertically_within(other);
     }
 
-    void center_horizontally_within(const Rect<T>& other)
+    void center_horizontally_within(Rect<T> const& other)
     {
         set_x(other.center().x() - width() / 2);
     }
 
-    void center_vertically_within(const Rect<T>& other)
+    void center_vertically_within(Rect<T> const& other)
     {
         set_y(other.center().y() - height() / 2);
     }
