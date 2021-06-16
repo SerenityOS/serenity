@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Debug.h>
+#include <AK/Optional.h>
+#include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Lexer.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
-#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/ScriptFunction.h>
 
 namespace JS {
 
@@ -38,9 +43,26 @@ Value GeneratorFunctionConstructor::call()
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
-Value GeneratorFunctionConstructor::construct(Function&)
+Value GeneratorFunctionConstructor::construct(Function& new_target)
 {
-    TODO();
+    auto function = FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator);
+    if (!function)
+        return {};
+
+    auto* bytecode_interpreter = Bytecode::Interpreter::current();
+    VERIFY(bytecode_interpreter);
+
+    auto executable = Bytecode::Generator::generate(function->body(), true);
+    auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
+    passes.perform(executable);
+    if constexpr (JS_BYTECODE_DEBUG) {
+        dbgln("Optimisation passes took {}us", passes.elapsed());
+        dbgln("Compiled Bytecode::Block for function '{}':", function->name());
+        for (auto& block : executable.basic_blocks)
+            block.dump(executable);
+    }
+
+    return ScriptFunction::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().current_scope(), FunctionKind::Generator, function->is_strict_mode(), false);
 }
 
 }
