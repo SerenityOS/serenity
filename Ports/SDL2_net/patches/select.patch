@@ -1,0 +1,11 @@
+diff -Naur SDL2_net-2.0.1/SDLnetsys.h SDL2_net-2.0.1.serenity/SDLnetsys.h
+--- SDL2_net-2.0.1/SDLnetsys.h	2021-06-16 10:42:24.609750625 +0200
++++ SDL2_net-2.0.1.serenity/SDLnetsys.h	2016-01-03 08:57:09.000000000 +0100
+@@ -46,6 +46,7 @@
+ #include <iphlpapi.h>
+ #else /* UNIX */
+ #include <sys/types.h>
++#include <sys/select.h>
+ #ifdef __FreeBSD__
+ #include <sys/socket.h>
+ #endif
