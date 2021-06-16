@@ -37,6 +37,14 @@ void RectangleSelectTool::on_mousemove(Layer&, GUI::MouseEvent&, GUI::MouseEvent
     if (!m_selecting)
         return;
 
+    if (m_moving_mode != MovingMode::None) {
+        auto delta = m_selection_end - image_event.position();
+        if (m_moving_mode == MovingMode::MovingOrigin)
+            m_selection_start -= delta;
+        else if (m_moving_mode == MovingMode::AroundCenter)
+            m_selection_start += delta;
+    }
+
     m_selection_end = image_event.position();
     m_editor->update();
 }
@@ -53,6 +61,22 @@ void RectangleSelectTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent& 
 
     auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
     m_editor->selection().set(rect_in_image);
+}
+
+void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)
+{
+    if (key_event.key() == KeyCode::Key_Space)
+        m_moving_mode = MovingMode::MovingOrigin;
+    else if (key_event.key() == KeyCode::Key_Control)
+        m_moving_mode = MovingMode::AroundCenter;
+}
+
+void RectangleSelectTool::on_keyup(GUI::KeyEvent& key_event)
+{
+    if (key_event.key() == KeyCode::Key_Space && m_moving_mode == MovingMode::MovingOrigin)
+        m_moving_mode = MovingMode::None;
+    else if (key_event.key() == KeyCode::Key_Control && m_moving_mode == MovingMode::AroundCenter)
+        m_moving_mode = MovingMode::None;
 }
 
 void RectangleSelectTool::on_second_paint(Layer const&, GUI::PaintEvent& event)
