@@ -362,8 +362,7 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
     Object::initialize(global_object);
 
     VERIFY(!m_exports_object);
-    m_exports_object = JS::Object::create_empty(global_object);
-    m_exports_object->set_prototype(nullptr);
+    m_exports_object = JS::Object::create(global_object, nullptr);
     auto& instance = this->instance();
     for (auto& export_ : instance.exports()) {
         export_.value().visit(

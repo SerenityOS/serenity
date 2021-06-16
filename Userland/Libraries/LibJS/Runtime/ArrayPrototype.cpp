@@ -75,8 +75,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     define_property(vm.well_known_symbol_iterator(), get(vm.names.values), attr);
 
     // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
-    Object* unscopable_list = create_empty(global_object);
-    unscopable_list->set_prototype(nullptr);
+    auto* unscopable_list = Object::create(global_object, nullptr);
     unscopable_list->put(vm.names.copyWithin, Value(true));
     unscopable_list->put(vm.names.entries, Value(true));
     unscopable_list->put(vm.names.fill, Value(true));

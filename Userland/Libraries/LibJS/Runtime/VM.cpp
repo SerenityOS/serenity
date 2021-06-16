@@ -286,8 +286,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             VERIFY(!property.pattern);
             JS::Value value_to_assign;
             if (property.is_rest) {
-                auto* rest_object = Object::create_empty(global_object);
-                rest_object->set_prototype(nullptr);
+                auto* rest_object = Object::create(global_object, nullptr);
                 for (auto& property : object->shape().property_table()) {
                     if (!property.value.attributes.has_enumerable())
                         continue;
@@ -406,7 +405,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
-        new_object = Object::create_empty(global_object);
+        new_object = Object::create(global_object, nullptr);
         if (environment)
             environment->bind_this_value(global_object, new_object);
         if (exception())

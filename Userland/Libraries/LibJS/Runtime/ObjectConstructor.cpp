@@ -62,10 +62,13 @@ ObjectConstructor::~ObjectConstructor()
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
 Value ObjectConstructor::call()
 {
-    auto value = vm().argument(0);
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto value = vm.argument(0);
     if (value.is_nullish())
-        return Object::create_empty(global_object());
-    return value.to_object(global_object());
+        return Object::create(global_object, global_object.object_prototype());
+    return value.to_object(global_object);
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
@@ -191,8 +194,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::from_entries)
     if (vm.exception())
         return {};
 
-    auto* object = Object::create_empty(global_object);
-    object->set_prototype(global_object.object_prototype());
+    auto* object = Object::create(global_object, global_object.object_prototype());
 
     get_iterator_values(global_object, iterable, [&](Value iterator_value) {
         if (vm.exception())
@@ -344,8 +346,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::create)
         return {};
     }
 
-    auto* object = Object::create_empty(global_object);
-    object->set_prototype(prototype);
+    auto* object = Object::create(global_object, prototype);
 
     if (!properties.is_undefined()) {
         object->define_properties(properties);

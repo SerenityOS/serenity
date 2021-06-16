@@ -773,7 +773,6 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             return {};
         }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
-        Object* prototype = Object::create_empty(global_object);
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
@@ -787,7 +786,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             if (super_constructor_prototype_value.is_object())
                 super_constructor_prototype = &super_constructor_prototype_value.as_object();
         }
-        prototype->set_prototype(super_constructor_prototype);
+        auto* prototype = Object::create(global_object, super_constructor_prototype);
 
         prototype->define_property(vm.names.constructor, class_constructor, 0);
         if (interpreter.exception())
@@ -1683,7 +1682,7 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto* object = Object::create_empty(global_object);
+    auto* object = Object::create(global_object, global_object.object_prototype());
     for (auto& property : m_properties) {
         auto key = property.key().execute(interpreter, global_object);
         if (interpreter.exception())
