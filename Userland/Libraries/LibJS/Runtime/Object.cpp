@@ -657,11 +657,35 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
         VERIFY(metadata.has_value());
     }
 
-    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable() && attributes != metadata.value().attributes) {
-        dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
-        if (throw_exceptions)
-            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
-        return false;
+    auto value_here = m_storage[metadata.value().offset];
+    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !metadata.value().attributes.is_configurable()) {
+        if ((attributes.has_configurable() && attributes.is_configurable()) || (attributes.has_enumerable() && attributes.is_enumerable() != metadata.value().attributes.is_enumerable())) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
+            return false;
+        }
+
+        if (value_here.is_accessor() != value.is_accessor()) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
+            return false;
+        }
+
+        if (!value_here.is_accessor() && !metadata.value().attributes.is_writable() && ((attributes.has_writable() && attributes.is_writable()) || (!value.is_empty() && !same_value(value, value_here)))) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
+            return false;
+        }
+
+        if (value_here.is_accessor() && ((attributes.has_setter() && value.as_accessor().setter() != value_here.as_accessor().setter()) || (attributes.has_getter() && value.as_accessor().getter() != value_here.as_accessor().getter()))) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_display_string());
+            return false;
+        }
     }
 
     if (mode == PutOwnPropertyMode::DefineProperty && attributes != metadata.value().attributes) {
@@ -675,7 +699,6 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
         dbgln_if(OBJECT_DEBUG, "Reconfigured property {}, new shape says offset is {} and my storage capacity is {}", property_name.to_display_string(), metadata.value().offset, m_storage.size());
     }
 
-    auto value_here = m_storage[metadata.value().offset];
     if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !metadata.value().attributes.is_writable()) {
         dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
         if (throw_exceptions && vm().in_strict_mode())

@@ -166,7 +166,7 @@ describe("errors", () => {
         Object.defineProperty(o, "foo", { value: 1, writable: true, enumerable: true });
 
         expect(() => {
-            Object.defineProperty(o, "foo", { value: 2, writable: false, enumerable: true });
+            Object.defineProperty(o, "foo", { value: 2, writable: true, enumerable: false });
         }).toThrowWithMessage(
             TypeError,
             "Cannot change attributes of non-configurable property 'foo'"
@@ -179,7 +179,7 @@ describe("errors", () => {
         Object.defineProperty(o, s, { value: 1, writable: true, enumerable: true });
 
         expect(() => {
-            Object.defineProperty(o, s, { value: 2, writable: false, enumerable: true });
+            Object.defineProperty(o, s, { value: 2, writable: true, enumerable: false });
         }).toThrowWithMessage(
             TypeError,
             "Cannot change attributes of non-configurable property 'Symbol(foo)'"
