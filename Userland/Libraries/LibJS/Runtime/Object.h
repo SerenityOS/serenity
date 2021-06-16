@@ -163,7 +163,7 @@ protected:
     explicit Object(GlobalObjectTag);
     Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
-    virtual Value get_by_index(u32 property_index) const;
+    virtual Value get_by_index(u32 property_index, bool without_side_effects = false) const;
     virtual bool put_by_index(u32 property_index, Value);
 
 private:

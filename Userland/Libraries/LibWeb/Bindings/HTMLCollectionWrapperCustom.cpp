@@ -22,11 +22,11 @@ JS::Value HTMLCollectionWrapper::get(JS::PropertyName const& name, JS::Value rec
     return JS::Value { wrap(global_object(), *item) };
 }
 
-JS::Value HTMLCollectionWrapper::get_by_index(u32 property_index) const
+JS::Value HTMLCollectionWrapper::get_by_index(u32 property_index, bool without_side_effects) const
 {
     auto* item = const_cast<DOM::HTMLCollection&>(impl()).item(property_index);
     if (!item)
-        return Base::get_by_index(property_index);
+        return Base::get_by_index(property_index, without_side_effects);
     return wrap(global_object(), *item);
 }
 
