@@ -108,7 +108,7 @@ void CardStack::rebound_cards()
         card.set_position(m_stack_positions.at(card_index++));
 }
 
-void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed)
+void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule)
 {
     VERIFY(grabbed.is_empty());
 
@@ -149,15 +149,56 @@ void CardStack::add_all_grabbed_cards(const Gfx::IntPoint& click_location, Nonnu
         grabbed.append(*last_intersect);
         last_intersect->set_moving(true);
     }
+
+    // verify valid stack
+    bool valid_stack = true;
+    uint8_t last_value;
+    Color last_color;
+    for (size_t i = 0; i < grabbed.size(); i++) {
+        auto& card = grabbed.at(i);
+        if (i != 0) {
+            bool color_match;
+            switch (movement_rule) {
+            case Alternating:
+                color_match = card.color() != last_color;
+                break;
+            case Same:
+                color_match = card.color() == last_color;
+                break;
+            case Any:
+                color_match = true;
+                break;
+            }
+
+            if (!color_match || card.value() != last_value - 1) {
+                valid_stack = false;
+                break;
+            }
+        }
+        last_value = card.value();
+        last_color = card.color();
+    }
+
+    if (!valid_stack) {
+        for (auto& card : grabbed) {
+            card.set_moving(false);
+        }
+        grabbed.clear();
+    }
 }
 
-bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size) const
+bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size, MovementRule movement_rule) const
 {
     if (m_type == Stock || m_type == Waste || m_type == Play)
         return false;
 
-    if (m_type == Normal && is_empty())
-        return card.value() == 12;
+    if (m_type == Normal && is_empty()) {
+        // FIXME: proper solution for this
+        if (movement_rule == Alternating) {
+            return card.value() == 12;
+        }
+        return true;
+    }
 
     if (m_type == Foundation && is_empty())
         return card.value() == 0;
@@ -173,7 +214,20 @@ bool CardStack::is_allowed_to_push(const Card& card, size_t stack_size) const
                 return false;
             return top_card.type() == card.type() && m_stack.size() == card.value();
         } else if (m_type == Normal) {
-            return top_card.color() != card.color() && top_card.value() == card.value() + 1;
+            bool color_match;
+            switch (movement_rule) {
+            case Alternating:
+                color_match = card.color() != top_card.color();
+                break;
+            case Same:
+                color_match = card.color() == top_card.color();
+                break;
+            case Any:
+                color_match = true;
+                break;
+            }
+
+            return color_match && top_card.value() == card.value() + 1;
         }
 
         VERIFY_NOT_REACHED();
