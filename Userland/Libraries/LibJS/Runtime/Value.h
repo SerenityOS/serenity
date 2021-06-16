@@ -265,6 +265,8 @@ public:
     Value to_numeric(GlobalObject&) const;
     Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
+    i64 to_bigint_int64(GlobalObject&) const;
+    u64 to_bigint_uint64(GlobalObject&) const;
     double to_double(GlobalObject&) const;
     StringOrSymbol to_property_key(GlobalObject&) const;
     i32 to_i32(GlobalObject& global_object) const
@@ -274,6 +276,11 @@ public:
         return to_i32_slow_case(global_object);
     }
     u32 to_u32(GlobalObject&) const;
+    i16 to_i16(GlobalObject&) const;
+    u16 to_u16(GlobalObject&) const;
+    i8 to_i8(GlobalObject&) const;
+    u8 to_u8(GlobalObject&) const;
+    u8 to_u8_clamp(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
     double to_integer_or_infinity(GlobalObject&) const;
