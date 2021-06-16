@@ -43,7 +43,7 @@ jobs:
         with:
           commits: ${{ steps.get-pr-commits.outputs.commits }}
           pattern: '^\S.*?: [A-Z0-9]'
-          error: 'First word of commit after the subsystem isn\'t capitalized'
+          error: 'First word of commit after the subsystem is not capitalized'
 
       - name: Check title
         if: ${{ success() || failure() }}
