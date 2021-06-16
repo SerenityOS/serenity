@@ -77,10 +77,10 @@ public:
         return true;
     }
 
-    virtual Value get_by_index(u32 property_index) const override
+    virtual Value get_by_index(u32 property_index, bool without_side_effects = false) const override
     {
         if (property_index >= m_array_length)
-            return Base::get_by_index(property_index);
+            return Base::get_by_index(property_index, without_side_effects);
 
         if constexpr (sizeof(UnderlyingBufferDataType) < 4) {
             return Value((i32)data()[property_index]);
