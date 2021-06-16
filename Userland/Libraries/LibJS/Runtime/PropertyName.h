@@ -88,10 +88,38 @@ public:
     }
 
     bool is_valid() const { return m_type != Type::Invalid; }
-    bool is_number() const { return m_type == Type::Number; }
-    bool is_string() const { return m_type == Type::String; }
+    bool is_number() const
+    {
+        if (m_type == Type::Number)
+            return true;
+        if (m_type != Type::String || !m_string_may_be_number)
+            return false;
+
+        return const_cast<PropertyName*>(this)->try_coerce_into_number();
+    }
+    bool is_string() const
+    {
+        if (m_type != Type::String)
+            return false;
+        if (!m_string_may_be_number)
+            return true;
+
+        return !const_cast<PropertyName*>(this)->try_coerce_into_number();
+    }
     bool is_symbol() const { return m_type == Type::Symbol; }
-    bool string_may_be_number() const { return m_string_may_be_number; }
+
+    bool try_coerce_into_number()
+    {
+        VERIFY(m_string_may_be_number);
+        i32 property_index = m_string.to_int().value_or(-1);
+        if (property_index < 0) {
+            m_string_may_be_number = false;
+            return false;
+        }
+        m_type = Type::Number;
+        m_number = property_index;
+        return true;
+    }
 
     u32 as_number() const
     {
