@@ -88,9 +88,8 @@ private:
     void paint_normal_frame(Gfx::Painter&);
     void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
-    Gfx::Bitmap* window_shadow() const;
+    Gfx::Bitmap* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
-    Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
 
     void handle_menubar_mouse_event(const MouseEvent&);
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
@@ -103,8 +102,6 @@ private:
     Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
-
-    Gfx::IntPoint m_shadow_offset {};
 
     RefPtr<Gfx::Bitmap> m_top_bottom;
     RefPtr<Gfx::Bitmap> m_left_right;
