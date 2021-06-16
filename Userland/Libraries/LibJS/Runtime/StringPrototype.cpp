@@ -54,6 +54,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
 
     define_native_function(vm.names.charAt, char_at, 1, attr);
     define_native_function(vm.names.charCodeAt, char_code_at, 1, attr);
+    define_native_function(vm.names.codePointAt, code_point_at, 1, attr);
     define_native_function(vm.names.repeat, repeat, 1, attr);
     define_native_function(vm.names.startsWith, starts_with, 1, attr);
     define_native_function(vm.names.endsWith, ends_with, 1, attr);
@@ -117,16 +118,12 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_at)
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    i32 index = 0;
-    if (vm.argument_count()) {
-        index = vm.argument(0).to_i32(global_object);
-        if (vm.exception())
-            return {};
-    }
-    if (index < 0 || index >= static_cast<i32>(string->length()))
+    auto position = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (position < 0 || position >= string->length())
         return js_string(vm, String::empty());
-    // FIXME: This should return a character corresponding to the i'th UTF-16 code point.
-    return js_string(vm, string->substring(index, 1));
+    return js_string(vm, string->substring(position, 1));
 }
 
 // 22.1.3.2 String.prototype.charCodeAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.charcodeat
@@ -135,16 +132,30 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::char_code_at)
     auto string = ak_string_from(vm, global_object);
     if (!string.has_value())
         return {};
-    i32 index = 0;
-    if (vm.argument_count()) {
-        index = vm.argument(0).to_i32(global_object);
-        if (vm.exception())
-            return {};
-    }
-    if (index < 0 || index >= static_cast<i32>(string->length()))
+    auto position = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    if (position < 0 || position >= string->length())
         return js_nan();
-    // FIXME: This should return the i'th UTF-16 code point.
-    return Value((i32)(*string)[index]);
+    return Value((*string)[position]);
+}
+
+// 22.1.3.3 String.prototype.codePointAt ( pos ), https://tc39.es/ecma262/#sec-string.prototype.codepointat
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::code_point_at)
+{
+    auto string = ak_string_from(vm, global_object);
+    if (!string.has_value())
+        return {};
+    auto position = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+    auto view = Utf8View(*string);
+    if (position < 0 || position >= view.length())
+        return js_undefined();
+    auto it = view.begin();
+    for (auto i = 0; i < position; ++i)
+        ++it;
+    return Value(*it);
 }
 
 // 22.1.3.16 String.prototype.repeat ( count ), https://tc39.es/ecma262/#sec-string.prototype.repeat
