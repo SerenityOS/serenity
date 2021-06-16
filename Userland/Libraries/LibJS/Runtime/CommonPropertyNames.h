@@ -128,6 +128,7 @@ namespace JS {
     P(freeze)                                \
     P(from)                                  \
     P(fromCharCode)                          \
+    P(fromCodePoint)                         \
     P(fromEntries)                           \
     P(fround)                                \
     P(gc)                                    \
