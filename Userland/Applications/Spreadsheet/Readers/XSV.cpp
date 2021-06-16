@@ -11,12 +11,12 @@ namespace Reader {
 
 ParserBehaviour operator&(ParserBehaviour left, ParserBehaviour right)
 {
-    return static_cast<ParserBehaviour>(static_cast<u32>(left) & static_cast<u32>(right));
+    return static_cast<ParserBehaviour>(to_underlying(left) & to_underlying(right));
 }
 
 ParserBehaviour operator|(ParserBehaviour left, ParserBehaviour right)
 {
-    return static_cast<ParserBehaviour>(static_cast<u32>(left) | static_cast<u32>(right));
+    return static_cast<ParserBehaviour>(to_underlying(left) | to_underlying(right));
 }
 
 void XSV::set_error(ReadError error)
@@ -43,8 +43,22 @@ Vector<String> XSV::headers() const
     return headers;
 }
 
+void XSV::parse_preview()
+{
+    reset();
+    if ((m_behaviours & ParserBehaviour::ReadHeaders) != ParserBehaviour::None)
+        read_headers();
+
+    while (!has_error() && !m_lexer.is_eof()) {
+        if (m_rows.size() >= 10)
+            break;
+        m_rows.append(read_row());
+    }
+}
+
 void XSV::parse()
 {
+    reset();
     if ((m_behaviours & ParserBehaviour::ReadHeaders) != ParserBehaviour::None)
         read_headers();
 
