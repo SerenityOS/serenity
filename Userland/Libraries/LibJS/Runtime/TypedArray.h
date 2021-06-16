@@ -51,51 +51,53 @@ class TypedArray : public TypedArrayBase {
     using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
 
 public:
+    // 10.4.5.11 IntegerIndexedElementSet ( O, index, value ), https://tc39.es/ecma262/#sec-integerindexedelementset
+    // NOTE: In error cases, the function will return as if it succeeded.
     virtual bool put_by_index(u32 property_index, Value value) override
     {
-        if (property_index >= m_array_length)
-            return Base::put_by_index(property_index, value);
+        // FIXME: If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+        //        Otherwise, let numValue be ? ToNumber(value).
+        //        (set_value currently takes value by itself)
 
-        if constexpr (sizeof(UnderlyingBufferDataType) < 4) {
-            auto number = value.to_i32(global_object());
-            if (vm().exception())
-                return {};
-            if constexpr (IsSame<T, ClampedU8>)
-                number = clamp(number, 0, 255);
-            data()[property_index] = number;
-        } else if constexpr (sizeof(UnderlyingBufferDataType) == 4 || sizeof(UnderlyingBufferDataType) == 8) {
-            auto number = value.to_double(global_object());
-            if (vm().exception())
-                return {};
-            data()[property_index] = number;
-        } else {
-            static_assert(DependentFalse<T>, "TypedArray::put_by_index with unhandled type size");
+        if (!is_valid_integer_index(property_index))
+            return true;
+
+        auto offset = byte_offset();
+
+        // FIXME: Not exactly sure what we should do when overflow occurs.
+        //        Just return as if it succeeded for now.
+        Checked<size_t> indexed_position = property_index;
+        indexed_position *= sizeof(UnderlyingBufferDataType);
+        indexed_position += offset;
+        if (indexed_position.has_overflow()) {
+            dbgln("TypedArray::put_by_index: indexed_position overflowed, returning as if succeeded.");
+            return true;
         }
+
+        viewed_array_buffer()->template set_value<T>(indexed_position.value(), value, true, ArrayBuffer::Order::Unordered);
+
         return true;
     }
 
-    virtual Value get_by_index(u32 property_index, bool without_side_effects = false) const override
+    // 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
+    virtual Value get_by_index(u32 property_index, [[maybe_unused]] bool without_side_effects = false) const override
     {
-        if (property_index >= m_array_length)
-            return Base::get_by_index(property_index, without_side_effects);
+        if (!is_valid_integer_index(property_index))
+            return js_undefined();
 
-        if constexpr (sizeof(UnderlyingBufferDataType) < 4) {
-            return Value((i32)data()[property_index]);
-        } else if constexpr (sizeof(UnderlyingBufferDataType) == 4 || sizeof(UnderlyingBufferDataType) == 8) {
-            auto value = data()[property_index];
-            if constexpr (IsFloatingPoint<UnderlyingBufferDataType>) {
-                return Value((double)value);
-            } else if constexpr (NumericLimits<UnderlyingBufferDataType>::is_signed()) {
-                if (value > NumericLimits<i32>::max() || value < NumericLimits<i32>::min())
-                    return Value((double)value);
-            } else {
-                if (value > NumericLimits<i32>::max())
-                    return Value((double)value);
-            }
-            return Value((i32)value);
-        } else {
-            static_assert(DependentFalse<T>, "TypedArray::get_by_index with unhandled type size");
+        auto offset = byte_offset();
+
+        // FIXME: Not exactly sure what we should do when overflow occurs.
+        //        Just return as if it's an invalid index for now.
+        Checked<size_t> indexed_position = property_index;
+        indexed_position *= sizeof(UnderlyingBufferDataType);
+        indexed_position += offset;
+        if (indexed_position.has_overflow()) {
+            dbgln("TypedArray::get_by_index: indexed_position overflowed, returning as if it's an invalid index.");
+            return js_undefined();
         }
+
+        return viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
     }
 
     Span<const UnderlyingBufferDataType> data() const
@@ -123,6 +125,22 @@ protected:
 
 private:
     virtual bool is_typed_array() const final { return true; }
+
+    // 10.4.5.9 IsValidIntegerIndex ( O, index ), https://tc39.es/ecma262/#sec-isvalidintegerindex
+    bool is_valid_integer_index(u32 property_index) const
+    {
+        if (viewed_array_buffer()->is_detached())
+            return false;
+
+        // FIXME: If ! IsIntegralNumber(index) is false, return false.
+
+        // FIXME: If index is -0𝔽, return false.
+
+        if (property_index >= m_array_length /* FIXME: or less than 0 (index is currently unsigned) */)
+            return false;
+
+        return true;
+    }
 };
 
 #define JS_DECLARE_TYPED_ARRAY(ClassName, snake_name, PrototypeName, ConstructorName, Type) \
