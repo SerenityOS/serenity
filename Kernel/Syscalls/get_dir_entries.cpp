@@ -9,10 +9,10 @@
 
 namespace Kernel {
 
-KResultOr<ssize_t> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buffer, ssize_t user_size)
+KResultOr<size_t> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buffer, size_t user_size)
 {
     REQUIRE_PROMISE(stdio);
-    if (user_size < 0)
+    if (user_size > NumericLimits<ssize_t>::max())
         return EINVAL;
     auto description = file_description(fd);
     if (!description)

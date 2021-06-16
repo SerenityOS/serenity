@@ -41,7 +41,7 @@ KResultOr<size_t> StorageDevice::read(FileDescription&, u64 offset, UserOrKernel
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
-    ssize_t remaining = len % block_size();
+    size_t remaining = len % block_size();
 
     unsigned blocks_per_page = PAGE_SIZE / block_size();
 
@@ -106,7 +106,7 @@ KResultOr<size_t> StorageDevice::write(FileDescription&, u64 offset, const UserO
 {
     unsigned index = offset / block_size();
     u16 whole_blocks = len / block_size();
-    ssize_t remaining = len % block_size();
+    size_t remaining = len % block_size();
 
     unsigned blocks_per_page = PAGE_SIZE / block_size();
 

@@ -21,7 +21,7 @@
 namespace Kernel {
 
 static constexpr size_t max_block_size = 4096;
-static constexpr ssize_t max_inline_symlink_length = 60;
+static constexpr size_t max_inline_symlink_length = 60;
 
 struct Ext2FSDirectoryEntry {
     String name;
@@ -823,7 +823,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     Locker inode_locker(m_lock);
     VERIFY(offset >= 0);
@@ -837,7 +837,7 @@ KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKe
     // This avoids wasting an entire block on short links. (Most links are short.)
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
-        ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
+        size_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
         if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, (size_t)nread))
             return EFAULT;
         return nread;
@@ -862,7 +862,7 @@ KResultOr<ssize_t> Ext2FSInode::read_bytes(off_t offset, ssize_t count, UserOrKe
 
     int offset_into_first_block = offset % block_size;
 
-    ssize_t nread = 0;
+    size_t nread = 0;
     auto remaining_count = min((off_t)count, (off_t)size() - offset);
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::read_bytes(): Reading up to {} bytes, {} bytes into inode to {}", identifier(), count, offset, buffer.user_or_kernel_ptr());
@@ -968,10 +968,9 @@ KResult Ext2FSInode::resize(u64 new_size)
     return KSuccess;
 }
 
-KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& data, FileDescription* description)
+KResultOr<size_t> Ext2FSInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& data, FileDescription* description)
 {
     VERIFY(offset >= 0);
-    VERIFY(count >= 0);
 
     if (count == 0)
         return 0;
@@ -1017,7 +1016,7 @@ KResultOr<ssize_t> Ext2FSInode::write_bytes(off_t offset, ssize_t count, const U
 
     size_t offset_into_first_block = offset % block_size;
 
-    ssize_t nwritten = 0;
+    size_t nwritten = 0;
     auto remaining_count = min((off_t)count, (off_t)new_size - offset);
 
     dbgln_if(EXT2_VERY_DEBUG, "Ext2FSInode[{}]::write_bytes(): Writing {} bytes, {} bytes into inode from {}", identifier(), count, offset, data.user_or_kernel_ptr());

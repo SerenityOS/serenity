@@ -289,7 +289,7 @@ KResultOr<size_t> KeyboardDevice::read(FileDescription&, u64, UserOrKernelBuffer
         if (m_queue.is_empty())
             break;
         // Don't return partial data frames.
-        if ((size - nread) < (ssize_t)sizeof(Event))
+        if (size - nread < sizeof(Event))
             break;
         auto event = m_queue.dequeue();
 

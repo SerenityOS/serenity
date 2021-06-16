@@ -12,7 +12,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
+KResultOr<size_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
@@ -68,13 +68,13 @@ KResultOr<ssize_t> Process::sys$readv(int fd, Userspace<const struct iovec*> iov
     return nread;
 }
 
-KResultOr<ssize_t> Process::sys$read(int fd, Userspace<u8*> buffer, ssize_t size)
+KResultOr<size_t> Process::sys$read(int fd, Userspace<u8*> buffer, size_t size)
 {
     REQUIRE_PROMISE(stdio);
-    if (size < 0)
-        return EINVAL;
     if (size == 0)
         return 0;
+    if (size > NumericLimits<ssize_t>::max())
+        return EINVAL;
     dbgln_if(IO_DEBUG, "sys$read({}, {}, {})", fd, buffer.ptr(), size);
     auto description = file_description(fd);
     if (!description)

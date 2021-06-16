@@ -81,7 +81,7 @@ DevFSInode::DevFSInode(DevFS& fs)
 {
 }
 
-KResultOr<ssize_t> DevFSInode::read_bytes(off_t, ssize_t, UserOrKernelBuffer&, FileDescription*) const
+KResultOr<size_t> DevFSInode::read_bytes(off_t, size_t, UserOrKernelBuffer&, FileDescription*) const
 {
     VERIFY_NOT_REACHED();
 }
@@ -100,7 +100,7 @@ void DevFSInode::flush_metadata()
 {
 }
 
-KResultOr<ssize_t> DevFSInode::write_bytes(off_t, ssize_t, const UserOrKernelBuffer&, FileDescription*)
+KResultOr<size_t> DevFSInode::write_bytes(off_t, size_t, const UserOrKernelBuffer&, FileDescription*)
 {
     VERIFY_NOT_REACHED();
 }
@@ -152,7 +152,7 @@ DevFSLinkInode::DevFSLinkInode(DevFS& fs, String name)
     , m_name(name)
 {
 }
-KResultOr<ssize_t> DevFSLinkInode::read_bytes(off_t offset, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> DevFSLinkInode::read_bytes(off_t offset, size_t, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     Locker locker(m_lock);
     VERIFY(offset == 0);
@@ -173,7 +173,7 @@ InodeMetadata DevFSLinkInode::metadata() const
     metadata.mtime = mepoch;
     return metadata;
 }
-KResultOr<ssize_t> DevFSLinkInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription*)
+KResultOr<size_t> DevFSLinkInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription*)
 {
     Locker locker(m_lock);
     VERIFY(offset == 0);
@@ -350,7 +350,7 @@ String DevFSDeviceInode::name() const
     return m_cached_name;
 }
 
-KResultOr<ssize_t> DevFSDeviceInode::read_bytes(off_t offset, ssize_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
+KResultOr<size_t> DevFSDeviceInode::read_bytes(off_t offset, size_t count, UserOrKernelBuffer& buffer, FileDescription* description) const
 {
     Locker locker(m_lock);
     VERIFY(!!description);
@@ -376,7 +376,7 @@ InodeMetadata DevFSDeviceInode::metadata() const
     metadata.minor_device = m_attached_device->minor();
     return metadata;
 }
-KResultOr<ssize_t> DevFSDeviceInode::write_bytes(off_t offset, ssize_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
+KResultOr<size_t> DevFSDeviceInode::write_bytes(off_t offset, size_t count, const UserOrKernelBuffer& buffer, FileDescription* description)
 {
     Locker locker(m_lock);
     VERIFY(!!description);

@@ -45,6 +45,9 @@ KResultOr<int> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(rpath);
 
+    if (size > NumericLimits<ssize_t>::max())
+        return EINVAL;
+
     auto path = current_directory().absolute_path();
 
     size_t ideal_size = path.length() + 1;

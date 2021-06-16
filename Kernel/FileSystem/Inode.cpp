@@ -51,7 +51,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
 {
     KBufferBuilder builder;
 
-    ssize_t nread;
+    size_t nread;
     u8 buffer[4096];
     off_t offset = 0;
     for (;;) {
@@ -60,17 +60,13 @@ KResultOr<NonnullOwnPtr<KBuffer>> Inode::read_entire(FileDescription* descriptio
         if (result.is_error())
             return result.error();
         nread = result.value();
-        VERIFY(nread <= (ssize_t)sizeof(buffer));
+        VERIFY(nread <= sizeof(buffer));
         if (nread <= 0)
             break;
         builder.append((const char*)buffer, nread);
         offset += nread;
-        if (nread < (ssize_t)sizeof(buffer))
+        if (nread < sizeof(buffer))
             break;
-    }
-    if (nread < 0) {
-        dmesgln("Inode::read_entire: Error: {}", nread);
-        return KResult((ErrnoCode)-nread);
     }
 
     auto entire_file = builder.build();

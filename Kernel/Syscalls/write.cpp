@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count)
+KResultOr<size_t> Process::sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count)
 {
     REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
@@ -57,9 +57,9 @@ KResultOr<ssize_t> Process::sys$writev(int fd, Userspace<const struct iovec*> io
     return nwritten;
 }
 
-KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
+KResultOr<size_t> Process::do_write(FileDescription& description, const UserOrKernelBuffer& data, size_t data_size)
 {
-    ssize_t total_nwritten = 0;
+    size_t total_nwritten = 0;
 
     if (description.should_append() && description.file().is_seekable()) {
         auto seek_result = description.seek(0, SEEK_END);
@@ -96,13 +96,13 @@ KResultOr<ssize_t> Process::do_write(FileDescription& description, const UserOrK
     return total_nwritten;
 }
 
-KResultOr<ssize_t> Process::sys$write(int fd, Userspace<const u8*> data, ssize_t size)
+KResultOr<size_t> Process::sys$write(int fd, Userspace<const u8*> data, size_t size)
 {
     REQUIRE_PROMISE(stdio);
-    if (size < 0)
-        return EINVAL;
     if (size == 0)
         return 0;
+    if (size > NumericLimits<ssize_t>::max())
+        return EINVAL;
 
     dbgln_if(IO_DEBUG, "sys$write({}, {}, {})", fd, data.ptr(), size);
     auto description = file_description(fd);

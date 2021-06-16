@@ -16,7 +16,7 @@ namespace Kernel {
 KResultOr<size_t> Process::sys$getrandom(Userspace<void*> buffer, size_t buffer_size, [[maybe_unused]] unsigned flags)
 {
     REQUIRE_PROMISE(stdio);
-    if (buffer_size <= 0)
+    if (buffer_size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
     auto data_buffer = UserOrKernelBuffer::for_user_buffer(buffer, buffer_size);
