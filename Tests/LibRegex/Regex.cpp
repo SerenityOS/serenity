@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "LibRegex/RegexMatcher.h"
 #include <LibTest/TestCase.h> // import first, to prevent warning of VERIFY* redefinition
 
 #include <AK/StringBuilder.h>
@@ -594,4 +595,13 @@ TEST_CASE(replace)
         EXPECT_EQ(re.parser_result.error, Error::NoError);
         EXPECT_EQ(re.replace(test.subject, test.replacement), test.expected);
     }
+}
+
+TEST_CASE(case_insensitive_match)
+{
+    Regex<PosixExtended> re("cd", PosixFlags::Insensitive | PosixFlags::Global);
+    auto result = re.match("AEKFCD");
+
+    EXPECT_EQ(result.success, true);
+    EXPECT_EQ(result.matches.at(0).column, 4ul);
 }
