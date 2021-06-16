@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -36,7 +36,7 @@ public:
     }
 
     template<typename U>
-    explicit Point(const Point<U>& other)
+    explicit Point(Point<U> const& other)
         : m_x(other.x())
         , m_y(other.y())
     {
@@ -58,7 +58,7 @@ public:
     }
 
     ALWAYS_INLINE void translate_by(T dboth) { translate_by(dboth, dboth); }
-    ALWAYS_INLINE void translate_by(const Point<T>& delta) { translate_by(delta.x(), delta.y()); }
+    ALWAYS_INLINE void translate_by(Point<T> const& delta) { translate_by(delta.x(), delta.y()); }
 
     void scale_by(T dx, T dy)
     {
@@ -67,11 +67,11 @@ public:
     }
 
     ALWAYS_INLINE void scale_by(T dboth) { scale_by(dboth, dboth); }
-    ALWAYS_INLINE void scale_by(const Point<T>& delta) { scale_by(delta.x(), delta.y()); }
+    ALWAYS_INLINE void scale_by(Point<T> const& delta) { scale_by(delta.x(), delta.y()); }
 
-    void transform_by(const AffineTransform& transform) { *this = transform.map(*this); }
+    void transform_by(AffineTransform const& transform) { *this = transform.map(*this); }
 
-    Point<T> translated(const Point<T>& delta) const
+    Point<T> translated(Point<T> const& delta) const
     {
         Point<T> point = *this;
         point.translate_by(delta);
@@ -92,7 +92,7 @@ public:
         return point;
     }
 
-    Point<T> scaled(const Point<T>& delta) const
+    Point<T> scaled(Point<T> const& delta) const
     {
         Point<T> point = *this;
         point.scale_by(delta);
@@ -106,15 +106,15 @@ public:
         return point;
     }
 
-    Point<T> transformed(const AffineTransform& transform) const
+    Point<T> transformed(AffineTransform const& transform) const
     {
         Point<T> point = *this;
         point.transform_by(transform);
         return point;
     }
 
-    void constrain(const Rect<T>&);
-    Point<T> constrained(const Rect<T>& rect) const
+    void constrain(Rect<T> const&);
+    Point<T> constrained(Rect<T> const& rect) const
     {
         Point<T> point = *this;
         point.constrain(rect);
@@ -127,20 +127,20 @@ public:
     Point<T> moved_down(T amount) const { return { x(), y() + amount }; }
 
     template<class U>
-    bool operator==(const Point<U>& other) const
+    bool operator==(Point<U> const& other) const
     {
         return x() == other.x() && y() == other.y();
     }
 
     template<class U>
-    bool operator!=(const Point<U>& other) const
+    bool operator!=(Point<U> const& other) const
     {
         return !(*this == other);
     }
 
-    Point<T> operator+(const Point<T>& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
+    Point<T> operator+(Point<T> const& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
-    Point<T>& operator+=(const Point<T>& other)
+    Point<T>& operator+=(Point<T> const& other)
     {
         m_x += other.m_x;
         m_y += other.m_y;
@@ -149,9 +149,9 @@ public:
 
     Point<T> operator-() const { return { -m_x, -m_y }; }
 
-    Point<T> operator-(const Point<T>& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
+    Point<T> operator-(Point<T> const& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
 
-    Point<T>& operator-=(const Point<T>& other)
+    Point<T>& operator-=(Point<T> const& other)
     {
         m_x -= other.m_x;
         m_y -= other.m_y;
@@ -204,30 +204,30 @@ public:
         }
     }
 
-    T dx_relative_to(const Point<T>& other) const
+    T dx_relative_to(Point<T> const& other) const
     {
         return x() - other.x();
     }
 
-    T dy_relative_to(const Point<T>& other) const
+    T dy_relative_to(Point<T> const& other) const
     {
         return y() - other.y();
     }
 
     // Returns pixels moved from other in either direction
-    T pixels_moved(const Point<T>& other) const
+    T pixels_moved(Point<T> const& other) const
     {
         return max(abs(dx_relative_to(other)), abs(dy_relative_to(other)));
     }
 
-    float distance_from(const Point<T>& other) const
+    float distance_from(Point<T> const& other) const
     {
         if (*this == other)
             return 0;
         return sqrtf(powf(m_x - other.m_x, 2.0f) + powf(m_y - other.m_y, 2.0f));
     }
 
-    Point absolute_relative_distance_to(const Point& other) const
+    Point absolute_relative_distance_to(Point const& other) const
     {
         return { abs(dx_relative_to(other)), abs(dy_relative_to(other)) };
     }
@@ -254,7 +254,7 @@ namespace AK {
 
 template<typename T>
 struct Formatter<Gfx::Point<T>> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const Gfx::Point<T>& value)
+    void format(FormatBuilder& builder, Gfx::Point<T> const& value)
     {
         Formatter<StringView>::format(builder, value.to_string());
     }
@@ -264,7 +264,7 @@ struct Formatter<Gfx::Point<T>> : Formatter<StringView> {
 
 namespace IPC {
 
-bool encode(Encoder&, const Gfx::IntPoint&);
+bool encode(Encoder&, Gfx::IntPoint const&);
 bool decode(Decoder&, Gfx::IntPoint&);
 
 }
