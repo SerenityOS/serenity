@@ -270,7 +270,7 @@ public:
     KResultOr<int> sys$inode_watcher_add_watch(Userspace<const Syscall::SC_inode_watcher_add_watch_params*> user_params);
     KResultOr<int> sys$inode_watcher_remove_watch(int fd, int wd);
     KResultOr<int> sys$dbgputch(u8);
-    KResultOr<size_t> sys$dbgputstr(Userspace<const u8*>, int length);
+    KResultOr<size_t> sys$dbgputstr(Userspace<const u8*>, size_t);
     KResultOr<int> sys$dump_backtrace();
     KResultOr<pid_t> sys$gettid();
     KResultOr<int> sys$donate(pid_t tid);
@@ -290,10 +290,10 @@ public:
     KResultOr<mode_t> sys$umask(mode_t);
     KResultOr<int> sys$open(Userspace<const Syscall::SC_open_params*>);
     KResultOr<int> sys$close(int fd);
-    KResultOr<ssize_t> sys$read(int fd, Userspace<u8*>, ssize_t);
-    KResultOr<ssize_t> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
-    KResultOr<ssize_t> sys$write(int fd, Userspace<const u8*>, ssize_t);
-    KResultOr<ssize_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    KResultOr<size_t> sys$read(int fd, Userspace<u8*>, size_t);
+    KResultOr<size_t> sys$readv(int fd, Userspace<const struct iovec*> iov, int iov_count);
+    KResultOr<size_t> sys$write(int fd, Userspace<const u8*>, size_t);
+    KResultOr<size_t> sys$writev(int fd, Userspace<const struct iovec*> iov, int iov_count);
     KResultOr<int> sys$fstat(int fd, Userspace<stat*>);
     KResultOr<int> sys$stat(Userspace<const Syscall::SC_stat_params*>);
     KResultOr<int> sys$lseek(int fd, Userspace<off_t*>, int whence);
@@ -312,7 +312,7 @@ public:
     KResultOr<int> sys$purge(int mode);
     KResultOr<int> sys$select(Userspace<const Syscall::SC_select_params*>);
     KResultOr<int> sys$poll(Userspace<const Syscall::SC_poll_params*>);
-    KResultOr<ssize_t> sys$get_dir_entries(int fd, Userspace<void*>, ssize_t);
+    KResultOr<size_t> sys$get_dir_entries(int fd, Userspace<void*>, size_t);
     KResultOr<int> sys$getcwd(Userspace<char*>, size_t);
     KResultOr<int> sys$chdir(Userspace<const char*>, size_t);
     KResultOr<int> sys$fchdir(int fd);
@@ -321,8 +321,8 @@ public:
     KResultOr<int> sys$clock_gettime(clockid_t, Userspace<timespec*>);
     KResultOr<int> sys$clock_settime(clockid_t, Userspace<const timespec*>);
     KResultOr<int> sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*>);
-    KResultOr<int> sys$gethostname(Userspace<char*>, ssize_t);
-    KResultOr<int> sys$sethostname(Userspace<const char*>, ssize_t);
+    KResultOr<int> sys$gethostname(Userspace<char*>, size_t);
+    KResultOr<int> sys$sethostname(Userspace<const char*>, size_t);
     KResultOr<int> sys$uname(Userspace<utsname*>);
     KResultOr<int> sys$readlink(Userspace<const Syscall::SC_readlink_params*>);
     KResultOr<int> sys$ttyname(int fd, Userspace<char*>, size_t);
@@ -333,8 +333,8 @@ public:
     KResultOr<int> sys$sigaction(int signum, Userspace<const sigaction*> act, Userspace<sigaction*> old_act);
     KResultOr<int> sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set);
     KResultOr<int> sys$sigpending(Userspace<sigset_t*>);
-    KResultOr<int> sys$getgroups(ssize_t, Userspace<gid_t*>);
-    KResultOr<int> sys$setgroups(ssize_t, Userspace<const gid_t*>);
+    KResultOr<int> sys$getgroups(size_t, Userspace<gid_t*>);
+    KResultOr<int> sys$setgroups(size_t, Userspace<const gid_t*>);
     KResultOr<int> sys$pipe(int pipefd[2], int flags);
     KResultOr<int> sys$killpg(pid_t pgrp, int sig);
     KResultOr<int> sys$seteuid(uid_t);
@@ -367,8 +367,8 @@ public:
     KResultOr<int> sys$accept4(Userspace<const Syscall::SC_accept4_params*>);
     KResultOr<int> sys$connect(int sockfd, Userspace<const sockaddr*>, socklen_t);
     KResultOr<int> sys$shutdown(int sockfd, int how);
-    KResultOr<ssize_t> sys$sendmsg(int sockfd, Userspace<const struct msghdr*>, int flags);
-    KResultOr<ssize_t> sys$recvmsg(int sockfd, Userspace<struct msghdr*>, int flags);
+    KResultOr<size_t> sys$sendmsg(int sockfd, Userspace<const struct msghdr*>, int flags);
+    KResultOr<size_t> sys$recvmsg(int sockfd, Userspace<struct msghdr*>, int flags);
     KResultOr<int> sys$getsockopt(Userspace<const Syscall::SC_getsockopt_params*>);
     KResultOr<int> sys$setsockopt(Userspace<const Syscall::SC_setsockopt_params*>);
     KResultOr<int> sys$getsockname(Userspace<const Syscall::SC_getsockname_params*>);
@@ -529,7 +529,7 @@ private:
     void delete_perf_events_buffer();
 
     KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
-    KResultOr<ssize_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
+    KResultOr<size_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<int> do_statvfs(String path, statvfs* buf);
 

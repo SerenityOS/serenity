@@ -171,7 +171,7 @@ public:
 
     const KBuffer& build();
 
-    static constexpr ssize_t max_header_size = 24;
+    static constexpr size_t max_header_size = 24;
 
 private:
     template<typename N>
@@ -634,9 +634,9 @@ KResult Plan9FS::post_message_and_wait_for_a_reply(Message& message)
     }
 }
 
-ssize_t Plan9FS::adjust_buffer_size(ssize_t size) const
+size_t Plan9FS::adjust_buffer_size(size_t size) const
 {
-    ssize_t max_size = m_max_message_size - Message::max_header_size;
+    size_t max_size = m_max_message_size - Message::max_header_size;
     return min(size, max_size);
 }
 
@@ -728,7 +728,7 @@ KResult Plan9FSInode::ensure_open_for_mode(int mode)
     }
 }
 
-KResultOr<ssize_t> Plan9FSInode::read_bytes(off_t offset, ssize_t size, UserOrKernelBuffer& buffer, FileDescription*) const
+KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKernelBuffer& buffer, FileDescription*) const
 {
     auto result = const_cast<Plan9FSInode&>(*this).ensure_open_for_mode(O_RDONLY);
     if (result.is_error())
@@ -767,7 +767,7 @@ KResultOr<ssize_t> Plan9FSInode::read_bytes(off_t offset, ssize_t size, UserOrKe
     return nread;
 }
 
-KResultOr<ssize_t> Plan9FSInode::write_bytes(off_t offset, ssize_t size, const UserOrKernelBuffer& data, FileDescription*)
+KResultOr<size_t> Plan9FSInode::write_bytes(off_t offset, size_t size, const UserOrKernelBuffer& data, FileDescription*)
 {
     auto result = ensure_open_for_mode(O_WRONLY);
     if (result.is_error())
