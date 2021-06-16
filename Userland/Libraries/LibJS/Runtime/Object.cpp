@@ -65,9 +65,15 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(VM& vm, const Object& obj
     return descriptor;
 }
 
-Object* Object::create_empty(GlobalObject& global_object)
+// 10.1.12 OrdinaryObjectCreate ( proto [ , additionalInternalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinaryobjectcreate
+Object* Object::create(GlobalObject& global_object, Object* prototype)
 {
-    return global_object.heap().allocate<Object>(global_object, *global_object.new_object_shape());
+    if (!prototype)
+        return global_object.heap().allocate<Object>(global_object, *global_object.empty_object_shape());
+    else if (prototype == global_object.object_prototype())
+        return global_object.heap().allocate<Object>(global_object, *global_object.new_object_shape());
+    else
+        return global_object.heap().allocate<Object>(global_object, *prototype);
 }
 
 Object::Object(GlobalObjectTag)
@@ -425,12 +431,14 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
     VERIFY(property_name.is_valid());
 
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
     auto descriptor_opt = get_own_property_descriptor(property_name);
     if (!descriptor_opt.has_value())
         return js_undefined();
     auto descriptor = descriptor_opt.value();
 
-    auto* descriptor_object = Object::create_empty(global_object());
+    auto* descriptor_object = Object::create(global_object, global_object.object_prototype());
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property(vm.names.value, descriptor.value.value_or(js_undefined()));
         descriptor_object->define_property(vm.names.writable, Value(descriptor.attributes.is_writable()));

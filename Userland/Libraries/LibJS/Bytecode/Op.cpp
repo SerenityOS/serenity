@@ -130,7 +130,7 @@ void NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 
 void NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
-    interpreter.accumulator() = Object::create_empty(interpreter.global_object());
+    interpreter.accumulator() = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
 }
 
 void ConcatString::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -307,7 +307,7 @@ void PushLexicalEnvironment::execute_impl(Bytecode::Interpreter& interpreter) co
 void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto yielded_value = interpreter.accumulator().value_or(js_undefined());
-    auto object = JS::Object::create_empty(interpreter.global_object());
+    auto object = JS::Object::create(interpreter.global_object(), nullptr);
     object->put("result", yielded_value);
     if (m_continuation_label.has_value())
         object->put("continuation", Value(static_cast<double>(reinterpret_cast<u64>(&m_continuation_label->block()))));

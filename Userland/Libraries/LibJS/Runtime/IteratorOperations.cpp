@@ -124,7 +124,7 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
 Value create_iterator_result_object(GlobalObject& global_object, Value value, bool done)
 {
     auto& vm = global_object.vm();
-    auto* object = Object::create_empty(global_object);
+    auto* object = Object::create(global_object, global_object.object_prototype());
     object->define_property(vm.names.value, value);
     object->define_property(vm.names.done, Value(done));
     return object;

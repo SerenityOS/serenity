@@ -106,7 +106,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create_empty(global_object);
+    auto* wrapper = Object::create(global_object, global_object.object_prototype());
     wrapper->define_property(String::empty(), value);
     if (vm.exception())
         return {};
@@ -396,11 +396,12 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     }
     Value result = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
-        auto* holder_object = Object::create_empty(global_object);
-        holder_object->define_property(String::empty(), result);
+        auto* root = Object::create(global_object, global_object.object_prototype());
+        auto root_name = String::empty();
+        root->define_property(root_name, result);
         if (vm.exception())
             return {};
-        return internalize_json_property(global_object, holder_object, String::empty(), reviver.as_function());
+        return internalize_json_property(global_object, root, root_name, reviver.as_function());
     }
     return result;
 }
@@ -426,7 +427,7 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
 
 Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)
 {
-    auto* object = Object::create_empty(global_object);
+    auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
         object->define_property(key, parse_json_value(global_object, value));
     });
@@ -443,6 +444,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
     return array;
 }
 
+// 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
 Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, const PropertyName& name, Function& reviver)
 {
     auto& vm = global_object.vm();
