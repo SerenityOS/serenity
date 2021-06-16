@@ -81,6 +81,7 @@ void StringPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.match, match, 1, attr);
     define_native_function(vm.names.matchAll, match_all, 1, attr);
     define_native_function(vm.names.replace, replace, 2, attr);
+    define_native_function(vm.names.search, search, 1, attr);
     define_native_function(vm.names.anchor, anchor, 1, attr);
     define_native_function(vm.names.big, big, 0, attr);
     define_native_function(vm.names.blink, blink, 0, attr);
@@ -800,6 +801,28 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     builder.append(string.substring(position.value() + search_string.length()));
 
     return js_string(vm, builder.build());
+}
+
+// 22.1.3.19 String.prototype.search ( regexp ), https://tc39.es/ecma262/#sec-string.prototype.search
+JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
+{
+    auto this_object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+    auto regexp = vm.argument(0);
+    if (!regexp.is_nullish()) {
+        if (auto* searcher = get_method(global_object, regexp, vm.well_known_symbol_search()))
+            return vm.call(*searcher, regexp, this_object);
+        if (vm.exception())
+            return {};
+    }
+    auto s = this_object.to_string(global_object);
+    if (vm.exception())
+        return {};
+    auto rx = regexp_create(global_object, regexp, js_undefined());
+    if (!rx)
+        return {};
+    return rx->invoke(vm.well_known_symbol_search(), js_string(vm, s));
 }
 
 // B.2.3.2.1 CreateHTML ( string, tag, attribute, value ), https://tc39.es/ecma262/#sec-createhtml
