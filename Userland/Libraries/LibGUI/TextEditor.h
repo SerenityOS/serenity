@@ -192,6 +192,16 @@ public:
 
     void delete_text_range(TextRange);
 
+    // ^TextDocument::Client
+    virtual void document_did_append_line() override;
+    virtual void document_did_insert_line(size_t) override;
+    virtual void document_did_remove_line(size_t) override;
+    virtual void document_did_remove_all_lines() override;
+    virtual void document_did_change() override;
+    virtual void document_did_set_text() override;
+    virtual void document_did_set_cursor(const TextPosition&) override;
+    virtual void document_did_update_undo_stack() override;
+
 protected:
     explicit TextEditor(Type = Type::MultiLine);
 
@@ -223,16 +233,6 @@ protected:
 
 private:
     friend class TextDocumentLine;
-
-    // ^TextDocument::Client
-    virtual void document_did_append_line() override;
-    virtual void document_did_insert_line(size_t) override;
-    virtual void document_did_remove_line(size_t) override;
-    virtual void document_did_remove_all_lines() override;
-    virtual void document_did_change() override;
-    virtual void document_did_set_text() override;
-    virtual void document_did_set_cursor(const TextPosition&) override;
-    virtual void document_did_update_undo_stack() override;
 
     // ^Syntax::HighlighterClient
     virtual Vector<TextDocumentSpan>& spans() final { return document().spans(); }
