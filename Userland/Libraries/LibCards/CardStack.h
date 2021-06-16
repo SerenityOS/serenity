@@ -24,6 +24,12 @@ public:
         Foundation
     };
 
+    enum MovementRule {
+        Alternating,
+        Same,
+        Any,
+    };
+
     CardStack();
     CardStack(const Gfx::IntPoint& position, Type type);
     CardStack(const Gfx::IntPoint& position, Type type, NonnullRefPtr<CardStack> associated_stack);
@@ -44,8 +50,8 @@ public:
     void move_to_stack(CardStack&);
     void rebound_cards();
 
-    bool is_allowed_to_push(const Card&, size_t stack_size = 1) const;
-    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed);
+    bool is_allowed_to_push(const Card&, size_t stack_size = 1, MovementRule movement_rule = Alternating) const;
+    void add_all_grabbed_cards(const Gfx::IntPoint& click_location, NonnullRefPtrVector<Card>& grabbed, MovementRule movement_rule = Alternating);
     void draw(GUI::Painter&, const Gfx::Color& background_color);
     void clear();
 
