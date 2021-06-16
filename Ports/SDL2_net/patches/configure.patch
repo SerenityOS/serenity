@@ -1,0 +1,12 @@
+diff -Naur SDL2_net-2.0.1/config.sub SDL2_net-2.0.1.serenity/config.sub
+--- SDL2_net-2.0.1/config.sub	2016-01-03 08:57:09.000000000 +0100
++++ SDL2_net-2.0.1.serenity/config.sub	2021-06-16 10:40:58.771380293 +0200
+@@ -1364,7 +1364,7 @@
+ 	# The portable systems comes first.
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+-	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* \

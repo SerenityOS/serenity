@@ -1,0 +1,14 @@
+diff -Naur SDL2_net-2.0.1/SDLnet.c SDL2_net-2.0.1.serenity/SDLnet.c
+--- SDL2_net-2.0.1/SDLnet.c	2016-01-03 08:57:09.000000000 +0100
++++ SDL2_net-2.0.1.serenity/SDLnet.c	2021-06-16 10:48:32.073734588 +0200
+@@ -184,6 +184,10 @@
+     return inet_ntoa(in);
+ }
+ 
++#ifdef __serenity__
++#undef SIOCGIFCONF
++#endif
++
+ int SDLNet_GetLocalAddresses(IPaddress *addresses, int maxcount)
+ {
+     int count = 0;
