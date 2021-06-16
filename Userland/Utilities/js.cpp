@@ -826,7 +826,7 @@ int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
-    const char* script_path = nullptr;
+    Vector<String> script_paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
@@ -837,7 +837,7 @@ int main(int argc, char** argv)
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
-    args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     bool syntax_highlight = !disable_syntax_highlight;
@@ -870,7 +870,7 @@ int main(int argc, char** argv)
         vm->throw_exception(interpreter->global_object(), error);
     };
 
-    if (script_path == nullptr) {
+    if (script_paths.is_empty()) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
@@ -1083,21 +1083,25 @@ int main(int argc, char** argv)
             sigint_handler();
         });
 
-        auto file = Core::File::construct(script_path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", script_path, file->error_string());
-            return 1;
-        }
-        auto file_contents = file->read_all();
+        StringBuilder builder;
+        for (auto& path : script_paths) {
+            auto file = Core::File::construct(path);
+            if (!file->open(Core::OpenMode::ReadOnly)) {
+                warnln("Failed to open {}: {}", path, file->error_string());
+                return 1;
+            }
+            auto file_contents = file->read_all();
 
-        StringView source;
-        if (file_has_shebang(file_contents)) {
-            source = strip_shebang(file_contents);
-        } else {
-            source = file_contents;
+            StringView source;
+            if (file_has_shebang(file_contents)) {
+                source = strip_shebang(file_contents);
+            } else {
+                source = file_contents;
+            }
+            builder.append(source);
         }
 
-        if (!parse_and_run(*interpreter, source))
+        if (!parse_and_run(*interpreter, builder.to_string()))
             return 1;
     }
 
