@@ -6,6 +6,7 @@
  */
 
 #include "Parser.h"
+#include <AK/Array.h>
 #include <AK/CharacterTypes.h>
 #include <AK/HashTable.h>
 #include <AK/ScopeGuard.h>
@@ -2251,12 +2252,22 @@ void Parser::consume_or_insert_semicolon()
     expected("Semicolon");
 }
 
+static constexpr AK::Array<StringView, 38> reserved_words = { "await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with", "yield" };
+static constexpr AK::Array<StringView, 9> strict_reserved_words = { "implements", "interface", "let", "package", "private", "protected", "public", "static", "yield" };
+
 Token Parser::consume(TokenType expected_type)
 {
     if (!match(expected_type)) {
         expected(Token::name(expected_type));
     }
-    return consume();
+    auto token = consume();
+    if (expected_type == TokenType::Identifier) {
+        if (any_of(reserved_words.begin(), reserved_words.end(), [&](auto const& word) { return word == token.value(); }))
+            syntax_error("Identifier must not be a reserved word");
+        if (m_parser_state.m_strict_mode && any_of(strict_reserved_words.begin(), strict_reserved_words.end(), [&](auto const& word) { return word == token.value(); }))
+            syntax_error("Identifier must not be a class-related reserved word in strict mode");
+    }
+    return token;
 }
 
 Token Parser::consume_and_validate_numeric_literal()
