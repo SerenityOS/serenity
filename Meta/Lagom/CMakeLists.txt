@@ -260,6 +260,8 @@ if (BUILD_LAGOM)
             )
         endforeach()
     endif()
+
+    install(TARGETS Lagom LagomCore)
 endif()
 
 if (ENABLE_FUZZER_SANITIZER OR ENABLE_OSS_FUZZ)
