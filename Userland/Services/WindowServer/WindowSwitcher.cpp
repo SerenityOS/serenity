@@ -202,7 +202,7 @@ void WindowSwitcher::refresh()
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
-    wm.for_each_window_of_type_from_front_to_back(
+    wm.window_stack().for_each_window_of_type_from_front_to_back(
         WindowType::Normal, [&](Window& window) {
             if (window.is_frameless())
                 return IterationDecision::Continue;

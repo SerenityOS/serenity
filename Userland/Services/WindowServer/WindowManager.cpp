@@ -8,18 +8,14 @@
 #include "Compositor.h"
 #include "EventLoop.h"
 #include "Menu.h"
-#include "MenuItem.h"
-#include "Menubar.h"
 #include "Screen.h"
 #include "Window.h"
 #include <AK/Debug.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibGUI/WindowManagerServerConnection.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/CharacterBitmap.h>
 #include <LibGfx/Font.h>
-#include <LibGfx/Painter.h>
 #include <LibGfx/StylePainter.h>
 #include <LibGfx/SystemTheme.h>
 #include <WindowServer/AppletManager.h>
@@ -27,11 +23,6 @@
 #include <WindowServer/ClientConnection.h>
 #include <WindowServer/Cursor.h>
 #include <WindowServer/WindowClientEndpoint.h>
-#include <errno.h>
-#include <serenity.h>
-#include <stdio.h>
-#include <time.h>
-#include <unistd.h>
 
 namespace WindowServer {
 
@@ -109,7 +100,7 @@ bool WindowManager::set_resolution(int width, int height, int scale)
         client.notify_about_new_screen_rect(Screen::the().rect());
     });
     if (success) {
-        for_each_window([](Window& window) {
+        m_window_stack.for_each_window([](Window& window) {
             window.recalculate_rect();
             return IterationDecision::Continue;
         });
@@ -174,9 +165,9 @@ int WindowManager::scale_factor() const
 
 void WindowManager::add_window(Window& window)
 {
-    bool is_first_window = m_windows_in_order.is_empty();
+    bool is_first_window = m_window_stack.is_empty();
 
-    m_windows_in_order.append(window);
+    m_window_stack.windows().append(window);
 
     if (window.is_fullscreen()) {
         Core::EventLoop::current().post_event(window, make<ResizeEvent>(Screen::the().rect()));
@@ -228,10 +219,7 @@ void WindowManager::move_to_front_and_make_active(Window& window)
 
 void WindowManager::do_move_to_front(Window& window, bool make_active, bool make_input)
 {
-    if (m_windows_in_order.last() != &window)
-        window.invalidate();
-    m_windows_in_order.remove(window);
-    m_windows_in_order.append(window);
+    m_window_stack.move_to_front(window);
 
     if (make_active)
         set_active_window(&window, make_input);
@@ -252,7 +240,7 @@ void WindowManager::do_move_to_front(Window& window, bool make_active, bool make
 
 void WindowManager::remove_window(Window& window)
 {
-    m_windows_in_order.remove(window);
+    m_window_stack.remove(window);
     auto* active = active_window();
     auto* active_input = active_input_window();
     if (active == &window || active_input == &window || (active && window.is_descendant_of(*active)) || (active_input && active_input != active && window.is_descendant_of(*active_input)))
@@ -279,7 +267,7 @@ void WindowManager::greet_window_manager(WMClientConnection& conn)
     if (conn.window_id() < 0)
         return;
 
-    for_each_window([&](Window& other_window) {
+    m_window_stack.for_each_window([&](Window& other_window) {
         //if (conn.window_id() != other_window.window_id()) {
         tell_wm_about_window(conn, other_window);
         tell_wm_about_window_icon(conn, other_window);
@@ -456,7 +444,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
 {
     bool new_window_picked = false;
     Window* first_candidate = nullptr;
-    for_each_visible_window_from_front_to_back([&](Window& candidate) {
+    m_window_stack.for_each_visible_window_from_front_to_back([&](Window& candidate) {
         if (candidate.type() != WindowType::Normal && candidate.type() != WindowType::ToolWindow)
             return IterationDecision::Continue;
         if (candidate.is_destroyed())
@@ -762,7 +750,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 
     if (event.type() == Event::MouseMove) {
         // We didn't let go of the drag yet, see if we should send some drag move events..
-        for_each_visible_window_from_front_to_back([&](Window& window) {
+        m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
             if (!window.rect().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
@@ -778,7 +766,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
         return true;
 
     hovered_window = nullptr;
-    for_each_visible_window_from_front_to_back([&](auto& window) {
+    m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
         if (window.hit_test(event.position())) {
             hovered_window = &window;
             return IterationDecision::Break;
@@ -976,7 +964,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
     if (MenuManager::the().has_open_menu()
         || hitting_menu_in_window_with_active_menu) {
-        for_each_visible_window_of_type_from_front_to_back(WindowType::Applet, [&](auto& window) {
+        m_window_stack.for_each_visible_window_of_type_from_front_to_back(WindowType::Applet, [&](auto& window) {
             if (!window.rect_in_applet_area().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
@@ -1007,7 +995,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             m_active_input_tracking_window = nullptr;
         }
 
-        for_each_visible_window_from_front_to_back([&](auto& window) {
+        m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
             if (window.hit_test(event.position())) {
                 hovered_window = &window;
                 return IterationDecision::Break;
@@ -1079,7 +1067,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         if (auto* fullscreen_window = active_fullscreen_window()) {
             process_mouse_event_for_window(*fullscreen_window);
         } else {
-            for_each_visible_window_from_front_to_back([&](Window& window) {
+            m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
                 if (!window.hit_test(event.position()))
                     return IterationDecision::Continue;
                 process_mouse_event_for_window(window);
@@ -1092,8 +1080,8 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             set_active_window(nullptr);
     }
 
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
+    auto reverse_iterator = m_window_stack.windows().rbegin();
+    for (; reverse_iterator != m_window_stack.windows().rend(); ++reverse_iterator) {
         auto& window = *reverse_iterator;
         if (received_mouse_event == &window)
             continue;
@@ -1124,7 +1112,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
         if (fullscreen_window->hit_test(cursor_location))
             hovered_window = fullscreen_window;
     } else {
-        for_each_visible_window_from_front_to_back([&](Window& window) {
+        m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
             if (!window.hit_test(cursor_location))
                 return IterationDecision::Continue;
             hovered_window = &window;
@@ -1298,19 +1286,19 @@ void WindowManager::event(Core::Event& event)
     Core::Object::event(event);
 }
 
-void WindowManager::set_highlight_window(Window* window)
+void WindowManager::set_highlight_window(Window* new_highlight_window)
 {
-    if (window == m_highlight_window)
+    if (new_highlight_window == m_window_stack.highlight_window())
         return;
-    auto* previous_highlight_window = m_highlight_window.ptr();
-    m_highlight_window = window;
+    auto* previous_highlight_window = m_window_stack.highlight_window();
+    m_window_stack.set_highlight_window(new_highlight_window);
     if (previous_highlight_window) {
         previous_highlight_window->invalidate(true, true);
         Compositor::the().invalidate_screen(previous_highlight_window->frame().render_rect());
     }
-    if (m_highlight_window) {
-        m_highlight_window->invalidate(true, true);
-        Compositor::the().invalidate_screen(m_highlight_window->frame().render_rect());
+    if (new_highlight_window) {
+        new_highlight_window->invalidate(true, true);
+        Compositor::the().invalidate_screen(new_highlight_window->frame().render_rect());
     }
     // Invalidate occlusions in case the state change changes geometry
     Compositor::the().invalidate_occlusions();
@@ -1507,7 +1495,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     rect.set_height(rect.height() - window.frame().titlebar_rect().height() - window.frame().menubar_rect().height());
 
     // Subtract taskbar window height if present
-    const_cast<WindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, [&rect](Window& taskbar_window) {
+    const_cast<WindowManager*>(this)->m_window_stack.for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, [&rect](Window& taskbar_window) {
         rect.set_height(rect.height() - taskbar_window.height());
         return IterationDecision::Break;
     });
@@ -1553,7 +1541,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
 {
     Compositor::the().set_background_color(m_config->read_entry("Background", "Color", palette().desktop_background().to_string()));
     WindowFrame::reload_config();
-    for_each_window([&](Window& window) {
+    m_window_stack.for_each_window([&](Window& window) {
         window.frame().theme_changed();
         return IterationDecision::Continue;
     });
@@ -1618,7 +1606,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
     int taskbar_height = 28;
 
     const Window* overlap_window = nullptr;
-    for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
+    m_window_stack.for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
         if (window.default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
             overlap_window = &window;
         }
@@ -1650,7 +1638,7 @@ void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icon
 {
     m_allow_hidpi_icons = allow_hidpi_icons;
     reload_config();
-    for_each_window([&](Window& window) {
+    m_window_stack.for_each_window([&](Window& window) {
         auto& window_frame = window.frame();
         window_frame.theme_changed();
         return IterationDecision::Continue;
