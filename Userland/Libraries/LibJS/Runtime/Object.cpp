@@ -679,6 +679,20 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
         }
     }
 
+    // FIXME: Instead of adding back existing attributes we should just stop overwriting them
+    if (!attributes.has_configurable() && metadata.value().attributes.is_configurable()) {
+        attributes.set_has_configurable();
+        attributes.set_configurable();
+    }
+    if (!attributes.has_enumerable() && metadata.value().attributes.is_enumerable()) {
+        attributes.set_has_enumerable();
+        attributes.set_enumerable();
+    }
+    if (!value.is_accessor() && !attributes.has_writable() && metadata.value().attributes.is_writable()) {
+        attributes.set_has_writable();
+        attributes.set_writable();
+    }
+
     if (mode == PutOwnPropertyMode::DefineProperty && attributes != metadata.value().attributes) {
         if (m_shape->is_unique()) {
             m_shape->reconfigure_property_in_unique_shape(property_name, attributes);
