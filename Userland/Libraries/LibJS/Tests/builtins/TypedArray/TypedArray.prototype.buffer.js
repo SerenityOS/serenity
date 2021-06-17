@@ -1,18 +1,24 @@
-// Update when more typed arrays get added
 const TYPED_ARRAYS = [
     Uint8Array,
     Uint16Array,
     Uint32Array,
+    BigUint64Array,
     Int8Array,
     Int16Array,
     Int32Array,
+    BigInt64Array,
     Float32Array,
     Float64Array,
 ];
 
 test("basic functionality", () => {
     TYPED_ARRAYS.forEach(T => {
-        const typedArray = new T([1, 2, 3]);
+        const isBigIntArray = T === BigInt64Array || T === BigUint64Array;
+        let typedArray;
+
+        if (!isBigIntArray) typedArray = new T([1, 2, 3]);
+        else typedArray = new T([1n, 2n, 3n]);
+
         expect(Object.hasOwn(typedArray, "byteOffset")).toBeFalse();
 
         const buffer = typedArray.buffer;
