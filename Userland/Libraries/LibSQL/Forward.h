@@ -25,6 +25,7 @@ class ColumnNameExpression;
 class CommonTableExpression;
 class CommonTableExpressionList;
 class CreateTable;
+class Database;
 class TupleDescriptor;
 struct TupleElement;
 class Delete;
