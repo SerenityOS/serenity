@@ -7,7 +7,6 @@
 #include <LibGUI/AboutDialog.h>
 #include <LibGUI/Application.h>
 #include <LibGUI/Icon.h>
-#include <LibGfx/Bitmap.h>
 #include <stdio.h>
 #include <unistd.h>
 
