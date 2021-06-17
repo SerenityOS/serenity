@@ -105,7 +105,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             });
             return promise->invoke(vm.names.then.as_string(), value_thunk);
         });
-        then_finally_function->define_property(vm.names.length, Value(1));
+        then_finally_function->define_property(vm.names.length, Value(1), Attribute::Configurable);
 
         // 27.2.5.3.2 Catch Finally Functions, https://tc39.es/ecma262/#sec-catchfinallyfunctions
         auto* catch_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> Value {
@@ -124,7 +124,7 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
             });
             return promise->invoke(vm.names.then.as_string(), thrower);
         });
-        catch_finally_function->define_property(vm.names.length, Value(1));
+        catch_finally_function->define_property(vm.names.length, Value(1), Attribute::Configurable);
 
         then_finally = Value(then_finally_function);
         catch_finally = Value(catch_finally_function);
