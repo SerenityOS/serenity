@@ -32,6 +32,8 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.findIndex, find_index, 1, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
+
+    define_native_accessor(vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()
@@ -230,6 +232,18 @@ JS_DEFINE_NATIVE_GETTER(TypedArrayPrototype::byte_offset_getter)
     if (array_buffer->is_detached())
         return Value(0);
     return Value(typed_array->byte_offset());
+}
+
+// 23.2.3.32 get %TypedArray%.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::to_string_tag_getter)
+{
+    auto this_value = vm.this_value(global_object);
+    if (!this_value.is_object())
+        return js_undefined();
+    auto& this_object = this_value.as_object();
+    if (!this_object.is_typed_array())
+        return js_undefined();
+    return js_string(vm, static_cast<TypedArrayBase&>(this_object).element_name());
 }
 
 }
