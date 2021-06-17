@@ -1022,17 +1022,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 }
             }
 
-            if (m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseWheel) {
-                float opacity_change = -event.wheel_delta() * 0.05f;
-                float new_opacity = window.opacity() + opacity_change;
-                if (new_opacity < 0.05f)
-                    new_opacity = 0.05f;
-                if (new_opacity > 1.0f)
-                    new_opacity = 1.0f;
-                window.set_opacity(new_opacity);
-                return;
-            }
-
             VERIFY(window.hit_test(event.position()));
             if (event.type() == Event::MouseDown) {
                 // We're clicking on something that's blocked by a modal window.
