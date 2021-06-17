@@ -92,7 +92,7 @@ void FileOperationProgressWidget::did_finish()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_error(const String message)
+void FileOperationProgressWidget::did_error(String const message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
@@ -134,7 +134,7 @@ String FileOperationProgressWidget::estimate_time(off_t bytes_done, off_t total_
     return String::formatted("{} hours and {} minutes", hours_remaining, minutes_remaining);
 }
 
-void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, const StringView& current_filename)
+void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, [[maybe_unused]] off_t current_file_done, [[maybe_unused]] off_t current_file_size, StringView const& current_filename)
 {
     auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
     auto& current_file_label = *find_descendant_of_type_named<GUI::Label>("current_file_label");

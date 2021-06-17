@@ -18,6 +18,6 @@ enum class FileOperation {
     Cut
 };
 
-void delete_path(const String&, GUI::Window*);
-void delete_paths(const Vector<String>&, bool should_confirm, GUI::Window*);
+void delete_path(String const&, GUI::Window*);
+void delete_paths(Vector<String> const&, bool should_confirm, GUI::Window*);
 }
