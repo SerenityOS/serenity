@@ -366,6 +366,14 @@ static void print_array_buffer(const JS::Object& object, HashTable<JS::Object*>&
     }
 }
 
+template<typename T>
+static void print_number(T number) requires IsArithmetic<T>
+{
+    out("\033[35;1m");
+    out("{}", number);
+    out("\033[0m");
+}
+
 static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& typed_array_base = static_cast<const JS::TypedArrayBase&>(object);
@@ -390,7 +398,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
         for (size_t i = 0; i < length; ++i) {                                            \
             if (i > 0)                                                                   \
                 out(", ");                                                               \
-            print_value(JS::Value(data[i]), seen_objects);                               \
+            print_number(data[i]);                                                       \
         }                                                                                \
         out(" ]");                                                                       \
         return;                                                                          \
