@@ -14,7 +14,7 @@
 
 namespace FileUtils {
 
-void delete_path(const String& path, GUI::Window* parent_window)
+void delete_path(String const& path, GUI::Window* parent_window)
 {
     struct stat st;
     if (lstat(path.characters(), &st)) {
@@ -43,7 +43,7 @@ void delete_path(const String& path, GUI::Window* parent_window)
     }
 }
 
-void delete_paths(const Vector<String>& paths, bool should_confirm, GUI::Window* parent_window)
+void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window* parent_window)
 {
     String message;
     if (paths.size() == 1) {

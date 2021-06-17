@@ -22,7 +22,7 @@ private:
 
     void did_finish();
     void did_error(String message);
-    void did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, off_t current_file_done, off_t current_file_size, const StringView& current_filename);
+    void did_progress(off_t bytes_done, off_t total_byte_count, size_t files_done, size_t total_file_count, off_t current_file_done, off_t current_file_size, StringView const& current_filename);
 
     void close_pipe();
 
