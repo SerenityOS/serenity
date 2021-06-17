@@ -18,12 +18,16 @@ WindowStack::~WindowStack()
 
 void WindowStack::add(Window& window)
 {
+    VERIFY(window.outer_stack() == nullptr);
     m_windows.append(window);
+    window.set_outer_stack({}, this);
 }
 
 void WindowStack::remove(Window& window)
 {
+    VERIFY(window.outer_stack() == this);
     m_windows.remove(window);
+    window.set_outer_stack({}, nullptr);
 }
 
 void WindowStack::move_to_front(Window& window)

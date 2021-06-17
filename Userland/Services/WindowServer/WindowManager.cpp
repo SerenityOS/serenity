@@ -167,7 +167,7 @@ void WindowManager::add_window(Window& window)
 {
     bool is_first_window = m_window_stack.is_empty();
 
-    m_window_stack.windows().append(window);
+    m_window_stack.add(window);
 
     if (window.is_fullscreen()) {
         Core::EventLoop::current().post_event(window, make<ResizeEvent>(Screen::the().rect()));
