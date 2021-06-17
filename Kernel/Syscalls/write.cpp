@@ -67,7 +67,7 @@ KResultOr<size_t> Process::do_write(FileDescription& description, const UserOrKe
             return seek_result.error();
     }
 
-    while ((size_t)total_nwritten < data_size) {
+    while (total_nwritten < data_size) {
         while (!description.can_write()) {
             if (!description.is_blocking()) {
                 if (total_nwritten > 0)

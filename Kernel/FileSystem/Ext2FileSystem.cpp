@@ -838,7 +838,7 @@ KResultOr<size_t> Ext2FSInode::read_bytes(off_t offset, size_t count, UserOrKern
     if (is_symlink() && size() < max_inline_symlink_length) {
         VERIFY(offset == 0);
         size_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
-        if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, (size_t)nread))
+        if (!buffer.write(((const u8*)m_raw_inode.i_block) + offset, nread))
             return EFAULT;
         return nread;
     }
