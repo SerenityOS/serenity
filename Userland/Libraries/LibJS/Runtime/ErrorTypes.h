@@ -156,6 +156,7 @@
     M(TypedArrayInvalidByteOffset, "Invalid byte offset for {}: must be a multiple of {}, got {}")                                      \
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
     M(TypedArrayOutOfRangeByteOffsetOrLength, "Typed array range {}:{} is out of range for buffer with length {}")                      \
+    M(TypedArrayFailedSettingIndex, "Failed setting value of index {} of typed array")                                                  \
     M(UnknownIdentifier, "'{}' is not defined")                                                                                         \
     M(URIMalformed, "URI malformed")                                                                                                    \
     /* LibWeb bindings */                                                                                                               \
