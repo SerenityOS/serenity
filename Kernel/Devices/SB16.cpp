@@ -200,6 +200,9 @@ void SB16::dma_start(uint32_t length)
 
     // Write the buffer
     IO::out8(0x8b, addr >> 16);
+    auto page_number = addr >> 16;
+    VERIFY(page_number <= NumericLimits<u8>::max());
+    IO::out8(0x8b, page_number);
 
     // Enable the DMA channel
     IO::out8(0xd4, (channel % 4));
