@@ -1,4 +1,3 @@
-// Update when more typed arrays get added
 const TYPED_ARRAYS = [
     Uint8Array,
     Uint16Array,
@@ -10,6 +9,8 @@ const TYPED_ARRAYS = [
     Float64Array,
 ];
 
+const BIGINT_TYPED_ARRAYS = [BigUint64Array, BigInt64Array];
+
 const getTypedArrayConstructor = () => Object.getPrototypeOf(TYPED_ARRAYS[0]);
 
 test("basic functionality", () => {
@@ -18,6 +19,9 @@ test("basic functionality", () => {
     expect(TypedArray.name).toBe("TypedArray");
     expect(TypedArray.prototype.constructor).toBe(TypedArray);
     TYPED_ARRAYS.forEach(T => {
+        expect(T.prototype.constructor).toBe(T);
+    });
+    BIGINT_TYPED_ARRAYS.forEach(T => {
         expect(T.prototype.constructor).toBe(T);
     });
     const FunctionPrototype = Object.getPrototypeOf(() => {});
@@ -30,11 +34,19 @@ test("typed array constructors must be invoked with 'new'", () => {
             T();
         }).toThrowWithMessage(TypeError, `${T.name} constructor must be called with 'new'`);
     });
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        expect(() => {
+            T();
+        }).toThrowWithMessage(TypeError, `${T.name} constructor must be called with 'new'`);
+    });
 });
 
 test("typed array constructors have TypedArray as prototype", () => {
     const TypedArray = getTypedArrayConstructor();
     TYPED_ARRAYS.forEach(T => {
+        expect(Object.getPrototypeOf(T)).toBe(TypedArray);
+    });
+    BIGINT_TYPED_ARRAYS.forEach(T => {
         expect(Object.getPrototypeOf(T)).toBe(TypedArray);
     });
 });
@@ -45,11 +57,18 @@ test("typed array prototypes have TypedArray.prototype as prototype", () => {
         const TPrototype = Object.getPrototypeOf(new T());
         expect(Object.getPrototypeOf(TPrototype)).toBe(TypedArray.prototype);
     });
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        const TPrototype = Object.getPrototypeOf(new T());
+        expect(Object.getPrototypeOf(TPrototype)).toBe(TypedArray.prototype);
+    });
 });
 
 test("typed arrays inherit from TypedArray", () => {
     const TypedArray = getTypedArrayConstructor();
     TYPED_ARRAYS.forEach(T => {
+        expect(new T()).toBeInstanceOf(TypedArray);
+    });
+    BIGINT_TYPED_ARRAYS.forEach(T => {
         expect(new T()).toBeInstanceOf(TypedArray);
     });
 });
@@ -130,6 +149,22 @@ test("typed array from TypedArray", () => {
         expect(newTypedArray[1]).toBe(2);
         expect(newTypedArray[2]).toBe(3);
     });
+
+    const bigU64Array = new BigUint64Array(3);
+    bigU64Array[0] = 1n;
+    bigU64Array[1] = 2n;
+    bigU64Array[2] = 3n;
+
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        expect(() => {
+            const newTypedArray = new T(u8Array);
+        }).toThrowWithMessage(TypeError, "Cannot convert number to BigInt");
+
+        const newBigIntTypedArray = new T(bigU64Array);
+        expect(newBigIntTypedArray[0]).toBe(1n);
+        expect(newBigIntTypedArray[1]).toBe(2n);
+        expect(newBigIntTypedArray[2]).toBe(3n);
+    });
 });
 
 test("typed array from TypedArray element cast", () => {
@@ -193,6 +228,16 @@ test("typed array from Array-Like", () => {
         }
         func(1, 2, 3);
     });
+
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        function func() {
+            const newTypedArray = new T(arguments);
+            expect(newTypedArray[0]).toBe(1n);
+            expect(newTypedArray[1]).toBe(2n);
+            expect(newTypedArray[2]).toBe(3n);
+        }
+        func(1n, 2n, 3n);
+    });
 });
 
 test("typed array from Iterable", () => {
@@ -203,6 +248,13 @@ test("typed array from Iterable", () => {
         expect(newTypedArray[0]).toBe(1);
         expect(newTypedArray[1]).toBe(2);
         expect(newTypedArray[2]).toBe(3);
+    });
+
+    BIGINT_TYPED_ARRAYS.forEach(T => {
+        const newTypedArray = new T(from);
+        expect(newTypedArray[0]).toBe(1n);
+        expect(newTypedArray[1]).toBe(2n);
+        expect(newTypedArray[2]).toBe(3n);
     });
 });
 
