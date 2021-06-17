@@ -34,7 +34,7 @@ WindowManager& WindowManager::the()
     return *s_the;
 }
 
-WindowManager::WindowManager(const Gfx::PaletteImpl& palette)
+WindowManager::WindowManager(Gfx::PaletteImpl const& palette)
     : m_palette(palette)
 {
     s_the = this;
@@ -48,9 +48,9 @@ WindowManager::~WindowManager()
 {
 }
 
-NonnullRefPtr<Cursor> WindowManager::get_cursor(const String& name)
+NonnullRefPtr<Cursor> WindowManager::get_cursor(String const& name)
 {
-    static const auto s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
+    static auto const s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
     auto path = m_config->read_entry("Cursor", name, s_default_cursor_path);
     auto gb = Gfx::Bitmap::load_from_file(path, compositor_icon_scale());
     if (gb)
@@ -83,12 +83,12 @@ void WindowManager::reload_config()
     WindowFrame::reload_config();
 }
 
-const Gfx::Font& WindowManager::font() const
+Gfx::Font const& WindowManager::font() const
 {
     return Gfx::FontDatabase::default_font();
 }
 
-const Gfx::Font& WindowManager::window_title_font() const
+Gfx::Font const& WindowManager::window_title_font() const
 {
     return Gfx::FontDatabase::default_font().bold_variant();
 }
@@ -336,7 +336,7 @@ void WindowManager::tell_wms_window_rect_changed(Window& window)
     });
 }
 
-void WindowManager::tell_wms_applet_area_size_changed(const Gfx::IntSize& size)
+void WindowManager::tell_wms_applet_area_size_changed(Gfx::IntSize const& size)
 {
     for_each_window_manager([&](WMClientConnection& conn) {
         if (conn.window_id() < 0)
@@ -397,7 +397,7 @@ void WindowManager::notify_modal_unparented(Window& window)
     tell_wms_window_state_changed(window);
 }
 
-void WindowManager::notify_rect_changed(Window& window, const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect)
+void WindowManager::notify_rect_changed(Window& window, Gfx::IntRect const& old_rect, Gfx::IntRect const& new_rect)
 {
     dbgln_if(RESIZE_DEBUG, "[WM] Window({}) rect changed {} -> {}", &window, old_rect, new_rect);
 
@@ -465,7 +465,7 @@ bool WindowManager::pick_new_active_window(Window* previous_active)
     return new_window_picked;
 }
 
-void WindowManager::start_window_move(Window& window, const Gfx::IntPoint& origin)
+void WindowManager::start_window_move(Window& window, Gfx::IntPoint const& origin)
 {
     MenuManager::the().close_everyone();
 
@@ -479,12 +479,12 @@ void WindowManager::start_window_move(Window& window, const Gfx::IntPoint& origi
     window.invalidate(true, true);
 }
 
-void WindowManager::start_window_move(Window& window, const MouseEvent& event)
+void WindowManager::start_window_move(Window& window, MouseEvent const& event)
 {
     start_window_move(window, event.position());
 }
 
-void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& position, MouseButton button)
+void WindowManager::start_window_resize(Window& window, Gfx::IntPoint const& position, MouseButton button)
 {
     MenuManager::the().close_everyone();
 
@@ -525,7 +525,7 @@ void WindowManager::start_window_resize(Window& window, const Gfx::IntPoint& pos
     }
 }
 
-void WindowManager::start_window_resize(Window& window, const MouseEvent& event)
+void WindowManager::start_window_resize(Window& window, MouseEvent const& event)
 {
     start_window_resize(window, event.position(), event.button());
 }
@@ -613,7 +613,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
     return true;
 }
 
-bool WindowManager::process_ongoing_window_resize(const MouseEvent& event, Window*& hovered_window)
+bool WindowManager::process_ongoing_window_resize(MouseEvent const& event, Window*& hovered_window)
 {
     if (!m_resize_window)
         return false;
@@ -793,7 +793,7 @@ void WindowManager::set_cursor_tracking_button(Button* button)
     m_cursor_tracking_button = button;
 }
 
-auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> const ClickMetadata&
+auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) const -> ClickMetadata const&
 {
     switch (button) {
     case MouseButton::Left:
@@ -829,7 +829,7 @@ auto WindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> 
     }
 }
 
-bool WindowManager::is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const
+bool WindowManager::is_considered_doubleclick(MouseEvent const& event, DoubleClickInfo::ClickMetadata const& metadata) const
 {
     int elapsed_since_last_click = metadata.clock.elapsed();
     if (elapsed_since_last_click < m_double_click_speed) {
@@ -841,7 +841,7 @@ bool WindowManager::is_considered_doubleclick(const MouseEvent& event, const Dou
     return false;
 }
 
-void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& event)
+void WindowManager::start_menu_doubleclick(Window& window, MouseEvent const& event)
 {
     // This is a special case. Basically, we're trying to determine whether
     // double clicking on the window menu icon happened. In this case, the
@@ -868,7 +868,7 @@ void WindowManager::start_menu_doubleclick(Window& window, const MouseEvent& eve
     metadata.clock.start();
 }
 
-bool WindowManager::is_menu_doubleclick(Window& window, const MouseEvent& event) const
+bool WindowManager::is_menu_doubleclick(Window& window, MouseEvent const& event) const
 {
     VERIFY(event.type() == Event::MouseUp);
 
@@ -1192,7 +1192,7 @@ void WindowManager::event(Core::Event& event)
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
-        auto& key_event = static_cast<const KeyEvent&>(event);
+        auto& key_event = static_cast<KeyEvent const&>(event);
         m_keyboard_modifiers = key_event.modifiers();
 
         // Escape key cancels an ongoing drag.
@@ -1422,14 +1422,14 @@ bool WindowManager::set_hovered_window(Window* window)
     return true;
 }
 
-const ClientConnection* WindowManager::active_client() const
+ClientConnection const* WindowManager::active_client() const
 {
     if (m_active_window)
         return m_active_window->client();
     return nullptr;
 }
 
-const Cursor& WindowManager::active_cursor() const
+Cursor const& WindowManager::active_cursor() const
 {
     if (m_dnd_client)
         return *m_drag_cursor;
@@ -1479,14 +1479,14 @@ void WindowManager::set_resize_candidate(Window& window, ResizeDirection directi
     m_resize_direction = direction;
 }
 
-ResizeDirection WindowManager::resize_direction_of_window(const Window& window)
+ResizeDirection WindowManager::resize_direction_of_window(Window const& window)
 {
     if (&window != m_resize_window)
         return ResizeDirection::None;
     return m_resize_direction;
 }
 
-Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
+Gfx::IntRect WindowManager::maximized_window_rect(Window const& window) const
 {
     Gfx::IntRect rect = Screen::the().rect();
 
@@ -1507,7 +1507,7 @@ Gfx::IntRect WindowManager::maximized_window_rect(const Window& window) const
     return rect;
 }
 
-void WindowManager::start_dnd_drag(ClientConnection& client, const String& text, const Gfx::Bitmap* bitmap, const Core::MimeData& mime_data)
+void WindowManager::start_dnd_drag(ClientConnection& client, String const& text, Gfx::Bitmap const* bitmap, Core::MimeData const& mime_data)
 {
     VERIFY(!m_dnd_client);
     m_dnd_client = client;
@@ -1597,7 +1597,7 @@ void WindowManager::maximize_windows(Window& window, bool maximized)
     });
 }
 
-Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint& desired)
+Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const& desired)
 {
     // FIXME: Find a  better source for the width and height to shift by.
     Gfx::IntPoint shift(8, Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette()) + 10);
@@ -1605,7 +1605,7 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(const Gfx::IntPoint
     // FIXME: Find a better source for this.
     int taskbar_height = 28;
 
-    const Window* overlap_window = nullptr;
+    Window const* overlap_window = nullptr;
     m_window_stack.for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, [&](Window& window) {
         if (window.default_positioned() && (!overlap_window || overlap_window->window_id() < window.window_id())) {
             overlap_window = &window;

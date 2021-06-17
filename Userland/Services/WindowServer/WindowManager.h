@@ -59,7 +59,7 @@ class WindowManager : public Core::Object {
 public:
     static WindowManager& the();
 
-    explicit WindowManager(const Gfx::PaletteImpl&);
+    explicit WindowManager(Gfx::PaletteImpl const&);
     virtual ~WindowManager() override;
 
     Palette palette() const { return Palette(*m_palette); }
@@ -72,32 +72,32 @@ public:
 
     void notify_title_changed(Window&);
     void notify_modal_unparented(Window&);
-    void notify_rect_changed(Window&, const Gfx::IntRect& oldRect, const Gfx::IntRect& newRect);
+    void notify_rect_changed(Window&, Gfx::IntRect const& oldRect, Gfx::IntRect const& newRect);
     void notify_minimization_state_changed(Window&);
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
 
-    Gfx::IntRect maximized_window_rect(const Window&) const;
+    Gfx::IntRect maximized_window_rect(Window const&) const;
 
-    const ClientConnection* dnd_client() const { return m_dnd_client.ptr(); }
-    const String& dnd_text() const { return m_dnd_text; }
-    const Core::MimeData& dnd_mime_data() const { return *m_dnd_mime_data; }
-    const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
+    ClientConnection const* dnd_client() const { return m_dnd_client.ptr(); }
+    String const& dnd_text() const { return m_dnd_text; }
+    Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
+    Gfx::Bitmap const* dnd_bitmap() const { return m_dnd_bitmap; }
     Gfx::IntRect dnd_rect() const;
 
-    void start_dnd_drag(ClientConnection&, const String& text, const Gfx::Bitmap*, const Core::MimeData&);
+    void start_dnd_drag(ClientConnection&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
     Window* active_window() { return m_active_window.ptr(); }
-    const Window* active_window() const { return m_active_window.ptr(); }
+    Window const* active_window() const { return m_active_window.ptr(); }
     Window* active_input_window() { return m_active_input_window.ptr(); }
-    const Window* active_input_window() const { return m_active_input_window.ptr(); }
-    const ClientConnection* active_client() const;
+    Window const* active_input_window() const { return m_active_input_window.ptr(); }
+    ClientConnection const* active_client() const;
 
     Window* window_with_active_menu() { return m_window_with_active_menu; }
-    const Window* window_with_active_menu() const { return m_window_with_active_menu; }
+    Window const* window_with_active_menu() const { return m_window_with_active_menu; }
     void set_window_with_active_menu(Window*);
 
     Window const* highlight_window() const { return m_window_stack.highlight_window(); }
@@ -108,26 +108,26 @@ public:
     Gfx::IntRect desktop_rect() const;
     Gfx::IntRect arena_rect_for_type(WindowType) const;
 
-    const Cursor& active_cursor() const;
-    const Cursor& hidden_cursor() const { return *m_hidden_cursor; }
-    const Cursor& arrow_cursor() const { return *m_arrow_cursor; }
-    const Cursor& crosshair_cursor() const { return *m_crosshair_cursor; }
-    const Cursor& hand_cursor() const { return *m_hand_cursor; }
-    const Cursor& help_cursor() const { return *m_help_cursor; }
-    const Cursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
-    const Cursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
-    const Cursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
-    const Cursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
-    const Cursor& resize_column_cursor() const { return *m_resize_column_cursor; }
-    const Cursor& resize_row_cursor() const { return *m_resize_row_cursor; }
-    const Cursor& i_beam_cursor() const { return *m_i_beam_cursor; }
-    const Cursor& disallowed_cursor() const { return *m_disallowed_cursor; }
-    const Cursor& move_cursor() const { return *m_move_cursor; }
-    const Cursor& drag_cursor() const { return *m_drag_cursor; }
-    const Cursor& wait_cursor() const { return *m_wait_cursor; }
+    Cursor const& active_cursor() const;
+    Cursor const& hidden_cursor() const { return *m_hidden_cursor; }
+    Cursor const& arrow_cursor() const { return *m_arrow_cursor; }
+    Cursor const& crosshair_cursor() const { return *m_crosshair_cursor; }
+    Cursor const& hand_cursor() const { return *m_hand_cursor; }
+    Cursor const& help_cursor() const { return *m_help_cursor; }
+    Cursor const& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
+    Cursor const& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
+    Cursor const& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
+    Cursor const& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
+    Cursor const& resize_column_cursor() const { return *m_resize_column_cursor; }
+    Cursor const& resize_row_cursor() const { return *m_resize_row_cursor; }
+    Cursor const& i_beam_cursor() const { return *m_i_beam_cursor; }
+    Cursor const& disallowed_cursor() const { return *m_disallowed_cursor; }
+    Cursor const& move_cursor() const { return *m_move_cursor; }
+    Cursor const& drag_cursor() const { return *m_drag_cursor; }
+    Cursor const& wait_cursor() const { return *m_wait_cursor; }
 
-    const Gfx::Font& font() const;
-    const Gfx::Font& window_title_font() const;
+    Gfx::Font const& font() const;
+    Gfx::Font const& window_title_font() const;
 
     bool set_resolution(int width, int height, int scale);
     Gfx::IntSize resolution() const;
@@ -143,28 +143,28 @@ public:
     void set_active_window(Window*, bool make_input = true);
     void set_hovered_button(Button*);
 
-    const Button* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
+    Button const* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
     void set_cursor_tracking_button(Button*);
 
     void set_resize_candidate(Window&, ResizeDirection);
     void clear_resize_candidate();
-    ResizeDirection resize_direction_of_window(const Window&);
+    ResizeDirection resize_direction_of_window(Window const&);
 
     void greet_window_manager(WMClientConnection&);
     void tell_wms_window_state_changed(Window&);
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);
-    void tell_wms_applet_area_size_changed(const Gfx::IntSize&);
+    void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
 
-    void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
-    void start_window_resize(Window&, const MouseEvent&);
-    void start_window_move(Window&, const MouseEvent&);
-    void start_window_move(Window&, const Gfx::IntPoint&);
+    void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
+    void start_window_resize(Window&, MouseEvent const&);
+    void start_window_move(Window&, MouseEvent const&);
+    void start_window_move(Window&, Gfx::IntPoint const&);
 
-    const Window* active_fullscreen_window() const
+    Window const* active_fullscreen_window() const
     {
         if (m_active_window && m_active_window->is_fullscreen()) {
             return m_active_window;
@@ -188,8 +188,8 @@ public:
 
     void did_popup_a_menu(Badge<Menu>);
 
-    void start_menu_doubleclick(Window& window, const MouseEvent& event);
-    bool is_menu_doubleclick(Window& window, const MouseEvent& event) const;
+    void start_menu_doubleclick(Window& window, MouseEvent const& event);
+    bool is_menu_doubleclick(Window& window, MouseEvent const& event) const;
 
     void minimize_windows(Window&, bool);
     void maximize_windows(Window&, bool);
@@ -223,7 +223,7 @@ public:
         }
     }
 
-    Gfx::IntPoint get_recommended_window_position(const Gfx::IntPoint& desired);
+    Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint const& desired);
 
     int compositor_icon_scale() const;
     void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
@@ -234,11 +234,11 @@ public:
     WindowStack& window_stack() { return m_window_stack; }
 
 private:
-    NonnullRefPtr<Cursor> get_cursor(const String& name);
+    NonnullRefPtr<Cursor> get_cursor(String const& name);
 
     void process_mouse_event(MouseEvent&, Window*& hovered_window);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
-    bool process_ongoing_window_resize(const MouseEvent&, Window*& hovered_window);
+    bool process_ongoing_window_resize(MouseEvent const&, Window*& hovered_window);
     bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
     bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
 
@@ -279,7 +279,7 @@ private:
             Gfx::IntPoint last_position;
         };
 
-        const ClickMetadata& metadata_for_button(MouseButton) const;
+        ClickMetadata const& metadata_for_button(MouseButton) const;
         ClickMetadata& metadata_for_button(MouseButton);
 
         void reset()
@@ -301,7 +301,7 @@ private:
         ClickMetadata m_forward;
     };
 
-    bool is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const;
+    bool is_considered_doubleclick(MouseEvent const&, DoubleClickInfo::ClickMetadata const&) const;
 
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
