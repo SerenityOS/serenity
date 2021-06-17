@@ -99,11 +99,21 @@ public:
     operator bool() const { return !is_null(); }
 
     // Disable default implementations that would use surprising integer promotion.
-    bool operator==(const Address&) const = delete;
     bool operator<=(const Address&) const = delete;
     bool operator>=(const Address&) const = delete;
     bool operator<(const Address&) const = delete;
     bool operator>(const Address&) const = delete;
+
+    bool operator==(const Address& other) const
+    {
+        if (this == &other)
+            return true;
+        return m_seg == other.m_seg && m_bus == other.m_bus && m_device == other.m_device && m_function == other.m_function;
+    }
+    bool operator!=(const Address& other) const
+    {
+        return !(*this == other);
+    }
 
     u16 seg() const { return m_seg; }
     u8 bus() const { return m_bus; }
