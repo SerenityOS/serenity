@@ -24,13 +24,13 @@ void spawn_terminal(String const& directory);
 
 class LauncherHandler : public RefCounted<LauncherHandler> {
 public:
-    LauncherHandler(const NonnullRefPtr<Desktop::Launcher::Details>& details)
+    LauncherHandler(NonnullRefPtr<Desktop::Launcher::Details> const& details)
         : m_details(details)
     {
     }
 
-    NonnullRefPtr<GUI::Action> create_launch_action(Function<void(const LauncherHandler&)>);
-    const Desktop::Launcher::Details& details() const { return *m_details; }
+    NonnullRefPtr<GUI::Action> create_launch_action(Function<void(LauncherHandler const&)>);
+    Desktop::Launcher::Details const& details() const { return *m_details; }
 
 private:
     NonnullRefPtr<Desktop::Launcher::Details> m_details;
@@ -56,18 +56,18 @@ public:
     void open_next_directory();
     int path_history_size() const { return m_path_history.size(); }
     int path_history_position() const { return m_path_history_position; }
-    static RefPtr<LauncherHandler> get_default_launch_handler(const NonnullRefPtrVector<LauncherHandler>& handlers);
-    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const URL& url);
-    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(const String& path);
+    static RefPtr<LauncherHandler> get_default_launch_handler(NonnullRefPtrVector<LauncherHandler> const& handlers);
+    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(URL const& url);
+    static NonnullRefPtrVector<LauncherHandler> get_launch_handlers(String const& path);
 
     void refresh();
 
-    void launch(const URL&, const LauncherHandler&) const;
+    void launch(URL const&, LauncherHandler const&) const;
 
-    Function<void(const StringView& path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
+    Function<void(StringView const& path, bool can_read_in_path, bool can_write_in_path)> on_path_change;
     Function<void(GUI::AbstractView&)> on_selection_change;
-    Function<void(const GUI::ModelIndex&, const GUI::ContextMenuEvent&)> on_context_menu_request;
-    Function<void(const StringView&)> on_status_message;
+    Function<void(GUI::ModelIndex const&, GUI::ContextMenuEvent const&)> on_context_menu_request;
+    Function<void(StringView const&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
     Function<void()> on_accepted_drop;
 
@@ -94,7 +94,7 @@ public:
         }
     }
 
-    const GUI::AbstractView& current_view() const
+    GUI::AbstractView const& current_view() const
     {
         return const_cast<DirectoryView*>(this)->current_view();
     }
@@ -112,7 +112,7 @@ public:
 
     void set_should_show_dotfiles(bool);
 
-    const GUI::FileSystemModel::Node& node(const GUI::ModelIndex&) const;
+    GUI::FileSystemModel::Node const& node(GUI::ModelIndex const&) const;
 
     bool is_desktop() const { return m_mode == Mode::Desktop; }
 
@@ -128,11 +128,11 @@ public:
 private:
     explicit DirectoryView(Mode);
 
-    const GUI::FileSystemModel& model() const { return *m_model; }
+    GUI::FileSystemModel const& model() const { return *m_model; }
     GUI::FileSystemModel& model() { return *m_model; }
 
     void handle_selection_change();
-    void handle_drop(const GUI::ModelIndex&, const GUI::DropEvent&);
+    void handle_drop(GUI::ModelIndex const&, GUI::DropEvent const&);
     void do_delete(bool should_confirm);
 
     // ^GUI::ModelClient
@@ -144,9 +144,9 @@ private:
     void setup_columns_view();
     void setup_table_view();
 
-    void handle_activation(const GUI::ModelIndex&);
+    void handle_activation(GUI::ModelIndex const&);
 
-    void set_status_message(const StringView&);
+    void set_status_message(StringView const&);
     void update_statusbar();
 
     Mode m_mode { Mode::Normal };

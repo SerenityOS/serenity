@@ -12,7 +12,7 @@
 #include <sched.h>
 #include <sys/stat.h>
 
-static int perform_copy(const String& source, const String& destination);
+static int perform_copy(String const& source, String const& destination);
 static void report_error(String message);
 static void report_warning(String message);
 
@@ -56,7 +56,7 @@ static void report_warning(String message)
     outln("WARN {}", message);
 }
 
-static bool collect_work_items(const String& source, const String& destination, Vector<WorkItem>& items)
+static bool collect_work_items(String const& source, String const& destination, Vector<WorkItem>& items)
 {
     struct stat st = {};
     if (stat(source.characters(), &st) < 0) {
@@ -98,7 +98,7 @@ static bool collect_work_items(const String& source, const String& destination, 
     return true;
 }
 
-int perform_copy(const String& source, const String& destination)
+int perform_copy(String const& source, String const& destination)
 {
     Vector<WorkItem> items;
 
