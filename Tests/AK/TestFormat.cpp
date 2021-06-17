@@ -289,3 +289,11 @@ TEST_CASE(long_long_regression)
 
     EXPECT_EQ(builder.string_view(), "81985529216486895");
 }
+
+TEST_CASE(hex_dump)
+{
+    EXPECT_EQ(String::formatted("{:hex-dump}", "0000"), "30303030");
+    EXPECT_EQ(String::formatted("{:>4hex-dump}", "0000"), "30303030    0000");
+    EXPECT_EQ(String::formatted("{:>2hex-dump}", "0000"), "3030    00\n3030    00");
+    EXPECT_EQ(String::formatted("{:*>4hex-dump}", "0000"), "30303030****0000");
+}
