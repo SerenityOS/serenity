@@ -44,72 +44,6 @@ void spawn_terminal(String const& directory)
     posix_spawn_file_actions_destroy(&spawn_actions);
 }
 
-enum class FileOperation {
-    Copy,
-};
-
-static HashTable<RefPtr<GUI::Window>> file_operation_windows;
-
-static void run_file_operation([[maybe_unused]] FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
-{
-    int pipe_fds[2];
-    if (pipe(pipe_fds) < 0) {
-        perror("pipe");
-        VERIFY_NOT_REACHED();
-    }
-
-    pid_t child_pid = fork();
-    if (child_pid < 0) {
-        perror("fork");
-        VERIFY_NOT_REACHED();
-    }
-
-    if (!child_pid) {
-        if (close(pipe_fds[0]) < 0) {
-            perror("close");
-            _exit(1);
-        }
-        if (dup2(pipe_fds[1], STDOUT_FILENO) < 0) {
-            perror("dup2");
-            _exit(1);
-        }
-
-        Vector<char const*> file_operation_args;
-        file_operation_args.append("/bin/FileOperation");
-        file_operation_args.append("Copy");
-
-        for (auto& source : sources)
-            file_operation_args.append(source.characters());
-
-        file_operation_args.append(destination.characters());
-        file_operation_args.append(nullptr);
-
-        if (execvp(file_operation_args.first(), const_cast<char**>(file_operation_args.data())) < 0) {
-            perror("execvp");
-            _exit(1);
-        }
-        VERIFY_NOT_REACHED();
-    } else {
-        if (close(pipe_fds[1]) < 0) {
-            perror("close");
-            _exit(1);
-        }
-    }
-
-    auto window = GUI::Window::construct();
-    file_operation_windows.set(window);
-
-    auto pipe_input_file = Core::File::construct();
-    pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
-
-    window->set_title("Copying Files...");
-    window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);
-    window->resize(320, 190);
-    if (parent_window)
-        window->center_within(*parent_window);
-    window->show();
-}
-
 NonnullRefPtr<GUI::Action> LauncherHandler::create_launch_action(Function<void(LauncherHandler const&)> launch_handler)
 {
     auto icon = GUI::FileIconProvider::icon_for_executable(details().executable).bitmap_for_size(16);
@@ -547,7 +481,7 @@ void DirectoryView::do_delete(bool should_confirm)
 {
     auto paths = selected_file_paths();
     VERIFY(!paths.is_empty());
-    FileUtils::delete_paths(paths, should_confirm, window());
+    delete_paths(paths, should_confirm, window());
 }
 
 void DirectoryView::handle_selection_change()

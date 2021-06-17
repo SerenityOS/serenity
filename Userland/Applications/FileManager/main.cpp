@@ -57,7 +57,7 @@ using namespace FileManager;
 
 static int run_in_desktop_mode(RefPtr<Core::ConfigFile>);
 static int run_in_windowed_mode(RefPtr<Core::ConfigFile>, String initial_location, String entry_focused_on_init);
-static void do_copy(Vector<String> const& selected_file_paths, FileUtils::FileOperation file_operation);
+static void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation);
 static void do_paste(String const& target_directory, GUI::Window* window);
 static void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window);
 static void do_unzip_archive(Vector<String> const& selected_file_paths, GUI::Window* window);
@@ -131,13 +131,13 @@ int main(int argc, char** argv)
     return run_in_windowed_mode(move(config), initial_location, focused_entry);
 }
 
-void do_copy(Vector<String> const& selected_file_paths, FileUtils::FileOperation file_operation)
+void do_copy(Vector<String> const& selected_file_paths, FileOperation file_operation)
 {
     if (selected_file_paths.is_empty())
         VERIFY_NOT_REACHED();
 
     StringBuilder copy_text;
-    if (file_operation == FileUtils::FileOperation::Cut) {
+    if (file_operation == FileOperation::Cut) {
         copy_text.append("#cut\n"); // This exploits the comment lines in the text/uri-list specification, which might be a bit hackish
     }
     for (auto& path : selected_file_paths) {
@@ -180,7 +180,7 @@ void do_paste(String const& target_directory, GUI::Window* window)
             auto error_message = String::formatted("Could not paste '{}': {}", url.path(), result.error().error_code);
             GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
         } else if (should_delete_src) {
-            FileUtils::delete_path(url.path(), window);
+            delete_path(url.path(), window);
         }
     }
 }
@@ -297,7 +297,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileUtils::FileOperation::Cut);
+            do_copy(paths, FileOperation::Cut);
         },
         window);
     cut_action->set_enabled(false);
@@ -309,7 +309,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileUtils::FileOperation::Copy);
+            do_copy(paths, FileOperation::Copy);
         },
         window);
     copy_action->set_enabled(false);
@@ -660,7 +660,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileUtils::FileOperation::Cut);
+            do_copy(paths, FileOperation::Cut);
             refresh_tree_view();
         },
         window);
@@ -676,7 +676,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileUtils::FileOperation::Copy);
+            do_copy(paths, FileOperation::Copy);
             refresh_tree_view();
         },
         window);
@@ -816,7 +816,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     auto tree_view_delete_action = GUI::CommonActions::make_delete_action(
         [&](auto&) {
-            FileUtils::delete_paths(tree_view_selected_file_paths(), true, window);
+            delete_paths(tree_view_selected_file_paths(), true, window);
             refresh_tree_view();
         },
         &tree_view);
