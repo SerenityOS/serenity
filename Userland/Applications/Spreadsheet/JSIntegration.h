@@ -26,7 +26,7 @@ public:
 
     virtual ~SheetGlobalObject() override;
 
-    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
+    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, JS::AllowSideEffects = JS::AllowSideEffects::Yes) const override;
     virtual bool put(const JS::PropertyName&, JS::Value value, JS::Value receiver = {}) override;
     virtual void initialize_global_object() override;
 

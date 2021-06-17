@@ -169,10 +169,10 @@ bool Object::set_integrity_level(IntegrityLevel level)
     // FIXME: This feels clunky and should get nicer abstractions.
     auto update_property = [this](auto& property_name, auto new_attributes) {
         if (property_name.is_number()) {
-            auto value_and_attributes = m_indexed_properties.get(nullptr, property_name.as_number(), false).value();
+            auto value_and_attributes = m_indexed_properties.get(nullptr, property_name.as_number(), AllowSideEffects::No).value();
             auto value = value_and_attributes.value;
             auto attributes = value_and_attributes.attributes.bits() & new_attributes;
-            m_indexed_properties.put(nullptr, property_name.as_number(), value, attributes, false);
+            m_indexed_properties.put(nullptr, property_name.as_number(), value, attributes, AllowSideEffects::No);
         } else {
             auto metadata = shape().lookup(property_name.to_string_or_symbol()).value();
             auto attributes = metadata.attributes.bits() & new_attributes;
@@ -248,7 +248,7 @@ bool Object::test_integrity_level(IntegrityLevel level)
     return true;
 }
 
-Value Object::get_own_property(const PropertyName& property_name, Value receiver, bool without_side_effects) const
+Value Object::get_own_property(const PropertyName& property_name, Value receiver, AllowSideEffects allow_side_effects) const
 {
     VERIFY(property_name.is_valid());
     VERIFY(!receiver.is_empty());
@@ -256,7 +256,7 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
     Value value_here;
 
     if (property_name.is_number()) {
-        auto existing_property = m_indexed_properties.get(nullptr, property_name.as_number(), false);
+        auto existing_property = m_indexed_properties.get(nullptr, property_name.as_number(), AllowSideEffects::No);
         if (!existing_property.has_value())
             return {};
         value_here = existing_property.value().value.value_or(js_undefined());
@@ -268,7 +268,7 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
     }
 
     VERIFY(!value_here.is_empty());
-    if (!without_side_effects) {
+    if (allow_side_effects == AllowSideEffects::Yes) {
         if (value_here.is_accessor())
             return value_here.as_accessor().call_getter(receiver);
         if (value_here.is_native_property())
@@ -379,7 +379,7 @@ Optional<PropertyDescriptor> Object::get_own_property_descriptor(const PropertyN
     PropertyAttributes attributes;
 
     if (property_name.is_number()) {
-        auto existing_value = m_indexed_properties.get(nullptr, property_name.as_number(), false);
+        auto existing_value = m_indexed_properties.get(nullptr, property_name.as_number(), AllowSideEffects::No);
         if (!existing_value.has_value())
             return {};
         value = existing_value.value().value;
@@ -579,7 +579,7 @@ bool Object::define_accessor(const PropertyName& property_name, Function* getter
 {
     VERIFY(property_name.is_valid());
 
-    auto existing_property = get_own_property(property_name, this, true);
+    auto existing_property = get_own_property(property_name, this, AllowSideEffects::No);
     auto* accessor = existing_property.is_accessor() ? &existing_property.as_accessor() : nullptr;
     if (!accessor) {
         accessor = Accessor::create(vm(), getter, setter);
@@ -712,7 +712,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
 {
     VERIFY(!(mode == PutOwnPropertyMode::Put && value.is_accessor()));
 
-    auto existing_property = m_indexed_properties.get(nullptr, property_index, false);
+    auto existing_property = m_indexed_properties.get(nullptr, property_index, AllowSideEffects::No);
     auto new_property = !existing_property.has_value();
 
     if (!is_extensible() && new_property) {
@@ -751,7 +751,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     if (value_here.is_native_property()) {
         call_native_property_setter(value_here.as_native_property(), this, value);
     } else {
-        m_indexed_properties.put(this, property_index, value, attributes, mode == PutOwnPropertyMode::Put);
+        m_indexed_properties.put(this, property_index, value, attributes, mode == PutOwnPropertyMode::Put ? AllowSideEffects::Yes : AllowSideEffects::No);
     }
     return true;
 }
@@ -789,7 +789,7 @@ void Object::ensure_shape_is_unique()
     m_shape = m_shape->create_unique_clone();
 }
 
-Value Object::get_by_index(u32 property_index, bool without_side_effects) const
+Value Object::get_by_index(u32 property_index, AllowSideEffects allow_side_effects) const
 {
     const Object* object = this;
     while (object) {
@@ -798,7 +798,7 @@ Value Object::get_by_index(u32 property_index, bool without_side_effects) const
             if (property_index < string.length())
                 return js_string(heap(), string.substring(property_index, 1));
         } else if (static_cast<size_t>(property_index) < object->m_indexed_properties.array_like_size()) {
-            auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index, !without_side_effects);
+            auto result = object->m_indexed_properties.get(const_cast<Object*>(this), property_index, allow_side_effects);
             if (vm().exception())
                 return {};
             if (result.has_value() && !result.value().value.is_empty())
@@ -811,19 +811,19 @@ Value Object::get_by_index(u32 property_index, bool without_side_effects) const
     return {};
 }
 
-Value Object::get(const PropertyName& property_name, Value receiver, bool without_side_effects) const
+Value Object::get(const PropertyName& property_name, Value receiver, AllowSideEffects allow_side_effects) const
 {
     VERIFY(property_name.is_valid());
 
     if (property_name.is_number())
-        return get_by_index(property_name.as_number(), without_side_effects);
+        return get_by_index(property_name.as_number(), allow_side_effects);
 
     if (receiver.is_empty())
         receiver = Value(this);
 
     const Object* object = this;
     while (object) {
-        auto value = object->get_own_property(property_name, receiver, without_side_effects);
+        auto value = object->get_own_property(property_name, receiver, allow_side_effects);
         if (vm().exception())
             return {};
         if (!value.is_empty())
@@ -838,7 +838,7 @@ Value Object::get(const PropertyName& property_name, Value receiver, bool withou
 Value Object::get_without_side_effects(const PropertyName& property_name) const
 {
     TemporaryClearException clear_exception(vm());
-    return get(property_name, {}, true);
+    return get(property_name, {}, AllowSideEffects::No);
 }
 
 bool Object::put_by_index(u32 property_index, Value value)
@@ -849,7 +849,7 @@ bool Object::put_by_index(u32 property_index, Value value)
     // Otherwise, it goes in the own property storage.
     Object* object = this;
     while (object) {
-        auto existing_value = object->m_indexed_properties.get(nullptr, property_index, false);
+        auto existing_value = object->m_indexed_properties.get(nullptr, property_index, AllowSideEffects::No);
         if (existing_value.has_value()) {
             auto value_here = existing_value.value();
             if (value_here.value.is_accessor()) {
