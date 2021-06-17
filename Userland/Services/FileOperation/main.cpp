@@ -13,29 +13,6 @@
 #include <sched.h>
 #include <sys/stat.h>
 
-static int perform_copy(Vector<String> const& sources, String const& destination);
-static void report_error(String message);
-static void report_warning(String message);
-
-int main(int argc, char** argv)
-{
-    String operation;
-    Vector<String> sources;
-    String destination;
-
-    Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(operation, "Operation", "operation", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(sources, "Sources", "sources", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(destination, "Destination", "destination", Core::ArgsParser::Required::Yes);
-    args_parser.parse(argc, argv);
-
-    if (operation == "Copy")
-        return perform_copy(sources, destination);
-
-    report_warning(String::formatted("Unknown operation '{}'", operation));
-    return 0;
-}
-
 struct WorkItem {
     enum class Type {
         CreateDirectory,
@@ -46,6 +23,30 @@ struct WorkItem {
     String destination;
     off_t size;
 };
+
+static int perform_copy(Vector<String> const& sources, String const& destination);
+static int execute_work_items(Vector<WorkItem> const& items);
+static void report_error(String message);
+static void report_warning(String message);
+
+int main(int argc, char** argv)
+{
+    String operation;
+    Vector<String> sources;
+    String destination;
+
+    Core::ArgsParser args_parser;
+    args_parser.add_positional_argument(operation, "Operation: either 'Copy' or 'Move'", "operation", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(sources, "Sources", "sources", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(destination, "Destination", "destination", Core::ArgsParser::Required::Yes);
+    args_parser.parse(argc, argv);
+
+    if (operation == "Copy")
+        return perform_copy(sources, destination);
+
+    report_warning(String::formatted("Unknown operation '{}'", operation));
+    return 0;
+}
 
 static void report_error(String message)
 {
@@ -108,59 +109,74 @@ int perform_copy(Vector<String> const& sources, String const& destination)
             return 1;
     }
 
-    off_t total_bytes_to_copy = 0;
-    for (auto& item : items)
-        total_bytes_to_copy += item.size;
+    return execute_work_items(items);
+}
 
-    off_t bytes_copied_so_far = 0;
+int execute_work_items(Vector<WorkItem> const& items)
+{
+    off_t total_work_bytes = 0;
+    for (auto& item : items)
+        total_work_bytes += item.size;
+
+    off_t executed_work_bytes = 0;
 
     for (size_t i = 0; i < items.size(); ++i) {
         auto& item = items[i];
         off_t item_done = 0;
         auto print_progress = [&] {
-            outln("PROGRESS {} {} {} {} {} {} {}", i, items.size(), bytes_copied_so_far, total_bytes_to_copy, item_done, item.size, item.source);
+            outln("PROGRESS {} {} {} {} {} {} {}", i, items.size(), executed_work_bytes, total_work_bytes, item_done, item.size, item.source);
         };
-        if (item.type == WorkItem::Type::CreateDirectory) {
+
+        switch (item.type) {
+
+        case WorkItem::Type::CreateDirectory: {
             outln("MKDIR {}", item.destination);
             if (mkdir(item.destination.characters(), 0755) < 0 && errno != EEXIST) {
                 auto original_errno = errno;
                 report_error(String::formatted("mkdir: {}", strerror(original_errno)));
                 return 1;
             }
-            continue;
+            break;
         }
-        VERIFY(item.type == WorkItem::Type::CopyFile);
-        auto source_file_or_error = Core::File::open(item.source, Core::OpenMode::ReadOnly);
-        if (source_file_or_error.is_error()) {
-            report_warning(String::formatted("Failed to open {} for reading: {}", item.source, source_file_or_error.error()));
-            return 1;
-        }
-        auto destination_file_or_error = Core::File::open(item.destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
-        if (destination_file_or_error.is_error()) {
-            report_warning(String::formatted("Failed to open {} for write: {}", item.destination, destination_file_or_error.error()));
-            return 1;
-        }
-        auto& source_file = *source_file_or_error.value();
-        auto& destination_file = *destination_file_or_error.value();
 
-        while (true) {
-            print_progress();
-            auto buffer = source_file.read(65536);
-            if (buffer.is_empty())
-                break;
-            if (!destination_file.write(buffer)) {
-                report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
+        case WorkItem::Type::CopyFile: {
+            auto source_file_or_error = Core::File::open(item.source, Core::OpenMode::ReadOnly);
+            if (source_file_or_error.is_error()) {
+                report_warning(String::formatted("Failed to open {} for reading: {}", item.source, source_file_or_error.error()));
                 return 1;
             }
-            item_done += buffer.size();
-            bytes_copied_so_far += buffer.size();
+            auto destination_file_or_error = Core::File::open(item.destination, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
+            if (destination_file_or_error.is_error()) {
+                report_warning(String::formatted("Failed to open {} for write: {}", item.destination, destination_file_or_error.error()));
+                return 1;
+            }
+            auto& source_file = *source_file_or_error.value();
+            auto& destination_file = *destination_file_or_error.value();
+
+            while (true) {
+                print_progress();
+                auto buffer = source_file.read(65536);
+                if (buffer.is_empty())
+                    break;
+                if (!destination_file.write(buffer)) {
+                    report_warning(String::formatted("Failed to write to destination file: {}", destination_file.error_string()));
+                    return 1;
+                }
+                item_done += buffer.size();
+                executed_work_bytes += buffer.size();
+                print_progress();
+                // FIXME: Remove this once the kernel is smart enough to schedule other threads
+                //        while we're doing heavy I/O. Right now, copying a large file will totally
+                //        starve the rest of the system.
+                sched_yield();
+            }
             print_progress();
-            // FIXME: Remove this once the kernel is smart enough to schedule other threads
-            //        while we're doing heavy I/O. Right now, copying a large file will totally
-            //        starve the rest of the system.
-            sched_yield();
+            break;
         }
-        print_progress();
+
+        default:
+            VERIFY_NOT_REACHED();
+        }
     }
 
     outln("FINISH");
