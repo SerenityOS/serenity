@@ -32,6 +32,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.findIndex, find_index, 1, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
+    define_native_function(vm.names.join, join, 1, attr);
 
     define_native_accessor(vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 }
@@ -195,6 +196,38 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
         return IterationDecision::Continue;
     });
     return Value(result);
+}
+
+// 23.2.3.15 %TypedArray%.prototype.join ( separator ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.join
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+    auto length = typed_array->array_length();
+    String separator = ",";
+    if (!vm.argument(0).is_undefined()) {
+        separator = vm.argument(0).to_string(global_object);
+        if (vm.exception())
+            return {};
+    }
+
+    StringBuilder builder;
+    for (size_t i = 0; i < length; ++i) {
+        if (i > 0)
+            builder.append(separator);
+        auto value = typed_array->get(i).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+        if (value.is_nullish())
+            continue;
+        auto string = value.to_string(global_object);
+        if (vm.exception())
+            return {};
+        builder.append(string);
+    }
+
+    return js_string(vm, builder.to_string());
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
