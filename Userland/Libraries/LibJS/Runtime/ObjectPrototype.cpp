@@ -40,6 +40,8 @@ void ObjectPrototype::initialize(GlobalObject& global_object)
     // Annex B
     define_native_function(vm.names.__defineGetter__, define_getter, 2, attr);
     define_native_function(vm.names.__defineSetter__, define_setter, 2, attr);
+    define_native_function(vm.names.__lookupGetter__, lookup_getter, 1, attr);
+    define_native_function(vm.names.__lookupSetter__, lookup_setter, 1, attr);
     define_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
 }
 
@@ -211,6 +213,56 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::define_setter)
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectDefinePropertyReturnedFalse);
         return {};
     }
+    return js_undefined();
+}
+
+// B.2.2.4 Object.prototype.__lookupGetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_getter)
+{
+    auto object = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    auto key = vm.argument(0).to_property_key(global_object);
+    if (vm.exception())
+        return {};
+
+    while (object) {
+        auto desc = object->get_own_property_descriptor(key);
+        if (vm.exception())
+            return {};
+        if (desc.has_value())
+            return desc->getter ?: js_undefined();
+        object = object->prototype();
+        if (vm.exception())
+            return {};
+    }
+
+    return js_undefined();
+}
+
+// B.2.2.5 Object.prototype.__lookupSetter__ ( P ), https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::lookup_setter)
+{
+    auto* object = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    auto key = vm.argument(0).to_property_key(global_object);
+    if (vm.exception())
+        return {};
+
+    while (object) {
+        auto desc = object->get_own_property_descriptor(key);
+        if (vm.exception())
+            return {};
+        if (desc.has_value())
+            return desc->setter ?: js_undefined();
+        object = object->prototype();
+        if (vm.exception())
+            return {};
+    }
+
     return js_undefined();
 }
 

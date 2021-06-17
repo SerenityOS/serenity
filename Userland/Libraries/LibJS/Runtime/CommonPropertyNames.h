@@ -15,6 +15,8 @@ namespace JS {
     P(__proto__)                             \
     P(__defineGetter__)                      \
     P(__defineSetter__)                      \
+    P(__lookupGetter__)                      \
+    P(__lookupSetter__)                      \
     P(BYTES_PER_ELEMENT)                     \
     P(BigInt)                                \
     P(Boolean)                               \
