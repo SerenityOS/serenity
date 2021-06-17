@@ -101,11 +101,11 @@ public:
             if (copied_or_error.is_error())
                 return copied_or_error.error();
             auto copied = copied_or_error.value();
-            VERIFY((size_t)copied <= to_copy);
-            if (!write(buffer, nwritten, (size_t)copied))
+            VERIFY(copied <= to_copy);
+            if (!write(buffer, nwritten, copied))
                 return EFAULT;
-            nwritten += (size_t)copied;
-            if ((size_t)copied < to_copy)
+            nwritten += copied;
+            if (copied < to_copy)
                 break;
         }
         return nwritten;

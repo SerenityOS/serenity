@@ -17,7 +17,7 @@ KResultOr<int> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
     Locker locker(*g_hostname_lock, Lock::Mode::Shared);
-    if ((size_t)size < (g_hostname->length() + 1))
+    if (size < (g_hostname->length() + 1))
         return ENAMETOOLONG;
     if (!copy_to_user(buffer, g_hostname->characters(), g_hostname->length() + 1))
         return EFAULT;
