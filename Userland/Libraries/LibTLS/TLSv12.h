@@ -24,10 +24,7 @@ namespace TLS {
 
 inline void print_buffer(ReadonlyBytes buffer)
 {
-    StringBuilder builder(buffer.size() * 2);
-    for (auto b : buffer)
-        builder.appendff("{:02x} ", b);
-    dbgln("{}", builder.string_view());
+    dbgln("{:hex-dump}", buffer);
 }
 
 inline void print_buffer(const ByteBuffer& buffer)
