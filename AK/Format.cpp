@@ -377,6 +377,29 @@ void FormatBuilder::put_f64(
 }
 #endif
 
+void FormatBuilder::put_hexdump(ReadonlyBytes bytes, size_t width, char fill)
+{
+    auto put_char_view = [&](auto i) {
+        put_padding(fill, 4);
+        for (size_t j = i - width; j < i; ++j) {
+            auto ch = bytes[j];
+            m_builder.append(ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
+        }
+    };
+    for (size_t i = 0; i < bytes.size(); ++i) {
+        if (width > 0) {
+            if (i % width == 0 && i) {
+                put_char_view(i);
+                put_literal("\n");
+            }
+        }
+        put_u64(bytes[i], 16, false, false, true, Align::Right, 2);
+    }
+
+    if (width > 0 && bytes.size() && bytes.size() % width == 0)
+        put_char_view(bytes.size());
+}
+
 void vformat(StringBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
 {
     FormatBuilder fmtbuilder { builder };
@@ -456,6 +479,8 @@ void StandardFormatter::parse(TypeErasedFormatParams& params, FormatParser& pars
         m_mode = Mode::Hexfloat;
     else if (parser.consume_specific('A'))
         m_mode = Mode::HexfloatUppercase;
+    else if (parser.consume_specific("hex-dump"))
+        m_mode = Mode::HexDump;
 
     if (!parser.is_eof())
         dbgln("{} did not consume '{}'", __PRETTY_FUNCTION__, parser.remaining());
@@ -471,7 +496,7 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
         VERIFY_NOT_REACHED();
     if (m_zero_pad)
         VERIFY_NOT_REACHED();
-    if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character)
+    if (m_mode != Mode::Default && m_mode != Mode::String && m_mode != Mode::Character && m_mode != Mode::HexDump)
         VERIFY_NOT_REACHED();
     if (m_width.has_value() && m_precision.has_value())
         VERIFY_NOT_REACHED();
@@ -479,7 +504,10 @@ void Formatter<StringView>::format(FormatBuilder& builder, StringView value)
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(NumericLimits<size_t>::max());
 
-    builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
+    if (m_mode == Mode::HexDump)
+        builder.put_hexdump(value.bytes(), m_width.value(), m_fill);
+    else
+        builder.put_string(value, m_align, m_width.value(), m_precision.value(), m_fill);
 }
 
 void Formatter<FormatString>::vformat(FormatBuilder& builder, StringView fmtstr, TypeErasedFormatParams params)
@@ -535,6 +563,10 @@ void Formatter<T, typename EnableIf<IsIntegral<T>>::Type>::format(FormatBuilder&
     } else if (m_mode == Mode::HexadecimalUppercase) {
         base = 16;
         upper_case = true;
+    } else if (m_mode == Mode::HexDump) {
+        m_width = m_width.value_or(32);
+        builder.put_hexdump({ &value, sizeof(value) }, m_width.value(), m_fill);
+        return;
     } else {
         VERIFY_NOT_REACHED();
     }
@@ -563,6 +595,8 @@ void Formatter<bool>::format(FormatBuilder& builder, bool value)
     if (m_mode == Mode::Binary || m_mode == Mode::BinaryUppercase || m_mode == Mode::Decimal || m_mode == Mode::Octal || m_mode == Mode::Hexadecimal || m_mode == Mode::HexadecimalUppercase) {
         Formatter<u8> formatter { *this };
         return formatter.format(builder, static_cast<u8>(value));
+    } else if (m_mode == Mode::HexDump) {
+        return builder.put_hexdump({ &value, sizeof(value) }, m_width.value_or(32), m_fill);
     } else {
         Formatter<StringView> formatter { *this };
         return formatter.format(builder, value ? "true" : "false");
