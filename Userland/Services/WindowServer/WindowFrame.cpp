@@ -732,8 +732,7 @@ void WindowFrame::handle_mouse_event(MouseEvent const& event)
         return;
     }
 
-    auto menubar_rect = this->menubar_rect();
-    if (menubar_rect.contains(event.position())) {
+    if (menubar_rect().contains(event.position())) {
         wm.clear_resize_candidate();
         handle_menubar_mouse_event(event);
         return;
