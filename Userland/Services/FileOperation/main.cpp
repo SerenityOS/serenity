@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,24 +13,24 @@
 #include <sched.h>
 #include <sys/stat.h>
 
-static int perform_copy(String const& source, String const& destination);
+static int perform_copy(Vector<String> const& sources, String const& destination);
 static void report_error(String message);
 static void report_warning(String message);
 
 int main(int argc, char** argv)
 {
     String operation;
-    String source;
+    Vector<String> sources;
     String destination;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(operation, "Operation", "operation", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(source, "Source", "source", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(sources, "Sources", "sources", Core::ArgsParser::Required::Yes);
     args_parser.add_positional_argument(destination, "Destination", "destination", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
     if (operation == "Copy")
-        return perform_copy(source, destination);
+        return perform_copy(sources, destination);
 
     report_warning(String::formatted("Unknown operation '{}'", operation));
     return 0;
@@ -98,12 +99,14 @@ static bool collect_work_items(String const& source, String const& destination, 
     return true;
 }
 
-int perform_copy(String const& source, String const& destination)
+int perform_copy(Vector<String> const& sources, String const& destination)
 {
     Vector<WorkItem> items;
 
-    if (!collect_work_items(source, destination, items))
-        return 1;
+    for (auto& source : sources) {
+        if (!collect_work_items(source, destination, items))
+            return 1;
+    }
 
     off_t total_bytes_to_copy = 0;
     for (auto& item : items)
