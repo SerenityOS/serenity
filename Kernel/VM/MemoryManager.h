@@ -43,9 +43,9 @@ inline FlatPtr low_physical_to_virtual(FlatPtr physical)
     return physical + 0xc0000000;
 }
 
-inline FlatPtr virtual_to_low_physical(FlatPtr physical)
+inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return physical - 0xc0000000;
+    return virtual_ - 0xc0000000;
 }
 
 enum class UsedMemoryRangeType {
