@@ -1409,8 +1409,10 @@ NonnullRefPtr<FunctionNodeType> Parser::parse_function_node(u8 parse_options)
         consume(TokenType::Function);
         if (!is_generator) {
             is_generator = match(TokenType::Asterisk);
-            if (is_generator)
+            if (is_generator) {
                 consume(TokenType::Asterisk);
+                parse_options = parse_options | FunctionNodeParseOptions::IsGeneratorFunction;
+            }
         }
 
         if (FunctionNodeType::must_have_name() || match(TokenType::Identifier))
@@ -1499,6 +1501,10 @@ Vector<FunctionNode::Parameter> Parser::parse_formal_parameters(int& function_le
             has_default_parameter = true;
             function_length = parameters.size();
             default_value = parse_expression(2);
+
+            bool is_generator = parse_options & FunctionNodeParseOptions::IsGeneratorFunction;
+            if (is_generator && default_value && default_value->fast_is<Identifier>() && static_cast<Identifier&>(*default_value).string() == "yield"sv)
+                syntax_error("Generator function parameter initializer cannot contain a reference to an identifier named \"yield\"");
         }
         parameters.append({ move(parameter), default_value, is_rest });
         if (match(TokenType::ParenClose))
