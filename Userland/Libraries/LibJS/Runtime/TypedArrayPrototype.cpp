@@ -53,7 +53,12 @@ static TypedArrayBase* typed_array_from(VM& vm, GlobalObject& global_object)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "TypedArray");
         return nullptr;
     }
-    return static_cast<TypedArrayBase*>(this_object);
+    auto* typed_array = static_cast<TypedArrayBase*>(this_object);
+    if (typed_array->viewed_array_buffer()->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return nullptr;
+    }
+    return typed_array;
 }
 
 static Function* callback_from_args(GlobalObject& global_object, const String& name)
