@@ -22,24 +22,6 @@ static bool g_continue { false };
 static void (*old_signal)(int);
 static Wasm::DebuggerBytecodeInterpreter g_interpreter;
 
-static void print_buffer(ReadonlyBytes buffer, int split)
-{
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        if (split > 0) {
-            if (i % split == 0 && i) {
-                out("    ");
-                for (size_t j = i - split; j < i; ++j) {
-                    auto ch = buffer[j];
-                    out("{:c}", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
-                }
-                outln();
-            }
-        }
-        out("{:02x} ", buffer[i]);
-    }
-    puts("");
-}
-
 static void sigint_handler(int)
 {
     if (!g_continue) {
@@ -143,7 +125,7 @@ static bool pre_interpret_hook(Wasm::Configuration& config, Wasm::InstructionPoi
                     warnln("invalid memory index {} (not found)", args[2]);
                     continue;
                 }
-                print_buffer(mem->data(), 32);
+                warnln("{:>32hex-dump}", mem->data().bytes());
                 continue;
             }
             if (what.is_one_of("i", "instr", "instruction")) {

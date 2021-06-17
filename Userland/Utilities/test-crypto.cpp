@@ -91,20 +91,10 @@ static int crc32_tests();
 
 static void print_buffer(ReadonlyBytes buffer, int split)
 {
-    for (size_t i = 0; i < buffer.size(); ++i) {
-        if (split > 0) {
-            if (i % split == 0 && i) {
-                out("    ");
-                for (size_t j = i - split; j < i; ++j) {
-                    auto ch = buffer[j];
-                    out("{}", ch >= 32 && ch <= 127 ? ch : '.'); // silly hack
-                }
-                outln();
-            }
-        }
-        out("{:02x} ", buffer[i]);
-    }
-    puts("");
+    if (split > 0)
+        out("{:>{}hex-dump}", buffer, split);
+    else
+        out("{:hex-dump}", buffer);
 }
 
 static Core::EventLoop g_loop;
