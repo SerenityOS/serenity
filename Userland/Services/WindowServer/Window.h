@@ -25,6 +25,7 @@ class Menu;
 class Menubar;
 class MenuItem;
 class MouseEvent;
+class WindowStack;
 
 enum WMEventMask {
     WindowRectChanges = 1 << 0,
@@ -313,6 +314,10 @@ public:
     const Menubar* menubar() const { return m_menubar; }
     void set_menubar(Menubar*);
 
+    WindowStack* outer_stack() { return m_outer_stack; }
+    WindowStack const* outer_stack() const { return m_outer_stack; }
+    void set_outer_stack(Badge<WindowStack>, WindowStack* stack) { m_outer_stack = stack; }
+
 private:
     Window(ClientConnection&, WindowType, int window_id, bool modal, bool minimizable, bool frameless, bool resizable, bool fullscreen, bool accessory, Window* parent_window = nullptr);
     Window(Core::Object&, WindowType);
@@ -394,6 +399,7 @@ private:
     int m_minimize_animation_step { -1 };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
+    WindowStack* m_outer_stack { nullptr };
 
 public:
     using List = IntrusiveList<Window, RawPtr<Window>, &Window::m_list_node>;
