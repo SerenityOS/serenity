@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "HitTestResult.h"
 #include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/Object.h>
@@ -138,7 +139,7 @@ public:
     {
         m_alpha_hit_threshold = threshold;
     }
-    bool hit_test(const Gfx::IntPoint&, bool include_frame = true) const;
+    Optional<HitTestResult> hit_test(const Gfx::IntPoint&, bool include_frame = true) const;
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }

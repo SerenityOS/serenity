@@ -591,50 +591,60 @@ void WindowFrame::layout_buttons()
         m_buttons[i].set_relative_rect(button_rects[i]);
 }
 
-bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
+Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position) const
 {
     if (m_window.is_frameless())
-        return false;
+        return {};
     auto frame_rect = rect();
-    if (!frame_rect.contains(point))
-        return false;
+    if (!frame_rect.contains(position))
+        return {};
     auto window_rect = m_window.rect();
-    if (window_rect.contains(point))
-        return false;
+    if (window_rect.contains(position))
+        return {};
+
+    auto window_relative_position = position.translated(-render_rect().location());
+    HitTestResult result {
+        .window = m_window,
+        .screen_position = position,
+        .window_relative_position = window_relative_position,
+        .is_frame_hit = true,
+    };
 
     u8 alpha_threshold = Gfx::WindowTheme::current().frame_alpha_hit_threshold(window_state_for_theme()) * 255;
     if (alpha_threshold == 0)
-        return true;
+        return result;
     u8 alpha = 0xff;
-    auto relative_point = point.translated(-render_rect().location());
-    if (point.y() < window_rect.y()) {
+
+    if (position.y() < window_rect.y()) {
         if (m_top_bottom) {
-            auto scaled_relative_point = relative_point * m_top_bottom->scale();
+            auto scaled_relative_point = window_relative_position * m_top_bottom->scale();
             if (m_top_bottom->rect().contains(scaled_relative_point))
                 alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.y() > window_rect.bottom()) {
+    } else if (position.y() > window_rect.bottom()) {
         if (m_top_bottom) {
-            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1 };
+            Gfx::IntPoint scaled_relative_point { window_relative_position.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + position.y() - window_rect.bottom() - 1 };
             if (m_top_bottom->rect().contains(scaled_relative_point))
                 alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.x() < window_rect.x()) {
+    } else if (position.x() < window_rect.x()) {
         if (m_left_right) {
-            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            Gfx::IntPoint scaled_relative_point { window_relative_position.x() * m_left_right->scale(), (window_relative_position.y() - m_bottom_y) * m_left_right->scale() };
             if (m_left_right->rect().contains(scaled_relative_point))
                 alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.x() > window_rect.right()) {
+    } else if (position.x() > window_rect.right()) {
         if (m_left_right) {
-            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + position.x() - window_rect.right() - 1, (window_relative_position.y() - m_bottom_y) * m_left_right->scale() };
             if (m_left_right->rect().contains(scaled_relative_point))
                 alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
         }
     } else {
-        return false;
+        return {};
     }
-    return alpha >= alpha_threshold;
+    if (alpha >= alpha_threshold)
+        return result;
+    return {};
 }
 
 void WindowFrame::on_mouse_event(const MouseEvent& event)
