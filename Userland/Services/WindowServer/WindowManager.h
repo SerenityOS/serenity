@@ -90,8 +90,8 @@ public:
     void start_dnd_drag(ClientConnection&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
-    Window* active_window() { return m_active_window.ptr(); }
-    Window const* active_window() const { return m_active_window.ptr(); }
+    Window* active_window() { return m_window_stack.active_window(); }
+    Window const* active_window() const { return m_window_stack.active_window(); }
     Window* active_input_window() { return m_active_input_window.ptr(); }
     Window const* active_input_window() const { return m_active_input_window.ptr(); }
     ClientConnection const* active_client() const;
@@ -166,17 +166,15 @@ public:
 
     Window const* active_fullscreen_window() const
     {
-        if (m_active_window && m_active_window->is_fullscreen()) {
-            return m_active_window;
-        }
+        if (active_window() && active_window()->is_fullscreen())
+            return active_window();
         return nullptr;
     };
 
     Window* active_fullscreen_window()
     {
-        if (m_active_window && m_active_window->is_fullscreen()) {
-            return m_active_window;
-        }
+        if (active_window() && active_window()->is_fullscreen())
+            return active_window();
         return nullptr;
     }
 
@@ -308,7 +306,6 @@ private:
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
 
-    WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_hovered_window;
     WeakPtr<Window> m_active_input_window;
     WeakPtr<Window> m_active_input_tracking_window;

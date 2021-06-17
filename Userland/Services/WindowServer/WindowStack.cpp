@@ -46,4 +46,12 @@ void WindowStack::set_highlight_window(Window* window)
         m_highlight_window = window->make_weak_ptr<Window>();
 }
 
+void WindowStack::set_active_window(Window* window)
+{
+    if (!window)
+        m_active_window = nullptr;
+    else
+        m_active_window = window->make_weak_ptr<Window>();
+}
+
 }

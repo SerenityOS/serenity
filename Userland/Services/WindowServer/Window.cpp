@@ -592,7 +592,9 @@ void Window::clear_dirty_rects()
 
 bool Window::is_active() const
 {
-    return WindowManager::the().active_window() == this;
+    if (!outer_stack())
+        return false;
+    return outer_stack()->active_window() == this;
 }
 
 Window* Window::blocking_modal_window()

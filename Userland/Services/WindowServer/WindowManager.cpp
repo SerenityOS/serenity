@@ -1306,13 +1306,10 @@ void WindowManager::set_highlight_window(Window* new_highlight_window)
 
 bool WindowManager::is_active_window_or_accessory(Window& window) const
 {
-    if (m_active_window == &window)
-        return true;
+    if (window.is_accessory())
+        return window.parent_window()->is_active();
 
-    if (!window.is_accessory())
-        return false;
-
-    return m_active_window == window.parent_window();
+    return window.is_active();
 }
 
 static bool window_type_can_become_active(WindowType type)
@@ -1355,52 +1352,50 @@ Window* WindowManager::set_active_input_window(Window* window)
     return previous_input_window;
 }
 
-void WindowManager::set_active_window(Window* window, bool make_input)
+void WindowManager::set_active_window(Window* new_active_window, bool make_input)
 {
-    if (window) {
-        if (auto* modal_window = window->blocking_modal_window()) {
+    if (new_active_window) {
+        if (auto* modal_window = new_active_window->blocking_modal_window()) {
             VERIFY(modal_window->is_modal());
-            VERIFY(modal_window != window);
-            window = modal_window;
+            VERIFY(modal_window != new_active_window);
+            new_active_window = modal_window;
             make_input = true;
         }
 
-        if (!window_type_can_become_active(window->type()))
+        if (!window_type_can_become_active(new_active_window->type()))
             return;
     }
 
-    auto* new_active_input_window = window;
-    if (window && window->is_accessory()) {
+    auto* new_active_input_window = new_active_window;
+    if (new_active_window && new_active_window->is_accessory()) {
         // The parent of an accessory window is always the active
         // window, but input is routed to the accessory window
-        window = window->parent_window();
+        new_active_window = new_active_window->parent_window();
     }
 
     if (make_input)
         set_active_input_window(new_active_input_window);
 
-    if (window == m_active_window)
+    if (new_active_window == m_window_stack.active_window())
         return;
 
-    auto* previously_active_window = m_active_window.ptr();
-
-    if (previously_active_window) {
+    if (auto* previously_active_window = m_window_stack.active_window()) {
         for (auto& child_window : previously_active_window->child_windows()) {
             if (child_window && child_window->type() == WindowType::Tooltip)
                 child_window->request_close();
         }
         Core::EventLoop::current().post_event(*previously_active_window, make<Event>(Event::WindowDeactivated));
         previously_active_window->invalidate(true, true);
-        m_active_window = nullptr;
+        m_window_stack.set_active_window(nullptr);
         m_active_input_tracking_window = nullptr;
         tell_wms_window_state_changed(*previously_active_window);
     }
 
-    if (window) {
-        m_active_window = *window;
-        Core::EventLoop::current().post_event(*m_active_window, make<Event>(Event::WindowActivated));
-        m_active_window->invalidate(true, true);
-        tell_wms_window_state_changed(*m_active_window);
+    if (new_active_window) {
+        m_window_stack.set_active_window(new_active_window);
+        Core::EventLoop::current().post_event(*new_active_window, make<Event>(Event::WindowActivated));
+        new_active_window->invalidate(true, true);
+        tell_wms_window_state_changed(*new_active_window);
     }
 
     // Window shapes may have changed (e.g. shadows for inactive/active windows)
@@ -1424,8 +1419,8 @@ bool WindowManager::set_hovered_window(Window* window)
 
 ClientConnection const* WindowManager::active_client() const
 {
-    if (m_active_window)
-        return m_active_window->client();
+    if (auto* window = m_window_stack.active_window())
+        return window->client();
     return nullptr;
 }
 

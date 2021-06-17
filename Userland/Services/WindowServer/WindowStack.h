@@ -40,8 +40,13 @@ public:
     Window const* highlight_window() const { return m_highlight_window; }
     void set_highlight_window(Window*);
 
+    Window* active_window() { return m_active_window; }
+    Window const* active_window() const { return m_active_window; }
+    void set_active_window(Window*);
+
 private:
     WeakPtr<Window> m_highlight_window;
+    WeakPtr<Window> m_active_window;
 
     Window::List m_windows;
 };
