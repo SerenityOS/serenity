@@ -28,6 +28,7 @@ public:
     void set_viewed_array_buffer(ArrayBuffer* array_buffer) { m_viewed_array_buffer = array_buffer; }
 
     virtual size_t element_size() const = 0;
+    virtual String element_name() const = 0;
 
 protected:
     explicit TypedArrayBase(Object& prototype)
@@ -151,6 +152,7 @@ private:
         virtual ~ClassName();                                                               \
         static ClassName* create(GlobalObject&, u32 length);                                \
         ClassName(u32 length, Object& prototype);                                           \
+        virtual String element_name() const override;                                       \
     };                                                                                      \
     class PrototypeName final : public Object {                                             \
         JS_OBJECT(PrototypeName, Object);                                                   \
