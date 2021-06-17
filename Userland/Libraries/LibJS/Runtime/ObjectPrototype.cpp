@@ -35,6 +35,9 @@ void ObjectPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.valueOf, value_of, 0, attr);
     define_native_function(vm.names.propertyIsEnumerable, property_is_enumerable, 1, attr);
     define_native_function(vm.names.isPrototypeOf, is_prototype_of, 1, attr);
+
+    // Annex B
+    define_native_accessor(vm.names.__proto__, proto_getter, proto_setter, Attribute::Configurable);
 }
 
 ObjectPrototype::~ObjectPrototype()
@@ -142,6 +145,42 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::is_prototype_of)
         if (same_value(this_object, object))
             return Value(true);
     }
+}
+
+// B.2.2.1.1 get Object.prototype.__proto__, https://tc39.es/ecma262/#sec-get-object.prototype.__proto__
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_getter)
+{
+    auto object = vm.this_value(global_object).to_object(global_object);
+    if (vm.exception())
+        return {};
+    auto proto = object->prototype();
+    if (vm.exception())
+        return {};
+    return proto;
+}
+
+// B.2.2.1.2 set Object.prototype.__proto__, https://tc39.es/ecma262/#sec-set-object.prototype.__proto__
+JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::proto_setter)
+{
+    auto object = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+
+    auto proto = vm.argument(0);
+    if (!proto.is_object() && !proto.is_null())
+        return js_undefined();
+
+    if (!object.is_object())
+        return js_undefined();
+
+    auto status = object.as_object().set_prototype(proto.is_object() ? &proto.as_object() : nullptr);
+    if (vm.exception())
+        return {};
+    if (!status) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
+        return {};
+    }
+    return js_undefined();
 }
 
 }
