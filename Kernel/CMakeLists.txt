@@ -387,6 +387,8 @@ endif()
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
+set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
+
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
     check_ipo_supported()
