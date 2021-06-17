@@ -1024,7 +1024,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
             if (window.frame().hit_test(event.position()).has_value()) {
                 // We are hitting the frame, pass the event along to WindowFrame.
-                window.frame().on_mouse_event(event.translated(-window.frame().rect().location()));
+                window.frame().handle_mouse_event(event.translated(-window.frame().rect().location()));
                 event_window_with_frame = &window;
             } else if (window.hit_test(event.position(), false).has_value()) {
                 // We are hitting the window content
@@ -1106,7 +1106,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
                 hovered_window->dispatch_event(event);
             } else if (!hovered_window->is_frameless()) {
                 MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->frame().rect().location()), 0, MouseButton::None, 0);
-                hovered_window->frame().on_mouse_event(event);
+                hovered_window->frame().handle_mouse_event(event);
             }
         }
     }
