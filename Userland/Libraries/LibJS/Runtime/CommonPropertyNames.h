@@ -13,6 +13,8 @@ namespace JS {
 
 #define ENUMERATE_STANDARD_PROPERTY_NAMES(P) \
     P(__proto__)                             \
+    P(__defineGetter__)                      \
+    P(__defineSetter__)                      \
     P(BYTES_PER_ELEMENT)                     \
     P(BigInt)                                \
     P(Boolean)                               \
