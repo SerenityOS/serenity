@@ -760,7 +760,7 @@ KResultOr<size_t> Plan9FSInode::read_bytes(off_t offset, size_t size, UserOrKern
     }
 
     // Guard against the server returning more data than requested.
-    size_t nread = min(data.length(), (size_t)size);
+    size_t nread = min(data.length(), size);
     if (!buffer.write(data.characters_without_null_termination(), nread))
         return EFAULT;
 

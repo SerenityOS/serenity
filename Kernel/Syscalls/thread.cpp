@@ -179,7 +179,7 @@ KResultOr<int> Process::sys$get_thread_name(pid_t tid, Userspace<char*> buffer, 
 
     // We must make a temporary copy here to avoid a race with sys$set_thread_name
     auto thread_name = thread->name();
-    if (thread_name.length() + 1 > (size_t)buffer_size)
+    if (thread_name.length() + 1 > buffer_size)
         return ENAMETOOLONG;
 
     if (!copy_to_user(buffer, thread_name.characters(), thread_name.length() + 1))

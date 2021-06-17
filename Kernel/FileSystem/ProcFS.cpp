@@ -1503,7 +1503,7 @@ KResultOr<size_t> ProcFSInode::write_bytes(off_t offset, size_t size, const User
     VERIFY(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     VERIFY(offset == 0);
-    auto nwritten_or_error = write_callback(identifier(), buffer, (size_t)size);
+    auto nwritten_or_error = write_callback(identifier(), buffer, size);
     if (nwritten_or_error.is_error())
         dbgln("ProcFS: Writing {} bytes failed: {}", size, nwritten_or_error.error());
     return nwritten_or_error;
