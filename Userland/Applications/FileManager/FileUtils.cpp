@@ -71,7 +71,7 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
     }
 }
 
-void run_file_operation([[maybe_unused]] FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
+void run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
 {
     int pipe_fds[2];
     if (pipe(pipe_fds) < 0) {
@@ -97,7 +97,17 @@ void run_file_operation([[maybe_unused]] FileOperation operation, Vector<String>
 
         Vector<char const*> file_operation_args;
         file_operation_args.append("/bin/FileOperation");
-        file_operation_args.append("Copy");
+
+        switch (operation) {
+        case FileOperation::Copy:
+            file_operation_args.append("Copy");
+            break;
+        case FileOperation::Cut:
+            file_operation_args.append("Move");
+            break;
+        default:
+            VERIFY_NOT_REACHED();
+        }
 
         for (auto& source : sources)
             file_operation_args.append(source.characters());
