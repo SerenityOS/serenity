@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -49,7 +50,7 @@ enum class FileOperation {
 
 static HashTable<RefPtr<GUI::Window>> file_operation_windows;
 
-static void run_file_operation([[maybe_unused]] FileOperation operation, String const& source, String const& destination, GUI::Window* parent_window)
+static void run_file_operation([[maybe_unused]] FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
 {
     int pipe_fds[2];
     if (pipe(pipe_fds) < 0) {
@@ -72,8 +73,19 @@ static void run_file_operation([[maybe_unused]] FileOperation operation, String 
             perror("dup2");
             _exit(1);
         }
-        if (execlp("/bin/FileOperation", "/bin/FileOperation", "Copy", source.characters(), LexicalPath::dirname(destination).characters(), nullptr) < 0) {
-            perror("execlp");
+
+        Vector<char const*> file_operation_args;
+        file_operation_args.append("/bin/FileOperation");
+        file_operation_args.append("Copy");
+
+        for (auto& source : sources)
+            file_operation_args.append(source.characters());
+
+        file_operation_args.append(destination.characters());
+        file_operation_args.append(nullptr);
+
+        if (execvp(file_operation_args.first(), const_cast<char**>(file_operation_args.data())) < 0) {
+            perror("execvp");
             _exit(1);
         }
         VERIFY_NOT_REACHED();
@@ -622,6 +634,7 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
         return;
 
     bool had_accepted_drop = false;
+    Vector<String> paths_to_copy;
     for (auto& url_to_copy : urls) {
         if (!url_to_copy.is_valid() || url_to_copy.path() == target_node.full_path())
             continue;
@@ -629,9 +642,13 @@ void DirectoryView::handle_drop(GUI::ModelIndex const& index, GUI::DropEvent con
         if (url_to_copy.path() == new_path)
             continue;
 
-        run_file_operation(FileOperation::Copy, url_to_copy.path(), new_path, window());
+        paths_to_copy.append(url_to_copy.path());
         had_accepted_drop = true;
     }
+
+    if (!paths_to_copy.is_empty())
+        run_file_operation(FileOperation::Copy, paths_to_copy, target_node.full_path(), window());
+
     if (had_accepted_drop && on_accepted_drop)
         on_accepted_drop();
 }
