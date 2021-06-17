@@ -305,10 +305,10 @@ bool ProxyObject::has_property(const PropertyName& name) const
     return trap_result.to_boolean();
 }
 
-Value ProxyObject::get(const PropertyName& name, Value receiver, bool without_side_effects) const
+Value ProxyObject::get(const PropertyName& name, Value receiver, AllowSideEffects allow_side_effects) const
 {
     auto& vm = this->vm();
-    if (without_side_effects) {
+    if (allow_side_effects == AllowSideEffects::No) {
         // Sorry, we're not going to call anything on this proxy.
         return js_string(vm, "<ProxyObject>");
     }

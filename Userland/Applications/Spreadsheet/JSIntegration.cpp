@@ -101,7 +101,7 @@ SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
-JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const
+JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
 {
     if (name.is_string()) {
         if (name.as_string() == "value") {
@@ -117,7 +117,7 @@ JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receive
         }
     }
 
-    return GlobalObject::get(name, receiver, without_side_effects);
+    return GlobalObject::get(name, receiver, allow_side_effects);
 }
 
 bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)

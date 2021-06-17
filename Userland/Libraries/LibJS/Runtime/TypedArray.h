@@ -80,7 +80,7 @@ public:
     }
 
     // 10.4.5.10 IntegerIndexedElementGet ( O, index ), https://tc39.es/ecma262/#sec-integerindexedelementget
-    virtual Value get_by_index(u32 property_index, [[maybe_unused]] bool without_side_effects = false) const override
+    virtual Value get_by_index(u32 property_index, AllowSideEffects = AllowSideEffects::Yes) const override
     {
         if (!is_valid_integer_index(property_index))
             return js_undefined();
