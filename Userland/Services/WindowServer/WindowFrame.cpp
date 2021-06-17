@@ -240,7 +240,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
     if (m_flash_timer && m_flash_timer->is_active())
         return m_flash_counter & 1 ? Gfx::WindowTheme::WindowState::Active : Gfx::WindowTheme::WindowState::Inactive;
 
-    if (&m_window == wm.m_highlight_window)
+    if (&m_window == wm.highlight_window())
         return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
         return Gfx::WindowTheme::WindowState::Moving;

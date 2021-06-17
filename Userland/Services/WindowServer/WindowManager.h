@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "WindowStack.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/WeakPtr.h>
@@ -21,7 +22,6 @@
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Menubar.h>
 #include <WindowServer/WMClientConnection.h>
-#include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
 
@@ -100,7 +100,7 @@ public:
     const Window* window_with_active_menu() const { return m_window_with_active_menu; }
     void set_window_with_active_menu(Window*);
 
-    const Window* highlight_window() const { return m_highlight_window.ptr(); }
+    Window const* highlight_window() const { return m_window_stack.highlight_window(); }
     void set_highlight_window(Window*);
 
     void move_to_front_and_make_active(Window&);
@@ -231,6 +231,8 @@ public:
     void reevaluate_hovered_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
+    WindowStack& window_stack() { return m_window_stack; }
+
 private:
     NonnullRefPtr<Cursor> get_cursor(const String& name);
 
@@ -241,23 +243,9 @@ private:
     bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
 
     template<typename Callback>
-    IterationDecision for_each_visible_window_of_type_from_back_to_front(WindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_front_to_back(Callback);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_back_to_front(Callback);
-    template<typename Callback>
-    void for_each_window(Callback);
-    template<typename Callback>
-    IterationDecision for_each_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
-
-    template<typename Callback>
     void for_each_window_manager(Callback);
 
     virtual void event(Core::Event&) override;
-    void paint_window_frame(const Window&);
     void tell_wm_about_window(WMClientConnection& conn, Window&);
     void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
     void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
@@ -283,7 +271,7 @@ private:
     RefPtr<Cursor> m_wait_cursor;
     RefPtr<Cursor> m_crosshair_cursor;
 
-    Window::List m_windows_in_order;
+    WindowStack m_window_stack;
 
     struct DoubleClickInfo {
         struct ClickMetadata {
@@ -322,7 +310,6 @@ private:
 
     WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_hovered_window;
-    WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_input_window;
     WeakPtr<Window> m_active_input_tracking_window;
     WeakPtr<Window> m_window_with_active_menu;
@@ -356,100 +343,6 @@ private:
 };
 
 template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_of_type_from_back_to_front(WindowType type, Callback callback, bool ignore_highlight)
-{
-    bool do_highlight_window_at_end = false;
-    for (auto& window : m_windows_in_order) {
-        if (!window.is_visible())
-            continue;
-        if (window.is_minimized())
-            continue;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && m_highlight_window == &window) {
-            do_highlight_window_at_end = true;
-            continue;
-        }
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    if (do_highlight_window_at_end) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Desktop, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_back_to_front(WindowType::WindowSwitcher, callback);
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
-{
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (!window.is_visible())
-            continue;
-        if (window.is_minimized())
-            continue;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && &window == m_highlight_window)
-            continue;
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::WindowSwitcher, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_front_to_back(WindowType::Desktop, callback);
-}
-
-template<typename Callback>
 void WindowManager::for_each_window_manager(Callback callback)
 {
     auto& connections = WMClientConnection::s_connections;
@@ -459,38 +352,6 @@ void WindowManager::for_each_window_manager(Callback callback)
         if (callback(*it->value) == IterationDecision::Break)
             return;
     }
-}
-
-template<typename Callback>
-void WindowManager::for_each_window(Callback callback)
-{
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (callback(window) == IterationDecision::Break)
-            return;
-    }
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
-{
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && &window == m_highlight_window)
-            continue;
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
 }
 
 }

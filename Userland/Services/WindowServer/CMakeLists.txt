@@ -25,6 +25,7 @@ set(SOURCES
     Window.cpp
     WindowFrame.cpp
     WindowManager.cpp
+    WindowStack.cpp
     WindowSwitcher.cpp
     WindowServerEndpoint.h
     WindowClientEndpoint.h
