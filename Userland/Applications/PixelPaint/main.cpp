@@ -191,7 +191,7 @@ int main(int argc, char** argv)
         }
         auto bitmap = editor->active_layer()->try_copy_bitmap(editor->selection());
         if (!bitmap) {
-            dbgln("try_copy() from Layer failed");
+            dbgln("try_copy_bitmap() from Layer failed");
             return;
         }
         GUI::Clipboard::the().set_bitmap(*bitmap);
