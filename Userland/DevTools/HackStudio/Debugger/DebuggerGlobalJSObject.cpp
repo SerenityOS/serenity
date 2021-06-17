@@ -21,16 +21,16 @@ DebuggerGlobalJSObject::DebuggerGlobalJSObject()
     m_variables = lib->debug_info->get_variables_in_current_scope(regs);
 }
 
-JS::Value DebuggerGlobalJSObject::get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const
+JS::Value DebuggerGlobalJSObject::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
 {
     if (m_variables.is_empty() || !name.is_string())
-        return JS::Object::get(name, receiver, without_side_effects);
+        return JS::Object::get(name, receiver, allow_side_effects);
 
     auto it = m_variables.find_if([&](auto& variable) {
         return variable->name == name.as_string();
     });
     if (it.is_end())
-        return JS::Object::get(name, receiver, without_side_effects);
+        return JS::Object::get(name, receiver, allow_side_effects);
     auto& target_variable = **it;
     auto js_value = debugger_to_js(target_variable);
     if (js_value.has_value())

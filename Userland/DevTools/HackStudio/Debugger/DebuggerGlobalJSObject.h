@@ -20,7 +20,7 @@ class DebuggerGlobalJSObject final
 public:
     DebuggerGlobalJSObject();
 
-    JS::Value get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const override;
+    JS::Value get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects = JS::AllowSideEffects::Yes) const override;
     bool put(const JS::PropertyName& name, JS::Value value, JS::Value receiver) override;
 
     Optional<JS::Value> debugger_to_js(const Debug::DebugInfo::VariableInfo&) const;
