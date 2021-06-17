@@ -1,8 +1,15 @@
 set(SOURCES
+        BTree.cpp
+        BTreeIterator.cpp
+        Heap.cpp
+        Index.cpp
+        Key.cpp
         Lexer.cpp
+        Meta.cpp
         Parser.cpp
         SyntaxHighlighter.cpp
         Token.cpp
+        TreeNode.cpp
         Tuple.cpp
         Value.cpp
         )
