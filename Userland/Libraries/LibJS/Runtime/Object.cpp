@@ -480,11 +480,16 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         Function* getter_function { nullptr };
         Function* setter_function { nullptr };
 
+        auto existing_property = get_without_side_effects(property_name).value_or(js_undefined());
+
         if (getter.is_function()) {
             getter_function = &getter.as_function();
         } else if (!getter.is_undefined()) {
             vm.throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "get");
             return false;
+        } else if (existing_property.is_accessor()) {
+            // FIXME: This is a hack, since we store Accessor as a getter & setter tuple value, instead of as separate entries in the property
+            getter_function = existing_property.as_accessor().getter();
         }
 
         if (setter.is_function()) {
@@ -492,6 +497,9 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         } else if (!setter.is_undefined()) {
             vm.throw_exception<TypeError>(global_object(), ErrorType::AccessorBadField, "set");
             return false;
+        } else if (existing_property.is_accessor()) {
+            // FIXME: See above
+            setter_function = existing_property.as_accessor().setter();
         }
 
         dbgln_if(OBJECT_DEBUG, "Defining new property {} with accessor descriptor {{ attributes={}, getter={}, setter={} }}", property_name.to_display_string(), attributes, getter, setter);
