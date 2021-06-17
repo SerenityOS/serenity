@@ -38,6 +38,14 @@ void WindowStack::move_to_front(Window& window)
     m_windows.append(window);
 }
 
+Window* WindowStack::window_at(Gfx::IntPoint const& position) const
+{
+    auto result = hit_test(position);
+    if (!result.has_value())
+        return nullptr;
+    return result->window;
+}
+
 void WindowStack::set_highlight_window(Window* window)
 {
     if (!window)
@@ -52,6 +60,18 @@ void WindowStack::set_active_window(Window* window)
         m_active_window = nullptr;
     else
         m_active_window = window->make_weak_ptr<Window>();
+}
+
+Optional<HitTestResult> WindowStack::hit_test(Gfx::IntPoint const& position) const
+{
+    Optional<HitTestResult> result;
+    const_cast<WindowStack*>(this)->for_each_visible_window_from_front_to_back([&](Window& window) {
+        result = window.hit_test(position);
+        if (result.has_value())
+            return IterationDecision::Break;
+        return IterationDecision::Continue;
+    });
+    return result;
 }
 
 }

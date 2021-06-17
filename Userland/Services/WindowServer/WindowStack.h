@@ -20,6 +20,8 @@ public:
     void remove(Window&);
     void move_to_front(Window&);
 
+    Window* window_at(Gfx::IntPoint const&) const;
+
     template<typename Callback>
     IterationDecision for_each_visible_window_from_back_to_front(Callback);
     template<typename Callback>
@@ -43,6 +45,8 @@ public:
     Window* active_window() { return m_active_window; }
     Window const* active_window() const { return m_active_window; }
     void set_active_window(Window*);
+
+    Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
 
 private:
     WeakPtr<Window> m_highlight_window;
