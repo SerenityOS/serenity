@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "HitTestResult.h"
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/RefPtr.h>
@@ -78,7 +79,7 @@ public:
 
     void theme_changed();
 
-    bool hit_test(const Gfx::IntPoint&) const;
+    Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
 
     void open_menubar_menu(Menu&);
 

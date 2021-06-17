@@ -953,25 +953,36 @@ bool Window::is_descendant_of(Window& window) const
     return false;
 }
 
-bool Window::hit_test(const Gfx::IntPoint& point, bool include_frame) const
+Optional<HitTestResult> Window::hit_test(Gfx::IntPoint const& position, bool include_frame) const
 {
-    if (!frame().rect().contains(point))
-        return false;
-    if (!rect().contains(point)) {
-        if (include_frame)
-            return frame().hit_test(point);
-        return false;
-    }
     if (!m_hit_testing_enabled)
-        return false;
+        return {};
+    if (!frame().rect().contains(position))
+        return {};
+    if (!rect().contains(position)) {
+        if (include_frame)
+            return frame().hit_test(position);
+        return {};
+    }
+    bool hit = false;
     u8 threshold = alpha_hit_threshold() * 255;
-    if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel())
-        return true;
-    auto relative_point = point.translated(-rect().location()) * m_backing_store->scale();
-    u8 alpha = 0xff;
-    if (m_backing_store->rect().contains(relative_point))
-        alpha = m_backing_store->get_pixel(relative_point).alpha();
-    return alpha >= threshold;
+    if (threshold == 0 || !m_backing_store || !m_backing_store->has_alpha_channel()) {
+        hit = true;
+    } else {
+        auto relative_point = position.translated(-rect().location()) * m_backing_store->scale();
+        u8 alpha = 0xff;
+        if (m_backing_store->rect().contains(relative_point))
+            alpha = m_backing_store->get_pixel(relative_point).alpha();
+        hit = alpha >= threshold;
+    }
+    if (!hit)
+        return {};
+    return HitTestResult {
+        .window = *this,
+        .screen_position = position,
+        .window_relative_position = position.translated(-rect().location()),
+        .is_frame_hit = false,
+    };
 }
 
 void Window::set_menubar(Menubar* menubar)

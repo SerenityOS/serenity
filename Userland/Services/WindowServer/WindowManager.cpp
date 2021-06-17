@@ -767,7 +767,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
 
     hovered_window = nullptr;
     m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
-        if (window.hit_test(event.position())) {
+        if (window.hit_test(event.position()).has_value()) {
             hovered_window = &window;
             return IterationDecision::Break;
         }
@@ -996,7 +996,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         }
 
         m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
-            if (window.hit_test(event.position())) {
+            if (window.hit_test(event.position()).has_value()) {
                 hovered_window = &window;
                 return IterationDecision::Break;
             }
@@ -1022,7 +1022,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                 }
             }
 
-            VERIFY(window.hit_test(event.position()));
+            VERIFY(window.hit_test(event.position()).has_value());
             if (event.type() == Event::MouseDown) {
                 // We're clicking on something that's blocked by a modal window.
                 // Flash the modal window to let the user know about it.
@@ -1035,11 +1035,11 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
                     set_active_window(&window);
             }
 
-            if (window.frame().hit_test(event.position())) {
+            if (window.frame().hit_test(event.position()).has_value()) {
                 // We are hitting the frame, pass the event along to WindowFrame.
                 window.frame().on_mouse_event(event.translated(-window.frame().rect().location()));
                 event_window_with_frame = &window;
-            } else if (window.hit_test(event.position(), false)) {
+            } else if (window.hit_test(event.position(), false).has_value()) {
                 // We are hitting the window content
                 hovered_window = &window;
                 if (!window.global_cursor_tracking() && !window.blocking_modal_window()) {
@@ -1057,7 +1057,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             process_mouse_event_for_window(*fullscreen_window);
         } else {
             m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-                if (!window.hit_test(event.position()))
+                if (!window.hit_test(event.position()).has_value())
                     return IterationDecision::Continue;
                 process_mouse_event_for_window(window);
                 return IterationDecision::Break;
@@ -1098,11 +1098,11 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
 
     Window* hovered_window = nullptr;
     if (auto* fullscreen_window = active_fullscreen_window()) {
-        if (fullscreen_window->hit_test(cursor_location))
+        if (fullscreen_window->hit_test(cursor_location).has_value())
             hovered_window = fullscreen_window;
     } else {
         m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-            if (!window.hit_test(cursor_location))
+            if (!window.hit_test(cursor_location).has_value())
                 return IterationDecision::Continue;
             hovered_window = &window;
             return IterationDecision::Break;
@@ -1119,7 +1119,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
             // accordingly. We do this because this re-evaluation of the currently
             // hovered window wasn't triggered by a mouse move event, but rather
             // e.g. a hit-test result change due to a transparent window repaint.
-            if (hovered_window->hit_test(cursor_location, false)) {
+            if (hovered_window->hit_test(cursor_location, false).has_value()) {
                 MouseEvent event(Event::MouseMove, cursor_location.translated(-hovered_window->rect().location()), 0, MouseButton::None, 0);
                 hovered_window->dispatch_event(event);
             } else if (!hovered_window->is_frameless()) {
