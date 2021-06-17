@@ -160,12 +160,13 @@ void do_paste(String const& target_directory, GUI::Window* window)
         return;
     }
 
-    bool should_delete_src = false;
-    if (copied_lines[0] == "#cut") { // cut operation encoded as a text/uri-list commen
-        should_delete_src = true;
+    FileOperation file_operation = FileOperation::Copy;
+    if (copied_lines[0] == "#cut") { // cut operation encoded as a text/uri-list comment
+        file_operation = FileOperation::Cut;
         copied_lines.remove(0);
     }
 
+    Vector<String> source_paths;
     for (auto& uri_as_string : copied_lines) {
         if (uri_as_string.is_empty())
             continue;
@@ -176,13 +177,14 @@ void do_paste(String const& target_directory, GUI::Window* window)
         }
 
         auto new_path = String::formatted("{}/{}", target_directory, url.basename());
-        if (auto result = Core::File::copy_file_or_directory(new_path, url.path()); result.is_error()) {
-            auto error_message = String::formatted("Could not paste '{}': {}", url.path(), result.error().error_code);
-            GUI::MessageBox::show(window, error_message, "File Manager", GUI::MessageBox::Type::Error);
-        } else if (should_delete_src) {
-            delete_path(url.path(), window);
-        }
+        if (url.path() == new_path)
+            continue;
+
+        source_paths.append(url.path());
     }
+
+    if (!source_paths.is_empty())
+        run_file_operation(file_operation, source_paths, target_directory, window);
 }
 
 void do_create_link(Vector<String> const& selected_file_paths, GUI::Window* window)
