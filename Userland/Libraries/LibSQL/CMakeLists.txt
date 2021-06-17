@@ -1,6 +1,7 @@
 set(SOURCES
         BTree.cpp
         BTreeIterator.cpp
+        Database.cpp
         HashIndex.cpp
         Heap.cpp
         Index.cpp
@@ -8,6 +9,7 @@ set(SOURCES
         Lexer.cpp
         Meta.cpp
         Parser.cpp
+        Row.cpp
         SyntaxHighlighter.cpp
         Token.cpp
         TreeNode.cpp
