@@ -29,6 +29,8 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(is_prototype_of);
     JS_DECLARE_NATIVE_FUNCTION(define_getter);
     JS_DECLARE_NATIVE_FUNCTION(define_setter);
+    JS_DECLARE_NATIVE_FUNCTION(lookup_getter);
+    JS_DECLARE_NATIVE_FUNCTION(lookup_setter);
     JS_DECLARE_NATIVE_FUNCTION(proto_getter);
     JS_DECLARE_NATIVE_FUNCTION(proto_setter);
 };
