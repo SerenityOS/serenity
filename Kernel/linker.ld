@@ -8,10 +8,19 @@ SECTIONS
 
     start_of_kernel_image = .;
 
-    .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_VIRTUAL_BASE)
+    .boot ALIGN(4K) : AT (ADDR(.boot) - KERNEL_VIRTUAL_BASE)
     {
         $<TARGET_OBJECTS:boot>
         *(.multiboot)
+    }
+
+    .super_pages ALIGN(4K) : AT (ADDR(.super_pages) - KERNEL_VIRTUAL_BASE)
+    {
+        *(.super_pages)
+    }
+
+    .text ALIGN(4K) : AT (ADDR(.text) - KERNEL_VIRTUAL_BASE)
+    {
         start_of_kernel_text = .;
 
         start_of_safemem_text = .;
@@ -70,8 +79,6 @@ SECTIONS
 
         . = ALIGN(4K);
         *(.heap)
-        . = ALIGN(4K);
-        *(.super_pages)
     }
 
     end_of_kernel_image = .;
