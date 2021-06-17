@@ -22,6 +22,8 @@ class ColumnNameExpression;
 class CommonTableExpression;
 class CommonTableExpressionList;
 class CreateTable;
+class TupleDescriptor;
+struct TupleElement;
 class Delete;
 class DropColumn;
 class DropTable;
@@ -58,7 +60,9 @@ class Statement;
 class StringLiteral;
 class TableOrSubquery;
 class Token;
+class Tuple;
 class TypeName;
 class UnaryOperatorExpression;
 class Update;
+class Value;
 }
