@@ -35,7 +35,12 @@ public:
     void paint(Gfx::Painter&, const Gfx::IntRect&);
     void render(Gfx::Painter&);
     void render_to_cache();
-    void on_mouse_event(const MouseEvent&);
+
+    void handle_mouse_event(MouseEvent const&);
+    void handle_titlebar_mouse_event(MouseEvent const&);
+    bool handle_titlebar_icon_mouse_event(MouseEvent const&);
+    void handle_border_mouse_event(MouseEvent const&);
+
     void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_titlebar();
     void invalidate(Gfx::IntRect relative_rect);
