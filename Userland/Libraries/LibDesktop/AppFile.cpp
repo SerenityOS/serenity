@@ -9,6 +9,9 @@
 #include <LibCore/ConfigFile.h>
 #include <LibCore/DirIterator.h>
 #include <LibDesktop/AppFile.h>
+#include <errno.h>
+#include <serenity.h>
+#include <spawn.h>
 
 namespace Desktop {
 
