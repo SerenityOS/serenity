@@ -300,19 +300,6 @@ ValueAndAttributes IndexedProperties::take_last(Object* this_object)
     return last;
 }
 
-void IndexedProperties::append_all(Object* this_object, const IndexedProperties& properties, bool evaluate_accessors)
-{
-    if (m_storage->is_simple_storage() && !properties.m_storage->is_simple_storage())
-        switch_to_generic_storage();
-
-    for (auto it = properties.begin(false); it != properties.end(); ++it) {
-        const auto& element = it.value_and_attributes(this_object, evaluate_accessors);
-        if (this_object && this_object->vm().exception())
-            return;
-        m_storage->put(m_storage->array_like_size(), element.value, element.attributes);
-    }
-}
-
 void IndexedProperties::set_array_like_size(size_t new_size)
 {
     auto current_array_like_size = array_like_size();

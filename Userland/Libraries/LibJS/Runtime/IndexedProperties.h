@@ -133,7 +133,6 @@ public:
     ValueAndAttributes take_last(Object* this_object);
 
     void append(Value value, PropertyAttributes attributes = default_attributes) { put(nullptr, array_like_size(), value, attributes, false); }
-    void append_all(Object* this_object, const IndexedProperties& properties, bool evaluate_accessors = true);
 
     IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };
     IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };
