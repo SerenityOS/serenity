@@ -765,14 +765,7 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
         return true;
 
-    hovered_window = nullptr;
-    m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
-        if (window.hit_test(event.position()).has_value()) {
-            hovered_window = &window;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
+    hovered_window = m_window_stack.window_at(event.position());
 
     if (hovered_window) {
         m_dnd_client->async_drag_accepted();
@@ -995,13 +988,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             m_active_input_tracking_window = nullptr;
         }
 
-        m_window_stack.for_each_visible_window_from_front_to_back([&](auto& window) {
-            if (window.hit_test(event.position()).has_value()) {
-                hovered_window = &window;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        });
+        hovered_window = m_window_stack.window_at(event.position());
     } else {
         auto process_mouse_event_for_window = [&](Window& window) {
             if (&window != m_resize_candidate.ptr())
@@ -1101,12 +1088,7 @@ void WindowManager::reevaluate_hovered_window(Window* updated_window)
         if (fullscreen_window->hit_test(cursor_location).has_value())
             hovered_window = fullscreen_window;
     } else {
-        m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-            if (!window.hit_test(cursor_location).has_value())
-                return IterationDecision::Continue;
-            hovered_window = &window;
-            return IterationDecision::Break;
-        });
+        hovered_window = m_window_stack.window_at(cursor_location);
     }
 
     if (set_hovered_window(hovered_window)) {
