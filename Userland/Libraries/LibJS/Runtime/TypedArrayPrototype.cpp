@@ -27,6 +27,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_accessor(vm.names.byteOffset, byte_offset_getter, nullptr, Attribute::Configurable);
     define_native_function(vm.names.at, at, 1, attr);
     define_native_function(vm.names.every, every, 1, attr);
+    define_native_function(vm.names.find, find, 1, attr);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()
@@ -137,6 +138,20 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::every)
         return IterationDecision::Continue;
     });
     return Value(result);
+}
+
+// 23.2.3.10 %TypedArray%.prototype.find ( predicate [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.find
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find)
+{
+    auto result = js_undefined();
+    for_each_item(vm, global_object, "find", [&](auto, auto value, auto callback_result) {
+        if (callback_result.to_boolean()) {
+            result = value;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return result;
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
