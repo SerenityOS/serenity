@@ -1154,98 +1154,103 @@ void WindowManager::event(Core::Event& event)
     }
 
     if (static_cast<Event&>(event).is_key_event()) {
-        auto& key_event = static_cast<KeyEvent const&>(event);
-        m_keyboard_modifiers = key_event.modifiers();
+        process_key_event(static_cast<KeyEvent&>(event));
+        return;
+    }
 
-        // Escape key cancels an ongoing drag.
-        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Escape && m_dnd_client) {
-            // Notify the drag-n-drop client that the drag was cancelled.
-            m_dnd_client->async_drag_cancelled();
+    Core::Object::event(event);
+}
 
-            // Also notify the currently hovered window (if any) that the ongoing drag was cancelled.
-            if (m_hovered_window && m_hovered_window->client() && m_hovered_window->client() != m_dnd_client)
-                m_hovered_window->client()->async_drag_cancelled();
+void WindowManager::process_key_event(KeyEvent& event)
+{
+    m_keyboard_modifiers = event.modifiers();
 
-            end_dnd_drag();
-            return;
-        }
+    // Escape key cancels an ongoing drag.
+    if (event.type() == Event::KeyDown && event.key() == Key_Escape && m_dnd_client) {
+        // Notify the drag-n-drop client that the drag was cancelled.
+        m_dnd_client->async_drag_cancelled();
 
-        if (key_event.type() == Event::KeyDown && (key_event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && key_event.key() == Key_I)) {
-            reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
-            Compositor::the().invalidate_screen();
-            return;
-        }
+        // Also notify the currently hovered window (if any) that the ongoing drag was cancelled.
+        if (m_hovered_window && m_hovered_window->client() && m_hovered_window->client() != m_dnd_client)
+            m_hovered_window->client()->async_drag_cancelled();
 
-        if (key_event.type() == Event::KeyDown && key_event.key() == Key_Super) {
-            m_previous_event_was_super_keydown = true;
-        } else if (m_previous_event_was_super_keydown) {
-            m_previous_event_was_super_keydown = false;
-            if (!m_dnd_client && !m_active_input_tracking_window && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
-                tell_wms_super_key_pressed();
-                return;
-            }
-        }
+        end_dnd_drag();
+        return;
+    }
 
-        if (MenuManager::the().current_menu() && key_event.key() != Key_Super) {
-            MenuManager::the().dispatch_event(event);
-            return;
-        }
+    if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && event.key() == Key_I)) {
+        reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
+        Compositor::the().invalidate_screen();
+        return;
+    }
 
-        if (key_event.type() == Event::KeyDown && ((key_event.modifiers() == Mod_Super && key_event.key() == Key_Tab) || (key_event.modifiers() == (Mod_Super | Mod_Shift) && key_event.key() == Key_Tab)))
-            m_switcher.show();
-        if (m_switcher.is_visible()) {
-            m_switcher.on_key_event(key_event);
-            return;
-        }
-
-        if (m_active_input_window) {
-            if (key_event.type() == Event::KeyDown && key_event.modifiers() == Mod_Super && m_active_input_window->type() != WindowType::Desktop) {
-                if (key_event.key() == Key_Down) {
-                    if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
-                        maximize_windows(*m_active_input_window, false);
-                        return;
-                    }
-                    if (m_active_input_window->is_minimizable())
-                        minimize_windows(*m_active_input_window, true);
-                    return;
-                }
-                if (m_active_input_window->is_resizable()) {
-                    if (key_event.key() == Key_Up) {
-                        maximize_windows(*m_active_input_window, !m_active_input_window->is_maximized());
-                        return;
-                    }
-                    if (key_event.key() == Key_Left) {
-                        if (m_active_input_window->tiled() == WindowTileType::Left)
-                            return;
-                        if (m_active_input_window->tiled() != WindowTileType::None) {
-                            m_active_input_window->set_untiled();
-                            return;
-                        }
-                        if (m_active_input_window->is_maximized())
-                            maximize_windows(*m_active_input_window, false);
-                        m_active_input_window->set_tiled(WindowTileType::Left);
-                        return;
-                    }
-                    if (key_event.key() == Key_Right) {
-                        if (m_active_input_window->tiled() == WindowTileType::Right)
-                            return;
-                        if (m_active_input_window->tiled() != WindowTileType::None) {
-                            m_active_input_window->set_untiled();
-                            return;
-                        }
-                        if (m_active_input_window->is_maximized())
-                            maximize_windows(*m_active_input_window, false);
-                        m_active_input_window->set_tiled(WindowTileType::Right);
-                        return;
-                    }
-                }
-            }
-            m_active_input_window->dispatch_event(event);
+    if (event.type() == Event::KeyDown && event.key() == Key_Super) {
+        m_previous_event_was_super_keydown = true;
+    } else if (m_previous_event_was_super_keydown) {
+        m_previous_event_was_super_keydown = false;
+        if (!m_dnd_client && !m_active_input_tracking_window && event.type() == Event::KeyUp && event.key() == Key_Super) {
+            tell_wms_super_key_pressed();
             return;
         }
     }
 
-    Core::Object::event(event);
+    if (MenuManager::the().current_menu() && event.key() != Key_Super) {
+        MenuManager::the().dispatch_event(event);
+        return;
+    }
+
+    if (event.type() == Event::KeyDown && ((event.modifiers() == Mod_Super && event.key() == Key_Tab) || (event.modifiers() == (Mod_Super | Mod_Shift) && event.key() == Key_Tab)))
+        m_switcher.show();
+    if (m_switcher.is_visible()) {
+        m_switcher.on_key_event(event);
+        return;
+    }
+
+    if (!m_active_input_window)
+        return;
+
+    if (event.type() == Event::KeyDown && event.modifiers() == Mod_Super && m_active_input_window->type() != WindowType::Desktop) {
+        if (event.key() == Key_Down) {
+            if (m_active_input_window->is_resizable() && m_active_input_window->is_maximized()) {
+                maximize_windows(*m_active_input_window, false);
+                return;
+            }
+            if (m_active_input_window->is_minimizable())
+                minimize_windows(*m_active_input_window, true);
+            return;
+        }
+        if (m_active_input_window->is_resizable()) {
+            if (event.key() == Key_Up) {
+                maximize_windows(*m_active_input_window, !m_active_input_window->is_maximized());
+                return;
+            }
+            if (event.key() == Key_Left) {
+                if (m_active_input_window->tiled() == WindowTileType::Left)
+                    return;
+                if (m_active_input_window->tiled() != WindowTileType::None) {
+                    m_active_input_window->set_untiled();
+                    return;
+                }
+                if (m_active_input_window->is_maximized())
+                    maximize_windows(*m_active_input_window, false);
+                m_active_input_window->set_tiled(WindowTileType::Left);
+                return;
+            }
+            if (event.key() == Key_Right) {
+                if (m_active_input_window->tiled() == WindowTileType::Right)
+                    return;
+                if (m_active_input_window->tiled() != WindowTileType::None) {
+                    m_active_input_window->set_untiled();
+                    return;
+                }
+                if (m_active_input_window->is_maximized())
+                    maximize_windows(*m_active_input_window, false);
+                m_active_input_window->set_tiled(WindowTileType::Right);
+                return;
+            }
+        }
+    }
+    m_active_input_window->dispatch_event(event);
 }
 
 void WindowManager::set_highlight_window(Window* new_highlight_window)
