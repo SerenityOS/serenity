@@ -29,6 +29,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.every, every, 1, attr);
     define_native_function(vm.names.find, find, 1, attr);
     define_native_function(vm.names.findIndex, find_index, 1, attr);
+    define_native_function(vm.names.forEach, for_each, 1, attr);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()
@@ -167,6 +168,15 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::find_index)
         return IterationDecision::Continue;
     });
     return Value(result_index);
+}
+
+// 23.2.3.12 %TypedArray%.prototype.forEach ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
+{
+    for_each_item(vm, global_object, "forEach", [](auto, auto, auto) {
+        return IterationDecision::Continue;
+    });
+    return js_undefined();
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
