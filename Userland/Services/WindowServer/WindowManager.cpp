@@ -1194,7 +1194,7 @@ void WindowManager::event(Core::Event& event)
             m_previous_event_was_super_keydown = true;
         } else if (m_previous_event_was_super_keydown) {
             m_previous_event_was_super_keydown = false;
-            if (!m_dnd_client && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
+            if (!m_dnd_client && !m_active_input_tracking_window && key_event.type() == Event::KeyUp && key_event.key() == Key_Super) {
                 tell_wms_super_key_pressed();
                 return;
             }
