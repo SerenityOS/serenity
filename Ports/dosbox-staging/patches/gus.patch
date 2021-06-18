@@ -1,0 +1,21 @@
+diff -Naur dosbox-staging-0.76.0/src/hardware/gus.cpp dosbox-staging-0.76.0.serenity/src/hardware/gus.cpp
+--- dosbox-staging-0.76.0/src/hardware/gus.cpp	2020-12-03 19:36:19.000000000 +0100
++++ dosbox-staging-0.76.0.serenity/src/hardware/gus.cpp	2021-06-18 14:10:46.735285326 +0200
+@@ -245,7 +245,7 @@
+ 	void PopulatePanScalars() noexcept;
+ 	void PopulateVolScalars() noexcept;
+ 	void PrepareForPlayback() noexcept;
+-	size_t ReadFromPort(const size_t port, const size_t iolen);
++	Bitu ReadFromPort(const Bitu port, const Bitu iolen);
+ 	void RegisterIoHandlers();
+ 	void Reset(uint8_t state);
+ 	void SetLevelCallback(const AudioFrame &level);
+@@ -253,7 +253,7 @@
+ 	void UpdateDmaAddress(uint8_t new_address);
+ 	void UpdateWaveMsw(int32_t &addr) const noexcept;
+ 	void UpdateWaveLsw(int32_t &addr) const noexcept;
+-	void WriteToPort(size_t port, size_t val, size_t iolen);
++	void WriteToPort(Bitu port, Bitu val, Bitu iolen);
+ 	void WriteToRegister();
+ 
+ 	// Collections

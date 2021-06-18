@@ -25,6 +25,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`diffutils`](diffutils/)              | GNU Diffutils                                              | 3.7                      | https://www.gnu.org/software/diffutils/                                        |
 | [`dmidecode`](dmidecode/)              | dmidecode                                                  | 3.3                      | https://github.com/mirror/dmidecode                                            |
 | [`doom`](doom/)                        | DOOM                                                       |                          | https://github.com/SerenityOS/SerenityDOOM                                     |
+| [`dosbox-staging`](dosbox-staging/)    | DOSBox Staging                                             | 0.76.0                   | https://dosbox-staging.github.io/                                              |
 | [`dropbear`](dropbear/)                | Dropbear SSH                                               | 2019.78                  | https://dropbear.nl/mirror/dropbear.html                                       |
 | [`dungeonrush`](dungeonrush/)          | DungeonRush                                                | 1.1-beta                 | https://github.com/Rapiz1/DungeonRush                                          |
 | [`ed`](ed/)                            | GNU ed                                                     | 1.15                     | https://www.gnu.org/software/ed/                                               |
