@@ -682,7 +682,6 @@ bool WindowFrame::handle_titlebar_icon_mouse_event(MouseEvent const& event)
 void WindowFrame::handle_titlebar_mouse_event(MouseEvent const& event)
 {
     auto& wm = WindowManager::the();
-    wm.clear_resize_candidate();
 
     if (titlebar_icon_rect().contains(event.position())) {
         if (handle_titlebar_icon_mouse_event(event))
@@ -733,7 +732,6 @@ void WindowFrame::handle_mouse_event(MouseEvent const& event)
     }
 
     if (menubar_rect().contains(event.position())) {
-        wm.clear_resize_candidate();
         handle_menubar_mouse_event(event);
         return;
     }
