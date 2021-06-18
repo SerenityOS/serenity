@@ -955,9 +955,6 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
         return;
     }
 
-    if (&window != m_resize_candidate.ptr())
-        clear_resize_candidate();
-
     // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
     // In those cases, the event is swallowed by the window manager.
     if (window.is_movable()) {
@@ -994,6 +991,10 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
 
 void WindowManager::process_mouse_event(MouseEvent& event)
 {
+    // 0. Forget the resize candidate (window that we could initiate a resize of from the current cursor position.)
+    //    A new resize candidate may be determined if we hit an appropriate part of a window.
+    clear_resize_candidate();
+
     // 1. Process ongoing drag events. This is done first to avoid clashing with global cursor tracking.
     if (process_ongoing_drag(event))
         return;
@@ -1038,7 +1039,6 @@ void WindowManager::process_mouse_event(MouseEvent& event)
 
     if (MenuManager::the().has_open_menu()
         || hitting_menu_in_window_with_active_menu) {
-        clear_resize_candidate();
 
         if (!hitting_menu_in_window_with_active_menu) {
             MenuManager::the().dispatch_event(event);
@@ -1056,7 +1056,6 @@ void WindowManager::process_mouse_event(MouseEvent& event)
             // FIXME: Is this actually necessary? The desktop window should catch everything anyway.
             set_active_window(nullptr);
         }
-        clear_resize_candidate();
         return;
     }
 
