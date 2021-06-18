@@ -5,7 +5,7 @@
 .set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO
 .set multiboot_checksum,      -(MULTIBOOT_MAGIC + multiboot_flags)
 
-.section .multiboot
+.section .multiboot, "a"
 .align 4
 
 .long MULTIBOOT_MAGIC
@@ -56,7 +56,7 @@ boot_pd3_pts:
 boot_pd3_pt1023:
 .skip 4096
 
-.section .text
+.section .boot_text, "ax"
 
 .global start
 .type start, @function

@@ -270,6 +270,7 @@ set(KERNEL_SOURCES
 
 set(KERNEL_SOURCES
     ${KERNEL_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/Boot/boot.S
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/CPU.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/InterruptEntry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/ProcessorInfo.cpp
@@ -358,19 +359,9 @@ add_compile_definitions(KERNEL)
 #       It's needed because CLion doesn't understand the way we switch compilers mid-build.
 add_compile_definitions(__serenity__)
 
-add_link_options(LINKER:-T ${CMAKE_CURRENT_BINARY_DIR}/linker.ld -nostdlib)
-
-# HACK: This is to work around a bug in CMake dependency resolution, the
-#       kernel won't re-link when boot.S changes without this.
-set_source_files_properties(init.cpp
-    PROPERTIES
-    OBJECT_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/Boot/boot.S
-)
-
-add_library(boot OBJECT Arch/${KERNEL_ARCH}/Boot/boot.S)
+add_link_options(LINKER:-T ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld -nostdlib)
 
 add_library(kernel_heap STATIC ${KERNEL_HEAP_SOURCES})
-file(GENERATE OUTPUT linker.ld INPUT linker.ld)
 
 if (${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
     include_directories(/usr/local/include/c++/${GCC_VERSION}/)
@@ -387,7 +378,7 @@ endif()
 add_executable(Kernel ${SOURCES})
 add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
 
-set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/linker.ld)
+set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
@@ -395,7 +386,7 @@ if (ENABLE_KERNEL_LTO)
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
 target_link_libraries(Kernel kernel_heap gcc stdc++)
-add_dependencies(Kernel boot kernel_heap)
+add_dependencies(Kernel kernel_heap)
 install(TARGETS Kernel RUNTIME DESTINATION boot)
 
 add_custom_command(
