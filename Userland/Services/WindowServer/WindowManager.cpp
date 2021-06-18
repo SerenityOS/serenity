@@ -940,6 +940,20 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event, 
     return true;
 }
 
+bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent& event)
+{
+    if (m_cursor_tracking_button) {
+        m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
+        return true;
+    }
+
+    // This is quite hackish, but it's how the Button hover effect is implemented.
+    if (m_hovered_button && event.type() == Event::MouseMove)
+        m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
+
+    return false;
+}
+
 void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_window)
 {
     hovered_window = nullptr;
@@ -957,12 +971,8 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
     if (process_ongoing_window_resize(event, hovered_window))
         return;
 
-    if (m_cursor_tracking_button)
-        return m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
-
-    // This is quite hackish, but it's how the Button hover effect is implemented.
-    if (m_hovered_button && event.type() == Event::MouseMove)
-        m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
+    if (process_mouse_event_for_titlebar_buttons(event))
+        return;
 
     bool hitting_menu_in_window_with_active_menu = [&] {
         if (!m_window_with_active_menu)
