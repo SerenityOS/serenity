@@ -12,6 +12,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RedBlackTree.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibELF/Image.h>
@@ -45,6 +46,7 @@ private:
     ReadonlyBytes m_debug_info_data;
     ReadonlyBytes m_abbreviation_data;
     ReadonlyBytes m_debug_strings_data;
+    ReadonlyBytes m_debug_line_data;
     ReadonlyBytes m_debug_line_strings_data;
 
     NonnullOwnPtrVector<Dwarf::CompilationUnit> m_compilation_units;
