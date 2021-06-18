@@ -243,6 +243,8 @@ private:
     bool process_mouse_event_for_titlebar_buttons(MouseEvent const&);
     void process_mouse_event_for_window(HitTestResult&, MouseEvent const&);
 
+    void process_key_event(KeyEvent&);
+
     template<typename Callback>
     void for_each_window_manager(Callback);
 
