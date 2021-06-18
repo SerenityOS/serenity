@@ -74,26 +74,26 @@ FlyString::FlyString(StringView const& string)
 }
 
 template<typename T>
-Optional<T> FlyString::to_int() const
+Optional<T> FlyString::to_int(TrimWhitespace trim_whitespace) const
 {
-    return StringUtils::convert_to_int<T>(view());
+    return StringUtils::convert_to_int<T>(view(), trim_whitespace);
 }
 
-template Optional<i8> FlyString::to_int() const;
-template Optional<i16> FlyString::to_int() const;
-template Optional<i32> FlyString::to_int() const;
-template Optional<i64> FlyString::to_int() const;
+template Optional<i8> FlyString::to_int(TrimWhitespace) const;
+template Optional<i16> FlyString::to_int(TrimWhitespace) const;
+template Optional<i32> FlyString::to_int(TrimWhitespace) const;
+template Optional<i64> FlyString::to_int(TrimWhitespace) const;
 
 template<typename T>
-Optional<T> FlyString::to_uint() const
+Optional<T> FlyString::to_uint(TrimWhitespace trim_whitespace) const
 {
-    return StringUtils::convert_to_uint<T>(view());
+    return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
 }
 
-template Optional<u8> FlyString::to_uint() const;
-template Optional<u16> FlyString::to_uint() const;
-template Optional<u32> FlyString::to_uint() const;
-template Optional<u64> FlyString::to_uint() const;
+template Optional<u8> FlyString::to_uint(TrimWhitespace) const;
+template Optional<u16> FlyString::to_uint(TrimWhitespace) const;
+template Optional<u32> FlyString::to_uint(TrimWhitespace) const;
+template Optional<u64> FlyString::to_uint(TrimWhitespace) const;
 
 bool FlyString::equals_ignoring_case(const StringView& other) const
 {
