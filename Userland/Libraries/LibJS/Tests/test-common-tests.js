@@ -333,13 +333,11 @@ test("toEval", () => {
     expect("function foo() { return 1; }; foo();").toEval();
 });
 
-// FIXME: Will have to change when this matcher changes to use the
-// "eval" function
 test("toEvalTo", () => {
     expect("let a = 1").toEvalTo();
     expect("let a = 1").toEvalTo(undefined);
-    expect("return 10").toEvalTo(10);
-    expect("return 10").not.toEvalTo(5);
+    expect("10").toEvalTo(10);
+    expect("10").not.toEvalTo(5);
 
     expect(() => {
         expect("*^&%%").not.toEvalTo();

@@ -37,7 +37,7 @@ test("break/continue, variable declaration, do-while, and return asi", () => {
     1;
 var curly/* semicolon inserted here */}
 
-return foo();`;
+foo();`;
 
     expect(source).toEvalTo(undefined);
 });
@@ -55,7 +55,7 @@ for (let i = 0; i < 5; ++i) {
     counter++;
 }
 
-return counter;`;
+counter;`;
 
     expect(source).toEvalTo(5);
 });

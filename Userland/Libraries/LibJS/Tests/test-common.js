@@ -354,7 +354,7 @@ class ExpectationError extends Error {
             let result;
 
             try {
-                result = new Function(this.target)();
+                result = eval(this.target);
             } catch (e) {
                 throw new ExpectationError();
             }

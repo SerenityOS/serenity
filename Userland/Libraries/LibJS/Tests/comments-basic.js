@@ -7,7 +7,7 @@ var i = 0;
 i++;
 */
 /**/ i++;
-return i;`;
+i;`;
 
     expect(source).toEvalTo(1);
 });
@@ -22,7 +22,7 @@ i++;
 --> i++;
 /**/ --> i++;
 j --> i++;
-return i;`;
+i;`;
     expect(source).toEvalTo(2);
 });
 
