@@ -912,9 +912,9 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool 
 {
     auto translated_event = event.translated(-window.position());
     window.dispatch_event(translated_event);
-    if (process_double_click && event.type() == Event::MouseUp) {
-        process_event_for_doubleclick(window, event);
-        if (event.type() == Event::MouseDoubleClick)
+    if (process_double_click && translated_event.type() == Event::MouseUp) {
+        process_event_for_doubleclick(window, translated_event);
+        if (translated_event.type() == Event::MouseDoubleClick)
             window.dispatch_event(translated_event);
     }
 }
@@ -952,6 +952,62 @@ bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent& event)
         m_hovered_button->on_mouse_event(event.translated(-m_hovered_button->screen_rect().location()));
 
     return false;
+}
+
+void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseEvent& event, Window*& hovered_window)
+{
+    auto& window = *result.window;
+
+    if (auto* blocking_modal_window = window.blocking_modal_window()) {
+        if (event.type() == Event::Type::MouseDown) {
+            // We're clicking on something that's blocked by a modal window.
+            // Flash the modal window to let the user know about it.
+            blocking_modal_window->frame().start_flash_animation();
+        }
+        // Don't send mouse events to windows blocked by a modal child.
+        return;
+    }
+
+    if (&window != m_resize_candidate.ptr())
+        clear_resize_candidate();
+
+    // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
+    // In those cases, the event is swallowed by the window manager.
+    if (window.is_movable()) {
+        if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
+            hovered_window = &window;
+            start_window_move(window, event);
+            return;
+        }
+        if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
+            hovered_window = &window;
+            start_window_resize(window, event);
+            return;
+        }
+    }
+
+    if (event.type() == Event::MouseDown) {
+        if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow)
+            move_to_front_and_make_active(window);
+        else if (window.type() == WindowType::Desktop)
+            set_active_window(&window);
+    }
+
+    if (result.is_frame_hit) {
+        // We are hitting the frame, pass the event along to WindowFrame.
+        window.frame().handle_mouse_event(event.translated(-window.frame().rect().location()));
+        return;
+    }
+
+    // We are hitting the window content
+    hovered_window = &window;
+
+    if (!window.global_cursor_tracking()) {
+        deliver_mouse_event(window, event, true);
+    }
+
+    if (event.type() == Event::MouseDown)
+        m_active_input_tracking_window = window;
 }
 
 void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_window)
@@ -1002,58 +1058,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         }
     }
 
-    Window* event_window_with_frame = nullptr;
-    Window* received_mouse_event = nullptr;
-
-    auto process_mouse_event_for_window = [&](Window& window) {
-        if (&window != m_resize_candidate.ptr())
-            clear_resize_candidate();
-
-        // First check if we should initiate a move or resize (Super+LMB or Super+RMB).
-        // In those cases, the event is swallowed by the window manager.
-        if (window.is_movable()) {
-            if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
-                hovered_window = &window;
-                start_window_move(window, event);
-                return;
-            }
-            if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
-                hovered_window = &window;
-                start_window_resize(window, event);
-                return;
-            }
-        }
-
-        VERIFY(window.hit_test(event.position()).has_value());
-        if (event.type() == Event::MouseDown) {
-            // We're clicking on something that's blocked by a modal window.
-            // Flash the modal window to let the user know about it.
-            if (auto* blocking_modal_window = window.blocking_modal_window())
-                blocking_modal_window->frame().start_flash_animation();
-
-            if (window.type() == WindowType::Normal || window.type() == WindowType::ToolWindow)
-                move_to_front_and_make_active(window);
-            else if (window.type() == WindowType::Desktop)
-                set_active_window(&window);
-        }
-
-        if (window.frame().hit_test(event.position()).has_value()) {
-            // We are hitting the frame, pass the event along to WindowFrame.
-            window.frame().handle_mouse_event(event.translated(-window.frame().rect().location()));
-            event_window_with_frame = &window;
-        } else if (window.hit_test(event.position(), false).has_value()) {
-            // We are hitting the window content
-            hovered_window = &window;
-            if (!window.global_cursor_tracking() && !window.blocking_modal_window()) {
-                deliver_mouse_event(window, event, true);
-                received_mouse_event = &window;
-                if (event.type() == Event::MouseDown) {
-                    m_active_input_tracking_window = window;
-                }
-            }
-        }
-    };
-
     // Hit test the window stack to see what's under the cursor.
     auto result = m_window_stack.hit_test(event.position());
 
@@ -1068,20 +1072,14 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         return;
     }
 
-    process_mouse_event_for_window(*result->window);
+    m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.global_cursor_tracking()) {
+            deliver_mouse_event(window, event, false);
+        }
+        return IterationDecision::Continue;
+    });
 
-    auto reverse_iterator = m_window_stack.windows().rbegin();
-    for (; reverse_iterator != m_window_stack.windows().rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (received_mouse_event == &window)
-            continue;
-        if (!window.global_cursor_tracking() || !window.is_visible() || window.is_minimized() || window.blocking_modal_window())
-            continue;
-        deliver_mouse_event(window, event, false);
-    }
-
-    if (event_window_with_frame != m_resize_candidate.ptr())
-        clear_resize_candidate();
+    process_mouse_event_for_window(result.value(), event, hovered_window);
 }
 
 void WindowManager::reevaluate_hovered_window(Window* updated_window)
