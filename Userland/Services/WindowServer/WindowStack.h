@@ -20,7 +20,11 @@ public:
     void remove(Window&);
     void move_to_front(Window&);
 
-    Window* window_at(Gfx::IntPoint const&) const;
+    enum class IncludeWindowFrame {
+        Yes,
+        No,
+    };
+    Window* window_at(Gfx::IntPoint const&, IncludeWindowFrame = IncludeWindowFrame::Yes) const;
 
     template<typename Callback>
     IterationDecision for_each_visible_window_from_back_to_front(Callback);
