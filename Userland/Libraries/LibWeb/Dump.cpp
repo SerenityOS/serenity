@@ -341,6 +341,9 @@ void dump_selector(StringBuilder& builder, const CSS::Selector& selector)
             case CSS::Selector::SimpleSelector::PseudoClass::Visited:
                 pseudo_class_description = "Visited";
                 break;
+            case CSS::Selector::SimpleSelector::PseudoClass::Active:
+                pseudo_class_description = "Active";
+                break;
             case CSS::Selector::SimpleSelector::PseudoClass::None:
                 pseudo_class_description = "None";
                 break;

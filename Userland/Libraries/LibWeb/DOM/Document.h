@@ -208,6 +208,10 @@ public:
 
     void set_focused_element(Element*);
 
+    const Element* active_element() const { return m_active_element; }
+
+    void set_active_element(Element*);
+
     bool created_for_appropriate_template_contents() const { return m_created_for_appropriate_template_contents; }
     void set_created_for_appropriate_template_contents(bool value) { m_created_for_appropriate_template_contents = value; }
 
@@ -323,6 +327,7 @@ private:
     bool m_editable { false };
 
     WeakPtr<Element> m_focused_element;
+    WeakPtr<Element> m_active_element;
 
     bool m_created_for_appropriate_template_contents { false };
     RefPtr<Document> m_associated_inert_template_document;

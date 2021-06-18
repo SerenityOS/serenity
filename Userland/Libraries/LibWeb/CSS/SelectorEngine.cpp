@@ -44,13 +44,18 @@ static bool matches(const CSS::Selector::SimpleSelector& component, const DOM::E
     case CSS::Selector::SimpleSelector::PseudoClass::Visited:
         // FIXME: Maybe match this selector sometimes?
         return false;
+    case CSS::Selector::SimpleSelector::PseudoClass::Active:
+        if (!element.is_active())
+            return false;
+        break;
     case CSS::Selector::SimpleSelector::PseudoClass::Hover:
         if (!matches_hover_pseudo_class(element))
             return false;
         break;
     case CSS::Selector::SimpleSelector::PseudoClass::Focus:
-        // FIXME: Implement matches_focus_pseudo_class(element)
-        return false;
+        if (!element.is_focused())
+            return false;
+        break;
     case CSS::Selector::SimpleSelector::PseudoClass::FirstChild:
         if (element.previous_element_sibling())
             return false;

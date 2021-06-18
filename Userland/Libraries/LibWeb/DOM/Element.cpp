@@ -327,6 +327,11 @@ bool Element::is_focused() const
     return document().focused_element() == this;
 }
 
+bool Element::is_active() const
+{
+    return document().active_element() == this;
+}
+
 NonnullRefPtr<HTMLCollection> Element::get_elements_by_tag_name(FlyString const& tag_name)
 {
     // FIXME: Support "*" for tag_name
