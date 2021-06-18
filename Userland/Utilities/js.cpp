@@ -508,23 +508,6 @@ static void print(JS::Value value)
     outln();
 }
 
-static bool file_has_shebang(ByteBuffer const& file_contents)
-{
-    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
-        return true;
-    return false;
-}
-
-static StringView strip_shebang(ByteBuffer const& file_contents)
-{
-    size_t i = 0;
-    for (i = 2; i < file_contents.size(); ++i) {
-        if (file_contents[i] == '\n')
-            break;
-    }
-    return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
-}
-
 static bool write_to_file(const String& path)
 {
     int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -650,9 +633,7 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
         return {};
     }
     auto file_contents = file->read_all();
-    auto source = file_has_shebang(file_contents)
-        ? strip_shebang(file_contents)
-        : StringView { file_contents };
+    auto source = StringView { file_contents };
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
@@ -1099,13 +1080,7 @@ int main(int argc, char** argv)
                 return 1;
             }
             auto file_contents = file->read_all();
-
-            StringView source;
-            if (file_has_shebang(file_contents)) {
-                source = strip_shebang(file_contents);
-            } else {
-                source = file_contents;
-            }
+            auto source = StringView { file_contents };
             builder.append(source);
         }
 

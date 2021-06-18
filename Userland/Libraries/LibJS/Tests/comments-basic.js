@@ -33,3 +33,12 @@ test("unterminated multi-line comment", () => {
     expect("/* foo").not.toEval();
     expect("foo /*").not.toEval();
 });
+
+test("hashbang comments", () => {
+    expect("#!").toEvalTo(undefined);
+    expect("#!/bin/js").toEvalTo(undefined);
+    expect("#!\n1").toEvalTo(1);
+    expect(" #!").not.toEval();
+    expect("\n#!").not.toEval();
+    expect("#!\n#!").not.toEval();
+});
