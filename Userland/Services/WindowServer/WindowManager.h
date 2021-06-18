@@ -182,7 +182,7 @@ public:
     void invalidate_after_theme_or_font_change();
 
     bool set_hovered_window(Window*);
-    void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);
+    void deliver_mouse_event(Window&, MouseEvent&, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
 
