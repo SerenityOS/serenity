@@ -6,8 +6,7 @@
 
 #pragma once
 
-#include "CompilationUnit.h"
-#include "DwarfInfo.h"
+#include "AttributeValue.h"
 #include "DwarfTypes.h"
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
@@ -21,7 +20,7 @@ class CompilationUnit;
 // DIE = Debugging Information Entry
 class DIE {
 public:
-    DIE(const CompilationUnit&, u32 offset);
+    DIE(const CompilationUnit&, u32 offset, Optional<u32> parent_offset = {});
 
     u32 offset() const { return m_offset; }
     u32 size() const { return m_size; }
