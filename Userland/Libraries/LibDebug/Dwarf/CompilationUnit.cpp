@@ -9,11 +9,12 @@
 
 namespace Debug::Dwarf {
 
-CompilationUnit::CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader& header)
+CompilationUnit::CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader& header, NonnullOwnPtr<LineProgram>&& line_program)
     : m_dwarf_info(dwarf_info)
     , m_offset(offset)
     , m_header(header)
     , m_abbreviations(dwarf_info, header.abbrev_offset())
+    , m_line_program(move(line_program))
 {
     VERIFY(header.version() < 5 || header.unit_type() == CompilationUnitType::Full);
 }

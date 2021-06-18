@@ -78,17 +78,11 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
 
 void DebugInfo::prepare_lines()
 {
-    auto section = elf().lookup_section(".debug_line"sv);
-    if (!section.has_value())
-        return;
-
-    InputMemoryStream stream { section->bytes() };
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
-    while (!stream.eof()) {
-        Dwarf::LineProgram program(m_dwarf_info, stream);
-        all_lines.extend(program.lines());
-    }
+    m_dwarf_info.for_each_compilation_unit([&all_lines](const Dwarf::CompilationUnit& unit) {
+        all_lines.extend(unit.line_program().lines());
+    });
 
     HashMap<FlyString, Optional<String>> memoized_full_paths;
     auto compute_full_path = [&](FlyString const& file_path) -> Optional<String> {
