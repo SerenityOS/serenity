@@ -102,6 +102,9 @@ inline InputStream& operator>>(InputStream& stream, LineProgramUnitHeader32& hea
 }
 
 class LineProgram {
+    AK_MAKE_NONCOPYABLE(LineProgram);
+    AK_MAKE_NONMOVABLE(LineProgram);
+
 public:
     explicit LineProgram(DwarfInfo& dwarf_info, InputMemoryStream& stream);
 

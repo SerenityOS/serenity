@@ -16,6 +16,7 @@ DwarfInfo::DwarfInfo(const ELF::Image& elf)
     m_debug_info_data = section_data(".debug_info"sv);
     m_abbreviation_data = section_data(".debug_abbrev"sv);
     m_debug_strings_data = section_data(".debug_str"sv);
+    m_debug_line_data = section_data(".debug_line"sv);
     m_debug_line_strings_data = section_data(".debug_line_str"sv);
 
     populate_compilation_units();
@@ -34,19 +35,26 @@ void DwarfInfo::populate_compilation_units()
     if (!m_debug_info_data.data())
         return;
 
-    InputMemoryStream stream { m_debug_info_data };
-    while (!stream.eof()) {
-        auto unit_offset = stream.offset();
+    InputMemoryStream debug_info_stream { m_debug_info_data };
+    InputMemoryStream line_info_stream { m_debug_line_data };
+
+    while (!debug_info_stream.eof()) {
+        auto unit_offset = debug_info_stream.offset();
         CompilationUnitHeader compilation_unit_header {};
 
-        stream >> compilation_unit_header;
+        debug_info_stream >> compilation_unit_header;
         VERIFY(compilation_unit_header.common.version <= 5);
         VERIFY(compilation_unit_header.address_size() == sizeof(u32));
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
-        m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header));
-        stream.discard_or_error(length_after_header);
+
+        auto line_program = make<LineProgram>(*this, line_info_stream);
+
+        m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header, move(line_program)));
+        debug_info_stream.discard_or_error(length_after_header);
     }
+
+    VERIFY(line_info_stream.eof());
 }
 
 AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
