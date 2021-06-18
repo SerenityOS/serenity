@@ -38,10 +38,12 @@ void WindowStack::move_to_front(Window& window)
     m_windows.append(window);
 }
 
-Window* WindowStack::window_at(Gfx::IntPoint const& position) const
+Window* WindowStack::window_at(Gfx::IntPoint const& position, IncludeWindowFrame include_window_frame) const
 {
     auto result = hit_test(position);
     if (!result.has_value())
+        return nullptr;
+    if (include_window_frame == IncludeWindowFrame::No && result->is_frame_hit)
         return nullptr;
     return result->window;
 }

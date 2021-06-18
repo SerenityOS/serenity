@@ -1149,7 +1149,7 @@ void WindowManager::event(Core::Event& event)
             m_previous_event_was_super_keydown = false;
 
         process_mouse_event(mouse_event);
-        set_hovered_window(m_window_stack.window_at(mouse_event.position()));
+        set_hovered_window(m_window_stack.window_at(mouse_event.position(), WindowStack::IncludeWindowFrame::No));
         return;
     }
 
