@@ -16,7 +16,7 @@ namespace Symbolication {
 
 struct CachedELF {
     NonnullRefPtr<MappedFile> mapped_file;
-    Debug::DebugInfo debug_info;
+    NonnullOwnPtr<Debug::DebugInfo> debug_info;
 };
 
 static HashMap<String, OwnPtr<CachedELF>> s_cache;
@@ -36,8 +36,7 @@ Optional<Symbol> symbolicate(String const& path, u32 address)
             s_cache.set(path, {});
             {};
         }
-        Debug::DebugInfo debug_info(move(elf));
-        auto cached_elf = make<CachedELF>(mapped_file.release_value(), move(debug_info));
+        auto cached_elf = make<CachedELF>(mapped_file.release_value(), make<Debug::DebugInfo>(move(elf)));
         s_cache.set(path, move(cached_elf));
     }
 
@@ -49,8 +48,8 @@ Optional<Symbol> symbolicate(String const& path, u32 address)
         return {};
 
     u32 offset = 0;
-    auto symbol = cached_elf->debug_info.elf().symbolicate(address, &offset);
-    auto source_position = cached_elf->debug_info.get_source_position(address);
+    auto symbol = cached_elf->debug_info->elf().symbolicate(address, &offset);
+    auto source_position = cached_elf->debug_info->get_source_position(address);
     String filename;
     u32 line_number = 0;
     if (source_position.has_value()) {

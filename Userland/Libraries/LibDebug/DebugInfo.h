@@ -20,6 +20,9 @@
 namespace Debug {
 
 class DebugInfo {
+    AK_MAKE_NONCOPYABLE(DebugInfo);
+    AK_MAKE_NONMOVABLE(DebugInfo);
+
 public:
     explicit DebugInfo(NonnullOwnPtr<const ELF::Image>, String source_root = {}, FlatPtr base_address = 0);
 

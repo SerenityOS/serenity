@@ -19,6 +19,9 @@
 namespace Debug::Dwarf {
 
 class DwarfInfo {
+    AK_MAKE_NONCOPYABLE(DwarfInfo);
+    AK_MAKE_NONMOVABLE(DwarfInfo);
+
 public:
     explicit DwarfInfo(const ELF::Image&);
 
@@ -44,7 +47,7 @@ private:
     ReadonlyBytes m_debug_strings_data;
     ReadonlyBytes m_debug_line_strings_data;
 
-    Vector<Dwarf::CompilationUnit> m_compilation_units;
+    NonnullOwnPtrVector<Dwarf::CompilationUnit> m_compilation_units;
 };
 
 template<typename Callback>

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "AbbreviationsMap.h"
+#include <AK/Noncopyable.h>
 #include <AK/Types.h>
 
 namespace Debug::Dwarf {
@@ -15,6 +16,9 @@ class DwarfInfo;
 class DIE;
 
 class CompilationUnit {
+    AK_MAKE_NONCOPYABLE(CompilationUnit);
+    AK_MAKE_NONMOVABLE(CompilationUnit);
+
 public:
     CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader&);
 
