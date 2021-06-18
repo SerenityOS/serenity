@@ -754,10 +754,9 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
             if (!window.rect().contains(event.position()))
                 return IterationDecision::Continue;
             hovered_window = &window;
-            auto translated_event = event.translated(-window.position());
-            translated_event.set_drag(true);
-            translated_event.set_mime_data(*m_dnd_mime_data);
-            deliver_mouse_event(window, translated_event, false);
+            event.set_drag(true);
+            event.set_mime_data(*m_dnd_mime_data);
+            deliver_mouse_event(window, event, false);
             return IterationDecision::Break;
         });
     }
@@ -911,11 +910,12 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
 
 void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click)
 {
-    window.dispatch_event(event);
+    auto translated_event = event.translated(-window.position());
+    window.dispatch_event(translated_event);
     if (process_double_click && event.type() == Event::MouseUp) {
         process_event_for_doubleclick(window, event);
         if (event.type() == Event::MouseDoubleClick)
-            window.dispatch_event(event);
+            window.dispatch_event(translated_event);
     }
 }
 
@@ -930,8 +930,7 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event, 
     //
     // This prevents e.g. moving on one window out of the bounds starting
     // a move in that other unrelated window, and other silly shenanigans.
-    auto translated_event = event.translated(-m_active_input_tracking_window->position());
-    deliver_mouse_event(*m_active_input_tracking_window, translated_event, true);
+    deliver_mouse_event(*m_active_input_tracking_window, event, true);
 
     if (event.type() == Event::MouseUp && event.buttons() == 0) {
         m_active_input_tracking_window = nullptr;
@@ -1036,8 +1035,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             // We are hitting the window content
             hovered_window = &window;
             if (!window.global_cursor_tracking() && !window.blocking_modal_window()) {
-                auto translated_event = event.translated(-window.position());
-                deliver_mouse_event(window, translated_event, true);
+                deliver_mouse_event(window, event, true);
                 received_mouse_event = &window;
                 if (event.type() == Event::MouseDown) {
                     m_active_input_tracking_window = window;
@@ -1068,8 +1066,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
             continue;
         if (!window.global_cursor_tracking() || !window.is_visible() || window.is_minimized() || window.blocking_modal_window())
             continue;
-        auto translated_event = event.translated(-window.position());
-        deliver_mouse_event(window, translated_event, false);
+        deliver_mouse_event(window, event, false);
     }
 
     if (event_window_with_frame != m_resize_candidate.ptr())
