@@ -13,7 +13,7 @@ namespace Kernel {
 class ZeroDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    ZeroDevice();
+    static NonnullRefPtr<ZeroDevice> must_create();
     virtual ~ZeroDevice() override;
 
     // ^Device
@@ -21,6 +21,7 @@ public:
     virtual String device_name() const override { return "zero"; }
 
 private:
+    ZeroDevice();
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;
