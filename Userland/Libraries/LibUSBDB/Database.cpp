@@ -161,12 +161,12 @@ int Database::init()
             if (line[0] != '\t') {
                 commit_vendor();
                 current_vendor = make<Vendor>();
-                current_vendor->id = AK::StringUtils::convert_to_uint_from_hex<u16>(line).value_or(0);
+                current_vendor->id = AK::StringUtils::convert_to_uint_from_hex<u16>(line.substring_view(0, 4)).value_or(0);
                 current_vendor->name = line.substring_view(6, line.length() - 6);
             } else if (line[0] == '\t' && line[1] != '\t') {
                 commit_device();
                 current_device = make<Device>();
-                current_device->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, line.length() - 1))).value_or(0);
+                current_device->id = AK::StringUtils::convert_to_uint_from_hex<u16>((line.substring_view(1, 4))).value_or(0);
                 current_device->name = line.substring_view(7, line.length() - 7);
             } else if (line[0] == '\t' && line[1] == '\t') {
                 auto interface = make<Interface>();
