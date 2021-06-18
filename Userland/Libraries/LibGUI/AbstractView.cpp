@@ -308,6 +308,7 @@ void AbstractView::mousemove_event(MouseEvent& event)
         break;
     case DragOperation::Outcome::Cancelled:
         dbgln("Drag was cancelled!");
+        m_might_drag = false;
         break;
     default:
         VERIFY_NOT_REACHED();
