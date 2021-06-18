@@ -116,6 +116,12 @@ public:
 
     const Vector<LineInfo>& lines() const { return m_lines; }
 
+    struct DirectoryAndFile {
+        FlyString directory;
+        FlyString filename;
+    };
+    DirectoryAndFile get_directory_and_file(size_t file_index) const;
+
 private:
     void parse_unit_header();
     void parse_source_directories();

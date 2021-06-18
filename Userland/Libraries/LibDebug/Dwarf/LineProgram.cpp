@@ -290,4 +290,13 @@ void LineProgram::run_program()
     }
 }
 
+LineProgram::DirectoryAndFile LineProgram::get_directory_and_file(size_t file_index) const
+{
+    VERIFY(file_index < m_source_files.size());
+    auto file_entry = m_source_files[file_index];
+    VERIFY(file_entry.directory_index < m_source_directories.size());
+    auto directory_entry = m_source_directories[file_entry.directory_index];
+    return { directory_entry, file_entry.name };
+}
+
 }
