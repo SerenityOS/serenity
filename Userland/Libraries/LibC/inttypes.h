@@ -36,8 +36,10 @@ __BEGIN_DECLS
 #define PRIu32 "u"
 #ifndef __LP64__
 #    define PRIu64 "llu"
+#    define PRIuPTR "x"
 #else
 #    define PRIu64 "lu"
+#    define PRIuPTR "lx"
 #endif
 #define PRIx8 "b"
 #define PRIX8 "hhX"
