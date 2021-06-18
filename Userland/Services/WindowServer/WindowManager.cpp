@@ -896,7 +896,7 @@ void WindowManager::process_event_for_doubleclick(Window& window, MouseEvent& ev
     metadata.last_position = event.position();
 }
 
-void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click)
+void WindowManager::deliver_mouse_event(Window& window, MouseEvent const& event, bool process_double_click)
 {
     auto translated_event = event.translated(-window.position());
     window.dispatch_event(translated_event);
@@ -907,7 +907,7 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool 
     }
 }
 
-bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event)
+bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent const& event)
 {
     if (!m_active_input_tracking_window)
         return false;
@@ -927,7 +927,7 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event)
     return true;
 }
 
-bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent& event)
+bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent const& event)
 {
     if (m_cursor_tracking_button) {
         m_cursor_tracking_button->on_mouse_event(event.translated(-m_cursor_tracking_button->screen_rect().location()));
@@ -941,7 +941,7 @@ bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent& event)
     return false;
 }
 
-void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseEvent& event)
+void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseEvent const& event)
 {
     auto& window = *result.window;
 
