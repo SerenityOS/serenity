@@ -194,17 +194,6 @@ protected:
     virtual void receive_dcs_char(u8 byte) override;
     virtual void execute_dcs_sequence() override;
 
-    struct CursorPosition {
-        u16 row { 0 };
-        u16 column { 0 };
-
-        void clamp(u16 max_row, u16 max_column)
-        {
-            row = min(row, max_row);
-            column = min(column, max_column);
-        }
-    };
-
     struct BufferState {
         Attribute attribute;
         CursorPosition cursor;
