@@ -75,7 +75,7 @@ multiboot_module_entry_t multiboot_copy_boot_modules_array[16];
 size_t multiboot_copy_boot_modules_count;
 
 extern "C" const char kernel_cmdline[4096];
-bool g_in_early_boot;
+READONLY_AFTER_INIT bool g_in_early_boot;
 
 namespace Kernel {
 
@@ -259,14 +259,14 @@ void init_stage2(void*)
 
     load_kernel_symbol_table();
 
+    // Switch out of early boot mode.
+    g_in_early_boot = false;
+
     // NOTE: Everything marked READONLY_AFTER_INIT becomes non-writable after this point.
     MM.protect_readonly_after_init_memory();
 
     // NOTE: Everything marked UNMAP_AFTER_INIT becomes inaccessible after this point.
     MM.unmap_memory_after_init();
-
-    // Switch out of early boot mode.
-    g_in_early_boot = false;
 
     int error;
 
