@@ -994,23 +994,36 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
 
 void WindowManager::process_mouse_event(MouseEvent& event)
 {
-    if (process_ongoing_active_input_mouse_event(event))
-        return;
-
-    // We need to process ongoing drag events first. Otherwise, global tracking
-    // and dnd collides, leading to duplicate GUI::DragOperation instances
+    // 1. Process ongoing drag events. This is done first to avoid clashing with global cursor tracking.
     if (process_ongoing_drag(event))
         return;
 
+    // 2. Send the mouse event to all windows with global cursor tracking enabled.
+    m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
+        if (window.global_cursor_tracking())
+            deliver_mouse_event(window, event, false);
+        return IterationDecision::Continue;
+    });
+
+    // 3. If there's an active input tracking window, all mouse events go there.
+    //    Tracking ends after all mouse buttons have been released.
+    if (process_ongoing_active_input_mouse_event(event))
+        return;
+
+    // 4. If there's a window being moved around, take care of that.
     if (process_ongoing_window_move(event))
         return;
 
+    // 5. If there's a window being resized, take care of that.
     if (process_ongoing_window_resize(event))
         return;
 
+    // 6. If the event is inside a titlebar button, WindowServer implements all
+    //    the behavior for those buttons internally.
     if (process_mouse_event_for_titlebar_buttons(event))
         return;
 
+    // 7. If there are menus open, deal with them now. (FIXME: This needs to be cleaned up & simplified!)
     bool hitting_menu_in_window_with_active_menu = [&] {
         if (!m_window_with_active_menu)
             return false;
@@ -1033,11 +1046,11 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         }
     }
 
-    // Hit test the window stack to see what's under the cursor.
+    // 8. Hit test the window stack to see what's under the cursor.
     auto result = m_window_stack.hit_test(event.position());
 
     if (!result.has_value()) {
-        // No window is outside the cursor.
+        // No window is under the cursor.
         if (event.type() == Event::MouseDown) {
             // Clicked outside of any window -> no active window.
             // FIXME: Is this actually necessary? The desktop window should catch everything anyway.
@@ -1046,13 +1059,6 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         clear_resize_candidate();
         return;
     }
-
-    m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-        if (window.global_cursor_tracking()) {
-            deliver_mouse_event(window, event, false);
-        }
-        return IterationDecision::Continue;
-    });
 
     process_mouse_event_for_window(result.value(), event);
 }
