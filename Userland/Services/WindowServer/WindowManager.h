@@ -239,6 +239,7 @@ private:
     bool process_ongoing_window_resize(MouseEvent const&, Window*& hovered_window);
     bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
     bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
+    bool process_ongoing_active_input_mouse_event(MouseEvent&, Window*& hovered_window);
 
     template<typename Callback>
     void for_each_window_manager(Callback);
