@@ -87,7 +87,8 @@ void Launcher::load_handlers(const String& af_dir)
         HashTable<String> protocols;
         for (auto& protocol : af->launcher_protocols())
             protocols.set(protocol);
-        m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, file_types, protocols });
+        if (access(app_executable.characters(), X_OK) == 0)
+            m_handlers.set(app_executable, { Handler::Type::Default, app_name, app_executable, file_types, protocols });
     },
         af_dir);
 }
@@ -98,12 +99,16 @@ void Launcher::load_config(const Core::ConfigFile& cfg)
         auto handler = cfg.read_entry("FileType", key).trim_whitespace();
         if (handler.is_empty())
             continue;
+        if (access(handler.characters(), X_OK) != 0)
+            continue;
         m_file_handlers.set(key.to_lowercase(), handler);
     }
 
     for (auto key : cfg.keys("Protocol")) {
         auto handler = cfg.read_entry("Protocol", key).trim_whitespace();
         if (handler.is_empty())
+            continue;
+        if (access(handler.characters(), X_OK) != 0)
             continue;
         m_protocol_handlers.set(key.to_lowercase(), handler);
     }
