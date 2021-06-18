@@ -34,6 +34,7 @@ SetConstructor::~SetConstructor()
 {
 }
 
+// 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
 Value SetConstructor::call()
 {
     auto& vm = this->vm();
@@ -41,6 +42,7 @@ Value SetConstructor::call()
     return {};
 }
 
+// 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
 Value SetConstructor::construct(Function&)
 {
     auto& vm = this->vm();
@@ -66,6 +68,7 @@ Value SetConstructor::construct(Function&)
     return set;
 }
 
+// 24.2.2.2 get Set [ @@species ], https://tc39.es/ecma262/#sec-get-set-@@species
 JS_DEFINE_NATIVE_GETTER(SetConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);

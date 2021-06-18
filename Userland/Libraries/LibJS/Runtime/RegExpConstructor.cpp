@@ -20,7 +20,10 @@ void RegExpConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 22.2.4.1 RegExp.prototype, https://tc39.es/ecma262/#sec-regexp.prototype
     define_property(vm.names.prototype, global_object.regexp_prototype(), 0);
+
     define_property(vm.names.length, Value(2), Attribute::Configurable);
 
     define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
@@ -30,11 +33,13 @@ RegExpConstructor::~RegExpConstructor()
 {
 }
 
+// 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
 Value RegExpConstructor::call()
 {
     return construct(*this);
 }
 
+// 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
 Value RegExpConstructor::construct(Function&)
 {
     auto& vm = this->vm();
@@ -53,6 +58,7 @@ Value RegExpConstructor::construct(Function&)
     return RegExpObject::create(global_object(), pattern, flags);
 }
 
+// 22.2.4.2 get RegExp [ @@species ], https://tc39.es/ecma262/#sec-get-regexp-@@species
 JS_DEFINE_NATIVE_GETTER(RegExpConstructor::symbol_species_getter)
 {
     return vm.this_value(global_object);
