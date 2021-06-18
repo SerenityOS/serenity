@@ -117,7 +117,12 @@ public:
     void set_drag(bool b) { m_drag = b; }
     void set_mime_data(const Core::MimeData& mime_data) { m_mime_data = mime_data; }
 
-    MouseEvent translated(const Gfx::IntPoint& delta) const { return MouseEvent((Type)type(), m_position.translated(delta), m_buttons, m_button, m_modifiers, m_wheel_delta); }
+    MouseEvent translated(Gfx::IntPoint const& delta) const
+    {
+        MouseEvent event = *this;
+        event.m_position = m_position.translated(delta);
+        return event;
+    }
 
 private:
     Gfx::IntPoint m_position;
