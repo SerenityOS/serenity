@@ -44,7 +44,7 @@ void DwarfInfo::populate_compilation_units()
         VERIFY(compilation_unit_header.address_size() == sizeof(u32));
 
         u32 length_after_header = compilation_unit_header.length() - (compilation_unit_header.header_size() - offsetof(CompilationUnitHeader, common.version));
-        m_compilation_units.empend(*this, unit_offset, compilation_unit_header);
+        m_compilation_units.append(make<CompilationUnit>(*this, unit_offset, compilation_unit_header));
         stream.discard_or_error(length_after_header);
     }
 }

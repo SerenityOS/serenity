@@ -42,7 +42,7 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
         return nullptr;
 
     auto image = make<ELF::Image>(file_or_error.value()->bytes());
-    auto info = make<ELFObjectInfo>(file_or_error.release_value(), Debug::DebugInfo { move(image) });
+    auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
     auto* info_ptr = info.ptr();
     s_debug_info_cache.set(path, move(info));
     return info_ptr;
