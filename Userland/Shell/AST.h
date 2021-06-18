@@ -10,7 +10,6 @@
 #include "Job.h"
 #include "NodeVisitor.h"
 #include <AK/Format.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>

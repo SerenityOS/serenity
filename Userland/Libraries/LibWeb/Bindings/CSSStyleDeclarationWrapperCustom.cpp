@@ -11,12 +11,12 @@
 
 namespace Web::Bindings {
 
-JS::Value CSSStyleDeclarationWrapper::get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const
+JS::Value CSSStyleDeclarationWrapper::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
 {
     // FIXME: These should actually use camelCase versions of the property names!
     auto property_id = CSS::property_id_from_string(name.to_string());
     if (property_id == CSS::PropertyID::Invalid)
-        return Base::get(name, receiver, without_side_effects);
+        return Base::get(name, receiver, allow_side_effects);
     for (auto& property : impl().properties()) {
         if (property.property_id == property_id)
             return js_string(vm(), property.value->to_string());

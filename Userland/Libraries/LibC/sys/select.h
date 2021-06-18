@@ -10,6 +10,7 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/cdefs.h>
+#include <sys/time.h>
 #include <sys/types.h>
 
 __BEGIN_DECLS

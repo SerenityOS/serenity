@@ -123,7 +123,7 @@ private:
     KResult post_message_and_explicitly_ignore_reply(Message&);
 
     ProtocolVersion parse_protocol_version(const StringView&) const;
-    ssize_t adjust_buffer_size(ssize_t size) const;
+    size_t adjust_buffer_size(size_t size) const;
 
     void thread_main();
     void ensure_thread();
@@ -156,8 +156,8 @@ public:
     // ^Inode
     virtual InodeMetadata metadata() const override;
     virtual void flush_metadata() override;
-    virtual KResultOr<ssize_t> read_bytes(off_t, ssize_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
-    virtual KResultOr<ssize_t> write_bytes(off_t, ssize_t, const UserOrKernelBuffer& data, FileDescription*) override;
+    virtual KResultOr<size_t> read_bytes(off_t, size_t, UserOrKernelBuffer& buffer, FileDescription*) const override;
+    virtual KResultOr<size_t> write_bytes(off_t, size_t, const UserOrKernelBuffer& data, FileDescription*) override;
     virtual KResult traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)>) const override;
     virtual RefPtr<Inode> lookup(StringView name) override;
     virtual KResultOr<NonnullRefPtr<Inode>> create_child(const String& name, mode_t, dev_t, uid_t, gid_t) override;

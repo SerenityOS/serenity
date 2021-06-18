@@ -10,6 +10,10 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
+<<<<<<< HEAD
+=======
+#include <AK/LexicalPath.h>
+>>>>>>> master
 #include <AK/MappedFile.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/File.h>
@@ -51,7 +55,8 @@ RefPtr<Image> Image::try_create_with_size(Gfx::IntSize const& size)
 }
 
 Image::Image(Gfx::IntSize const& size)
-    : m_size(size)
+    : m_title("Untitled")
+    , m_size(size)
 {
 }
 
@@ -95,6 +100,7 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
     auto json_or_error = JsonValue::from_string(contents);
     if (!json_or_error.has_value())
         return String { "Not a valid PP file"sv };
+<<<<<<< HEAD
 
     auto& json = json_or_error.value().as_object();
     auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
@@ -106,6 +112,19 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
         auto& layer_object = layer_value.as_object();
         auto name = layer_object.get("name").as_string();
 
+=======
+
+    auto& json = json_or_error.value().as_object();
+    auto image = try_create_with_size({ json.get("width").to_i32(), json.get("height").to_i32() });
+    if (!image)
+        return String { "Image memory allocation failed" };
+
+    auto layers_value = json.get("layers");
+    for (auto& layer_value : layers_value.as_array().values()) {
+        auto& layer_object = layer_value.as_object();
+        auto name = layer_object.get("name").as_string();
+
+>>>>>>> master
         auto bitmap_base64_encoded = layer_object.get("bitmap").as_string();
         auto bitmap_data = decode_base64(bitmap_base64_encoded);
 
@@ -131,6 +150,10 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_pixel_paint_file(Str
         image->add_layer(*layer);
     }
 
+<<<<<<< HEAD
+=======
+    image->set_path(file_path);
+>>>>>>> master
     return image.release_nonnull();
 }
 
@@ -152,6 +175,10 @@ Result<NonnullRefPtr<Image>, String> Image::try_create_from_file(String const& f
     auto image = Image::try_create_from_bitmap(bitmap.release_nonnull());
     if (!image)
         return String { "Unable to allocate Image"sv };
+<<<<<<< HEAD
+=======
+    image->set_path(file_path);
+>>>>>>> master
     return image.release_nonnull();
 }
 
@@ -223,11 +250,19 @@ Result<void, String> Image::export_png_to_file(String const& file_path)
     auto file_or_error = Core::File::open(file_path, (Core::OpenMode)(Core::OpenMode::WriteOnly | Core::OpenMode::Truncate));
     if (file_or_error.is_error())
         return file_or_error.error();
+<<<<<<< HEAD
 
     auto bitmap = try_compose_bitmap();
     if (!bitmap)
         return String { "Failed to allocate bitmap for encoding"sv };
 
+=======
+
+    auto bitmap = try_compose_bitmap();
+    if (!bitmap)
+        return String { "Failed to allocate bitmap for encoding"sv };
+
+>>>>>>> master
     auto encoded_data = Gfx::PNGWriter::encode(*bitmap);
     auto& file = *file_or_error.value();
     if (!file.write(encoded_data.data(), encoded_data.size()))
@@ -416,6 +451,19 @@ void ImageUndoCommand::undo()
 void ImageUndoCommand::redo()
 {
     undo();
+}
+
+void Image::set_title(String title)
+{
+    m_title = move(title);
+    for (auto* client : m_clients)
+        client->image_did_change_title(m_title);
+}
+
+void Image::set_path(String path)
+{
+    m_path = move(path);
+    set_title(LexicalPath(m_path).basename());
 }
 
 }

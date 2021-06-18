@@ -21,24 +21,45 @@ public:
     bool operator!=(const SinglyLinkedListIterator& other) const { return m_node != other.m_node; }
     SinglyLinkedListIterator& operator++()
     {
-        m_prev = m_node;
-        m_node = m_node->next;
+        if (m_removed)
+            m_removed = false;
+        else
+            m_prev = m_node;
+        m_node = m_next;
+        if (m_next)
+            m_next = m_next->next;
         return *this;
     }
-    ElementType& operator*() { return m_node->value; }
-    ElementType* operator->() { return &m_node->value; }
+    ElementType& operator*()
+    {
+        VERIFY(!m_removed);
+        return m_node->value;
+    }
+    ElementType* operator->()
+    {
+        VERIFY(!m_removed);
+        return &m_node->value;
+    }
     bool is_end() const { return !m_node; }
     bool is_begin() const { return !m_prev; }
+    void remove(ListType& list)
+    {
+        m_removed = true;
+        list.remove(*this);
+    };
 
 private:
     friend ListType;
     explicit SinglyLinkedListIterator(typename ListType::Node* node, typename ListType::Node* prev = nullptr)
         : m_node(node)
         , m_prev(prev)
+        , m_next(node ? node->next : nullptr)
     {
     }
     typename ListType::Node* m_node { nullptr };
     typename ListType::Node* m_prev { nullptr };
+    typename ListType::Node* m_next { nullptr };
+    bool m_removed { false };
 };
 
 template<typename T>
@@ -165,18 +186,6 @@ public:
         return find_if([&](auto& other) { return Traits<T>::equals(value, other); });
     }
 
-    void remove(Iterator iterator)
-    {
-        VERIFY(!iterator.is_end());
-        if (m_head == iterator.m_node)
-            m_head = iterator.m_node->next;
-        if (m_tail == iterator.m_node)
-            m_tail = iterator.m_prev;
-        if (iterator.m_prev)
-            iterator.m_prev->next = iterator.m_node->next;
-        delete iterator.m_node;
-    }
-
     template<typename U = T>
     void insert_before(Iterator iterator, U&& value)
     {
@@ -206,6 +215,18 @@ public:
     }
 
 private:
+    void remove(Iterator& iterator)
+    {
+        VERIFY(!iterator.is_end());
+        if (m_head == iterator.m_node)
+            m_head = iterator.m_node->next;
+        if (m_tail == iterator.m_node)
+            m_tail = iterator.m_prev;
+        if (iterator.m_prev)
+            iterator.m_prev->next = iterator.m_node->next;
+        delete iterator.m_node;
+    }
+
     Node* head() { return m_head; }
     const Node* head() const { return m_head; }
 

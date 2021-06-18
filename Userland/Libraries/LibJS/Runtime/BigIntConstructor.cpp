@@ -46,7 +46,7 @@ Value BigIntConstructor::call()
     if (vm().exception())
         return {};
     if (primitive.is_number()) {
-        if (!primitive.is_integer()) {
+        if (!primitive.is_integral_number()) {
             vm().throw_exception<RangeError>(global_object(), ErrorType::BigIntIntArgument);
             return {};
         }

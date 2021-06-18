@@ -104,7 +104,7 @@ public:
     bool operator!=(const IndexedPropertyIterator&) const;
 
     u32 index() const { return m_index; };
-    ValueAndAttributes value_and_attributes(Object* this_object, bool evaluate_accessors = true);
+    ValueAndAttributes value_and_attributes(Object* this_object, AllowSideEffects = AllowSideEffects::Yes);
 
 private:
     void skip_empty_indices();
@@ -124,16 +124,15 @@ public:
     }
 
     bool has_index(u32 index) const { return m_storage->has_index(index); }
-    Optional<ValueAndAttributes> get(Object* this_object, u32 index, bool evaluate_accessors = true) const;
-    void put(Object* this_object, u32 index, Value value, PropertyAttributes attributes = default_attributes, bool evaluate_accessors = true);
+    Optional<ValueAndAttributes> get(Object* this_object, u32 index, AllowSideEffects = AllowSideEffects::Yes) const;
+    void put(Object* this_object, u32 index, Value value, PropertyAttributes attributes = default_attributes, AllowSideEffects allow_side_effects = AllowSideEffects::Yes);
     bool remove(u32 index);
 
     void insert(u32 index, Value value, PropertyAttributes attributes = default_attributes);
     ValueAndAttributes take_first(Object* this_object);
     ValueAndAttributes take_last(Object* this_object);
 
-    void append(Value value, PropertyAttributes attributes = default_attributes) { put(nullptr, array_like_size(), value, attributes, false); }
-    void append_all(Object* this_object, const IndexedProperties& properties, bool evaluate_accessors = true);
+    void append(Value value, PropertyAttributes attributes = default_attributes) { put(nullptr, array_like_size(), value, attributes, AllowSideEffects::No); }
 
     IndexedPropertyIterator begin(bool skip_empty = true) const { return IndexedPropertyIterator(*this, 0, skip_empty); };
     IndexedPropertyIterator end() const { return IndexedPropertyIterator(*this, array_like_size(), false); };

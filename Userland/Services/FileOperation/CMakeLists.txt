@@ -1,3 +1,8 @@
+serenity_component(
+    FileOperation
+    TARGETS FileOperation
+)
+
 set(SOURCES
     main.cpp
 )

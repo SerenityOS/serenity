@@ -179,7 +179,7 @@ KResultOr<int> Process::sys$shutdown(int sockfd, int how)
     return socket.shutdown(how);
 }
 
-KResultOr<ssize_t> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*> user_msg, int flags)
+KResultOr<size_t> Process::sys$sendmsg(int sockfd, Userspace<const struct msghdr*> user_msg, int flags)
 {
     REQUIRE_PROMISE(stdio);
     struct msghdr msg;
@@ -193,6 +193,8 @@ KResultOr<ssize_t> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
         return ENOMEM;
     if (!copy_n_from_user(iovs.data(), msg.msg_iov, msg.msg_iovlen))
         return EFAULT;
+    if (iovs[0].iov_len > NumericLimits<ssize_t>::max())
+        return EINVAL;
 
     Userspace<const sockaddr*> user_addr((FlatPtr)msg.msg_name);
     socklen_t addr_length = msg.msg_namelen;
@@ -208,13 +210,10 @@ KResultOr<ssize_t> Process::sys$sendmsg(int sockfd, Userspace<const struct msghd
     auto data_buffer = UserOrKernelBuffer::for_user_buffer((u8*)iovs[0].iov_base, iovs[0].iov_len);
     if (!data_buffer.has_value())
         return EFAULT;
-    auto result = socket.sendto(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, addr_length);
-    if (result.is_error())
-        return result.error();
-    return result.value();
+    return socket.sendto(*description, data_buffer.value(), iovs[0].iov_len, flags, user_addr, addr_length);
 }
 
-KResultOr<ssize_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
+KResultOr<size_t> Process::sys$recvmsg(int sockfd, Userspace<struct msghdr*> user_msg, int flags)
 {
     REQUIRE_PROMISE(stdio);
 

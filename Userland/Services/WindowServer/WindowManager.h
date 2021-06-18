@@ -1,14 +1,14 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
+#include "WindowStack.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/ConfigFile.h>
 #include <LibCore/ElapsedTimer.h>
@@ -22,7 +22,6 @@
 #include <WindowServer/MenuManager.h>
 #include <WindowServer/Menubar.h>
 #include <WindowServer/WMClientConnection.h>
-#include <WindowServer/Window.h>
 #include <WindowServer/WindowSwitcher.h>
 #include <WindowServer/WindowType.h>
 
@@ -60,7 +59,7 @@ class WindowManager : public Core::Object {
 public:
     static WindowManager& the();
 
-    explicit WindowManager(const Gfx::PaletteImpl&);
+    explicit WindowManager(Gfx::PaletteImpl const&);
     virtual ~WindowManager() override;
 
     Palette palette() const { return Palette(*m_palette); }
@@ -73,35 +72,35 @@ public:
 
     void notify_title_changed(Window&);
     void notify_modal_unparented(Window&);
-    void notify_rect_changed(Window&, const Gfx::IntRect& oldRect, const Gfx::IntRect& newRect);
+    void notify_rect_changed(Window&, Gfx::IntRect const& oldRect, Gfx::IntRect const& newRect);
     void notify_minimization_state_changed(Window&);
     void notify_opacity_changed(Window&);
     void notify_occlusion_state_changed(Window&);
     void notify_progress_changed(Window&);
     void notify_modified_changed(Window&);
 
-    Gfx::IntRect maximized_window_rect(const Window&) const;
+    Gfx::IntRect maximized_window_rect(Window const&) const;
 
-    const ClientConnection* dnd_client() const { return m_dnd_client.ptr(); }
-    const String& dnd_text() const { return m_dnd_text; }
-    const Core::MimeData& dnd_mime_data() const { return *m_dnd_mime_data; }
-    const Gfx::Bitmap* dnd_bitmap() const { return m_dnd_bitmap; }
+    ClientConnection const* dnd_client() const { return m_dnd_client.ptr(); }
+    String const& dnd_text() const { return m_dnd_text; }
+    Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
+    Gfx::Bitmap const* dnd_bitmap() const { return m_dnd_bitmap; }
     Gfx::IntRect dnd_rect() const;
 
-    void start_dnd_drag(ClientConnection&, const String& text, const Gfx::Bitmap*, const Core::MimeData&);
+    void start_dnd_drag(ClientConnection&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
 
-    Window* active_window() { return m_active_window.ptr(); }
-    const Window* active_window() const { return m_active_window.ptr(); }
+    Window* active_window() { return m_window_stack.active_window(); }
+    Window const* active_window() const { return m_window_stack.active_window(); }
     Window* active_input_window() { return m_active_input_window.ptr(); }
-    const Window* active_input_window() const { return m_active_input_window.ptr(); }
-    const ClientConnection* active_client() const;
+    Window const* active_input_window() const { return m_active_input_window.ptr(); }
+    ClientConnection const* active_client() const;
 
     Window* window_with_active_menu() { return m_window_with_active_menu; }
-    const Window* window_with_active_menu() const { return m_window_with_active_menu; }
+    Window const* window_with_active_menu() const { return m_window_with_active_menu; }
     void set_window_with_active_menu(Window*);
 
-    const Window* highlight_window() const { return m_highlight_window.ptr(); }
+    Window const* highlight_window() const { return m_window_stack.highlight_window(); }
     void set_highlight_window(Window*);
 
     void move_to_front_and_make_active(Window&);
@@ -109,26 +108,26 @@ public:
     Gfx::IntRect desktop_rect() const;
     Gfx::IntRect arena_rect_for_type(WindowType) const;
 
-    const Cursor& active_cursor() const;
-    const Cursor& hidden_cursor() const { return *m_hidden_cursor; }
-    const Cursor& arrow_cursor() const { return *m_arrow_cursor; }
-    const Cursor& crosshair_cursor() const { return *m_crosshair_cursor; }
-    const Cursor& hand_cursor() const { return *m_hand_cursor; }
-    const Cursor& help_cursor() const { return *m_help_cursor; }
-    const Cursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
-    const Cursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
-    const Cursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
-    const Cursor& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
-    const Cursor& resize_column_cursor() const { return *m_resize_column_cursor; }
-    const Cursor& resize_row_cursor() const { return *m_resize_row_cursor; }
-    const Cursor& i_beam_cursor() const { return *m_i_beam_cursor; }
-    const Cursor& disallowed_cursor() const { return *m_disallowed_cursor; }
-    const Cursor& move_cursor() const { return *m_move_cursor; }
-    const Cursor& drag_cursor() const { return *m_drag_cursor; }
-    const Cursor& wait_cursor() const { return *m_wait_cursor; }
+    Cursor const& active_cursor() const;
+    Cursor const& hidden_cursor() const { return *m_hidden_cursor; }
+    Cursor const& arrow_cursor() const { return *m_arrow_cursor; }
+    Cursor const& crosshair_cursor() const { return *m_crosshair_cursor; }
+    Cursor const& hand_cursor() const { return *m_hand_cursor; }
+    Cursor const& help_cursor() const { return *m_help_cursor; }
+    Cursor const& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
+    Cursor const& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
+    Cursor const& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
+    Cursor const& resize_diagonally_bltr_cursor() const { return *m_resize_diagonally_bltr_cursor; }
+    Cursor const& resize_column_cursor() const { return *m_resize_column_cursor; }
+    Cursor const& resize_row_cursor() const { return *m_resize_row_cursor; }
+    Cursor const& i_beam_cursor() const { return *m_i_beam_cursor; }
+    Cursor const& disallowed_cursor() const { return *m_disallowed_cursor; }
+    Cursor const& move_cursor() const { return *m_move_cursor; }
+    Cursor const& drag_cursor() const { return *m_drag_cursor; }
+    Cursor const& wait_cursor() const { return *m_wait_cursor; }
 
-    const Gfx::Font& font() const;
-    const Gfx::Font& window_title_font() const;
+    Gfx::Font const& font() const;
+    Gfx::Font const& window_title_font() const;
 
     bool set_resolution(int width, int height, int scale);
     Gfx::IntSize resolution() const;
@@ -144,40 +143,38 @@ public:
     void set_active_window(Window*, bool make_input = true);
     void set_hovered_button(Button*);
 
-    const Button* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
+    Button const* cursor_tracking_button() const { return m_cursor_tracking_button.ptr(); }
     void set_cursor_tracking_button(Button*);
 
     void set_resize_candidate(Window&, ResizeDirection);
     void clear_resize_candidate();
-    ResizeDirection resize_direction_of_window(const Window&);
+    ResizeDirection resize_direction_of_window(Window const&);
 
     void greet_window_manager(WMClientConnection&);
     void tell_wms_window_state_changed(Window&);
     void tell_wms_window_icon_changed(Window&);
     void tell_wms_window_rect_changed(Window&);
-    void tell_wms_applet_area_size_changed(const Gfx::IntSize&);
+    void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
 
-    void start_window_resize(Window&, const Gfx::IntPoint&, MouseButton);
-    void start_window_resize(Window&, const MouseEvent&);
-    void start_window_move(Window&, const MouseEvent&);
-    void start_window_move(Window&, const Gfx::IntPoint&);
+    void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
+    void start_window_resize(Window&, MouseEvent const&);
+    void start_window_move(Window&, MouseEvent const&);
+    void start_window_move(Window&, Gfx::IntPoint const&);
 
-    const Window* active_fullscreen_window() const
+    Window const* active_fullscreen_window() const
     {
-        if (m_active_window && m_active_window->is_fullscreen()) {
-            return m_active_window;
-        }
+        if (active_window() && active_window()->is_fullscreen())
+            return active_window();
         return nullptr;
     };
 
     Window* active_fullscreen_window()
     {
-        if (m_active_window && m_active_window->is_fullscreen()) {
-            return m_active_window;
-        }
+        if (active_window() && active_window()->is_fullscreen())
+            return active_window();
         return nullptr;
     }
 
@@ -185,12 +182,12 @@ public:
     void invalidate_after_theme_or_font_change();
 
     bool set_hovered_window(Window*);
-    void deliver_mouse_event(Window& window, MouseEvent& event, bool process_double_click);
+    void deliver_mouse_event(Window&, MouseEvent const&, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
 
-    void start_menu_doubleclick(Window& window, const MouseEvent& event);
-    bool is_menu_doubleclick(Window& window, const MouseEvent& event) const;
+    void start_menu_doubleclick(Window& window, MouseEvent const& event);
+    bool is_menu_doubleclick(Window& window, MouseEvent const& event) const;
 
     void minimize_windows(Window&, bool);
     void maximize_windows(Window&, bool);
@@ -224,7 +221,7 @@ public:
         }
     }
 
-    Gfx::IntPoint get_recommended_window_position(const Gfx::IntPoint& desired);
+    Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint const& desired);
 
     int compositor_icon_scale() const;
     void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
@@ -232,33 +229,26 @@ public:
     void reevaluate_hovered_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
 
+    WindowStack& window_stack() { return m_window_stack; }
+
 private:
-    NonnullRefPtr<Cursor> get_cursor(const String& name);
+    NonnullRefPtr<Cursor> get_cursor(String const& name);
 
-    void process_mouse_event(MouseEvent&, Window*& hovered_window);
+    void process_mouse_event(MouseEvent&);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
-    bool process_ongoing_window_resize(const MouseEvent&, Window*& hovered_window);
-    bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
-    bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
+    bool process_ongoing_window_resize(MouseEvent const&);
+    bool process_ongoing_window_move(MouseEvent&);
+    bool process_ongoing_drag(MouseEvent&);
+    bool process_ongoing_active_input_mouse_event(MouseEvent const&);
+    bool process_mouse_event_for_titlebar_buttons(MouseEvent const&);
+    void process_mouse_event_for_window(HitTestResult&, MouseEvent const&);
 
-    template<typename Callback>
-    IterationDecision for_each_visible_window_of_type_from_back_to_front(WindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_front_to_back(Callback);
-    template<typename Callback>
-    IterationDecision for_each_visible_window_from_back_to_front(Callback);
-    template<typename Callback>
-    void for_each_window(Callback);
-    template<typename Callback>
-    IterationDecision for_each_window_of_type_from_front_to_back(WindowType, Callback, bool ignore_highlight = false);
+    void process_key_event(KeyEvent&);
 
     template<typename Callback>
     void for_each_window_manager(Callback);
 
     virtual void event(Core::Event&) override;
-    void paint_window_frame(const Window&);
     void tell_wm_about_window(WMClientConnection& conn, Window&);
     void tell_wm_about_window_icon(WMClientConnection& conn, Window&);
     void tell_wm_about_window_rect(WMClientConnection& conn, Window&);
@@ -284,7 +274,7 @@ private:
     RefPtr<Cursor> m_wait_cursor;
     RefPtr<Cursor> m_crosshair_cursor;
 
-    Window::List m_windows_in_order;
+    WindowStack m_window_stack;
 
     struct DoubleClickInfo {
         struct ClickMetadata {
@@ -292,7 +282,7 @@ private:
             Gfx::IntPoint last_position;
         };
 
-        const ClickMetadata& metadata_for_button(MouseButton) const;
+        ClickMetadata const& metadata_for_button(MouseButton) const;
         ClickMetadata& metadata_for_button(MouseButton);
 
         void reset()
@@ -314,16 +304,14 @@ private:
         ClickMetadata m_forward;
     };
 
-    bool is_considered_doubleclick(const MouseEvent& event, const DoubleClickInfo::ClickMetadata& metadata) const;
+    bool is_considered_doubleclick(MouseEvent const&, DoubleClickInfo::ClickMetadata const&) const;
 
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
     int m_max_distance_for_double_click { 4 };
     bool m_previous_event_was_super_keydown { false };
 
-    WeakPtr<Window> m_active_window;
     WeakPtr<Window> m_hovered_window;
-    WeakPtr<Window> m_highlight_window;
     WeakPtr<Window> m_active_input_window;
     WeakPtr<Window> m_active_input_tracking_window;
     WeakPtr<Window> m_window_with_active_menu;
@@ -357,100 +345,6 @@ private:
 };
 
 template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_of_type_from_back_to_front(WindowType type, Callback callback, bool ignore_highlight)
-{
-    bool do_highlight_window_at_end = false;
-    for (auto& window : m_windows_in_order) {
-        if (!window.is_visible())
-            continue;
-        if (window.is_minimized())
-            continue;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && m_highlight_window == &window) {
-            do_highlight_window_at_end = true;
-            continue;
-        }
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    if (do_highlight_window_at_end) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_from_back_to_front(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Desktop, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_back_to_front(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_back_to_front(WindowType::WindowSwitcher, callback);
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
-{
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (!window.is_visible())
-            continue;
-        if (window.is_minimized())
-            continue;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && &window == m_highlight_window)
-            continue;
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_visible_window_from_front_to_back(Callback callback)
-{
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::WindowSwitcher, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Menu, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Tooltip, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Notification, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::AppletArea, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Taskbar, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::ToolWindow, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_front_to_back(WindowType::Desktop, callback);
-}
-
-template<typename Callback>
 void WindowManager::for_each_window_manager(Callback callback)
 {
     auto& connections = WMClientConnection::s_connections;
@@ -460,38 +354,6 @@ void WindowManager::for_each_window_manager(Callback callback)
         if (callback(*it->value) == IterationDecision::Break)
             return;
     }
-}
-
-template<typename Callback>
-void WindowManager::for_each_window(Callback callback)
-{
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (callback(window) == IterationDecision::Break)
-            return;
-    }
-}
-
-template<typename Callback>
-IterationDecision WindowManager::for_each_window_of_type_from_front_to_back(WindowType type, Callback callback, bool ignore_highlight)
-{
-    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    auto reverse_iterator = m_windows_in_order.rbegin();
-    for (; reverse_iterator != m_windows_in_order.rend(); ++reverse_iterator) {
-        auto& window = *reverse_iterator;
-        if (window.type() != type)
-            continue;
-        if (!ignore_highlight && &window == m_highlight_window)
-            continue;
-        if (callback(window) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-    return IterationDecision::Continue;
 }
 
 }

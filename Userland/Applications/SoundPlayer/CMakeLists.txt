@@ -1,3 +1,10 @@
+serenity_component(
+    SoundPlayer
+    RECOMMENDED
+    TARGETS SoundPlayer
+    DEPENDS AudioServer
+)
+
 set(SOURCES
     main.cpp
     PlaybackManager.cpp

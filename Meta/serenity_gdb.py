@@ -20,8 +20,6 @@ def handler_class_for_type(type, re=re.compile('^([^<]+)(<.*>)?$')):
         return AKAtomic
     elif klass == 'AK::DistinctNumeric':
         return AKDistinctNumeric
-    elif klass == 'AK::InlineLinkedList':
-        return AKInlineLinkedList
     elif klass == 'AK::HashMap':
         return AKHashMapPrettyPrinter
     elif klass == 'AK::RefCounted':
@@ -318,30 +316,6 @@ class AKSinglyLinkedList:
     def prettyprint_type(cls, type):
         template_type = type.template_argument(0)
         return f'AK::SinglyLinkedList<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
-
-
-class AKInlineLinkedList:
-    def __init__(self, val):
-        self.val = val
-
-    def to_string(self):
-        return AKInlineLinkedList.prettyprint_type(self.val.type)
-
-    def children(self):
-        node_type_ptr = self.val.type.template_argument(0).pointer()
-
-        elements = []
-        node = self.val["m_head"]
-        while node != 0:
-            elements.append(node.cast(node_type_ptr))
-            node = node["m_next"]
-
-        return [(f"[{i}]", elements[i].dereference()) for i in range(len(elements))]
-
-    @classmethod
-    def prettyprint_type(cls, type):
-        template_type = type.template_argument(0)
-        return f'AK::InlineLinkedList<{handler_class_for_type(template_type).prettyprint_type(template_type)}>'
 
 
 class VirtualAddress:

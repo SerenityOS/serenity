@@ -1,3 +1,8 @@
+serenity_component(
+    WebSocket
+    TARGETS WebSocket
+)
+
 compile_ipc(WebSocketServer.ipc WebSocketServerEndpoint.h)
 compile_ipc(WebSocketClient.ipc WebSocketClientEndpoint.h)
 

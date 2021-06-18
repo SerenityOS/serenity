@@ -32,6 +32,7 @@ void StringConstructor::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.raw, raw, 1, attr);
     define_native_function(vm.names.fromCharCode, from_char_code, 1, attr);
+    define_native_function(vm.names.fromCodePoint, from_code_point, 1, attr);
 }
 
 StringConstructor::~StringConstructor()
@@ -116,6 +117,28 @@ JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_char_code)
         auto truncated = char_code & 0xffff;
         // FIXME: We need an Utf16View :^)
         builder.append(Utf32View((u32*)&truncated, 1));
+    }
+    return js_string(vm, builder.build());
+}
+
+// 22.1.2.2 String.fromCodePoint ( ...codePoints ), https://tc39.es/ecma262/#sec-string.fromcodepoint
+JS_DEFINE_NATIVE_FUNCTION(StringConstructor::from_code_point)
+{
+    StringBuilder builder;
+    for (size_t i = 0; i < vm.argument_count(); ++i) {
+        auto next_code_point = vm.argument(i).to_number(global_object);
+        if (vm.exception())
+            return {};
+        if (!next_code_point.is_integral_number()) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
+            return {};
+        }
+        auto code_point = next_code_point.to_i32(global_object);
+        if (code_point < 0 || code_point > 0x10FFFF) {
+            vm.throw_exception<RangeError>(global_object, ErrorType::InvalidCodePoint, next_code_point.to_string_without_side_effects());
+            return {};
+        }
+        builder.append_code_point(code_point);
     }
     return js_string(vm, builder.build());
 }

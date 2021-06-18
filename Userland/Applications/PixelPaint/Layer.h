@@ -46,7 +46,7 @@ public:
 
     void set_bitmap(NonnullRefPtr<Gfx::Bitmap> bitmap) { m_bitmap = move(bitmap); }
 
-    void did_modify_bitmap(Image&);
+    void did_modify_bitmap();
 
     void set_selected(bool selected) { m_selected = selected; }
     bool is_selected() const { return m_selected; }
@@ -59,6 +59,11 @@ public:
 
     RefPtr<Gfx::Bitmap> try_copy_bitmap(Selection const&) const;
 
+<<<<<<< HEAD
+=======
+    Image const& image() const { return m_image; }
+
+>>>>>>> master
 private:
     Layer(Image&, NonnullRefPtr<Gfx::Bitmap>, String name);
 

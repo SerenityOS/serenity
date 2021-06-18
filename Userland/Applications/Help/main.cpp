@@ -153,16 +153,25 @@ int main(int argc, char* argv[])
         auto url = URL::create_with_file_protocol(path);
         page_view.load_html(html, url);
 
-        auto tree_view_index = model->index_from_path(path);
-        if (tree_view_index.has_value())
-            tree_view.expand_tree(tree_view_index.value().parent());
+        app->deferred_invoke([&, path](auto&) {
+            auto tree_view_index = model->index_from_path(path);
+            if (tree_view_index.has_value()) {
+                tree_view.expand_tree(tree_view_index.value().parent());
+                tree_view.selection().set(tree_view_index.value());
 
-        String page_and_section = model->page_and_section(tree_view_index.value());
-        window->set_title(String::formatted("{} - Help", page_and_section));
+                String page_and_section = model->page_and_section(tree_view_index.value());
+                window->set_title(String::formatted("{} - Help", page_and_section));
+            } else {
+                window->set_title("Help");
+            }
+        });
     };
 
     tree_view.on_selection_change = [&] {
         String path = model->page_path(tree_view.selection().first());
+        if (path.is_null())
+            return;
+
         history.push(path);
         update_actions();
         open_page(path);

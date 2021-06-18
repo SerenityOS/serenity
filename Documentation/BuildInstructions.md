@@ -270,6 +270,8 @@ There are some optional features that can be enabled during compilation that are
 - `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speedup compilation.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests
+- `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components.
+- `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
 

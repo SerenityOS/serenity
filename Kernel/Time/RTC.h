@@ -31,6 +31,6 @@ public:
 
 private:
     explicit RealTimeClock(Function<void(const RegisterState&)> callback);
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 };
 }

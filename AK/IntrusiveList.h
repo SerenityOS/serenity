@@ -54,6 +54,7 @@ public:
     [[nodiscard]] size_t size_slow() const;
     void append(T& n);
     void prepend(T& n);
+    void insert_before(T&, T&);
     void remove(T& n);
     [[nodiscard]] bool contains(const T&) const;
     [[nodiscard]] Container first() const;
@@ -248,10 +249,9 @@ inline void IntrusiveList<T, Container, member>::append(T& n)
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
 inline void IntrusiveList<T, Container, member>::prepend(T& n)
 {
-    auto& nnode = n.*member;
-    if (nnode.m_storage)
-        nnode.remove();
+    remove(n);
 
+    auto& nnode = n.*member;
     nnode.m_storage = &m_storage;
     nnode.m_prev = nullptr;
     nnode.m_next = m_storage.m_first;
@@ -263,6 +263,28 @@ inline void IntrusiveList<T, Container, member>::prepend(T& n)
     m_storage.m_first = &nnode;
     if (!m_storage.m_last)
         m_storage.m_last = &nnode;
+}
+
+template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>
+inline void IntrusiveList<T, Container, member>::insert_before(T& bn, T& n)
+{
+    remove(n);
+
+    auto& new_node = n.*member;
+    auto& before_node = bn.*member;
+    new_node.m_storage = &m_storage;
+    new_node.m_next = &before_node;
+    new_node.m_prev = before_node.m_prev;
+    if (before_node.m_prev)
+        before_node.m_prev->m_next = &new_node;
+    before_node.m_prev = &new_node;
+
+    if (m_storage.m_first == &before_node) {
+        m_storage.m_first = &new_node;
+    }
+
+    if constexpr (!RemoveReference<decltype(new_node)>::IsRaw)
+        new_node.m_self.reference = &n;
 }
 
 template<class T, typename Container, IntrusiveListNode<T, Container> T::*member>

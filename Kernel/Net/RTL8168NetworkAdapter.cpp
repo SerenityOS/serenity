@@ -1073,8 +1073,14 @@ UNMAP_AFTER_INIT RTL8168NetworkAdapter::~RTL8168NetworkAdapter()
 {
 }
 
+<<<<<<< HEAD
 void RTL8168NetworkAdapter::handle_irq(const RegisterState&)
 {
+=======
+bool RTL8168NetworkAdapter::handle_irq(const RegisterState&)
+{
+    bool was_handled = false;
+>>>>>>> master
     for (;;) {
         int status = in16(REG_ISR);
         out16(REG_ISR, status);
@@ -1086,6 +1092,10 @@ void RTL8168NetworkAdapter::handle_irq(const RegisterState&)
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_SYS_ERR)) == 0)
             break;
 
+<<<<<<< HEAD
+=======
+        was_handled = true;
+>>>>>>> master
         if (status & INT_RXOK) {
             dbgln_if(RTL8168_DEBUG, "RTL8168: RX ready");
             receive();
@@ -1116,6 +1126,10 @@ void RTL8168NetworkAdapter::handle_irq(const RegisterState&)
             dmesgln("RTL8168: Fatal system error");
         }
     }
+<<<<<<< HEAD
+=======
+    return was_handled;
+>>>>>>> master
 }
 
 void RTL8168NetworkAdapter::reset()

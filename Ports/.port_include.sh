@@ -119,7 +119,11 @@ install_icon() {
     if [ "$convert_exists" == "0" ] && [ "$identify_exists" == "0" ]; then
         for icon_size in "16x16" "32x32"; do
             index=$(run identify "$icon" | grep "$icon_size" | grep -oE "\[[0-9]+\]" | tr -d "[]" | head -n1)
-            run convert "${icon}[${index}]" "app-${icon_size}.png"
+            if [ -n "$index" ]; then
+                run convert "${icon}[${index}]" "app-${icon_size}.png"
+            else
+                run convert "$icon" -resize $icon_size "app-${icon_size}.png"
+            fi
         done
         run objcopy --add-section serenity_icon_s="app-16x16.png" "${DESTDIR}${launcher}"
         run objcopy --add-section serenity_icon_m="app-32x32.png" "${DESTDIR}${launcher}"

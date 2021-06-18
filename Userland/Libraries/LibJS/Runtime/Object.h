@@ -40,7 +40,7 @@ struct PropertyDescriptor {
 
 class Object : public Cell {
 public:
-    static Object* create_empty(GlobalObject&);
+    static Object* create(GlobalObject&, Object* prototype);
 
     explicit Object(Object& prototype);
     explicit Object(Shape&);
@@ -74,7 +74,7 @@ public:
 
     GlobalObject& global_object() const { return *shape().global_object(); }
 
-    virtual Value get(const PropertyName&, Value receiver = {}, bool without_side_effects = false) const;
+    virtual Value get(const PropertyName&, Value receiver = {}, AllowSideEffects = AllowSideEffects::Yes) const;
     Value get_without_side_effects(const PropertyName&) const;
 
     virtual bool has_property(const PropertyName&) const;
@@ -82,7 +82,7 @@ public:
 
     virtual bool put(const PropertyName&, Value, Value receiver = {});
 
-    Value get_own_property(const PropertyName&, Value receiver, bool without_side_effects = false) const;
+    Value get_own_property(const PropertyName&, Value receiver, AllowSideEffects = AllowSideEffects::Yes) const;
     MarkedValueList get_own_properties(PropertyKind, bool only_enumerable_properties = false, GetOwnPropertyReturnType = GetOwnPropertyReturnType::All) const;
     MarkedValueList get_enumerable_own_property_names(PropertyKind) const;
     virtual Optional<PropertyDescriptor> get_own_property_descriptor(const PropertyName&) const;
@@ -163,7 +163,7 @@ protected:
     explicit Object(GlobalObjectTag);
     Object(ConstructWithoutPrototypeTag, GlobalObject&);
 
-    virtual Value get_by_index(u32 property_index) const;
+    virtual Value get_by_index(u32 property_index, AllowSideEffects = AllowSideEffects::Yes) const;
     virtual bool put_by_index(u32 property_index, Value);
 
 private:

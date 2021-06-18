@@ -1,0 +1,12 @@
+diff -Naur DungeonRush-1.1-beta/src/res.c DungeonRush-1.1-beta.serenity/src/res.c
+--- DungeonRush-1.1-beta/src/res.c	2020-11-21 14:22:39.000000000 +0100
++++ DungeonRush-1.1-beta.serenity/src/res.c	2021-06-16 11:00:12.654195338 +0200
+@@ -89,6 +89,8 @@
+ int soundsCount;
+ Mix_Chunk *sounds[AUDIO_SOUND_SIZE];
+ 
++#define SOFTWARE_ACC
++
+ bool init() {
+   // Initialization flag
+   bool success = true;

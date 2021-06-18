@@ -207,10 +207,10 @@ bool IndexedPropertyIterator::operator!=(const IndexedPropertyIterator& other) c
     return m_index != other.m_index;
 }
 
-ValueAndAttributes IndexedPropertyIterator::value_and_attributes(Object* this_object, bool evaluate_accessors)
+ValueAndAttributes IndexedPropertyIterator::value_and_attributes(Object* this_object, AllowSideEffects allow_side_effects)
 {
     if (m_index < m_indexed_properties.array_like_size())
-        return m_indexed_properties.get(this_object, m_index, evaluate_accessors).value_or({});
+        return m_indexed_properties.get(this_object, m_index, allow_side_effects).value_or({});
     return {};
 }
 
@@ -226,10 +226,10 @@ void IndexedPropertyIterator::skip_empty_indices()
     m_index = m_indexed_properties.array_like_size();
 }
 
-Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 index, bool evaluate_accessors) const
+Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 index, AllowSideEffects allow_side_effects) const
 {
     auto result = m_storage->get(index);
-    if (!evaluate_accessors)
+    if (allow_side_effects == AllowSideEffects::No)
         return result;
     if (!result.has_value())
         return {};
@@ -242,13 +242,13 @@ Optional<ValueAndAttributes> IndexedProperties::get(Object* this_object, u32 ind
     return result;
 }
 
-void IndexedProperties::put(Object* this_object, u32 index, Value value, PropertyAttributes attributes, bool evaluate_accessors)
+void IndexedProperties::put(Object* this_object, u32 index, Value value, PropertyAttributes attributes, AllowSideEffects allow_side_effects)
 {
     if (m_storage->is_simple_storage() && (attributes != default_attributes || index > (array_like_size() + SPARSE_ARRAY_HOLE_THRESHOLD))) {
         switch_to_generic_storage();
     }
 
-    if (m_storage->is_simple_storage() || !evaluate_accessors) {
+    if (m_storage->is_simple_storage() || allow_side_effects == AllowSideEffects::No) {
         m_storage->put(index, value, attributes);
         return;
     }
@@ -298,19 +298,6 @@ ValueAndAttributes IndexedProperties::take_last(Object* this_object)
     if (last.value.is_accessor())
         return { last.value.as_accessor().call_getter(this_object), last.attributes };
     return last;
-}
-
-void IndexedProperties::append_all(Object* this_object, const IndexedProperties& properties, bool evaluate_accessors)
-{
-    if (m_storage->is_simple_storage() && !properties.m_storage->is_simple_storage())
-        switch_to_generic_storage();
-
-    for (auto it = properties.begin(false); it != properties.end(); ++it) {
-        const auto& element = it.value_and_attributes(this_object, evaluate_accessors);
-        if (this_object && this_object->vm().exception())
-            return;
-        m_storage->put(m_storage->array_like_size(), element.value, element.attributes);
-    }
 }
 
 void IndexedProperties::set_array_like_size(size_t new_size)

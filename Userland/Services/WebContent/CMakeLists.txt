@@ -1,3 +1,8 @@
+serenity_component(
+    WebContent
+    TARGETS WebContent
+)
+
 compile_ipc(WebContentServer.ipc WebContentServerEndpoint.h)
 compile_ipc(WebContentClient.ipc WebContentClientEndpoint.h)
 

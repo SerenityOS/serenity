@@ -366,6 +366,14 @@ static void print_array_buffer(const JS::Object& object, HashTable<JS::Object*>&
     }
 }
 
+template<typename T>
+static void print_number(T number) requires IsArithmetic<T>
+{
+    out("\033[35;1m");
+    out("{}", number);
+    out("\033[0m");
+}
+
 static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& seen_objects)
 {
     auto& typed_array_base = static_cast<const JS::TypedArrayBase&>(object);
@@ -390,7 +398,7 @@ static void print_typed_array(const JS::Object& object, HashTable<JS::Object*>& 
         for (size_t i = 0; i < length; ++i) {                                            \
             if (i > 0)                                                                   \
                 out(", ");                                                               \
-            print_value(JS::Value(data[i]), seen_objects);                               \
+            print_number(data[i]);                                                       \
         }                                                                                \
         out(" ]");                                                                       \
         return;                                                                          \
@@ -498,23 +506,6 @@ static void print(JS::Value value)
     HashTable<JS::Object*> seen_objects;
     print_value(value, seen_objects);
     outln();
-}
-
-static bool file_has_shebang(ByteBuffer const& file_contents)
-{
-    if (file_contents.size() >= 2 && file_contents[0] == '#' && file_contents[1] == '!')
-        return true;
-    return false;
-}
-
-static StringView strip_shebang(ByteBuffer const& file_contents)
-{
-    size_t i = 0;
-    for (i = 2; i < file_contents.size(); ++i) {
-        if (file_contents[i] == '\n')
-            break;
-    }
-    return StringView((const char*)file_contents.data() + i, file_contents.size() - i);
 }
 
 static bool write_to_file(const String& path)
@@ -642,9 +633,7 @@ static JS::Value load_file_impl(JS::VM& vm, JS::GlobalObject& global_object)
         return {};
     }
     auto file_contents = file->read_all();
-    auto source = file_has_shebang(file_contents)
-        ? strip_shebang(file_contents)
-        : StringView { file_contents };
+    auto source = StringView { file_contents };
     auto parser = JS::Parser(JS::Lexer(source));
     auto program = parser.parse_program();
     if (parser.has_errors()) {
@@ -826,7 +815,7 @@ int main(int argc, char** argv)
 {
     bool gc_on_every_allocation = false;
     bool disable_syntax_highlight = false;
-    const char* script_path = nullptr;
+    Vector<String> script_paths;
 
     Core::ArgsParser args_parser;
     args_parser.set_general_help("This is a JavaScript interpreter.");
@@ -837,7 +826,7 @@ int main(int argc, char** argv)
     args_parser.add_option(s_print_last_result, "Print last result", "print-last-result", 'l');
     args_parser.add_option(gc_on_every_allocation, "GC on every allocation", "gc-on-every-allocation", 'g');
     args_parser.add_option(disable_syntax_highlight, "Disable live syntax highlighting", "no-syntax-highlight", 's');
-    args_parser.add_positional_argument(script_path, "Path to script file", "script", Core::ArgsParser::Required::No);
+    args_parser.add_positional_argument(script_paths, "Path to script files", "scripts", Core::ArgsParser::Required::No);
     args_parser.parse(argc, argv);
 
     bool syntax_highlight = !disable_syntax_highlight;
@@ -870,7 +859,7 @@ int main(int argc, char** argv)
         vm->throw_exception(interpreter->global_object(), error);
     };
 
-    if (script_path == nullptr) {
+    if (script_paths.is_empty()) {
         s_print_last_result = true;
         interpreter = JS::Interpreter::create<ReplObject>(*vm);
         ReplConsoleClient console_client(interpreter->global_object().console());
@@ -1083,21 +1072,19 @@ int main(int argc, char** argv)
             sigint_handler();
         });
 
-        auto file = Core::File::construct(script_path);
-        if (!file->open(Core::OpenMode::ReadOnly)) {
-            warnln("Failed to open {}: {}", script_path, file->error_string());
-            return 1;
-        }
-        auto file_contents = file->read_all();
-
-        StringView source;
-        if (file_has_shebang(file_contents)) {
-            source = strip_shebang(file_contents);
-        } else {
-            source = file_contents;
+        StringBuilder builder;
+        for (auto& path : script_paths) {
+            auto file = Core::File::construct(path);
+            if (!file->open(Core::OpenMode::ReadOnly)) {
+                warnln("Failed to open {}: {}", path, file->error_string());
+                return 1;
+            }
+            auto file_contents = file->read_all();
+            auto source = StringView { file_contents };
+            builder.append(source);
         }
 
-        if (!parse_and_run(*interpreter, source))
+        if (!parse_and_run(*interpreter, builder.to_string()))
             return 1;
     }
 

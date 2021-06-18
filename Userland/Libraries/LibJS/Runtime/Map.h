@@ -22,13 +22,22 @@ public:
     explicit Map(Object& prototype);
     virtual ~Map() override;
 
+<<<<<<< HEAD
     HashMap<Value, Value, ValueTraits> const& entries() const { return m_entries; };
     HashMap<Value, Value, ValueTraits>& entries() { return m_entries; };
+=======
+    OrderedHashMap<Value, Value, ValueTraits> const& entries() const { return m_entries; };
+    OrderedHashMap<Value, Value, ValueTraits>& entries() { return m_entries; };
+>>>>>>> master
 
 private:
     virtual void visit_edges(Visitor& visitor) override;
 
+<<<<<<< HEAD
     HashMap<Value, Value, ValueTraits> m_entries; // FIXME: Replace with a HashMap that maintains a linked list of insertion order for correct iteration order
+=======
+    OrderedHashMap<Value, Value, ValueTraits> m_entries;
+>>>>>>> master
 };
 
 }

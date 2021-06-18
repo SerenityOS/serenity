@@ -786,12 +786,12 @@ public:
 
     if (interface.extended_attributes.contains("CustomGet")) {
         generator.append(R"~~~(
-    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, bool without_side_effects = false) const override;
+    virtual JS::Value get(const JS::PropertyName&, JS::Value receiver = {}, JS::AllowSideEffects = JS::AllowSideEffects::Yes) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomGetByIndex")) {
         generator.append(R"~~~(
-    virtual JS::Value get_by_index(u32 property_index) const override;
+    virtual JS::Value get_by_index(u32 property_index, JS::AllowSideEffects = JS::AllowSideEffects::Yes) const override;
 )~~~");
     }
     if (interface.extended_attributes.contains("CustomPut")) {

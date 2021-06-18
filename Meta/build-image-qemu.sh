@@ -27,7 +27,7 @@ else
 fi
 }
 
-DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 100))
+DISK_SIZE=$(($(disk_usage "$SERENITY_SOURCE_DIR/Base") + $(disk_usage Root) + 500))
 DISK_SIZE=${DISK_SIZE:-600}
 DISK_SIZE_BYTES=$((DISK_SIZE * 1024 * 1024))
 unset DISK_SIZE

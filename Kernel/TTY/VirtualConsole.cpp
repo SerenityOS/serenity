@@ -151,19 +151,12 @@ void VirtualConsole::refresh_after_resolution_change()
     }
 
     // Note: A potential loss of displayed data occur when resolution width shrinks.
-    if (columns() < old_columns_count) {
-        for (size_t row = 0; row < rows(); row++) {
-            auto& line = m_lines[row];
-            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), columns() * sizeof(Cell));
-            line.dirty = true;
-        }
-    } else {
-        // Handle Growth of resolution
-        for (size_t row = 0; row < rows(); row++) {
-            auto& line = m_lines[row];
-            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), old_columns_count * sizeof(Cell));
-            line.dirty = true;
-        }
+    auto common_rows_count = min(old_rows_count, rows());
+    auto common_columns_count = min(old_columns_count, columns());
+    for (size_t row = 0; row < common_rows_count; row++) {
+        auto& line = m_lines[row];
+        memcpy(new_cells->vaddr().offset(row * columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset(row * old_columns_count * sizeof(Cell)).as_ptr(), common_columns_count * sizeof(Cell));
+        line.dirty = true;
     }
 
     // Update the new cells Region
@@ -265,20 +258,18 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     });
 }
 
-ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
+KResultOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
 {
     ScopedSpinLock global_lock(ConsoleManagement::the().tty_write_lock());
     ScopedSpinLock lock(m_lock);
-    auto result = data.read_buffered<512>((size_t)size, [&](u8 const* buffer, size_t buffer_bytes) {
+    auto result = data.read_buffered<512>(size, [&](u8 const* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; ++i)
             m_console_impl.on_input(buffer[i]);
         return buffer_bytes;
     });
     if (m_active)
         flush_dirty_lines();
-    if (result.is_error())
-        return result.error();
-    return (ssize_t)result.value();
+    return result;
 }
 
 void VirtualConsole::set_active(bool active)

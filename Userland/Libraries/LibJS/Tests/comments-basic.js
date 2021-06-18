@@ -7,7 +7,7 @@ var i = 0;
 i++;
 */
 /**/ i++;
-return i;`;
+i;`;
 
     expect(source).toEvalTo(1);
 });
@@ -22,7 +22,7 @@ i++;
 --> i++;
 /**/ --> i++;
 j --> i++;
-return i;`;
+i;`;
     expect(source).toEvalTo(2);
 });
 
@@ -32,4 +32,13 @@ test("unterminated multi-line comment", () => {
     expect("/*/").not.toEval();
     expect("/* foo").not.toEval();
     expect("foo /*").not.toEval();
+});
+
+test("hashbang comments", () => {
+    expect("#!").toEvalTo(undefined);
+    expect("#!/bin/js").toEvalTo(undefined);
+    expect("#!\n1").toEvalTo(1);
+    expect(" #!").not.toEval();
+    expect("\n#!").not.toEval();
+    expect("#!\n#!").not.toEval();
 });

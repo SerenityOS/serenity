@@ -158,6 +158,11 @@ public:
         return m_bitfield & ((1 << port_index) & m_bit_mask);
     }
 
+    bool is_zeroed() const
+    {
+        return (m_bitfield & m_bit_mask) == 0;
+    }
+
     Vector<u8> to_vector() const
     {
         // FIXME: Add a sync mechanism!

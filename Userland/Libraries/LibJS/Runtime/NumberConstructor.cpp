@@ -42,6 +42,10 @@ void NumberConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.isInteger, is_integer, 1, attr);
     define_native_function(vm.names.isNaN, is_nan, 1, attr);
     define_native_function(vm.names.isSafeInteger, is_safe_integer, 1, attr);
+<<<<<<< HEAD
+=======
+    define_property(vm.names.parseInt, global_object.get(vm.names.parseInt), attr);
+>>>>>>> master
     define_property(vm.names.parseFloat, global_object.get(vm.names.parseFloat), attr);
     define_property(vm.names.EPSILON, Value(EPSILON_VALUE), 0);
     define_property(vm.names.MAX_VALUE, Value(NumericLimits<double>::max()), 0);
@@ -86,7 +90,7 @@ JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_finite)
 // 21.1.2.3 Number.isInteger ( number ), https://tc39.es/ecma262/#sec-number.isinteger
 JS_DEFINE_NATIVE_FUNCTION(NumberConstructor::is_integer)
 {
-    return Value(vm.argument(0).is_integer());
+    return Value(vm.argument(0).is_integral_number());
 }
 
 // 21.1.2.4 Number.isNaN ( number ), https://tc39.es/ecma262/#sec-number.isnan

@@ -1,3 +1,9 @@
+serenity_component(
+    WindowServer
+    REQUIRED
+    TARGETS WindowServer
+)
+
 compile_ipc(WindowServer.ipc WindowServerEndpoint.h)
 compile_ipc(WindowClient.ipc WindowClientEndpoint.h)
 compile_ipc(WindowManagerServer.ipc WindowManagerServerEndpoint.h)
@@ -19,6 +25,7 @@ set(SOURCES
     Window.cpp
     WindowFrame.cpp
     WindowManager.cpp
+    WindowStack.cpp
     WindowSwitcher.cpp
     WindowServerEndpoint.h
     WindowClientEndpoint.h

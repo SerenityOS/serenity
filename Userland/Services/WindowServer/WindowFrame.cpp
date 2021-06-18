@@ -65,11 +65,13 @@ static Gfx::IntRect frame_rect_for_window(Window& window, const Gfx::IntRect& re
 WindowFrame::WindowFrame(Window& window)
     : m_window(window)
 {
-    auto button = make<Button>(*this, [this](auto&) {
-        m_window.handle_window_menu_action(WindowMenuAction::Close);
-    });
-    m_close_button = button.ptr();
-    m_buttons.append(move(button));
+    {
+        auto button = make<Button>(*this, [this](auto&) {
+            m_window.handle_window_menu_action(WindowMenuAction::Close);
+        });
+        m_close_button = button.ptr();
+        m_buttons.append(move(button));
+    }
 
     if (window.is_resizable()) {
         auto button = make<Button>(*this, [this](auto&) {
@@ -174,7 +176,7 @@ void WindowFrame::reload_config()
     load_shadow(WindowManager::the().palette().tooltip_shadow_path(), s_last_tooltip_shadow_path, s_tooltip_shadow);
 }
 
-Gfx::Bitmap* WindowFrame::window_shadow() const
+Gfx::Bitmap* WindowFrame::shadow_bitmap() const
 {
     if (m_window.is_frameless())
         return nullptr;
@@ -198,7 +200,7 @@ Gfx::Bitmap* WindowFrame::window_shadow() const
 
 bool WindowFrame::has_shadow() const
 {
-    if (auto* shadow_bitmap = window_shadow(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::BGRA8888)
+    if (auto* shadow_bitmap = this->shadow_bitmap(); shadow_bitmap && shadow_bitmap->format() == Gfx::BitmapFormat::BGRA8888)
         return true;
     return false;
 }
@@ -238,7 +240,7 @@ Gfx::WindowTheme::WindowState WindowFrame::window_state_for_theme() const
     if (m_flash_timer && m_flash_timer->is_active())
         return m_flash_counter & 1 ? Gfx::WindowTheme::WindowState::Active : Gfx::WindowTheme::WindowState::Inactive;
 
-    if (&m_window == wm.m_highlight_window)
+    if (&m_window == wm.highlight_window())
         return Gfx::WindowTheme::WindowState::Highlighted;
     if (&m_window == wm.m_move_window)
         return Gfx::WindowTheme::WindowState::Moving;
@@ -384,42 +386,52 @@ void WindowFrame::render_to_cache()
 
     static RefPtr<Gfx::Bitmap> s_tmp_bitmap;
     auto frame_rect = rect();
-    auto total_frame_rect = frame_rect;
-    Gfx::Bitmap* shadow_bitmap = inflate_for_shadow(total_frame_rect, m_shadow_offset);
+
+    auto frame_rect_including_shadow = frame_rect;
+    auto* shadow_bitmap = this->shadow_bitmap();
+    Gfx::IntPoint shadow_offset;
+
+    if (shadow_bitmap) {
+        auto total_shadow_size = shadow_bitmap->height();
+        frame_rect_including_shadow.inflate(total_shadow_size, total_shadow_size);
+        auto offset = total_shadow_size / 2;
+        shadow_offset = { offset, offset };
+    }
+
     auto window_rect = m_window.rect();
     auto scale = Screen::the().scale_factor();
-    if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(total_frame_rect.size()) || s_tmp_bitmap->scale() != scale) {
+    if (!s_tmp_bitmap || !s_tmp_bitmap->size().contains(frame_rect_including_shadow.size()) || s_tmp_bitmap->scale() != scale) {
         // Explicitly clear the old bitmap first so this works on machines with very little memory
         s_tmp_bitmap = nullptr;
-        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, total_frame_rect.size(), scale);
+        s_tmp_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, frame_rect_including_shadow.size(), scale);
         if (!s_tmp_bitmap) {
-            dbgln("Could not create bitmap of size {}", total_frame_rect.size());
+            dbgln("Could not create bitmap of size {}", frame_rect_including_shadow.size());
             return;
         }
     }
 
     VERIFY(s_tmp_bitmap);
 
-    auto top_bottom_height = total_frame_rect.height() - window_rect.height();
-    auto left_right_width = total_frame_rect.width() - window_rect.width();
+    auto top_bottom_height = frame_rect_including_shadow.height() - window_rect.height();
+    auto left_right_width = frame_rect_including_shadow.width() - window_rect.width();
 
-    if (!m_top_bottom || m_top_bottom->width() != total_frame_rect.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale) {
+    if (!m_top_bottom || m_top_bottom->width() != frame_rect_including_shadow.width() || m_top_bottom->height() != top_bottom_height || m_top_bottom->scale() != scale) {
         if (top_bottom_height > 0)
-            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { total_frame_rect.width(), top_bottom_height }, scale);
+            m_top_bottom = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { frame_rect_including_shadow.width(), top_bottom_height }, scale);
         else
             m_top_bottom = nullptr;
         m_shadow_dirty = true;
     }
-    if (!m_left_right || m_left_right->height() != total_frame_rect.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale) {
+    if (!m_left_right || m_left_right->height() != frame_rect_including_shadow.height() || m_left_right->width() != left_right_width || m_left_right->scale() != scale) {
         if (left_right_width > 0)
-            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { left_right_width, total_frame_rect.height() }, scale);
+            m_left_right = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, { left_right_width, frame_rect_including_shadow.height() }, scale);
         else
             m_left_right = nullptr;
         m_shadow_dirty = true;
     }
 
-    auto& frame_rect_to_update = m_shadow_dirty ? total_frame_rect : frame_rect;
-    Gfx::IntPoint update_location(m_shadow_dirty ? Gfx::IntPoint { 0, 0 } : m_shadow_offset);
+    auto& frame_rect_to_update = m_shadow_dirty ? frame_rect_including_shadow : frame_rect;
+    Gfx::IntPoint update_location(m_shadow_dirty ? Gfx::IntPoint { 0, 0 } : shadow_offset);
 
     Gfx::Painter painter(*s_tmp_bitmap);
 
@@ -428,38 +440,38 @@ void WindowFrame::render_to_cache()
         painter.clear_rect({ rect.location() - frame_rect_to_update.location(), rect.size() }, { 255, 255, 255, 0 });
 
     if (m_shadow_dirty && shadow_bitmap)
-        paint_simple_rect_shadow(painter, { { 0, 0 }, total_frame_rect.size() }, *shadow_bitmap);
+        paint_simple_rect_shadow(painter, { { 0, 0 }, frame_rect_including_shadow.size() }, *shadow_bitmap);
 
     {
         Gfx::PainterStateSaver save(painter);
-        painter.translate(m_shadow_offset);
+        painter.translate(shadow_offset);
         render(painter);
     }
 
     if (m_top_bottom && top_bottom_height > 0) {
-        m_bottom_y = window_rect.y() - total_frame_rect.y();
+        m_bottom_y = window_rect.y() - frame_rect_including_shadow.y();
         VERIFY(m_bottom_y >= 0);
 
         Gfx::Painter top_bottom_painter(*m_top_bottom);
-        top_bottom_painter.add_clip_rect({ update_location, { frame_rect_to_update.width(), top_bottom_height - update_location.y() - (total_frame_rect.bottom() - frame_rect_to_update.bottom()) } });
+        top_bottom_painter.add_clip_rect({ update_location, { frame_rect_to_update.width(), top_bottom_height - update_location.y() - (frame_rect_including_shadow.bottom() - frame_rect_to_update.bottom()) } });
         if (m_bottom_y > 0)
-            top_bottom_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, 0, total_frame_rect.width(), m_bottom_y }, 1.0, false);
+            top_bottom_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, 0, frame_rect_including_shadow.width(), m_bottom_y }, 1.0, false);
         if (m_bottom_y < top_bottom_height)
-            top_bottom_painter.blit({ 0, m_bottom_y }, *s_tmp_bitmap, { 0, total_frame_rect.height() - (total_frame_rect.bottom() - window_rect.bottom()), total_frame_rect.width(), top_bottom_height - m_bottom_y }, 1.0, false);
+            top_bottom_painter.blit({ 0, m_bottom_y }, *s_tmp_bitmap, { 0, frame_rect_including_shadow.height() - (frame_rect_including_shadow.bottom() - window_rect.bottom()), frame_rect_including_shadow.width(), top_bottom_height - m_bottom_y }, 1.0, false);
     } else {
         m_bottom_y = 0;
     }
 
     if (left_right_width > 0) {
-        m_right_x = window_rect.x() - total_frame_rect.x();
+        m_right_x = window_rect.x() - frame_rect_including_shadow.x();
         VERIFY(m_right_x >= 0);
 
         Gfx::Painter left_right_painter(*m_left_right);
-        left_right_painter.add_clip_rect({ update_location, { left_right_width - update_location.x() - (total_frame_rect.right() - frame_rect_to_update.right()), window_rect.height() } });
+        left_right_painter.add_clip_rect({ update_location, { left_right_width - update_location.x() - (frame_rect_including_shadow.right() - frame_rect_to_update.right()), window_rect.height() } });
         if (m_right_x > 0)
             left_right_painter.blit({ 0, 0 }, *s_tmp_bitmap, { 0, m_bottom_y, m_right_x, window_rect.height() }, 1.0, false);
         if (m_right_x < left_right_width)
-            left_right_painter.blit({ m_right_x, 0 }, *s_tmp_bitmap, { (window_rect.right() - total_frame_rect.x()) + 1, m_bottom_y, total_frame_rect.width() - (total_frame_rect.right() - window_rect.right()), window_rect.height() }, 1.0, false);
+            left_right_painter.blit({ m_right_x, 0 }, *s_tmp_bitmap, { (window_rect.right() - frame_rect_including_shadow.x()) + 1, m_bottom_y, frame_rect_including_shadow.width() - (frame_rect_including_shadow.right() - window_rect.right()), window_rect.height() }, 1.0, false);
     } else {
         m_right_x = 0;
     }
@@ -481,25 +493,11 @@ void WindowFrame::set_opacity(float opacity)
 
 Gfx::IntRect WindowFrame::inflated_for_shadow(const Gfx::IntRect& frame_rect) const
 {
-    if (auto* shadow = window_shadow()) {
+    if (auto* shadow = shadow_bitmap()) {
         auto total_shadow_size = shadow->height();
         return frame_rect.inflated(total_shadow_size, total_shadow_size);
     }
     return frame_rect;
-}
-
-Gfx::Bitmap* WindowFrame::inflate_for_shadow(Gfx::IntRect& frame_rect, Gfx::IntPoint& shadow_offset) const
-{
-    auto* shadow = window_shadow();
-    if (shadow) {
-        auto total_shadow_size = shadow->height();
-        frame_rect.inflate(total_shadow_size, total_shadow_size);
-        auto offset = total_shadow_size / 2;
-        shadow_offset = { offset, offset };
-    } else {
-        shadow_offset = {};
-    }
-    return shadow;
 }
 
 Gfx::IntRect WindowFrame::rect() const
@@ -593,97 +591,134 @@ void WindowFrame::layout_buttons()
         m_buttons[i].set_relative_rect(button_rects[i]);
 }
 
-bool WindowFrame::hit_test(const Gfx::IntPoint& point) const
+Optional<HitTestResult> WindowFrame::hit_test(Gfx::IntPoint const& position) const
 {
     if (m_window.is_frameless())
-        return false;
+        return {};
     auto frame_rect = rect();
-    if (!frame_rect.contains(point))
-        return false;
+    if (!frame_rect.contains(position))
+        return {};
     auto window_rect = m_window.rect();
-    if (window_rect.contains(point))
-        return false;
+    if (window_rect.contains(position))
+        return {};
+
+    auto window_relative_position = position.translated(-render_rect().location());
+    HitTestResult result {
+        .window = m_window,
+        .screen_position = position,
+        .window_relative_position = window_relative_position,
+        .is_frame_hit = true,
+    };
 
     u8 alpha_threshold = Gfx::WindowTheme::current().frame_alpha_hit_threshold(window_state_for_theme()) * 255;
     if (alpha_threshold == 0)
-        return true;
+        return result;
     u8 alpha = 0xff;
-    auto relative_point = point.translated(-render_rect().location());
-    if (point.y() < window_rect.y()) {
+
+    if (position.y() < window_rect.y()) {
         if (m_top_bottom) {
-            auto scaled_relative_point = relative_point * m_top_bottom->scale();
+            auto scaled_relative_point = window_relative_position * m_top_bottom->scale();
             if (m_top_bottom->rect().contains(scaled_relative_point))
                 alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.y() > window_rect.bottom()) {
+    } else if (position.y() > window_rect.bottom()) {
         if (m_top_bottom) {
-            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + point.y() - window_rect.bottom() - 1 };
+            Gfx::IntPoint scaled_relative_point { window_relative_position.x() * m_top_bottom->scale(), m_bottom_y * m_top_bottom->scale() + position.y() - window_rect.bottom() - 1 };
             if (m_top_bottom->rect().contains(scaled_relative_point))
                 alpha = m_top_bottom->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.x() < window_rect.x()) {
+    } else if (position.x() < window_rect.x()) {
         if (m_left_right) {
-            Gfx::IntPoint scaled_relative_point { relative_point.x() * m_left_right->scale(), (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            Gfx::IntPoint scaled_relative_point { window_relative_position.x() * m_left_right->scale(), (window_relative_position.y() - m_bottom_y) * m_left_right->scale() };
             if (m_left_right->rect().contains(scaled_relative_point))
                 alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
         }
-    } else if (point.x() > window_rect.right()) {
+    } else if (position.x() > window_rect.right()) {
         if (m_left_right) {
-            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + point.x() - window_rect.right() - 1, (relative_point.y() - m_bottom_y) * m_left_right->scale() };
+            Gfx::IntPoint scaled_relative_point { m_right_x * m_left_right->scale() + position.x() - window_rect.right() - 1, (window_relative_position.y() - m_bottom_y) * m_left_right->scale() };
             if (m_left_right->rect().contains(scaled_relative_point))
                 alpha = m_left_right->get_pixel(scaled_relative_point).alpha();
         }
     } else {
-        return false;
+        return {};
     }
-    return alpha >= alpha_threshold;
+    if (alpha >= alpha_threshold)
+        return result;
+    return {};
 }
 
-void WindowFrame::on_mouse_event(const MouseEvent& event)
+bool WindowFrame::handle_titlebar_icon_mouse_event(MouseEvent const& event)
+{
+    auto& wm = WindowManager::the();
+
+    if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
+        // Manually start a potential double click. Since we're opening
+        // a menu, we will only receive the MouseDown event, so we
+        // need to record that fact. If the user subsequently clicks
+        // on the same area, the menu will get closed, and we will
+        // receive a MouseUp event, but because windows have changed
+        // we don't get a MouseDoubleClick event. We can however record
+        // this click, and when we receive the MouseUp event check if
+        // it would have been considered a double click, if it weren't
+        // for the fact that we opened and closed a window in the meanwhile
+        wm.start_menu_doubleclick(m_window, event);
+
+        m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
+        return true;
+    } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
+        // Since the MouseDown event opened a menu, another MouseUp
+        // from the second click outside the menu wouldn't be considered
+        // a double click, so let's manually check if it would otherwise
+        // have been be considered to be one
+        if (wm.is_menu_doubleclick(m_window, event)) {
+            // It is a double click, so perform activate the default item
+            m_window.window_menu_activate_default();
+        }
+        return true;
+    }
+    return false;
+}
+
+void WindowFrame::handle_titlebar_mouse_event(MouseEvent const& event)
+{
+    auto& wm = WindowManager::the();
+
+    if (titlebar_icon_rect().contains(event.position())) {
+        if (handle_titlebar_icon_mouse_event(event))
+            return;
+    }
+
+    for (auto& button : m_buttons) {
+        if (button.relative_rect().contains(event.position()))
+            return button.on_mouse_event(event.translated(-button.relative_rect().location()));
+    }
+
+    if (event.type() == Event::MouseDown) {
+        if ((m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) && event.button() == MouseButton::Right) {
+            auto default_action = m_window.is_maximized() ? WindowMenuDefaultAction::Restore : WindowMenuDefaultAction::Maximize;
+            m_window.popup_window_menu(event.position().translated(rect().location()), default_action);
+            return;
+        }
+        if (m_window.is_movable() && event.button() == MouseButton::Left)
+            wm.start_window_move(m_window, event.translated(rect().location()));
+    }
+}
+
+void WindowFrame::handle_mouse_event(MouseEvent const& event)
 {
     VERIFY(!m_window.is_fullscreen());
 
-    auto& wm = WindowManager::the();
     if (m_window.type() != WindowType::Normal && m_window.type() != WindowType::ToolWindow && m_window.type() != WindowType::Notification)
         return;
 
+    auto& wm = WindowManager::the();
     if (m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) {
         if (event.type() == Event::MouseDown)
             wm.move_to_front_and_make_active(m_window);
-
-        if (m_window.blocking_modal_window())
-            return;
-
-        if (titlebar_icon_rect().contains(event.position())) {
-            if (event.type() == Event::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right)) {
-                // Manually start a potential double click. Since we're opening
-                // a menu, we will only receive the MouseDown event, so we
-                // need to record that fact. If the user subsequently clicks
-                // on the same area, the menu will get closed, and we will
-                // receive a MouseUp event, but because windows have changed
-                // we don't get a MouseDoubleClick event. We can however record
-                // this click, and when we receive the MouseUp event check if
-                // it would have been considered a double click, if it weren't
-                // for the fact that we opened and closed a window in the meanwhile
-                auto& wm = WindowManager::the();
-                wm.start_menu_doubleclick(m_window, event);
-
-                m_window.popup_window_menu(titlebar_rect().bottom_left().translated(rect().location()), WindowMenuDefaultAction::Close);
-                return;
-            } else if (event.type() == Event::MouseUp && event.button() == MouseButton::Left) {
-                // Since the MouseDown event opened a menu, another MouseUp
-                // from the second click outside the menu wouldn't be considered
-                // a double click, so let's manually check if it would otherwise
-                // have been be considered to be one
-                auto& wm = WindowManager::the();
-                if (wm.is_menu_doubleclick(m_window, event)) {
-                    // It is a double click, so perform activate the default item
-                    m_window.window_menu_activate_default();
-                }
-                return;
-            }
-        }
     }
+
+    if (m_window.blocking_modal_window())
+        return;
 
     // This is slightly hackish, but expand the title bar rect by two pixels downwards,
     // so that mouse events between the title bar and window contents don't act like
@@ -692,35 +727,26 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
     adjusted_titlebar_rect.set_height(adjusted_titlebar_rect.height() + 2);
 
     if (adjusted_titlebar_rect.contains(event.position())) {
-        wm.clear_resize_candidate();
-
-        if (event.type() == Event::MouseDown)
-            wm.move_to_front_and_make_active(m_window);
-
-        for (auto& button : m_buttons) {
-            if (button.relative_rect().contains(event.position()))
-                return button.on_mouse_event(event.translated(-button.relative_rect().location()));
-        }
-        if (event.type() == Event::MouseDown) {
-            if ((m_window.type() == WindowType::Normal || m_window.type() == WindowType::ToolWindow) && event.button() == MouseButton::Right) {
-                auto default_action = m_window.is_maximized() ? WindowMenuDefaultAction::Restore : WindowMenuDefaultAction::Maximize;
-                m_window.popup_window_menu(event.position().translated(rect().location()), default_action);
-                return;
-            }
-            if (m_window.is_movable() && event.button() == MouseButton::Left)
-                wm.start_window_move(m_window, event.translated(rect().location()));
-        }
+        handle_titlebar_mouse_event(event);
         return;
     }
 
-    auto menubar_rect = this->menubar_rect();
-    if (menubar_rect.contains(event.position())) {
-        wm.clear_resize_candidate();
+    if (menubar_rect().contains(event.position())) {
         handle_menubar_mouse_event(event);
         return;
     }
 
-    if (m_window.is_resizable() && event.type() == Event::MouseMove && event.buttons() == 0) {
+    handle_border_mouse_event(event);
+}
+
+void WindowFrame::handle_border_mouse_event(const MouseEvent& event)
+{
+    if (!m_window.is_resizable())
+        return;
+
+    auto& wm = WindowManager::the();
+
+    if (event.type() == Event::MouseMove && event.buttons() == 0) {
         constexpr ResizeDirection direction_for_hot_area[3][3] = {
             { ResizeDirection::UpLeft, ResizeDirection::Up, ResizeDirection::UpRight },
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
@@ -737,7 +763,7 @@ void WindowFrame::on_mouse_event(const MouseEvent& event)
         return;
     }
 
-    if (m_window.is_resizable() && event.type() == Event::MouseDown && event.button() == MouseButton::Left)
+    if (event.type() == Event::MouseDown && event.button() == MouseButton::Left)
         wm.start_window_resize(m_window, event.translated(rect().location()));
 }
 

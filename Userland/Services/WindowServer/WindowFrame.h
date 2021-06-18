@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "HitTestResult.h"
 #include <AK/Forward.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/RefPtr.h>
@@ -34,7 +35,12 @@ public:
     void paint(Gfx::Painter&, const Gfx::IntRect&);
     void render(Gfx::Painter&);
     void render_to_cache();
-    void on_mouse_event(const MouseEvent&);
+
+    void handle_mouse_event(MouseEvent const&);
+    void handle_titlebar_mouse_event(MouseEvent const&);
+    bool handle_titlebar_icon_mouse_event(MouseEvent const&);
+    void handle_border_mouse_event(MouseEvent const&);
+
     void notify_window_rect_changed(const Gfx::IntRect& old_rect, const Gfx::IntRect& new_rect);
     void invalidate_titlebar();
     void invalidate(Gfx::IntRect relative_rect);
@@ -78,7 +84,7 @@ public:
 
     void theme_changed();
 
-    bool hit_test(const Gfx::IntPoint&) const;
+    Optional<HitTestResult> hit_test(Gfx::IntPoint const&) const;
 
     void open_menubar_menu(Menu&);
 
@@ -88,9 +94,8 @@ private:
     void paint_normal_frame(Gfx::Painter&);
     void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
-    Gfx::Bitmap* window_shadow() const;
+    Gfx::Bitmap* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
-    Gfx::Bitmap* inflate_for_shadow(Gfx::IntRect&, Gfx::IntPoint&) const;
 
     void handle_menubar_mouse_event(const MouseEvent&);
     void handle_menu_mouse_event(Menu&, const MouseEvent&);
@@ -103,8 +108,6 @@ private:
     Button* m_close_button { nullptr };
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
-
-    Gfx::IntPoint m_shadow_offset {};
 
     RefPtr<Gfx::Bitmap> m_top_bottom;
     RefPtr<Gfx::Bitmap> m_left_right;

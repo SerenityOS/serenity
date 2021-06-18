@@ -33,6 +33,7 @@ option(ENABLE_ALL_THE_DEBUG_MACROS "Enable all debug macros to validate they sti
 option(ENABLE_ALL_DEBUG_FACILITIES "Enable all noisy debug symbols and options. Not recommended for normal developer use" OFF)
 option(ENABLE_COMPILETIME_FORMAT_CHECK "Enable compiletime format string checks" ON)
 option(ENABLE_PCI_IDS_DOWNLOAD "Enable download of the pci.ids database at build time" ON)
+option(ENABLE_USB_IDS_DOWNLOAD "Enable download of the usb.ids database at build time" ON)
 option(BUILD_LAGOM "Build parts of the system targeting the host OS for fuzzing/testing" OFF)
 option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 
@@ -260,10 +261,22 @@ if (ENABLE_UNDEFINED_SANITIZER)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
 endif()
 
+add_custom_target(components ALL)
+option(BUILD_EVERYTHING "Build all optional components" ON)
+
+include(${CMAKE_SOURCE_DIR}/Meta/CMake/utils.cmake)
+
+serenity_component(
+    Tests
+    RECOMMENDED
+)
+
 add_subdirectory(AK)
 add_subdirectory(Kernel)
 add_subdirectory(Userland)
 add_subdirectory(Tests)
+
+export_components("${CMAKE_BINARY_DIR}/components.ini")
 
 set(PCI_IDS_GZ_URL https://pci-ids.ucw.cz/v2.2/pci.ids.gz)
 set(PCI_IDS_GZ_PATH ${CMAKE_BINARY_DIR}/pci.ids.gz)
@@ -280,4 +293,21 @@ if(EXISTS ${PCI_IDS_GZ_PATH} AND NOT EXISTS ${PCI_IDS_INSTALL_PATH})
     execute_process(COMMAND gzip -k -d ${PCI_IDS_GZ_PATH})
     file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
     file(RENAME ${PCI_IDS_PATH} ${PCI_IDS_INSTALL_PATH})
+endif()
+
+set(USB_IDS_GZ_URL http://www.linux-usb.org/usb.ids.gz)
+set(USB_IDS_GZ_PATH ${CMAKE_BINARY_DIR}/usb.ids.gz)
+set(USB_IDS_PATH ${CMAKE_BINARY_DIR}/usb.ids)
+set(USB_IDS_INSTALL_PATH ${CMAKE_INSTALL_DATAROOTDIR}/usb.ids)
+
+if(ENABLE_USB_IDS_DOWNLOAD AND NOT EXISTS ${USB_IDS_GZ_PATH})
+    message(STATUS "Downloading USB ID database from ${USB_IDS_GZ_URL}...")
+    file(DOWNLOAD ${USB_IDS_GZ_URL} ${USB_IDS_GZ_PATH} INACTIVITY_TIMEOUT 10)
+endif()
+
+if(EXISTS ${USB_IDS_GZ_PATH} AND NOT EXISTS ${USB_IDS_INSTALL_PATH})
+    message(STATUS "Extracting USB ID database from ${USB_IDS_GZ_PATH}...")
+    execute_process(COMMAND gzip -k -d ${USB_IDS_GZ_PATH})
+    file(MAKE_DIRECTORY ${CMAKE_INSTALL_DATAROOTDIR})
+    file(RENAME ${USB_IDS_PATH} ${USB_IDS_INSTALL_PATH})
 endif()

@@ -1,3 +1,10 @@
+serenity_component(
+    Chess
+    RECOMMENDED
+    TARGETS Chess
+    DEPENDS ChessEngine
+)
+
 set(SOURCES
     main.cpp
     ChessWidget.cpp

@@ -36,7 +36,11 @@ private:
 
     RTL8168NetworkAdapter(PCI::Address, u8 irq);
 
+<<<<<<< HEAD
     virtual void handle_irq(const RegisterState&) override;
+=======
+    virtual bool handle_irq(const RegisterState&) override;
+>>>>>>> master
     virtual const char* class_name() const override { return "RTL8168NetworkAdapter"; }
 
     struct [[gnu::packed]] TXDescriptor {

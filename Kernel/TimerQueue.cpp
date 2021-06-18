@@ -4,9 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <AK/Function.h>
 #include <AK/NonnullOwnPtr.h>
-#include <AK/OwnPtr.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
 #include <Kernel/Scheduler.h>
@@ -93,24 +91,23 @@ void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
 
     auto& queue = queue_for_timer(*timer);
     if (queue.list.is_empty()) {
-        queue.list.append(&timer.leak_ref());
+        queue.list.append(timer.leak_ref());
         queue.next_timer_due = timer_expiration;
     } else {
         Timer* following_timer = nullptr;
-        queue.list.for_each([&](Timer& t) {
+        for (auto& t : queue.list) {
             if (t.m_expires > timer_expiration) {
                 following_timer = &t;
-                return IterationDecision::Break;
+                break;
             }
-            return IterationDecision::Continue;
-        });
+        }
         if (following_timer) {
-            bool next_timer_needs_update = queue.list.head() == following_timer;
-            queue.list.insert_before(following_timer, &timer.leak_ref());
+            bool next_timer_needs_update = queue.list.first() == following_timer;
+            queue.list.insert_before(*following_timer, timer.leak_ref());
             if (next_timer_needs_update)
                 queue.next_timer_due = timer_expiration;
         } else {
-            queue.list.append(&timer.leak_ref());
+            queue.list.append(timer.leak_ref());
         }
     }
 }
@@ -131,23 +128,22 @@ bool TimerQueue::cancel_timer(TimerId id)
     Queue* timer_queue = nullptr;
 
     ScopedSpinLock lock(g_timerqueue_lock);
-    if (m_timer_queue_monotonic.list.for_each([&](Timer& timer) {
-            if (timer.m_id == id) {
-                found_timer = &timer;
-                timer_queue = &m_timer_queue_monotonic;
-                return IterationDecision::Break;
-            }
-            return IterationDecision::Continue;
-        })
-        != IterationDecision::Break) {
-        m_timer_queue_realtime.list.for_each([&](Timer& timer) {
+    for (auto& timer : m_timer_queue_monotonic.list) {
+        if (timer.m_id == id) {
+            found_timer = &timer;
+            timer_queue = &m_timer_queue_monotonic;
+            break;
+        }
+    }
+
+    if (found_timer == nullptr) {
+        for (auto& timer : m_timer_queue_realtime.list) {
             if (timer.m_id == id) {
                 found_timer = &timer;
                 timer_queue = &m_timer_queue_realtime;
-                return IterationDecision::Break;
+                break;
             }
-            return IterationDecision::Continue;
-        });
+        };
     }
 
     if (!found_timer) {
@@ -155,22 +151,29 @@ bool TimerQueue::cancel_timer(TimerId id)
         // be in m_timers_executing. If it is then release the lock
         // briefly to allow it to finish by removing itself
         // NOTE: This can only happen with multiple processors!
-        while (m_timers_executing.for_each([&](Timer& timer) {
-            if (timer.m_id == id)
-                return IterationDecision::Break;
-            return IterationDecision::Continue;
-        }) == IterationDecision::Break) {
-            // NOTE: This isn't the most efficient way to wait, but
-            // it should only happen when multiple processors are used.
-            // Also, the timers should execute pretty quickly, so it
-            // should not loop here for very long. But we can't yield.
-            lock.unlock();
-            Processor::wait_check();
-            lock.lock();
+        while (true) {
+            for (auto& timer : m_timers_executing) {
+                if (timer.m_id == id) {
+                    found_timer = &timer;
+                    break;
+                }
+            }
+
+            if (found_timer) {
+                // NOTE: This isn't the most efficient way to wait, but
+                // it should only happen when multiple processors are used.
+                // Also, the timers should execute pretty quickly, so it
+                // should not loop here for very long. But we can't yield.
+                lock.unlock();
+                Processor::wait_check();
+                lock.lock();
+                found_timer = nullptr;
+            } else {
+                // We were not able to cancel the timer, but at this point
+                // the handler should have completed if it was running!
+                return false;
+            }
         }
-        // We were not able to cancel the timer, but at this point
-        // the handler should have completed if it was running!
-        return false;
     }
 
     VERIFY(found_timer);
@@ -183,12 +186,12 @@ bool TimerQueue::cancel_timer(Timer& timer)
 {
     auto& timer_queue = queue_for_timer(timer);
     ScopedSpinLock lock(g_timerqueue_lock);
-    if (!timer_queue.list.contains_slow(&timer)) {
+    if (!timer_queue.list.contains(timer)) {
         // The timer may be executing right now, if it is then it should
         // be in m_timers_executing. If it is then release the lock
         // briefly to allow it to finish by removing itself
         // NOTE: This can only happen with multiple processors!
-        while (m_timers_executing.contains_slow(&timer)) {
+        while (m_timers_executing.contains(timer)) {
             // NOTE: This isn't the most efficient way to wait, but
             // it should only happen when multiple processors are used.
             // Also, the timers should execute pretty quickly, so it
@@ -209,8 +212,8 @@ bool TimerQueue::cancel_timer(Timer& timer)
 
 void TimerQueue::remove_timer_locked(Queue& queue, Timer& timer)
 {
-    bool was_next_timer = (queue.list.head() == &timer);
-    queue.list.remove(&timer);
+    bool was_next_timer = (queue.list.first() == &timer);
+    queue.list.remove(timer);
     timer.set_queued(false);
     auto now = timer.now(false);
     if (timer.m_expires > now)
@@ -229,15 +232,15 @@ void TimerQueue::fire()
     ScopedSpinLock lock(g_timerqueue_lock);
 
     auto fire_timers = [&](Queue& queue) {
-        auto* timer = queue.list.head();
+        auto* timer = queue.list.first();
         VERIFY(timer);
         VERIFY(queue.next_timer_due == timer->m_expires);
 
         while (timer && timer->now(true) > timer->m_expires) {
-            queue.list.remove(timer);
+            queue.list.remove(*timer);
             timer->set_queued(false);
 
-            m_timers_executing.append(timer);
+            m_timers_executing.append(*timer);
 
             update_next_timer_due(queue);
 
@@ -247,13 +250,13 @@ void TimerQueue::fire()
             Processor::current().deferred_call_queue([this, timer]() {
                 timer->m_callback();
                 ScopedSpinLock lock(g_timerqueue_lock);
-                m_timers_executing.remove(timer);
+                m_timers_executing.remove(*timer);
                 // Drop the reference we added when queueing the timer
                 timer->unref();
             });
 
             lock.lock();
-            timer = queue.list.head();
+            timer = queue.list.first();
         }
     };
 
@@ -267,7 +270,7 @@ void TimerQueue::update_next_timer_due(Queue& queue)
 {
     VERIFY(g_timerqueue_lock.is_locked());
 
-    if (auto* next_timer = queue.list.head())
+    if (auto* next_timer = queue.list.first())
         queue.next_timer_due = next_timer->m_expires;
     else
         queue.next_timer_due = {};

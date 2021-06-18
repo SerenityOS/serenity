@@ -184,10 +184,13 @@ UNMAP_AFTER_INIT NE2000NetworkAdapter::~NE2000NetworkAdapter()
 {
 }
 
-void NE2000NetworkAdapter::handle_irq(const RegisterState&)
+bool NE2000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u8 status = in8(REG_RW_INTERRUPTSTATUS);
     dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Got interrupt, status={:#02x}", status);
+    if (status == 0) {
+        return false;
+    }
 
     if (status & BIT_INTERRUPTMASK_PRX) {
         dbgln_if(NE2000_DEBUG, "NE2000NetworkAdapter: Interrupt for packet received");
@@ -223,6 +226,7 @@ void NE2000NetworkAdapter::handle_irq(const RegisterState&)
     m_wait_queue.wake_all();
 
     out8(REG_RW_INTERRUPTSTATUS, status);
+    return true;
 }
 
 UNMAP_AFTER_INIT int NE2000NetworkAdapter::ram_test()

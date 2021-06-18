@@ -1,3 +1,9 @@
+serenity_component(
+    ClipboardHistory.Applet
+    REQUIRED
+    TARGETS ClipboardHistory.Applet
+)
+
 set(SOURCES
     ClipboardHistoryModel.cpp
     main.cpp

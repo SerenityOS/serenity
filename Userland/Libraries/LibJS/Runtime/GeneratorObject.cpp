@@ -86,7 +86,11 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     if (vm.exception())
         return {};
 
+<<<<<<< HEAD
     auto result = Object::create_empty(global_object);
+=======
+    auto result = Object::create(global_object, global_object.object_prototype());
+>>>>>>> master
     result->put("value", previous_generated_value);
 
     if (m_done) {

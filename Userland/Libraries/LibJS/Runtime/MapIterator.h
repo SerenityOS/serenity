@@ -33,7 +33,11 @@ private:
     Map& m_map;
     bool m_done { false };
     Object::PropertyKind m_iteration_kind;
+<<<<<<< HEAD
     HashMap<Value, Value, ValueTraits>::IteratorType m_iterator;
+=======
+    OrderedHashMap<Value, Value, ValueTraits>::IteratorType m_iterator;
+>>>>>>> master
 };
 
 }

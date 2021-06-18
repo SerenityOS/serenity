@@ -103,6 +103,27 @@ UNMAP_AFTER_INIT UHCIController::~UHCIController()
 {
 }
 
+RefPtr<USB::Device> const UHCIController::get_device_at_port(USB::Device::PortNumber port)
+{
+    if (!m_devices.at(to_underlying(port)))
+        return nullptr;
+
+    return m_devices.at(to_underlying(port));
+}
+
+RefPtr<USB::Device> const UHCIController::get_device_from_address(u8 device_address)
+{
+    for (auto const& device : m_devices) {
+        if (!device)
+            continue;
+
+        if (device->address() == device_address)
+            return device;
+    }
+
+    return nullptr;
+}
+
 void UHCIController::reset()
 {
     stop();
@@ -461,12 +482,21 @@ KResultOr<size_t> UHCIController::submit_control_transfer(Transfer& transfer)
         free_descriptor_chain(data_descriptor_chain);
         return 0;
     }
+<<<<<<< HEAD
 
     transfer_queue->attach_transfer_descriptor_chain(setup_td);
     transfer_queue->set_transfer(&transfer);
 
     m_fullspeed_control_qh->attach_transfer_queue(*transfer_queue);
 
+=======
+
+    transfer_queue->attach_transfer_descriptor_chain(setup_td);
+    transfer_queue->set_transfer(&transfer);
+
+    m_fullspeed_control_qh->attach_transfer_queue(*transfer_queue);
+
+>>>>>>> master
     size_t transfer_size = 0;
     while (!transfer.complete())
         transfer_size = poll_transfer_queue(*transfer_queue);
@@ -545,6 +575,11 @@ void UHCIController::spawn_port_proc()
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 1 ({})", device.error());
+<<<<<<< HEAD
+=======
+
+                            m_devices.at(0) = device.value();
+>>>>>>> master
                         } else {
                             dmesgln("UHCI: Device detach detected on Root Port 1");
                         }
@@ -575,6 +610,11 @@ void UHCIController::spawn_port_proc()
 
                             if (device.is_error())
                                 dmesgln("UHCI: Device creation failed on port 2 ({})", device.error());
+<<<<<<< HEAD
+=======
+
+                            m_devices.at(1) = device.value();
+>>>>>>> master
                         } else {
                             dmesgln("UHCI: Device detach detected on Root Port 2");
                         }
@@ -586,13 +626,17 @@ void UHCIController::spawn_port_proc()
     });
 }
 
-void UHCIController::handle_irq(const RegisterState&)
+bool UHCIController::handle_irq(const RegisterState&)
 {
     u32 status = read_usbsts();
 
     // Shared IRQ. Not ours!
     if (!status)
+<<<<<<< HEAD
         return;
+=======
+        return false;
+>>>>>>> master
 
     if constexpr (UHCI_DEBUG) {
         dbgln("UHCI: Interrupt happened!");
@@ -601,6 +645,10 @@ void UHCIController::handle_irq(const RegisterState&)
 
     // Write back USBSTS to clear bits
     write_usbsts(status);
+<<<<<<< HEAD
+=======
+    return true;
+>>>>>>> master
 }
 
 }

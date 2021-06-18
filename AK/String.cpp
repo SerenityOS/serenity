@@ -180,26 +180,26 @@ ByteBuffer String::to_byte_buffer() const
 }
 
 template<typename T>
-Optional<T> String::to_int() const
+Optional<T> String::to_int(TrimWhitespace trim_whitespace) const
 {
-    return StringUtils::convert_to_int<T>(view());
+    return StringUtils::convert_to_int<T>(view(), trim_whitespace);
 }
 
-template Optional<i8> String::to_int() const;
-template Optional<i16> String::to_int() const;
-template Optional<i32> String::to_int() const;
-template Optional<i64> String::to_int() const;
+template Optional<i8> String::to_int(TrimWhitespace) const;
+template Optional<i16> String::to_int(TrimWhitespace) const;
+template Optional<i32> String::to_int(TrimWhitespace) const;
+template Optional<i64> String::to_int(TrimWhitespace) const;
 
 template<typename T>
-Optional<T> String::to_uint() const
+Optional<T> String::to_uint(TrimWhitespace trim_whitespace) const
 {
-    return StringUtils::convert_to_uint<T>(view());
+    return StringUtils::convert_to_uint<T>(view(), trim_whitespace);
 }
 
-template Optional<u8> String::to_uint() const;
-template Optional<u16> String::to_uint() const;
-template Optional<u32> String::to_uint() const;
-template Optional<u64> String::to_uint() const;
+template Optional<u8> String::to_uint(TrimWhitespace) const;
+template Optional<u16> String::to_uint(TrimWhitespace) const;
+template Optional<u32> String::to_uint(TrimWhitespace) const;
+template Optional<u64> String::to_uint(TrimWhitespace) const;
 
 bool String::starts_with(const StringView& str, CaseSensitivity case_sensitivity) const
 {

@@ -1,3 +1,10 @@
+serenity_component(
+    ImageViewer
+    RECOMMENDED
+    TARGETS ImageViewer
+    DEPENDS ImageDecoder
+)
+
 set(SOURCES
     main.cpp
         ViewWidget.cpp

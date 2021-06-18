@@ -40,7 +40,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SB16"; }

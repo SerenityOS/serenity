@@ -383,6 +383,8 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
     bool inverse_matched { false };
     bool had_zero_length_match { false };
 
+    state.string_position_before_match = state.string_position;
+
     size_t offset { state.instruction_position + 3 };
     for (size_t i = 0; i < arguments_count(); ++i) {
         if (state.string_position > string_position)
@@ -514,7 +516,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
 
     if (input.regex_options & AllFlags::Insensitive) {
         ch1 = to_ascii_lowercase(ch1);
-        ch2 = to_ascii_uppercase(ch2);
+        ch2 = to_ascii_lowercase(ch2);
     }
 
     if (ch1 == ch2) {
@@ -686,7 +688,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
         result.empend(String::formatted("type={} [{}]", (size_t)compare_type, character_compare_type_name(compare_type)));
 
-        auto compared_against_string_start_offset = state().string_position > 0 ? state().string_position - 1 : state().string_position;
+        auto string_start_offset = state().string_position_before_match;
 
         if (compare_type == CharacterCompareType::Char) {
             auto ch = m_bytecode->at(offset++);
@@ -696,13 +698,13 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             else
                 result.empend(String::formatted("value={:x}", ch));
 
-            if (!view.is_null() && view.length() > state().string_position) {
+            if (!view.is_null() && view.length() > string_start_offset) {
                 if (is_ascii) {
                     result.empend(String::formatted(
                         "compare against: '{}'",
-                        view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                        view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string()));
                 } else {
-                    auto str = view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string();
+                    auto str = view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string();
                     u8 buf[8] { 0 };
                     __builtin_memcpy(buf, str.characters(), min(str.length(), sizeof(buf)));
                     result.empend(String::formatted("compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
@@ -725,21 +727,21 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: \"{}\"",
-                    input.value().view.substring_view(compared_against_string_start_offset, compared_against_string_start_offset + length > view.length() ? 0 : length).to_string()));
+                    input.value().view.substring_view(string_start_offset, string_start_offset + length > view.length() ? 0 : length).to_string()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
             result.empend(String::formatted("ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::formatted("ch_range='{:c}'-'{:c}'", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         }
     }
     return result;

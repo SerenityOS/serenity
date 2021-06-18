@@ -31,7 +31,7 @@ public:
 
 private:
     RTL8139NetworkAdapter(PCI::Address, u8 irq);
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "RTL8139NetworkAdapter"; }
 
     void reset();

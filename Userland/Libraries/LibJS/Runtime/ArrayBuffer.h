@@ -13,6 +13,9 @@
 
 namespace JS {
 
+struct ClampedU8 {
+};
+
 class ArrayBuffer : public Object {
     JS_OBJECT(ArrayBuffer, Object);
 
@@ -70,26 +73,44 @@ static Value raw_bytes_to_numeric(GlobalObject& global_object, ByteBuffer raw_va
         for (size_t i = 0; i < raw_value.size() / 2; ++i)
             swap(raw_value[i], raw_value[raw_value.size() - 1 - i]);
     }
+<<<<<<< HEAD
     if constexpr (IsSame<T, float>) {
+=======
+    using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
+    if constexpr (IsSame<UnderlyingBufferDataType, float>) {
+>>>>>>> master
         float value;
         raw_value.span().copy_to({ &value, sizeof(float) });
         if (isnan(value))
             return js_nan();
         return Value(value);
     }
+<<<<<<< HEAD
     if constexpr (IsSame<T, double>) {
+=======
+    if constexpr (IsSame<UnderlyingBufferDataType, double>) {
+>>>>>>> master
         double value;
         raw_value.span().copy_to({ &value, sizeof(double) });
         if (isnan(value))
             return js_nan();
         return Value(value);
     }
+<<<<<<< HEAD
     if constexpr (!IsIntegral<T>)
         VERIFY_NOT_REACHED();
     T int_value = 0;
     raw_value.span().copy_to({ &int_value, sizeof(T) });
     if constexpr (sizeof(T) == 8) {
         if constexpr (IsSigned<T>)
+=======
+    if constexpr (!IsIntegral<UnderlyingBufferDataType>)
+        VERIFY_NOT_REACHED();
+    UnderlyingBufferDataType int_value = 0;
+    raw_value.span().copy_to({ &int_value, sizeof(UnderlyingBufferDataType) });
+    if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
+        if constexpr (IsSigned<UnderlyingBufferDataType>)
+>>>>>>> master
             return js_bigint(global_object.heap(), Crypto::SignedBigInteger::create_from(int_value));
         else
             return js_bigint(global_object.heap(), Crypto::SignedBigInteger { Crypto::UnsignedBigInteger::create_from(int_value) });
@@ -114,6 +135,7 @@ Value ArrayBuffer::get_value(size_t byte_index, [[maybe_unused]] bool is_typed_a
 template<typename T>
 static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value, bool is_little_endian)
 {
+<<<<<<< HEAD
     ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(T));
     auto flip_if_needed = [&]() {
         if (is_little_endian)
@@ -123,17 +145,34 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
             swap(raw_bytes[i], raw_bytes[sizeof(T) - 1 - i]);
     };
     if constexpr (IsSame<T, float>) {
+=======
+    using UnderlyingBufferDataType = Conditional<IsSame<ClampedU8, T>, u8, T>;
+    ByteBuffer raw_bytes = ByteBuffer::create_uninitialized(sizeof(UnderlyingBufferDataType));
+    auto flip_if_needed = [&]() {
+        if (is_little_endian)
+            return;
+        VERIFY(sizeof(UnderlyingBufferDataType) % 2 == 0);
+        for (size_t i = 0; i < sizeof(UnderlyingBufferDataType) / 2; ++i)
+            swap(raw_bytes[i], raw_bytes[sizeof(UnderlyingBufferDataType) - 1 - i]);
+    };
+    if constexpr (IsSame<UnderlyingBufferDataType, float>) {
+>>>>>>> master
         float raw_value = value.to_double(global_object);
         ReadonlyBytes { &raw_value, sizeof(float) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;
     }
+<<<<<<< HEAD
     if constexpr (IsSame<T, double>) {
+=======
+    if constexpr (IsSame<UnderlyingBufferDataType, double>) {
+>>>>>>> master
         double raw_value = value.to_double(global_object);
         ReadonlyBytes { &raw_value, sizeof(double) }.copy_to(raw_bytes);
         flip_if_needed();
         return raw_bytes;
     }
+<<<<<<< HEAD
     if constexpr (!IsIntegral<T>)
         VERIFY_NOT_REACHED();
     if constexpr (sizeof(T) == 8) {
@@ -149,6 +188,43 @@ static ByteBuffer numeric_to_raw_bytes(GlobalObject& global_object, Value value,
             int_value = value.to_u32(global_object);
         ReadonlyBytes { &int_value, sizeof(T) }.copy_to(raw_bytes);
         flip_if_needed();
+=======
+    if constexpr (!IsIntegral<UnderlyingBufferDataType>)
+        VERIFY_NOT_REACHED();
+    if constexpr (sizeof(UnderlyingBufferDataType) == 8) {
+        UnderlyingBufferDataType int_value;
+
+        if constexpr (IsSigned<UnderlyingBufferDataType>)
+            int_value = value.to_bigint_int64(global_object);
+        else
+            int_value = value.to_bigint_uint64(global_object);
+
+        ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
+        flip_if_needed();
+        return raw_bytes;
+    } else {
+        UnderlyingBufferDataType int_value;
+        if constexpr (IsSigned<UnderlyingBufferDataType>) {
+            if constexpr (sizeof(UnderlyingBufferDataType) == 4)
+                int_value = value.to_i32(global_object);
+            else if constexpr (sizeof(UnderlyingBufferDataType) == 2)
+                int_value = value.to_i16(global_object);
+            else
+                int_value = value.to_i8(global_object);
+        } else {
+            if constexpr (sizeof(UnderlyingBufferDataType) == 4)
+                int_value = value.to_u32(global_object);
+            else if constexpr (sizeof(UnderlyingBufferDataType) == 2)
+                int_value = value.to_u16(global_object);
+            else if constexpr (!IsSame<T, ClampedU8>)
+                int_value = value.to_u8(global_object);
+            else
+                int_value = value.to_u8_clamp(global_object);
+        }
+        ReadonlyBytes { &int_value, sizeof(UnderlyingBufferDataType) }.copy_to(raw_bytes);
+        if constexpr (sizeof(UnderlyingBufferDataType) % 2 == 0)
+            flip_if_needed();
+>>>>>>> master
         return raw_bytes;
     }
 }

@@ -548,6 +548,24 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     }
 }
 
+// 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobigint64
+i64 Value::to_bigint_int64(GlobalObject& global_object) const
+{
+    auto* bigint = to_bigint(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    return static_cast<i64>(bigint->big_integer().to_u64());
+}
+
+// 7.1.16 ToBigUint64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobiguint64
+u64 Value::to_bigint_uint64(GlobalObject& global_object) const
+{
+    auto* bigint = to_bigint(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    return bigint->big_integer().to_u64();
+}
+
 // FIXME: These two conversions are wrong for JS, and seem likely to be footguns
 i32 Value::as_i32() const
 {
@@ -615,9 +633,110 @@ u32 Value::to_u32(GlobalObject& global_object) const
     return static_cast<u32>(int32bit);
 }
 
+<<<<<<< HEAD
 // 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
 size_t Value::to_length(GlobalObject& global_object) const
 {
+=======
+// 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
+i16 Value::to_i16(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto remainder = fmod(int_val, 65536.0);
+    auto int16bit = remainder >= 0.0 ? remainder : remainder + 65536.0; // The notation “x modulo y” computes a value k of the same sign as y
+    if (int16bit >= 32768.0)
+        int16bit -= 65536.0;
+    return static_cast<i16>(int16bit);
+}
+
+// 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
+u16 Value::to_u16(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
+    return static_cast<u16>(int16bit);
+}
+
+// 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
+i8 Value::to_i8(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto remainder = fmod(int_val, 256.0);
+    auto int8bit = remainder >= 0.0 ? remainder : remainder + 256.0; // The notation “x modulo y” computes a value k of the same sign as y
+    if (int8bit >= 128.0)
+        int8bit -= 256.0;
+    return static_cast<i8>(int8bit);
+}
+
+// 7.1.11 ToUint8 ( argument ), https://tc39.es/ecma262/#sec-touint8
+u8 Value::to_u8(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int8bit = fmod(int_val, NumericLimits<u8>::max() + 1.0);
+    return static_cast<u8>(int8bit);
+}
+
+// 7.1.12 ToUint8Clamp ( argument ), https://tc39.es/ecma262/#sec-touint8clamp
+u8 Value::to_u8_clamp(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    if (number.is_nan())
+        return 0;
+    double value = number.as_double();
+    if (value <= 0.0)
+        return 0;
+    if (value >= 255.0)
+        return 255;
+    auto int_val = floor(value);
+    if (int_val + 0.5 < value)
+        return static_cast<u8>(int_val + 1.0);
+    if (value < int_val + 0.5)
+        return static_cast<u8>(int_val);
+    if (fmod(int_val, 2.0) == 1.0)
+        return static_cast<u8>(int_val + 1.0);
+    return static_cast<u8>(int_val);
+}
+
+// 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
+size_t Value::to_length(GlobalObject& global_object) const
+{
+>>>>>>> master
     auto& vm = global_object.vm();
 
     auto len = to_integer_or_infinity(global_object);
@@ -1255,7 +1374,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
             return false;
-        if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
+        if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
             return Crypto::SignedBigInteger { lhs.to_i32(global_object) } == rhs.as_bigint().big_integer();
@@ -1368,11 +1487,11 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
 
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
-        x_lower_than_y = x_numeric.is_integer()
+        x_lower_than_y = x_numeric.is_integral_number()
             ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer()
             : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
-        x_lower_than_y = y_numeric.is_integer()
+        x_lower_than_y = y_numeric.is_integral_number()
             ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) }
             : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) + 1 });
     }

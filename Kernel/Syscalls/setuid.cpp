@@ -148,11 +148,9 @@ KResultOr<int> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_
     return 0;
 }
 
-KResultOr<int> Process::sys$setgroups(ssize_t count, Userspace<const gid_t*> user_gids)
+KResultOr<int> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
 {
     REQUIRE_PROMISE(id);
-    if (count < 0)
-        return EINVAL;
     if (!is_superuser())
         return EPERM;
 

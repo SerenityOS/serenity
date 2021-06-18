@@ -16,13 +16,21 @@ static u32 s_next_usb_address = 1; // Next address we hand out to a device once 
 
 namespace Kernel::USB {
 
+<<<<<<< HEAD
 KResultOr<NonnullOwnPtr<Device>> Device::try_create(PortNumber port, DeviceSpeed speed)
+=======
+KResultOr<NonnullRefPtr<Device>> Device::try_create(PortNumber port, DeviceSpeed speed)
+>>>>>>> master
 {
     auto pipe_or_error = Pipe::try_create_pipe(Pipe::Type::Control, Pipe::Direction::Bidirectional, 0, 8, 0);
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
+<<<<<<< HEAD
     auto device = adopt_own_if_nonnull(new Device(port, speed, pipe_or_error.release_value()));
+=======
+    auto device = adopt_ref_if_nonnull(new Device(port, speed, pipe_or_error.release_value()));
+>>>>>>> master
     if (!device)
         return ENOMEM;
 
@@ -94,6 +102,10 @@ KResult Device::enumerate()
     VERIFY(transfer_length > 0);
     m_address = s_next_usb_address++;
 
+<<<<<<< HEAD
+=======
+    memcpy(&m_device_descriptor, &dev_descriptor, sizeof(USBDeviceDescriptor));
+>>>>>>> master
     return KSuccess;
 }
 

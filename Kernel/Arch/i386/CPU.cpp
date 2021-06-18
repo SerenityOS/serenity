@@ -971,6 +971,8 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
         set_feature(CPUFeature::PGE);
     if (processor_info.edx() & (1 << 23))
         set_feature(CPUFeature::MMX);
+    if (processor_info.edx() & (1 << 24))
+        set_feature(CPUFeature::FXSR);
     if (processor_info.edx() & (1 << 25))
         set_feature(CPUFeature::SSE);
     if (processor_info.edx() & (1 << 26))
@@ -1001,15 +1003,16 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
 
     u32 max_extended_leaf = CPUID(0x80000000).eax();
 
-    VERIFY(max_extended_leaf >= 0x80000001);
-    CPUID extended_processor_info(0x80000001);
-    if (extended_processor_info.edx() & (1 << 20))
-        set_feature(CPUFeature::NX);
-    if (extended_processor_info.edx() & (1 << 27))
-        set_feature(CPUFeature::RDTSCP);
-    if (extended_processor_info.edx() & (1 << 11)) {
-        // Only available in 64 bit mode
-        set_feature(CPUFeature::SYSCALL);
+    if (max_extended_leaf >= 0x80000001) {
+        CPUID extended_processor_info(0x80000001);
+        if (extended_processor_info.edx() & (1 << 20))
+            set_feature(CPUFeature::NX);
+        if (extended_processor_info.edx() & (1 << 27))
+            set_feature(CPUFeature::RDTSCP);
+        if (extended_processor_info.edx() & (1 << 11)) {
+            // Only available in 64 bit mode
+            set_feature(CPUFeature::SYSCALL);
+        }
     }
 
     if (max_extended_leaf >= 0x80000007) {
@@ -1047,8 +1050,12 @@ UNMAP_AFTER_INIT void Processor::cpu_setup()
     //       initialized yet!
     cpu_detect();
 
-    if (has_feature(CPUFeature::SSE))
+    if (has_feature(CPUFeature::SSE)) {
+        // enter_thread_context() assumes that if a x86 CPU supports SSE then it also supports FXSR.
+        // SSE support without FXSR is an extremely unlikely scenario, so let's be pragmatic about it.
+        VERIFY(has_feature(CPUFeature::FXSR));
         sse_init();
+    }
 
     write_cr0(read_cr0() | 0x00010000);
 
@@ -1137,6 +1144,8 @@ String Processor::features_string() const
             return "syscall";
         case CPUFeature::MMX:
             return "mmx";
+        case CPUFeature::FXSR:
+            return "fxsr";
         case CPUFeature::SSE2:
             return "sse2";
         case CPUFeature::SSE3:
@@ -1229,8 +1238,12 @@ UNMAP_AFTER_INIT void Processor::initialize(u32 cpu)
     if (cpu == 0) {
         VERIFY((FlatPtr(&s_clean_fpu_state) & 0xF) == 0);
         asm volatile("fninit");
-        asm volatile("fxsave %0"
-                     : "=m"(s_clean_fpu_state));
+        if (has_feature(CPUFeature::FXSR))
+            asm volatile("fxsave %0"
+                         : "=m"(s_clean_fpu_state));
+        else
+            asm volatile("fnsave %0"
+                         : "=m"(s_clean_fpu_state));
     }
 
     m_info = new ProcessorInfo(*this);
@@ -1408,12 +1421,18 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
     VERIFY(to_thread->state() == Thread::Running);
 
+    bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     Processor::set_current_thread(*to_thread);
 
     auto& from_tss = from_thread->tss();
     auto& to_tss = to_thread->tss();
-    asm volatile("fxsave %0"
-                 : "=m"(from_thread->fpu_state()));
+
+    if (has_fxsr)
+        asm volatile("fxsave %0"
+                     : "=m"(from_thread->fpu_state()));
+    else
+        asm volatile("fnsave %0"
+                     : "=m"(from_thread->fpu_state()));
 
     from_tss.fs = get_fs();
     from_tss.gs = get_gs();
@@ -1440,7 +1459,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
 
-    asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
+    if (has_fxsr)
+        asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
+    else
+        asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
 
     // TODO: ioperm?
 }

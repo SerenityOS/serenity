@@ -26,10 +26,15 @@
     M(DescWriteNonWritable, "Cannot write to non-writable property '{}'")                                                               \
     M(DetachedArrayBuffer, "ArrayBuffer is detached")                                                                                   \
     M(DivisionByZero, "Division by zero")                                                                                               \
+<<<<<<< HEAD
+=======
+    M(FinalizationRegistrySameTargetAndValue, "Target and held value must not be the same")                                             \
+>>>>>>> master
     M(GetCapabilitiesExecutorCalledMultipleTimes, "GetCapabilitiesExecutor was called multiple times")                                  \
     M(InOperatorWithObject, "'in' operator must be used on an object")                                                                  \
     M(InstanceOfOperatorBadPrototype, "'prototype' property of {} is not an object")                                                    \
     M(InvalidAssignToConst, "Invalid assignment to const variable")                                                                     \
+    M(InvalidCodePoint, "Invalid code point {}, must be an integer no less than 0 and no greater than 0x10FFFF")                        \
     M(InvalidHint, "Invalid hint: \"{}\"")                                                                                              \
     M(InvalidIndex, "Index must be a positive integer")                                                                                 \
     M(InvalidLeftHandAssignment, "Invalid left-hand side in assignment")                                                                \
@@ -143,6 +148,10 @@
     M(RegExpObjectRepeatedFlag, "Repeated RegExp flag '{}'")                                                                            \
     M(SpeciesConstructorDidNotCreate, "Species constructor did not create {}")                                                          \
     M(SpeciesConstructorReturned, "Species constructor returned {}")                                                                    \
+<<<<<<< HEAD
+=======
+    M(StringMatchAllNonGlobalRegExp, "RegExp argument is non-global")                                                                   \
+>>>>>>> master
     M(StringRawCannotConvert, "Cannot convert property 'raw' to object from {}")                                                        \
     M(StringRepeatCountMustBe, "repeat count must be a {} number")                                                                      \
     M(ThisHasNotBeenInitialized, "|this| has not been initialized")                                                                     \
@@ -153,6 +162,8 @@
     M(TypedArrayInvalidByteOffset, "Invalid byte offset for {}: must be a multiple of {}, got {}")                                      \
     M(TypedArrayOutOfRangeByteOffset, "Typed array byte offset {} is out of range for buffer with length {}")                           \
     M(TypedArrayOutOfRangeByteOffsetOrLength, "Typed array range {}:{} is out of range for buffer with length {}")                      \
+    M(TypedArrayPrototypeOneArg, "TypedArray.prototype.{}() requires at least one argument")                                            \
+    M(TypedArrayFailedSettingIndex, "Failed setting value of index {} of typed array")                                                  \
     M(UnknownIdentifier, "'{}' is not defined")                                                                                         \
     M(URIMalformed, "URI malformed")                                                                                                    \
     /* LibWeb bindings */                                                                                                               \

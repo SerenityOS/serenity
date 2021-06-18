@@ -1,3 +1,12 @@
+<<<<<<< HEAD
+=======
+serenity_component(
+    VideoPlayer
+    TARGETS VideoPlayer
+    DEPENDS AudioServer
+)
+
+>>>>>>> master
 set(SOURCES
     main.cpp
 )

@@ -36,7 +36,7 @@ protected:
     void setup_link();
 
     E1000NetworkAdapter(PCI::Address, u8 irq);
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
     struct [[gnu::packed]] e1000_rx_desc {

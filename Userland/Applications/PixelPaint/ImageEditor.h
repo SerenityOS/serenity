@@ -25,10 +25,15 @@ class ImageEditor final
 public:
     virtual ~ImageEditor() override;
 
+<<<<<<< HEAD
     Image const* image() const { return m_image; }
     Image* image() { return m_image; }
 
     void set_image(RefPtr<Image>);
+=======
+    Image const& image() const { return m_image; }
+    Image& image() { return m_image; }
+>>>>>>> master
 
     Layer* active_layer() { return m_active_layer; }
     void set_active_layer(Layer*);
@@ -65,6 +70,11 @@ public:
 
     Function<void(Layer*)> on_active_layer_change;
 
+<<<<<<< HEAD
+=======
+    Function<void(String const&)> on_image_title_change;
+
+>>>>>>> master
     Gfx::FloatRect layer_rect_to_editor_rect(Layer const&, Gfx::IntRect const&) const;
     Gfx::FloatRect image_rect_to_editor_rect(Gfx::IntRect const&) const;
     Gfx::FloatRect editor_rect_to_image_rect(Gfx::IntRect const&) const;
@@ -73,7 +83,7 @@ public:
     Gfx::FloatPoint editor_position_to_image_position(Gfx::IntPoint const&) const;
 
 private:
-    ImageEditor();
+    explicit ImageEditor(NonnullRefPtr<Image>);
 
     virtual void paint_event(GUI::PaintEvent&) override;
     virtual void second_paint_event(GUI::PaintEvent&) override;
@@ -88,6 +98,7 @@ private:
 
     virtual void image_did_change() override;
     virtual void image_select_layer(Layer*) override;
+    virtual void image_did_change_title(String const&) override;
 
     GUI::MouseEvent event_adjusted_for_layer(GUI::MouseEvent const&, Layer const&) const;
     GUI::MouseEvent event_with_pan_and_scale_applied(GUI::MouseEvent const&) const;
@@ -95,7 +106,7 @@ private:
     void clamped_scale(float);
     void relayout();
 
-    RefPtr<Image> m_image;
+    NonnullRefPtr<Image> m_image;
     RefPtr<Layer> m_active_layer;
     OwnPtr<GUI::UndoStack> m_undo_stack;
 

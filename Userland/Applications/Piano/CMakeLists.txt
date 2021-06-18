@@ -1,3 +1,10 @@
+serenity_component(
+    Piano
+    RECOMMENDED
+    TARGETS Piano
+    DEPENDS AudioServer
+)
+
 set(SOURCES
     Track.cpp
     TrackManager.cpp

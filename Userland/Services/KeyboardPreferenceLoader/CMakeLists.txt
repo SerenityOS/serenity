@@ -1,3 +1,9 @@
+serenity_component(
+    KeyboardPreferenceLoader
+    REQUIRED
+    TARGETS KeyboardPreferenceLoader keymap
+)
+
 set(SOURCES
     main.cpp
 )
