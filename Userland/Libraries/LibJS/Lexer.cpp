@@ -308,7 +308,9 @@ bool Lexer::is_line_comment_start(bool line_has_token_yet) const
         // "-->" is considered a line comment start if the current line is only whitespace and/or
         // other block comment(s); or in other words: the current line does not have a token or
         // ongoing line comment yet
-        || (match('-', '-', '>') && !line_has_token_yet);
+        || (match('-', '-', '>') && !line_has_token_yet)
+        // https://tc39.es/proposal-hashbang/out.html#sec-updated-syntax
+        || (match('#', '!') && m_position == 1);
 }
 
 bool Lexer::is_block_comment_start() const
