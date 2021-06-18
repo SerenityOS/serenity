@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibVT/Attribute.h>
+#include <LibVT/Position.h>
 #include <LibVT/XtermColors.h>
 
 namespace VT {
@@ -25,6 +26,8 @@ public:
     struct Cell {
         u32 code_point { ' ' };
         Attribute attribute;
+
+        bool operator!=(Cell const& other) const { return code_point != other.code_point || attribute != other.attribute; }
     };
 
     const Attribute& attribute_at(size_t index) const { return m_cells[index].attribute; }
@@ -41,8 +44,16 @@ public:
     void clear_range(size_t first_column, size_t last_column, const Attribute& attribute = Attribute());
     bool has_only_one_background_color() const;
 
-    size_t length() const { return m_cells.size(); }
-    void set_length(size_t);
+    bool is_empty() const
+    {
+        return !any_of(m_cells.begin(), m_cells.end(), [](auto& cell) { return cell != Cell(); });
+    }
+
+    size_t length() const
+    {
+        return m_cells.size();
+    }
+    void set_length(size_t, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line = true);
 
     u32 code_point(size_t index) const
     {
@@ -67,6 +78,9 @@ public:
     void set_terminated(u16 column) { m_terminated_at = column; }
 
 private:
+    void take_cells_from_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
+    void push_cells_into_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
+
     Vector<Cell> m_cells;
     bool m_dirty { false };
     // Note: The alignment is 8, so this member lives in the padding (that already existed before it was introduced)
