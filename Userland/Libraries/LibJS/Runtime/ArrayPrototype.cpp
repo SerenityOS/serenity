@@ -144,10 +144,56 @@ static void for_each_item(VM& vm, GlobalObject& global_object, const String& nam
     }
 }
 
+// 10.4.2.3 ArraySpeciesCreate ( originalArray, length ), https://tc39.es/ecma262/#sec-arrayspeciescreate
+static Object* array_species_create(GlobalObject& global_object, Object& original_array, size_t length)
+{
+    auto& vm = global_object.vm();
+
+    if (!Value(&original_array).is_array(global_object))
+        return Array::create(global_object, length);
+
+    auto constructor = original_array.get(vm.names.constructor).value_or(js_undefined());
+    if (vm.exception())
+        return {};
+    if (constructor.is_constructor()) {
+        // FIXME: Check if the returned constructor is from another realm, and if so set constructor to undefined
+    }
+
+    if (constructor.is_object()) {
+        constructor = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
+        if (vm.exception())
+            return {};
+        if (constructor.is_null())
+            constructor = js_undefined();
+    }
+
+    if (constructor.is_undefined())
+        return Array::create(global_object, length);
+
+    if (!constructor.is_constructor()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
+        return {};
+    }
+
+    MarkedValueList arguments(vm.heap());
+    arguments.append(Value(length));
+    auto result = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
+    if (vm.exception())
+        return {};
+    return &result.as_object();
+}
+
 // 23.1.3.7 Array.prototype.filter ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-array.prototype.filter
 JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::filter)
 {
-    auto* new_array = Array::create(global_object);
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object)
+        return {};
+
+    auto* new_array = array_species_create(global_object, *this_object, 0);
+    if (vm.exception())
+        return {};
+
     for_each_item(vm, global_object, "filter", [&](auto, auto value, auto callback_result) {
         if (callback_result.to_boolean())
             new_array->indexed_properties().append(value);
@@ -174,7 +220,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::map)
     auto initial_length = length_of_array_like(global_object, *this_object);
     if (vm.exception())
         return {};
-    auto* new_array = Array::create(global_object, initial_length);
+    auto* new_array = array_species_create(global_object, *this_object, initial_length);
     if (vm.exception())
         return {};
     for_each_item(vm, global_object, "map", [&](auto index, auto, auto callback_result) {
@@ -458,8 +504,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
     if (!this_object)
         return {};
 
-    // FIXME: Use ArraySpeciesCreate.
-    auto new_array = Array::create(global_object);
+    auto* new_array = array_species_create(global_object, *this_object, 0);
+    if (vm.exception())
+        return {};
 
     size_t n = 0;
 
@@ -583,8 +630,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
 
     auto count = max(final - actual_start, 0.0);
 
-    // FIXME: Use ArraySpeciesCreate.
-    auto* new_array = Array::create(global_object, (size_t)count);
+    auto* new_array = array_species_create(global_object, *this_object, count);
     if (vm.exception())
         return {};
 
@@ -1146,8 +1192,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
         return {};
     }
 
-    // FIXME: Use ArraySpeciesCreate.
-    auto removed_elements = Array::create(global_object, actual_delete_count);
+    auto* removed_elements = array_species_create(global_object, *this_object, actual_delete_count);
     if (vm.exception())
         return {};
 
@@ -1368,7 +1413,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat)
         depth = max(depth_num, 0.0);
     }
 
-    auto* new_array = Array::create(global_object);
+    auto* new_array = array_species_create(global_object, *this_object, 0);
+    if (vm.exception())
+        return {};
 
     flatten_into_array(global_object, *new_array, *this_object, length, 0, depth);
     if (vm.exception())
@@ -1393,8 +1440,9 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::flat_map)
 
     auto this_argument = vm.argument(1);
 
-    // FIXME: Use ArraySpeciesCreate.
-    auto new_array = Array::create(global_object);
+    auto* new_array = array_species_create(global_object, *this_object, 0);
+    if (vm.exception())
+        return {};
 
     flatten_into_array(global_object, *new_array, *this_object, length, 0, 1, mapper_function, this_argument);
     if (vm.exception())
