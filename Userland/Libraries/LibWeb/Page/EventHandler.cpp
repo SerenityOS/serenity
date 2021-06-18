@@ -237,6 +237,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
                 auto anchor = href.substring_view(1, href.length() - 1);
                 m_frame.scroll_to_anchor(anchor);
             } else {
+                document->set_active_element(link);
                 if (m_frame.is_top_level()) {
                     if (auto* page = m_frame.page())
                         page->client().page_did_click_link(url, link->target(), modifiers);

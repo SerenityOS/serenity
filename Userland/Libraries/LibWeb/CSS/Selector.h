@@ -43,6 +43,7 @@ public:
             Enabled,
             Checked,
             Not,
+            Active,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 

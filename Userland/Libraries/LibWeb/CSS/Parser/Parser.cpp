@@ -200,6 +200,8 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Link;
             } else if (pseudo_name.equals_ignoring_case("visited")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Visited;
+            } else if (pseudo_name.equals_ignoring_case("active")) {
+                simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Active;
             } else if (pseudo_name.equals_ignoring_case("hover")) {
                 simple_selector.pseudo_class = CSS::Selector::SimpleSelector::PseudoClass::Hover;
             } else if (pseudo_name.equals_ignoring_case("focus")) {
