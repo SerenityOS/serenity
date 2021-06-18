@@ -6,41 +6,17 @@
 
 #pragma once
 
+#include "AttributeValue.h"
 #include "CompilationUnit.h"
 #include "DwarfTypes.h"
 #include <AK/ByteBuffer.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
 #include <LibELF/Image.h>
 
 namespace Debug::Dwarf {
-
-struct AttributeValue {
-    enum class Type : u8 {
-        UnsignedNumber,
-        SignedNumber,
-        LongUnsignedNumber,
-        String,
-        DieReference, // Reference to another DIE in the same compilation unit
-        Boolean,
-        DwarfExpression,
-        SecOffset,
-        RawBytes,
-    } type;
-
-    union {
-        u32 as_u32;
-        i32 as_i32;
-        u64 as_u64;
-        const char* as_string; // points to bytes in the memory mapped elf image
-        bool as_bool;
-        struct {
-            u32 length;
-            const u8* bytes; // points to bytes in the memory mapped elf image
-        } as_raw_bytes;
-    } data {};
-};
 
 class DwarfInfo {
 public:
