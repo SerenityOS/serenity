@@ -182,7 +182,7 @@ public:
     void invalidate_after_theme_or_font_change();
 
     bool set_hovered_window(Window*);
-    void deliver_mouse_event(Window&, MouseEvent&, bool process_double_click);
+    void deliver_mouse_event(Window&, MouseEvent const&, bool process_double_click);
 
     void did_popup_a_menu(Badge<Menu>);
 
@@ -239,9 +239,9 @@ private:
     bool process_ongoing_window_resize(MouseEvent const&);
     bool process_ongoing_window_move(MouseEvent&);
     bool process_ongoing_drag(MouseEvent&);
-    bool process_ongoing_active_input_mouse_event(MouseEvent&);
-    bool process_mouse_event_for_titlebar_buttons(MouseEvent&);
-    void process_mouse_event_for_window(HitTestResult&, MouseEvent&);
+    bool process_ongoing_active_input_mouse_event(MouseEvent const&);
+    bool process_mouse_event_for_titlebar_buttons(MouseEvent const&);
+    void process_mouse_event_for_window(HitTestResult&, MouseEvent const&);
 
     template<typename Callback>
     void for_each_window_manager(Callback);
