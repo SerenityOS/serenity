@@ -139,7 +139,7 @@ void Window::set_rect(const Gfx::IntRect& rect)
     }
 
     invalidate(true, old_rect.size() != rect.size());
-    m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
+    m_frame.window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
 void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
@@ -159,7 +159,7 @@ void Window::set_rect_without_repaint(const Gfx::IntRect& rect)
     }
 
     invalidate(true, old_rect.size() != rect.size());
-    m_frame.notify_window_rect_changed(old_rect, rect); // recomputes occlusions
+    m_frame.window_rect_changed(old_rect, rect); // recomputes occlusions
 }
 
 bool Window::apply_minimum_size(Gfx::IntRect& rect)
