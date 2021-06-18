@@ -21,7 +21,10 @@ void WeakSetConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 24.4.2.1 WeakSet.prototype, https://tc39.es/ecma262/#sec-weakset.prototype
     define_property(vm.names.prototype, global_object.weak_set_prototype(), 0);
+
     define_property(vm.names.length, Value(0), Attribute::Configurable);
 }
 
@@ -29,6 +32,7 @@ WeakSetConstructor::~WeakSetConstructor()
 {
 }
 
+// 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
 Value WeakSetConstructor::call()
 {
     auto& vm = this->vm();
@@ -36,6 +40,7 @@ Value WeakSetConstructor::call()
     return {};
 }
 
+// 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
 Value WeakSetConstructor::construct(Function&)
 {
     auto& vm = this->vm();

@@ -198,6 +198,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         : TypedArray(length, prototype)                                                                                                \
     {                                                                                                                                  \
     }                                                                                                                                  \
+                                                                                                                                       \
     ClassName::~ClassName() { }                                                                                                        \
                                                                                                                                        \
     String ClassName::element_name() const                                                                                             \
@@ -211,27 +212,39 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
         auto& vm = this->vm();                                                                                                         \
         define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                                      \
     }                                                                                                                                  \
+                                                                                                                                       \
     PrototypeName::~PrototypeName() { }                                                                                                \
                                                                                                                                        \
     ConstructorName::ConstructorName(GlobalObject& global_object)                                                                      \
         : TypedArrayConstructor(vm().names.ClassName.as_string(), *global_object.typed_array_constructor())                            \
     {                                                                                                                                  \
     }                                                                                                                                  \
+                                                                                                                                       \
     ConstructorName::~ConstructorName() { }                                                                                            \
+                                                                                                                                       \
     void ConstructorName::initialize(GlobalObject& global_object)                                                                      \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         NativeFunction::initialize(global_object);                                                                                     \
+                                                                                                                                       \
+        /* 23.2.6.2 TypedArray.prototype, https://tc39.es/ecma262/#sec-typedarray.prototype */                                         \
         define_property(vm.names.prototype, global_object.snake_name##_prototype(), 0);                                                \
+                                                                                                                                       \
         define_property(vm.names.length, Value(3), Attribute::Configurable);                                                           \
+                                                                                                                                       \
+        /* 23.2.6.1 TypedArray.BYTES_PER_ELEMENT, https://tc39.es/ecma262/#sec-typedarray.bytes_per_element */                         \
         define_property(vm.names.BYTES_PER_ELEMENT, Value((i32)sizeof(Type)), 0);                                                      \
     }                                                                                                                                  \
+                                                                                                                                       \
+    /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
     Value ConstructorName::call()                                                                                                      \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         vm.throw_exception<TypeError>(global_object(), ErrorType::ConstructorWithoutNew, vm.names.ClassName);                          \
         return {};                                                                                                                     \
     }                                                                                                                                  \
+                                                                                                                                       \
+    /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
     Value ConstructorName::construct(Function&)                                                                                        \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \

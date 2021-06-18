@@ -21,7 +21,10 @@ void BooleanConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
-    define_property(vm.names.prototype, Value(global_object.boolean_prototype()), 0);
+
+    // 20.3.2.1 Boolean.prototype, https://tc39.es/ecma262/#sec-boolean.prototype
+    define_property(vm.names.prototype, global_object.boolean_prototype(), 0);
+
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 }
 
@@ -29,11 +32,13 @@ BooleanConstructor::~BooleanConstructor()
 {
 }
 
+// 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value
 Value BooleanConstructor::call()
 {
     return Value(vm().argument(0).to_boolean());
 }
 
+// 20.3.1.1 Boolean ( value ), https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value
 Value BooleanConstructor::construct(Function&)
 {
     return BooleanObject::create(global_object(), vm().argument(0).to_boolean());
