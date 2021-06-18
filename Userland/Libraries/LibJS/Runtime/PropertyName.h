@@ -111,7 +111,7 @@ public:
     bool try_coerce_into_number()
     {
         VERIFY(m_string_may_be_number);
-        i32 property_index = m_string.to_int().value_or(-1);
+        i32 property_index = m_string.to_int(TrimWhitespace::No).value_or(-1);
         if (property_index < 0) {
             m_string_may_be_number = false;
             return false;
