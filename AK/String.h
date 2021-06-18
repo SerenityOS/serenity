@@ -112,9 +112,9 @@ public:
     [[nodiscard]] bool matches(const StringView& mask, Vector<MaskSpan>&, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     template<typename T = int>
-    [[nodiscard]] Optional<T> to_int() const;
+    [[nodiscard]] Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
     template<typename T = unsigned>
-    [[nodiscard]] Optional<T> to_uint() const;
+    [[nodiscard]] Optional<T> to_uint(TrimWhitespace = TrimWhitespace::Yes) const;
 
     [[nodiscard]] String to_lowercase() const;
     [[nodiscard]] String to_uppercase() const;

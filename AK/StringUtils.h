@@ -22,6 +22,11 @@ enum class TrimMode {
     Both
 };
 
+enum class TrimWhitespace {
+    Yes,
+    No,
+};
+
 struct MaskSpan {
     size_t start;
     size_t length;
@@ -40,11 +45,11 @@ namespace StringUtils {
 
 bool matches(const StringView& str, const StringView& mask, CaseSensitivity = CaseSensitivity::CaseInsensitive, Vector<MaskSpan>* match_spans = nullptr);
 template<typename T = int>
-Optional<T> convert_to_int(const StringView&);
+Optional<T> convert_to_int(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
-Optional<T> convert_to_uint(const StringView&);
+Optional<T> convert_to_uint(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
 template<typename T = unsigned>
-Optional<T> convert_to_uint_from_hex(const StringView&);
+Optional<T> convert_to_uint_from_hex(const StringView&, TrimWhitespace = TrimWhitespace::Yes);
 bool equals_ignoring_case(const StringView&, const StringView&);
 bool ends_with(const StringView& a, const StringView& b, CaseSensitivity);
 bool starts_with(const StringView&, const StringView&, CaseSensitivity);
@@ -61,3 +66,4 @@ String to_snakecase(const StringView&);
 
 using AK::CaseSensitivity;
 using AK::TrimMode;
+using AK::TrimWhitespace;
