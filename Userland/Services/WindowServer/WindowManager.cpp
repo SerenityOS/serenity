@@ -1054,20 +1054,21 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         }
     };
 
-    if (auto* fullscreen_window = active_fullscreen_window()) {
-        process_mouse_event_for_window(*fullscreen_window);
-    } else {
-        m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-            if (!window.hit_test(event.position()).has_value())
-                return IterationDecision::Continue;
-            process_mouse_event_for_window(window);
-            return IterationDecision::Break;
-        });
+    // Hit test the window stack to see what's under the cursor.
+    auto result = m_window_stack.hit_test(event.position());
+
+    if (!result.has_value()) {
+        // No window is outside the cursor.
+        if (event.type() == Event::MouseDown) {
+            // Clicked outside of any window -> no active window.
+            // FIXME: Is this actually necessary? The desktop window should catch everything anyway.
+            set_active_window(nullptr);
+        }
+        clear_resize_candidate();
+        return;
     }
 
-    // Clicked outside of any window
-    if (!hovered_window && !event_window_with_frame && event.type() == Event::MouseDown)
-        set_active_window(nullptr);
+    process_mouse_event_for_window(*result->window);
 
     auto reverse_iterator = m_window_stack.windows().rbegin();
     for (; reverse_iterator != m_window_stack.windows().rend(); ++reverse_iterator) {
