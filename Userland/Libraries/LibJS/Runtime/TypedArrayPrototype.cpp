@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Luke Wilde <lukew@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -30,6 +31,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.find, find, 1, attr);
     define_native_function(vm.names.findIndex, find_index, 1, attr);
     define_native_function(vm.names.forEach, for_each, 1, attr);
+    define_native_function(vm.names.some, some, 1, attr);
 }
 
 TypedArrayPrototype::~TypedArrayPrototype()
@@ -177,6 +179,20 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::for_each)
         return IterationDecision::Continue;
     });
     return js_undefined();
+}
+
+// 23.2.3.25 %TypedArray%.prototype.some ( callbackfn [ , thisArg ] ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.some
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::some)
+{
+    auto result = false;
+    for_each_item(vm, global_object, "some", [&](auto, auto, auto callback_result) {
+        if (callback_result.to_boolean()) {
+            result = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return Value(result);
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
