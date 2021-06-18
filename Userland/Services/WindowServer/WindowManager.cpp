@@ -530,7 +530,7 @@ void WindowManager::start_window_resize(Window& window, MouseEvent const& event)
     start_window_resize(window, event.position(), event.button());
 }
 
-bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hovered_window)
+bool WindowManager::process_ongoing_window_move(MouseEvent& event)
 {
     if (!m_move_window)
         return false;
@@ -539,8 +539,6 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
         dbgln_if(MOVE_DEBUG, "[WM] Finish moving Window({})", m_move_window);
 
         m_move_window->invalidate(true, true);
-        if (m_move_window->rect().contains(event.position()))
-            hovered_window = m_move_window;
         if (m_move_window->is_resizable()) {
             process_event_for_doubleclick(*m_move_window, event);
             if (event.type() == Event::MouseDoubleClick) {
@@ -607,13 +605,11 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event, Window*& hove
                 m_move_window_origin = m_move_window->position();
             }
         }
-        if (m_move_window->rect().contains(event.position()))
-            hovered_window = m_move_window;
     }
     return true;
 }
 
-bool WindowManager::process_ongoing_window_resize(MouseEvent const& event, Window*& hovered_window)
+bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
 {
     if (!m_resize_window)
         return false;
@@ -632,8 +628,6 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event, Windo
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
         m_resize_window->invalidate(true, true);
-        if (m_resize_window->rect().contains(event.position()))
-            hovered_window = m_resize_window;
         m_resize_window = nullptr;
         m_resizing_mouse_button = MouseButton::None;
         return true;
@@ -730,9 +724,6 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event, Windo
         VERIFY_NOT_REACHED();
     }
 
-    if (new_rect.contains(event.position()))
-        hovered_window = m_resize_window;
-
     if (m_resize_window->rect() == new_rect)
         return true;
 
@@ -743,7 +734,7 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event, Windo
     return true;
 }
 
-bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_window)
+bool WindowManager::process_ongoing_drag(MouseEvent& event)
 {
     if (!m_dnd_client)
         return false;
@@ -753,7 +744,6 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
         m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
             if (!window.rect().contains(event.position()))
                 return IterationDecision::Continue;
-            hovered_window = &window;
             event.set_drag(true);
             event.set_mime_data(*m_dnd_mime_data);
             deliver_mouse_event(window, event, false);
@@ -764,13 +754,11 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event, Window*& hovered_win
     if (!(event.type() == Event::MouseUp && event.button() == MouseButton::Left))
         return true;
 
-    hovered_window = m_window_stack.window_at(event.position());
-
-    if (hovered_window) {
+    if (auto* window = m_window_stack.window_at(event.position())) {
         m_dnd_client->async_drag_accepted();
-        if (hovered_window->client()) {
-            auto translated_event = event.translated(-hovered_window->position());
-            hovered_window->client()->async_drag_dropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data());
+        if (window->client()) {
+            auto translated_event = event.translated(-window->position());
+            window->client()->async_drag_dropped(window->window_id(), translated_event.position(), m_dnd_text, m_dnd_mime_data->all_data());
         }
     } else {
         m_dnd_client->async_drag_cancelled();
@@ -919,7 +907,7 @@ void WindowManager::deliver_mouse_event(Window& window, MouseEvent& event, bool 
     }
 }
 
-bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event, Window*& hovered_window)
+bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event)
 {
     if (!m_active_input_tracking_window)
         return false;
@@ -936,7 +924,6 @@ bool WindowManager::process_ongoing_active_input_mouse_event(MouseEvent& event, 
         m_active_input_tracking_window = nullptr;
     }
 
-    hovered_window = m_window_stack.window_at(event.position());
     return true;
 }
 
@@ -954,7 +941,7 @@ bool WindowManager::process_mouse_event_for_titlebar_buttons(MouseEvent& event)
     return false;
 }
 
-void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseEvent& event, Window*& hovered_window)
+void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseEvent& event)
 {
     auto& window = *result.window;
 
@@ -975,12 +962,10 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
     // In those cases, the event is swallowed by the window manager.
     if (window.is_movable()) {
         if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Left) {
-            hovered_window = &window;
             start_window_move(window, event);
             return;
         }
         if (window.is_resizable() && m_keyboard_modifiers == Mod_Super && event.type() == Event::MouseDown && event.button() == MouseButton::Right && !window.blocking_modal_window()) {
-            hovered_window = &window;
             start_window_resize(window, event);
             return;
         }
@@ -999,9 +984,6 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
         return;
     }
 
-    // We are hitting the window content
-    hovered_window = &window;
-
     if (!window.global_cursor_tracking()) {
         deliver_mouse_event(window, event, true);
     }
@@ -1010,21 +992,20 @@ void WindowManager::process_mouse_event_for_window(HitTestResult& result, MouseE
         m_active_input_tracking_window = window;
 }
 
-void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_window)
+void WindowManager::process_mouse_event(MouseEvent& event)
 {
-    hovered_window = nullptr;
-    if (process_ongoing_active_input_mouse_event(event, hovered_window))
+    if (process_ongoing_active_input_mouse_event(event))
         return;
 
     // We need to process ongoing drag events first. Otherwise, global tracking
     // and dnd collides, leading to duplicate GUI::DragOperation instances
-    if (process_ongoing_drag(event, hovered_window))
+    if (process_ongoing_drag(event))
         return;
 
-    if (process_ongoing_window_move(event, hovered_window))
+    if (process_ongoing_window_move(event))
         return;
 
-    if (process_ongoing_window_resize(event, hovered_window))
+    if (process_ongoing_window_resize(event))
         return;
 
     if (process_mouse_event_for_titlebar_buttons(event))
@@ -1044,12 +1025,6 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
 
     if (MenuManager::the().has_open_menu()
         || hitting_menu_in_window_with_active_menu) {
-        m_window_stack.for_each_visible_window_of_type_from_front_to_back(WindowType::Applet, [&](auto& window) {
-            if (!window.rect_in_applet_area().contains(event.position()))
-                return IterationDecision::Continue;
-            hovered_window = &window;
-            return IterationDecision::Break;
-        });
         clear_resize_candidate();
 
         if (!hitting_menu_in_window_with_active_menu) {
@@ -1079,7 +1054,7 @@ void WindowManager::process_mouse_event(MouseEvent& event, Window*& hovered_wind
         return IterationDecision::Continue;
     });
 
-    process_mouse_event_for_window(result.value(), event, hovered_window);
+    process_mouse_event_for_window(result.value(), event);
 }
 
 void WindowManager::reevaluate_hovered_window(Window* updated_window)
@@ -1164,12 +1139,12 @@ Gfx::IntRect WindowManager::arena_rect_for_type(WindowType type) const
 void WindowManager::event(Core::Event& event)
 {
     if (static_cast<Event&>(event).is_mouse_event()) {
-        if (event.type() != Event::MouseMove)
+        auto& mouse_event = static_cast<MouseEvent&>(event);
+        if (mouse_event.type() != Event::MouseMove)
             m_previous_event_was_super_keydown = false;
 
-        Window* hovered_window = nullptr;
-        process_mouse_event(static_cast<MouseEvent&>(event), hovered_window);
-        set_hovered_window(hovered_window);
+        process_mouse_event(mouse_event);
+        set_hovered_window(m_window_stack.window_at(mouse_event.position()));
         return;
     }
 

@@ -234,14 +234,14 @@ public:
 private:
     NonnullRefPtr<Cursor> get_cursor(String const& name);
 
-    void process_mouse_event(MouseEvent&, Window*& hovered_window);
+    void process_mouse_event(MouseEvent&);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
-    bool process_ongoing_window_resize(MouseEvent const&, Window*& hovered_window);
-    bool process_ongoing_window_move(MouseEvent&, Window*& hovered_window);
-    bool process_ongoing_drag(MouseEvent&, Window*& hovered_window);
-    bool process_ongoing_active_input_mouse_event(MouseEvent&, Window*& hovered_window);
+    bool process_ongoing_window_resize(MouseEvent const&);
+    bool process_ongoing_window_move(MouseEvent&);
+    bool process_ongoing_drag(MouseEvent&);
+    bool process_ongoing_active_input_mouse_event(MouseEvent&);
     bool process_mouse_event_for_titlebar_buttons(MouseEvent&);
-    void process_mouse_event_for_window(HitTestResult&, MouseEvent&, Window*& hovered_window);
+    void process_mouse_event_for_window(HitTestResult&, MouseEvent&);
 
     template<typename Callback>
     void for_each_window_manager(Callback);
