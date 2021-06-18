@@ -22,11 +22,17 @@ mode_t umask(mode_t mask)
 
 int mkdir(const char* pathname, mode_t mode)
 {
+    return mkdirat(AT_FDCWD, pathname, mode);
+}
+
+int mkdirat(int dirfd, const char* pathname, mode_t mode)
+{
     if (!pathname) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_mkdir, pathname, strlen(pathname), mode);
+    Syscall::SC_mkdir_params params { dirfd, { pathname, strlen(pathname) }, mode };
+    int rc = syscall(SC_mkdir, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

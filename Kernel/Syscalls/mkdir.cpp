@@ -10,12 +10,18 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$mkdir(Userspace<const char*> user_path, size_t path_length, mode_t mode)
+KResultOr<int> Process::sys$mkdir(Userspace<const Syscall::SC_mkdir_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
-    auto path = get_syscall_path_argument(user_path, path_length);
+    Syscall::SC_mkdir_params params;
+    if (!copy_from_user(&params, user_params))
+        return EFAULT;
+    auto dirfd = get_syscall_fd_argument(params.dirfd);
+    if (dirfd.is_error())
+        return dirfd.error();
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
-    return VFS::the().mkdir(path.value()->view(), mode & ~umask(), current_directory());
+    return VFS::the().mkdir({ *dirfd.value(), path.value()->view() }, params.mode & ~umask());
 }
 }

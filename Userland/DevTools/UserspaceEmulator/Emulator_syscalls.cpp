@@ -113,7 +113,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_fstat:
         return virt$fstat(arg1, arg2);
     case SC_mkdir:
-        return virt$mkdir(arg1, arg2, arg3);
+        return virt$mkdir(arg1);
     case SC_rmdir:
         return virt$rmdir(arg1, arg2);
     case SC_unlink:
@@ -305,10 +305,15 @@ int Emulator::virt$close(int fd)
     return syscall(SC_close, fd);
 }
 
-int Emulator::virt$mkdir(FlatPtr path, size_t path_length, mode_t mode)
+int Emulator::virt$mkdir(FlatPtr params_addr)
 {
-    auto buffer = mmu().copy_buffer_from_vm(path, path_length);
-    return syscall(SC_mkdir, buffer.data(), buffer.size(), mode);
+    Syscall::SC_mkdir_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
+    params.path.characters = (const char*)path.data();
+    params.path.length = path.size();
+    return syscall(SC_mkdir, &params);
 }
 
 int Emulator::virt$rmdir(FlatPtr path, size_t path_length)

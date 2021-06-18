@@ -348,7 +348,7 @@ public:
     KResultOr<int> sys$access(Userspace<const char*> pathname, size_t path_length, int mode);
     KResultOr<int> sys$fcntl(int fd, int cmd, u32 extra_arg);
     KResultOr<int> sys$ioctl(int fd, unsigned request, FlatPtr arg);
-    KResultOr<int> sys$mkdir(Userspace<const char*> pathname, size_t path_length, mode_t mode);
+    KResultOr<int> sys$mkdir(Userspace<const Syscall::SC_mkdir_params*>);
     KResultOr<clock_t> sys$times(Userspace<tms*>);
     KResultOr<int> sys$utime(Userspace<const char*> pathname, size_t path_length, Userspace<const struct utimbuf*>);
     KResultOr<int> sys$link(Userspace<const Syscall::SC_link_params*>);

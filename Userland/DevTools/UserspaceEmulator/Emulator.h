@@ -103,7 +103,7 @@ private:
     u32 virt$open(u32);
     int virt$pipe(FlatPtr pipefd, int flags);
     int virt$close(int);
-    int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
+    int virt$mkdir(FlatPtr);
     int virt$rmdir(FlatPtr path, size_t path_length);
     int virt$unlink(FlatPtr);
     int virt$symlink(FlatPtr address);

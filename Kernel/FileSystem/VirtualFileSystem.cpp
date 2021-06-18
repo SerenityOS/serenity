@@ -393,17 +393,18 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     return description;
 }
 
-KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
+KResult VFS::mkdir(PathWithBase path_with_base, mode_t mode)
 {
     // Unlike in basically every other case, where it's only the last
     // path component (the one being created) that is allowed not to
     // exist, POSIX allows mkdir'ed path to have trailing slashes.
     // Let's handle that case by trimming any trailing slashes.
+    auto& path = path_with_base.path;
     while (path.length() > 1 && path.ends_with("/"))
         path = path.substring_view(0, path.length() - 1);
 
     RefPtr<Custody> parent_custody;
-    if (auto result = resolve_path(path, base, &parent_custody); !result.is_error())
+    if (auto result = resolve_path(path_with_base, &parent_custody); !result.is_error())
         return EEXIST;
     else if (!parent_custody)
         return ENOENT;
