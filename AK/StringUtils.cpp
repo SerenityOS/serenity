@@ -86,18 +86,20 @@ bool matches(const StringView& str, const StringView& mask, CaseSensitivity case
 }
 
 template<typename T>
-Optional<T> convert_to_int(const StringView& str)
+Optional<T> convert_to_int(const StringView& str, TrimWhitespace trim_whitespace)
 {
-    auto str_trimmed = str.trim_whitespace();
-    if (str_trimmed.is_empty())
+    auto string = trim_whitespace == TrimWhitespace::Yes
+        ? str.trim_whitespace()
+        : str;
+    if (string.is_empty())
         return {};
 
     T sign = 1;
     size_t i = 0;
-    const auto characters = str_trimmed.characters_without_null_termination();
+    const auto characters = string.characters_without_null_termination();
 
     if (characters[0] == '-' || characters[0] == '+') {
-        if (str_trimmed.length() == 1)
+        if (string.length() == 1)
             return {};
         i++;
         if (characters[0] == '-')
@@ -105,7 +107,7 @@ Optional<T> convert_to_int(const StringView& str)
     }
 
     T value = 0;
-    for (; i < str_trimmed.length(); i++) {
+    for (; i < string.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
@@ -118,22 +120,24 @@ Optional<T> convert_to_int(const StringView& str)
     return value;
 }
 
-template Optional<i8> convert_to_int(const StringView& str);
-template Optional<i16> convert_to_int(const StringView& str);
-template Optional<i32> convert_to_int(const StringView& str);
-template Optional<i64> convert_to_int(const StringView& str);
+template Optional<i8> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<i16> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<i32> convert_to_int(const StringView& str, TrimWhitespace);
+template Optional<i64> convert_to_int(const StringView& str, TrimWhitespace);
 
 template<typename T>
-Optional<T> convert_to_uint(const StringView& str)
+Optional<T> convert_to_uint(const StringView& str, TrimWhitespace trim_whitespace)
 {
-    auto str_trimmed = str.trim_whitespace();
-    if (str_trimmed.is_empty())
+    auto string = trim_whitespace == TrimWhitespace::Yes
+        ? str.trim_whitespace()
+        : str;
+    if (string.is_empty())
         return {};
 
     T value = 0;
-    const auto characters = str_trimmed.characters_without_null_termination();
+    const auto characters = string.characters_without_null_termination();
 
-    for (size_t i = 0; i < str_trimmed.length(); i++) {
+    for (size_t i = 0; i < string.length(); i++) {
         if (characters[i] < '0' || characters[i] > '9')
             return {};
 
@@ -146,26 +150,28 @@ Optional<T> convert_to_uint(const StringView& str)
     return value;
 }
 
-template Optional<u8> convert_to_uint(const StringView& str);
-template Optional<u16> convert_to_uint(const StringView& str);
-template Optional<u32> convert_to_uint(const StringView& str);
-template Optional<u64> convert_to_uint(const StringView& str);
-template Optional<long> convert_to_uint(const StringView& str);
-template Optional<long long> convert_to_uint(const StringView& str);
+template Optional<u8> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<u16> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<u32> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<u64> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<long> convert_to_uint(const StringView& str, TrimWhitespace);
+template Optional<long long> convert_to_uint(const StringView& str, TrimWhitespace);
 
 template<typename T>
-Optional<T> convert_to_uint_from_hex(const StringView& str)
+Optional<T> convert_to_uint_from_hex(const StringView& str, TrimWhitespace trim_whitespace)
 {
-    auto str_trimmed = str.trim_whitespace();
-    if (str_trimmed.is_empty())
+    auto string = trim_whitespace == TrimWhitespace::Yes
+        ? str.trim_whitespace()
+        : str;
+    if (string.is_empty())
         return {};
 
     T value = 0;
-    const auto count = str_trimmed.length();
+    const auto count = string.length();
     const T upper_bound = NumericLimits<T>::max();
 
     for (size_t i = 0; i < count; i++) {
-        char digit = str_trimmed[i];
+        char digit = string[i];
         u8 digit_val;
         if (value > (upper_bound >> 4))
             return {};
@@ -185,10 +191,10 @@ Optional<T> convert_to_uint_from_hex(const StringView& str)
     return value;
 }
 
-template Optional<u8> convert_to_uint_from_hex(const StringView& str);
-template Optional<u16> convert_to_uint_from_hex(const StringView& str);
-template Optional<u32> convert_to_uint_from_hex(const StringView& str);
-template Optional<u64> convert_to_uint_from_hex(const StringView& str);
+template Optional<u8> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
+template Optional<u16> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
+template Optional<u32> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
+template Optional<u64> convert_to_uint_from_hex(const StringView& str, TrimWhitespace);
 
 static inline char to_lowercase(char c)
 {
