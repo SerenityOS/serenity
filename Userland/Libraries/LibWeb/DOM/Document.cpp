@@ -876,6 +876,17 @@ void Document::set_focused_element(Element* element)
         m_layout_root->set_needs_display();
 }
 
+void Document::set_active_element(Element* element)
+{
+    if (m_active_element == element)
+        return;
+
+    m_active_element = element;
+
+    if (m_layout_root)
+        m_layout_root->set_needs_display();
+}
+
 void Document::set_ready_state(const String& ready_state)
 {
     m_ready_state = ready_state;
