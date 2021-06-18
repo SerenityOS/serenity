@@ -158,10 +158,10 @@ extern "C" UNMAP_AFTER_INIT [[noreturn]] void init()
 
     NullDevice::initialize();
     if (!get_serial_debug())
-        new SerialDevice(IOAddress(SERIAL_COM1_ADDR), 64);
-    new SerialDevice(IOAddress(SERIAL_COM2_ADDR), 65);
-    new SerialDevice(IOAddress(SERIAL_COM3_ADDR), 66);
-    new SerialDevice(IOAddress(SERIAL_COM4_ADDR), 67);
+        (void)SerialDevice::must_create(0).leak_ref();
+    (void)SerialDevice::must_create(1).leak_ref();
+    (void)SerialDevice::must_create(2).leak_ref();
+    (void)SerialDevice::must_create(3).leak_ref();
 
     VMWareBackdoor::the(); // don't wait until first mouse packet
     HIDManagement::initialize();
@@ -243,10 +243,10 @@ void init_stage2(void*)
     NetworkingManagement::the().initialize();
     Syscall::initialize();
 
-    new MemoryDevice;
-    new ZeroDevice;
-    new FullDevice;
-    new RandomDevice;
+    (void)MemoryDevice::must_create().leak_ref();
+    (void)ZeroDevice::must_create().leak_ref();
+    (void)FullDevice::must_create().leak_ref();
+    (void)RandomDevice::must_create().leak_ref();
     PTYMultiplexer::initialize();
     SB16::detect();
 

@@ -8,10 +8,16 @@
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/PC/BIOS.h>
+#include <Kernel/Panic.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/TypedMapping.h>
 
 namespace Kernel {
+
+UNMAP_AFTER_INIT NonnullRefPtr<MemoryDevice> MemoryDevice::must_create()
+{
+    return adopt_ref_if_nonnull(new MemoryDevice).release_nonnull();
+}
 
 UNMAP_AFTER_INIT MemoryDevice::MemoryDevice()
     : CharacterDevice(1, 1)
