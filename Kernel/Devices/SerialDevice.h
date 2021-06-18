@@ -11,15 +11,11 @@
 
 namespace Kernel {
 
-#define SERIAL_COM1_ADDR 0x3F8
-#define SERIAL_COM2_ADDR 0x2F8
-#define SERIAL_COM3_ADDR 0x3E8
-#define SERIAL_COM4_ADDR 0x2E8
-
 class SerialDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    SerialDevice(IOAddress base_addr, unsigned minor);
+    static NonnullRefPtr<SerialDevice> must_create(size_t com_number);
+
     virtual ~SerialDevice() override;
 
     // ^CharacterDevice
@@ -112,6 +108,8 @@ public:
 
 private:
     friend class PCISerialDevice;
+
+    SerialDevice(IOAddress base_addr, unsigned minor);
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SerialDevice"; }

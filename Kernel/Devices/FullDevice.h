@@ -13,7 +13,7 @@ namespace Kernel {
 class FullDevice final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
-    FullDevice();
+    static NonnullRefPtr<FullDevice> must_create();
     virtual ~FullDevice() override;
 
     // ^Device
@@ -21,6 +21,8 @@ public:
     virtual String device_name() const override { return "full"; }
 
 private:
+    FullDevice();
+
     // ^CharacterDevice
     virtual KResultOr<size_t> read(FileDescription&, u64, UserOrKernelBuffer&, size_t) override;
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override;

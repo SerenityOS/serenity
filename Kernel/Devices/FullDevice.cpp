@@ -8,9 +8,15 @@
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Panic.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {
+
+UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
+{
+    return adopt_ref_if_nonnull(new FullDevice).release_nonnull();
+}
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()
     : CharacterDevice(1, 7)
