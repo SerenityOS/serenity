@@ -59,10 +59,13 @@ enum class TimerShouldFireWhenNotVisible {
 #define C_OBJECT(klass)                                                \
 public:                                                                \
     virtual const char* class_name() const override { return #klass; } \
-    template<class... Args>                                            \
+    template<typename Klass = klass, class... Args>                    \
     static inline NonnullRefPtr<klass> construct(Args&&... args)       \
     {                                                                  \
-        return adopt_ref(*new klass(forward<Args>(args)...));          \
+        auto obj = adopt_ref(*new Klass(forward<Args>(args)...));      \
+        if constexpr (requires { declval<Klass>().did_construct(); })  \
+            obj->did_construct();                                      \
+        return obj;                                                    \
     }
 
 #define C_OBJECT_ABSTRACT(klass) \
