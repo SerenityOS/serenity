@@ -25,6 +25,7 @@ private:
     JS_DECLARE_NATIVE_GETTER(byte_offset_getter);
 
     JS_DECLARE_NATIVE_FUNCTION(at);
+    JS_DECLARE_NATIVE_FUNCTION(every);
 };
 
 }
