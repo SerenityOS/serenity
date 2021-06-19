@@ -308,4 +308,15 @@ Optional<DIE> DwarfInfo::get_die_at_address(FlatPtr address) const
     return iter->die;
 }
 
+Optional<DIE> DwarfInfo::get_cached_die_at_offset(FlatPtr offset) const
+{
+    if (!m_built_cached_dies)
+        build_cached_dies();
+
+    auto* die = m_cached_dies_by_offset.find(offset);
+    if (!die)
+        return {};
+    return *die;
+}
+
 }
