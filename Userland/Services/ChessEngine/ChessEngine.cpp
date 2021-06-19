@@ -42,9 +42,6 @@ void ChessEngine::handle_go(const GoCommand& command)
 
     MCTSTree mcts(m_board);
 
-    // FIXME: optimize simulations enough for use.
-    mcts.set_eval_method(MCTSTree::EvalMethod::Heuristic);
-
     int rounds = 0;
     while (elapsed_time.elapsed() <= command.movetime.value()) {
         mcts.do_round();

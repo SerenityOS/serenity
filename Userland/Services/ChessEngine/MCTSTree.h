@@ -8,6 +8,7 @@
 
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <LibChess/Chess.h>
 #include <math.h>
 
@@ -18,7 +19,7 @@ public:
         Heuristic,
     };
 
-    MCTSTree(const Chess::Board& board, double exploration_parameter = sqrt(2), MCTSTree* parent = nullptr);
+    MCTSTree(const Chess::Board& board, MCTSTree* parent = nullptr);
 
     MCTSTree& select_leaf();
     MCTSTree& expand();
@@ -32,16 +33,19 @@ public:
     double uct(Chess::Color color) const;
     bool expanded() const;
 
-    EvalMethod eval_method() const { return m_eval_method; }
-    void set_eval_method(EvalMethod method) { m_eval_method = method; }
-
 private:
+    // While static parameters are less configurable, they don't take up any
+    // memory in the tree, which I believe to be a worthy tradeoff.
+    static constexpr double s_exploration_parameter { sqrt(2) };
+    // FIXME: Optimize simulations enough for use.
+    static constexpr EvalMethod s_eval_method { EvalMethod::Heuristic };
+
     NonnullOwnPtrVector<MCTSTree> m_children;
     MCTSTree* m_parent { nullptr };
     int m_white_points { 0 };
     int m_simulations { 0 };
-    bool m_moves_generated { false };
-    double m_exploration_parameter;
-    EvalMethod m_eval_method { EvalMethod::Simulation };
-    Chess::Board m_board;
+    OwnPtr<Chess::Board> m_board;
+    Optional<Chess::Move> m_last_move;
+    Chess::Color m_turn : 2;
+    bool m_moves_generated : 1 { false };
 };
