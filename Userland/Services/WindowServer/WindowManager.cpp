@@ -48,14 +48,10 @@ WindowManager::~WindowManager()
 {
 }
 
-NonnullRefPtr<Cursor> WindowManager::get_cursor(String const& name)
+RefPtr<Cursor> WindowManager::get_cursor(String const& name)
 {
     static auto const s_default_cursor_path = "/res/cursors/arrow.x2y2.png";
-    auto path = m_config->read_entry("Cursor", name, s_default_cursor_path);
-    auto gb = Gfx::Bitmap::load_from_file(path, compositor_icon_scale());
-    if (gb)
-        return Cursor::create(*gb, path);
-    return Cursor::create(*Gfx::Bitmap::load_from_file(s_default_cursor_path), s_default_cursor_path);
+    return Cursor::create(m_config->read_entry("Cursor", name, s_default_cursor_path), s_default_cursor_path);
 }
 
 void WindowManager::reload_config()
@@ -1179,7 +1175,7 @@ void WindowManager::process_key_event(KeyEvent& event)
     }
 
     if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && event.key() == Key_I)) {
-        reload_icon_bitmaps_after_scale_change(!m_allow_hidpi_icons);
+        reload_icon_bitmaps_after_scale_change();
         Compositor::the().invalidate_screen();
         return;
     }
@@ -1595,16 +1591,8 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
     return point;
 }
 
-int WindowManager::compositor_icon_scale() const
+void WindowManager::reload_icon_bitmaps_after_scale_change()
 {
-    if (!m_allow_hidpi_icons)
-        return 1;
-    return Screen::main().scale_factor(); // TODO: There is no *one* scale factor...
-}
-
-void WindowManager::reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons)
-{
-    m_allow_hidpi_icons = allow_hidpi_icons;
     reload_config();
     m_window_stack.for_each_window([&](Window& window) {
         auto& window_frame = window.frame();
