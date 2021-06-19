@@ -18,5 +18,6 @@ size_t length_of_array_like(GlobalObject&, Object const&);
 MarkedValueList create_list_from_array_like(GlobalObject&, Value, AK::Function<Result<void, ErrorType>(Value)> = {});
 Function* species_constructor(GlobalObject&, Object const&, Function& default_constructor);
 GlobalObject* get_function_realm(GlobalObject&, Function const&);
+Object* get_prototype_from_constructor(GlobalObject&, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 
 }
