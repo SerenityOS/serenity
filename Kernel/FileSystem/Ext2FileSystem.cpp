@@ -1209,6 +1209,9 @@ KResult Ext2FSInode::add_child(Inode& child, const StringView& name, mode_t mode
     if (result.is_error())
         return result;
 
+    if (auto populate_result = populate_lookup_cache(); populate_result.is_error())
+        return populate_result;
+
     m_lookup_cache.set(name, child.index());
     did_add_child(child.identifier(), name);
     return KSuccess;
@@ -1219,6 +1222,9 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     Locker locker(m_lock);
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]::remove_child(): Removing '{}'", identifier(), name);
     VERIFY(is_directory());
+
+    if (auto populate_result = populate_lookup_cache(); populate_result.is_error())
+        return populate_result;
 
     auto it = m_lookup_cache.find(name);
     if (it == m_lookup_cache.end())
@@ -1591,11 +1597,11 @@ KResultOr<NonnullRefPtr<Inode>> Ext2FS::create_inode(Ext2FSInode& parent_inode, 
     return new_inode.release_nonnull();
 }
 
-bool Ext2FSInode::populate_lookup_cache() const
+KResult Ext2FSInode::populate_lookup_cache() const
 {
     Locker locker(m_lock);
     if (!m_lookup_cache.is_empty())
-        return true;
+        return KSuccess;
     HashMap<String, InodeIndex> children;
 
     KResult result = traverse_as_directory([&children](auto& entry) {
@@ -1604,19 +1610,18 @@ bool Ext2FSInode::populate_lookup_cache() const
     });
 
     if (!result.is_success())
-        return false;
+        return result;
 
-    if (!m_lookup_cache.is_empty())
-        return false;
+    VERIFY(m_lookup_cache.is_empty());
     m_lookup_cache = move(children);
-    return true;
+    return KSuccess;
 }
 
 RefPtr<Inode> Ext2FSInode::lookup(StringView name)
 {
     VERIFY(is_directory());
     dbgln_if(EXT2_DEBUG, "Ext2FSInode[{}]:lookup(): Looking up '{}'", identifier(), name);
-    if (!populate_lookup_cache())
+    if (populate_lookup_cache().is_error())
         return {};
     Locker locker(m_lock);
     auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
@@ -1702,7 +1707,8 @@ KResultOr<size_t> Ext2FSInode::directory_entry_count() const
 {
     VERIFY(is_directory());
     Locker locker(m_lock);
-    populate_lookup_cache();
+    if (auto result = populate_lookup_cache(); result.is_error())
+        return KResultOr<size_t>(result);
     return m_lookup_cache.size();
 }
 
