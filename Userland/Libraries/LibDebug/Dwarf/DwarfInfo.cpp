@@ -5,6 +5,7 @@
  */
 
 #include "DwarfInfo.h"
+#include "AttributeValue.h"
 
 #include <AK/MemoryStream.h>
 
@@ -61,6 +62,7 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
     InputMemoryStream& debug_info_stream, const CompilationUnit* unit) const
 {
     AttributeValue value;
+    value.form = form;
 
     auto assign_raw_bytes_value = [&](size_t length) {
         value.data.as_raw_bytes.length = length;
