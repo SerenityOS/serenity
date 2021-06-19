@@ -49,20 +49,23 @@ Optional<Symbol> symbolicate(String const& path, u32 address)
 
     u32 offset = 0;
     auto symbol = cached_elf->debug_info->elf().symbolicate(address, &offset);
-    auto source_position = cached_elf->debug_info->get_source_position(address);
-    String filename;
-    u32 line_number = 0;
-    if (source_position.has_value()) {
-        filename = source_position.value().file_path;
-        line_number = source_position.value().line_number;
+    auto source_position_with_inlines = cached_elf->debug_info->get_source_position_with_inlines(address);
+
+    Vector<Debug::DebugInfo::SourcePosition> positions;
+    for (auto& position : source_position_with_inlines.inline_chain) {
+        if (!positions.contains_slow(position))
+            positions.append(position);
+    }
+
+    if (source_position_with_inlines.source_position.has_value() && !positions.contains_slow(source_position_with_inlines.source_position.value())) {
+        positions.insert(0, source_position_with_inlines.source_position.value());
     }
 
     return Symbol {
         .address = address,
         .name = move(symbol),
         .offset = offset,
-        .filename = move(filename),
-        .line_number = line_number
+        .source_positions = move(positions),
     };
 }
 
@@ -166,10 +169,13 @@ Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid)
         else
             adjusted_address = address;
 
-        auto result = symbolicate(found_region->path, adjusted_address);
+        // We're subtracting 1 from the address because this is the return address,
+        // i.e. it is one instruction past the call instruction.
+        auto result = symbolicate(found_region->path, adjusted_address - 1);
         if (!result.has_value()) {
             symbols.append(Symbol {
                 .address = address,
+                .source_positions = {},
             });
             continue;
         }
