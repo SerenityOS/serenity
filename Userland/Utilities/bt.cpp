@@ -48,25 +48,31 @@ int main(int argc, char** argv)
             out("{:3}: \033[{};1m{:p}\033[0m | ", frame_number, color, symbol.address);
             if (!symbol.name.is_empty())
                 out("{} ", symbol.name);
-            if (!symbol.filename.is_empty()) {
-                bool linked = false;
-
+            if (!symbol.source_positions.is_empty()) {
                 out("(");
 
-                // See if we can find the sources in /usr/src
-                // FIXME: I'm sure this can be improved!
-                auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", symbol.filename));
-                if (access(full_path.characters(), F_OK) == 0) {
-                    linked = true;
-                    auto url = URL::create_with_file_scheme(full_path, {}, hostname);
-                    url.set_query(String::formatted("line_number={}", symbol.line_number));
-                    out("\033]8;;{}\033\\", url.serialize());
+                for (size_t i = 0; i < symbol.source_positions.size(); i++) {
+                    auto& source_position = symbol.source_positions[i];
+                    bool linked = false;
+
+                    // See if we can find the sources in /usr/src
+                    // FIXME: I'm sure this can be improved!
+                    auto full_path = LexicalPath::canonicalized_path(String::formatted("/usr/src/serenity/dummy/dummy/{}", source_position.file_path));
+                    if (access(full_path.characters(), F_OK) == 0) {
+                        linked = true;
+                        auto url = URL::create_with_file_scheme(full_path, {}, hostname);
+                        url.set_query(String::formatted("line_number={}", source_position.line_number));
+                        out("\033]8;;{}\033\\", url.serialize());
+                    }
+
+                    out("\033[34;1m{}:{}\033[0m", LexicalPath(source_position.file_path).basename(), source_position.line_number);
+
+                    if (linked)
+                        out("\033]8;;\033\\");
+
+                    if (i != symbol.source_positions.size() - 1)
+                        out(" => ");
                 }
-
-                out("\033[34;1m{}:{}\033[0m", LexicalPath(symbol.filename).basename(), symbol.line_number);
-
-                if (linked)
-                    out("\033]8;;\033\\");
 
                 out(")");
             }

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <LibDebug/DebugInfo.h>
 
 namespace Symbolication {
 
@@ -14,8 +15,7 @@ struct Symbol {
     FlatPtr address { 0 };
     String name {};
     u32 offset { 0 };
-    String filename {};
-    u32 line_number { 0 };
+    Vector<Debug::DebugInfo::SourcePosition> source_positions;
 };
 
 Vector<Symbol> symbolicate_thread(pid_t pid, pid_t tid);
