@@ -124,12 +124,12 @@ public:
         }
     };
 
-    bool has_errors() const { return m_parser_state.m_errors.size(); }
-    const Vector<Error>& errors() const { return m_parser_state.m_errors; }
+    bool has_errors() const { return m_state.errors.size(); }
+    const Vector<Error>& errors() const { return m_state.errors; }
     void print_errors() const
     {
-        for (auto& error : m_parser_state.m_errors) {
-            auto hint = error.source_location_hint(m_parser_state.m_lexer.source());
+        for (auto& error : m_state.errors) {
+            auto hint = error.source_location_hint(m_state.lexer.source());
             if (!hint.is_empty())
                 warnln("{}", hint);
             warnln("SyntaxError: {}", error.to_string());
@@ -197,25 +197,25 @@ private:
     [[nodiscard]] RulePosition push_start() { return { *this, position() }; }
 
     struct ParserState {
-        Lexer m_lexer;
-        Token m_current_token;
-        Vector<Error> m_errors;
-        Vector<NonnullRefPtrVector<VariableDeclaration>> m_var_scopes;
-        Vector<NonnullRefPtrVector<VariableDeclaration>> m_let_scopes;
-        Vector<NonnullRefPtrVector<FunctionDeclaration>> m_function_scopes;
+        Lexer lexer;
+        Token current_token;
+        Vector<Error> errors;
+        Vector<NonnullRefPtrVector<VariableDeclaration>> var_scopes;
+        Vector<NonnullRefPtrVector<VariableDeclaration>> let_scopes;
+        Vector<NonnullRefPtrVector<FunctionDeclaration>> function_scopes;
 
         Vector<Vector<FunctionNode::Parameter>&> function_parameters;
 
-        HashTable<StringView> m_labels_in_scope;
-        bool m_strict_mode { false };
-        bool m_allow_super_property_lookup { false };
-        bool m_allow_super_constructor_call { false };
-        bool m_in_function_context { false };
-        bool m_in_generator_function_context { false };
-        bool m_in_arrow_function_context { false };
-        bool m_in_break_context { false };
-        bool m_in_continue_context { false };
-        bool m_string_legacy_octal_escape_sequence_in_scope { false };
+        HashTable<StringView> labels_in_scope;
+        bool strict_mode { false };
+        bool allow_super_property_lookup { false };
+        bool allow_super_constructor_call { false };
+        bool in_function_context { false };
+        bool in_generator_function_context { false };
+        bool in_arrow_function_context { false };
+        bool in_break_context { false };
+        bool in_continue_context { false };
+        bool string_legacy_octal_escape_sequence_in_scope { false };
 
         explicit ParserState(Lexer);
     };
@@ -234,7 +234,7 @@ private:
     };
 
     Vector<Position> m_rule_starts;
-    ParserState m_parser_state;
+    ParserState m_state;
     FlyString m_filename;
     Vector<ParserState> m_saved_state;
     HashMap<Position, TokenMemoization, PositionKeyTraits> m_token_memoizations;
