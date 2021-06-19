@@ -464,6 +464,12 @@ public:
     ConstIterator end() const { return {}; }
     ConstIterator begin_from(K key) const { return ConstIterator(static_cast<Node*>(BaseTree::find(this->m_root, key))); }
 
+    ConstIterator find_largest_not_above_iterator(K key) const
+    {
+        auto node = static_cast<Node*>(BaseTree::find_largest_not_above(this->m_root, key));
+        return ConstIterator(node, static_cast<Node*>(BaseTree::predecessor(node)));
+    }
+
     V unsafe_remove(K key)
     {
         auto* node = BaseTree::find(this->m_root, key);
