@@ -11,8 +11,6 @@
 
 namespace AK::Concepts {
 
-#if defined(__cpp_concepts) && !defined(__COVERITY__)
-
 template<typename T>
 concept Integral = IsIntegral<T>;
 
@@ -31,13 +29,15 @@ concept Unsigned = IsUnsigned<T>;
 template<typename T, typename U>
 concept SameAs = IsSame<T, U>;
 
+// FIXME: remove once Clang formats these properly.
+// clang-format off
 template<typename Func, typename... Args>
 concept VoidFunction = requires(Func func, Args... args)
 {
     {
         func(args...)
     }
-    ->SameAs<void>;
+    -> SameAs<void>;
 };
 
 template<typename Func, typename... Args>
@@ -46,14 +46,10 @@ concept IteratorFunction = requires(Func func, Args... args)
     {
         func(args...)
     }
-    ->SameAs<IterationDecision>;
+    -> SameAs<IterationDecision>;
 };
-
-#endif
-
+// clang-format on
 }
-
-#if defined(__cpp_concepts) && !defined(__COVERITY__)
 
 using AK::Concepts::Arithmetic;
 using AK::Concepts::FloatingPoint;
@@ -62,5 +58,3 @@ using AK::Concepts::IteratorFunction;
 using AK::Concepts::Signed;
 using AK::Concepts::Unsigned;
 using AK::Concepts::VoidFunction;
-
-#endif
