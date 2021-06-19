@@ -35,6 +35,7 @@ public:
 
     void clear(const Attribute& attribute = Attribute())
     {
+        m_terminated_at.clear();
         clear_range(0, m_cells.size() - 1, attribute);
     }
     void clear_range(size_t first_column, size_t last_column, const Attribute& attribute = Attribute());
@@ -50,15 +51,26 @@ public:
 
     void set_code_point(size_t index, u32 code_point)
     {
+        if (m_terminated_at.has_value()) {
+            if (index > *m_terminated_at) {
+                m_terminated_at = index + 1;
+            }
+        }
+
         m_cells[index].code_point = code_point;
     }
 
     bool is_dirty() const { return m_dirty; }
     void set_dirty(bool b) { m_dirty = b; }
 
+    Optional<u16> termination_column() const { return m_terminated_at; }
+    void set_terminated(u16 column) { m_terminated_at = column; }
+
 private:
     Vector<Cell> m_cells;
     bool m_dirty { false };
+    // Note: The alignment is 8, so this member lives in the padding (that already existed before it was introduced)
+    [[no_unique_address]] Optional<u16> m_terminated_at;
 };
 
 }
