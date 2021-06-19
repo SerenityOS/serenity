@@ -299,8 +299,6 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
             if (vm().exception())
                 return MarkedValueList { heap() };
         }
-
-        return properties;
     }
 
     if (return_type != GetOwnPropertyReturnType::SymbolOnly) {
