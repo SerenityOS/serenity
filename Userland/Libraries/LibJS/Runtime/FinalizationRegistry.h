@@ -23,7 +23,7 @@ class FinalizationRegistry final
 public:
     static FinalizationRegistry* create(GlobalObject&, Function&);
 
-    explicit FinalizationRegistry(Object& prototype, Function&);
+    explicit FinalizationRegistry(Function&, Object& prototype);
     virtual ~FinalizationRegistry() override;
 
     void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);

@@ -10,10 +10,10 @@ namespace JS {
 
 DataView* DataView::create(GlobalObject& global_object, ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset)
 {
-    return global_object.heap().allocate<DataView>(global_object, *global_object.data_view_prototype(), viewed_buffer, byte_length, byte_offset);
+    return global_object.heap().allocate<DataView>(global_object, viewed_buffer, byte_length, byte_offset, *global_object.data_view_prototype());
 }
 
-DataView::DataView(Object& prototype, ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset)
+DataView::DataView(ArrayBuffer* viewed_buffer, size_t byte_length, size_t byte_offset, Object& prototype)
     : Object(prototype)
     , m_viewed_array_buffer(viewed_buffer)
     , m_byte_length(byte_length)
