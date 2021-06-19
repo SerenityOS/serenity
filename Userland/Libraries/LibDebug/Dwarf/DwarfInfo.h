@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -39,6 +39,7 @@ public:
 
 private:
     void populate_compilation_units();
+    void build_cached_dies() const;
 
     ReadonlyBytes section_data(const StringView& section_name) const;
 
@@ -50,6 +51,22 @@ private:
     ReadonlyBytes m_debug_line_strings_data;
 
     NonnullOwnPtrVector<Dwarf::CompilationUnit> m_compilation_units;
+
+    struct DIERange {
+        FlatPtr start_address { 0 };
+        FlatPtr end_address { 0 };
+    };
+
+    struct DIEAndRange {
+        DIE die;
+        DIERange range;
+    };
+
+    using DIEStartAddress = FlatPtr;
+
+    mutable RedBlackTree<DIEStartAddress, DIEAndRange> m_cached_dies_by_range;
+    mutable RedBlackTree<FlatPtr, DIE> m_cached_dies_by_offset;
+    mutable bool m_built_cached_dies { false };
 };
 
 template<typename Callback>
