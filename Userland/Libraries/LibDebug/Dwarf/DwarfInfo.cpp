@@ -13,7 +13,7 @@
 
 namespace Debug::Dwarf {
 
-DwarfInfo::DwarfInfo(const ELF::Image& elf)
+DwarfInfo::DwarfInfo(ELF::Image const& elf)
     : m_elf(elf)
 {
     m_debug_info_data = section_data(".debug_info"sv);
@@ -25,7 +25,7 @@ DwarfInfo::DwarfInfo(const ELF::Image& elf)
     populate_compilation_units();
 }
 
-ReadonlyBytes DwarfInfo::section_data(const StringView& section_name) const
+ReadonlyBytes DwarfInfo::section_data(StringView const& section_name) const
 {
     auto section = m_elf.lookup_section(section_name);
     if (!section.has_value())
@@ -237,11 +237,11 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
 
 void DwarfInfo::build_cached_dies() const
 {
-    auto insert_to_cache = [this](const DIE& die, DIERange& range) {
+    auto insert_to_cache = [this](DIE const& die, DIERange const& range) {
         m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
         m_cached_dies_by_offset.insert(die.offset(), die);
     };
-    auto get_ranges_of_die = [this](const DIE& die) -> Vector<DIERange> {
+    auto get_ranges_of_die = [this](DIE const& die) -> Vector<DIERange> {
         // TODO support DW_AT_ranges (appears when range is non-contiguous)
 
         auto start = die.get_attribute(Attribute::LowPc);
@@ -266,22 +266,22 @@ void DwarfInfo::build_cached_dies() const
     };
 
     // If we simply use a lambda, type deduction fails because it's used recursively.
-    Function<void(const DIE& die)> insert_to_cache_recursively;
-    insert_to_cache_recursively = [&](const DIE& die) {
+    Function<void(DIE const& die)> insert_to_cache_recursively;
+    insert_to_cache_recursively = [&](DIE const& die) {
         if (die.offset() == 0 || die.parent_offset().has_value()) {
             auto ranges = get_ranges_of_die(die);
             for (auto& range : ranges) {
                 insert_to_cache(die, range);
             }
         }
-        die.for_each_child([&](const DIE& child) {
+        die.for_each_child([&](DIE const& child) {
             if (!child.is_null()) {
                 insert_to_cache_recursively(child);
             }
         });
     };
 
-    for_each_compilation_unit([&](const CompilationUnit& compilation_unit) {
+    for_each_compilation_unit([&](CompilationUnit const& compilation_unit) {
         insert_to_cache_recursively(compilation_unit.root_die());
     });
 

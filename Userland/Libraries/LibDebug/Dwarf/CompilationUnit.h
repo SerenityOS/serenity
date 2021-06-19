@@ -23,7 +23,7 @@ class CompilationUnit {
     AK_MAKE_NONMOVABLE(CompilationUnit);
 
 public:
-    CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader&, NonnullOwnPtr<LineProgram>&& line_program);
+    CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const&, NonnullOwnPtr<LineProgram>&& line_program);
 
     u32 offset() const { return m_offset; }
     u32 size() const { return m_header.length() + sizeof(u32); }
@@ -31,12 +31,12 @@ public:
     DIE root_die() const;
     DIE get_die_at_offset(u32 offset) const;
 
-    const DwarfInfo& dwarf_info() const { return m_dwarf_info; }
-    const AbbreviationsMap& abbreviations_map() const { return m_abbreviations; }
-    const LineProgram& line_program() const { return *m_line_program; }
+    DwarfInfo const& dwarf_info() const { return m_dwarf_info; }
+    AbbreviationsMap const& abbreviations_map() const { return m_abbreviations; }
+    LineProgram const& line_program() const { return *m_line_program; }
 
 private:
-    const DwarfInfo& m_dwarf_info;
+    DwarfInfo const& m_dwarf_info;
     u32 m_offset { 0 };
     CompilationUnitHeader m_header;
     AbbreviationsMap m_abbreviations;

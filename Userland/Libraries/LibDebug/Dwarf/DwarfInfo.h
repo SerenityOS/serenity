@@ -24,7 +24,7 @@ class DwarfInfo {
     AK_MAKE_NONMOVABLE(DwarfInfo);
 
 public:
-    explicit DwarfInfo(const ELF::Image&);
+    explicit DwarfInfo(ELF::Image const&);
 
     ReadonlyBytes debug_info_data() const { return m_debug_info_data; }
     ReadonlyBytes abbreviation_data() const { return m_abbreviation_data; }
@@ -50,9 +50,9 @@ private:
     void populate_compilation_units();
     void build_cached_dies() const;
 
-    ReadonlyBytes section_data(const StringView& section_name) const;
+    ReadonlyBytes section_data(StringView const& section_name) const;
 
-    const ELF::Image& m_elf;
+    ELF::Image const& m_elf;
     ReadonlyBytes m_debug_info_data;
     ReadonlyBytes m_abbreviation_data;
     ReadonlyBytes m_debug_strings_data;

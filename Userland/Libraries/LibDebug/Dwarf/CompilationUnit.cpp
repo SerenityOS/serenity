@@ -9,7 +9,7 @@
 
 namespace Debug::Dwarf {
 
-CompilationUnit::CompilationUnit(const DwarfInfo& dwarf_info, u32 offset, const CompilationUnitHeader& header, NonnullOwnPtr<LineProgram>&& line_program)
+CompilationUnit::CompilationUnit(DwarfInfo const& dwarf_info, u32 offset, CompilationUnitHeader const& header, NonnullOwnPtr<LineProgram>&& line_program)
     : m_dwarf_info(dwarf_info)
     , m_offset(offset)
     , m_header(header)

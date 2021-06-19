@@ -27,15 +27,15 @@ DebugInfo::DebugInfo(NonnullOwnPtr<const ELF::Image> elf, String source_root, Fl
 
 void DebugInfo::prepare_variable_scopes()
 {
-    m_dwarf_info.for_each_compilation_unit([&](const Dwarf::CompilationUnit& unit) {
+    m_dwarf_info.for_each_compilation_unit([&](Dwarf::CompilationUnit const& unit) {
         auto root = unit.root_die();
         parse_scopes_impl(root);
     });
 }
 
-void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
+void DebugInfo::parse_scopes_impl(Dwarf::DIE const& die)
 {
-    die.for_each_child([&](const Dwarf::DIE& child) {
+    die.for_each_child([&](Dwarf::DIE const& child) {
         if (child.is_null())
             return;
         if (!(child.tag() == Dwarf::EntryTag::SubProgram || child.tag() == Dwarf::EntryTag::LexicalBlock))
@@ -64,7 +64,7 @@ void DebugInfo::parse_scopes_impl(const Dwarf::DIE& die)
         // The attribute name HighPc is confusing. In this context, it seems to actually be a positive offset from LowPc
         scope.address_high = scope.address_low + child.get_attribute(Dwarf::Attribute::HighPc).value().data.as_u32;
 
-        child.for_each_child([&](const Dwarf::DIE& variable_entry) {
+        child.for_each_child([&](Dwarf::DIE const& variable_entry) {
             if (!(variable_entry.tag() == Dwarf::EntryTag::Variable
                     || variable_entry.tag() == Dwarf::EntryTag::FormalParameter))
                 return;
@@ -80,7 +80,7 @@ void DebugInfo::prepare_lines()
 {
 
     Vector<Dwarf::LineProgram::LineInfo> all_lines;
-    m_dwarf_info.for_each_compilation_unit([&all_lines](const Dwarf::CompilationUnit& unit) {
+    m_dwarf_info.for_each_compilation_unit([&all_lines](Dwarf::CompilationUnit const& unit) {
         all_lines.extend(unit.line_program().lines());
     });
 
@@ -131,7 +131,7 @@ Optional<DebugInfo::SourcePosition> DebugInfo::get_source_position(u32 target_ad
     return {};
 }
 
-Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(const String& file, size_t line) const
+Optional<DebugInfo::SourcePositionAndAddress> DebugInfo::get_address_from_source_position(String const& file, size_t line) const
 {
     String file_path = file;
     if (!file_path.starts_with("/"))
@@ -180,7 +180,7 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
     return variables;
 }
 
-static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_die, DebugInfo::VariableInfo& variable_info)
+static Optional<Dwarf::DIE> parse_variable_type_die(Dwarf::DIE const& variable_die, DebugInfo::VariableInfo& variable_info)
 {
     auto type_die_offset = variable_die.get_attribute(Dwarf::Attribute::Type);
     if (!type_die_offset.has_value())
@@ -200,7 +200,7 @@ static Optional<Dwarf::DIE> parse_variable_type_die(const Dwarf::DIE& variable_d
     return type_die;
 }
 
-static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::VariableInfo& variable_info, const PtraceRegisters& regs)
+static void parse_variable_location(Dwarf::DIE const& variable_die, DebugInfo::VariableInfo& variable_info, PtraceRegisters const& regs)
 {
     auto location_info = variable_die.get_attribute(Dwarf::Attribute::Location);
     if (!location_info.has_value()) {
@@ -231,7 +231,7 @@ static void parse_variable_location(const Dwarf::DIE& variable_die, DebugInfo::V
     }
 }
 
-OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters& regs, u32 address_offset) const
+OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(Dwarf::DIE const& variable_die, PtraceRegisters const& regs, u32 address_offset) const
 {
     VERIFY(is_variable_tag_supported(variable_die.tag()));
 
@@ -275,7 +275,7 @@ OwnPtr<DebugInfo::VariableInfo> DebugInfo::create_variable_info(const Dwarf::DIE
     return variable_info;
 }
 
-void DebugInfo::add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const
+void DebugInfo::add_type_info_to_variable(Dwarf::DIE const& type_die, PtraceRegisters const& regs, DebugInfo::VariableInfo* parent_variable) const
 {
     OwnPtr<VariableInfo> type_info;
     auto is_array_type = type_die.tag() == Dwarf::EntryTag::ArrayType;
@@ -286,7 +286,7 @@ void DebugInfo::add_type_info_to_variable(const Dwarf::DIE& type_die, const Ptra
         type_info = create_variable_info(type_die, regs);
     }
 
-    type_die.for_each_child([&](const Dwarf::DIE& member) {
+    type_die.for_each_child([&](Dwarf::DIE const& member) {
         if (member.is_null())
             return;
 
@@ -332,7 +332,7 @@ void DebugInfo::add_type_info_to_variable(const Dwarf::DIE& type_die, const Ptra
     }
 }
 
-bool DebugInfo::is_variable_tag_supported(const Dwarf::EntryTag& tag)
+bool DebugInfo::is_variable_tag_supported(Dwarf::EntryTag const& tag)
 {
     return tag == Dwarf::EntryTag::Variable
         || tag == Dwarf::EntryTag::Member
@@ -361,7 +361,7 @@ Optional<DebugInfo::VariablesScope> DebugInfo::get_containing_function(u32 addre
     return {};
 }
 
-Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const VariablesScope& scope) const
+Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(VariablesScope const& scope) const
 {
     Vector<DebugInfo::SourcePosition> source_lines;
     for (const auto& line : m_sorted_lines) {
@@ -375,7 +375,7 @@ Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const Variabl
     return source_lines;
 }
 
-DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const Dwarf::LineProgram::LineInfo& line)
+DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(Dwarf::LineProgram::LineInfo const& line)
 {
     return { line.file, line.line, { line.address } };
 }
@@ -393,7 +393,7 @@ DebugInfo::SourcePositionWithInlines DebugInfo::get_source_position_with_inlines
 
     Vector<SourcePosition> inline_chain;
 
-    auto insert_to_chain = [&](const Dwarf::DIE& die) {
+    auto insert_to_chain = [&](Dwarf::DIE const& die) {
         auto caller_source_path = get_source_path_of_inline(die);
         auto caller_line = get_line_of_inline(die);
 
@@ -421,7 +421,7 @@ DebugInfo::SourcePositionWithInlines DebugInfo::get_source_position_with_inlines
     return SourcePositionWithInlines { inner_source_position, inline_chain };
 }
 
-Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inline(const Dwarf::DIE& die) const
+Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inline(Dwarf::DIE const& die) const
 {
     auto caller_file = die.get_attribute(Dwarf::Attribute::CallFile);
     if (caller_file.has_value()) {
@@ -442,7 +442,7 @@ Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inl
     return {};
 }
 
-Optional<uint32_t> DebugInfo::get_line_of_inline(const Dwarf::DIE& die) const
+Optional<uint32_t> DebugInfo::get_line_of_inline(Dwarf::DIE const& die) const
 {
     auto caller_line = die.get_attribute(Dwarf::Attribute::CallLine);
     if (!caller_line.has_value())
