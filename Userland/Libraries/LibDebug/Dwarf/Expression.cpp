@@ -12,7 +12,7 @@
 
 namespace Debug::Dwarf::Expression {
 
-Value evaluate(ReadonlyBytes bytes, const PtraceRegisters& regs)
+Value evaluate(ReadonlyBytes bytes, PtraceRegisters const& regs)
 {
     InputMemoryStream stream(bytes);
 

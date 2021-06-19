@@ -17,7 +17,7 @@ class DwarfInfo;
 
 class AbbreviationsMap {
 public:
-    AbbreviationsMap(const DwarfInfo& dwarf_info, u32 offset);
+    AbbreviationsMap(DwarfInfo const& dwarf_info, u32 offset);
 
     struct AbbreviationEntry {
 
@@ -32,7 +32,7 @@ public:
 private:
     void populate_map();
 
-    const DwarfInfo& m_dwarf_info;
+    DwarfInfo const& m_dwarf_info;
     u32 m_offset { 0 };
     HashMap<u32, AbbreviationEntry> m_entries;
 };

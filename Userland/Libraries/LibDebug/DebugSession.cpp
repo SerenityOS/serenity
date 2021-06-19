@@ -43,7 +43,7 @@ DebugSession::~DebugSession()
     }
 }
 
-OwnPtr<DebugSession> DebugSession::exec_and_attach(const String& command, String source_root)
+OwnPtr<DebugSession> DebugSession::exec_and_attach(String const& command, String source_root)
 {
     auto pid = fork();
 
@@ -285,7 +285,7 @@ PtraceRegisters DebugSession::get_registers() const
     return regs;
 }
 
-void DebugSession::set_registers(const PtraceRegisters& regs)
+void DebugSession::set_registers(PtraceRegisters const& regs)
 {
     if (ptrace(PT_SETREGS, m_debuggee_pid, reinterpret_cast<void*>(&const_cast<PtraceRegisters&>(regs)), 0) < 0) {
         perror("PT_SETREGS");
@@ -349,7 +349,7 @@ void DebugSession::detach()
     continue_debuggee();
 }
 
-Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(const String& symbol_name)
+Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_breakpoint(String const& symbol_name)
 {
     Optional<InsertBreakpointAtSymbolResult> result;
     for_each_loaded_library([this, symbol_name, &result](auto& lib) {
@@ -372,7 +372,7 @@ Optional<DebugSession::InsertBreakpointAtSymbolResult> DebugSession::insert_brea
     return result;
 }
 
-Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(const String& filename, size_t line_number)
+Optional<DebugSession::InsertBreakpointAtSourcePositionResult> DebugSession::insert_breakpoint(String const& filename, size_t line_number)
 {
     auto address_and_source_position = get_address_from_source_position(filename, line_number);
     if (!address_and_source_position.has_value())
@@ -402,7 +402,7 @@ void DebugSession::update_loaded_libs()
     auto vm_entries = json.value().as_array();
     Regex<PosixExtended> re("(.+): \\.text");
 
-    auto get_path_to_object = [&re](const String& vm_name) -> Optional<String> {
+    auto get_path_to_object = [&re](String const& vm_name) -> Optional<String> {
         if (vm_name == "/usr/lib/Loader.so")
             return vm_name;
         RegexResult result;
@@ -470,7 +470,7 @@ Optional<DebugSession::SymbolicationResult> DebugSession::symbolicate(FlatPtr ad
     return { { lib->name, symbol } };
 }
 
-Optional<DebugInfo::SourcePositionAndAddress> DebugSession::get_address_from_source_position(const String& file, size_t line) const
+Optional<DebugInfo::SourcePositionAndAddress> DebugSession::get_address_from_source_position(String const& file, size_t line) const
 {
     Optional<DebugInfo::SourcePositionAndAddress> result;
     for_each_loaded_library([this, file, line, &result](auto& lib) {

@@ -20,23 +20,23 @@ class CompilationUnit;
 // DIE = Debugging Information Entry
 class DIE {
 public:
-    DIE(const CompilationUnit&, u32 offset, Optional<u32> parent_offset = {});
+    DIE(CompilationUnit const&, u32 offset, Optional<u32> parent_offset = {});
 
     u32 offset() const { return m_offset; }
     u32 size() const { return m_size; }
     bool has_children() const { return m_has_children; }
     EntryTag tag() const { return m_tag; }
 
-    Optional<AttributeValue> get_attribute(const Attribute&) const;
+    Optional<AttributeValue> get_attribute(Attribute const&) const;
 
-    void for_each_child(Function<void(const DIE& child)> callback) const;
+    void for_each_child(Function<void(DIE const& child)> callback) const;
 
     bool is_null() const { return m_tag == EntryTag::None; }
-    const CompilationUnit& compilation_unit() const { return m_compilation_unit; }
+    CompilationUnit const& compilation_unit() const { return m_compilation_unit; }
     Optional<u32> parent_offset() const { return m_parent_offset; }
 
 private:
-    const CompilationUnit& m_compilation_unit;
+    CompilationUnit const& m_compilation_unit;
     u32 m_offset { 0 };
     u32 m_data_offset { 0 };
     size_t m_abbreviation_code { 0 };
