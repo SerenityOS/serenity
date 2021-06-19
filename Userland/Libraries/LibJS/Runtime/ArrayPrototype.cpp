@@ -531,7 +531,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (!spreadable.is_undefined())
             return spreadable.to_boolean();
 
-        return object->is_array();
+        return val.is_array(global_object);
     };
 
     auto append_to_new_array = [&vm, &is_concat_spreadable, &new_array, &global_object, &n](Value arg) {
@@ -546,7 +546,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
             if (vm.exception())
                 return;
 
-            if (length + k > MAX_ARRAY_LIKE_INDEX) {
+            if (n + length > MAX_ARRAY_LIKE_INDEX) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ArrayMaxSize);
                 return;
             }

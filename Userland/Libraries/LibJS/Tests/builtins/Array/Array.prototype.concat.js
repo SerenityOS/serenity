@@ -40,4 +40,14 @@ describe("normal behavior", () => {
         expect(concatenated[4]).toBe(1);
         expect(concatenated[5]).toEqual([2, 3]);
     });
+
+    test("Proxy is concatenated as array", () => {
+        var proxy = new Proxy([9, 8], {});
+        var concatenated = array.concat(proxy);
+        expect(array).toHaveLength(1);
+        expect(concatenated).toHaveLength(3);
+        expect(concatenated[0]).toBe("hello");
+        expect(concatenated[1]).toBe(9);
+        expect(concatenated[2]).toBe(8);
+    });
 });
