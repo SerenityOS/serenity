@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -95,6 +95,12 @@ public:
 
     Optional<SourcePosition> get_source_position(u32 address) const;
 
+    struct SourcePositionWithInlines {
+        Optional<SourcePosition> source_position;
+        Vector<SourcePosition> inline_chain;
+    };
+    SourcePositionWithInlines get_source_position_with_inlines(u32 address) const;
+
     struct SourcePositionAndAddress {
         String file;
         size_t line;
@@ -114,6 +120,9 @@ private:
     OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&, u32 address_offset = 0) const;
     static bool is_variable_tag_supported(const Dwarf::EntryTag& tag);
     void add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const;
+
+    Optional<Dwarf::LineProgram::DirectoryAndFile> get_source_path_of_inline(const Dwarf::DIE&) const;
+    Optional<uint32_t> get_line_of_inline(const Dwarf::DIE&) const;
 
     NonnullOwnPtr<const ELF::Image> m_elf;
     String m_source_root;
