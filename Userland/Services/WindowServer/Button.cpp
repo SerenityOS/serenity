@@ -9,6 +9,7 @@
 #include <LibGfx/StylePainter.h>
 #include <WindowServer/Button.h>
 #include <WindowServer/Event.h>
+#include <WindowServer/Screen.h>
 #include <WindowServer/WindowManager.h>
 
 namespace WindowServer {
@@ -23,7 +24,7 @@ Button::~Button()
 {
 }
 
-void Button::paint(Gfx::Painter& painter)
+void Button::paint(Screen& screen, Gfx::Painter& painter)
 {
     auto palette = WindowManager::the().palette();
     Gfx::PainterStateSaver saver(painter);
@@ -31,10 +32,11 @@ void Button::paint(Gfx::Painter& painter)
     Gfx::StylePainter::paint_button(painter, rect(), palette, Gfx::ButtonStyle::Normal, m_pressed, m_hovered);
 
     if (m_icon) {
-        auto icon_location = rect().center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2));
+        auto& bitmap = m_icon->bitmap(screen.scale_factor());
+        auto icon_location = rect().center().translated(-(bitmap.width() / 2), -(bitmap.height() / 2));
         if (m_pressed)
             painter.translate(1, 1);
-        painter.blit(icon_location, *m_icon, m_icon->rect());
+        painter.blit(icon_location, bitmap, bitmap.rect());
     }
 }
 
