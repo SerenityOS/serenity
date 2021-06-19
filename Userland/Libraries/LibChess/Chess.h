@@ -15,7 +15,7 @@
 
 namespace Chess {
 
-enum class Type {
+enum class Type : u8 {
     Pawn,
     Knight,
     Bishop,
@@ -28,7 +28,7 @@ enum class Type {
 String char_for_piece(Type type);
 Chess::Type piece_for_char_promotion(const StringView& str);
 
-enum class Color {
+enum class Color : u8 {
     White,
     Black,
     None,
@@ -55,8 +55,8 @@ struct Piece {
 constexpr Piece EmptyPiece = { Color::None, Type::None };
 
 struct Square {
-    int rank; // zero indexed;
-    int file;
+    i8 rank; // zero indexed;
+    i8 file;
     Square(const StringView& name);
     Square(const int& rank, const int& file)
         : rank(rank)
@@ -88,10 +88,10 @@ struct Move {
     Square to;
     Type promote_to;
     Piece piece;
-    bool is_check = false;
-    bool is_mate = false;
-    bool is_capture = false;
-    bool is_ambiguous = false;
+    bool is_check : 1 = false;
+    bool is_mate : 1 = false;
+    bool is_capture : 1 = false;
+    bool is_ambiguous : 1 = false;
     Square ambiguous { 50, 50 };
     Move(const StringView& long_algebraic);
     Move(const Square& from, const Square& to, const Type& promote_to = Type::None)
@@ -161,16 +161,17 @@ private:
     bool apply_illegal_move(const Move&, Color color);
 
     Piece m_board[8][8];
-    Color m_turn { Color::White };
-    Color m_resigned { Color::None };
     Optional<Move> m_last_move;
-    int m_moves_since_capture { 0 };
-    int m_moves_since_pawn_advance { 0 };
+    short m_moves_since_capture { 0 };
+    short m_moves_since_pawn_advance { 0 };
 
-    bool m_white_can_castle_kingside { true };
-    bool m_white_can_castle_queenside { true };
-    bool m_black_can_castle_kingside { true };
-    bool m_black_can_castle_queenside { true };
+    Color m_turn : 2 { Color::White };
+    Color m_resigned : 2 { Color::None };
+
+    bool m_white_can_castle_kingside : 1 { true };
+    bool m_white_can_castle_queenside : 1 { true };
+    bool m_black_can_castle_kingside : 1 { true };
+    bool m_black_can_castle_queenside : 1 { true };
 
     // We trust that hash collisions will not happen to save lots of memory and time.
     HashMap<unsigned, int> m_previous_states;
