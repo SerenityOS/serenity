@@ -1,13 +1,15 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "DwarfInfo.h"
 #include "AttributeValue.h"
+#include "CompilationUnit.h"
 
 #include <AK/MemoryStream.h>
+#include <LibDebug/DebugInfo.h>
 
 namespace Debug::Dwarf {
 
@@ -231,6 +233,59 @@ AttributeValue DwarfInfo::get_attribute_value(AttributeDataForm form, ssize_t im
         VERIFY_NOT_REACHED();
     }
     return value;
+}
+
+void DwarfInfo::build_cached_dies() const
+{
+    auto insert_to_cache = [this](const DIE& die, DIERange& range) {
+        m_cached_dies_by_range.insert(range.start_address, DIEAndRange { die, range });
+        m_cached_dies_by_offset.insert(die.offset(), die);
+    };
+    auto get_ranges_of_die = [this](const DIE& die) -> Vector<DIERange> {
+        // TODO support DW_AT_ranges (appears when range is non-contiguous)
+
+        auto start = die.get_attribute(Attribute::LowPc);
+        auto end = die.get_attribute(Attribute::HighPc);
+
+        if (!start.has_value() || !end.has_value())
+            return {};
+
+        VERIFY(sizeof(FlatPtr) == sizeof(u32));
+        VERIFY(start->type == Dwarf::AttributeValue::Type::UnsignedNumber);
+
+        // DW_AT_high_pc attribute can have different meanings depending on the attribute form.
+        // (Dwarf version 5, section 2.17.2).
+
+        uint32_t range_end = 0;
+        if (end->form == Dwarf::AttributeDataForm::Addr)
+            range_end = end->data.as_u32;
+        else
+            range_end = start->data.as_u32 + end->data.as_u32;
+
+        return { DIERange { start.value().data.as_u32, range_end } };
+    };
+
+    // If we simply use a lambda, type deduction fails because it's used recursively.
+    Function<void(const DIE& die)> insert_to_cache_recursively;
+    insert_to_cache_recursively = [&](const DIE& die) {
+        if (die.offset() == 0 || die.parent_offset().has_value()) {
+            auto ranges = get_ranges_of_die(die);
+            for (auto& range : ranges) {
+                insert_to_cache(die, range);
+            }
+        }
+        die.for_each_child([&](const DIE& child) {
+            if (!child.is_null()) {
+                insert_to_cache_recursively(child);
+            }
+        });
+    };
+
+    for_each_compilation_unit([&](const CompilationUnit& compilation_unit) {
+        insert_to_cache_recursively(compilation_unit.root_die());
+    });
+
+    m_built_cached_dies = true;
 }
 
 }
