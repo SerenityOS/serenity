@@ -9,6 +9,7 @@
 #include <AK/Debug.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <AK/TemporaryChange.h>
 #include <LibVT/Color.h>
 #include <LibVT/Terminal.h>
 #ifdef KERNEL
@@ -706,6 +707,10 @@ void Terminal::DCH(Parameters params)
 void Terminal::linefeed()
 {
     u16 new_row = cursor_row();
+#ifndef KERNEL
+    if (!m_controls_are_logically_generated)
+        active_buffer()[new_row].set_terminated(m_column_before_carriage_return.value_or(cursor_column()));
+#endif
     if (cursor_row() == m_scroll_region_bottom) {
         scroll_up();
     } else {
@@ -719,6 +724,7 @@ void Terminal::linefeed()
 void Terminal::carriage_return()
 {
     dbgln_if(TERMINAL_DEBUG, "Carriage return");
+    m_column_before_carriage_return = cursor_column();
     set_cursor(cursor_row(), 0);
 }
 
@@ -967,6 +973,7 @@ void Terminal::emit_code_point(u32 code_point)
     }
     if (m_stomp) {
         m_stomp = false;
+        TemporaryChange change { m_controls_are_logically_generated, true };
         carriage_return();
         linefeed();
         put_character_at(cursor_row(), cursor_column(), code_point);
@@ -980,6 +987,11 @@ void Terminal::emit_code_point(u32 code_point)
 
 void Terminal::execute_control_code(u8 code)
 {
+    ArmedScopeGuard clear_position_before_cr {
+        [&] {
+            m_column_before_carriage_return.clear();
+        }
+    };
     switch (code) {
     case '\a':
         m_client.beep();
@@ -1002,10 +1014,13 @@ void Terminal::execute_control_code(u8 code)
     case '\n':
     case '\v':
     case '\f':
+        if (m_column_before_carriage_return == m_columns - 1)
+            m_column_before_carriage_return = m_columns;
         linefeed();
         return;
     case '\r':
         carriage_return();
+        clear_position_before_cr.disarm();
         return;
     default:
         unimplemented_control_code(code);
