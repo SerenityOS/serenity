@@ -20,10 +20,10 @@ public:
     Gfx::Bitmap const& default_bitmap() const { return bitmap(1); }
     Gfx::Bitmap const& bitmap(int scale_factor) const;
     Gfx::BitmapFormat format() const { return m_format; }
+    bool load(StringView const& filename, StringView const& default_filename = {});
 
 private:
     MultiScaleBitmaps() = default;
-    bool load(StringView const& filename, StringView const& default_filename);
 
     HashMap<int, NonnullRefPtr<Gfx::Bitmap>> m_bitmaps;
     Gfx::BitmapFormat m_format { Gfx::BitmapFormat::Invalid };
