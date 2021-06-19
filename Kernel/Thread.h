@@ -1134,6 +1134,9 @@ public:
     bool is_profiling_suppressed() const { return m_is_profiling_suppressed; }
     void set_profiling_suppressed() { m_is_profiling_suppressed = true; }
 
+    bool may_die_immediately() const { return m_may_die_immediately; }
+    void set_may_die_immediately(bool flag) { m_may_die_immediately = flag; }
+
 private:
     Thread(NonnullRefPtr<Process>, NonnullOwnPtr<Region>, NonnullRefPtr<Timer>);
 
@@ -1227,6 +1230,7 @@ private:
     Optional<Range> m_thread_specific_range;
     Array<SignalActionData, NSIG> m_signal_action_data;
     Blocker* m_blocker { nullptr };
+    bool m_may_die_immediately { true };
 
 #if LOCK_DEBUG
     struct HoldingLockInfo {
