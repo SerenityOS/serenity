@@ -54,7 +54,10 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
     uint32_t* ebp = (uint32_t*)m_thread_info.regs.ebp;
     uint32_t* eip = (uint32_t*)m_thread_info.regs.eip;
     while (ebp && eip) {
-        add_entry(coredump, (FlatPtr)eip);
+        // We use eip - 1 because the return address from a function frame
+        // is the instruction that comes after the 'call' instruction.
+        VERIFY((FlatPtr)eip > 0);
+        add_entry(coredump, (FlatPtr)eip - 1);
         auto next_eip = coredump.peek_memory((FlatPtr)(ebp + 1));
         auto next_ebp = coredump.peek_memory((FlatPtr)(ebp));
         if (!next_eip.has_value() || !next_ebp.has_value())
