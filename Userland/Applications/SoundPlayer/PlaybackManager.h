@@ -12,9 +12,6 @@
 #include <LibAudio/Loader.h>
 #include <LibCore/Timer.h>
 
-#define PLAYBACK_MANAGER_BUFFER_SIZE 48 * KiB
-#define PLAYBACK_MANAGER_RATE 44100
-
 class PlaybackManager final {
 public:
     PlaybackManager(NonnullRefPtr<Audio::ClientConnection>);
@@ -27,6 +24,7 @@ public:
     void loop(bool);
     bool toggle_pause();
     void set_loader(NonnullRefPtr<Audio::Loader>&&);
+    size_t device_sample_rate() const { return m_device_sample_rate; }
 
     int last_seek() const { return m_last_seek; }
     bool is_paused() const { return m_paused; }
@@ -42,18 +40,23 @@ public:
 private:
     void next_buffer();
     void set_paused(bool);
-    void load_next_buffer();
-    void remove_dead_buffers();
 
     bool m_paused { true };
     bool m_loop = { false };
-    size_t m_next_ptr { 0 };
     size_t m_last_seek { 0 };
     float m_total_length { 0 };
+    // FIXME: Get this from the audio server
+    size_t m_device_sample_rate { 44100 };
+    size_t m_device_samples_per_buffer { 0 };
+    size_t m_source_buffer_size_bytes { 0 };
     RefPtr<Audio::Loader> m_loader { nullptr };
     NonnullRefPtr<Audio::ClientConnection> m_connection;
-    RefPtr<Audio::Buffer> m_next_buffer;
     RefPtr<Audio::Buffer> m_current_buffer;
-    Vector<RefPtr<Audio::Buffer>> m_buffers;
     RefPtr<Core::Timer> m_timer;
+
+    // Controls the GUI update rate. A smaller value makes the visualizations nicer.
+    static constexpr u32 update_rate_ms = 50;
+
+    // Number of milliseconds of audio data contained in each audio buffer
+    static constexpr u32 buffer_size_ms = 100;
 };

@@ -41,6 +41,8 @@ public:
     virtual bool has_error() override { return !m_error_string.is_null(); }
     virtual const char* error_string() override { return m_error_string.characters(); }
 
+    // The Buffer returned contains input data resampled at the
+    // destination audio device sample rate.
     virtual RefPtr<Buffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KiB) override;
 
     virtual void reset() override { return seek(0); }
@@ -64,6 +66,11 @@ private:
     OwnPtr<AK::InputStream> m_stream;
     AK::InputMemoryStream* m_memory_stream;
     String m_error_string;
+
+    // TODO: We should probably move resampling into the audio server.
+    //
+    // It would avoid duplicate resampling code and would allow clients
+    // to be agnostic of the destination audio device's sample rate.
     OwnPtr<ResampleHelper> m_resampler;
 
     u32 m_sample_rate { 0 };
@@ -71,6 +78,8 @@ private:
     PcmSampleFormat m_sample_format;
     size_t m_byte_offset_of_data_samples { 0 };
 
+    // FIXME: Get this value from the audio server
+    int m_device_sample_rate { 44100 };
     int m_loaded_samples { 0 };
     int m_total_samples { 0 };
 };
