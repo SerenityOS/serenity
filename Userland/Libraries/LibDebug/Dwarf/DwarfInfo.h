@@ -39,6 +39,13 @@ public:
 
     Optional<DIE> get_die_at_address(FlatPtr) const;
 
+    // Note that even if there is a DIE at the given offset,
+    // but it does not exist in the DIE cache (because for example
+    // it does not contain an address range), then this function will not return it.
+    // To get any DIE object at a given offset in a compilation unit,
+    // use CompilationUnit::get_die_at_offset.
+    Optional<DIE> get_cached_die_at_offset(FlatPtr) const;
+
 private:
     void populate_compilation_units();
     void build_cached_dies() const;
