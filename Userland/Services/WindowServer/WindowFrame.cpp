@@ -41,8 +41,6 @@ static RefPtr<MultiScaleBitmaps> s_restore_icon;
 static RefPtr<MultiScaleBitmaps> s_close_icon;
 static RefPtr<MultiScaleBitmaps> s_close_modified_icon;
 
-static String s_last_title_button_icons_path;
-
 static RefPtr<MultiScaleBitmaps> s_active_window_shadow;
 static RefPtr<MultiScaleBitmaps> s_inactive_window_shadow;
 static RefPtr<MultiScaleBitmaps> s_menu_shadow;
@@ -126,46 +124,31 @@ void WindowFrame::reload_config()
 {
     String icons_path = WindowManager::the().palette().title_button_icons_path();
 
-    StringBuilder full_path;
-    if (!s_minimize_icon || s_last_title_button_icons_path != icons_path) {
+    auto reload_icon = [&](RefPtr<MultiScaleBitmaps>& icon, StringView const& path, StringView const& default_path) {
+        StringBuilder full_path;
         full_path.append(icons_path);
-        full_path.append("window-minimize.png");
-        s_minimize_icon = MultiScaleBitmaps::create(full_path.to_string(), "/res/icons/16x16/downward-triangle.png");
-        full_path.clear();
-    }
-    if (!s_maximize_icon || s_last_title_button_icons_path != icons_path) {
-        full_path.append(icons_path);
-        full_path.append("window-maximize.png");
-        s_maximize_icon = MultiScaleBitmaps::create(full_path.to_string(), "/res/icons/16x16/upward-triangle.png");
-        full_path.clear();
-    }
-    if (!s_restore_icon || s_last_title_button_icons_path != icons_path) {
-        full_path.append(icons_path);
-        full_path.append("window-restore.png");
-        s_restore_icon = MultiScaleBitmaps::create(full_path.to_string(), "/res/icons/16x16/window-restore.png");
-        full_path.clear();
-    }
-    if (!s_close_icon || s_last_title_button_icons_path != icons_path) {
-        full_path.append(icons_path);
-        full_path.append("window-close.png");
-        s_close_icon = MultiScaleBitmaps::create(full_path.to_string(), "/res/icons/16x16/window-close.png");
-        full_path.clear();
-    }
-    if (!s_close_modified_icon || s_last_title_button_icons_path != icons_path) {
-        full_path.append(icons_path);
-        full_path.append("window-close-modified.png");
-        s_close_modified_icon = MultiScaleBitmaps::create(full_path.to_string(), "/res/icons/16x16/window-close-modified.png");
-        full_path.clear();
-    }
+        full_path.append(path);
+        if (icon)
+            icon->load(full_path.to_string(), default_path);
+        else
+            icon = MultiScaleBitmaps::create(full_path.to_string(), default_path);
+    };
 
-    s_last_title_button_icons_path = icons_path;
+    reload_icon(s_minimize_icon, "window-minimize.png", "/res/icons/16x16/downward-triangle.png");
+    reload_icon(s_maximize_icon, "window-maximize.png", "/res/icons/16x16/upward-triangle.png");
+    reload_icon(s_restore_icon, "window-restore.png", "/res/icons/16x16/window-restore.png");
+    reload_icon(s_close_icon, "window-close.png", "/res/icons/16x16/window-close.png");
+    reload_icon(s_close_modified_icon, "window-close-modified.png", "/res/icons/16x16/window-close-modified.png");
 
     auto load_shadow = [](const String& path, String& last_path, RefPtr<MultiScaleBitmaps>& shadow_bitmap) {
         if (path.is_empty()) {
             last_path = String::empty();
             shadow_bitmap = nullptr;
         } else if (!shadow_bitmap || last_path != path) {
-            shadow_bitmap = MultiScaleBitmaps::create(path);
+            if (shadow_bitmap)
+                shadow_bitmap->load(path);
+            else
+                shadow_bitmap = MultiScaleBitmaps::create(path);
             if (shadow_bitmap)
                 last_path = path;
             else
