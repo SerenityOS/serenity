@@ -12,16 +12,10 @@
 
 namespace AK {
 
-// HACK: This is just here to make syntax highlighting work in Qt Creator.
-//       Once it supports C++20 concepts, we can remove this.
-#if defined(__cpp_concepts) && !defined(__COVERITY__)
 template<typename T>
 concept PointerTypeName = IsPointer<T>;
-template<PointerTypeName T>
-#else
-template<typename T, typename EnableIf<IsPointer<T>, int>::Type = 0>
-#endif
 
+template<PointerTypeName T>
 class Userspace {
 public:
     Userspace() = default;
