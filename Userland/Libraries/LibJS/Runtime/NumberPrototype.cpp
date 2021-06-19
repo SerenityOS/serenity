@@ -34,6 +34,7 @@ void NumberPrototype::initialize(GlobalObject& object)
     auto& vm = this->vm();
     Object::initialize(object);
     u8 attr = Attribute::Configurable | Attribute::Writable;
+    define_native_function(vm.names.toFixed, to_fixed, 1, attr);
     define_native_function(vm.names.toString, to_string, 1, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 }
@@ -52,6 +53,37 @@ static Value this_number_value(GlobalObject& global_object, Value value)
     auto& vm = global_object.vm();
     vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Number");
     return {};
+}
+
+// 21.1.3.3 Number.prototype.toFixed ( fractionDigits ), https://tc39.es/ecma262/#sec-number.prototype.tofixed
+JS_DEFINE_NATIVE_FUNCTION(NumberPrototype::to_fixed)
+{
+    auto number_value = this_number_value(global_object, vm.this_value(global_object));
+    if (vm.exception())
+        return {};
+
+    auto fraction_digits = vm.argument(0).to_integer_or_infinity(global_object);
+    if (vm.exception())
+        return {};
+
+    if (!vm.argument(0).is_finite_number()) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+        return {};
+    }
+
+    if (fraction_digits < 0 || fraction_digits > 100) {
+        vm.throw_exception<RangeError>(global_object, ErrorType::InvalidFractionDigits);
+        return {};
+    }
+
+    if (!number_value.is_finite_number())
+        return js_string(vm, number_value.to_string(global_object));
+
+    auto number = number_value.as_double();
+    if (fabs(number) >= 1e+21)
+        return js_string(vm, number_value.to_string(global_object));
+
+    return js_string(vm, String::formatted("{:0.{1}}", number, static_cast<size_t>(fraction_digits)));
 }
 
 // 21.1.3.6 Number.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-number.prototype.tostring

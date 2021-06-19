@@ -297,6 +297,7 @@ namespace JS {
     P(test)                                  \
     P(then)                                  \
     P(toDateString)                          \
+    P(toFixed)                               \
     P(toGMTString)                           \
     P(toISOString)                           \
     P(toJSON)                                \
