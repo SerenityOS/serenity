@@ -579,14 +579,12 @@ bool Board::apply_move(const Move& move, Color color)
 
 bool Board::apply_illegal_move(const Move& move, Color color)
 {
-    Board clone = *this;
-    clone.m_previous_states = {};
-    clone.m_moves = {};
+    auto state = Traits<Board>::hash(*this);
     auto state_count = 0;
-    if (m_previous_states.contains(clone))
-        state_count = m_previous_states.get(clone).value();
+    if (m_previous_states.contains(state))
+        state_count = m_previous_states.get(state).value();
 
-    m_previous_states.set(clone, state_count + 1);
+    m_previous_states.set(state, state_count + 1);
     m_moves.append(move);
 
     m_turn = opposing_color(color);
@@ -758,7 +756,7 @@ Board::Result Board::game_result() const
         if (m_moves_since_capture == 50 * 2)
             return Result::FiftyMoveRule;
 
-        auto repeats = m_previous_states.get(*this);
+        auto repeats = m_previous_states.get(Traits<Board>::hash(*this));
         if (repeats.has_value()) {
             if (repeats.value() == 3)
                 return Result::ThreeFoldRepetition;
