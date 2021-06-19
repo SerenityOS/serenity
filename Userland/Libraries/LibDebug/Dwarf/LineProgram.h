@@ -114,7 +114,7 @@ public:
         size_t line { 0 };
     };
 
-    const Vector<LineInfo>& lines() const { return m_lines; }
+    Vector<LineInfo> const& lines() const { return m_lines; }
 
     struct DirectoryAndFile {
         FlyString directory;

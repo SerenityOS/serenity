@@ -31,6 +31,6 @@ enum class Operations : u8 {
     FbReg = 0x91,
 };
 
-Value evaluate(ReadonlyBytes, const PtraceRegisters&);
+Value evaluate(ReadonlyBytes, PtraceRegisters const&);
 
 }

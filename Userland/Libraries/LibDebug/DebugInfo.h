@@ -26,7 +26,7 @@ class DebugInfo {
 public:
     explicit DebugInfo(NonnullOwnPtr<const ELF::Image>, String source_root = {}, FlatPtr base_address = 0);
 
-    const ELF::Image& elf() const { return *m_elf; }
+    ELF::Image const& elf() const { return *m_elf; }
 
     struct SourcePosition {
         FlyString file_path;
@@ -49,10 +49,10 @@ public:
         {
         }
 
-        bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
-        bool operator!=(const SourcePosition& other) const { return !(*this == other); }
+        bool operator==(SourcePosition const& other) const { return file_path == other.file_path && line_number == other.line_number; }
+        bool operator!=(SourcePosition const& other) const { return !(*this == other); }
 
-        static SourcePosition from_line_info(const Dwarf::LineProgram::LineInfo&);
+        static SourcePosition from_line_info(Dwarf::LineProgram::LineInfo const&);
     };
 
     struct VariableInfo {
@@ -91,7 +91,7 @@ public:
         Vector<Dwarf::DIE> dies_of_variables;
     };
 
-    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(const PtraceRegisters&) const;
+    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(PtraceRegisters const&) const;
 
     Optional<SourcePosition> get_source_position(u32 address) const;
 

@@ -25,7 +25,7 @@ namespace Debug {
 
 class DebugSession {
 public:
-    static OwnPtr<DebugSession> exec_and_attach(const String& command, String source_root = {});
+    static OwnPtr<DebugSession> exec_and_attach(String const& command, String source_root = {});
 
     ~DebugSession();
 
@@ -53,7 +53,7 @@ public:
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(const String& symbol_name);
+    Optional<InsertBreakpointAtSymbolResult> insert_breakpoint(String const& symbol_name);
 
     struct InsertBreakpointAtSourcePositionResult {
         String library_name;
@@ -62,7 +62,7 @@ public:
         FlatPtr address { 0 };
     };
 
-    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(const String& filename, size_t line_number);
+    Optional<InsertBreakpointAtSourcePositionResult> insert_breakpoint(String const& filename, size_t line_number);
 
     bool insert_breakpoint(void* address);
     bool disable_breakpoint(void* address);
@@ -89,7 +89,7 @@ public:
     }
 
     PtraceRegisters get_registers() const;
-    void set_registers(const PtraceRegisters&);
+    void set_registers(PtraceRegisters const&);
 
     enum class ContinueType {
         FreeRun,
@@ -132,7 +132,7 @@ public:
         NonnullOwnPtr<DebugInfo> debug_info;
         FlatPtr base_address;
 
-        LoadedLibrary(const String& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
+        LoadedLibrary(String const& name, NonnullRefPtr<MappedFile> file, NonnullOwnPtr<DebugInfo>&& debug_info, FlatPtr base_address)
             : name(name)
             , file(move(file))
             , debug_info(move(debug_info))
@@ -159,7 +159,7 @@ public:
     };
     Optional<SymbolicationResult> symbolicate(FlatPtr address) const;
 
-    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
+    Optional<DebugInfo::SourcePositionAndAddress> get_address_from_source_position(String const& file, size_t line) const;
 
     Optional<DebugInfo::SourcePosition> get_source_position(FlatPtr address) const;
 

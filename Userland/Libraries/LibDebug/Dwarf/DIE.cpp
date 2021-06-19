@@ -12,7 +12,7 @@
 
 namespace Debug::Dwarf {
 
-DIE::DIE(const CompilationUnit& unit, u32 offset, Optional<u32> parent_offset)
+DIE::DIE(CompilationUnit const& unit, u32 offset, Optional<u32> parent_offset)
     : m_compilation_unit(unit)
     , m_offset(offset)
 {
@@ -40,7 +40,7 @@ DIE::DIE(const CompilationUnit& unit, u32 offset, Optional<u32> parent_offset)
     m_parent_offset = parent_offset;
 }
 
-Optional<AttributeValue> DIE::get_attribute(const Attribute& attribute) const
+Optional<AttributeValue> DIE::get_attribute(Attribute const& attribute) const
 {
     InputMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
     stream.discard_or_error(m_data_offset);
@@ -57,7 +57,7 @@ Optional<AttributeValue> DIE::get_attribute(const Attribute& attribute) const
     return {};
 }
 
-void DIE::for_each_child(Function<void(const DIE& child)> callback) const
+void DIE::for_each_child(Function<void(DIE const& child)> callback) const
 {
     if (!m_has_children)
         return;
@@ -81,7 +81,7 @@ void DIE::for_each_child(Function<void(const DIE& child)> callback) const
         if (!sibling.has_value()) {
             // NOTE: According to the spec, the compiler doesn't have to supply the sibling information.
             // When it doesn't, we have to recursively iterate the current child's children to find where they end
-            current_child->for_each_child([&](const DIE& sub_child) {
+            current_child->for_each_child([&](DIE const& sub_child) {
                 sibling_offset = sub_child.offset() + sub_child.size();
             });
         }
