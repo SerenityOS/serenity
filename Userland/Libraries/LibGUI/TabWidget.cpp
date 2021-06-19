@@ -205,15 +205,17 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto tab_button_content_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
+        auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
+
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+        tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 2));
 
         Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
         text_rect.inflate(6, 4);
         text_rect.align_within(tab_button_content_rect, m_text_alignment);
         text_rect.intersect(tab_button_content_rect);
 
-        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text(), Gfx::TextElision::Right);
+        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::CenterLeft, palette().button_text(), Gfx::TextElision::Right);
     }
 
     for (size_t i = 0; i < m_tabs.size(); ++i) {
@@ -222,15 +224,16 @@ void TabWidget::paint_event(PaintEvent& event)
         bool hovered = static_cast<int>(i) == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
         Gfx::StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled(), m_tab_position == TabPosition::Top);
-        auto tab_button_content_rect = button_rect.translated(0, m_tab_position == TabPosition::Top ? 1 : 0);
+        auto tab_button_content_rect = button_rect.translated(4, m_tab_position == TabPosition::Top ? 1 : 0);
         paint_tab_icon_if_needed(m_tabs[i].icon, button_rect, tab_button_content_rect);
+        tab_button_content_rect.set_width(tab_button_content_rect.width() - (m_close_button_enabled ? 16 : 2));
 
         Gfx::IntRect text_rect { 0, 0, min(tab_button_content_rect.width(), font().width(m_tabs[i].title)), font().glyph_height() };
         text_rect.inflate(6, 4);
         text_rect.align_within(tab_button_content_rect, m_text_alignment);
         text_rect.intersect(tab_button_content_rect);
 
-        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::Center, palette().button_text(), Gfx::TextElision::Right);
+        painter.draw_text(text_rect, m_tabs[i].title, Gfx::TextAlignment::CenterLeft, palette().button_text(), Gfx::TextElision::Right);
 
         if (is_focused()) {
             painter.draw_focus_rect(text_rect, palette().focus_outline());
@@ -245,6 +248,22 @@ void TabWidget::paint_event(PaintEvent& event)
             painter.draw_line(button_rect.top_left().translated(1, -2), button_rect.top_right().translated(-2, -2), palette().button());
         }
         break;
+    }
+
+    if (!m_close_button_enabled)
+        return;
+
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
+        bool hovered_close_button = static_cast<int>(i) == m_hovered_close_button_index;
+        bool pressed_close_button = static_cast<int>(i) == m_pressed_close_button_index;
+        auto close_button_rect = this->close_button_rect(i);
+
+        if (hovered_close_button)
+            Gfx::StylePainter::paint_frame(painter, close_button_rect, palette(), Gfx::FrameShape::Box, pressed_close_button ? Gfx::FrameShadow::Sunken : Gfx::FrameShadow::Raised, 1);
+
+        Gfx::IntRect icon_rect { close_button_rect.x() + 3, close_button_rect.y() + 3, 6, 6 };
+        painter.draw_line(icon_rect.top_left(), icon_rect.bottom_right(), palette().button_text());
+        painter.draw_line(icon_rect.top_right(), icon_rect.bottom_left(), palette().button_text());
     }
 }
 
@@ -271,11 +290,13 @@ void TabWidget::set_bar_visible(bool bar_visible)
 Gfx::IntRect TabWidget::button_rect(int index) const
 {
     int x_offset = bar_margin();
+    int close_button_offset = m_close_button_enabled ? 16 : 0;
+
     for (int i = 0; i < index; ++i) {
-        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font());
+        auto tab_width = m_uniform_tabs ? uniform_tab_width() : m_tabs[i].width(font()) + close_button_offset;
         x_offset += tab_width;
     }
-    Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()), bar_height() };
+    Gfx::IntRect rect { x_offset, 0, m_uniform_tabs ? uniform_tab_width() : m_tabs[index].width(font()) + close_button_offset, bar_height() };
     if (m_tabs[index].widget != m_active_widget) {
         rect.translate_by(0, m_tab_position == TabPosition::Top ? 2 : 0);
         rect.set_height(rect.height() - 2);
@@ -287,6 +308,19 @@ Gfx::IntRect TabWidget::button_rect(int index) const
     return rect;
 }
 
+Gfx::IntRect TabWidget::close_button_rect(int index) const
+{
+    auto rect = button_rect(index);
+    Gfx::IntRect close_button_rect { 0, 0, 12, 12 };
+
+    if (m_tabs[index].widget == m_active_widget)
+        close_button_rect.translate_by(rect.right() - 16, rect.top() + (m_tab_position == TabPosition::Top ? 5 : 4));
+    else
+        close_button_rect.translate_by(rect.right() - 15, rect.top() + (m_tab_position == TabPosition::Top ? 4 : 3));
+
+    return close_button_rect;
+}
+
 int TabWidget::TabData::width(const Gfx::Font& font) const
 {
     return 16 + font.width(title) + (icon ? (16 + 4) : 0);
@@ -296,9 +330,17 @@ void TabWidget::mousedown_event(MouseEvent& event)
 {
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
+        auto close_button_rect = this->close_button_rect(i);
+
         if (!button_rect.contains(event.position()))
             continue;
+
         if (event.button() == MouseButton::Left) {
+            if (m_close_button_enabled && close_button_rect.contains(event.position())) {
+                m_pressed_close_button_index = i;
+                update_bar();
+                return;
+            }
             set_active_widget(m_tabs[i].widget);
         } else if (event.button() == MouseButton::Middle) {
             auto* widget = m_tabs[i].widget;
@@ -311,27 +353,58 @@ void TabWidget::mousedown_event(MouseEvent& event)
     }
 }
 
+void TabWidget::mouseup_event(MouseEvent& event)
+{
+    if (event.button() != MouseButton::Left)
+        return;
+
+    if (!m_close_button_enabled)
+        return;
+
+    for (size_t i = 0; i < m_tabs.size(); ++i) {
+        auto close_button_rect = this->close_button_rect(i);
+        if (close_button_rect.contains(event.position())) {
+            auto* widget = m_tabs[i].widget;
+            deferred_invoke([this, widget](auto&) {
+                if (on_tab_close_click && widget)
+                    on_tab_close_click(*widget);
+            });
+            m_pressed_close_button_index = -1;
+            return;
+        }
+    }
+}
+
 void TabWidget::mousemove_event(MouseEvent& event)
 {
     int hovered_tab = -1;
+    int hovered_close_button = -1;
+
     for (size_t i = 0; i < m_tabs.size(); ++i) {
         auto button_rect = this->button_rect(i);
+        auto close_button_rect = this->close_button_rect(i);
+
+        if (close_button_rect.contains(event.position()))
+            hovered_close_button = i;
+
         if (!button_rect.contains(event.position()))
             continue;
         hovered_tab = i;
         if (m_tabs[i].widget == m_active_widget)
             break;
     }
-    if (hovered_tab == m_hovered_tab_index)
+    if (hovered_tab == m_hovered_tab_index && hovered_close_button == m_hovered_close_button_index)
         return;
     m_hovered_tab_index = hovered_tab;
+    m_hovered_close_button_index = hovered_close_button;
     update_bar();
 }
 
 void TabWidget::leave_event(Core::Event&)
 {
-    if (m_hovered_tab_index != -1) {
+    if (m_hovered_tab_index != -1 || m_hovered_close_button_index != -1) {
         m_hovered_tab_index = -1;
+        m_hovered_close_button_index = -1;
         update_bar();
     }
 }
