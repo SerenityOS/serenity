@@ -65,9 +65,12 @@ public:
     void set_bar_visible(bool bar_visible);
     bool is_bar_visible() const { return m_bar_visible; };
 
+    void set_close_button_enabled(bool close_button_enabled) { m_close_button_enabled = close_button_enabled; };
+
     Function<void(size_t)> on_tab_count_change;
     Function<void(Widget&)> on_change;
     Function<void(Widget&)> on_middle_click;
+    Function<void(Widget&)> on_tab_close_click;
     Function<void(Widget&, const ContextMenuEvent&)> on_context_menu_request;
 
 protected:
@@ -77,6 +80,7 @@ protected:
     virtual void child_event(Core::ChildEvent&) override;
     virtual void resize_event(ResizeEvent&) override;
     virtual void mousedown_event(MouseEvent&) override;
+    virtual void mouseup_event(MouseEvent&) override;
     virtual void mousemove_event(MouseEvent&) override;
     virtual void leave_event(Core::Event&) override;
     virtual void keydown_event(KeyEvent&) override;
@@ -85,6 +89,7 @@ protected:
 private:
     Gfx::IntRect child_rect_for_size(const Gfx::IntSize&) const;
     Gfx::IntRect button_rect(int index) const;
+    Gfx::IntRect close_button_rect(int index) const;
     Gfx::IntRect bar_rect() const;
     Gfx::IntRect container_rect() const;
     void update_bar();
@@ -102,10 +107,13 @@ private:
     Vector<TabData> m_tabs;
     TabPosition m_tab_position { TabPosition::Top };
     int m_hovered_tab_index { -1 };
+    int m_hovered_close_button_index { -1 };
+    int m_pressed_close_button_index { -1 };
     GUI::Margins m_container_margins { 2, 2, 2, 2 };
     Gfx::TextAlignment m_text_alignment { Gfx::TextAlignment::Center };
     bool m_uniform_tabs { false };
     bool m_bar_visible { true };
+    bool m_close_button_enabled { false };
 };
 
 }
