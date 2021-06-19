@@ -288,4 +288,24 @@ void DwarfInfo::build_cached_dies() const
     m_built_cached_dies = true;
 }
 
+Optional<DIE> DwarfInfo::get_die_at_address(FlatPtr address) const
+{
+    if (!m_built_cached_dies)
+        build_cached_dies();
+
+    auto iter = m_cached_dies_by_range.find_largest_not_above_iterator(address);
+    while (!iter.is_end() && !iter.is_begin() && iter->range.end_address < address) {
+        --iter;
+    }
+
+    if (iter.is_end())
+        return {};
+
+    if (iter->range.start_address > address || iter->range.end_address < address) {
+        return {};
+    }
+
+    return iter->die;
+}
+
 }
