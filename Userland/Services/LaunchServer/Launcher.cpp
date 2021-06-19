@@ -301,16 +301,21 @@ bool Launcher::open_file_url(const URL& url)
 
     // Additional parameters parsing, specific for the file protocol and TextEditor
     Vector<String> additional_parameters;
-    additional_parameters.append(url.path());
+    String filepath = url.path();
+
     auto parameters = url.query().split('&');
-    for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter) {
-        auto pair = parameter->split('=');
+    for (auto const& parameter : parameters) {
+        auto pair = parameter.split('=');
         if (pair.size() == 2 && pair[0] == "line_number") {
             auto line = pair[1].to_int();
             if (line.has_value())
-                additional_parameters.prepend(String::formatted("-l {}", line.value()));
+                // TextEditor uses file:line:col to open a file at a specific line number
+                filepath = String::formatted("{}:{}", filepath, line.value());
         }
     }
+
+    additional_parameters.append(filepath);
+
     return open_with_user_preferences(m_file_handlers, extension, additional_parameters, "/bin/TextEditor");
 }
 }
