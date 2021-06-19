@@ -272,7 +272,7 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
         if (value_here.is_accessor())
             return value_here.as_accessor().call_getter(receiver);
         if (value_here.is_native_property())
-            return call_native_property_getter(value_here.as_native_property(), receiver);
+            return call_native_property_getter(value_here.as_native_property(), this);
     }
     return value_here;
 }
@@ -869,9 +869,7 @@ bool Object::put_by_index(u32 property_index, Value value)
                 return true;
             }
             if (value_here.value.is_native_property()) {
-                // FIXME: Why doesn't put_by_index() receive the receiver value from put()?!
-                auto receiver = this;
-                call_native_property_setter(value_here.value.as_native_property(), receiver, value);
+                call_native_property_setter(value_here.value.as_native_property(), this, value);
                 return true;
             }
         }
@@ -908,7 +906,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
                 return true;
             }
             if (value_here.is_native_property()) {
-                call_native_property_setter(value_here.as_native_property(), receiver, value);
+                call_native_property_setter(value_here.as_native_property(), this, value);
                 return true;
             }
         }
