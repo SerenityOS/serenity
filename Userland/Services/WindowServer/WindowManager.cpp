@@ -59,22 +59,31 @@ void WindowManager::reload_config()
     m_config = Core::ConfigFile::open("/etc/WindowServer.ini");
 
     m_double_click_speed = m_config->read_num_entry("Input", "DoubleClickSpeed", 250);
-    m_hidden_cursor = get_cursor("Hidden");
-    m_arrow_cursor = get_cursor("Arrow");
-    m_hand_cursor = get_cursor("Hand");
-    m_help_cursor = get_cursor("Help");
-    m_resize_horizontally_cursor = get_cursor("ResizeH");
-    m_resize_vertically_cursor = get_cursor("ResizeV");
-    m_resize_diagonally_tlbr_cursor = get_cursor("ResizeDTLBR");
-    m_resize_diagonally_bltr_cursor = get_cursor("ResizeDBLTR");
-    m_resize_column_cursor = get_cursor("ResizeColumn");
-    m_resize_row_cursor = get_cursor("ResizeRow");
-    m_i_beam_cursor = get_cursor("IBeam");
-    m_disallowed_cursor = get_cursor("Disallowed");
-    m_move_cursor = get_cursor("Move");
-    m_drag_cursor = get_cursor("Drag");
-    m_wait_cursor = get_cursor("Wait");
-    m_crosshair_cursor = get_cursor("Crosshair");
+
+    auto* current_cursor = Compositor::the().current_cursor();
+    auto reload_cursor = [&](RefPtr<Cursor>& cursor, const String& name) {
+        bool is_current_cursor = current_cursor && current_cursor == cursor.ptr();
+        cursor = get_cursor(name);
+        if (is_current_cursor)
+            Compositor::the().current_cursor_was_reloaded(cursor.ptr());
+    };
+
+    reload_cursor(m_hidden_cursor, "Hidden");
+    reload_cursor(m_arrow_cursor, "Arrow");
+    reload_cursor(m_hand_cursor, "Hand");
+    reload_cursor(m_help_cursor, "Help");
+    reload_cursor(m_resize_horizontally_cursor, "ResizeH");
+    reload_cursor(m_resize_vertically_cursor, "ResizeV");
+    reload_cursor(m_resize_diagonally_tlbr_cursor, "ResizeDTLBR");
+    reload_cursor(m_resize_diagonally_bltr_cursor, "ResizeDBLTR");
+    reload_cursor(m_resize_column_cursor, "ResizeColumn");
+    reload_cursor(m_resize_row_cursor, "ResizeRow");
+    reload_cursor(m_i_beam_cursor, "IBeam");
+    reload_cursor(m_disallowed_cursor, "Disallowed");
+    reload_cursor(m_move_cursor, "Move");
+    reload_cursor(m_drag_cursor, "Drag");
+    reload_cursor(m_wait_cursor, "Wait");
+    reload_cursor(m_crosshair_cursor, "Crosshair");
 
     WindowFrame::reload_config();
 }

@@ -48,6 +48,8 @@ public:
 
     void invalidate_cursor(bool = false);
     Gfx::IntRect current_cursor_rect() const;
+    const Cursor* current_cursor() const { return m_current_cursor; }
+    void current_cursor_was_reloaded(const Cursor* new_cursor) { m_current_cursor = new_cursor; }
 
     void increment_display_link_count(Badge<ClientConnection>);
     void decrement_display_link_count(Badge<ClientConnection>);
