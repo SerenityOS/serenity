@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -33,6 +33,7 @@ public:
 
     bool is_null() const { return m_tag == EntryTag::None; }
     const CompilationUnit& compilation_unit() const { return m_compilation_unit; }
+    Optional<u32> parent_offset() const { return m_parent_offset; }
 
 private:
     const CompilationUnit& m_compilation_unit;
@@ -42,6 +43,7 @@ private:
     EntryTag m_tag { EntryTag::None };
     bool m_has_children { false };
     u32 m_size { 0 };
+    Optional<u32> m_parent_offset;
 };
 
 }
