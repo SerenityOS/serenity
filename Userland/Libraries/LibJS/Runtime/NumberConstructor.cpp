@@ -84,15 +84,26 @@ static Value get_value_from_constructor_argument(GlobalObject& global_object)
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 Value NumberConstructor::call()
 {
-    return get_value_from_constructor_argument(global_object());
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto number = get_value_from_constructor_argument(global_object);
+    if (vm.exception())
+        return {};
+    return number;
 }
 
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 Value NumberConstructor::construct(Function&)
 {
-    auto number = get_value_from_constructor_argument(global_object());
+    auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
+    auto number = get_value_from_constructor_argument(global_object);
+    if (vm.exception())
+        return {};
     // FIXME: Use OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%")
-    return NumberObject::create(global_object(), number.as_double());
+    return NumberObject::create(global_object, number.as_double());
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite
