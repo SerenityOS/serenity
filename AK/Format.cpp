@@ -334,6 +334,7 @@ void FormatBuilder::put_f64(
     double value,
     u8 base,
     bool upper_case,
+    bool zero_pad,
     Align align,
     size_t min_width,
     size_t precision,
@@ -367,10 +368,14 @@ void FormatBuilder::put_f64(
             epsilon *= 10.0;
         }
 
-        if (visible_precision > 0) {
+        if (zero_pad || visible_precision > 0)
             string_builder.append('.');
+
+        if (visible_precision > 0)
             format_builder.put_u64(static_cast<u64>(value), base, false, upper_case, true, Align::Right, visible_precision);
-        }
+
+        if (zero_pad && (precision - visible_precision) > 0)
+            format_builder.put_u64(0, base, false, false, true, Align::Right, precision - visible_precision);
     }
 
     put_string(string_builder.string_view(), align, min_width, NumericLimits<size_t>::max(), fill);
@@ -623,7 +628,7 @@ void Formatter<double>::format(FormatBuilder& builder, double value)
     m_width = m_width.value_or(0);
     m_precision = m_precision.value_or(6);
 
-    builder.put_f64(value, base, upper_case, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
+    builder.put_f64(value, base, upper_case, m_zero_pad, m_align, m_width.value(), m_precision.value(), m_fill, m_sign_mode);
 }
 void Formatter<float>::format(FormatBuilder& builder, float value)
 {
