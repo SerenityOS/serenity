@@ -12,3 +12,8 @@ test("use with object with symbol keys", () => {
     let names = Object.getOwnPropertyNames({ foo: 1, [Symbol("bar")]: 2, baz: 3 });
     expect(names).toEqual(["foo", "baz"]);
 });
+
+test("use with String object", () => {
+    let names = Object.getOwnPropertyNames(new String("foo"));
+    expect(names).toEqual(["0", "1", "2", "length"]);
+});
