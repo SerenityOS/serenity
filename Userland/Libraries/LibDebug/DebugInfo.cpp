@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -378,6 +378,79 @@ Vector<DebugInfo::SourcePosition> DebugInfo::source_lines_in_scope(const Variabl
 DebugInfo::SourcePosition DebugInfo::SourcePosition::from_line_info(const Dwarf::LineProgram::LineInfo& line)
 {
     return { line.file, line.line, { line.address } };
+}
+
+DebugInfo::SourcePositionWithInlines DebugInfo::get_source_position_with_inlines(u32 address) const
+{
+    // If the address is in an "inline chain", this is the inner-most inlined position.
+    auto inner_source_position = get_source_position(address);
+
+    auto die = m_dwarf_info.get_die_at_address(address);
+    if (!die.has_value() || die->tag() == Dwarf::EntryTag::SubroutineType) {
+        // Inline chain is empty
+        return SourcePositionWithInlines { inner_source_position, {} };
+    }
+
+    Vector<SourcePosition> inline_chain;
+
+    auto insert_to_chain = [&](const Dwarf::DIE& die) {
+        auto caller_source_path = get_source_path_of_inline(die);
+        auto caller_line = get_line_of_inline(die);
+
+        if (!caller_source_path.has_value() || !caller_line.has_value()) {
+            return;
+        }
+
+        inline_chain.append({ String::formatted("{}/{}", caller_source_path->directory, caller_source_path->filename), caller_line.value() });
+    };
+
+    while (die->tag() == Dwarf::EntryTag::InlinedSubroutine) {
+        insert_to_chain(*die);
+
+        if (!die->parent_offset().has_value()) {
+            break;
+        }
+
+        auto parent = die->compilation_unit().dwarf_info().get_cached_die_at_offset(die->parent_offset().value());
+        if (!parent.has_value()) {
+            break;
+        }
+        die = *parent;
+    }
+
+    return SourcePositionWithInlines { inner_source_position, inline_chain };
+}
+
+Optional<Dwarf::LineProgram::DirectoryAndFile> DebugInfo::get_source_path_of_inline(const Dwarf::DIE& die) const
+{
+    auto caller_file = die.get_attribute(Dwarf::Attribute::CallFile);
+    if (caller_file.has_value()) {
+        u32 file_index = 0;
+
+        if (caller_file->type == Dwarf::AttributeValue::Type::UnsignedNumber) {
+            file_index = caller_file->data.as_u32;
+        } else if (caller_file->type == Dwarf::AttributeValue::Type::SignedNumber) {
+            // For some reason, the file_index is sometimes stored as a signed number.
+            VERIFY(caller_file->data.as_i32 >= 0);
+            file_index = (u32)caller_file->data.as_i32;
+        } else {
+            return {};
+        }
+
+        return die.compilation_unit().line_program().get_directory_and_file(file_index);
+    }
+    return {};
+}
+
+Optional<uint32_t> DebugInfo::get_line_of_inline(const Dwarf::DIE& die) const
+{
+    auto caller_line = die.get_attribute(Dwarf::Attribute::CallLine);
+    if (!caller_line.has_value())
+        return {};
+
+    if (caller_line->type != Dwarf::AttributeValue::Type::UnsignedNumber)
+        return {};
+    return caller_line.value().data.as_u32;
 }
 
 }
