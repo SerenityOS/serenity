@@ -6,6 +6,7 @@
 
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/Date.h>
