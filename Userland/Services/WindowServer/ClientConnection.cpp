@@ -682,7 +682,7 @@ void ClientConnection::set_window_custom_cursor(i32 window_id, Gfx::ShareableBit
         return;
     }
 
-    window.set_cursor(Cursor::create(*cursor.bitmap()));
+    window.set_cursor(Cursor::create(*cursor.bitmap(), 1));
     Compositor::the().invalidate_cursor();
 }
 

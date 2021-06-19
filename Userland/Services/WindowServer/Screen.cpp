@@ -23,6 +23,7 @@ NonnullOwnPtrVector<Screen, default_screen_count> Screen::s_screens;
 Screen* Screen::s_main_screen { nullptr };
 Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
+Vector<int, default_scale_factors_in_use_count> Screen::s_scale_factors_in_use;
 
 ScreenInput& ScreenInput::the()
 {
@@ -83,7 +84,23 @@ bool Screen::apply_layout(ScreenLayout&& screen_layout, String& error_msg)
 
     rollback.disarm();
     update_bounding_rect();
+    update_scale_factors_in_use();
     return true;
+}
+
+void Screen::update_scale_factors_in_use()
+{
+    s_scale_factors_in_use.clear();
+    for_each([&](auto& screen) {
+        auto scale_factor = screen.scale_factor();
+        // The This doesn't have to be extremely efficient as this
+        // code is only run when we start up or the screen configuration
+        // changes. But using a vector allows for efficient iteration,
+        // which is the most common use case.
+        if (!s_scale_factors_in_use.contains_slow(scale_factor))
+            s_scale_factors_in_use.append(scale_factor);
+        return IterationDecision::Continue;
+    });
 }
 
 Screen::Screen(ScreenLayout::Screen& screen_info)

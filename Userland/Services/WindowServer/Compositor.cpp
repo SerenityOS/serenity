@@ -919,7 +919,7 @@ void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cur
     auto& current_cursor = compositor.m_current_cursor ? *compositor.m_current_cursor : wm.active_cursor();
     auto screen_rect = screen.rect();
     m_cursor_back_painter->blit({ 0, 0 }, *m_back_bitmap, current_cursor.rect().translated(cursor_rect.location()).intersected(screen_rect).translated(-screen_rect.location()));
-    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(), current_cursor.source_rect(compositor.m_current_cursor_frame));
+    m_back_painter->blit(cursor_rect.location(), current_cursor.bitmap(screen.scale_factor()), current_cursor.source_rect(compositor.m_current_cursor_frame));
     m_last_cursor_rect = cursor_rect;
     VERIFY(compositor.m_current_cursor_screen == &screen);
     m_cursor_back_is_valid = true;

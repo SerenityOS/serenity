@@ -19,12 +19,13 @@ namespace WindowServer {
 class Button;
 class Menu;
 class MouseEvent;
-class Window;
+class MultiScaleBitmaps;
 class Screen;
+class Window;
 
 class WindowFrame {
 public:
-    class RenderedCache {
+    class PerScaleRenderedCache {
         friend class WindowFrame;
 
     public:
@@ -60,7 +61,7 @@ public:
 
     void paint(Screen&, Gfx::Painter&, const Gfx::IntRect&);
     void render(Screen&, Gfx::Painter&);
-    RenderedCache* render_to_cache(Screen&);
+    PerScaleRenderedCache* render_to_cache(Screen&);
 
     void handle_mouse_event(MouseEvent const&);
     void handle_titlebar_mouse_event(MouseEvent const&);
@@ -123,7 +124,7 @@ private:
     void paint_normal_frame(Gfx::Painter&);
     void paint_tool_window_frame(Gfx::Painter&);
     void paint_menubar(Gfx::Painter&);
-    Gfx::Bitmap* shadow_bitmap() const;
+    MultiScaleBitmaps* shadow_bitmap() const;
     Gfx::IntRect inflated_for_shadow(const Gfx::IntRect&) const;
 
     void handle_menubar_mouse_event(const MouseEvent&);
@@ -140,7 +141,7 @@ private:
     Button* m_maximize_button { nullptr };
     Button* m_minimize_button { nullptr };
 
-    HashMap<int, NonnullOwnPtr<RenderedCache>> m_rendered_cache;
+    HashMap<int, NonnullOwnPtr<PerScaleRenderedCache>> m_rendered_cache;
 
     RefPtr<Core::Timer> m_flash_timer;
     size_t m_flash_counter { 0 };

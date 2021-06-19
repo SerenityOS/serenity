@@ -9,6 +9,7 @@
 #include "ScreenLayout.h"
 #include <AK/NonnullOwnPtrVector.h>
 #include <Kernel/API/KeyCode.h>
+#include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
@@ -23,6 +24,8 @@ constexpr unsigned scroll_step_size_min = 1;
 
 // Most people will probably have 4 screens or less
 constexpr size_t default_screen_count = 4;
+// We currently only support 2 scale factors: 1x and 2x
+constexpr size_t default_scale_factors_in_use_count = 2;
 
 class Screen;
 
@@ -125,6 +128,17 @@ public:
         return IterationDecision::Continue;
     }
 
+    template<typename F>
+    static IterationDecision for_each_scale_factor_in_use(F f)
+    {
+        for (auto& scale_factor : s_scale_factors_in_use) {
+            IterationDecision decision = f(scale_factor);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    }
+
     void make_main_screen() { s_main_screen = this; }
     bool is_main_screen() const { return s_main_screen == this; }
 
@@ -158,6 +172,7 @@ private:
             s_screens[i].m_index = i;
     }
     static void update_bounding_rect();
+    static void update_scale_factors_in_use();
 
     bool is_opened() const { return m_framebuffer_fd >= 0; }
 
@@ -165,6 +180,7 @@ private:
     static Screen* s_main_screen;
     static Gfx::IntRect s_bounding_screens_rect;
     static ScreenLayout s_layout;
+    static Vector<int, default_scale_factors_in_use_count> s_scale_factors_in_use;
     size_t m_index { 0 };
 
     size_t m_size_in_bytes;

@@ -224,8 +224,7 @@ public:
 
     Gfx::IntPoint get_recommended_window_position(Gfx::IntPoint const& desired);
 
-    int compositor_icon_scale() const;
-    void reload_icon_bitmaps_after_scale_change(bool allow_hidpi_icons = true);
+    void reload_icon_bitmaps_after_scale_change();
 
     void reevaluate_hovered_window(Window* = nullptr);
     Window* hovered_window() const { return m_hovered_window.ptr(); }
@@ -233,7 +232,7 @@ public:
     WindowStack& window_stack() { return m_window_stack; }
 
 private:
-    NonnullRefPtr<Cursor> get_cursor(String const& name);
+    RefPtr<Cursor> get_cursor(String const& name);
 
     void process_mouse_event(MouseEvent&);
     void process_event_for_doubleclick(Window& window, MouseEvent& event);
@@ -257,7 +256,6 @@ private:
 
     void do_move_to_front(Window&, bool, bool);
 
-    bool m_allow_hidpi_icons { true };
     RefPtr<Cursor> m_hidden_cursor;
     RefPtr<Cursor> m_arrow_cursor;
     RefPtr<Cursor> m_hand_cursor;
