@@ -432,6 +432,9 @@ protected:
     Vector<bool> m_horizontal_tabs;
     u32 m_last_code_point { 0 };
     size_t m_max_history_lines { 1024 };
+
+    Optional<u16> m_column_before_carriage_return;
+    bool m_controls_are_logically_generated { false };
 };
 
 }
