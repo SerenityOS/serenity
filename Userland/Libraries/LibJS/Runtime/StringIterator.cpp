@@ -12,10 +12,10 @@ namespace JS {
 
 StringIterator* StringIterator::create(GlobalObject& global_object, String string)
 {
-    return global_object.heap().allocate<StringIterator>(global_object, *global_object.string_iterator_prototype(), move(string));
+    return global_object.heap().allocate<StringIterator>(global_object, move(string), *global_object.string_iterator_prototype());
 }
 
-StringIterator::StringIterator(Object& prototype, String string)
+StringIterator::StringIterator(String string, Object& prototype)
     : Object(prototype)
     , m_string(move(string))
     , m_iterator(Utf8View(m_string).begin())

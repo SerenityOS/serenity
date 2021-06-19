@@ -10,10 +10,10 @@ namespace JS {
 
 WeakRef* WeakRef::create(GlobalObject& global_object, Object* object)
 {
-    return global_object.heap().allocate<WeakRef>(global_object, *global_object.weak_ref_prototype(), object);
+    return global_object.heap().allocate<WeakRef>(global_object, object, *global_object.weak_ref_prototype());
 }
 
-WeakRef::WeakRef(Object& prototype, Object* object)
+WeakRef::WeakRef(Object* object, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
     , m_value(object)

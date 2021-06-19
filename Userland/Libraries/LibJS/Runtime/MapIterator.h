@@ -18,7 +18,7 @@ class MapIterator final : public Object {
 public:
     static MapIterator* create(GlobalObject&, Map& map, Object::PropertyKind iteration_kind);
 
-    explicit MapIterator(Object& prototype, Map& map, Object::PropertyKind iteration_kind);
+    explicit MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~MapIterator() override;
 
     Map& map() const { return m_map; }

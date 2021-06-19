@@ -46,7 +46,7 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     explicit Function(Object& prototype);
-    Function(Object& prototype, Value bound_this, Vector<Value> bound_arguments);
+    Function(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
 
 private:
     virtual bool is_function() const override { return true; }

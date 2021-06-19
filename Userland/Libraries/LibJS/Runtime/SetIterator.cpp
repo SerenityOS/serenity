@@ -11,10 +11,10 @@ namespace JS {
 
 SetIterator* SetIterator::create(GlobalObject& global_object, Set& set, Object::PropertyKind iteration_kind)
 {
-    return global_object.heap().allocate<SetIterator>(global_object, *global_object.set_iterator_prototype(), set, iteration_kind);
+    return global_object.heap().allocate<SetIterator>(global_object, set, iteration_kind, *global_object.set_iterator_prototype());
 }
 
-SetIterator::SetIterator(Object& prototype, Set& set, Object::PropertyKind iteration_kind)
+SetIterator::SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype)
     : Object(prototype)
     , m_set(set)
     , m_iteration_kind(iteration_kind)

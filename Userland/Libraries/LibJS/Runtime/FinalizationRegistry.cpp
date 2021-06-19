@@ -10,10 +10,10 @@ namespace JS {
 
 FinalizationRegistry* FinalizationRegistry::create(GlobalObject& global_object, Function& cleanup_callback)
 {
-    return global_object.heap().allocate<FinalizationRegistry>(global_object, *global_object.finalization_registry_prototype(), cleanup_callback);
+    return global_object.heap().allocate<FinalizationRegistry>(global_object, cleanup_callback, *global_object.finalization_registry_prototype());
 }
 
-FinalizationRegistry::FinalizationRegistry(Object& prototype, Function& cleanup_callback)
+FinalizationRegistry::FinalizationRegistry(Function& cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
     , m_cleanup_callback(&cleanup_callback)
