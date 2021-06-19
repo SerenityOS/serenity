@@ -266,10 +266,11 @@ private:
     void try_update_once();
     void handle_interrupt_event();
     void handle_read_event();
+    void handle_resize_event(bool reset_origin);
 
     void ensure_free_lines_from_origin(size_t count);
 
-    Vector<size_t, 2> vt_dsr();
+    Result<Vector<size_t, 2>, Error> vt_dsr();
     void remove_at_index(size_t);
 
     enum class ModificationKind {
@@ -360,10 +361,18 @@ private:
         return current_prompt_metrics().offset_with_addition(buffer_metrics, m_num_columns);
     }
 
-    void set_origin()
+    bool set_origin(bool quit_on_error = true)
     {
         auto position = vt_dsr();
-        set_origin(position[0], position[1]);
+        if (!position.is_error()) {
+            set_origin(position.value()[0], position.value()[1]);
+            return true;
+        }
+        if (quit_on_error && position.is_error()) {
+            m_input_error = position.error();
+            finish();
+        }
+        return false;
     }
 
     void set_origin(int row, int col)
@@ -423,6 +432,7 @@ private:
     // Exact position before our prompt in the terminal.
     size_t m_origin_row { 0 };
     size_t m_origin_column { 0 };
+    bool m_has_origin_reset_scheduled { false };
 
     OwnPtr<SuggestionDisplay> m_suggestion_display;
 

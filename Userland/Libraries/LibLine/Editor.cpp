@@ -598,6 +598,27 @@ void Editor::resized()
     m_previous_num_columns = m_num_columns;
     get_terminal_size();
 
+    if (!m_has_origin_reset_scheduled) {
+        // Reset the origin, but make sure it doesn't blow up if we can't read it
+        if (set_origin(false)) {
+            handle_resize_event(false);
+        } else {
+            deferred_invoke([this](auto&) { handle_resize_event(true); });
+            m_has_origin_reset_scheduled = true;
+        }
+    }
+}
+
+void Editor::handle_resize_event(bool reset_origin)
+{
+    m_has_origin_reset_scheduled = false;
+    if (reset_origin && !set_origin(false)) {
+        m_has_origin_reset_scheduled = true;
+        return deferred_invoke([this](auto&) { handle_resize_event(true); });
+    }
+
+    set_origin(m_origin_row, 1);
+
     reposition_cursor(true);
     m_suggestion_display->redisplay(m_suggestion_manager, m_num_lines, m_num_columns);
     reposition_cursor();
@@ -1751,7 +1772,7 @@ Editor::VTState Editor::actual_rendered_string_length_step(StringMetrics& metric
     return state;
 }
 
-Vector<size_t, 2> Editor::vt_dsr()
+Result<Vector<size_t, 2>, Editor::Error> Editor::vt_dsr()
 {
     char buf[16];
 
@@ -1783,7 +1804,7 @@ Vector<size_t, 2> Editor::vt_dsr()
     } while (more_junk_to_read);
 
     if (m_input_error.has_value())
-        return { 1, 1 };
+        return m_input_error.value();
 
     fputs("\033[6n", stderr);
     fflush(stderr);
@@ -1813,15 +1834,11 @@ Vector<size_t, 2> Editor::vt_dsr()
                 continue;
             }
             dbgln("Error while reading DSR: {}", strerror(errno));
-            m_input_error = Error::ReadFailure;
-            finish();
-            return { 1, 1 };
+            return Error::ReadFailure;
         }
         if (nread == 0) {
-            m_input_error = Error::Empty;
-            finish();
             dbgln("Terminal DSR issue; received no response");
-            return { 1, 1 };
+            return Error::Empty;
         }
 
         switch (state) {
@@ -1897,7 +1914,7 @@ Vector<size_t, 2> Editor::vt_dsr()
 
     if (has_error)
         dbgln("Terminal DSR issue, couldn't parse DSR response");
-    return { row, col };
+    return Vector<size_t, 2> { row, col };
 }
 
 String Editor::line(size_t up_to_index) const
