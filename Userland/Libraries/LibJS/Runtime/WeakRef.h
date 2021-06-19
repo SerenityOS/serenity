@@ -20,7 +20,7 @@ class WeakRef final
 public:
     static WeakRef* create(GlobalObject&, Object*);
 
-    explicit WeakRef(Object& prototype, Object*);
+    explicit WeakRef(Object*, Object& prototype);
     virtual ~WeakRef() override;
 
     Object* value() const { return m_value; };

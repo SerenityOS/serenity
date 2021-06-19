@@ -17,7 +17,7 @@ class StringIterator final : public Object {
 public:
     static StringIterator* create(GlobalObject&, String string);
 
-    explicit StringIterator(Object& prototype, String string);
+    explicit StringIterator(String string, Object& prototype);
     virtual ~StringIterator() override;
 
     Utf8CodePointIterator& iterator() { return m_iterator; }

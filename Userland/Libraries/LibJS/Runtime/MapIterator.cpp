@@ -11,10 +11,10 @@ namespace JS {
 
 MapIterator* MapIterator::create(GlobalObject& global_object, Map& map, Object::PropertyKind iteration_kind)
 {
-    return global_object.heap().allocate<MapIterator>(global_object, *global_object.map_iterator_prototype(), map, iteration_kind);
+    return global_object.heap().allocate<MapIterator>(global_object, map, iteration_kind, *global_object.map_iterator_prototype());
 }
 
-MapIterator::MapIterator(Object& prototype, Map& map, Object::PropertyKind iteration_kind)
+MapIterator::MapIterator(Map& map, Object::PropertyKind iteration_kind, Object& prototype)
     : Object(prototype)
     , m_map(map)
     , m_iteration_kind(iteration_kind)

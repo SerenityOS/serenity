@@ -18,7 +18,7 @@ class SetIterator final : public Object {
 public:
     static SetIterator* create(GlobalObject&, Set& set, Object::PropertyKind iteration_kind);
 
-    explicit SetIterator(Object& prototype, Set& set, Object::PropertyKind iteration_kind);
+    explicit SetIterator(Set& set, Object::PropertyKind iteration_kind, Object& prototype);
     virtual ~SetIterator() override;
 
     Set& set() const { return m_set; }

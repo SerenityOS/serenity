@@ -18,7 +18,7 @@ class DataView : public Object {
 public:
     static DataView* create(GlobalObject&, ArrayBuffer*, size_t byte_length, size_t byte_offset);
 
-    explicit DataView(Object& prototype, ArrayBuffer*, size_t byte_length, size_t byte_offset);
+    explicit DataView(ArrayBuffer*, size_t byte_length, size_t byte_offset, Object& prototype);
     virtual ~DataView() override;
 
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }

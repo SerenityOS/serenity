@@ -11,10 +11,10 @@ namespace JS {
 
 ArrayIterator* ArrayIterator::create(GlobalObject& global_object, Value array, Object::PropertyKind iteration_kind)
 {
-    return global_object.heap().allocate<ArrayIterator>(global_object, *global_object.array_iterator_prototype(), array, iteration_kind);
+    return global_object.heap().allocate<ArrayIterator>(global_object, array, iteration_kind, *global_object.array_iterator_prototype());
 }
 
-ArrayIterator::ArrayIterator(Object& prototype, Value array, Object::PropertyKind iteration_kind)
+ArrayIterator::ArrayIterator(Value array, Object::PropertyKind iteration_kind, Object& prototype)
     : Object(prototype)
     , m_array(array)
     , m_iteration_kind(iteration_kind)

@@ -50,7 +50,7 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
 }
 
 ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
-    : Function(prototype, is_arrow_function ? vm().this_value(global_object) : Value(), {})
+    : Function(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
