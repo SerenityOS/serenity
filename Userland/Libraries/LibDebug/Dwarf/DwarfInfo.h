@@ -37,6 +37,8 @@ public:
     AttributeValue get_attribute_value(AttributeDataForm form, ssize_t implicit_const_value,
         InputMemoryStream& debug_info_stream, const CompilationUnit* unit = nullptr) const;
 
+    Optional<DIE> get_die_at_address(FlatPtr) const;
+
 private:
     void populate_compilation_units();
     void build_cached_dies() const;
