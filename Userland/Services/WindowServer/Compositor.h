@@ -56,6 +56,7 @@ public:
 
     void did_construct_window_manager(Badge<WindowManager>);
 
+    const Gfx::Bitmap* cursor_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
     const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
 
 private:

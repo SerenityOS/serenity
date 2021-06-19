@@ -64,6 +64,13 @@ Compositor::Compositor()
     init_bitmaps();
 }
 
+const Gfx::Bitmap* Compositor::cursor_bitmap_for_screenshot(Badge<ClientConnection>, Screen& screen) const
+{
+    if (!m_current_cursor)
+        return nullptr;
+    return &m_current_cursor->bitmap(screen.scale_factor());
+}
+
 const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnection>, Screen& screen) const
 {
     return *m_screen_data[screen.index()].m_front_bitmap;

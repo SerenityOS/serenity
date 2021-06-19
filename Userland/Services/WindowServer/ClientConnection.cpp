@@ -921,30 +921,100 @@ void ClientConnection::did_become_responsive()
     set_unresponsive(false);
 }
 
-Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap(Optional<Gfx::IntRect> const& rect)
+Messages::WindowServer::GetScreenBitmapResponse ClientConnection::get_screen_bitmap(Optional<Gfx::IntRect> const& rect, Optional<u32> const& screen_index)
 {
-    auto& screen = Screen::main(); // TODO: implement screenshots from other screens or areas spanning multiple screens
-    if (rect.has_value()) {
-        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect.value());
+    if (screen_index.has_value()) {
+        auto* screen = Screen::find_by_index(screen_index.value());
+        if (!screen) {
+            dbgln("get_screen_bitmap: Screen {} does not exist!", screen_index.value());
+            return { {} };
+        }
+        if (rect.has_value()) {
+            auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen).cropped(rect.value());
+            return bitmap->to_shareable_bitmap();
+        }
+        auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, *screen);
+        return bitmap.to_shareable_bitmap();
+    }
+    // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
+    if (auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, Screen::bounding_rect().size(), 1)) {
+        Gfx::Painter painter(*bitmap);
+        Screen::for_each([&](auto& screen) {
+            auto screen_rect = screen.rect();
+            if (rect.has_value() && !rect.value().intersects(screen_rect))
+                return IterationDecision::Continue;
+            auto src_rect = rect.has_value() ? rect.value().intersected(screen_rect) : screen_rect;
+            VERIFY(Screen::bounding_rect().contains(src_rect));
+            auto& screen_bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
+            // TODO: painter does *not* support down-sampling!!!
+            painter.blit(screen_rect.location(), screen_bitmap, src_rect.translated(-screen_rect.location()), 1.0f, false);
+            return IterationDecision::Continue;
+        });
         return bitmap->to_shareable_bitmap();
     }
-    auto& bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
-    return bitmap.to_shareable_bitmap();
+    return { {} };
 }
 
 Messages::WindowServer::GetScreenBitmapAroundCursorResponse ClientConnection::get_screen_bitmap_around_cursor(Gfx::IntSize const& size)
 {
-    auto& screen = Screen::main(); // TODO: implement getting screen bitmaps from other screens or areas spanning multiple screens
-    auto scale_factor = screen.scale_factor();
+    // TODO: Mixed scale setups at what scale? Lowest? Highest? Configurable?
     auto cursor_location = ScreenInput::the().cursor_location();
-    Gfx::Rect rect { (cursor_location.x() * scale_factor) - (size.width() / 2), (cursor_location.y() * scale_factor) - (size.height() / 2), size.width(), size.height() };
+    Gfx::Rect rect { cursor_location.x() - (size.width() / 2), cursor_location.y() - (size.height() / 2), size.width(), size.height() };
 
     // Recompose the screen to make sure the cursor is painted in the location we think it is.
     // FIXME: This is rather wasteful. We can probably think of a way to avoid this.
     Compositor::the().compose();
 
-    auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect);
-    return bitmap->to_shareable_bitmap();
+    // Check if we need to compose from multiple screens. If not we can take a fast path
+    size_t intersecting_with_screens = 0;
+    Screen::for_each([&](auto& screen) {
+        if (rect.intersects(screen.rect()))
+            intersecting_with_screens++;
+        return IterationDecision::Continue;
+    });
+
+    if (intersecting_with_screens == 1) {
+        auto& screen = Screen::closest_to_rect(rect);
+        auto bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen).cropped(rect.translated(-screen.rect().location()));
+        return bitmap->to_shareable_bitmap();
+    }
+
+    if (auto bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, rect.size(), 1)) {
+        auto bounding_screen_src_rect = Screen::bounding_rect().intersected(rect);
+        Gfx::Painter painter(*bitmap);
+        Gfx::IntRect last_cursor_rect;
+        auto& screen_with_cursor = ScreenInput::the().cursor_location_screen();
+        auto cursor_rect = Compositor::the().current_cursor_rect();
+        Screen::for_each([&](auto& screen) {
+            auto screen_rect = screen.rect();
+            auto src_rect = screen_rect.intersected(bounding_screen_src_rect);
+            if (src_rect.is_empty())
+                return IterationDecision ::Continue;
+            auto& screen_bitmap = Compositor::the().front_bitmap_for_screenshot({}, screen);
+            auto from_rect = src_rect.translated(-screen_rect.location());
+            auto target_location = rect.intersected(screen_rect).location().translated(-rect.location());
+            // TODO: painter does *not* support down-sampling!!!
+            painter.blit(target_location, screen_bitmap, from_rect, 1.0f, false);
+            // Check if we are a screen that doesn't have the cursor but the cursor would
+            // have normally been cut off (we don't draw portions of the cursor on a screen
+            // that doesn't actually have the cursor). In that case we need to render the remaining
+            // portion of the cursor on that screen's capture manually
+            if (&screen != &screen_with_cursor) {
+                auto screen_cursor_rect = cursor_rect.intersected(screen_rect);
+                if (!screen_cursor_rect.is_empty()) {
+                    if (auto const* cursor_bitmap = Compositor::the().cursor_bitmap_for_screenshot({}, screen)) {
+                        auto src_rect = screen_cursor_rect.translated(-cursor_rect.location());
+                        auto cursor_target = cursor_rect.intersected(screen_rect).location().translated(-rect.location());
+                        // TODO: painter does *not* support down-sampling!!!
+                        painter.blit(cursor_target, *cursor_bitmap, src_rect);
+                    }
+                }
+            }
+            return IterationDecision::Continue;
+        });
+        return bitmap->to_shareable_bitmap();
+    }
+    return { {} };
 }
 
 Messages::WindowServer::IsWindowModifiedResponse ClientConnection::is_window_modified(i32 window_id)
