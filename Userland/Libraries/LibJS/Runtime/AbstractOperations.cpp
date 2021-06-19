@@ -140,4 +140,20 @@ GlobalObject* get_function_realm(GlobalObject& global_object, Function const& fu
     return &global_object;
 }
 
+// 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto )
+Object* get_prototype_from_constructor(GlobalObject& global_object, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
+{
+    auto& vm = global_object.vm();
+    auto prototype = constructor.get(vm.names.prototype);
+    if (vm.exception())
+        return nullptr;
+    if (!prototype.is_object()) {
+        auto* realm = get_function_realm(global_object, constructor);
+        if (vm.exception())
+            return nullptr;
+        prototype = (realm->*intrinsic_default_prototype)();
+    }
+    return &prototype.as_object();
+}
+
 }
