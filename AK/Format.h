@@ -189,6 +189,7 @@ public:
         double value,
         u8 base = 10,
         bool upper_case = false,
+        bool zero_pad = false,
         Align align = Align::Right,
         size_t min_width = 0,
         size_t precision = 6,

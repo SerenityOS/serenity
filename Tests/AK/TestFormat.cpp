@@ -252,6 +252,12 @@ TEST_CASE(yay_this_implementation_sucks)
     EXPECT_EQ(String::formatted("{:.0}", .99999999999), "0");
 }
 
+TEST_CASE(precision_with_trailing_zeros)
+{
+    EXPECT_EQ(String::formatted("{:0.3}", 1.12), "1.120");
+    EXPECT_EQ(String::formatted("{:0.1}", 1.12), "1.1");
+}
+
 TEST_CASE(magnitude_less_than_zero)
 {
     EXPECT_EQ(String::formatted("{}", -0.654), "-0.654");
