@@ -172,7 +172,8 @@ private:
     bool m_black_can_castle_kingside { true };
     bool m_black_can_castle_queenside { true };
 
-    HashMap<Board, int> m_previous_states;
+    // We trust that hash collisions will not happen to save lots of memory and time.
+    HashMap<unsigned, int> m_previous_states;
     Vector<Move> m_moves;
     friend struct Traits<Board>;
 };
@@ -276,7 +277,7 @@ void Board::generate_moves(Callback callback, Color color) const
 
 template<>
 struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
-    static unsigned hash(Chess::Piece piece)
+    static unsigned hash(const Chess::Piece& piece)
     {
         return pair_int_hash(static_cast<u32>(piece.color), static_cast<u32>(piece.type));
     }
@@ -284,7 +285,7 @@ struct AK::Traits<Chess::Piece> : public GenericTraits<Chess::Piece> {
 
 template<>
 struct AK::Traits<Chess::Board> : public GenericTraits<Chess::Board> {
-    static unsigned hash(Chess::Board chess)
+    static unsigned hash(const Chess::Board chess)
     {
         unsigned hash = 0;
         hash = pair_int_hash(hash, static_cast<u32>(chess.m_white_can_castle_queenside));
