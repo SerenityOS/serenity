@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -58,24 +58,41 @@ NumberConstructor::~NumberConstructor()
 {
 }
 
+// Most of 21.1.1.1 Number ( value ) factored into a separate function for sharing between call() and construct().
+static Value get_value_from_constructor_argument(GlobalObject& global_object)
+{
+    auto& vm = global_object.vm();
+
+    Value number;
+    if (vm.argument_count() > 0) {
+        auto primitive = vm.argument(0).to_numeric(global_object);
+        if (vm.exception())
+            return {};
+        if (primitive.is_bigint()) {
+            // FIXME: How should huge values be handled here?
+            auto& big_integer = primitive.as_bigint().big_integer();
+            number = Value(static_cast<double>(big_integer.unsigned_value().to_u64()) * (big_integer.is_negative() ? -1.0 : 1.0));
+        } else {
+            number = primitive;
+        }
+    } else {
+        number = Value(0);
+    }
+    return number;
+}
+
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 Value NumberConstructor::call()
 {
-    if (!vm().argument_count())
-        return Value(0);
-    return vm().argument(0).to_number(global_object());
+    return get_value_from_constructor_argument(global_object());
 }
 
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
 Value NumberConstructor::construct(Function&)
 {
-    double number = 0;
-    if (vm().argument_count()) {
-        number = vm().argument(0).to_double(global_object());
-        if (vm().exception())
-            return {};
-    }
-    return NumberObject::create(global_object(), number);
+    auto number = get_value_from_constructor_argument(global_object());
+    // FIXME: Use OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%")
+    return NumberObject::create(global_object(), number.as_double());
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite
