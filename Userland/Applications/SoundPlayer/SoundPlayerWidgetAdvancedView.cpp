@@ -49,7 +49,7 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
 
     // Set a temporary value for total samples.
     // This value will be set properly when we load a new file.
-    const int total_samples = this->manager().total_length() * 44100;
+    const int total_samples = this->manager().total_length() * this->manager().device_sample_rate();
 
     m_playback_progress_slider = m_player_view->add<AutoSlider>(Orientation::Horizontal);
     m_playback_progress_slider->set_fixed_height(20);
@@ -142,16 +142,20 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
     set_nonlinear_volume_slider(false);
 
     manager().on_update = [&]() {
-        //TODO: make this program support other sample rates
-        int samples_played = client_connection().get_played_samples() + this->manager().last_seek();
-        int current_second = samples_played / 44100;
+        // Determine how many of the source file samples have played.
+        int samples_played = client_connection().get_played_samples();
+        float source_to_dest_ratio = static_cast<float>(loaded_file_samplerate()) / manager().device_sample_rate();
+        samples_played *= source_to_dest_ratio;
+        samples_played += this->manager().last_seek();
+
+        int current_second = samples_played / loaded_file_samplerate();
         timestamp_label.set_text(String::formatted("Elapsed: {:02}:{:02}:{:02}", current_second / 3600, current_second / 60, current_second % 60));
         if (!m_playback_progress_slider->mouse_is_down()) {
             m_playback_progress_slider->set_value(samples_played);
         }
 
         dynamic_cast<Visualization*>(m_visualization.ptr())->set_buffer(this->manager().current_buffer());
-        dynamic_cast<Visualization*>(m_visualization.ptr())->set_samplerate(loaded_file_samplerate());
+        dynamic_cast<Visualization*>(m_visualization.ptr())->set_samplerate(manager().device_sample_rate());
     };
 
     manager().on_load_sample_buffer = [&](Audio::Buffer&) {
@@ -176,6 +180,8 @@ SoundPlayerWidgetAdvancedView::SoundPlayerWidgetAdvancedView(GUI::Window& window
             } else
                 open_file((it + 1)->path);
         }
+
+        m_stop_button->set_enabled(false);
     };
 }
 

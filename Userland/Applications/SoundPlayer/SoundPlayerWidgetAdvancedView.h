@@ -63,4 +63,5 @@ private:
     RefPtr<GUI::Label> m_volume_label;
 
     bool m_nonlinear_volume_slider;
+    size_t m_device_sample_rate { 44100 };
 };
