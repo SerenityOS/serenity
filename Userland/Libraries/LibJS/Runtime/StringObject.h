@@ -29,6 +29,7 @@ public:
 private:
     virtual bool is_string_object() const final { return true; }
     virtual void visit_edges(Visitor&) override;
+    virtual Optional<PropertyDescriptor> get_own_property_descriptor(PropertyName const&) const override;
 
     PrimitiveString& m_string;
 };

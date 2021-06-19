@@ -39,4 +39,18 @@ void StringObject::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_string);
 }
 
+Optional<PropertyDescriptor> StringObject::get_own_property_descriptor(PropertyName const& property_name) const
+{
+    if (!property_name.is_number() || property_name.as_number() >= m_string.string().length())
+        return Base::get_own_property_descriptor(property_name);
+
+    PropertyDescriptor descriptor;
+    descriptor.value = js_string(heap(), m_string.string().substring(property_name.as_number(), 1));
+    descriptor.attributes.set_has_configurable();
+    descriptor.attributes.set_has_enumerable();
+    descriptor.attributes.set_has_writable();
+    descriptor.attributes.set_enumerable();
+    return descriptor;
+}
+
 }

@@ -86,3 +86,12 @@ test("defined property", () => {
     expect(o).not.toHaveGetterProperty(1);
     expect(o).not.toHaveSetterProperty(1);
 });
+
+test("String object indexed properties", () => {
+    expect("foo").toHaveValueProperty(0, "f");
+    expect("foo").toHaveEnumerableProperty(0);
+    expect("foo").not.toHaveConfigurableProperty(0);
+    expect("foo").not.toHaveWritableProperty(0);
+
+    expect("foo").toHaveValueProperty(1, "o");
+});
