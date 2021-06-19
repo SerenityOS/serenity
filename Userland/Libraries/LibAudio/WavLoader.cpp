@@ -30,7 +30,7 @@ WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     if (!valid)
         return;
 
-    m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
+    m_resampler = make<ResampleHelper>(m_sample_rate, m_device_sample_rate);
 }
 
 WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
@@ -46,7 +46,7 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
     if (!valid)
         return;
 
-    m_resampler = make<ResampleHelper>(m_sample_rate, 44100);
+    m_resampler = make<ResampleHelper>(m_sample_rate, m_device_sample_rate);
 }
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
