@@ -13,6 +13,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PropertyName.h>
+#include <LibJS/Runtime/ProxyObject.h>
 
 namespace JS {
 
@@ -110,6 +111,33 @@ Function* species_constructor(GlobalObject& global_object, Object const& object,
         return &species.as_function();
     vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
     return nullptr;
+}
+
+// 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
+GlobalObject* get_function_realm(GlobalObject& global_object, Function const& function)
+{
+    auto& vm = global_object.vm();
+
+    // FIXME: not sure how to do this currently.
+    // 2. If obj has a [[Realm]] internal slot, then
+    //     a. Return obj.[[Realm]].
+    if (is<BoundFunction>(function)) {
+        auto& bound_function = static_cast<BoundFunction const&>(function);
+        auto& target = bound_function.target_function();
+        return get_function_realm(global_object, target);
+    }
+    if (is<ProxyObject>(function)) {
+        auto& proxy = static_cast<ProxyObject const&>(function);
+        if (proxy.is_revoked()) {
+            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
+            return nullptr;
+        }
+        auto& proxy_target = proxy.target();
+        VERIFY(proxy_target.is_function());
+        return get_function_realm(global_object, static_cast<Function const&>(proxy_target));
+    }
+    // 5. Return the current Realm Record.
+    return &global_object;
 }
 
 }
