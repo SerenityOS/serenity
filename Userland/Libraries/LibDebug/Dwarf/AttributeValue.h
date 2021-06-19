@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <LibDebug/Dwarf/DwarfTypes.h>
 
 namespace Debug::Dwarf {
 
@@ -34,6 +35,8 @@ struct AttributeValue {
             const u8* bytes; // points to bytes in the memory mapped elf image
         } as_raw_bytes;
     } data {};
+
+    AttributeDataForm form {};
 };
 
 }
