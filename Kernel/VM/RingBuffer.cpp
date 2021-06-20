@@ -30,6 +30,25 @@ bool RingBuffer::copy_data_in(const UserOrKernelBuffer& buffer, size_t offset, s
     return false;
 }
 
+KResultOr<size_t> RingBuffer::copy_data_out(size_t size, UserOrKernelBuffer& buffer) const
+{
+    auto start = m_start_of_used % m_capacity_in_bytes;
+    auto num_bytes = min(min(m_num_used_bytes, size), m_capacity_in_bytes - start);
+    if (!buffer.write(m_region->vaddr().offset(start).as_ptr(), num_bytes))
+        return EIO;
+    return num_bytes;
+}
+
+KResultOr<PhysicalAddress> RingBuffer::reserve_space(size_t size)
+{
+    if (m_capacity_in_bytes < m_num_used_bytes + size)
+        return ENOSPC;
+    size_t start_of_free_area = (m_start_of_used + m_num_used_bytes) % m_capacity_in_bytes;
+    m_num_used_bytes += size;
+    PhysicalAddress start_of_reserved_space = m_region->physical_page(start_of_free_area / PAGE_SIZE)->paddr().offset(start_of_free_area % PAGE_SIZE);
+    return start_of_reserved_space;
+}
+
 void RingBuffer::reclaim_space(PhysicalAddress chunk_start, size_t chunk_size)
 {
     VERIFY(start_of_used() == chunk_start);

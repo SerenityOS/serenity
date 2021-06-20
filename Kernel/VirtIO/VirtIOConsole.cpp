@@ -43,12 +43,26 @@ UNMAP_AFTER_INIT VirtIOConsole::VirtIOConsole(PCI::Address address)
             finish_init();
             m_receive_buffer = make<RingBuffer>("VirtIOConsole Receive", RINGBUFFER_SIZE);
             m_transmit_buffer = make<RingBuffer>("VirtIOConsole Transmit", RINGBUFFER_SIZE);
+
+            init_receive_buffer();
         }
     }
 }
 
 VirtIOConsole::~VirtIOConsole()
 {
+}
+
+void VirtIOConsole::init_receive_buffer()
+{
+    auto& queue = get_queue(RECEIVEQ);
+    ScopedSpinLock queue_lock(queue.lock());
+    VirtIOQueueChain chain(queue);
+
+    auto buffer_start = m_receive_buffer->start_of_region();
+    auto did_add_buffer = chain.add_buffer_to_chain(buffer_start, RINGBUFFER_SIZE, BufferType::DeviceWritable);
+    VERIFY(did_add_buffer);
+    supply_chain_and_notify(RECEIVEQ, chain);
 }
 
 bool VirtIOConsole::handle_device_config_change()
@@ -63,8 +77,27 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
     VERIFY(queue_index <= TRANSMITQ);
     switch (queue_index) {
     case RECEIVEQ: {
-        ScopedSpinLock lock(get_queue(RECEIVEQ).lock());
-        get_queue(RECEIVEQ).discard_used_buffers(); // TODO: do something with incoming data (users writing into qemu console) instead of just clearing
+        auto& queue = get_queue(RECEIVEQ);
+        ScopedSpinLock queue_lock(queue.lock());
+        size_t used;
+        VirtIOQueueChain popped_chain = queue.pop_used_buffer_chain(used);
+
+        ScopedSpinLock ringbuffer_lock(m_receive_buffer->lock());
+
+        auto used_space = m_receive_buffer->reserve_space(used).value();
+        auto remaining_space = RINGBUFFER_SIZE - used;
+
+        // Our algorithm always has only one buffer in the queue.
+        VERIFY(!queue.new_data_available());
+        popped_chain.release_buffer_slots_to_queue();
+
+        VirtIOQueueChain new_chain(queue);
+        if (remaining_space != 0) {
+            new_chain.add_buffer_to_chain(used_space.offset(used), remaining_space, BufferType::DeviceWritable);
+            supply_chain_and_notify(RECEIVEQ, new_chain);
+        }
+
+        evaluate_block_conditions();
         break;
     }
     case TRANSMITQ: {
@@ -91,12 +124,23 @@ void VirtIOConsole::handle_queue_update(u16 queue_index)
 
 bool VirtIOConsole::can_read(const FileDescription&, size_t) const
 {
-    return true;
+    return m_receive_buffer->used_bytes() > 0;
 }
 
-KResultOr<size_t> VirtIOConsole::read(FileDescription&, u64, [[maybe_unused]] UserOrKernelBuffer& data, size_t)
+KResultOr<size_t> VirtIOConsole::read(FileDescription& desc, u64, UserOrKernelBuffer& buffer, size_t size)
 {
-    return ENOTSUP;
+    if (!size)
+        return 0;
+
+    if (!can_read(desc, size))
+        return EAGAIN;
+
+    ScopedSpinLock ringbuffer_lock(m_receive_buffer->lock());
+
+    auto bytes_copied = m_receive_buffer->copy_data_out(size, buffer);
+    m_receive_buffer->reclaim_space(m_receive_buffer->start_of_used(), bytes_copied.value());
+
+    return bytes_copied;
 }
 
 bool VirtIOConsole::can_write(const FileDescription&, size_t) const
