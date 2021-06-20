@@ -105,7 +105,7 @@ private:
     int virt$close(int);
     int virt$mkdir(FlatPtr path, size_t path_length, mode_t mode);
     int virt$rmdir(FlatPtr path, size_t path_length);
-    int virt$unlink(FlatPtr path, size_t path_length);
+    int virt$unlink(FlatPtr);
     int virt$symlink(FlatPtr address);
     int virt$rename(FlatPtr address);
     int virt$set_coredump_metadata(FlatPtr address);

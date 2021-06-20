@@ -117,7 +117,7 @@ u32 Emulator::virt_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3)
     case SC_rmdir:
         return virt$rmdir(arg1, arg2);
     case SC_unlink:
-        return virt$unlink(arg1, arg2);
+        return virt$unlink(arg1);
     case SC_symlink:
         return virt$symlink(arg1);
     case SC_rename:
@@ -317,10 +317,15 @@ int Emulator::virt$rmdir(FlatPtr path, size_t path_length)
     return syscall(SC_rmdir, buffer.data(), buffer.size());
 }
 
-int Emulator::virt$unlink(FlatPtr path, size_t path_length)
+int Emulator::virt$unlink(FlatPtr params_addr)
 {
-    auto buffer = mmu().copy_buffer_from_vm(path, path_length);
-    return syscall(SC_unlink, buffer.data(), buffer.size());
+    Syscall::SC_unlink_params params;
+    mmu().copy_from_vm(&params, params_addr, sizeof(params));
+
+    auto path = mmu().copy_buffer_from_vm((FlatPtr)params.path.characters, params.path.length);
+    params.path.characters = (const char*)path.data();
+    params.path.length = path.size();
+    return syscall(SC_unlink, &params);
 }
 
 int Emulator::virt$symlink(FlatPtr params_addr)

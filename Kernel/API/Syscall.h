@@ -466,6 +466,12 @@ struct SC_statvfs_params {
     struct statvfs* buf;
 };
 
+struct SC_unlink_params {
+    int dirfd;
+    StringArgument path;
+    int flags;
+};
+
 void initialize();
 int sync();
 

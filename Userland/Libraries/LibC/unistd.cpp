@@ -482,7 +482,13 @@ int link(const char* old_path, const char* new_path)
 
 int unlink(const char* pathname)
 {
-    int rc = syscall(SC_unlink, pathname, strlen(pathname));
+    return unlinkat(AT_FDCWD, pathname, 0);
+}
+
+int unlinkat(int dirfd, const char* pathname, int flags)
+{
+    Syscall::SC_unlink_params params { dirfd, { pathname, strlen(pathname) }, flags };
+    int rc = syscall(SC_unlink, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

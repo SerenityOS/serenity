@@ -451,6 +451,19 @@ KResultOr<NonnullOwnPtr<KString>> Process::get_syscall_path_argument(Syscall::St
     return get_syscall_path_argument(path.characters, path.length);
 }
 
+KResultOr<RefPtr<Custody>> Process::get_syscall_fd_argument(int fd)
+{
+    if (fd == AT_FDCWD)
+        return current_directory();
+
+    auto description = file_description(fd);
+    if (!description)
+        return EBADF;
+    if (!description->custody())
+        return EINVAL;
+    return description->custody();
+}
+
 bool Process::dump_core()
 {
     VERIFY(is_dumpable());

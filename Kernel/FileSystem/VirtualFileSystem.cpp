@@ -658,16 +658,21 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     return parent_inode.add_child(old_inode, LexicalPath(new_path).basename(), old_inode.mode());
 }
 
-KResult VFS::unlink(StringView path, Custody& base)
+KResult VFS::unlink(PathWithBase path_with_base, AtFlags flags)
 {
+    if (flags & ~(AT_REMOVEDIR))
+        return EINVAL;
+
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL);
+    auto custody_or_error = resolve_path(path_with_base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
     auto& inode = custody.inode();
 
-    if (inode.is_directory())
+    if (inode.is_directory() && (flags & AT_REMOVEDIR))
+        return rmdir(path_with_base.path, path_with_base.base);
+    else if (inode.is_directory())
         return EISDIR;
 
     // We have just checked that the inode is not a directory, and thus it's not
@@ -688,7 +693,7 @@ KResult VFS::unlink(StringView path, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    if (auto result = parent_inode.remove_child(LexicalPath(path).basename()); result.is_error())
+    if (auto result = parent_inode.remove_child(LexicalPath(path_with_base.path).basename()); result.is_error())
         return result;
 
     return KSuccess;
@@ -944,6 +949,9 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path_without_veil(StringView path
 
     NonnullRefPtr<Custody> custody = path[0] == '/' ? current_root : base;
     bool extra_iteration = path[path.length() - 1] == '/';
+
+    if (!base.inode().is_directory())
+        return ENOTDIR;
 
     while (!path_lexer.is_eof() || extra_iteration) {
         if (path_lexer.is_eof())

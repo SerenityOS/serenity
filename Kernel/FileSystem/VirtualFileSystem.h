@@ -13,6 +13,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -28,6 +29,11 @@ class FileDescription;
 struct UidAndGid {
     uid_t uid;
     gid_t gid;
+};
+
+struct PathWithBase {
+    Custody& base;
+    StringView path;
 };
 
 class VFS {
@@ -64,6 +70,9 @@ public:
     VFS();
     ~VFS();
 
+    using AtFlags = int;
+    using OpenFlags = int;
+
     bool mount_root(FS&);
     KResult mount(FS&, Custody& mount_point, int flags);
     KResult bind_mount(Custody& source, Custody& mount_point, int flags);
@@ -74,8 +83,8 @@ public:
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
-    KResult unlink(StringView path, Custody& base);
     KResult symlink(StringView target, StringView linkpath, Custody& base);
+    KResult unlink(PathWithBase, AtFlags flags);
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(StringView path, mode_t, Custody& base);
     KResult chmod(Custody&, mode_t);
@@ -97,7 +106,15 @@ public:
 
     Custody& root_custody();
     KResultOr<NonnullRefPtr<Custody>> resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    KResultOr<NonnullRefPtr<Custody>> resolve_path(PathWithBase path_with_base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0)
+    {
+        return resolve_path(path_with_base.path, path_with_base.base, out_parent, options, symlink_recursion_level);
+    }
     KResultOr<NonnullRefPtr<Custody>> resolve_path_without_veil(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    KResultOr<NonnullRefPtr<Custody>> resolve_path_without_veil(PathWithBase path_with_base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0)
+    {
+        return resolve_path_without_veil(path_with_base.path, path_with_base.base, out_parent, options, symlink_recursion_level);
+    }
 
 private:
     friend class FileDescription;
