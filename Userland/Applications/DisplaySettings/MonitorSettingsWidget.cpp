@@ -141,4 +141,12 @@ void MonitorSettingsWidget::apply_settings()
     }
 }
 
+void MonitorSettingsWidget::show_screen_numbers(bool show)
+{
+    if (m_showing_screen_numbers == show)
+        return;
+    m_showing_screen_numbers = show;
+    GUI::WindowServerConnection::the().async_show_screen_numbers(show);
+}
+
 }
