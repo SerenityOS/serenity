@@ -80,8 +80,9 @@ TimerId TimerQueue::add_timer(NonnullRefPtr<Timer>&& timer)
 
     timer->m_id = ++m_timer_id_count;
     VERIFY(timer->m_id != 0); // wrapped
+    auto id = timer->m_id;
     add_timer_locked(move(timer));
-    return timer->m_id;
+    return id;
 }
 
 void TimerQueue::add_timer_locked(NonnullRefPtr<Timer> timer)
