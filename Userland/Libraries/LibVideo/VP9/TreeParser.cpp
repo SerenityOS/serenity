@@ -209,26 +209,32 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     switch (type) {
     case SyntaxElementType::Partition:
         m_decoder.m_syntax_element_counter->m_counts_partition[m_ctx][value]++;
-        break;
+        return;
     case SyntaxElementType::IntraMode:
-        break;
     case SyntaxElementType::SubIntraMode:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_intra_mode[m_ctx][value]++;
+        return;
     case SyntaxElementType::UVMode:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_uv_mode[m_ctx][value]++;
+        return;
     case SyntaxElementType::Skip:
         m_decoder.m_syntax_element_counter->m_counts_skip[m_ctx][value]++;
-        break;
+        return;
     case SyntaxElementType::IsInter:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_is_inter[m_ctx][value]++;
+        return;
     case SyntaxElementType::CompMode:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_comp_mode[m_ctx][value]++;
+        return;
     case SyntaxElementType::CompRef:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_comp_ref[m_ctx][value]++;
+        return;
     case SyntaxElementType::SingleRefP1:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][0][value]++;
+        return;
     case SyntaxElementType::SingleRefP2:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_single_ref[m_ctx][1][value]++;
+        return;
     case SyntaxElementType::MVSign:
         break;
     case SyntaxElementType::MVClass0Bit:
@@ -236,13 +242,17 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::MVBit:
         break;
     case SyntaxElementType::TXSize:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_tx_size[m_decoder.m_max_tx_size][m_ctx][value]++;
+        return;
     case SyntaxElementType::InterMode:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_inter_mode[m_ctx][value]++;
+        return;
     case SyntaxElementType::InterpFilter:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_interp_filter[m_ctx][value]++;
+        return;
     case SyntaxElementType::MVJoint:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_mv_joint[value]++;
+        return;
     case SyntaxElementType::MVClass:
         break;
     case SyntaxElementType::MVClass0FR:
@@ -261,8 +271,10 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::DefaultUVMode:
     case SyntaxElementType::SegmentID:
     case SyntaxElementType::SegIDPredicted:
-        break;
+        // No counting required
+        return;
     }
+    VERIFY_NOT_REACHED();
 }
 
 TreeParser::TreeSelection::TreeSelection(int const* values)
