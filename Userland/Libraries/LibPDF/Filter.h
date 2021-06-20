@@ -13,19 +13,19 @@ namespace PDF {
 
 class Filter {
 public:
-    static Optional<ByteBuffer> decode(const ReadonlyBytes& bytes, const FlyString& encoding_type);
+    static Optional<ByteBuffer> decode(ReadonlyBytes const& bytes, FlyString const& encoding_type);
 
 private:
-    static Optional<ByteBuffer> decode_ascii_hex(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_ascii85(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_lzw(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_flate(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_run_length(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_ccitt(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_jbig2(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_dct(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_jpx(const ReadonlyBytes& bytes);
-    static Optional<ByteBuffer> decode_crypt(const ReadonlyBytes& bytes);
+    static Optional<ByteBuffer> decode_ascii_hex(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_ascii85(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_lzw(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_flate(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_run_length(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_ccitt(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_jbig2(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_dct(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_jpx(ReadonlyBytes const& bytes);
+    static Optional<ByteBuffer> decode_crypt(ReadonlyBytes const& bytes);
 };
 
 }

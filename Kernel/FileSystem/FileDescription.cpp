@@ -110,9 +110,9 @@ Thread::FileBlocker::BlockFlags FileDescription::should_unblock(Thread::FileBloc
 KResult FileDescription::stat(::stat& buffer)
 {
     Locker locker(m_lock);
-    // FIXME: This is a little awkward, why can't we always forward to File::stat()?
+    // FIXME: This is due to the Device class not overriding File::stat().
     if (m_inode)
-        return metadata().stat(buffer);
+        return m_inode->metadata().stat(buffer);
     return m_file->stat(buffer);
 }
 
@@ -203,7 +203,7 @@ KResultOr<NonnullOwnPtr<KBuffer>> FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-KResultOr<ssize_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, ssize_t size)
+KResultOr<size_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_buffer, size_t size)
 {
     Locker locker(m_lock, Lock::Mode::Shared);
     if (!is_directory())
@@ -212,9 +212,6 @@ KResultOr<ssize_t> FileDescription::get_dir_entries(UserOrKernelBuffer& output_b
     auto metadata = this->metadata();
     if (!metadata.is_valid())
         return EIO;
-
-    if (size < 0)
-        return EINVAL;
 
     size_t remaining = size;
     KResult error = KSuccess;

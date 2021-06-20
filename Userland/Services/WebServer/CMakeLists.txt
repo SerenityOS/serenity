@@ -1,5 +1,11 @@
+serenity_component(
+    WebServer
+    TARGETS WebServer
+)
+
 set(SOURCES
     Client.cpp
+    Configuration.cpp
     main.cpp
 )
 

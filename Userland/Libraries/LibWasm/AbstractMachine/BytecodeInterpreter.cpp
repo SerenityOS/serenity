@@ -396,6 +396,67 @@ ALWAYS_INLINE static i32 ctz(T value)
         VERIFY_NOT_REACHED();
 }
 
+template<typename InputT, typename OutputT>
+ALWAYS_INLINE static OutputT extend_signed(InputT value)
+{
+    // Note: C++ will take care of sign extension.
+    return value;
+}
+
+template<typename TruncT, typename T>
+ALWAYS_INLINE static TruncT saturating_truncate(T value)
+{
+    if (isnan(value))
+        return 0;
+
+    if (isinf(value)) {
+        if (value < 0)
+            return NumericLimits<TruncT>::min();
+        return NumericLimits<TruncT>::max();
+    }
+
+    constexpr auto convert = [](auto truncated_value) {
+        if (truncated_value < NumericLimits<TruncT>::min())
+            return NumericLimits<TruncT>::min();
+        if (static_cast<double>(truncated_value) > static_cast<double>(NumericLimits<TruncT>::max()))
+            return NumericLimits<TruncT>::max();
+        return static_cast<TruncT>(truncated_value);
+    };
+
+    if constexpr (IsSame<T, float>)
+        return convert(truncf(value));
+    else
+        return convert(trunc(value));
+}
+
+template<typename T>
+ALWAYS_INLINE static T float_max(T lhs, T rhs)
+{
+    if (isnan(lhs))
+        return lhs;
+    if (isnan(rhs))
+        return rhs;
+    if (isinf(lhs))
+        return lhs > 0 ? lhs : rhs;
+    if (isinf(rhs))
+        return rhs > 0 ? rhs : lhs;
+    return max(lhs, rhs);
+}
+
+template<typename T>
+ALWAYS_INLINE static T float_min(T lhs, T rhs)
+{
+    if (isnan(lhs))
+        return lhs;
+    if (isnan(rhs))
+        return rhs;
+    if (isinf(lhs))
+        return lhs > 0 ? rhs : lhs;
+    if (isinf(rhs))
+        return rhs > 0 ? lhs : rhs;
+    return min(lhs, rhs);
+}
+
 void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPointer& ip, Instruction const& instruction)
 {
     dbgln_if(WASM_TRACE_DEBUG, "Executing instruction {} at ip {}", instruction_name(instruction.opcode()), ip.value());
@@ -843,9 +904,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f32_div.value():
         BINARY_NUMERIC_OPERATION(float, /, float);
     case Instructions::f32_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, min, float);
+        BINARY_PREFIX_NUMERIC_OPERATION(float, float_min, float);
     case Instructions::f32_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(float, max, float);
+        BINARY_PREFIX_NUMERIC_OPERATION(float, float_max, float);
     case Instructions::f32_copysign.value():
         BINARY_PREFIX_NUMERIC_OPERATION(float, copysignf, float);
     case Instructions::f64_abs.value():
@@ -871,9 +932,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::f64_div.value():
         BINARY_NUMERIC_OPERATION(double, /, double);
     case Instructions::f64_min.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, min, double);
+        BINARY_PREFIX_NUMERIC_OPERATION(double, float_min, double);
     case Instructions::f64_max.value():
-        BINARY_PREFIX_NUMERIC_OPERATION(double, max, double);
+        BINARY_PREFIX_NUMERIC_OPERATION(double, float_max, double);
     case Instructions::f64_copysign.value():
         BINARY_PREFIX_NUMERIC_OPERATION(double, copysign, double);
     case Instructions::i32_wrap_i64.value():
@@ -942,14 +1003,32 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         UNARY_MAP(i32, bit_cast<float>, float);
     case Instructions::f64_reinterpret_i64.value():
         UNARY_MAP(i64, bit_cast<double>, double);
+    case Instructions::i32_extend8_s.value():
+        UNARY_MAP(i32, (extend_signed<i8, i32>), i32);
+    case Instructions::i32_extend16_s.value():
+        UNARY_MAP(i32, (extend_signed<i16, i32>), i32);
+    case Instructions::i64_extend8_s.value():
+        UNARY_MAP(i64, (extend_signed<i8, i64>), i64);
+    case Instructions::i64_extend16_s.value():
+        UNARY_MAP(i64, (extend_signed<i16, i64>), i64);
+    case Instructions::i64_extend32_s.value():
+        UNARY_MAP(i64, (extend_signed<i32, i64>), i64);
     case Instructions::i32_trunc_sat_f32_s.value():
+        UNARY_MAP(float, saturating_truncate<i32>, i32);
     case Instructions::i32_trunc_sat_f32_u.value():
+        UNARY_MAP(float, saturating_truncate<u32>, i32);
     case Instructions::i32_trunc_sat_f64_s.value():
+        UNARY_MAP(double, saturating_truncate<i32>, i32);
     case Instructions::i32_trunc_sat_f64_u.value():
+        UNARY_MAP(double, saturating_truncate<u32>, i32);
     case Instructions::i64_trunc_sat_f32_s.value():
+        UNARY_MAP(float, saturating_truncate<i64>, i64);
     case Instructions::i64_trunc_sat_f32_u.value():
+        UNARY_MAP(float, saturating_truncate<u64>, i64);
     case Instructions::i64_trunc_sat_f64_s.value():
+        UNARY_MAP(double, saturating_truncate<i64>, i64);
     case Instructions::i64_trunc_sat_f64_u.value():
+        UNARY_MAP(double, saturating_truncate<u64>, i64);
     case Instructions::memory_init.value():
     case Instructions::data_drop.value():
     case Instructions::memory_copy.value():
@@ -960,11 +1039,6 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::table_grow.value():
     case Instructions::table_size.value():
     case Instructions::table_fill.value():
-    case Instructions::i32_extend8_s.value():
-    case Instructions::i32_extend16_s.value():
-    case Instructions::i64_extend8_s.value():
-    case Instructions::i64_extend16_s.value():
-    case Instructions::i64_extend32_s.value():
     default:
     unimplemented:;
         dbgln("Instruction '{}' not implemented", instruction_name(instruction.opcode()));

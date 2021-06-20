@@ -47,10 +47,28 @@ public:
     static SignedBigInteger import_data(const StringView& data) { return import_data((const u8*)data.characters_without_null_termination(), data.length()); }
     static SignedBigInteger import_data(const u8* ptr, size_t length);
 
+    static SignedBigInteger create_from(i64 value)
+    {
+        auto sign = false;
+        u64 unsigned_value;
+        if (value < 0) {
+            unsigned_value = static_cast<u64>(-(value + 1)) + 1;
+            sign = true;
+        } else {
+            unsigned_value = value;
+        }
+        return SignedBigInteger { UnsignedBigInteger::create_from(unsigned_value), sign };
+    }
+
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
+    static SignedBigInteger from_base2(StringView str);
+    static SignedBigInteger from_base8(StringView str);
     static SignedBigInteger from_base10(StringView str);
     String to_base10() const;
+    static SignedBigInteger from_base16(StringView str);
+
+    u64 to_u64() const;
 
     const UnsignedBigInteger& unsigned_value() const { return m_unsigned_data; }
     const Vector<u32, STARTING_WORD_SIZE> words() const { return m_unsigned_data.words(); }
@@ -98,6 +116,8 @@ public:
     SignedBigInteger bitwise_xor(const UnsignedBigInteger& other) const;
     SignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     SignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
+
+    u32 hash() const;
 
     void set_bit_inplace(size_t bit_index);
 

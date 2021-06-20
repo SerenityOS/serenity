@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/BitStream.h>
+#include <AK/MemoryStream.h>
 #include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
 #include <LibPDF/CommonNames.h>
@@ -22,51 +24,59 @@ static NonnullRefPtr<T> make_object(Args... args) requires(IsBaseOf<Object, T>)
     return adopt_ref(*new T(forward<Args>(args)...));
 }
 
-Vector<Command> Parser::parse_graphics_commands(const ReadonlyBytes& bytes)
+Vector<Command> Parser::parse_graphics_commands(ReadonlyBytes const& bytes)
 {
-    Parser parser(bytes);
-    return parser.parse_graphics_commands();
+    auto parser = adopt_ref(*new Parser(bytes));
+    return parser->parse_graphics_commands();
 }
 
-Parser::Parser(Badge<Document>, const ReadonlyBytes& bytes)
+Parser::Parser(Badge<Document>, ReadonlyBytes const& bytes)
     : m_reader(bytes)
 {
 }
 
-Parser::Parser(const ReadonlyBytes& bytes)
+Parser::Parser(ReadonlyBytes const& bytes)
     : m_reader(bytes)
 {
 }
 
-bool Parser::perform_validation()
+bool Parser::initialize()
 {
-    return !sloppy_is_linearized() && parse_header();
+    if (!parse_header())
+        return {};
+
+    if (!initialize_linearization_dict())
+        return {};
+
+    bool is_linearized = m_linearization_dictionary.has_value();
+    if (is_linearized) {
+        // The file may have been linearized at one point, but could have been updated afterwards,
+        // which means it is no longer a linearized PDF file.
+        is_linearized = is_linearized && m_linearization_dictionary.value().length_of_file == m_reader.bytes().size();
+
+        if (!is_linearized) {
+            // FIXME: The file shouldn't be treated as linearized, yet the xref tables are still
+            // split. This might take some tweaking to ensure correct behavior, which can be
+            // implemented later.
+            TODO();
+        }
+    }
+
+    if (is_linearized)
+        return initialize_linearized_xref_table();
+
+    return initialize_non_linearized_xref_table();
 }
 
-Parser::XRefTableAndTrailer Parser::parse_last_xref_table_and_trailer()
+Value Parser::parse_object_with_index(u32 index)
 {
-    m_reader.move_to(m_reader.bytes().size() - 1);
-    VERIFY(navigate_to_before_eof_marker());
-    navigate_to_after_startxref();
-    VERIFY(!m_reader.done());
-
-    m_reader.set_reading_forwards();
-    auto xref_offset_value = parse_number();
-    VERIFY(xref_offset_value.is_int());
-    auto xref_offset = xref_offset_value.as_int();
-
-    m_reader.move_to(xref_offset);
-    auto xref_table = parse_xref_table();
-    auto trailer = parse_file_trailer();
-
-    return { xref_table, trailer };
-}
-
-NonnullRefPtr<IndirectValue> Parser::parse_indirect_value_at_offset(size_t offset)
-{
-    m_reader.set_reading_forwards();
-    m_reader.move_to(offset);
-    return parse_indirect_value();
+    VERIFY(m_xref_table->has_object(index));
+    auto byte_offset = m_xref_table->byte_offset_for_object(index);
+    m_reader.move_to(byte_offset);
+    auto indirect_value = parse_indirect_value();
+    VERIFY(indirect_value);
+    VERIFY(indirect_value->index() == index);
+    return indirect_value->value();
 }
 
 bool Parser::parse_header()
@@ -103,17 +113,212 @@ bool Parser::parse_header()
     return true;
 }
 
-XRefTable Parser::parse_xref_table()
+bool Parser::initialize_linearization_dict()
 {
-    VERIFY(m_reader.matches("xref"));
-    m_reader.move_by(4);
-    consume_eol();
+    // parse_header() is called immediately before this, so we are at the right location
+    auto dict_value = m_document->resolve(parse_indirect_value());
+    if (!dict_value || !dict_value.is_object())
+        return false;
 
-    XRefTable table;
+    auto dict_object = dict_value.as_object();
+    if (!dict_object->is_dict())
+        return false;
+
+    auto dict = object_cast<DictObject>(dict_object);
+
+    if (!dict->contains(CommonNames::L, CommonNames::H, CommonNames::O, CommonNames::E, CommonNames::N, CommonNames::T))
+        return true;
+
+    auto length_of_file = dict->get_value(CommonNames::L);
+    auto hint_table = dict->get_value(CommonNames::H);
+    auto first_page_object_number = dict->get_value(CommonNames::O);
+    auto offset_of_first_page_end = dict->get_value(CommonNames::E);
+    auto number_of_pages = dict->get_value(CommonNames::N);
+    auto offset_of_main_xref_table = dict->get_value(CommonNames::T);
+    auto first_page = dict->get(CommonNames::P).value_or({});
+
+    // Validation
+    if (!length_of_file.is_int_type<u32>()
+        || !hint_table.is_object()
+        || !first_page_object_number.is_int_type<u32>()
+        || !number_of_pages.is_int_type<u16>()
+        || !offset_of_main_xref_table.is_int_type<u32>()
+        || (first_page && !first_page.is_int_type<u32>())) {
+        return true;
+    }
+
+    auto hint_table_object = hint_table.as_object();
+    if (!hint_table_object->is_array())
+        return true;
+
+    auto hint_table_array = object_cast<ArrayObject>(hint_table_object);
+    auto hint_table_size = hint_table_array->size();
+    if (hint_table_size != 2 && hint_table_size != 4)
+        return true;
+
+    auto primary_hint_stream_offset = hint_table_array->at(0);
+    auto primary_hint_stream_length = hint_table_array->at(1);
+    Value overflow_hint_stream_offset;
+    Value overflow_hint_stream_length;
+
+    if (hint_table_size == 4) {
+        overflow_hint_stream_offset = hint_table_array->at(2);
+        overflow_hint_stream_length = hint_table_array->at(3);
+    }
+
+    if (!primary_hint_stream_offset.is_int_type<u32>()
+        || !primary_hint_stream_length.is_int_type<u32>()
+        || (overflow_hint_stream_offset && !overflow_hint_stream_offset.is_int_type<u32>())
+        || (overflow_hint_stream_length && !overflow_hint_stream_length.is_int_type<u32>())) {
+        return true;
+    }
+
+    m_linearization_dictionary = LinearizationDictionary {
+        length_of_file.as_int_type<u32>(),
+        primary_hint_stream_offset.as_int_type<u32>(),
+        primary_hint_stream_length.as_int_type<u32>(),
+        overflow_hint_stream_offset ? overflow_hint_stream_offset.as_int_type<u32>() : NumericLimits<u32>::max(),
+        overflow_hint_stream_length ? overflow_hint_stream_length.as_int_type<u32>() : NumericLimits<u32>::max(),
+        first_page_object_number.as_int_type<u32>(),
+        offset_of_first_page_end.as_int_type<u32>(),
+        number_of_pages.as_int_type<u16>(),
+        offset_of_main_xref_table.as_int_type<u32>(),
+        first_page ? first_page.as_int_type<u32>() : NumericLimits<u32>::max(),
+    };
+
+    return true;
+}
+
+bool Parser::initialize_linearized_xref_table()
+{
+    // The linearization parameter dictionary has just been parsed, and the xref table
+    // comes immediately after it. We are in the correct spot.
+    if (!m_reader.matches("xref"))
+        return false;
+
+    m_xref_table = parse_xref_table();
+    if (!m_xref_table)
+        return false;
+
+    m_trailer = parse_file_trailer();
+    if (!m_trailer)
+        return false;
+
+    // Also parse the main xref table and merge into the first-page xref table. Note
+    // that we don't use the main xref table offset from the linearization dict because
+    // for some reason, it specified the offset of the whitespace after the object
+    // index start and length? So it's much easier to do it this way.
+    auto main_xref_table_offset = m_trailer->get_value(CommonNames::Prev).to_int();
+    m_reader.move_to(main_xref_table_offset);
+    auto main_xref_table = parse_xref_table();
+    if (!main_xref_table)
+        return false;
+
+    return m_xref_table->merge(move(*main_xref_table));
+}
+
+bool Parser::initialize_hint_tables()
+{
+    auto linearization_dict = m_linearization_dictionary.value();
+    auto primary_offset = linearization_dict.primary_hint_stream_offset;
+    auto overflow_offset = linearization_dict.overflow_hint_stream_offset;
+
+    auto parse_hint_table = [&](size_t offset) -> RefPtr<StreamObject> {
+        m_reader.move_to(offset);
+        auto stream_indirect_value = parse_indirect_value();
+        if (!stream_indirect_value)
+            return {};
+
+        auto stream_value = stream_indirect_value->value();
+        if (!stream_value.is_object())
+            return {};
+
+        auto stream_object = stream_value.as_object();
+        if (!stream_object->is_stream())
+            return {};
+
+        return object_cast<StreamObject>(stream_object);
+    };
+
+    auto primary_hint_stream = parse_hint_table(primary_offset);
+    if (!primary_hint_stream)
+        return false;
+
+    RefPtr<StreamObject> overflow_hint_stream;
+    if (overflow_offset != NumericLimits<u32>::max())
+        overflow_hint_stream = parse_hint_table(overflow_offset);
+
+    ByteBuffer possible_merged_stream_buffer;
+    ReadonlyBytes hint_stream_bytes;
+
+    if (overflow_hint_stream) {
+        auto primary_size = primary_hint_stream->bytes().size();
+        auto overflow_size = overflow_hint_stream->bytes().size();
+        auto total_size = primary_size + overflow_size;
+
+        possible_merged_stream_buffer = ByteBuffer::create_uninitialized(total_size);
+        possible_merged_stream_buffer.append(primary_hint_stream->bytes());
+        possible_merged_stream_buffer.append(overflow_hint_stream->bytes());
+        hint_stream_bytes = possible_merged_stream_buffer.bytes();
+    } else {
+        hint_stream_bytes = primary_hint_stream->bytes();
+    }
+
+    auto hint_table = parse_page_offset_hint_table(hint_stream_bytes);
+    if (!hint_table.has_value())
+        return false;
+
+    dbgln("hint table: {}", hint_table.value());
+
+    auto hint_table_entries = parse_all_page_offset_hint_table_entries(hint_table.value(), hint_stream_bytes);
+    if (!hint_table_entries.has_value())
+        return false;
+
+    auto entries = hint_table_entries.value();
+    dbgln("hint table entries size: {}", entries.size());
+    for (auto& entry : entries)
+        dbgln("{}", entry);
+
+    return true;
+}
+
+bool Parser::initialize_non_linearized_xref_table()
+{
+    m_reader.move_to(m_reader.bytes().size() - 1);
+    if (!navigate_to_before_eof_marker())
+        return false;
+    if (!navigate_to_after_startxref())
+        return false;
+    if (m_reader.done())
+        return false;
+
+    m_reader.set_reading_forwards();
+    auto xref_offset_value = parse_number();
+    if (!xref_offset_value.is_int())
+        return false;
+    auto xref_offset = xref_offset_value.as_int();
+
+    m_reader.move_to(xref_offset);
+    m_xref_table = parse_xref_table();
+    if (!m_xref_table)
+        return false;
+    m_trailer = parse_file_trailer();
+    return m_trailer;
+}
+
+RefPtr<XRefTable> Parser::parse_xref_table()
+{
+    if (!m_reader.matches("xref"))
+        return {};
+    m_reader.move_by(4);
+    if (!consume_eol())
+        return {};
+
+    auto table = adopt_ref(*new XRefTable());
 
     while (true) {
         if (m_reader.matches("trailer"))
-            break;
+            return table;
 
         Vector<XRefEntry> entries;
 
@@ -125,23 +330,28 @@ XRefTable Parser::parse_xref_table()
         for (int i = 0; i < object_count; i++) {
             auto offset_string = String(m_reader.bytes().slice(m_reader.offset(), 10));
             m_reader.move_by(10);
-            consume(' ');
+            if (!consume(' '))
+                return {};
 
             auto generation_string = String(m_reader.bytes().slice(m_reader.offset(), 5));
             m_reader.move_by(5);
-            consume(' ');
+            if (!consume(' '))
+                return {};
 
             auto letter = m_reader.read();
-            VERIFY(letter == 'n' || letter == 'f');
+            if (letter != 'n' && letter != 'f')
+                return {};
 
             // The line ending sequence can be one of the following:
             // SP CR, SP LF, or CR LF
             if (m_reader.matches(' ')) {
                 consume();
                 auto ch = consume();
-                VERIFY(ch == '\r' || ch == '\n');
+                if (ch != '\r' && ch != '\n')
+                    return {};
             } else {
-                VERIFY(m_reader.matches("\r\n"));
+                if (!m_reader.matches("\r\n"))
+                    return {};
                 m_reader.move_by(2);
             }
 
@@ -151,31 +361,140 @@ XRefTable Parser::parse_xref_table()
             entries.append({ offset, static_cast<u16>(generation), letter == 'n' });
         }
 
-        table.add_section({ starting_index, object_count, entries });
+        table->add_section({ starting_index, object_count, entries });
     }
-
-    return table;
 }
 
-NonnullRefPtr<DictObject> Parser::parse_file_trailer()
+RefPtr<DictObject> Parser::parse_file_trailer()
 {
-    VERIFY(m_reader.matches("trailer"));
+    if (!m_reader.matches("trailer"))
+        return {};
     m_reader.move_by(7);
     consume_whitespace();
     auto dict = parse_dict();
+    if (!dict)
+        return {};
 
-    VERIFY(m_reader.matches("startxref"));
+    if (!m_reader.matches("startxref"))
+        return {};
     m_reader.move_by(9);
     consume_whitespace();
 
     m_reader.move_until([&](auto) { return matches_eol(); });
-    consume_eol();
-    VERIFY(m_reader.matches("%%EOF"));
+    VERIFY(consume_eol());
+    if (!m_reader.matches("%%EOF"))
+        return {};
+
     m_reader.move_by(5);
     consume_whitespace();
-    VERIFY(m_reader.done());
-
     return dict;
+}
+
+Optional<Parser::PageOffsetHintTable> Parser::parse_page_offset_hint_table(ReadonlyBytes const& hint_stream_bytes)
+{
+    if (hint_stream_bytes.size() < sizeof(PageOffsetHintTable))
+        return {};
+
+    size_t offset = 0;
+
+    auto read_u32 = [&] {
+        u32 data = reinterpret_cast<const u32*>(hint_stream_bytes.data() + offset)[0];
+        offset += 4;
+        return AK::convert_between_host_and_big_endian(data);
+    };
+
+    auto read_u16 = [&] {
+        u16 data = reinterpret_cast<const u16*>(hint_stream_bytes.data() + offset)[0];
+        offset += 2;
+        return AK::convert_between_host_and_big_endian(data);
+    };
+
+    PageOffsetHintTable hint_table {
+        read_u32(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u32(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+        read_u16(),
+    };
+
+    // Verify that all of the bits_required_for_xyz fields are <= 32, since all of the numeric
+    // fields in PageOffsetHintTableEntry are u32
+    VERIFY(hint_table.bits_required_for_object_number <= 32);
+    VERIFY(hint_table.bits_required_for_page_length <= 32);
+    VERIFY(hint_table.bits_required_for_content_stream_offsets <= 32);
+    VERIFY(hint_table.bits_required_for_content_stream_length <= 32);
+    VERIFY(hint_table.bits_required_for_number_of_shared_obj_refs <= 32);
+    VERIFY(hint_table.bits_required_for_greatest_shared_obj_identifier <= 32);
+    VERIFY(hint_table.bits_required_for_fraction_numerator <= 32);
+
+    return hint_table;
+}
+
+Optional<Vector<Parser::PageOffsetHintTableEntry>> Parser::parse_all_page_offset_hint_table_entries(PageOffsetHintTable const& hint_table, ReadonlyBytes const& hint_stream_bytes)
+{
+    InputMemoryStream input_stream(hint_stream_bytes);
+    input_stream.seek(sizeof(PageOffsetHintTable));
+    if (input_stream.has_any_error())
+        return {};
+
+    InputBitStream bit_stream(input_stream);
+
+    auto number_of_pages = m_linearization_dictionary.value().number_of_pages;
+    Vector<PageOffsetHintTableEntry> entries;
+    for (size_t i = 0; i < number_of_pages; i++)
+        entries.append(PageOffsetHintTableEntry {});
+
+    auto bits_required_for_object_number = hint_table.bits_required_for_object_number;
+    auto bits_required_for_page_length = hint_table.bits_required_for_page_length;
+    auto bits_required_for_content_stream_offsets = hint_table.bits_required_for_content_stream_offsets;
+    auto bits_required_for_content_stream_length = hint_table.bits_required_for_content_stream_length;
+    auto bits_required_for_number_of_shared_obj_refs = hint_table.bits_required_for_number_of_shared_obj_refs;
+    auto bits_required_for_greatest_shared_obj_identifier = hint_table.bits_required_for_greatest_shared_obj_identifier;
+    auto bits_required_for_fraction_numerator = hint_table.bits_required_for_fraction_numerator;
+
+    auto parse_int_entry = [&](u32 PageOffsetHintTableEntry::*field, u32 bit_size) {
+        if (bit_size <= 0)
+            return;
+
+        for (int i = 0; i < number_of_pages; i++) {
+            auto& entry = entries[i];
+            entry.*field = bit_stream.read_bits(bit_size);
+        }
+    };
+
+    auto parse_vector_entry = [&](Vector<u32> PageOffsetHintTableEntry::*field, u32 bit_size) {
+        if (bit_size <= 0)
+            return;
+
+        for (int page = 1; page < number_of_pages; page++) {
+            auto number_of_shared_objects = entries[page].number_of_shared_objects;
+            Vector<u32> items;
+            items.ensure_capacity(number_of_shared_objects);
+
+            for (size_t i = 0; i < number_of_shared_objects; i++)
+                items.unchecked_append(bit_stream.read_bits(bit_size));
+
+            entries[page].*field = move(items);
+        }
+    };
+
+    parse_int_entry(&PageOffsetHintTableEntry::objects_in_page_number, bits_required_for_object_number);
+    parse_int_entry(&PageOffsetHintTableEntry::page_length_number, bits_required_for_page_length);
+    parse_int_entry(&PageOffsetHintTableEntry::number_of_shared_objects, bits_required_for_number_of_shared_obj_refs);
+    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_identifiers, bits_required_for_greatest_shared_obj_identifier);
+    parse_vector_entry(&PageOffsetHintTableEntry::shared_object_location_numerators, bits_required_for_fraction_numerator);
+    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_offset_number, bits_required_for_content_stream_offsets);
+    parse_int_entry(&PageOffsetHintTableEntry::page_content_stream_length_number, bits_required_for_content_stream_length);
+
+    return entries;
 }
 
 bool Parser::navigate_to_before_eof_marker()
@@ -268,7 +587,7 @@ Value Parser::parse_value()
     if (m_reader.matches("null")) {
         m_reader.move_by(4);
         consume_whitespace();
-        return Value();
+        return Value(Value::NullTag {});
     }
 
     if (m_reader.matches("true")) {
@@ -291,8 +610,10 @@ Value Parser::parse_value()
 
     if (m_reader.matches("<<")) {
         auto dict = parse_dict();
-        if (m_reader.matches("stream\n"))
-            return parse_stream(dict);
+        if (!dict)
+            return {};
+        if (m_reader.matches("stream"))
+            return parse_stream(dict.release_nonnull());
         return dict;
     }
 
@@ -335,23 +656,31 @@ Value Parser::parse_possible_indirect_value_or_ref()
     return first_number;
 }
 
-NonnullRefPtr<IndirectValue> Parser::parse_indirect_value(int index, int generation)
+RefPtr<IndirectValue> Parser::parse_indirect_value(int index, int generation)
 {
-    VERIFY(m_reader.matches("obj"));
+    if (!m_reader.matches("obj"))
+        return {};
     m_reader.move_by(3);
     if (matches_eol())
         consume_eol();
     auto value = parse_value();
-    VERIFY(m_reader.matches("endobj"));
+    if (!m_reader.matches("endobj"))
+        return {};
+
+    consume(6);
+    consume_whitespace();
 
     return make_object<IndirectValue>(index, generation, value);
 }
 
-NonnullRefPtr<IndirectValue> Parser::parse_indirect_value()
+RefPtr<IndirectValue> Parser::parse_indirect_value()
 {
     auto first_number = parse_number();
+    if (!first_number.is_int())
+        return {};
     auto second_number = parse_number();
-    VERIFY(first_number.is_int() && second_number.is_int());
+    if (!second_number.is_int())
+        return {};
     return parse_indirect_value(first_number.as_int(), second_number.as_int());
 }
 
@@ -387,9 +716,10 @@ Value Parser::parse_number()
     return Value(static_cast<int>(f));
 }
 
-NonnullRefPtr<NameObject> Parser::parse_name()
+RefPtr<NameObject> Parser::parse_name()
 {
-    consume('/');
+    if (!consume('/'))
+        return {};
     StringBuilder builder;
 
     while (true) {
@@ -400,7 +730,8 @@ NonnullRefPtr<NameObject> Parser::parse_name()
             int hex_value = 0;
             for (int i = 0; i < 2; i++) {
                 auto ch = consume();
-                VERIFY(isxdigit(ch));
+                if (!isxdigit(ch))
+                    return {};
                 hex_value *= 16;
                 if (ch <= '9') {
                     hex_value += ch - '0';
@@ -420,7 +751,7 @@ NonnullRefPtr<NameObject> Parser::parse_name()
     return make_object<NameObject>(builder.to_string());
 }
 
-NonnullRefPtr<StringObject> Parser::parse_string()
+RefPtr<StringObject> Parser::parse_string()
 {
     ScopeGuard guard([&] { consume_whitespace(); });
 
@@ -434,6 +765,9 @@ NonnullRefPtr<StringObject> Parser::parse_string()
         string = parse_hex_string();
         is_binary_string = true;
     }
+
+    if (string.is_null())
+        return {};
 
     if (string.bytes().starts_with(Array<u8, 2> { 0xfe, 0xff })) {
         // The string is encoded in UTF16-BE
@@ -449,7 +783,8 @@ NonnullRefPtr<StringObject> Parser::parse_string()
 
 String Parser::parse_literal_string()
 {
-    consume('(');
+    if (!consume('('))
+        return {};
     StringBuilder builder;
     auto opened_parens = 0;
 
@@ -470,7 +805,9 @@ String Parser::parse_literal_string()
                 continue;
             }
 
-            VERIFY(!m_reader.done());
+            if (m_reader.done())
+                return {};
+
             auto ch = consume();
             switch (ch) {
             case 'n':
@@ -520,13 +857,16 @@ String Parser::parse_literal_string()
         }
     }
 
-    VERIFY(opened_parens == 0);
+    if (opened_parens != 0)
+        return {};
+
     return builder.to_string();
 }
 
 String Parser::parse_hex_string()
 {
-    consume('<');
+    if (!consume('<'))
+        return {};
     StringBuilder builder;
 
     while (true) {
@@ -546,7 +886,9 @@ String Parser::parse_hex_string()
                     builder.append(static_cast<char>(hex_value));
                     return builder.to_string();
                 }
-                VERIFY(isxdigit(ch));
+
+                if (!isxdigit(ch))
+                    return {};
 
                 hex_value *= 16;
                 if (ch <= '9') {
@@ -561,25 +903,31 @@ String Parser::parse_hex_string()
     }
 }
 
-NonnullRefPtr<ArrayObject> Parser::parse_array()
+RefPtr<ArrayObject> Parser::parse_array()
 {
-    consume('[');
+    if (!consume('['))
+        return {};
     consume_whitespace();
     Vector<Value> values;
 
-    while (!m_reader.matches(']'))
-        values.append(parse_value());
+    while (!m_reader.matches(']')) {
+        auto value = parse_value();
+        if (!value)
+            return {};
+        values.append(value);
+    }
 
-    consume(']');
+    if (!consume(']'))
+        return {};
     consume_whitespace();
 
     return make_object<ArrayObject>(values);
 }
 
-NonnullRefPtr<DictObject> Parser::parse_dict()
+RefPtr<DictObject> Parser::parse_dict()
 {
-    consume('<');
-    consume('<');
+    if (!consume('<') || !consume('<'))
+        return {};
     consume_whitespace();
     HashMap<FlyString, Value> map;
 
@@ -587,28 +935,41 @@ NonnullRefPtr<DictObject> Parser::parse_dict()
         if (m_reader.matches(">>"))
             break;
         auto name = parse_name();
+        if (!name)
+            return {};
         auto value = parse_value();
+        if (!value)
+            return {};
         map.set(name->name(), value);
     }
 
-    consume('>');
-    consume('>');
+    if (!consume('>') || !consume('>'))
+        return {};
     consume_whitespace();
 
     return make_object<DictObject>(map);
 }
 
-RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t offset)
+RefPtr<DictObject> Parser::conditionally_parse_page_tree_node(u32 object_index, bool& ok)
 {
-    m_reader.move_to(offset);
+    ok = true;
+
+    VERIFY(m_xref_table->has_object(object_index));
+    auto byte_offset = m_xref_table->byte_offset_for_object(object_index);
+
+    m_reader.move_to(byte_offset);
     parse_number();
     parse_number();
-    VERIFY(m_reader.matches("obj"));
+    if (!m_reader.matches("obj")) {
+        ok = false;
+        return {};
+    }
+
     m_reader.move_by(3);
     consume_whitespace();
 
-    consume('<');
-    consume('<');
+    if (!consume('<') || !consume('<'))
+        return {};
     consume_whitespace();
     HashMap<FlyString, Value> map;
 
@@ -616,12 +977,21 @@ RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t o
         if (m_reader.matches(">>"))
             break;
         auto name = parse_name();
+        if (!name) {
+            ok = false;
+            return {};
+        }
+
         auto name_string = name->name();
         if (!name_string.is_one_of(CommonNames::Type, CommonNames::Parent, CommonNames::Kids, CommonNames::Count)) {
             // This is a page, not a page tree node
             return {};
         }
         auto value = parse_value();
+        if (!value) {
+            ok = false;
+            return {};
+        }
         if (name_string == CommonNames::Type) {
             if (!value.is_object())
                 return {};
@@ -635,18 +1005,20 @@ RefPtr<DictObject> Parser::conditionally_parse_page_tree_node_at_offset(size_t o
         map.set(name->name(), value);
     }
 
-    consume('>');
-    consume('>');
+    if (!consume('>') || !consume('>'))
+        return {};
     consume_whitespace();
 
     return make_object<DictObject>(map);
 }
 
-NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
+RefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
 {
-    VERIFY(m_reader.matches("stream"));
+    if (!m_reader.matches("stream"))
+        return {};
     m_reader.move_by(6);
-    consume_eol();
+    if (!consume_eol())
+        return {};
 
     ReadonlyBytes bytes;
 
@@ -681,8 +1053,8 @@ NonnullRefPtr<StreamObject> Parser::parse_stream(NonnullRefPtr<DictObject> dict)
     if (dict->contains(CommonNames::Filter)) {
         auto filter_type = dict->get_name(m_document, CommonNames::Filter)->name();
         auto maybe_bytes = Filter::decode(bytes, filter_type);
-        // FIXME: Handle error condition
-        VERIFY(maybe_bytes.has_value());
+        if (!maybe_bytes.has_value())
+            return {};
         return make_object<EncodedStreamObject>(dict, move(maybe_bytes.value()));
     }
 
@@ -752,14 +1124,15 @@ bool Parser::matches_regular_character() const
     return !matches_delimiter() && !matches_whitespace();
 }
 
-void Parser::consume_eol()
+bool Parser::consume_eol()
 {
     if (m_reader.matches("\r\n")) {
         consume(2);
-    } else {
-        auto consumed = consume();
-        VERIFY(consumed == 0xd || consumed == 0xa);
+        return true;
     }
+
+    auto consumed = consume();
+    return consumed == 0xd || consumed == 0xa;
 }
 
 bool Parser::consume_whitespace()
@@ -777,9 +1150,88 @@ char Parser::consume()
     return m_reader.read();
 }
 
-void Parser::consume(char ch)
+void Parser::consume(int amount)
 {
-    VERIFY(consume() == ch);
+    for (size_t i = 0; i < static_cast<size_t>(amount); i++)
+        consume();
 }
+
+bool Parser::consume(char ch)
+{
+    return consume() == ch;
+}
+
+}
+
+namespace AK {
+
+template<>
+struct Formatter<PDF::Parser::LinearizationDictionary> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, PDF::Parser::LinearizationDictionary const& dict)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  length_of_file={}\n", dict.length_of_file);
+        builder.appendff("  primary_hint_stream_offset={}\n", dict.primary_hint_stream_offset);
+        builder.appendff("  primary_hint_stream_length={}\n", dict.primary_hint_stream_length);
+        builder.appendff("  overflow_hint_stream_offset={}\n", dict.overflow_hint_stream_offset);
+        builder.appendff("  overflow_hint_stream_length={}\n", dict.overflow_hint_stream_length);
+        builder.appendff("  first_page_object_number={}\n", dict.first_page_object_number);
+        builder.appendff("  offset_of_first_page_end={}\n", dict.offset_of_first_page_end);
+        builder.appendff("  number_of_pages={}\n", dict.number_of_pages);
+        builder.appendff("  offset_of_main_xref_table={}\n", dict.offset_of_main_xref_table);
+        builder.appendff("  first_page={}\n", dict.first_page);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
+
+template<>
+struct Formatter<PDF::Parser::PageOffsetHintTable> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTable const& table)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  least_number_of_objects_in_a_page={}\n", table.least_number_of_objects_in_a_page);
+        builder.appendff("  location_of_first_page_object={}\n", table.location_of_first_page_object);
+        builder.appendff("  bits_required_for_object_number={}\n", table.bits_required_for_object_number);
+        builder.appendff("  least_length_of_a_page={}\n", table.least_length_of_a_page);
+        builder.appendff("  bits_required_for_page_length={}\n", table.bits_required_for_page_length);
+        builder.appendff("  least_offset_of_any_content_stream={}\n", table.least_offset_of_any_content_stream);
+        builder.appendff("  bits_required_for_content_stream_offsets={}\n", table.bits_required_for_content_stream_offsets);
+        builder.appendff("  least_content_stream_length={}\n", table.least_content_stream_length);
+        builder.appendff("  bits_required_for_content_stream_length={}\n", table.bits_required_for_content_stream_length);
+        builder.appendff("  bits_required_for_number_of_shared_obj_refs={}\n", table.bits_required_for_number_of_shared_obj_refs);
+        builder.appendff("  bits_required_for_greatest_shared_obj_identifier={}\n", table.bits_required_for_greatest_shared_obj_identifier);
+        builder.appendff("  bits_required_for_fraction_numerator={}\n", table.bits_required_for_fraction_numerator);
+        builder.appendff("  shared_object_reference_fraction_denominator={}\n", table.shared_object_reference_fraction_denominator);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
+
+template<>
+struct Formatter<PDF::Parser::PageOffsetHintTableEntry> : Formatter<StringView> {
+    void format(FormatBuilder& format_builder, PDF::Parser::PageOffsetHintTableEntry const& entry)
+    {
+        StringBuilder builder;
+        builder.append("{\n");
+        builder.appendff("  objects_in_page_number={}\n", entry.objects_in_page_number);
+        builder.appendff("  page_length_number={}\n", entry.page_length_number);
+        builder.appendff("  number_of_shared_objects={}\n", entry.number_of_shared_objects);
+        builder.append("  shared_object_identifiers=[");
+        for (auto& identifier : entry.shared_object_identifiers)
+            builder.appendff(" {}", identifier);
+        builder.append(" ]\n");
+        builder.append("  shared_object_location_numerators=[");
+        for (auto& numerator : entry.shared_object_location_numerators)
+            builder.appendff(" {}", numerator);
+        builder.append(" ]\n");
+        builder.appendff("  page_content_stream_offset_number={}\n", entry.page_content_stream_offset_number);
+        builder.appendff("  page_content_stream_length_number={}\n", entry.page_content_stream_length_number);
+        builder.append('}');
+        Formatter<StringView>::format(format_builder, builder.to_string());
+    }
+};
 
 }

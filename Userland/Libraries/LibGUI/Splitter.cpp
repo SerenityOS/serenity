@@ -155,7 +155,7 @@ void Splitter::recompute_grabbables()
     m_hovered_index = {};
 
     auto child_widgets = this->child_widgets();
-    child_widgets.remove_all_matching([&](auto& widget) { return !widget->is_visible(); });
+    child_widgets.remove_all_matching([&](auto& widget) { return !widget.is_visible(); });
 
     if (child_widgets.size() < 2)
         return;
@@ -164,8 +164,8 @@ void Splitter::recompute_grabbables()
     size_t end_index = 1;
 
     while (end_index < child_widgets.size()) {
-        auto const& first_widget = *child_widgets[start_index];
-        auto const& second_widget = *child_widgets[end_index];
+        auto const& first_widget = child_widgets[start_index];
+        auto const& second_widget = child_widgets[end_index];
         m_grabbables.append(Grabbable {
             .index = m_grabbables.size(),
             .grabbable_rect = rect_between_widgets(first_widget, second_widget, true),

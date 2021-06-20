@@ -75,10 +75,32 @@ int main(int, char**)
         return 1;
     }
 
-    int scale = wm_config->read_num_entry("Screen", "ScaleFactor", 1);
-    WindowServer::Screen screen(wm_config->read_num_entry("Screen", "Width", 1024 / scale), wm_config->read_num_entry("Screen", "Height", 768 / scale), scale);
-    screen.set_acceleration_factor(atof(wm_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters()));
-    screen.set_scroll_step_size(wm_config->read_num_entry("Mouse", "ScrollStepSize", 4));
+    // First check which screens are explicitly configured
+    {
+        AK::HashTable<String> fb_devices_configured;
+        WindowServer::ScreenLayout screen_layout;
+        String error_msg;
+        if (!screen_layout.load_config(*wm_config, &error_msg)) {
+            dbgln("Error loading screen configuration: {}", error_msg);
+            return 1;
+        }
+
+        for (auto& screen_info : screen_layout.screens)
+            fb_devices_configured.set(screen_info.device);
+
+        // TODO: Enumerate the /dev/fbX devices and set up any ones we find that we haven't already used
+
+        if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
+            dbgln("Error applying screen layout: {}", error_msg);
+            return 1;
+        }
+    }
+
+    auto& screen_input = WindowServer::ScreenInput::the();
+    screen_input.set_cursor_location(WindowServer::Screen::main().rect().center());
+    screen_input.set_acceleration_factor(atof(wm_config->read_entry("Mouse", "AccelerationFactor", "1.0").characters()));
+    screen_input.set_scroll_step_size(wm_config->read_num_entry("Mouse", "ScrollStepSize", 4));
+
     WindowServer::Compositor::the();
     auto wm = WindowServer::WindowManager::construct(*palette);
     auto am = WindowServer::AppletManager::construct();
@@ -89,10 +111,9 @@ int main(int, char**)
         return 1;
     }
 
-    if (unveil("/dev", "") < 0) {
-        perror("unveil /dev");
-        return 1;
-    }
+    // NOTE: Because we dynamically need to be able to open new /dev/fb*
+    // devices we can't really unveil all of /dev unless we have some
+    // other mechanism that can hand us file descriptors for these.
 
     if (unveil(nullptr, nullptr) < 0) {
         perror("unveil");

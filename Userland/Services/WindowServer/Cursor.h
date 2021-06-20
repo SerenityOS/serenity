@@ -6,12 +6,15 @@
 
 #pragma once
 
+#include <AK/HashMap.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/StandardCursor.h>
 
 namespace WindowServer {
 
 class CursorParams {
+    friend class Cursor;
+
 public:
     static CursorParams parse_from_filename(const StringView&, const Gfx::IntPoint&);
     CursorParams(const Gfx::IntPoint& hotspot)
@@ -34,13 +37,27 @@ private:
 
 class Cursor : public RefCounted<Cursor> {
 public:
-    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, const StringView&);
-    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&);
+    static RefPtr<Cursor> create(const StringView&, const StringView&);
+    static NonnullRefPtr<Cursor> create(NonnullRefPtr<Gfx::Bitmap>&&, int);
     static RefPtr<Cursor> create(Gfx::StandardCursor);
-    ~Cursor();
+    ~Cursor() = default;
 
     const CursorParams& params() const { return m_params; }
-    const Gfx::Bitmap& bitmap() const { return *m_bitmap; }
+    const Gfx::Bitmap& bitmap(int scale_factor) const
+    {
+        auto it = m_bitmaps.find(scale_factor);
+        if (it == m_bitmaps.end()) {
+            it = m_bitmaps.find(1);
+            if (it == m_bitmaps.end())
+                it = m_bitmaps.begin();
+        }
+        // We better found something
+        if (it == m_bitmaps.end()) {
+            dbgln("Could not find any bitmap in this Cursor");
+            VERIFY_NOT_REACHED();
+        }
+        return it->value;
+    }
 
     Gfx::IntRect source_rect(unsigned frame) const
     {
@@ -51,9 +68,12 @@ public:
     Gfx::IntSize size() const { return m_rect.size(); }
 
 private:
-    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, const CursorParams&);
+    Cursor() { }
+    Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const CursorParams&);
 
-    RefPtr<Gfx::Bitmap> m_bitmap;
+    bool load(const StringView&, const StringView&);
+
+    HashMap<int, NonnullRefPtr<Gfx::Bitmap>> m_bitmaps;
     CursorParams m_params;
     Gfx::IntRect m_rect;
 };

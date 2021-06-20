@@ -9,6 +9,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
 #include <AK/StringBuilder.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigIntObject.h>
 #include <LibJS/Runtime/BooleanObject.h>
@@ -33,6 +34,8 @@ void JSONObject::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.stringify, stringify, 3, attr);
     define_native_function(vm.names.parse, parse, 2, attr);
+
+    // 25.5.3 JSON [ @@toStringTag ], https://tc39.es/ecma262/#sec-json-@@tostringtag
     define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "JSON"), Attribute::Configurable);
 }
 
@@ -48,7 +51,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     if (replacer.is_object()) {
         if (replacer.as_object().is_function()) {
             state.replacer_function = &replacer.as_function();
-        } else if (replacer.is_array()) {
+        } else if (replacer.is_array(global_object)) {
             auto& replacer_object = replacer.as_object();
             auto replacer_length = length_of_array_like(global_object, replacer_object);
             if (vm.exception())
@@ -77,6 +80,8 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
             }
             state.property_list = list;
         }
+        if (vm.exception())
+            return {};
     }
 
     if (space.is_object()) {
@@ -102,7 +107,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
         state.gap = String::empty();
     }
 
-    auto* wrapper = Object::create_empty(global_object);
+    auto* wrapper = Object::create(global_object, global_object.object_prototype());
     wrapper->define_property(String::empty(), value);
     if (vm.exception())
         return {};
@@ -115,6 +120,7 @@ String JSONObject::stringify_impl(GlobalObject& global_object, Value value, Valu
     return result;
 }
 
+// 25.5.2 JSON.stringify ( value [ , replacer [ , space ] ] ), https://tc39.es/ecma262/#sec-json.stringify
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::stringify)
 {
     if (!vm.argument_count())
@@ -172,8 +178,10 @@ String JSONObject::serialize_json_property(GlobalObject& global_object, Stringif
         return "null";
     }
     if (value.is_object() && !value.is_function()) {
-        if (value.is_array())
+        if (value.is_array(global_object))
             return serialize_json_array(global_object, state, static_cast<Array&>(value.as_object()));
+        if (vm.exception())
+            return {};
         return serialize_json_object(global_object, state, value.as_object());
     }
     if (value.is_bigint())
@@ -372,6 +380,7 @@ String JSONObject::quote_json_string(String string)
     return builder.to_string();
 }
 
+// 25.5.1 JSON.parse ( text [ , reviver ] ), https://tc39.es/ecma262/#sec-json.parse
 JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
 {
     if (!vm.argument_count())
@@ -388,11 +397,12 @@ JS_DEFINE_NATIVE_FUNCTION(JSONObject::parse)
     }
     Value result = parse_json_value(global_object, json.value());
     if (reviver.is_function()) {
-        auto* holder_object = Object::create_empty(global_object);
-        holder_object->define_property(String::empty(), result);
+        auto* root = Object::create(global_object, global_object.object_prototype());
+        auto root_name = String::empty();
+        root->define_property(root_name, result);
         if (vm.exception())
             return {};
-        return internalize_json_property(global_object, holder_object, String::empty(), reviver.as_function());
+        return internalize_json_property(global_object, root, root_name, reviver.as_function());
     }
     return result;
 }
@@ -418,7 +428,7 @@ Value JSONObject::parse_json_value(GlobalObject& global_object, const JsonValue&
 
 Object* JSONObject::parse_json_object(GlobalObject& global_object, const JsonObject& json_object)
 {
-    auto* object = Object::create_empty(global_object);
+    auto* object = Object::create(global_object, global_object.object_prototype());
     json_object.for_each_member([&](auto& key, auto& value) {
         object->define_property(key, parse_json_value(global_object, value));
     });
@@ -435,6 +445,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
     return array;
 }
 
+// 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
 Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, const PropertyName& name, Function& reviver)
 {
     auto& vm = global_object.vm();

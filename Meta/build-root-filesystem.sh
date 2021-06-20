@@ -50,28 +50,47 @@ chmod 660 mnt/etc/WindowServer.ini
 chown $window_uid:$window_gid mnt/etc/WindowServer.ini
 echo "/bin/sh" > mnt/etc/shells
 
-chown 0:$wheel_gid mnt/bin/su
-chown 0:$wheel_gid mnt/bin/passwd
-chown 0:$wheel_gid mnt/bin/ping
-chown 0:$wheel_gid mnt/bin/traceroute
-chown 0:$phys_gid mnt/bin/keymap
-chown 0:$phys_gid mnt/bin/shutdown
-chown 0:$phys_gid mnt/bin/reboot
-chown 0:$wheel_gid mnt/bin/pls
+if [ -f mnt/bin/su ]; then
+    chown 0:$wheel_gid mnt/bin/su
+    chmod 4750 mnt/bin/su
+fi
+if [ -f mnt/bin/passwd ]; then
+    chown 0:$wheel_gid mnt/bin/passwd
+    chmod 4755 mnt/bin/passwd
+fi
+if [ -f mnt/bin/ping ]; then
+    chown 0:$wheel_gid mnt/bin/ping
+    chmod 4755 mnt/bin/ping
+fi
+if [ -f mnt/bin/traceroute ]; then
+    chown 0:$wheel_gid mnt/bin/traceroute
+    chmod 4755 mnt/bin/traceroute
+fi
+if [ -f mnt/bin/keymap ]; then
+    chown 0:$phys_gid mnt/bin/keymap
+    chmod 4750 mnt/bin/keymap
+fi
+if [ -f mnt/bin/shutdown ]; then
+    chown 0:$phys_gid mnt/bin/shutdown
+    chmod 4750 mnt/bin/shutdown
+fi
+if [ -f mnt/bin/reboot ]; then
+    chown 0:$phys_gid mnt/bin/reboot
+    chmod 4750 mnt/bin/reboot
+fi
+if [ -f mnt/bin/pls ]; then
+    chown 0:$wheel_gid mnt/bin/pls
+    chmod 4750 mnt/bin/pls
+fi
+if [ -f mnt/bin/utmpupdate ]; then
+    chown 0:$utmp_gid mnt/bin/utmpupdate
+    chmod 2755 mnt/bin/utmpupdate
+fi
+
 chown 0:0 mnt/boot/Kernel
 chown 0:0 mnt/res/kernel.map
 chmod 0400 mnt/res/kernel.map
 chmod 0400 mnt/boot/Kernel
-chmod 4750 mnt/bin/su
-chmod 4750 mnt/bin/pls
-chmod 4755 mnt/bin/passwd
-chmod 4755 mnt/bin/ping
-chmod 4755 mnt/bin/traceroute
-chmod 4750 mnt/bin/reboot
-chmod 4750 mnt/bin/shutdown
-chmod 4750 mnt/bin/keymap
-chown 0:$utmp_gid mnt/bin/utmpupdate
-chmod 2755 mnt/bin/utmpupdate
 chmod 600 mnt/etc/shadow
 chmod 755 mnt/res/devel/templates/*.postcreate
 echo "done"

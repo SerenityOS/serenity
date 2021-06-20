@@ -1,3 +1,9 @@
+serenity_component(
+    Pong
+    RECOMMENDED
+    TARGETS Pong
+)
+
 set(SOURCES
     main.cpp
     Game.cpp

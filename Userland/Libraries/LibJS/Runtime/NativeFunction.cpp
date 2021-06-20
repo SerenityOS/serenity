@@ -5,7 +5,6 @@
  */
 
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -21,16 +20,16 @@ NativeFunction::NativeFunction(Object& prototype)
 {
 }
 
-NativeFunction::NativeFunction(const FlyString& name, AK::Function<Value(VM&, GlobalObject&)> native_function, Object& prototype)
+NativeFunction::NativeFunction(PropertyName const& name, AK::Function<Value(VM&, GlobalObject&)> native_function, Object& prototype)
     : Function(prototype)
-    , m_name(name)
+    , m_name(name.as_string())
     , m_native_function(move(native_function))
 {
 }
 
-NativeFunction::NativeFunction(const FlyString& name, Object& prototype)
+NativeFunction::NativeFunction(PropertyName const& name, Object& prototype)
     : Function(prototype)
-    , m_name(name)
+    , m_name(name.as_string())
 {
 }
 
@@ -50,7 +49,7 @@ Value NativeFunction::construct(Function&)
 
 LexicalEnvironment* NativeFunction::create_environment()
 {
-    return heap().allocate<LexicalEnvironment>(global_object(), LexicalEnvironment::EnvironmentRecordType::Function);
+    return nullptr;
 }
 
 bool NativeFunction::is_strict_mode() const

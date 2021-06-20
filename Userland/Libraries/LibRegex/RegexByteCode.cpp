@@ -87,84 +87,88 @@ static const char* character_class_name(CharClass ch_class)
     }
 }
 
-HashMap<u32, OwnPtr<OpCode>> ByteCode::s_opcodes {};
+OwnPtr<OpCode> ByteCode::s_opcodes[(size_t)OpCodeId::Last + 1];
+bool ByteCode::s_opcodes_initialized { false };
 
-ALWAYS_INLINE OpCode* ByteCode::get_opcode_by_id(OpCodeId id) const
+void ByteCode::ensure_opcodes_initialized()
 {
-    if (!s_opcodes.size()) {
-        for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
-            switch ((OpCodeId)i) {
-            case OpCodeId::Exit:
-                s_opcodes.set(i, make<OpCode_Exit>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::Jump:
-                s_opcodes.set(i, make<OpCode_Jump>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::Compare:
-                s_opcodes.set(i, make<OpCode_Compare>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::CheckEnd:
-                s_opcodes.set(i, make<OpCode_CheckEnd>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::CheckBoundary:
-                s_opcodes.set(i, make<OpCode_CheckBoundary>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::ForkJump:
-                s_opcodes.set(i, make<OpCode_ForkJump>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::ForkStay:
-                s_opcodes.set(i, make<OpCode_ForkStay>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::FailForks:
-                s_opcodes.set(i, make<OpCode_FailForks>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::Save:
-                s_opcodes.set(i, make<OpCode_Save>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::Restore:
-                s_opcodes.set(i, make<OpCode_Restore>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::GoBack:
-                s_opcodes.set(i, make<OpCode_GoBack>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::CheckBegin:
-                s_opcodes.set(i, make<OpCode_CheckBegin>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::SaveLeftCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveLeftCaptureGroup>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::SaveRightCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveRightCaptureGroup>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::SaveLeftNamedCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveLeftNamedCaptureGroup>(*const_cast<ByteCode*>(this)));
-                break;
-            case OpCodeId::SaveRightNamedCaptureGroup:
-                s_opcodes.set(i, make<OpCode_SaveRightNamedCaptureGroup>(*const_cast<ByteCode*>(this)));
-                break;
-            }
+    if (s_opcodes_initialized)
+        return;
+    for (u32 i = (u32)OpCodeId::First; i <= (u32)OpCodeId::Last; ++i) {
+        switch ((OpCodeId)i) {
+        case OpCodeId::Exit:
+            s_opcodes[i] = make<OpCode_Exit>();
+            break;
+        case OpCodeId::Jump:
+            s_opcodes[i] = make<OpCode_Jump>();
+            break;
+        case OpCodeId::Compare:
+            s_opcodes[i] = make<OpCode_Compare>();
+            break;
+        case OpCodeId::CheckEnd:
+            s_opcodes[i] = make<OpCode_CheckEnd>();
+            break;
+        case OpCodeId::CheckBoundary:
+            s_opcodes[i] = make<OpCode_CheckBoundary>();
+            break;
+        case OpCodeId::ForkJump:
+            s_opcodes[i] = make<OpCode_ForkJump>();
+            break;
+        case OpCodeId::ForkStay:
+            s_opcodes[i] = make<OpCode_ForkStay>();
+            break;
+        case OpCodeId::FailForks:
+            s_opcodes[i] = make<OpCode_FailForks>();
+            break;
+        case OpCodeId::Save:
+            s_opcodes[i] = make<OpCode_Save>();
+            break;
+        case OpCodeId::Restore:
+            s_opcodes[i] = make<OpCode_Restore>();
+            break;
+        case OpCodeId::GoBack:
+            s_opcodes[i] = make<OpCode_GoBack>();
+            break;
+        case OpCodeId::CheckBegin:
+            s_opcodes[i] = make<OpCode_CheckBegin>();
+            break;
+        case OpCodeId::SaveLeftCaptureGroup:
+            s_opcodes[i] = make<OpCode_SaveLeftCaptureGroup>();
+            break;
+        case OpCodeId::SaveRightCaptureGroup:
+            s_opcodes[i] = make<OpCode_SaveRightCaptureGroup>();
+            break;
+        case OpCodeId::SaveLeftNamedCaptureGroup:
+            s_opcodes[i] = make<OpCode_SaveLeftNamedCaptureGroup>();
+            break;
+        case OpCodeId::SaveRightNamedCaptureGroup:
+            s_opcodes[i] = make<OpCode_SaveRightNamedCaptureGroup>();
+            break;
         }
     }
-
-    if (id > OpCodeId::Last)
-        return nullptr;
-
-    return const_cast<OpCode*>(s_opcodes.get((u32)id).value())->set_bytecode(*const_cast<ByteCode*>(this));
+    s_opcodes_initialized = true;
 }
 
-OpCode* ByteCode::get_opcode(MatchState& state) const
+ALWAYS_INLINE OpCode& ByteCode::get_opcode_by_id(OpCodeId id) const
 {
-    OpCode* op_code;
+    VERIFY(id >= OpCodeId::First && id <= OpCodeId::Last);
 
-    if (state.instruction_position >= size()) {
-        op_code = get_opcode_by_id(OpCodeId::Exit);
-    } else
-        op_code = get_opcode_by_id((OpCodeId)at(state.instruction_position));
+    auto& opcode = s_opcodes[(u32)id];
+    opcode->set_bytecode(*const_cast<ByteCode*>(this));
+    return *opcode;
+}
 
-    if (op_code)
-        op_code->set_state(state);
+OpCode& ByteCode::get_opcode(MatchState& state) const
+{
+    OpCodeId opcode_id;
+    if (state.instruction_position >= size())
+        opcode_id = OpCodeId::Exit;
+    else
+        opcode_id = (OpCodeId)at(state.instruction_position);
 
-    return op_code;
+    auto& opcode = get_opcode_by_id(opcode_id);
+    opcode.set_state(state);
+    return opcode;
 }
 
 ALWAYS_INLINE ExecutionResult OpCode_Exit::execute(const MatchInput& input, MatchState& state, MatchOutput&) const
@@ -379,6 +383,8 @@ ALWAYS_INLINE ExecutionResult OpCode_Compare::execute(const MatchInput& input, M
     bool inverse_matched { false };
     bool had_zero_length_match { false };
 
+    state.string_position_before_match = state.string_position;
+
     size_t offset { state.instruction_position + 3 };
     for (size_t i = 0; i < arguments_count(); ++i) {
         if (state.string_position > string_position)
@@ -510,7 +516,7 @@ ALWAYS_INLINE void OpCode_Compare::compare_char(const MatchInput& input, MatchSt
 
     if (input.regex_options & AllFlags::Insensitive) {
         ch1 = to_ascii_lowercase(ch1);
-        ch2 = to_ascii_uppercase(ch2);
+        ch2 = to_ascii_lowercase(ch2);
     }
 
     if (ch1 == ch2) {
@@ -527,15 +533,13 @@ ALWAYS_INLINE bool OpCode_Compare::compare_string(const MatchInput& input, Match
         auto str_view1 = StringView(str, length);
         auto str_view2 = StringView(&input.view.u8view()[state.string_position], length);
 
-        String str1, str2;
-        if (input.regex_options & AllFlags::Insensitive) {
-            str1 = str_view1.to_string().to_lowercase();
-            str2 = str_view2.to_string().to_lowercase();
-            str_view1 = str1.view();
-            str_view2 = str2.view();
-        }
+        bool string_equals;
+        if (input.regex_options & AllFlags::Insensitive)
+            string_equals = str_view1.equals_ignoring_case(str_view2);
+        else
+            string_equals = str_view1 == str_view2;
 
-        if (str_view1 == str_view2) {
+        if (string_equals) {
             state.string_position += length;
             if (length == 0)
                 had_zero_length_match = true;
@@ -684,7 +688,7 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
         auto compare_type = (CharacterCompareType)m_bytecode->at(offset++);
         result.empend(String::formatted("type={} [{}]", (size_t)compare_type, character_compare_type_name(compare_type)));
 
-        auto compared_against_string_start_offset = state().string_position > 0 ? state().string_position - 1 : state().string_position;
+        auto string_start_offset = state().string_position_before_match;
 
         if (compare_type == CharacterCompareType::Char) {
             auto ch = m_bytecode->at(offset++);
@@ -694,13 +698,13 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             else
                 result.empend(String::formatted("value={:x}", ch));
 
-            if (!view.is_null() && view.length() > state().string_position) {
+            if (!view.is_null() && view.length() > string_start_offset) {
                 if (is_ascii) {
                     result.empend(String::formatted(
                         "compare against: '{}'",
-                        view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                        view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string()));
                 } else {
-                    auto str = view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string();
+                    auto str = view.substring_view(string_start_offset, string_start_offset > view.length() ? 0 : 1).to_string();
                     u8 buf[8] { 0 };
                     __builtin_memcpy(buf, str.characters(), min(str.length(), sizeof(buf)));
                     result.empend(String::formatted("compare against: {:x},{:x},{:x},{:x},{:x},{:x},{:x},{:x}",
@@ -723,21 +727,21 @@ const Vector<String> OpCode_Compare::variable_arguments_to_string(Optional<Match
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: \"{}\"",
-                    input.value().view.substring_view(compared_against_string_start_offset, compared_against_string_start_offset + length > view.length() ? 0 : length).to_string()));
+                    input.value().view.substring_view(string_start_offset, string_start_offset + length > view.length() ? 0 : length).to_string()));
         } else if (compare_type == CharacterCompareType::CharClass) {
             auto character_class = (CharClass)m_bytecode->at(offset++);
             result.empend(String::formatted("ch_class={} [{}]", (size_t)character_class, character_class_name(character_class)));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         } else if (compare_type == CharacterCompareType::CharRange) {
             auto value = (CharRange)m_bytecode->at(offset++);
             result.empend(String::formatted("ch_range='{:c}'-'{:c}'", value.from, value.to));
             if (!view.is_null() && view.length() > state().string_position)
                 result.empend(String::formatted(
                     "compare against: '{}'",
-                    input.value().view.substring_view(compared_against_string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
+                    input.value().view.substring_view(string_start_offset, state().string_position > view.length() ? 0 : 1).to_string()));
         }
     }
     return result;

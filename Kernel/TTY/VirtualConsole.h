@@ -35,19 +35,14 @@ public:
 private:
     virtual void invalidate_cursor() override;
     virtual void clear() override;
-    virtual void clear_including_history() override;
+    virtual void clear_history() override;
 
-    virtual void scroll_up() override;
-    virtual void scroll_down() override;
-    virtual void linefeed() override;
+    virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) override;
+    virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) override;
+    virtual void scroll_left(u16 row, u16 column, size_t count) override;
+    virtual void scroll_right(u16 row, u16 column, size_t count) override;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) override;
-    virtual void set_window_title(const String&) override;
-
-    virtual void ICH(Parameters) override;
-
-    virtual void IL(Parameters) override;
-    virtual void DCH(Parameters) override;
-    virtual void DL(Parameters) override;
+    virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) override;
 };
 
 class VirtualConsole final : public TTY
@@ -96,7 +91,7 @@ private:
     virtual void on_key_pressed(KeyEvent) override;
 
     // ^TTY
-    virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) override;
+    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) override;
     virtual String const& tty_name() const override { return m_tty_name; }
     virtual void echo(u8) override;
 
@@ -105,7 +100,7 @@ private:
     virtual void set_window_title(const StringView&) override;
     virtual void set_window_progress(int, int) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
-    virtual void terminal_history_changed() override;
+    virtual void terminal_history_changed(int) override;
     virtual void emit(const u8*, size_t) override;
     virtual void set_cursor_style(VT::CursorStyle) override;
 
@@ -140,9 +135,15 @@ private:
 
     void on_code_point(u32);
 
-    void scroll_down();
-    void scroll_up();
-    void clear_line(size_t index);
+    void scroll_down(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_up(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_left(u16 row, u16 column, size_t count);
+    void scroll_right(u16 row, u16 column, size_t count);
+    void clear_line(size_t index)
+    {
+        clear_in_line(index, 0, m_console_impl.columns() - 1);
+    }
+    void clear_in_line(u16 row, u16 first_column, u16 last_column);
     void put_character_at(unsigned row, unsigned column, u32 ch, const VT::Attribute&);
 
     OwnPtr<Region> m_cells;

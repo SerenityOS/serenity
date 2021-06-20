@@ -7,6 +7,7 @@
 #pragma once
 
 #include <LibJS/AST.h>
+#include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Runtime/Function.h>
 
 namespace JS {
@@ -15,9 +16,9 @@ class ScriptFunction final : public Function {
     JS_OBJECT(ScriptFunction, Function);
 
 public:
-    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, bool is_strict, bool is_arrow_function = false);
+    static ScriptFunction* create(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, FunctionKind, bool is_strict, bool is_arrow_function = false);
 
-    ScriptFunction(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, bool is_strict, bool is_arrow_function = false);
+    ScriptFunction(GlobalObject&, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind, bool is_strict, bool is_arrow_function = false);
     virtual void initialize(GlobalObject&) override;
     virtual ~ScriptFunction();
 
@@ -31,6 +32,8 @@ public:
     void set_name(const FlyString& name) { m_name = name; };
 
     void set_is_class_constructor() { m_is_class_constructor = true; };
+
+    auto& bytecode_executable() const { return m_bytecode_executable; }
 
 protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
@@ -47,9 +50,10 @@ private:
     FlyString m_name;
     NonnullRefPtr<Statement> m_body;
     const Vector<FunctionNode::Parameter> m_parameters;
-    OwnPtr<Bytecode::Block> m_bytecode_block;
+    Optional<Bytecode::Executable> m_bytecode_executable;
     ScopeObject* m_parent_scope { nullptr };
     i32 m_function_length { 0 };
+    FunctionKind m_kind { FunctionKind::Regular };
     bool m_is_strict { false };
     bool m_is_arrow_function { false };
     bool m_is_class_constructor { false };

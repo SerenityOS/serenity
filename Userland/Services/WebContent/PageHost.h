@@ -28,7 +28,7 @@ public:
 
     void set_palette_impl(const Gfx::PaletteImpl&);
     void set_viewport_rect(const Gfx::IntRect&);
-    void set_screen_rect(const Gfx::IntRect& rect) { m_screen_rect = rect; };
+    void set_screen_rects(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index) { m_screen_rect = rects[main_screen_index]; };
 
     void set_should_show_line_box_borders(bool b) { m_should_show_line_box_borders = b; }
 

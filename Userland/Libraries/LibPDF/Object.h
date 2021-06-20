@@ -46,7 +46,7 @@ public:
 
     ~StringObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE const String& string() const { return m_string; }
+    [[nodiscard]] ALWAYS_INLINE String const& string() const { return m_string; }
     [[nodiscard]] ALWAYS_INLINE bool is_binary() const { return m_is_binary; }
 
     ALWAYS_INLINE bool is_string() const override { return true; }
@@ -67,7 +67,7 @@ public:
 
     ~NameObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE const FlyString& name() const { return m_name; }
+    [[nodiscard]] ALWAYS_INLINE FlyString const& name() const { return m_name; }
 
     ALWAYS_INLINE bool is_name() const override { return true; }
     ALWAYS_INLINE const char* type_name() const override { return "name"; }
@@ -92,8 +92,8 @@ public:
     ALWAYS_INLINE auto begin() const { return m_elements.begin(); }
     ALWAYS_INLINE auto end() const { return m_elements.end(); }
 
-    ALWAYS_INLINE const Value& operator[](size_t index) const { return at(index); }
-    ALWAYS_INLINE const Value& at(size_t index) const { return m_elements[index]; }
+    ALWAYS_INLINE Value const& operator[](size_t index) const { return at(index); }
+    ALWAYS_INLINE Value const& at(size_t index) const { return m_elements[index]; }
 
     NonnullRefPtr<Object> get_object_at(Document*, size_t index) const;
 
@@ -122,18 +122,24 @@ public:
 
     ~DictObject() override = default;
 
-    [[nodiscard]] ALWAYS_INLINE const HashMap<FlyString, Value>& map() const { return m_map; }
+    [[nodiscard]] ALWAYS_INLINE HashMap<FlyString, Value> const& map() const { return m_map; }
 
-    ALWAYS_INLINE bool contains(const FlyString& key) const { return m_map.contains(key); }
+    template<typename... Args>
+    bool contains(Args&&... keys) const { return (m_map.contains(keys) && ...); }
 
-    ALWAYS_INLINE Optional<Value> get(const FlyString& key) const { return m_map.get(key); }
+    ALWAYS_INLINE Optional<Value> get(FlyString const& key) const { return m_map.get(key); }
 
-    Value get_value(const FlyString& key) const { return get(key).value(); }
+    Value get_value(FlyString const& key) const
+    {
+        auto value = get(key);
+        VERIFY(value.has_value());
+        return value.value();
+    }
 
-    NonnullRefPtr<Object> get_object(Document*, const FlyString& key) const;
+    NonnullRefPtr<Object> get_object(Document*, FlyString const& key) const;
 
 #define DEFINE_GETTER(class_name, snake_name) \
-    NonnullRefPtr<class_name> get_##snake_name(Document*, const FlyString& key) const;
+    NonnullRefPtr<class_name> get_##snake_name(Document*, FlyString const& key) const;
     ENUMERATE_OBJECT_TYPES(DEFINE_GETTER)
 #undef DEFINE_GETTER
 
@@ -150,7 +156,7 @@ private:
 
 class StreamObject : public Object {
 public:
-    explicit StreamObject(const NonnullRefPtr<DictObject>& dict)
+    explicit StreamObject(NonnullRefPtr<DictObject> const& dict)
         : m_dict(dict)
     {
     }
@@ -170,7 +176,7 @@ private:
 
 class PlainTextStreamObject final : public StreamObject {
 public:
-    PlainTextStreamObject(const NonnullRefPtr<DictObject>& dict, const ReadonlyBytes& bytes)
+    PlainTextStreamObject(NonnullRefPtr<DictObject> const& dict, ReadonlyBytes const& bytes)
         : StreamObject(dict)
         , m_bytes(bytes)
     {
@@ -186,7 +192,7 @@ private:
 
 class EncodedStreamObject final : public StreamObject {
 public:
-    EncodedStreamObject(const NonnullRefPtr<DictObject>& dict, ByteBuffer&& buffer)
+    EncodedStreamObject(NonnullRefPtr<DictObject> const& dict, ByteBuffer&& buffer)
         : StreamObject(dict)
         , m_buffer(buffer)
     {
@@ -202,7 +208,7 @@ private:
 
 class IndirectValue final : public Object {
 public:
-    IndirectValue(u32 index, u32 generation_index, const Value& value)
+    IndirectValue(u32 index, u32 generation_index, Value const& value)
         : m_index(index)
         , m_value(value)
     {
@@ -212,7 +218,7 @@ public:
     ~IndirectValue() override = default;
 
     [[nodiscard]] ALWAYS_INLINE u32 index() const { return m_index; }
-    [[nodiscard]] ALWAYS_INLINE const Value& value() const { return m_value; }
+    [[nodiscard]] ALWAYS_INLINE Value const& value() const { return m_value; }
 
     ALWAYS_INLINE bool is_indirect_value() const override { return true; }
     ALWAYS_INLINE const char* type_name() const override { return "indirect_object"; }
@@ -251,7 +257,7 @@ namespace AK {
 
 template<PDF::IsObject T>
 struct Formatter<T> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const T& object)
+    void format(FormatBuilder& builder, T const& object)
     {
         Formatter<StringView>::format(builder, object.to_string(0));
     }
@@ -259,7 +265,7 @@ struct Formatter<T> : Formatter<StringView> {
 
 template<PDF::IsObject T>
 struct Formatter<NonnullRefPtr<T>> : Formatter<T> {
-    void format(FormatBuilder& builder, const NonnullRefPtr<T>& object)
+    void format(FormatBuilder& builder, NonnullRefPtr<T> const& object)
     {
         Formatter<T>::format(builder, *object);
     }

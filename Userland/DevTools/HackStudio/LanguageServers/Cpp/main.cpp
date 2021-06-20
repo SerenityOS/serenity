@@ -47,8 +47,10 @@ int mode_server()
         return 1;
     }
 
-    if (unveil("/usr/include", "r") < 0)
+    if (unveil("/usr/include", "r") < 0) {
         perror("unveil");
+        return 1;
+    }
 
     // unveil will be sealed later, when we know the project's root path.
     return event_loop.exec();

@@ -115,18 +115,18 @@ void Sheet::update()
         return;
     }
     m_visited_cells_in_update.clear();
-    Vector<Cell*> cells_copy;
+    Vector<Cell&> cells_copy;
 
     // Grab a copy as updates might insert cells into the table.
     for (auto& it : m_cells) {
         if (it.value->dirty()) {
-            cells_copy.append(it.value);
+            cells_copy.append(*it.value);
             m_workbook.set_dirty(true);
         }
     }
 
     for (auto& cell : cells_copy)
-        update(*cell);
+        update(cell);
 
     m_visited_cells_in_update.clear();
 }
@@ -209,8 +209,12 @@ Optional<Position> Sheet::parse_cell_name(const StringView& name) const
 Optional<size_t> Sheet::column_index(const StringView& column_name) const
 {
     auto index = convert_from_string(column_name);
-    if (m_columns.size() <= index || m_columns[index] != column_name)
-        return {};
+    if (m_columns.size() <= index || m_columns[index] != column_name) {
+        auto it = m_columns.find(column_name);
+        if (it == m_columns.end())
+            return {};
+        index = it.index();
+    }
 
     return index;
 }

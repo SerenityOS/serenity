@@ -7,6 +7,18 @@ describe("correct behavior", () => {
         expect("" + 123n).toBe("123");
     });
 
+    test("hex literals", () => {
+        expect(0xffn).toBe(255n);
+    });
+
+    test("octal literals", () => {
+        expect(0o10n).toBe(8n);
+    });
+
+    test("binary literals", () => {
+        expect(0b10n).toBe(2n);
+    });
+
     test("arithmetic operators", () => {
         let bigint = 123n;
         expect(-bigint).toBe(-123n);

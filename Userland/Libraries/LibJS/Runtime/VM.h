@@ -158,12 +158,16 @@ public:
     }
 
     Value last_value() const { return m_last_value; }
+    void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
     void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
 
     const StackInfo& stack_info() const { return m_stack_info; };
 
     bool underscore_is_last_value() const { return m_underscore_is_last_value; }
     void set_underscore_is_last_value(bool b) { m_underscore_is_last_value = b; }
+
+    u32 execution_generation() const { return m_execution_generation; }
+    void finish_execution_generation() { ++m_execution_generation; }
 
     void unwind(ScopeType type, FlyString label = {})
     {
@@ -184,9 +188,11 @@ public:
     bool should_unwind() const { return m_unwind_until != ScopeType::None; }
 
     ScopeType unwind_until() const { return m_unwind_until; }
+    FlyString unwind_until_label() const { return m_unwind_until_label; }
 
     Value get_variable(const FlyString& name, GlobalObject&);
     void set_variable(const FlyString& name, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
+    bool delete_variable(FlyString const& name);
     void assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
     void assign(const FlyString& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
     void assign(const NonnullRefPtr<BindingPattern>& target, Value, GlobalObject&, bool first_assignment = false, ScopeObject* specific_scope = nullptr);
@@ -211,7 +217,7 @@ public:
         return throw_exception(global_object, T::create(global_object, String::formatted(type.message(), forward<Args>(args)...)));
     }
 
-    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject&);
+    Value construct(Function&, Function& new_target, Optional<MarkedValueList> arguments);
 
     String join_arguments(size_t start_index = 0) const;
 
@@ -237,6 +243,9 @@ public:
 
     void run_queued_promise_jobs();
     void enqueue_promise_job(NativeFunction&);
+
+    void run_queued_finalization_registry_cleanup_jobs();
+    void enqueue_finalization_registry_cleanup_job(FinalizationRegistry&);
 
     void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
 
@@ -266,6 +275,8 @@ private:
 
     Vector<NativeFunction*> m_promise_jobs;
 
+    Vector<FinalizationRegistry*> m_finalization_registry_cleanup_jobs;
+
     PrimitiveString* m_empty_string { nullptr };
     PrimitiveString* m_single_ascii_character_strings[128] {};
 
@@ -277,6 +288,8 @@ private:
     Shape* m_scope_object_shape { nullptr };
 
     bool m_underscore_is_last_value { false };
+
+    u32 m_execution_generation { 0 };
 };
 
 template<>

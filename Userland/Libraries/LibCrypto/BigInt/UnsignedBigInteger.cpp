@@ -5,7 +5,9 @@
  */
 
 #include "UnsignedBigInteger.h"
+#include <AK/CharacterTypes.h>
 #include <AK/StringBuilder.h>
+#include <AK/StringHash.h>
 #include <LibCrypto/BigInt/Algorithms/UnsignedBigIntegerAlgorithms.h>
 
 namespace Crypto {
@@ -70,7 +72,40 @@ UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
     UnsignedBigInteger ten { 10 };
 
     for (auto& c : str) {
-        result = result.multiplied_by(ten).plus(c - '0');
+        result = result.multiplied_by(ten).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base2(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger two { 2 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(two).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base8(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger eight { 8 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(eight).plus(parse_ascii_digit(c));
+    }
+    return result;
+}
+
+UnsignedBigInteger UnsignedBigInteger::from_base16(const String& str)
+{
+    UnsignedBigInteger result;
+    UnsignedBigInteger sixteen { 16 };
+
+    for (auto& c : str) {
+        result = result.multiplied_by(sixteen).plus(parse_ascii_hex_digit(c));
     }
     return result;
 }
@@ -101,11 +136,23 @@ String UnsignedBigInteger::to_base10() const
     return builder.to_string();
 }
 
+u64 UnsignedBigInteger::to_u64() const
+{
+    VERIFY(sizeof(Word) == 4);
+    if (!length())
+        return 0;
+    u64 value = m_words[0];
+    if (length() > 1)
+        value |= static_cast<u64>(m_words[1]) << 32;
+    return value;
+}
+
 void UnsignedBigInteger::set_to_0()
 {
     m_words.clear_with_capacity();
     m_is_invalid = false;
     m_cached_trimmed_length = {};
+    m_cached_hash = 0;
 }
 
 void UnsignedBigInteger::set_to(UnsignedBigInteger::Word other)
@@ -114,6 +161,7 @@ void UnsignedBigInteger::set_to(UnsignedBigInteger::Word other)
     m_words.resize_and_keep_capacity(1);
     m_words[0] = other;
     m_cached_trimmed_length = {};
+    m_cached_hash = 0;
 }
 
 void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
@@ -122,6 +170,7 @@ void UnsignedBigInteger::set_to(const UnsignedBigInteger& other)
     m_words.resize_and_keep_capacity(other.m_words.size());
     __builtin_memcpy(m_words.data(), other.m_words.data(), other.m_words.size() * sizeof(u32));
     m_cached_trimmed_length = {};
+    m_cached_hash = 0;
 }
 
 size_t UnsignedBigInteger::trimmed_length() const
@@ -252,6 +301,14 @@ FLATTEN UnsignedDivisionResult UnsignedBigInteger::divided_by(const UnsignedBigI
     return UnsignedDivisionResult { quotient, remainder };
 }
 
+u32 UnsignedBigInteger::hash() const
+{
+    if (m_cached_hash != 0)
+        return m_cached_hash;
+
+    return m_cached_hash = string_hash((const char*)m_words.data(), sizeof(Word) * m_words.size());
+}
+
 void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
 {
     const size_t word_index = bit_index / UnsignedBigInteger::BITS_IN_WORD;
@@ -265,6 +322,7 @@ void UnsignedBigInteger::set_bit_inplace(size_t bit_index)
     m_words[word_index] |= (1 << inner_word_index);
 
     m_cached_trimmed_length = {};
+    m_cached_hash = 0;
 }
 
 bool UnsignedBigInteger::operator==(const UnsignedBigInteger& other) const

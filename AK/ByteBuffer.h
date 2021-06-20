@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Span.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
@@ -158,6 +159,11 @@ public:
         if (new_capacity <= capacity())
             return;
         ensure_capacity_slowpath(new_capacity);
+    }
+
+    void append(ReadonlyBytes const& bytes)
+    {
+        append(bytes.data(), bytes.size());
     }
 
     void append(void const* data, size_t data_size)

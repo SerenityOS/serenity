@@ -1,15 +1,16 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "Client.h"
 #include <AK/Base64.h>
 #include <AK/Debug.h>
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
 #include <AK/MemoryStream.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 #include <LibCore/DateTime.h>
@@ -18,24 +19,27 @@
 #include <LibCore/FileStream.h>
 #include <LibCore/MimeData.h>
 #include <LibHTTP/HttpRequest.h>
-#include <inttypes.h>
+#include <LibHTTP/HttpResponse.h>
+#include <WebServer/Client.h>
+#include <WebServer/Configuration.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <time.h>
 #include <unistd.h>
 
 namespace WebServer {
 
-Client::Client(NonnullRefPtr<Core::TCPSocket> socket, const String& root, Core::Object* parent)
+Client::Client(NonnullRefPtr<Core::TCPSocket> socket, Core::Object* parent)
     : Core::Object(parent)
     , m_socket(socket)
-    , m_root_path(root)
 {
 }
 
 void Client::die()
 {
-    remove_from_parent();
+    deferred_invoke([this](auto& object) {
+        NonnullRefPtr protector { object };
+        remove_from_parent();
+    });
 }
 
 void Client::start()
@@ -72,16 +76,24 @@ void Client::handle_request(ReadonlyBytes raw_request)
     }
 
     if (request.method() != HTTP::HttpRequest::Method::GET) {
-        send_error_response(403, "Forbidden!", request);
+        send_error_response(501, request);
         return;
+    }
+
+    // Check for credentials if they are required
+    if (Configuration::the().credentials().has_value()) {
+        bool has_authenticated = verify_credentials(request.headers());
+        if (!has_authenticated) {
+            send_error_response(401, request, { "WWW-Authenticate: Basic realm=\"WebServer\", charset=\"UTF-8\"" });
+            return;
+        }
     }
 
     auto requested_path = LexicalPath::join("/", request.resource()).string();
     dbgln_if(WEBSERVER_DEBUG, "Canonical requested path: '{}'", requested_path);
 
     StringBuilder path_builder;
-    path_builder.append(m_root_path);
-    path_builder.append('/');
+    path_builder.append(Configuration::the().root_path());
     path_builder.append(requested_path);
     auto real_path = path_builder.to_string();
 
@@ -110,7 +122,12 @@ void Client::handle_request(ReadonlyBytes raw_request)
 
     auto file = Core::File::construct(real_path);
     if (!file->open(Core::OpenMode::ReadOnly)) {
-        send_error_response(404, "Not found!", request);
+        send_error_response(404, request);
+        return;
+    }
+
+    if (file->is_device()) {
+        send_error_response(403, request);
         return;
     }
 
@@ -119,7 +136,7 @@ void Client::handle_request(ReadonlyBytes raw_request)
     send_response(stream, request, Core::guess_mime_type_based_on_filename(real_path));
 }
 
-void Client::send_response(InputStream& response, const HTTP::HttpRequest& request, const String& content_type)
+void Client::send_response(InputStream& response, HTTP::HttpRequest const& request, String const& content_type)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 200 OK\r\n");
@@ -145,7 +162,7 @@ void Client::send_response(InputStream& response, const HTTP::HttpRequest& reque
     } while (true);
 }
 
-void Client::send_redirect(StringView redirect_path, const HTTP::HttpRequest& request)
+void Client::send_redirect(StringView redirect_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
     builder.append("HTTP/1.0 301 Moved Permanently\r\n");
@@ -181,7 +198,7 @@ static String file_image_data()
     return cache;
 }
 
-void Client::handle_directory_listing(const String& requested_path, const String& real_path, const HTTP::HttpRequest& request)
+void Client::handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const& request)
 {
     StringBuilder builder;
 
@@ -204,13 +221,22 @@ void Client::handle_directory_listing(const String& requested_path, const String
     builder.append("<code><table>\n");
 
     Core::DirIterator dt(real_path);
-    while (dt.has_next()) {
-        auto name = dt.next_path();
+    Vector<String> names;
+    while (dt.has_next())
+        names.append(dt.next_path());
+    quick_sort(names);
 
+    for (auto& name : names) {
         StringBuilder path_builder;
         path_builder.append(real_path);
         path_builder.append('/');
-        path_builder.append(name);
+        // NOTE: In the root directory of the webserver, ".." should be equal to ".", since we don't want
+        //       the user to see e.g. the size of the parent directory (and it isn't unveiled, so stat fails).
+        if (requested_path == "/" && name == "..")
+            path_builder.append(".");
+        else
+            path_builder.append(name);
+
         struct stat st;
         memset(&st, 0, sizeof(st));
         int rc = stat(path_builder.to_string().characters(), &st);
@@ -218,12 +244,16 @@ void Client::handle_directory_listing(const String& requested_path, const String
             perror("stat");
         }
 
-        bool is_directory = S_ISDIR(st.st_mode) || name.is_one_of(".", "..");
+        bool is_directory = S_ISDIR(st.st_mode);
 
         builder.append("<tr>");
         builder.appendff("<td><div class=\"{}\"></div></td>", is_directory ? "folder" : "file");
         builder.append("<td><a href=\"");
         builder.append(URL::percent_encode(name));
+        // NOTE: For directories, we append a slash so we don't always hit the redirect case,
+        //       which adds a slash anyways.
+        if (is_directory)
+            builder.append('/');
         builder.append("\">");
         builder.append(escape_html_entities(name));
         builder.append("</a></td><td>&nbsp;</td>");
@@ -246,28 +276,46 @@ void Client::handle_directory_listing(const String& requested_path, const String
     send_response(stream, request, "text/html");
 }
 
-void Client::send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest& request)
+void Client::send_error_response(unsigned code, HTTP::HttpRequest const& request, Vector<String> const& headers)
 {
+    auto reason_phrase = HTTP::HttpResponse::reason_phrase_for_code(code);
     StringBuilder builder;
     builder.appendff("HTTP/1.0 {} ", code);
-    builder.append(message);
-    builder.append("\r\n\r\n");
+    builder.append(reason_phrase);
+    builder.append("\r\n");
+
+    for (auto& header : headers) {
+        builder.append(header);
+        builder.append("\r\n");
+    }
+
+    builder.append("\r\n");
     builder.append("<!DOCTYPE html><html><body><h1>");
     builder.appendff("{} ", code);
-    builder.append(message);
+    builder.append(reason_phrase);
     builder.append("</h1></body></html>");
     m_socket->write(builder.to_string());
 
     log_response(code, request);
 }
 
-void Client::log_response(unsigned code, const HTTP::HttpRequest& request)
+void Client::log_response(unsigned code, HTTP::HttpRequest const& request)
 {
-    printf("%s :: %03u :: %s %s\n",
-        Core::DateTime::now().to_string().characters(),
-        code,
-        request.method_name().characters(),
-        request.resource().characters());
+    outln("{} :: {:03d} :: {} {}", Core::DateTime::now().to_string(), code, request.method_name(), request.resource());
+}
+
+bool Client::verify_credentials(Vector<HTTP::HttpRequest::Header> const& headers)
+{
+    VERIFY(Configuration::the().credentials().has_value());
+    auto& configured_credentials = Configuration::the().credentials().value();
+    for (auto& header : headers) {
+        if (header.name.equals_ignoring_case("Authorization")) {
+            auto provided_credentials = HTTP::HttpRequest::parse_http_basic_authentication_header(header.value);
+            if (provided_credentials.has_value() && configured_credentials.username == provided_credentials->username && configured_credentials.password == provided_credentials->password)
+                return true;
+        }
+    }
+    return false;
 }
 
 }

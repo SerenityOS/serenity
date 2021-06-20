@@ -8,7 +8,7 @@
 
 namespace Debug::StackFrameUtils {
 
-Optional<StackFrameInfo> get_info(const DebugSession& session, FlatPtr current_ebp)
+Optional<StackFrameInfo> get_info(DebugSession const& session, FlatPtr current_ebp)
 {
     auto return_address = session.peek(reinterpret_cast<u32*>(current_ebp + sizeof(FlatPtr)));
     auto next_ebp = session.peek(reinterpret_cast<u32*>(current_ebp));

@@ -4,6 +4,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 
 | Port                                   | Name                                                       | Version                  | Website                                                                        |
 |----------------------------------------|------------------------------------------------------------|--------------------------|--------------------------------------------------------------------------------|
+| [`Another-World`](Another-World/)      | Another World Bytecode Interpreter                         |                          | https://github.com/fabiensanglard/Another-World-Bytecode-Interpreter           |
 | [`bash`](bash/)                        | GNU Bash                                                   | 5.0                      | https://www.gnu.org/software/bash/                                             |
 | [`bass`](bass/)                        | Beneath a Steel Sky                                        | cd-1.2                   | https://www.scummvm.org/games                                                  |
 | [`bc`](bc/)                            | bc                                                         | 2.5.1                    | https://github.com/gavinhoward/bc                                              |
@@ -17,13 +18,16 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`chester`](chester/)                  | Chester Gameboy Emulator                                   |                          | https://github.com/veikkos/chester                                             |
 | [`cmake`](cmake/)                      | CMake                                                      | 3.19.4                   | https://cmake.org/                                                             |
 | [`cmatrix`](cmatrix/)                  | cmatrix                                                    |                          | https://github.com/abishekvashok/cmatrix                                       |
+| [`composer`](composer/)                | Composer                                                   | 2.1.3                    | https://getcomposer.org/                                                       |
 | [`curl`](curl/)                        | curl                                                       | 7.77.0                   | https://curl.se/                                                               |
 | [`dash`](dash/)                        | DASH                                                       | 0.5.10.2                 | http://gondor.apana.org.au/~herbert/dash                                       |
 | [`dialog`](dialog/)                    | Dialog                                                     | 1.3-20210324             | https://invisible-island.net/dialog/                                           |
-| [`diffutils`](diffutils/)              | GNU Diffutils                                              | 3.5                      | https://www.gnu.org/software/diffutils/                                        |
+| [`diffutils`](diffutils/)              | GNU Diffutils                                              | 3.7                      | https://www.gnu.org/software/diffutils/                                        |
 | [`dmidecode`](dmidecode/)              | dmidecode                                                  | 3.3                      | https://github.com/mirror/dmidecode                                            |
 | [`doom`](doom/)                        | DOOM                                                       |                          | https://github.com/SerenityOS/SerenityDOOM                                     |
+| [`dosbox-staging`](dosbox-staging/)    | DOSBox Staging                                             | 0.76.0                   | https://dosbox-staging.github.io/                                              |
 | [`dropbear`](dropbear/)                | Dropbear SSH                                               | 2019.78                  | https://dropbear.nl/mirror/dropbear.html                                       |
+| [`dungeonrush`](dungeonrush/)          | DungeonRush                                                | 1.1-beta                 | https://github.com/Rapiz1/DungeonRush                                          |
 | [`ed`](ed/)                            | GNU ed                                                     | 1.15                     | https://www.gnu.org/software/ed/                                               |
 | [`emu2`](emu2/)                        | emu2 DOS emulator                                          | 2021.01                  | https://github.com/dmsc/emu2                                                   |
 | [`figlet`](figlet/)                    | FIGlet                                                     | 2.2.5                    | http://www.figlet.org/                                                         |
@@ -73,6 +77,7 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`libxml2`](libxml2/)                  | libxml2                                                    | 2.9.12                   | http://www.xmlsoft.org/                                                        |
 | [`libzip`](libzip/)                    | libzip                                                     | 1.7.3                    | https://libzip.org/                                                            |
 | [`links`](links/)                      | Links web browser                                          | 2.22                     | http://links.twibright.com/                                                    |
+| [`llvm`](llvm/)                        | LLVM                                                       | 12.0.0                   | http://llvm.org/                                                               |
 | [`lua`](lua/)                          | Lua                                                        | 5.3.5                    | https://www.lua.org/                                                           |
 | [`m4`](m4/)                            | GNU M4                                                     | 1.4.9                    | https://www.gnu.org/software/m4/                                               |
 | [`make`](make/)                        | GNU make                                                   | 4.3                      | https://www.gnu.org/software/make/                                             |
@@ -120,10 +125,11 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`SDL2_gfx`](SDL2_gfx/)                | SDL2\_gfx (Graphics primitives add-on for SDL2)            | 1.0.4                    | https://sourceforge.net/projects/sdl2gfx/                                      |
 | [`SDL2_image`](SDL2_image/)            | SDL2\_image (Image loading add-on for SDL2)                | 2.0.5                    | https://www.libsdl.org/projects/SDL_image/                                     |
 | [`SDL2_mixer`](SDL2_mixer/)            | SDL2\_mixer (audio mixer add-on for SDL2)                  | 2.0.4                    | https://www.libsdl.org/projects/SDL_mixer/                                     |
+| [`SDL2_net`](SDL2_net/)                | SDL2\_net (network add-on for SDL2)                        | 2.0.1                    | https://www.libsdl.org/projects/SDL_net/                                       |
 | [`SDL2_ttf`](SDL2_ttf/)                | SDL2\_ttf (TrueType Font add-on for SDL2)                  | 2.0.15                   | https://www.libsdl.org/projects/SDL_ttf/                                       |
 | [`sed`](sed/)                          | GNU sed                                                    | 4.2.1                    | https://www.gnu.org/software/sed/                                              |
 | [`sl`](sl/)                            | Steam Locomotive (SL)                                      |                          | https://github.com/mtoyoda/sl                                                  |
-| [`sqlite`](sqlite/)                    | SQLite                                                     | 3350300                  | https://www.sqlite.org/                                                        |
+| [`sqlite`](sqlite/)                    | SQLite                                                     | 3350500                  | https://www.sqlite.org/                                                        |
 | [`stpuzzles`](stpuzzles/)              | Simon Tatham's Portable Puzzle Collection                  |                          | https://www.chiark.greenend.org.uk/~sgtatham/puzzles/                          |
 | [`stress-ng`](stress-ng/)              | stress-ng                                                  | 0.11.23                  | https://github.com/ColinIanKing/stress-ng                                      |
 | [`Super-Mario`](Super-Mario/)          | Super-Mario Clone                                          |                          | https://github.com/Bennyhwanggggg/Super-Mario-Clone-Cpp                        |
@@ -139,4 +145,5 @@ Please make sure to keep this list up to date when adding and updating ports. :^
 | [`xz`](xz/)                            | xz                                                         | 5.2.5                    | https://tukaani.org/xz/                                                        |
 | [`yasm`](yasm/)                        | Yasm Modular Assembler                                     | 1.3.0                    | https://yasm.tortall.net/                                                      |
 | [`zlib`](zlib/)                        | zlib                                                       | 1.2.11                   | https://www.zlib.net/                                                          |
+| [`zsh`](zsh/)                          | Z Shell (Zsh)                                              | 5.8                      | https://www.zsh.org                                                            |
 | [`zstd`](zstd/)                        | Zstandard                                                  | 1.4.4                    | https://facebook.github.io/zstd/                                               |

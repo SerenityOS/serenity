@@ -23,6 +23,14 @@ public:
     static constexpr auto max_ref_generation_index = (1 << 15) - 1; // 2 ^ 14 - 1
 
     Value()
+        : m_type(Type::Empty)
+    {
+    }
+
+    struct NullTag {
+    };
+
+    Value(NullTag)
         : m_type(Type::Null)
     {
     }
@@ -54,6 +62,16 @@ public:
     }
 
     template<IsObject T>
+    Value(RefPtr<T> obj)
+        : m_type(obj ? Type::Object : Type::Empty)
+    {
+        if (obj) {
+            obj->ref();
+            m_as_object = obj;
+        }
+    }
+
+    template<IsObject T>
     Value(NonnullRefPtr<T> obj)
         : m_type(Type::Object)
     {
@@ -61,15 +79,16 @@ public:
         m_as_object = obj;
     }
 
-    Value(const Value& other)
+    Value(Value const& other)
     {
         *this = other;
     }
 
     ~Value();
 
-    Value& operator=(const Value& other);
+    Value& operator=(Value const& other);
 
+    [[nodiscard]] ALWAYS_INLINE bool is_empty() const { return m_type == Type::Empty; }
     [[nodiscard]] ALWAYS_INLINE bool is_null() const { return m_type == Type::Null; }
     [[nodiscard]] ALWAYS_INLINE bool is_bool() const { return m_type == Type::Bool; }
     [[nodiscard]] ALWAYS_INLINE bool is_int() const { return m_type == Type::Int; }
@@ -88,6 +107,22 @@ public:
     {
         VERIFY(is_int());
         return m_as_int;
+    }
+
+    template<typename T>
+    [[nodiscard]] ALWAYS_INLINE bool is_int_type() const
+    {
+        if (!is_int())
+            return false;
+        auto as_int = static_cast<T>(m_as_int);
+        return as_int >= NumericLimits<T>::min() && as_int <= NumericLimits<T>::max();
+    }
+
+    template<typename T>
+    [[nodiscard]] ALWAYS_INLINE T as_int_type() const
+    {
+        VERIFY(is_int_type<T>());
+        return static_cast<T>(m_as_int);
     }
 
     [[nodiscard]] ALWAYS_INLINE int to_int() const
@@ -124,12 +159,13 @@ public:
 
     [[nodiscard]] ALWAYS_INLINE NonnullRefPtr<Object> as_object() const { return *m_as_object; }
 
-    [[nodiscard]] ALWAYS_INLINE explicit operator bool() const { return !is_null(); }
+    [[nodiscard]] ALWAYS_INLINE explicit operator bool() const { return !is_empty(); }
 
     [[nodiscard]] String to_string(int indent = 0) const;
 
 private:
     enum class Type {
+        Empty,
         Null,
         Bool,
         Int,
@@ -155,7 +191,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::Value> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::Value& value)
+    void format(FormatBuilder& builder, PDF::Value const& value)
     {
         Formatter<StringView>::format(builder, value.to_string());
     }

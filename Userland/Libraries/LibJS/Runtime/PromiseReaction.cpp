@@ -11,7 +11,7 @@
 
 namespace JS {
 
-// 27.2.1.5 NewPromiseCapability, https://tc39.es/ecma262/#sec-newpromisecapability
+// 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability
 PromiseCapability new_promise_capability(GlobalObject& global_object, Value constructor)
 {
     auto& vm = global_object.vm();
@@ -25,6 +25,7 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
         Value reject { js_undefined() };
     } promise_capability_functions;
 
+    // 27.2.1.5.1 GetCapabilitiesExecutor Functions, https://tc39.es/ecma262/#sec-getcapabilitiesexecutor-functions
     auto* executor = NativeFunction::create(global_object, "", [&promise_capability_functions](auto& vm, auto& global_object) -> Value {
         auto resolve = vm.argument(0);
         auto reject = vm.argument(1);
@@ -41,11 +42,11 @@ PromiseCapability new_promise_capability(GlobalObject& global_object, Value cons
         promise_capability_functions.reject = reject;
         return js_undefined();
     });
-    executor->define_property(vm.names.length, Value(2));
+    executor->define_property(vm.names.length, Value(2), Attribute::Configurable);
 
     MarkedValueList arguments(vm.heap());
     arguments.append(executor);
-    auto promise = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments), global_object);
+    auto promise = vm.construct(constructor.as_function(), constructor.as_function(), move(arguments));
     if (vm.exception())
         return {};
 

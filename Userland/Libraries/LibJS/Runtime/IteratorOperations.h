@@ -11,8 +11,7 @@
 
 namespace JS {
 
-// Common iterator operations defined in ECMA262 7.4
-// https://tc39.es/ecma262/#sec-operations-on-iterator-objects
+// 7.4 Operations on Iterator Objects, https://tc39.es/ecma262/#sec-operations-on-iterator-objects
 
 enum class IteratorHint {
     Sync,
@@ -20,14 +19,17 @@ enum class IteratorHint {
 };
 
 Object* get_iterator(GlobalObject&, Value value, IteratorHint hint = IteratorHint::Sync, Value method = {});
-bool is_iterator_complete(Object& iterator_result);
-Value create_iterator_result_object(GlobalObject&, Value value, bool done);
-
 Object* iterator_next(Object& iterator, Value value = {});
+bool iterator_complete(GlobalObject&, Object& iterator_result);
+Value iterator_value(GlobalObject&, Object& iterator_result);
 void iterator_close(Object& iterator);
-
+Value create_iterator_result_object(GlobalObject&, Value value, bool done);
 MarkedValueList iterable_to_list(GlobalObject&, Value iterable, Value method = {});
 
-void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {});
+enum class CloseOnAbrupt {
+    No,
+    Yes
+};
+void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {}, CloseOnAbrupt close_on_abrupt = CloseOnAbrupt::Yes);
 
 }

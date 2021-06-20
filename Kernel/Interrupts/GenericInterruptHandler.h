@@ -27,7 +27,9 @@ public:
     {
         VERIFY(!m_registered);
     }
-    virtual void handle_interrupt(const RegisterState& regs) = 0;
+    // Note: this method returns boolean value, to indicate if the handler handled
+    // the interrupt or not. This is useful for shared handlers mostly.
+    virtual bool handle_interrupt(const RegisterState& regs) = 0;
 
     void will_be_destroyed();
     bool is_registered() const { return m_registered; }

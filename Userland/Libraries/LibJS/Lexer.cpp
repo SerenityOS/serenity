@@ -6,9 +6,9 @@
  */
 
 #include "Lexer.h"
+#include <AK/CharacterTypes.h>
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
-#include <ctype.h>
 #include <stdio.h>
 
 namespace JS {
@@ -139,9 +139,10 @@ void Lexer::consume()
     auto did_reach_eof = [this] {
         if (m_position != m_source.length())
             return false;
+        m_eof = true;
+        m_current_char = '\0';
         m_position++;
         m_line_column++;
-        m_current_char = EOF;
         return true;
     };
 
@@ -198,10 +199,10 @@ bool Lexer::consume_exponent()
     if (m_current_char == '-' || m_current_char == '+')
         consume();
 
-    if (!isdigit(m_current_char))
+    if (!is_ascii_digit(m_current_char))
         return false;
 
-    while (isdigit(m_current_char)) {
+    while (is_ascii_digit(m_current_char)) {
         consume();
     }
     return true;
@@ -223,10 +224,10 @@ bool Lexer::consume_octal_number()
 bool Lexer::consume_hexadecimal_number()
 {
     consume();
-    if (!isxdigit(m_current_char))
+    if (!is_ascii_hex_digit(m_current_char))
         return false;
 
-    while (isxdigit(m_current_char))
+    while (is_ascii_hex_digit(m_current_char))
         consume();
 
     return true;
@@ -276,7 +277,7 @@ bool Lexer::match(char a, char b, char c, char d) const
 
 bool Lexer::is_eof() const
 {
-    return m_current_char == EOF;
+    return m_eof;
 }
 
 bool Lexer::is_line_terminator() const
@@ -292,12 +293,12 @@ bool Lexer::is_line_terminator() const
 
 bool Lexer::is_identifier_start() const
 {
-    return isalpha(m_current_char) || m_current_char == '_' || m_current_char == '$';
+    return is_ascii_alpha(m_current_char) || m_current_char == '_' || m_current_char == '$';
 }
 
 bool Lexer::is_identifier_middle() const
 {
-    return is_identifier_start() || isdigit(m_current_char);
+    return is_identifier_start() || is_ascii_digit(m_current_char);
 }
 
 bool Lexer::is_line_comment_start(bool line_has_token_yet) const
@@ -307,7 +308,9 @@ bool Lexer::is_line_comment_start(bool line_has_token_yet) const
         // "-->" is considered a line comment start if the current line is only whitespace and/or
         // other block comment(s); or in other words: the current line does not have a token or
         // ongoing line comment yet
-        || (match('-', '-', '>') && !line_has_token_yet);
+        || (match('-', '-', '>') && !line_has_token_yet)
+        // https://tc39.es/proposal-hashbang/out.html#sec-updated-syntax
+        || (match('#', '!') && m_position == 1);
 }
 
 bool Lexer::is_block_comment_start() const
@@ -322,7 +325,7 @@ bool Lexer::is_block_comment_end() const
 
 bool Lexer::is_numeric_literal_start() const
 {
-    return isdigit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && isdigit(m_source[m_position]));
+    return is_ascii_digit(m_current_char) || (m_current_char == '.' && m_position < m_source.length() && is_ascii_digit(m_source[m_position]));
 }
 
 bool Lexer::slash_means_division() const
@@ -357,10 +360,10 @@ Token Lexer::next()
                 do {
                     consume();
                 } while (is_line_terminator());
-            } else if (isspace(m_current_char)) {
+            } else if (is_ascii_space(m_current_char)) {
                 do {
                     consume();
-                } while (isspace(m_current_char));
+                } while (is_ascii_space(m_current_char));
             } else if (is_line_comment_start(line_has_token_yet)) {
                 consume();
                 do {
@@ -392,9 +395,9 @@ Token Lexer::next()
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
     String token_message;
 
-    if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && isalpha(m_current_char)) {
+    if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && is_ascii_alpha(m_current_char)) {
         token_type = TokenType::RegexFlags;
-        while (!is_eof() && isalpha(m_current_char))
+        while (!is_eof() && is_ascii_alpha(m_current_char))
             consume();
     } else if (m_current_char == '`') {
         consume();
@@ -456,7 +459,7 @@ Token Lexer::next()
             if (m_current_char == '.') {
                 // decimal
                 consume();
-                while (isdigit(m_current_char))
+                while (is_ascii_digit(m_current_char))
                     consume();
                 if (m_current_char == 'e' || m_current_char == 'E')
                     is_invalid_numeric_literal = !consume_exponent();
@@ -465,24 +468,36 @@ Token Lexer::next()
             } else if (m_current_char == 'o' || m_current_char == 'O') {
                 // octal
                 is_invalid_numeric_literal = !consume_octal_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'b' || m_current_char == 'B') {
                 // binary
                 is_invalid_numeric_literal = !consume_binary_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'x' || m_current_char == 'X') {
                 // hexadecimal
                 is_invalid_numeric_literal = !consume_hexadecimal_number();
+                if (m_current_char == 'n') {
+                    consume();
+                    token_type = TokenType::BigIntLiteral;
+                }
             } else if (m_current_char == 'n') {
                 consume();
                 token_type = TokenType::BigIntLiteral;
-            } else if (isdigit(m_current_char)) {
+            } else if (is_ascii_digit(m_current_char)) {
                 // octal without '0o' prefix. Forbidden in 'strict mode'
                 do {
                     consume();
-                } while (isdigit(m_current_char));
+                } while (is_ascii_digit(m_current_char));
             }
         } else {
             // 1...9 or period
-            while (isdigit(m_current_char))
+            while (is_ascii_digit(m_current_char))
                 consume();
             if (m_current_char == 'n') {
                 consume();
@@ -490,7 +505,7 @@ Token Lexer::next()
             } else {
                 if (m_current_char == '.') {
                     consume();
-                    while (isdigit(m_current_char))
+                    while (is_ascii_digit(m_current_char))
                         consume();
                 }
                 if (m_current_char == 'e' || m_current_char == 'E')
@@ -540,7 +555,7 @@ Token Lexer::next()
         } else {
             consume();
         }
-    } else if (m_current_char == EOF) {
+    } else if (m_eof) {
         if (unterminated_comment) {
             token_type = TokenType::Invalid;
             token_message = "Unterminated multi-line comment";
@@ -578,7 +593,7 @@ Token Lexer::next()
             auto it = s_two_char_tokens.find(two_chars_view.hash(), [&](auto& entry) { return entry.key == two_chars_view; });
             if (it != s_two_char_tokens.end()) {
                 // OptionalChainingPunctuator :: ?. [lookahead ∉ DecimalDigit]
-                if (!(it->value == TokenType::QuestionMarkPeriod && m_position + 1 < m_source.length() && isdigit(m_source[m_position + 1]))) {
+                if (!(it->value == TokenType::QuestionMarkPeriod && m_position + 1 < m_source.length() && is_ascii_digit(m_source[m_position + 1]))) {
                     found_two_char_token = true;
                     consume();
                     consume();

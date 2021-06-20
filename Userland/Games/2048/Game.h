@@ -11,8 +11,8 @@
 class Game final {
 public:
     Game(size_t grid_size, size_t target_tile, bool evil_ai);
-    Game(const Game&) = default;
-    Game& operator=(const Game&) = default;
+    Game(Game const&) = default;
+    Game& operator=(Game const&) = default;
 
     enum class MoveOutcome {
         OK,
@@ -35,9 +35,65 @@ public:
     u32 target_tile() const { return m_target_tile; }
     u32 largest_tile() const;
 
-    using Board = Vector<Vector<u32>>;
+    class Board {
+    public:
+        using Row = Vector<u32>;
+        using Tiles = Vector<Row>;
 
-    const Board& board() const { return m_board; }
+        Tiles const& tiles() const { return m_tiles; }
+
+        bool is_stalled();
+
+        struct Position {
+            size_t row;
+            size_t column;
+
+            bool operator==(Position const& other) const
+            {
+                return row == other.row && column == other.column;
+            }
+        };
+
+        void add_tile(size_t row, size_t column, u32 value)
+        {
+            m_tiles[row][column] = value;
+            m_last_added_position = Position { row, column };
+        }
+        Position const& last_added_position() const { return m_last_added_position; }
+
+        struct SlideResult {
+            bool has_moved;
+            size_t score_delta;
+        };
+        SlideResult slide_tiles(Direction);
+
+        struct SlidingTile {
+            size_t row_from;
+            size_t column_from;
+            u32 value_from;
+
+            size_t row_to;
+            size_t column_to;
+            u32 value_to;
+        };
+        Vector<SlidingTile> const& sliding_tiles() const { return m_sliding_tiles; }
+
+    private:
+        void reverse();
+        void transpose();
+
+        size_t slide_row(size_t row_index);
+        size_t slide_left();
+
+        friend Game;
+
+        Tiles m_tiles;
+
+        Position m_last_added_position { 0, 0 };
+        Vector<SlidingTile> m_sliding_tiles;
+    };
+
+    Board const& board() const { return m_board; }
 
     static size_t max_power_for_board(size_t size)
     {
@@ -48,8 +104,6 @@ public:
     }
 
 private:
-    bool slide_tiles(Direction);
-
     void add_tile()
     {
         if (m_evil_ai)

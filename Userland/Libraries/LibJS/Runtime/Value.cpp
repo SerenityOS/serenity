@@ -13,6 +13,7 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibCrypto/NumberTheory/ModularFunctions.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -26,18 +27,18 @@
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/PrimitiveString.h>
+#include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/StringObject.h>
 #include <LibJS/Runtime/Symbol.h>
 #include <LibJS/Runtime/SymbolObject.h>
 #include <LibJS/Runtime/Value.h>
-#include <ctype.h>
 #include <math.h>
 
 namespace JS {
 
 // Used in various abstract operations to make it obvious when a non-optional return value must be discarded.
-static const double INVALID { 0 };
+static constexpr double INVALID { 0 };
 
 static inline bool same_type_for_equality(const Value& lhs, const Value& rhs)
 {
@@ -68,9 +69,9 @@ ALWAYS_INLINE bool both_bigint(const Value& lhs, const Value& rhs)
     return lhs.is_bigint() && rhs.is_bigint();
 }
 
+// 6.1.6.1.20 Number::toString ( x ), https://tc39.es/ecma262/#sec-numeric-types-number-tostring
 static String double_to_string(double d)
 {
-    // https://tc39.es/ecma262/#sec-numeric-types-number-tostring
     if (isnan(d))
         return "NaN";
     if (d == +0.0 || d == -0.0)
@@ -196,17 +197,33 @@ static String double_to_string(double d)
     return builder.to_string();
 }
 
-bool Value::is_array() const
+// 7.2.2 IsArray ( argument ), https://tc39.es/ecma262/#sec-isarray
+bool Value::is_array(GlobalObject& global_object) const
 {
-    return is_object() && as_object().is_array();
+    if (!is_object())
+        return false;
+    auto& object = as_object();
+    if (object.is_array())
+        return true;
+    if (is<ProxyObject>(object)) {
+        auto& proxy = static_cast<ProxyObject const&>(object);
+        if (proxy.is_revoked()) {
+            auto& vm = global_object.vm();
+            vm.throw_exception<TypeError>(global_object, ErrorType::ProxyRevoked);
+            return false;
+        }
+        return Value(&proxy.target()).is_array(global_object);
+    }
+    return false;
 }
 
 Array& Value::as_array()
 {
-    VERIFY(is_array());
+    VERIFY(is_object() && as_object().is_array());
     return static_cast<Array&>(*m_value.as_object);
 }
 
+// 7.2.3 IsCallable ( argument ), https://tc39.es/ecma262/#sec-iscallable
 bool Value::is_function() const
 {
     return is_object() && as_object().is_function();
@@ -218,7 +235,7 @@ Function& Value::as_function()
     return static_cast<Function&>(as_object());
 }
 
-// 7.2.4 IsConstructor, https://tc39.es/ecma262/#sec-isconstructor
+// 7.2.4 IsConstructor ( argument ), https://tc39.es/ecma262/#sec-isconstructor
 bool Value::is_constructor() const
 {
     if (!is_function())
@@ -229,7 +246,7 @@ bool Value::is_constructor() const
     return true;
 }
 
-// 7.2.8 IsRegExp, https://tc39.es/ecma262/#sec-isregexp
+// 7.2.8 IsRegExp ( argument ), https://tc39.es/ecma262/#sec-isregexp
 bool Value::is_regexp(GlobalObject& global_object) const
 {
     if (!is_object())
@@ -244,6 +261,7 @@ bool Value::is_regexp(GlobalObject& global_object) const
     return is<RegExpObject>(as_object());
 }
 
+// 13.5.3 The typeof Operator, https://tc39.es/ecma262/#sec-typeof-operator
 String Value::typeof() const
 {
     switch (m_type) {
@@ -257,6 +275,9 @@ String Value::typeof() const
     case Value::Type::String:
         return "string";
     case Value::Type::Object:
+        // B.3.7.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
+        if (as_object().is_htmldda())
+            return "undefined";
         if (is_function())
             return "function";
         return "object";
@@ -311,6 +332,7 @@ PrimitiveString* Value::to_primitive_string(GlobalObject& global_object)
     return js_string(global_object.heap(), string);
 }
 
+// 7.1.17 ToString ( argument ), https://tc39.es/ecma262/#sec-tostring
 String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_string) const
 {
     switch (m_type) {
@@ -342,6 +364,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
     }
 }
 
+// 7.1.2 ToBoolean ( argument ), https://tc39.es/ecma262/#sec-toboolean
 bool Value::to_boolean() const
 {
     switch (m_type) {
@@ -363,12 +386,16 @@ bool Value::to_boolean() const
     case Type::BigInt:
         return m_value.as_bigint->big_integer() != BIGINT_ZERO;
     case Type::Object:
+        // B.3.7.1 Changes to ToBoolean, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-to-boolean
+        if (m_value.as_object->is_htmldda())
+            return false;
         return true;
     default:
         VERIFY_NOT_REACHED();
     }
 }
 
+// 7.1.1 ToPrimitive ( input [ , preferredType ] ), https://tc39.es/ecma262/#sec-toprimitive
 Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_type) const
 {
     auto get_hint_for_preferred_type = [&]() -> String {
@@ -405,6 +432,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
     return *this;
 }
 
+// 7.1.18 ToObject ( argument ), https://tc39.es/ecma262/#sec-toobject
 Object* Value::to_object(GlobalObject& global_object) const
 {
     switch (m_type) {
@@ -431,6 +459,7 @@ Object* Value::to_object(GlobalObject& global_object) const
     }
 }
 
+// 7.1.3 ToNumeric ( value ), https://tc39.es/ecma262/#sec-tonumeric
 FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
 {
     auto primitive = to_primitive(global_object, Value::PreferredType::Number);
@@ -441,6 +470,7 @@ FLATTEN Value Value::to_numeric(GlobalObject& global_object) const
     return primitive.to_number(global_object);
 }
 
+// 7.1.4 ToNumber ( argument ), https://tc39.es/ecma262/#sec-tonumber
 Value Value::to_number(GlobalObject& global_object) const
 {
     switch (m_type) {
@@ -484,6 +514,7 @@ Value Value::to_number(GlobalObject& global_object) const
     }
 }
 
+// 7.1.13 ToBigInt ( argument ), https://tc39.es/ecma262/#sec-tobigint
 BigInt* Value::to_bigint(GlobalObject& global_object) const
 {
     auto& vm = global_object.vm();
@@ -523,6 +554,24 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
     }
 }
 
+// 7.1.15 ToBigInt64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobigint64
+i64 Value::to_bigint_int64(GlobalObject& global_object) const
+{
+    auto* bigint = to_bigint(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    return static_cast<i64>(bigint->big_integer().to_u64());
+}
+
+// 7.1.16 ToBigUint64 ( argument ), https://tc39.es/ecma262/multipage/abstract-operations.html#sec-tobiguint64
+u64 Value::to_bigint_uint64(GlobalObject& global_object) const
+{
+    auto* bigint = to_bigint(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    return bigint->big_integer().to_u64();
+}
+
 // FIXME: These two conversions are wrong for JS, and seem likely to be footguns
 i32 Value::as_i32() const
 {
@@ -543,6 +592,7 @@ double Value::to_double(GlobalObject& global_object) const
     return number.as_double();
 }
 
+// 7.1.19 ToPropertyKey ( argument ), https://tc39.es/ecma262/#sec-topropertykey
 StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
 {
     auto key = to_primitive(global_object, PreferredType::String);
@@ -550,7 +600,7 @@ StringOrSymbol Value::to_property_key(GlobalObject& global_object) const
         return {};
     if (key.is_symbol())
         return &key.as_symbol();
-    return to_string(global_object);
+    return key.to_string(global_object);
 }
 
 i32 Value::to_i32_slow_case(GlobalObject& global_object) const
@@ -573,9 +623,9 @@ i32 Value::to_i32_slow_case(GlobalObject& global_object) const
     return static_cast<i32>(int32bit);
 }
 
+// 7.1.7 ToUint32 ( argument ), https://tc39.es/ecma262/#sec-touint32
 u32 Value::to_u32(GlobalObject& global_object) const
 {
-    // 7.1.7 ToUint32, https://tc39.es/ecma262/#sec-touint32
     auto number = to_number(global_object);
     if (global_object.vm().exception())
         return INVALID;
@@ -589,10 +639,104 @@ u32 Value::to_u32(GlobalObject& global_object) const
     return static_cast<u32>(int32bit);
 }
 
+// 7.1.8 ToInt16 ( argument ), https://tc39.es/ecma262/#sec-toint16
+i16 Value::to_i16(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto remainder = fmod(int_val, 65536.0);
+    auto int16bit = remainder >= 0.0 ? remainder : remainder + 65536.0; // The notation “x modulo y” computes a value k of the same sign as y
+    if (int16bit >= 32768.0)
+        int16bit -= 65536.0;
+    return static_cast<i16>(int16bit);
+}
+
+// 7.1.9 ToUint16 ( argument ), https://tc39.es/ecma262/#sec-touint16
+u16 Value::to_u16(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int16bit = fmod(int_val, NumericLimits<u16>::max() + 1.0);
+    return static_cast<u16>(int16bit);
+}
+
+// 7.1.10 ToInt8 ( argument ), https://tc39.es/ecma262/#sec-toint8
+i8 Value::to_i8(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto abs = fabs(value);
+    auto int_val = floor(abs);
+    if (signbit(value))
+        int_val = -int_val;
+    auto remainder = fmod(int_val, 256.0);
+    auto int8bit = remainder >= 0.0 ? remainder : remainder + 256.0; // The notation “x modulo y” computes a value k of the same sign as y
+    if (int8bit >= 128.0)
+        int8bit -= 256.0;
+    return static_cast<i8>(int8bit);
+}
+
+// 7.1.11 ToUint8 ( argument ), https://tc39.es/ecma262/#sec-touint8
+u8 Value::to_u8(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    double value = number.as_double();
+    if (!isfinite(value) || value == 0)
+        return 0;
+    auto int_val = floor(fabs(value));
+    if (signbit(value))
+        int_val = -int_val;
+    auto int8bit = fmod(int_val, NumericLimits<u8>::max() + 1.0);
+    return static_cast<u8>(int8bit);
+}
+
+// 7.1.12 ToUint8Clamp ( argument ), https://tc39.es/ecma262/#sec-touint8clamp
+u8 Value::to_u8_clamp(GlobalObject& global_object) const
+{
+    auto number = to_number(global_object);
+    if (global_object.vm().exception())
+        return INVALID;
+    if (number.is_nan())
+        return 0;
+    double value = number.as_double();
+    if (value <= 0.0)
+        return 0;
+    if (value >= 255.0)
+        return 255;
+    auto int_val = floor(value);
+    if (int_val + 0.5 < value)
+        return static_cast<u8>(int_val + 1.0);
+    if (value < int_val + 0.5)
+        return static_cast<u8>(int_val);
+    if (fmod(int_val, 2.0) == 1.0)
+        return static_cast<u8>(int_val + 1.0);
+    return static_cast<u8>(int_val);
+}
+
+// 7.1.20 ToLength ( argument ), https://tc39.es/ecma262/#sec-tolength
 size_t Value::to_length(GlobalObject& global_object) const
 {
-    // 7.1.20 ToLength, https://tc39.es/ecma262/#sec-tolength
-
     auto& vm = global_object.vm();
 
     auto len = to_integer_or_infinity(global_object);
@@ -603,10 +747,9 @@ size_t Value::to_length(GlobalObject& global_object) const
     return min(len, MAX_ARRAY_LIKE_INDEX);
 }
 
+// 7.1.22 ToIndex ( argument ), https://tc39.es/ecma262/#sec-toindex
 size_t Value::to_index(GlobalObject& global_object) const
 {
-    // 7.1.22 ToIndex, https://tc39.es/ecma262/#sec-toindex
-
     auto& vm = global_object.vm();
 
     if (is_undefined())
@@ -627,10 +770,9 @@ size_t Value::to_index(GlobalObject& global_object) const
     return index;
 }
 
+// 7.1.5 ToIntegerOrInfinity ( argument ), https://tc39.es/ecma262/#sec-tointegerorinfinity
 double Value::to_integer_or_infinity(GlobalObject& global_object) const
 {
-    // 7.1.5 ToIntegerOrInfinity, https://tc39.es/ecma262/#sec-tointegerorinfinity
-
     auto& vm = global_object.vm();
 
     auto number = to_number(global_object);
@@ -646,6 +788,7 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
     return integer;
 }
 
+// 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
     TriState relation = abstract_relation(global_object, false, lhs, rhs);
@@ -654,6 +797,7 @@ Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
     return Value(relation == TriState::True);
 }
 
+// 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
     TriState relation = abstract_relation(global_object, true, lhs, rhs);
@@ -662,6 +806,7 @@ Value greater_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
     return Value(true);
 }
 
+// 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value less_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
     TriState relation = abstract_relation(global_object, true, lhs, rhs);
@@ -670,6 +815,7 @@ Value less_than(GlobalObject& global_object, Value lhs, Value rhs)
     return Value(relation == TriState::True);
 }
 
+// 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
 {
     TriState relation = abstract_relation(global_object, false, lhs, rhs);
@@ -678,6 +824,7 @@ Value less_than_equals(GlobalObject& global_object, Value lhs, Value rhs)
     return Value(true);
 }
 
+// 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
 Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -697,6 +844,7 @@ Value bitwise_and(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
 Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -720,6 +868,7 @@ Value bitwise_or(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.12 Binary Bitwise Operators, https://tc39.es/ecma262/#sec-binary-bitwise-operators
 Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -743,6 +892,7 @@ Value bitwise_xor(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.5.6 Bitwise NOT Operator ( ~ ), https://tc39.es/ecma262/#sec-bitwise-not-operator
 Value bitwise_not(GlobalObject& global_object, Value lhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -756,11 +906,13 @@ Value bitwise_not(GlobalObject& global_object, Value lhs)
     return js_bigint(global_object.heap(), big_integer_bitwise_not);
 }
 
+// 13.5.4 Unary + Operator, https://tc39.es/ecma262/#sec-unary-plus-operator
 Value unary_plus(GlobalObject& global_object, Value lhs)
 {
     return lhs.to_number(global_object);
 }
 
+// 13.5.5 Unary - Operator, https://tc39.es/ecma262/#sec-unary-minus-operator
 Value unary_minus(GlobalObject& global_object, Value lhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -778,10 +930,9 @@ Value unary_minus(GlobalObject& global_object, Value lhs)
     return js_bigint(global_object.heap(), big_integer_negated);
 }
 
+// 13.9.1 The Left Shift Operator ( << ), https://tc39.es/ecma262/#sec-left-shift-operator
 Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    // 6.1.6.1.9 Number::leftShift
-    // https://tc39.es/ecma262/#sec-numeric-types-number-leftShift
     auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
@@ -809,10 +960,9 @@ Value left_shift(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.9.2 The Signed Right Shift Operator ( >> ), https://tc39.es/ecma262/#sec-signed-right-shift-operator
 Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    // 6.1.6.1.11 Number::signedRightShift
-    // https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift
     auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
@@ -824,7 +974,6 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
             return Value(0);
         if (!rhs_numeric.is_finite_number())
             return lhs_numeric;
-        // Ok, so this performs toNumber() again but that "can't" throw
         auto lhs_i32 = lhs_numeric.to_i32(global_object);
         auto rhs_u32 = rhs_numeric.to_u32(global_object);
         return Value(lhs_i32 >> rhs_u32);
@@ -838,10 +987,9 @@ Value right_shift(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.9.3 The Unsigned Right Shift Operator ( >>> ), https://tc39.es/ecma262/#sec-unsigned-right-shift-operator
 Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
 {
-    // 6.1.6.1.11 Number::unsignedRightShift
-    // https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift
     auto lhs_numeric = lhs.to_numeric(global_object);
     if (global_object.vm().exception())
         return {};
@@ -862,6 +1010,7 @@ Value unsigned_right_shift(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.8.1 The Addition Operator ( + ), https://tc39.es/ecma262/#sec-addition-operator-plus
 Value add(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (both_number(lhs, rhs)) {
@@ -909,6 +1058,7 @@ Value add(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.8.2 The Subtraction Operator ( - ), https://tc39.es/ecma262/#sec-subtraction-operator-minus
 Value sub(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -925,6 +1075,7 @@ Value sub(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
 Value mul(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto lhs_numeric = lhs.to_numeric(global_object);
@@ -941,6 +1092,7 @@ Value mul(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
 Value div(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
@@ -963,6 +1115,7 @@ Value div(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.7 Multiplicative Operators, https://tc39.es/ecma262/#sec-multiplicative-operators
 Value mod(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
@@ -991,6 +1144,7 @@ Value mod(GlobalObject& global_object, Value lhs, Value rhs)
     return {};
 }
 
+// 13.6 Exponentiation Operator, https://tc39.es/ecma262/#sec-exp-operator
 Value exp(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
@@ -1025,6 +1179,7 @@ Value in(GlobalObject& global_object, Value lhs, Value rhs)
     return Value(rhs.as_object().has_property(lhs_property_key));
 }
 
+// 13.10.2 InstanceofOperator ( V, target ), https://tc39.es/ecma262/#sec-instanceofoperator
 Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
 {
     auto& vm = global_object.vm();
@@ -1083,6 +1238,7 @@ Value ordinary_has_instance(GlobalObject& global_object, Value lhs, Value rhs)
     }
 }
 
+// 7.2.10 SameValue ( x, y ), https://tc39.es/ecma262/#sec-samevalue
 bool same_value(Value lhs, Value rhs)
 {
     if (!same_type_for_equality(lhs, rhs))
@@ -1109,6 +1265,7 @@ bool same_value(Value lhs, Value rhs)
     return same_value_non_numeric(lhs, rhs);
 }
 
+// 7.2.11 SameValueZero ( x, y ), https://tc39.es/ecma262/#sec-samevaluezero
 bool same_value_zero(Value lhs, Value rhs)
 {
     if (!same_type_for_equality(lhs, rhs))
@@ -1126,6 +1283,7 @@ bool same_value_zero(Value lhs, Value rhs)
     return same_value_non_numeric(lhs, rhs);
 }
 
+// 7.2.12 SameValueNonNumeric ( x, y ), https://tc39.es/ecma262/#sec-samevaluenonnumeric
 bool same_value_non_numeric(Value lhs, Value rhs)
 {
     VERIFY(!lhs.is_number() && !lhs.is_bigint());
@@ -1148,6 +1306,7 @@ bool same_value_non_numeric(Value lhs, Value rhs)
     }
 }
 
+// 7.2.15 IsStrictlyEqual ( x, y ), https://tc39.es/ecma262/#sec-isstrictlyequal
 bool strict_eq(Value lhs, Value rhs)
 {
     if (!same_type_for_equality(lhs, rhs))
@@ -1167,12 +1326,19 @@ bool strict_eq(Value lhs, Value rhs)
     return same_value_non_numeric(lhs, rhs);
 }
 
+// 7.2.14 IsLooselyEqual ( x, y ), https://tc39.es/ecma262/#sec-islooselyequal
 bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
 {
     if (same_type_for_equality(lhs, rhs))
         return strict_eq(lhs, rhs);
 
     if (lhs.is_nullish() && rhs.is_nullish())
+        return true;
+
+    // B.3.7.2 Changes to IsLooselyEqual, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
+    if (lhs.is_object() && lhs.as_object().is_htmldda() && rhs.is_nullish())
+        return true;
+    if (lhs.is_nullish() && rhs.is_object() && rhs.as_object().is_htmldda())
         return true;
 
     if (lhs.is_number() && rhs.is_string())
@@ -1214,7 +1380,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     if ((lhs.is_bigint() && rhs.is_number()) || (lhs.is_number() && rhs.is_bigint())) {
         if (lhs.is_nan() || lhs.is_infinity() || rhs.is_nan() || rhs.is_infinity())
             return false;
-        if ((lhs.is_number() && !lhs.is_integer()) || (rhs.is_number() && !rhs.is_integer()))
+        if ((lhs.is_number() && !lhs.is_integral_number()) || (rhs.is_number() && !rhs.is_integral_number()))
             return false;
         if (lhs.is_number())
             return Crypto::SignedBigInteger { lhs.to_i32(global_object) } == rhs.as_bigint().big_integer();
@@ -1225,6 +1391,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
     return false;
 }
 
+// 7.2.13 IsLessThan ( x, y, LeftFirst ), https://tc39.es/ecma262/#sec-islessthan
 TriState abstract_relation(GlobalObject& global_object, bool left_first, Value lhs, Value rhs)
 {
     Value x_primitive;
@@ -1326,11 +1493,11 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
 
     bool x_lower_than_y;
     if (x_numeric.is_number()) {
-        x_lower_than_y = x_numeric.is_integer()
+        x_lower_than_y = x_numeric.is_integral_number()
             ? Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer()
             : (Crypto::SignedBigInteger { x_numeric.to_i32(global_object) } < y_numeric.as_bigint().big_integer() || Crypto::SignedBigInteger { x_numeric.to_i32(global_object) + 1 } < y_numeric.as_bigint().big_integer());
     } else {
-        x_lower_than_y = y_numeric.is_integer()
+        x_lower_than_y = y_numeric.is_integral_number()
             ? x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) }
             : (x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) } || x_numeric.as_bigint().big_integer() < Crypto::SignedBigInteger { y_numeric.to_i32(global_object) + 1 });
     }
@@ -1338,68 +1505,6 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         return TriState::True;
     else
         return TriState::False;
-}
-
-// 7.3.10 GetMethod, https://tc39.es/ecma262/#sec-getmethod
-Function* get_method(GlobalObject& global_object, Value value, const PropertyName& property_name)
-{
-    auto& vm = global_object.vm();
-    auto* object = value.to_object(global_object);
-    if (vm.exception())
-        return nullptr;
-    auto property_value = object->get(property_name);
-    if (vm.exception())
-        return nullptr;
-    if (property_value.is_empty() || property_value.is_nullish())
-        return nullptr;
-    if (!property_value.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property_value.to_string_without_side_effects());
-        return nullptr;
-    }
-    return &property_value.as_function();
-}
-
-// 7.3.18 LengthOfArrayLike, https://tc39.es/ecma262/#sec-lengthofarraylike
-size_t length_of_array_like(GlobalObject& global_object, const Object& object)
-{
-    auto& vm = global_object.vm();
-    auto result = object.get(vm.names.length).value_or(js_undefined());
-    if (vm.exception())
-        return INVALID;
-    return result.to_length(global_object);
-}
-
-// 7.3.22 SpeciesConstructor, https://tc39.es/ecma262/#sec-speciesconstructor
-Object* species_constructor(GlobalObject& global_object, const Object& object, Object& default_constructor)
-{
-    auto& vm = global_object.vm();
-    auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
-    if (vm.exception())
-        return nullptr;
-    if (constructor.is_undefined())
-        return &default_constructor;
-    if (!constructor.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
-        return nullptr;
-    }
-    auto species = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
-    if (species.is_nullish())
-        return &default_constructor;
-    if (species.is_constructor())
-        return &species.as_object();
-    vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, species.to_string_without_side_effects());
-    return nullptr;
-}
-
-// 7.2.1 RequireObjectCoercible, https://tc39.es/ecma262/#sec-requireobjectcoercible
-Value require_object_coercible(GlobalObject& global_object, Value value)
-{
-    auto& vm = global_object.vm();
-    if (value.is_nullish()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotObjectCoercible, value.to_string_without_side_effects());
-        return {};
-    }
-    return value;
 }
 
 }

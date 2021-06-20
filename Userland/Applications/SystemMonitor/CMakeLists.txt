@@ -1,3 +1,9 @@
+serenity_component(
+    SystemMonitor
+    REQUIRED
+    TARGETS SystemMonitor Profiler Inspector
+)
+
 set(SOURCES
     DevicesModel.cpp
     GraphWidget.cpp

@@ -22,6 +22,13 @@ public:
         No
     };
 
+    enum class FailureBehavior {
+        PrintUsageAndExit,
+        PrintUsage,
+        Exit,
+        Ignore,
+    };
+
     struct Option {
         bool requires_argument { true };
         const char* help_string { nullptr };
@@ -46,9 +53,10 @@ public:
         Function<bool(const char*)> accept_value;
     };
 
-    bool parse(int argc, char** argv, bool exit_on_failure = true);
+    bool parse(int argc, char* const* argv, FailureBehavior failure_behavior = FailureBehavior::PrintUsageAndExit);
     // *Without* trailing newline!
     void set_general_help(const char* help_string) { m_general_help = help_string; };
+    void set_stop_on_first_non_option(bool stop_on_first_non_option) { m_stop_on_first_non_option = stop_on_first_non_option; }
     void print_usage(FILE*, const char* argv0);
 
     void add_option(Option&&);
@@ -74,6 +82,7 @@ private:
 
     bool m_show_help { false };
     const char* m_general_help { nullptr };
+    bool m_stop_on_first_non_option { false };
 };
 
 }

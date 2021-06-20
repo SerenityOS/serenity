@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Till Mayer <till.mayer@web.de>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -136,6 +137,7 @@ private:
         __Count
     };
     static constexpr Array piles = { Pile1, Pile2, Pile3, Pile4, Pile5, Pile6, Pile7 };
+    static constexpr Array foundations = { Foundation1, Foundation2, Foundation3, Foundation4 };
 
     ALWAYS_INLINE const WasteRecycleRules& recycle_rules()
     {
@@ -155,18 +157,20 @@ private:
     }
 
     void mark_intersecting_stacks_dirty(Card& intersecting_card);
-    void score_move(CardStack& from, CardStack& to, bool inverse);
+    void score_move(CardStack& from, CardStack& to, bool inverse = false);
+    void score_flip(bool inverse = false);
     void remember_move_for_undo(CardStack& from, CardStack& to, NonnullRefPtrVector<Card> moved_cards);
     void remember_flip_for_undo(Card& card);
     void update_score(int to_add);
-    void move_card(CardStack& from, CardStack& to);
     void draw_cards();
     void pop_waste_to_play_stack();
-    void auto_move_eligible_cards_to_stacks();
+    bool attempt_to_move_card_to_foundations(CardStack& from);
+    void auto_move_eligible_cards_to_foundations();
     void start_timer_if_necessary();
     void start_game_over_animation();
     void stop_game_over_animation();
     void create_new_animation_card();
+    void set_background_fill_enabled(bool);
     void check_for_game_over();
     void dump_layout() const;
 
@@ -195,6 +199,7 @@ private:
     bool m_mouse_down { false };
 
     Animation m_animation;
+    bool m_start_game_over_animation_next_frame { false };
     bool m_game_over_animation { false };
     bool m_waiting_for_new_game { true };
     bool m_new_game_animation { false };

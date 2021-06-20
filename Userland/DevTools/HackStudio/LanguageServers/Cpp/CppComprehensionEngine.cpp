@@ -293,7 +293,9 @@ Vector<CppComprehensionEngine::PropertyInfo> CppComprehensionEngine::properties_
 
     Vector<PropertyInfo> properties;
     for (auto& member : struct_or_class.m_members) {
-        properties.append({ member.m_name, member.m_type });
+        if (!member.is_variable_declaration())
+            continue;
+        properties.append({ member.m_name, ((VariableDeclaration&)member).m_type });
     }
     return properties;
 }
@@ -323,7 +325,7 @@ Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::get_child_symbols
 
         auto new_scope = scope;
         new_scope.append(decl.name());
-        symbols.append(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
+        symbols.extend(get_child_symbols(decl, new_scope, are_child_symbols_local ? Symbol::IsLocal::Yes : is_local));
     }
 
     return symbols;
@@ -453,7 +455,7 @@ RefPtr<Declaration> CppComprehensionEngine::find_declaration_of(const DocumentDa
         bool match_function = target_decl.value().type == TargetDeclaration::Function && symbol.declaration->is_function();
         bool match_variable = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_variable_declaration();
         bool match_type = target_decl.value().type == TargetDeclaration::Type && symbol.declaration->is_struct_or_class();
-        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->is_member();
+        bool match_property = target_decl.value().type == TargetDeclaration::Property && symbol.declaration->parent()->is_declaration() && ((Declaration*)symbol.declaration->parent())->is_struct_or_class();
         bool match_parameter = target_decl.value().type == TargetDeclaration::Variable && symbol.declaration->is_parameter();
 
         if (match_property) {

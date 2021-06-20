@@ -26,14 +26,15 @@ void BigIntPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toLocaleString, to_locale_string, 0, attr);
     define_native_function(vm.names.valueOf, value_of, 0, attr);
 
-    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "BigInt"), Attribute::Configurable);
+    // 21.2.3.5 BigInt.prototype [ @@toStringTag ], https://tc39.es/ecma262/#sec-bigint.prototype-@@tostringtag
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), vm.names.BigInt.as_string()), Attribute::Configurable);
 }
 
 BigIntPrototype::~BigIntPrototype()
 {
 }
 
-// thisBigIntValue, https://tc39.es/ecma262/#thisbigintvalue
+// thisBigIntValue ( value ), https://tc39.es/ecma262/#thisbigintvalue
 static Value this_bigint_value(GlobalObject& global_object, Value value)
 {
     if (value.is_bigint())
@@ -45,6 +46,7 @@ static Value this_bigint_value(GlobalObject& global_object, Value value)
     return {};
 }
 
+// 21.2.3.3 BigInt.prototype.toString ( [ radix ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
 {
     auto bigint_value = this_bigint_value(global_object, vm.this_value(global_object));
@@ -54,11 +56,13 @@ JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_string)
     return js_string(vm, bigint_value.as_bigint().big_integer().to_base10());
 }
 
+// 21.2.3.2 BigInt.prototype.toLocaleString ( [ reserved1 [ , reserved2 ] ] ), https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::to_locale_string)
 {
     return to_string(vm, global_object);
 }
 
+// 21.2.3.4 BigInt.prototype.valueOf ( ), https://tc39.es/ecma262/#sec-bigint.prototype.valueof
 JS_DEFINE_NATIVE_FUNCTION(BigIntPrototype::value_of)
 {
     return this_bigint_value(global_object, vm.this_value(global_object));

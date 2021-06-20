@@ -50,7 +50,7 @@ public:
     Menu* hovered_menu() { return m_hovered_menu; }
 
 private:
-    void close_menus(const Vector<Menu*>&);
+    void close_menus(const Vector<Menu&>&);
 
     virtual void event(Core::Event&) override;
     void handle_mouse_event(MouseEvent&);

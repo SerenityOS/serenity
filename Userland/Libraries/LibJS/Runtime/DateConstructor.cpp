@@ -6,22 +6,24 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <LibCore/DateTime.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/VM.h>
-#include <ctype.h>
 #include <sys/time.h>
 #include <time.h>
 
 namespace JS {
 
+// 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 static Value parse_simplified_iso8601(const String& iso_8601)
 {
     // Date.parse() is allowed to accept many formats. We strictly only accept things matching
-    // http://www.ecma-international.org/ecma-262/#sec-date-time-string-format
+    // 21.4.1.15 Date Time String Format, https://tc39.es/ecma262/#sec-date-time-string-format
     GenericLexer lexer(iso_8601);
     auto lex_n_digits = [&](size_t n, int& out) {
         if (lexer.tell_remaining() < n)
@@ -29,7 +31,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
         int r = 0;
         for (size_t i = 0; i < n; ++i) {
             char ch = lexer.consume();
-            if (!isdigit(ch))
+            if (!is_ascii_digit(ch))
                 return false;
             r = 10 * r + ch - '0';
         }
@@ -39,7 +41,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
 
     int year = -1, month = -1, day = -1;
     int hours = -1, minutes = -1, seconds = -1, milliseconds = -1;
-    char timezone = -1;
+    int timezone = -1;
     int timezone_hours = -1, timezone_minutes = -1;
     auto lex_year = [&]() {
         if (lexer.consume_specific('+'))
@@ -98,7 +100,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
     tm.tm_min = minutes == -1 ? 0 : minutes;
     tm.tm_sec = seconds == -1 ? 0 : seconds;
 
-    // http://www.ecma-international.org/ecma-262/#sec-date.parse:
+    // https://tc39.es/ecma262/#sec-date.parse:
     // "When the UTC offset representation is absent, date-only forms are interpreted as a UTC time and date-time forms are interpreted as a local time."
     time_t timestamp;
     if (timezone != -1 || hours == -1)
@@ -127,33 +129,59 @@ void DateConstructor::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
+
+    // 21.4.3.3 Date.prototype, https://tc39.es/ecma262/#sec-date.prototype
     define_property(vm.names.prototype, global_object.date_prototype(), 0);
+
     define_property(vm.names.length, Value(7), Attribute::Configurable);
 
-    define_native_function(vm.names.now, now, 0, Attribute::Writable | Attribute::Configurable);
-    define_native_function(vm.names.parse, parse, 1, Attribute::Writable | Attribute::Configurable);
-    define_native_function(vm.names.UTC, utc, 1, Attribute::Writable | Attribute::Configurable);
+    u8 attr = Attribute::Writable | Attribute::Configurable;
+    define_native_function(vm.names.now, now, 0, attr);
+    define_native_function(vm.names.parse, parse, 1, attr);
+    define_native_function(vm.names.UTC, utc, 1, attr);
 }
 
 DateConstructor::~DateConstructor()
 {
 }
 
-Value DateConstructor::call()
+struct DatetimeAndMilliseconds {
+    Core::DateTime datetime;
+    i16 milliseconds { 0 };
+};
+
+static DatetimeAndMilliseconds now()
 {
-    return js_string(heap(), Date::now(global_object())->string());
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    auto datetime = Core::DateTime::now();
+    auto milliseconds = static_cast<i16>(tv.tv_usec / 1000);
+    return { datetime, milliseconds };
 }
 
-Value DateConstructor::construct(Function&)
+// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
+Value DateConstructor::call()
+{
+    auto [datetime, milliseconds] = JS::now();
+    auto* date = Date::create(global_object(), datetime, milliseconds);
+    return js_string(heap(), date->string());
+}
+
+// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
+Value DateConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    if (vm.argument_count() == 0)
-        return Date::now(global_object());
+    auto& global_object = this->global_object();
 
-    auto create_invalid_date = [this]() {
+    if (vm.argument_count() == 0) {
+        auto [datetime, milliseconds] = JS::now();
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
+    }
+
+    auto create_invalid_date = [&global_object, &new_target]() {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
         auto milliseconds = static_cast<i16>(0);
-        return Date::create(global_object(), datetime, milliseconds, true);
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true);
     };
 
     if (vm.argument_count() == 1) {
@@ -161,7 +189,7 @@ Value DateConstructor::construct(Function&)
         if (value.is_string())
             value = parse_simplified_iso8601(value.as_string().string());
         else
-            value = value.to_number(global_object());
+            value = value.to_number(global_object);
 
         if (vm.exception())
             return {};
@@ -176,13 +204,15 @@ Value DateConstructor::construct(Function&)
             return create_invalid_date();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
-        return Date::create(global_object(), datetime, milliseconds);
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
     }
 
     // A date/time in components, in local time.
-    auto arg_or = [&vm, this](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object()) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
-    auto year_value = vm.argument(0).to_number(global_object());
+    auto year_value = vm.argument(0).to_number(global_object);
     if (vm.exception())
         return {};
     if (!year_value.is_finite_number()) {
@@ -190,7 +220,7 @@ Value DateConstructor::construct(Function&)
     }
     auto year = year_value.as_i32();
 
-    auto month_index_value = vm.argument(1).to_number(global_object());
+    auto month_index_value = vm.argument(1).to_number(global_object);
     if (vm.exception())
         return {};
     if (!month_index_value.is_finite_number()) {
@@ -249,12 +279,13 @@ Value DateConstructor::construct(Function&)
         year += 1900;
     int month = month_index + 1;
     auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
-    auto* date = Date::create(global_object(), datetime, milliseconds);
-    if (date->time() > Date::time_clip)
+    auto time = datetime.timestamp() * 1000.0 + milliseconds;
+    if (time > Date::time_clip)
         return create_invalid_date();
-    return date;
+    return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
 }
 
+// 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
 {
     struct timeval tv;
@@ -262,6 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::now)
     return Value(tv.tv_sec * 1000.0 + tv.tv_usec / 1000.0);
 }
 
+// 21.4.3.2 Date.parse ( string ), https://tc39.es/ecma262/#sec-date.parse
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
 {
     if (!vm.argument_count())
@@ -274,6 +306,7 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::parse)
     return parse_simplified_iso8601(iso_8601);
 }
 
+// 21.4.3.4 Date.UTC ( year [ , month [ , date [ , hours [ , minutes [ , seconds [ , ms ] ] ] ] ] ] ), https://tc39.es/ecma262/#sec-date.utc
 JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
 {
     auto arg_or = [&vm, &global_object](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_i32(global_object) : fallback; };
@@ -293,4 +326,5 @@ JS_DEFINE_NATIVE_FUNCTION(DateConstructor::utc)
     int milliseconds = arg_or(6, 0);
     return Value(1000.0 * timegm(&tm) + milliseconds);
 }
+
 }

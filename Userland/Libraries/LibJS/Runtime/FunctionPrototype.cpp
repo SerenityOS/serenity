@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +8,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
@@ -42,6 +43,7 @@ FunctionPrototype::~FunctionPrototype()
 {
 }
 
+// 20.2.3.1 Function.prototype.apply ( thisArg, argArray ), https://tc39.es/ecma262/#sec-function.prototype.apply
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -56,23 +58,13 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
         return vm.call(function, this_arg);
-    if (!arg_array.is_object()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::FunctionArgsNotObject);
-        return {};
-    }
-    auto length = length_of_array_like(global_object, arg_array.as_object());
+    auto arguments = create_list_from_array_like(global_object, arg_array);
     if (vm.exception())
         return {};
-    MarkedValueList arguments(vm.heap());
-    for (size_t i = 0; i < length; ++i) {
-        auto element = arg_array.as_object().get(i);
-        if (vm.exception())
-            return {};
-        arguments.append(element.value_or(js_undefined()));
-    }
     return vm.call(function, this_arg, move(arguments));
 }
 
+// 20.2.3.2 Function.prototype.bind ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.bind
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -94,6 +86,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
     return this_function.bind(bound_this_arg, move(arguments));
 }
 
+// 20.2.3.3 Function.prototype.call ( thisArg, ...args ), https://tc39.es/ecma262/#sec-function.prototype.call
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -113,6 +106,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
     return vm.call(function, this_arg, move(arguments));
 }
 
+// 20.2.3.5 Function.prototype.toString ( ), https://tc39.es/ecma262/#sec-function.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
@@ -165,6 +159,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     return js_string(vm, function_source);
 }
 
+// 20.2.3.6 Function.prototype [ @@hasInstance ] ( V ), https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance
 JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::symbol_has_instance)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);

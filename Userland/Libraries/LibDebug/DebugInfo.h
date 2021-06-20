@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,10 +20,13 @@
 namespace Debug {
 
 class DebugInfo {
+    AK_MAKE_NONCOPYABLE(DebugInfo);
+    AK_MAKE_NONMOVABLE(DebugInfo);
+
 public:
     explicit DebugInfo(NonnullOwnPtr<const ELF::Image>, String source_root = {}, FlatPtr base_address = 0);
 
-    const ELF::Image& elf() const { return *m_elf; }
+    ELF::Image const& elf() const { return *m_elf; }
 
     struct SourcePosition {
         FlyString file_path;
@@ -46,10 +49,10 @@ public:
         {
         }
 
-        bool operator==(const SourcePosition& other) const { return file_path == other.file_path && line_number == other.line_number; }
-        bool operator!=(const SourcePosition& other) const { return !(*this == other); }
+        bool operator==(SourcePosition const& other) const { return file_path == other.file_path && line_number == other.line_number; }
+        bool operator!=(SourcePosition const& other) const { return !(*this == other); }
 
-        static SourcePosition from_line_info(const Dwarf::LineProgram::LineInfo&);
+        static SourcePosition from_line_info(Dwarf::LineProgram::LineInfo const&);
     };
 
     struct VariableInfo {
@@ -88,9 +91,15 @@ public:
         Vector<Dwarf::DIE> dies_of_variables;
     };
 
-    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(const PtraceRegisters&) const;
+    NonnullOwnPtrVector<VariableInfo> get_variables_in_current_scope(PtraceRegisters const&) const;
 
     Optional<SourcePosition> get_source_position(u32 address) const;
+
+    struct SourcePositionWithInlines {
+        Optional<SourcePosition> source_position;
+        Vector<SourcePosition> inline_chain;
+    };
+    SourcePositionWithInlines get_source_position_with_inlines(u32 address) const;
 
     struct SourcePositionAndAddress {
         String file;
@@ -99,20 +108,6 @@ public:
     };
 
     Optional<SourcePositionAndAddress> get_address_from_source_position(const String& file, size_t line) const;
-
-    template<typename Callback>
-    void for_each_source_position(Callback callback) const
-    {
-        FlyString previous_file = "";
-        size_t previous_line = 0;
-        for (const auto& line_info : m_sorted_lines) {
-            if (line_info.file == previous_file && line_info.line == previous_line)
-                continue;
-            previous_file = line_info.file;
-            previous_line = line_info.line;
-            callback({ line_info.file, line_info.line, line_info.address });
-        }
-    }
 
     String name_of_containing_function(u32 address) const;
     Vector<SourcePosition> source_lines_in_scope(const VariablesScope&) const;
@@ -125,6 +120,9 @@ private:
     OwnPtr<VariableInfo> create_variable_info(const Dwarf::DIE& variable_die, const PtraceRegisters&, u32 address_offset = 0) const;
     static bool is_variable_tag_supported(const Dwarf::EntryTag& tag);
     void add_type_info_to_variable(const Dwarf::DIE& type_die, const PtraceRegisters& regs, DebugInfo::VariableInfo* parent_variable) const;
+
+    Optional<Dwarf::LineProgram::DirectoryAndFile> get_source_path_of_inline(const Dwarf::DIE&) const;
+    Optional<uint32_t> get_line_of_inline(const Dwarf::DIE&) const;
 
     NonnullOwnPtr<const ELF::Image> m_elf;
     String m_source_root;

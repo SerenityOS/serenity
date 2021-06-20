@@ -39,6 +39,51 @@ describe("ability to work with generic non-array objects", () => {
         expect(removed[1]).toBeUndefined();
     });
 
+    test("slice", () => {
+        {
+            const o = { length: 3, 0: "hello", 2: "serenity" };
+            const slice = Array.prototype.slice.call(o, 0, 2);
+            expect(o).toHaveLength(3);
+            expect(o[0]).toBe("hello");
+            expect(o[1]).toBeUndefined();
+            expect(o[2]).toBe("serenity");
+            expect(slice).toHaveLength(2);
+            expect(slice[0]).toBe("hello");
+            expect(slice[1]).toBeUndefined();
+        }
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            expect(Array.prototype.slice.call(o)).toEqual([
+                "foo",
+                "bar",
+                undefined,
+                "baz",
+                undefined,
+            ]);
+            expect(Array.prototype.slice.call(o, 0, 3)).toEqual(["foo", "bar", undefined]);
+            expect(Array.prototype.slice.call(o, 0, 15)).toEqual([
+                "foo",
+                "bar",
+                undefined,
+                "baz",
+                undefined,
+            ]);
+
+            expect(Array.prototype.slice.call(o, 1)).toEqual(["bar", undefined, "baz", undefined]);
+            expect(Array.prototype.slice.call(o, 15)).toEqual([]);
+
+            expect(Array.prototype.slice.call(o, -1)).toEqual([undefined]);
+            expect(Array.prototype.slice.call(o, -2)).toEqual(["baz", undefined]);
+
+            expect(Array.prototype.slice.call(o, 1, -1)).toEqual(["bar", undefined, "baz"]);
+            expect(Array.prototype.slice.call(o, 2, -2)).toEqual([undefined]);
+
+            expect(Array.prototype.slice.call(o, 3, -3)).toEqual([]);
+            expect(Array.prototype.slice.call(o, 0, 0)).toEqual([]);
+            expect(Array.prototype.slice.call(o, 10, 10)).toEqual([]);
+        }
+    });
+
     test("join", () => {
         expect(Array.prototype.join.call({})).toBe("");
         expect(Array.prototype.join.call({ length: "foo" })).toBe("");
@@ -86,6 +131,65 @@ describe("ability to work with generic non-array objects", () => {
         expect(Array.prototype.includes.call({ length: 1, 0: undefined })).toBeTrue();
         expect(Array.prototype.includes.call({ length: 1, 2: "foo" }, "foo")).toBeFalse();
         expect(Array.prototype.includes.call({ length: 5, 2: "foo" }, "foo")).toBeTrue();
+    });
+
+    test("shift", () => {
+        expect(Array.prototype.shift.call({})).toBeUndefined();
+        expect(Array.prototype.shift.call({ length: 0 })).toBeUndefined();
+
+        const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+        const front = Array.prototype.shift.call(o);
+        expect(front).toEqual("a");
+        expect(o).toEqual({ length: 4, 0: "b", 2: "c" });
+    });
+
+    test("unshift", () => {
+        {
+            const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+            const front = "z";
+            Array.prototype.unshift.call(o, front);
+            expect(o[0]).toEqual(front);
+            expect(o[1]).toEqual("a");
+            expect(o.length).toEqual(6);
+        }
+        {
+            const o = { length: 5, 0: "a", 1: "b", 3: "c" };
+            const front = "z";
+            Array.prototype.unshift.call(o, front, front);
+            expect(o[0]).toEqual(front);
+            expect(o[1]).toEqual(front);
+            expect(o[2]).toEqual("a");
+            expect(o.length).toEqual(7);
+        }
+    });
+
+    test("copyWithin", () => {
+        const initial_o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            // returns value and modifies
+            expect(Array.prototype.copyWithin.call(o, 0, 0)).toEqual(o);
+            expect(o).toEqual(initial_o);
+        }
+
+        {
+            const o = {};
+            expect(Array.prototype.copyWithin.call(o, 1, 16, 32)).toEqual(o);
+            expect(o).toEqual({});
+        }
+
+        {
+            const o = { length: 100 };
+            expect(Array.prototype.copyWithin.call(o, 1, 16, 32)).toEqual(o);
+            expect(o).toEqual({ length: 100 });
+        }
+
+        {
+            const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
+            // returns value and modifies
+            expect(Array.prototype.copyWithin.call(o, 2, 0)).toEqual(o);
+            expect(o).toEqual({ length: 5, 0: "foo", 1: "bar", 2: "foo", 3: "bar" });
+        }
     });
 
     const o = { length: 5, 0: "foo", 1: "bar", 3: "baz" };
@@ -145,5 +249,59 @@ describe("ability to work with generic non-array objects", () => {
             "initial"
         );
         expect(visited).toEqual(["baz", "bar", "foo"]);
+    });
+
+    test("reverse", () => {
+        expect(Array.prototype.reverse.call(o)).toEqual({
+            length: 5,
+            4: "foo",
+            3: "bar",
+            1: "baz",
+        });
+        expect(Array.prototype.reverse.call({})).toEqual({});
+        expect(Array.prototype.reverse.call({ length: 10 })).toEqual({ length: 10 });
+        expect(Array.prototype.reverse.call({ length: 1, 0: "foo" })).toEqual({
+            length: 1,
+            0: "foo",
+        });
+    });
+
+    test("concat", () => {
+        expect(Array.prototype.concat.call(o)).toEqual([o]);
+        expect(Array.prototype.concat.call(o, true)).toEqual([o, true]);
+        expect(Array.prototype.concat.call({}, o)).toEqual([{}, o]);
+
+        const spreadable = {
+            length: 5,
+            0: "foo",
+            1: "bar",
+            3: "baz",
+            [Symbol.isConcatSpreadable]: true,
+        };
+        expect(Array.prototype.concat.call(spreadable)).toEqual([
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+        ]);
+        expect(Array.prototype.concat.call(spreadable, [1, 2])).toEqual([
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+            1,
+            2,
+        ]);
+        expect(Array.prototype.concat.call([1], spreadable, [2])).toEqual([
+            1,
+            "foo",
+            "bar",
+            undefined,
+            "baz",
+            undefined,
+            2,
+        ]);
     });
 });

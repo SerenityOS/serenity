@@ -30,15 +30,21 @@ void ArrayConstructor::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     NativeFunction::initialize(global_object);
 
+    // 23.1.2.4 Array.prototype, https://tc39.es/ecma262/#sec-array.prototype
     define_property(vm.names.prototype, global_object.array_prototype(), 0);
+
     define_property(vm.names.length, Value(1), Attribute::Configurable);
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.from, from, 1, attr);
     define_native_function(vm.names.isArray, is_array, 1, attr);
     define_native_function(vm.names.of, of, 0, attr);
+
+    // 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
+    define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
+// 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
 Value ArrayConstructor::call()
 {
     if (vm().argument_count() <= 0)
@@ -46,7 +52,7 @@ Value ArrayConstructor::call()
 
     if (vm().argument_count() == 1 && vm().argument(0).is_number()) {
         auto array_length_value = vm().argument(0);
-        if (!array_length_value.is_integer() || array_length_value.as_i32() < 0) {
+        if (!array_length_value.is_integral_number() || array_length_value.as_i32() < 0) {
             vm().throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
             return {};
         }
@@ -61,11 +67,13 @@ Value ArrayConstructor::call()
     return array;
 }
 
+// 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
 Value ArrayConstructor::construct(Function&)
 {
     return call();
 }
 
+// 23.1.2.1 Array.from ( items [ , mapfn [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-array.from
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 {
     auto value = vm.argument(0);
@@ -137,18 +145,26 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
     return array;
 }
 
+// 23.1.2.2 Array.isArray ( arg ), https://tc39.es/ecma262/#sec-array.isarray
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 {
     auto value = vm.argument(0);
-    return Value(value.is_array());
+    return Value(value.is_array(global_object));
 }
 
+// 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
     auto* array = Array::create(global_object);
     for (size_t i = 0; i < vm.argument_count(); ++i)
         array->indexed_properties().append(vm.argument(i));
     return array;
+}
+
+// 23.1.2.5 get Array [ @@species ], https://tc39.es/ecma262/#sec-get-array-@@species
+JS_DEFINE_NATIVE_GETTER(ArrayConstructor::symbol_species_getter)
+{
+    return vm.this_value(global_object);
 }
 
 }

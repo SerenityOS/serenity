@@ -7,9 +7,9 @@
 
 #include "Token.h"
 #include <AK/Assertions.h>
+#include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <AK/StringBuilder.h>
-#include <ctype.h>
 
 namespace JS {
 
@@ -64,7 +64,7 @@ double Token::double_value() const
         } else if (value_string[1] == 'b' || value_string[1] == 'B') {
             // binary
             return static_cast<double>(strtoul(value_string.characters() + 2, nullptr, 2));
-        } else if (isdigit(value_string[1])) {
+        } else if (is_ascii_digit(value_string[1])) {
             // also octal, but syntax error in strict mode
             if (!m_value.contains('8') && !m_value.contains('9'))
                 return static_cast<double>(strtoul(value_string.characters() + 1, nullptr, 8));
@@ -75,10 +75,10 @@ double Token::double_value() const
 
 static u32 hex2int(char x)
 {
-    VERIFY(isxdigit(x));
+    VERIFY(is_ascii_hex_digit(x));
     if (x >= '0' && x <= '9')
         return x - '0';
-    return 10u + (tolower(x) - 'a');
+    return 10u + (to_ascii_lowercase(x) - 'a');
 }
 
 String Token::string_value(StringValueStatus& status) const
@@ -115,7 +115,7 @@ String Token::string_value(StringValueStatus& status) const
             continue;
         }
         // Null-byte escape
-        if (lexer.next_is('0') && !isdigit(lexer.peek(1))) {
+        if (lexer.next_is('0') && !is_ascii_digit(lexer.peek(1))) {
             lexer.ignore();
             builder.append('\0');
             continue;
@@ -123,7 +123,7 @@ String Token::string_value(StringValueStatus& status) const
         // Hex escape
         if (lexer.next_is('x')) {
             lexer.ignore();
-            if (!isxdigit(lexer.peek()) || !isxdigit(lexer.peek(1)))
+            if (!is_ascii_hex_digit(lexer.peek()) || !is_ascii_hex_digit(lexer.peek(1)))
                 return encoding_failure(StringValueStatus::MalformedHexEscape);
             auto code_point = hex2int(lexer.consume()) * 16 + hex2int(lexer.consume());
             VERIFY(code_point <= 255);
@@ -137,7 +137,7 @@ String Token::string_value(StringValueStatus& status) const
             if (lexer.next_is('{')) {
                 lexer.ignore();
                 while (true) {
-                    if (!lexer.next_is(isxdigit))
+                    if (!lexer.next_is(is_ascii_hex_digit))
                         return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
                     auto new_code_point = (code_point << 4u) | hex2int(lexer.consume());
                     if (new_code_point < code_point)
@@ -149,7 +149,7 @@ String Token::string_value(StringValueStatus& status) const
                 lexer.ignore();
             } else {
                 for (int j = 0; j < 4; ++j) {
-                    if (!lexer.next_is(isxdigit))
+                    if (!lexer.next_is(is_ascii_hex_digit))
                         return encoding_failure(StringValueStatus::MalformedUnicodeEscape);
                     code_point = (code_point << 4u) | hex2int(lexer.consume());
                 }
@@ -203,7 +203,7 @@ bool Token::is_identifier_name() const
 {
     // IdentifierNames are Identifiers + ReservedWords
     // The standard defines this reversed: Identifiers are IdentifierNames except reserved words
-    // https://www.ecma-international.org/ecma-262/5.1/#sec-7.6
+    // https://tc39.es/ecma262/#prod-Identifier
     return m_type == TokenType::Identifier
         || m_type == TokenType::Await
         || m_type == TokenType::BoolLiteral

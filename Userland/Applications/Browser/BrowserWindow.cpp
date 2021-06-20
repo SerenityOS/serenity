@@ -60,6 +60,7 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     auto& top_line = *widget.find_descendant_of_type_named<GUI::HorizontalSeparator>("top_line");
 
     m_tab_widget = *widget.find_descendant_of_type_named<GUI::TabWidget>("tab_widget");
+    m_tab_widget->set_close_button_enabled(true);
 
     m_tab_widget->on_tab_count_change = [&top_line](size_t tab_count) {
         top_line.set_visible(tab_count > 1);
@@ -72,6 +73,11 @@ BrowserWindow::BrowserWindow(CookieJar& cookie_jar, URL url)
     };
 
     m_tab_widget->on_middle_click = [](auto& clicked_widget) {
+        auto& tab = static_cast<Browser::Tab&>(clicked_widget);
+        tab.on_tab_close_request(tab);
+    };
+
+    m_tab_widget->on_tab_close_click = [](auto& clicked_widget) {
         auto& tab = static_cast<Browser::Tab&>(clicked_widget);
         tab.on_tab_close_request(tab);
     };
@@ -247,6 +253,23 @@ void BrowserWindow::build_menus()
     inspect_menu.add_action(js_console_action);
 
     auto& settings_menu = menubar->add_menu("&Settings");
+
+    m_change_homepage_action = GUI::Action::create(
+        "Set Homepage URL", [this](auto&) {
+            auto config = Core::ConfigFile::get_for_app("Browser");
+            String homepage_url = config->read_entry("Preferences", "Home", "about:blank");
+            if (GUI::InputBox::show(this, homepage_url, "Enter URL", "Change homepage URL") == GUI::InputBox::ExecOK) {
+                if (URL(homepage_url).is_valid()) {
+                    config->write_entry("Preferences", "Home", homepage_url);
+                    Browser::g_home_url = homepage_url;
+                } else {
+                    GUI::MessageBox::show_error(this, "The URL you have entered is not valid");
+                }
+            }
+        },
+        this);
+
+    settings_menu.add_action(*m_change_homepage_action);
 
     m_search_engine_actions.set_exclusive(true);
     auto& search_engine_menu = settings_menu.add_submenu("&Search Engine");

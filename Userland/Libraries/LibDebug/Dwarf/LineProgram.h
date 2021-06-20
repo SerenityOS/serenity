@@ -102,6 +102,9 @@ inline InputStream& operator>>(InputStream& stream, LineProgramUnitHeader32& hea
 }
 
 class LineProgram {
+    AK_MAKE_NONCOPYABLE(LineProgram);
+    AK_MAKE_NONMOVABLE(LineProgram);
+
 public:
     explicit LineProgram(DwarfInfo& dwarf_info, InputMemoryStream& stream);
 
@@ -111,7 +114,13 @@ public:
         size_t line { 0 };
     };
 
-    const Vector<LineInfo>& lines() const { return m_lines; }
+    Vector<LineInfo> const& lines() const { return m_lines; }
+
+    struct DirectoryAndFile {
+        FlyString directory;
+        FlyString filename;
+    };
+    DirectoryAndFile get_directory_and_file(size_t file_index) const;
 
 private:
     void parse_unit_header();

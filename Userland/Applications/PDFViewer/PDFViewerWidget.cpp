@@ -12,6 +12,7 @@
 #include <LibGUI/Label.h>
 #include <LibGUI/Menu.h>
 #include <LibGUI/Menubar.h>
+#include <LibGUI/MessageBox.h>
 #include <LibGUI/Splitter.h>
 #include <LibGUI/Toolbar.h>
 #include <LibGUI/ToolbarContainer.h>
@@ -66,13 +67,13 @@ void PDFViewerWidget::create_toolbar()
     toolbar.add_action(*open_outline_action);
     toolbar.add_separator();
 
-    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](auto&) {
+    m_go_to_prev_page_action = GUI::Action::create("Go to &Previous Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-up.png"), [&](auto&) {
         VERIFY(m_viewer->current_page() > 0);
         m_page_text_box->set_current_number(m_viewer->current_page());
     });
     m_go_to_prev_page_action->set_enabled(false);
 
-    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
+    m_go_to_next_page_action = GUI::Action::create("Go to &Next Page", Gfx::Bitmap::load_from_file("/res/icons/16x16/go-down.png"), [&](auto&) {
         VERIFY(m_viewer->current_page() < m_viewer->document()->get_page_count() - 1);
         m_page_text_box->set_current_number(m_viewer->current_page() + 2);
     });
@@ -103,9 +104,18 @@ void PDFViewerWidget::open_file(const String& path)
 {
     window()->set_title(String::formatted("{} - PDF Viewer", path));
     auto file_result = Core::File::open(path, Core::OpenMode::ReadOnly);
-    VERIFY(!file_result.is_error());
+    if (file_result.is_error()) {
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't open file: {}", path));
+        return;
+    }
+
     m_buffer = file_result.value()->read_all();
-    auto document = adopt_ref(*new PDF::Document(m_buffer));
+    auto document = PDF::Document::create(m_buffer);
+    if (!document) {
+        GUI::MessageBox::show_error(nullptr, String::formatted("Couldn't load PDF: {}", path));
+        return;
+    }
+
     m_viewer->set_document(document);
     m_total_page_label->set_text(String::formatted("of {}", document->get_page_count()));
     m_total_page_label->set_fixed_width(30);

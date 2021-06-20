@@ -16,6 +16,7 @@
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/IO.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/PCI/IDs.h>
 #include <Kernel/Panic.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 
@@ -52,28 +53,9 @@ void GraphicsManagement::activate_graphical_mode()
     }
 }
 
-UNMAP_AFTER_INIT RefPtr<GraphicsDevice> GraphicsManagement::determine_graphics_device(PCI::Address address, PCI::ID id) const
+static inline bool is_vga_compatible_pci_device(PCI::Address address)
 {
-    if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef)) {
-        return BochsGraphicsAdapter::initialize(address);
-    }
-    if (PCI::get_class(address) == 0x3 && PCI::get_subclass(address) == 0x0) {
-        if (id.vendor_id == 0x8086) {
-            auto adapter = IntelNativeGraphicsAdapter::initialize(address);
-            if (!adapter.is_null())
-                return adapter;
-        }
-        if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
-            dmesgln("Graphics: Using a preset resolution from the bootloader");
-            return VGACompatibleAdapter::initialize_with_preset_resolution(address,
-                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                multiboot_info_ptr->framebuffer_width,
-                multiboot_info_ptr->framebuffer_height,
-                multiboot_info_ptr->framebuffer_pitch);
-        }
-        return VGACompatibleAdapter::initialize(address);
-    }
-    return {};
+    return PCI::get_class(address) == 0x3 && PCI::get_subclass(address) == 0x0;
 }
 
 UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
@@ -119,28 +101,78 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         dbgln("Forcing no initialization of framebuffer devices");
     }
 
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        // Note: Each graphics controller will try to set its native screen resolution
-        // upon creation. Later on, if we don't want to have framebuffer devices, a
-        // framebuffer console will take the control instead.
-        auto adapter = determine_graphics_device(address, id);
-        if (!adapter)
-            return;
-
-        // If IO space is enabled, this VGA adapter is operating in VGA mode.
-        if (adapter->type() == GraphicsDevice::Type::VGACompatible && PCI::is_io_space_enabled(address)) {
-            VERIFY(m_vga_adapter.is_null());
-            dbgln("Graphics adapter @ {} is operating in VGA mode", address);
-            m_vga_adapter = adapter;
-        }
-        auto display_adapter = adapter.release_nonnull();
+    auto add_and_initialize_adapter = [&](NonnullRefPtr<GraphicsDevice> display_adapter) {
         m_graphics_devices.append(display_adapter);
         if (!m_framebuffer_devices_allowed) {
             display_adapter->enable_consoles();
             return;
         }
         display_adapter->initialize_framebuffer_devices();
+    };
+    auto have_adapter_for_address = [&](const PCI::Address& address) {
+        for (auto& adapter : m_graphics_devices) {
+            if (adapter.device_pci_address() == address)
+                return true;
+        }
+        return false;
+    };
+
+    Vector<PCI::Address, 8> uninitialized_vga_pci_addresses;
+    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
+        // Note: Each graphics controller will try to set its native screen resolution
+        // upon creation. Later on, if we don't want to have framebuffer devices, a
+        // framebuffer console will take the control instead.
+        RefPtr<GraphicsDevice> adapter;
+        bool is_vga_compatible = is_vga_compatible_pci_device(address);
+        if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef)) {
+            adapter = BochsGraphicsAdapter::initialize(address);
+        } else if (is_vga_compatible) {
+            if (id.vendor_id == 0x8086) {
+                adapter = IntelNativeGraphicsAdapter::initialize(address);
+            }
+        }
+        if (adapter)
+            add_and_initialize_adapter(adapter.release_nonnull());
+        else if (is_vga_compatible)
+            uninitialized_vga_pci_addresses.append(address);
     });
+
+    if (!uninitialized_vga_pci_addresses.is_empty()) {
+        for (auto& address : uninitialized_vga_pci_addresses) {
+            VERIFY(is_vga_compatible_pci_device(address));
+            VERIFY(!have_adapter_for_address(address));
+
+            if (multiboot_info_ptr->framebuffer_type == MULTIBOOT_FRAMEBUFFER_TYPE_RGB) {
+                dmesgln("Graphics: Using a preset resolution from the bootloader");
+                auto vga_adapter = VGACompatibleAdapter::initialize_with_preset_resolution(address,
+                    PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
+                    multiboot_info_ptr->framebuffer_width,
+                    multiboot_info_ptr->framebuffer_height,
+                    multiboot_info_ptr->framebuffer_pitch);
+                m_vga_adapter = vga_adapter;
+                add_and_initialize_adapter(move(vga_adapter));
+            } else {
+                dmesgln("Graphics: Using a VGA compatible generic adapter");
+                auto vga_adapter = VGACompatibleAdapter::initialize(address);
+                m_vga_adapter = vga_adapter;
+                add_and_initialize_adapter(move(vga_adapter));
+            }
+            break; // We can only have one vga adapter
+        }
+
+        // If we still don't have a VGA compatible adapter, check if any of the ones
+        // we support explicitly happens to be able to operate in VGA mode
+        if (!m_vga_adapter) {
+            for (auto& adapter : m_graphics_devices) {
+                // If IO space is enabled, this VGA adapter is operating in VGA mode.
+                if (adapter.type() == GraphicsDevice::Type::VGACompatible && !m_vga_adapter && PCI::is_io_space_enabled(adapter.device_pci_address())) {
+                    dbgln("Graphics adapter @ {} is operating in VGA mode", adapter.device_pci_address());
+                    m_vga_adapter = adapter;
+                    break;
+                }
+            }
+        }
+    }
     if (m_graphics_devices.is_empty()) {
         dbgln("No graphics adapter was initialized.");
         return false;

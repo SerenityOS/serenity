@@ -9,6 +9,7 @@
 #include <AK/URL.h>
 #include <LibCore/ElapsedTimer.h>
 #include <LibCore/FileStream.h>
+#include <LibGUI/ImageWidget.h>
 #include <LibGUI/Progressbar.h>
 #include <LibGUI/Widget.h>
 #include <LibProtocol/Request.h>
@@ -34,6 +35,8 @@ private:
     RefPtr<GUI::Label> m_progress_label;
     RefPtr<GUI::Button> m_cancel_button;
     RefPtr<GUI::Button> m_close_button;
+    RefPtr<GUI::CheckBox> m_close_on_finish_checkbox;
+    RefPtr<GUI::ImageWidget> m_browser_image;
     OwnPtr<Core::OutputFileStream> m_output_file_stream;
     Core::ElapsedTimer m_elapsed_timer;
 };

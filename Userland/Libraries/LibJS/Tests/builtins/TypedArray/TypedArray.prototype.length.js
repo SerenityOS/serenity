@@ -1,11 +1,12 @@
-// Update when more typed arrays get added
 const TYPED_ARRAYS = [
     Uint8Array,
     Uint16Array,
     Uint32Array,
+    BigUint64Array,
     Int8Array,
     Int16Array,
     Int32Array,
+    BigInt64Array,
     Float32Array,
     Float64Array,
 ];

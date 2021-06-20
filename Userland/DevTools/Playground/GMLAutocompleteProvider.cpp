@@ -202,8 +202,8 @@ void GMLAutocompleteProvider::provide_completions(Function<void(Vector<Entry>)> 
     quick_sort(identifier_entries, [](auto& a, auto& b) { return a.completion < b.completion; });
 
     Vector<GUI::AutocompleteProvider::Entry> entries;
-    entries.append(move(identifier_entries));
-    entries.append(move(class_entries));
+    entries.extend(move(identifier_entries));
+    entries.extend(move(class_entries));
 
     callback(move(entries));
 }

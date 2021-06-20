@@ -14,7 +14,7 @@
 
 namespace PixelPaint {
 
-static Gfx::IntPoint constrain_line_angle(const Gfx::IntPoint& start_pos, const Gfx::IntPoint& end_pos, float angle_increment)
+static Gfx::IntPoint constrain_line_angle(Gfx::IntPoint const& start_pos, Gfx::IntPoint const& end_pos, float angle_increment)
 {
     float current_angle = atan2f(end_pos.y() - start_pos.y(), end_pos.x() - start_pos.x()) + float { M_PI * 2 };
 
@@ -57,7 +57,7 @@ void LineTool::on_mouseup(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&
         GUI::Painter painter(layer.bitmap());
         painter.draw_line(m_line_start_position, m_line_end_position, m_editor->color_for(m_drawing_button), m_thickness);
         m_drawing_button = GUI::MouseButton::None;
-        layer.did_modify_bitmap(*m_editor->image());
+        layer.did_modify_bitmap();
         m_editor->did_complete_action();
     }
 }
@@ -76,7 +76,7 @@ void LineTool::on_mousemove(Layer&, GUI::MouseEvent& layer_event, GUI::MouseEven
     m_editor->update();
 }
 
-void LineTool::on_second_paint(const Layer& layer, GUI::PaintEvent& event)
+void LineTool::on_second_paint(Layer const& layer, GUI::PaintEvent& event)
 {
     if (m_drawing_button == GUI::MouseButton::None)
         return;

@@ -206,7 +206,7 @@ void do_unzip_archive(const Vector<String>& selected_file_paths, GUI::Window* wi
     }
 
     if (!unzip_pid) {
-        int rc = execlp("/bin/unzip", "/bin/unzip", "-o", output_directory_path.characters(), archive_file_path.characters(), nullptr);
+        int rc = execlp("/bin/unzip", "/bin/unzip", "-d", output_directory_path.characters(), archive_file_path.characters(), nullptr);
         if (rc < 0) {
             perror("execlp");
             _exit(1);
@@ -430,7 +430,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     auto top = config->read_num_entry("Window", "Top", 75);
     auto width = config->read_num_entry("Window", "Width", 640);
     auto height = config->read_num_entry("Window", "Height", 480);
-    window->set_rect({ left, top, width, height });
+    auto was_maximized = config->read_bool_entry("Window", "Maximized", false);
 
     auto& widget = window->set_main_widget<GUI::Widget>();
 
@@ -1141,6 +1141,10 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     window->show();
 
+    window->set_rect({ left, top, width, height });
+    if (was_maximized)
+        window->set_maximized(true);
+
     // Read directory read mode from config.
     auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
 
@@ -1163,10 +1167,13 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
 
     // Write window position to config file on close request.
     window->on_close_request = [&] {
-        config->write_num_entry("Window", "Left", window->x());
-        config->write_num_entry("Window", "Top", window->y());
-        config->write_num_entry("Window", "Width", window->width());
-        config->write_num_entry("Window", "Height", window->height());
+        config->write_bool_entry("Window", "Maximized", window->is_maximized());
+        if (!window->is_maximized()) {
+            config->write_num_entry("Window", "Left", window->x());
+            config->write_num_entry("Window", "Top", window->y());
+            config->write_num_entry("Window", "Width", window->width());
+            config->write_num_entry("Window", "Height", window->height());
+        }
         config->sync();
 
         return GUI::Window::CloseRequestDecision::Close;

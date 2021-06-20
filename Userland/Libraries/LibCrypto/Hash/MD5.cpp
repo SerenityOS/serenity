@@ -58,9 +58,10 @@ void MD5::update(const u8* input, size_t length)
     m_count[1] += (u32)length >> 29;
 
     auto part_length = 64 - index;
+    auto buffer = Bytes { m_data_buffer, sizeof(m_data_buffer) };
     if (length >= part_length) {
-        m_buffer.overwrite(index, input, part_length);
-        transform(m_buffer.data());
+        buffer.overwrite(index, input, part_length);
+        transform(buffer.data());
 
         for (offset = part_length; offset + 63 < length; offset += 64)
             transform(&input[offset]);
@@ -69,7 +70,7 @@ void MD5::update(const u8* input, size_t length)
     }
 
     VERIFY(length < part_length || length - offset <= 64);
-    m_buffer.overwrite(index, &input[offset], length - offset);
+    buffer.overwrite(index, &input[offset], length - offset);
 }
 MD5::DigestType MD5::digest()
 {

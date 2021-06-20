@@ -219,7 +219,7 @@ static bool takes_integer_value(CSS::PropertyID property_id)
 
 static StringView parse_custom_property_name(const StringView& value)
 {
-    if (!value.starts_with("var(") && !value.ends_with(")"))
+    if (!value.starts_with("var(") || !value.ends_with(")"))
         return {};
     // FIXME: Allow for fallback
     auto first_comma_index = value.find_first_of(",");

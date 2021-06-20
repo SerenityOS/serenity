@@ -357,7 +357,7 @@ int sys_nerr = EMAXERRNO;
 int strerror_r(int errnum, char* buf, size_t buflen)
 {
     auto saved_errno = errno;
-    if (errnum >= EMAXERRNO) {
+    if (errnum < 0 || errnum >= EMAXERRNO) {
         auto rc = strlcpy(buf, "unknown error", buflen);
         if (rc >= buflen)
             dbgln("strerror_r(): Invalid error number '{}' specified and the output buffer is too small.", errnum);
@@ -377,7 +377,6 @@ int strerror_r(int errnum, char* buf, size_t buflen)
 char* strerror(int errnum)
 {
     if (errnum < 0 || errnum >= EMAXERRNO) {
-        dbgln("strerror() missing string for errnum={}", errnum);
         return const_cast<char*>("Unknown error");
     }
     return const_cast<char*>(sys_errlist[errnum]);

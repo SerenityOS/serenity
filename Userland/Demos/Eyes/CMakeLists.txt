@@ -1,3 +1,8 @@
+serenity_component(
+    Eyes
+    TARGETS Eyes
+)
+
 set(SOURCES
     main.cpp
     EyesWidget.cpp

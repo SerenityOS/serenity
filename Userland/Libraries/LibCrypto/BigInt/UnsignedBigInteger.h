@@ -41,10 +41,25 @@ public:
         return UnsignedBigInteger(ptr, length);
     }
 
+    static UnsignedBigInteger create_from(u64 value)
+    {
+        VERIFY(sizeof(Word) == 4);
+        UnsignedBigInteger integer;
+        integer.m_words.resize(2);
+        integer.m_words[0] = static_cast<Word>(value & 0xFFFFFFFF);
+        integer.m_words[1] = static_cast<Word>((value >> 32) & 0xFFFFFFFF);
+        return integer;
+    }
+
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
+    static UnsignedBigInteger from_base2(const String& str);
+    static UnsignedBigInteger from_base8(const String& str);
     static UnsignedBigInteger from_base10(const String& str);
     String to_base10() const;
+    static UnsignedBigInteger from_base16(const String& str);
+
+    u64 to_u64() const;
 
     const Vector<Word, STARTING_WORD_SIZE>& words() const { return m_words; }
 
@@ -56,6 +71,7 @@ public:
     {
         m_is_invalid = true;
         m_cached_trimmed_length = {};
+        m_cached_hash = 0;
     }
 
     bool is_odd() const { return m_words.size() && (m_words[0] & 1); }
@@ -78,6 +94,8 @@ public:
     UnsignedBigInteger multiplied_by(const UnsignedBigInteger& other) const;
     UnsignedDivisionResult divided_by(const UnsignedBigInteger& divisor) const;
 
+    u32 hash() const;
+
     void set_bit_inplace(size_t bit_index);
 
     bool operator==(const UnsignedBigInteger& other) const;
@@ -89,6 +107,8 @@ private:
     // Little endian
     // m_word[0] + m_word[1] * Word::MAX + m_word[2] * Word::MAX * Word::MAX + ...
     Vector<Word, STARTING_WORD_SIZE> m_words;
+
+    mutable u32 m_cached_hash { 0 };
 
     // Used to indicate a negative result, or a result of an invalid operation
     bool m_is_invalid { false };

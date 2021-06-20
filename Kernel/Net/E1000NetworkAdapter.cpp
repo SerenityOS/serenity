@@ -119,7 +119,7 @@ namespace Kernel {
 #define INTERRUPT_SRPD (1 << 16)
 
 // https://www.intel.com/content/dam/doc/manual/pci-pci-x-family-gbe-controllers-software-dev-manual.pdf Section 5.2
-static bool is_valid_device_id(u16 device_id)
+UNMAP_AFTER_INIT static bool is_valid_device_id(u16 device_id)
 {
     // FIXME: It would be nice to distinguish which particular device it is.
     //        Especially since it's needed to determine which registers we can access.
@@ -156,34 +156,47 @@ static bool is_valid_device_id(u16 device_id)
     }
 }
 
-UNMAP_AFTER_INIT void E1000NetworkAdapter::detect()
+UNMAP_AFTER_INIT RefPtr<E1000NetworkAdapter> E1000NetworkAdapter::try_to_initialize(PCI::Address address)
 {
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-        if (id.vendor_id != (u16)PCIVendorID::Intel)
-            return;
-        if (!is_valid_device_id(id.device_id))
-            return;
-        u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt_ref(*new E1000NetworkAdapter(address, irq)).leak_ref();
-    });
+    auto id = PCI::get_id(address);
+    if (id.vendor_id != (u16)PCIVendorID::Intel)
+        return {};
+    if (!is_valid_device_id(id.device_id))
+        return {};
+    u8 irq = PCI::get_interrupt_line(address);
+    auto adapter = adopt_ref_if_nonnull(new E1000NetworkAdapter(address, irq));
+    if (!adapter)
+        return {};
+    if (adapter->initialize())
+        return adapter;
+    return {};
 }
 
-UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
-    : PCI::Device(address, irq)
-    , m_io_base(PCI::get_BAR1(pci_address()) & ~1)
-    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
-    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX", Region::Access::Read | Region::Access::Write))
+UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_link()
 {
-    set_interface_name(address);
+    u32 flags = in32(REG_CTRL);
+    out32(REG_CTRL, flags | ECTRL_SLU);
+}
 
+UNMAP_AFTER_INIT void E1000NetworkAdapter::setup_interrupts()
+{
+    out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
+    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
+    in32(REG_INTERRUPT_CAUSE_READ);
+    enable_irq();
+}
+
+UNMAP_AFTER_INIT bool E1000NetworkAdapter::initialize()
+{
     dmesgln("E1000: Found @ {}", pci_address());
-
     enable_bus_mastering(pci_address());
+
+    m_io_base = IOAddress(PCI::get_BAR1(pci_address()) & ~1);
 
     size_t mmio_base_size = PCI::get_BAR_space_size(pci_address(), 0);
     m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(pci_address()))), page_round_up(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, Region::Cacheable::No);
+    if (!m_mmio_region)
+        return false;
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
     m_interrupt_line = PCI::get_interrupt_line(pci_address());
@@ -197,29 +210,34 @@ UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, 
     const auto& mac = mac_address();
     dmesgln("E1000: MAC address: {}", mac.to_string());
 
-    u32 flags = in32(REG_CTRL);
-    out32(REG_CTRL, flags | ECTRL_SLU);
-
-    out32(REG_INTERRUPT_RATE, 6000); // Interrupt rate of 1.536 milliseconds
-
     initialize_rx_descriptors();
     initialize_tx_descriptors();
 
-    out32(REG_INTERRUPT_MASK_SET, INTERRUPT_LSC | INTERRUPT_RXT0 | INTERRUPT_RXO);
-    in32(REG_INTERRUPT_CAUSE_READ);
+    setup_link();
+    setup_interrupts();
+    return true;
+}
 
-    enable_irq();
+UNMAP_AFTER_INIT E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address address, u8 irq)
+    : PCI::Device(address, irq)
+    , m_rx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16), "E1000 RX", Region::Access::Read | Region::Access::Write))
+    , m_tx_descriptors_region(MM.allocate_contiguous_kernel_region(page_round_up(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16), "E1000 TX", Region::Access::Read | Region::Access::Write))
+{
+    set_interface_name(pci_address());
 }
 
 UNMAP_AFTER_INIT E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq(const RegisterState&)
+bool E1000NetworkAdapter::handle_irq(const RegisterState&)
 {
     u32 status = in32(REG_INTERRUPT_CAUSE_READ);
 
     m_entropy_source.add_random_event(status);
+
+    if (status == 0)
+        return false;
 
     if (status & INTERRUPT_LSC) {
         u32 flags = in32(REG_CTRL);
@@ -238,6 +256,7 @@ void E1000NetworkAdapter::handle_irq(const RegisterState&)
     m_wait_queue.wake_all();
 
     out32(REG_INTERRUPT_CAUSE_READ, 0xffffffff);
+    return true;
 }
 
 UNMAP_AFTER_INIT void E1000NetworkAdapter::detect_eeprom()

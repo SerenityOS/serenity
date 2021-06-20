@@ -12,53 +12,19 @@
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {
 
-static AK::Singleton<Lockable<HashTable<NetworkAdapter*>>> s_table;
-
-Lockable<HashTable<NetworkAdapter*>>& NetworkAdapter::all_adapters()
-{
-    return *s_table;
-}
-
-RefPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
-{
-    Locker locker(all_adapters().lock());
-    for (auto* adapter : all_adapters().resource()) {
-        if (adapter->ipv4_address() == address || adapter->ipv4_broadcast() == address)
-            return adapter;
-    }
-    if (address[0] == 0 && address[1] == 0 && address[2] == 0 && address[3] == 0)
-        return LoopbackAdapter::the();
-    if (address[0] == 127)
-        return LoopbackAdapter::the();
-    return nullptr;
-}
-
-RefPtr<NetworkAdapter> NetworkAdapter::lookup_by_name(const StringView& name)
-{
-    NetworkAdapter* found_adapter = nullptr;
-    for_each([&](auto& adapter) {
-        if (adapter.name() == name)
-            found_adapter = &adapter;
-    });
-    return found_adapter;
-}
-
 NetworkAdapter::NetworkAdapter()
 {
-    // FIXME: I wanna lock :(
-    all_adapters().resource().set(this);
 }
 
 NetworkAdapter::~NetworkAdapter()
 {
-    // FIXME: I wanna lock :(
-    all_adapters().resource().remove(this);
 }
 
 void NetworkAdapter::send_packet(ReadonlyBytes packet)
@@ -76,7 +42,6 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
-    m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
     send_packet({ (const u8*)eth, size_in_bytes });
 }
@@ -199,14 +164,14 @@ void NetworkAdapter::set_interface_name(const PCI::Address& pci_address)
 {
     // Note: This stands for e - "Ethernet", p - "Port" as for PCI bus, "s" for slot as for PCI slot
     auto name = String::formatted("ep{}s{}", pci_address.bus(), pci_address.device());
-    VERIFY(!lookup_by_name(name));
+    VERIFY(!NetworkingManagement::the().lookup_by_name(name));
     m_name = move(name);
 }
 
 void NetworkAdapter::set_loopback_name()
 {
     auto name = String("loop");
-    VERIFY(!lookup_by_name(name));
+    VERIFY(!NetworkingManagement::the().lookup_by_name(name));
     m_name = move(name);
 }
 }

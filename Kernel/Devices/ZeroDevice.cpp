@@ -7,8 +7,14 @@
 #include "ZeroDevice.h"
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Panic.h>
 
 namespace Kernel {
+
+UNMAP_AFTER_INIT NonnullRefPtr<ZeroDevice> ZeroDevice::must_create()
+{
+    return adopt_ref_if_nonnull(new ZeroDevice).release_nonnull();
+}
 
 UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
     : CharacterDevice(1, 5)

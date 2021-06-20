@@ -33,7 +33,7 @@ void ConsoleImpl::clear()
 {
     m_client.clear();
 }
-void ConsoleImpl::clear_including_history()
+void ConsoleImpl::clear_history()
 {
 }
 
@@ -48,6 +48,9 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_columns = determined_columns;
     m_rows = determined_rows;
 
+    m_scroll_region_top = 0;
+    m_scroll_region_bottom = determined_rows - 1;
+
     m_current_state.cursor.clamp(rows() - 1, columns() - 1);
     m_normal_saved_state.cursor.clamp(rows() - 1, columns() - 1);
     m_alternate_saved_state.cursor.clamp(rows() - 1, columns() - 1);
@@ -59,51 +62,38 @@ void ConsoleImpl::set_size(u16 determined_columns, u16 determined_rows)
     m_horizontal_tabs[determined_columns - 1] = 1;
     m_client.terminal_did_resize(m_columns, m_rows);
 }
-void ConsoleImpl::scroll_up()
+void ConsoleImpl::scroll_up(u16 region_top, u16 region_bottom, size_t count)
 {
     // NOTE: We have to invalidate the cursor first.
     m_client.invalidate_cursor(cursor_row());
-    m_client.scroll_up();
+    m_client.scroll_up(region_top, region_bottom, count);
 }
-void ConsoleImpl::scroll_down()
+
+void ConsoleImpl::scroll_down(u16 region_top, u16 region_bottom, size_t count)
 {
+    m_client.invalidate_cursor(cursor_row());
+    m_client.scroll_down(region_top, region_bottom, count);
 }
-void ConsoleImpl::linefeed()
-{
-    u16 new_row = cursor_row();
-    u16 max_row = rows() - 1;
-    if (new_row == max_row) {
-        // NOTE: We have to invalidate the cursor first.
-        m_client.invalidate_cursor(new_row);
-        m_client.scroll_up();
-    } else {
-        ++new_row;
-    }
-    set_cursor(new_row, 0);
-}
+
 void ConsoleImpl::put_character_at(unsigned row, unsigned column, u32 ch)
 {
     m_client.put_character_at(row, column, ch, m_current_state.attribute);
     m_last_code_point = ch;
 }
-void ConsoleImpl::set_window_title(const String&)
+
+void ConsoleImpl::clear_in_line(u16 row, u16 first_column, u16 last_column)
 {
+    m_client.clear_in_line(row, first_column, last_column);
 }
-void ConsoleImpl::ICH(Parameters)
+
+void ConsoleImpl::scroll_left(u16 row, u16 column, size_t count)
 {
-    // FIXME: Implement this
+    m_client.scroll_left(row, column, count);
 }
-void ConsoleImpl::IL(Parameters)
+
+void ConsoleImpl::scroll_right(u16 row, u16 column, size_t count)
 {
-    // FIXME: Implement this
-}
-void ConsoleImpl::DCH(Parameters)
-{
-    // FIXME: Implement this
-}
-void ConsoleImpl::DL(Parameters)
-{
-    // FIXME: Implement this
+    m_client.scroll_right(row, column, count);
 }
 
 void VirtualConsole::set_graphical(bool graphical)
@@ -161,19 +151,12 @@ void VirtualConsole::refresh_after_resolution_change()
     }
 
     // Note: A potential loss of displayed data occur when resolution width shrinks.
-    if (columns() < old_columns_count) {
-        for (size_t row = 0; row < rows(); row++) {
-            auto& line = m_lines[row];
-            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), columns() * sizeof(Cell));
-            line.dirty = true;
-        }
-    } else {
-        // Handle Growth of resolution
-        for (size_t row = 0; row < rows(); row++) {
-            auto& line = m_lines[row];
-            memcpy(new_cells->vaddr().offset((row)*columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset((row) * (old_columns_count) * sizeof(Cell)).as_ptr(), old_columns_count * sizeof(Cell));
-            line.dirty = true;
-        }
+    auto common_rows_count = min(old_rows_count, rows());
+    auto common_columns_count = min(old_columns_count, columns());
+    for (size_t row = 0; row < common_rows_count; row++) {
+        auto& line = m_lines[row];
+        memcpy(new_cells->vaddr().offset(row * columns() * sizeof(Cell)).as_ptr(), m_cells->vaddr().offset(row * old_columns_count * sizeof(Cell)).as_ptr(), common_columns_count * sizeof(Cell));
+        line.dirty = true;
     }
 
     // Update the new cells Region
@@ -196,8 +179,11 @@ UNMAP_AFTER_INIT VirtualConsole::VirtualConsole(const unsigned index, const Circ
     , m_console_impl(*this)
 {
     initialize();
-    for (auto& ch : log) {
-        echo(ch);
+    // HACK: We have to go through the TTY layer for correct newline handling.
+    // It would be nice to not have to make all these calls, but we can't get the underlying data pointer
+    // and head index. If we did that, we could reduce this to at most 2 calls.
+    for (auto ch : log) {
+        emit_char(ch);
     }
 }
 
@@ -215,7 +201,7 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
     case VT::Color::ANSIColor::Red:
         return Graphics::Console::Color::Red;
     case VT::Color::ANSIColor::Green:
-        return Graphics::Console::Green;
+        return Graphics::Console::Color::Green;
     case VT::Color::ANSIColor::Yellow:
         // VGA only has bright yellow, and treats normal yellow as a brownish orange color.
         return Graphics::Console::Color::Brown;
@@ -227,9 +213,9 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
         return Graphics::Console::Color::Cyan;
     case VT::Color::ANSIColor::DefaultForeground:
     case VT::Color::ANSIColor::White:
-        return Graphics::Console::Color::White;
-    case VT::Color::ANSIColor::BrightBlack:
         return Graphics::Console::Color::LightGray;
+    case VT::Color::ANSIColor::BrightBlack:
+        return Graphics::Console::Color::DarkGray;
     case VT::Color::ANSIColor::BrightRed:
         return Graphics::Console::Color::BrightRed;
     case VT::Color::ANSIColor::BrightGreen:
@@ -242,9 +228,10 @@ static inline Graphics::Console::Color ansi_color_to_standard_vga_color(VT::Colo
         return Graphics::Console::Color::BrightMagenta;
     case VT::Color::ANSIColor::BrightCyan:
         return Graphics::Console::Color::BrightCyan;
-    default:
-        VERIFY_NOT_REACHED();
+    case VT::Color::ANSIColor::BrightWhite:
+        return Graphics::Console::Color::White;
     }
+    VERIFY_NOT_REACHED();
 }
 
 static inline Graphics::Console::Color terminal_to_standard_color(VT::Color color)
@@ -271,20 +258,18 @@ void VirtualConsole::on_key_pressed(KeyEvent event)
     });
 }
 
-ssize_t VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, ssize_t size)
+KResultOr<size_t> VirtualConsole::on_tty_write(const UserOrKernelBuffer& data, size_t size)
 {
     ScopedSpinLock global_lock(ConsoleManagement::the().tty_write_lock());
     ScopedSpinLock lock(m_lock);
-    auto result = data.read_buffered<512>((size_t)size, [&](u8 const* buffer, size_t buffer_bytes) {
+    auto result = data.read_buffered<512>(size, [&](u8 const* buffer, size_t buffer_bytes) {
         for (size_t i = 0; i < buffer_bytes; ++i)
             m_console_impl.on_input(buffer[i]);
         return buffer_bytes;
     });
     if (m_active)
         flush_dirty_lines();
-    if (result.is_error())
-        return result.error();
-    return (ssize_t)result.value();
+    return result;
 }
 
 void VirtualConsole::set_active(bool active)
@@ -305,7 +290,9 @@ void VirtualConsole::set_active(bool active)
 
 void VirtualConsole::emit_char(char ch)
 {
-    echo(ch);
+    // Since we are standards-compliant by not moving to column 1 on '\n', we have to add an extra carriage return to
+    // do newlines properly. The `TTY` layer handles adding it.
+    echo_with_processing(static_cast<u8>(ch));
 }
 
 void VirtualConsole::flush_dirty_lines()
@@ -358,7 +345,7 @@ void VirtualConsole::terminal_did_resize(u16 columns, u16 rows)
     dbgln("VC {}: Resized to {} x {}", index(), columns, rows);
 }
 
-void VirtualConsole::terminal_history_changed()
+void VirtualConsole::terminal_history_changed(int)
 {
     // Do nothing, I guess?
 }
@@ -381,10 +368,9 @@ String VirtualConsole::device_name() const
 
 void VirtualConsole::echo(u8 ch)
 {
-    if (should_echo_input()) {
-        auto buffer = UserOrKernelBuffer::for_kernel_buffer(&ch);
-        on_tty_write(buffer, 1);
-    }
+    m_console_impl.on_input(ch);
+    if (m_active)
+        flush_dirty_lines();
 }
 
 VirtualConsole::Cell& VirtualConsole::cell_at(size_t x, size_t y)
@@ -407,20 +393,62 @@ void VirtualConsole::clear()
     m_console_impl.set_cursor(0, 0);
 }
 
-void VirtualConsole::scroll_up()
+void VirtualConsole::scroll_up(u16 region_top, u16 region_bottom, size_t count)
 {
-    memmove(m_cells->vaddr().as_ptr(), m_cells->vaddr().offset(columns() * sizeof(Cell)).as_ptr(), ((rows() - 1) * columns() * sizeof(Cell)));
-    clear_line(rows() - 1);
-    m_console_impl.m_need_full_flush = true;
+    VERIFY(region_top <= region_bottom);
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    size_t line_bytes = (columns() * sizeof(Cell));
+    memmove(m_cells->vaddr().offset(line_bytes * region_top).as_ptr(), m_cells->vaddr().offset(line_bytes * (region_top + count)).as_ptr(), line_bytes * (region_size - count));
+    for (size_t i = 0; i < count; ++i)
+        clear_line(region_bottom - i);
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        m_lines[row].dirty = true;
 }
 
-void VirtualConsole::clear_line(size_t y_index)
+void VirtualConsole::scroll_down(u16 region_top, u16 region_bottom, size_t count)
 {
-    m_lines[y_index].dirty = true;
-    for (size_t x = 0; x < columns(); x++) {
-        auto& cell = cell_at(x, y_index);
-        cell.clear();
-    }
+    VERIFY(region_top <= region_bottom);
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    size_t line_bytes = (columns() * sizeof(Cell));
+    memmove(m_cells->vaddr().offset(line_bytes * (region_top + count)).as_ptr(), m_cells->vaddr().offset(line_bytes * region_top).as_ptr(), line_bytes * (region_size - count));
+    for (size_t i = 0; i < count; ++i)
+        clear_line(region_top + i);
+    for (u16 row = region_top; row <= region_bottom; ++row)
+        m_lines[row].dirty = true;
+}
+
+void VirtualConsole::scroll_left(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    memmove(&cell_at(column, row), &cell_at(column + count, row), sizeof(Cell) * (columns() - column - count));
+    for (size_t i = column + count; i < columns(); ++i)
+        cell_at(i, row).clear();
+    m_lines[row].dirty = true;
+}
+
+void VirtualConsole::scroll_right(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    memmove(&cell_at(column + count, row), &cell_at(column, row), sizeof(Cell) * (columns() - column - count));
+    for (size_t i = column; i < column + count; ++i)
+        cell_at(i, row).clear();
+    m_lines[row].dirty = true;
+}
+
+void VirtualConsole::clear_in_line(u16 row, u16 first_column, u16 last_column)
+{
+    VERIFY(row < rows());
+    VERIFY(first_column <= last_column);
+    VERIFY(last_column < columns());
+    m_lines[row].dirty = true;
+    for (size_t x = first_column; x <= last_column; x++)
+        cell_at(x, row).clear();
 }
 
 void VirtualConsole::put_character_at(unsigned row, unsigned column, u32 code_point, const VT::Attribute& attribute)

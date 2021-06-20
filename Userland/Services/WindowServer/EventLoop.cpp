@@ -81,9 +81,9 @@ EventLoop::~EventLoop()
 
 void EventLoop::drain_mouse()
 {
-    auto& screen = Screen::the();
+    auto& screen_input = ScreenInput::the();
     MousePacket state;
-    state.buttons = screen.mouse_button_state();
+    state.buttons = screen_input.mouse_button_state();
     unsigned buttons = state.buttons;
     MousePacket packets[32];
 
@@ -114,7 +114,7 @@ void EventLoop::drain_mouse()
         if (buttons != state.buttons) {
             state.buttons = buttons;
             dbgln_if(WSMESSAGELOOP_DEBUG, "EventLoop: Mouse Button Event");
-            screen.on_receive_mouse_data(state);
+            screen_input.on_receive_mouse_data(state);
             if (state.is_relative) {
                 state.x = 0;
                 state.y = 0;
@@ -123,21 +123,21 @@ void EventLoop::drain_mouse()
         }
     }
     if (state.is_relative && (state.x || state.y || state.z))
-        screen.on_receive_mouse_data(state);
+        screen_input.on_receive_mouse_data(state);
     if (!state.is_relative)
-        screen.on_receive_mouse_data(state);
+        screen_input.on_receive_mouse_data(state);
 }
 
 void EventLoop::drain_keyboard()
 {
-    auto& screen = Screen::the();
+    auto& screen_input = ScreenInput::the();
     for (;;) {
         ::KeyEvent event;
         ssize_t nread = read(m_keyboard_fd, (u8*)&event, sizeof(::KeyEvent));
         if (nread == 0)
             break;
         VERIFY(nread == sizeof(::KeyEvent));
-        screen.on_receive_keyboard_data(event);
+        screen_input.on_receive_keyboard_data(event);
     }
 }
 

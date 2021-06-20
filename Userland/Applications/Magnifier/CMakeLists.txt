@@ -1,3 +1,9 @@
+serenity_component(
+    Magnifier
+    RECOMMENDED
+    TARGETS Magnifier
+)
+
 set(SOURCES
     MagnifierWidget.cpp
     MagnifierWidget.h

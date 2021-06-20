@@ -42,16 +42,6 @@ struct PacketWithTimestamp : public RefCounted<PacketWithTimestamp> {
 class NetworkAdapter : public RefCounted<NetworkAdapter>
     , public Weakable<NetworkAdapter> {
 public:
-    template<typename Callback>
-    static inline void for_each(Callback callback)
-    {
-        Locker locker(all_adapters().lock());
-        for (auto& it : all_adapters().resource())
-            callback(*it);
-    }
-
-    static RefPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&);
-    static RefPtr<NetworkAdapter> lookup_by_name(const StringView&);
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;
@@ -103,8 +93,6 @@ protected:
     void set_loopback_name();
 
 private:
-    static Lockable<HashTable<NetworkAdapter*>>& all_adapters();
-
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
     IPv4Address m_ipv4_netmask;

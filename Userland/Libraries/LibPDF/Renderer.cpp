@@ -7,11 +7,9 @@
 #include <AK/Utf8View.h>
 #include <LibPDF/CommonNames.h>
 #include <LibPDF/Renderer.h>
-#include <ctype.h>
-#include <math.h>
 
 #define RENDERER_HANDLER(name) \
-    void Renderer::handle_##name([[maybe_unused]] const Vector<Value>& args)
+    void Renderer::handle_##name([[maybe_unused]] Vector<Value> const& args)
 
 #define RENDERER_TODO(name)                                         \
     RENDERER_HANDLER(name)                                          \
@@ -22,64 +20,12 @@
 
 namespace PDF {
 
-Optional<ColorSpace::Type> ColorSpace::color_space_from_string(const FlyString& str)
-{
-#define ENUM(name)    \
-    if (str == #name) \
-        return ColorSpace::Type::name;
-    ENUMERATE_COLOR_SPACES(ENUM)
-#undef ENUM
-
-    return {};
-}
-
-Color ColorSpace::default_color_for_color_space(ColorSpace::Type color_space)
-{
-    switch (color_space) {
-    case Type::DeviceGray:
-    case Type::DeviceRGB:
-        return Color::NamedColor::Black;
-    case Type::DeviceCMYK:
-        return Color::from_cmyk(1.0f, 1.0f, 1.0f, 0.0f);
-    default:
-        TODO();
-    }
-}
-
-Color ColorSpace::color_from_parameters(ColorSpace::Type color_space, const Vector<Value>& args)
-{
-    switch (color_space) {
-    case Type::DeviceGray: {
-        VERIFY(args.size() == 1);
-        auto gray = static_cast<u8>(args[0].to_float() * 255.0f);
-        return Color(gray, gray, gray);
-    }
-    case Type::DeviceRGB: {
-        VERIFY(args.size() == 3);
-        auto r = static_cast<u8>(args[0].to_float() * 255.0f);
-        auto g = static_cast<u8>(args[1].to_float() * 255.0f);
-        auto b = static_cast<u8>(args[2].to_float() * 255.0f);
-        return Color(r, g, b);
-    }
-    case Type::DeviceCMYK: {
-        VERIFY(args.size() == 4);
-        auto c = args[0].to_float();
-        auto m = args[1].to_float();
-        auto y = args[2].to_float();
-        auto k = args[3].to_float();
-        return Color::from_cmyk(c, m, y, k);
-    }
-    default:
-        TODO();
-    }
-}
-
-void Renderer::render(Document& document, const Page& page, RefPtr<Gfx::Bitmap> bitmap)
+void Renderer::render(Document& document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
 {
     Renderer(document, page, bitmap).render();
 }
 
-Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitmap> bitmap)
+Renderer::Renderer(RefPtr<Document> document, Page const& page, RefPtr<Gfx::Bitmap> bitmap)
     : m_document(document)
     , m_bitmap(bitmap)
     , m_page(page)
@@ -87,15 +33,25 @@ Renderer::Renderer(RefPtr<Document> document, const Page& page, RefPtr<Gfx::Bitm
 {
     auto media_box = m_page.media_box;
 
-    m_userspace_matrix.translate(media_box.lower_left_x, media_box.lower_left_y);
+    Gfx::AffineTransform userspace_matrix;
+    userspace_matrix.translate(media_box.lower_left_x, media_box.lower_left_y);
 
     float width = media_box.upper_right_x - media_box.lower_left_x;
     float height = media_box.upper_right_y - media_box.lower_left_y;
     float scale_x = static_cast<float>(bitmap->width()) / width;
     float scale_y = static_cast<float>(bitmap->height()) / height;
-    m_userspace_matrix.scale(scale_x, scale_y);
+    userspace_matrix.scale(scale_x, scale_y);
 
-    m_graphics_state_stack.append(GraphicsState { m_userspace_matrix });
+    // PDF user-space coordinate y axis increases from bottom to top, so we have to
+    // insert a horizontal reflection about the vertical midpoint into our transformation
+    // matrix
+
+    static Gfx::AffineTransform horizontal_reflection_matrix = { 1, 0, 0, -1, 0, 0 };
+
+    userspace_matrix.multiply(horizontal_reflection_matrix);
+    userspace_matrix.translate(0.0f, -height);
+
+    m_graphics_state_stack.append(GraphicsState { userspace_matrix });
 
     m_bitmap->fill(Gfx::Color::NamedColor::White);
 }
@@ -127,7 +83,7 @@ void Renderer::render()
         handle_command(command);
 }
 
-void Renderer::handle_command(const Command& command)
+void Renderer::handle_command(Command const& command)
 {
     switch (command.command_type()) {
 #define V(name, snake_name, symbol)               \
@@ -200,7 +156,15 @@ RENDERER_HANDLER(set_dash_pattern)
 
 RENDERER_TODO(set_color_rendering_intent);
 RENDERER_TODO(set_flatness_tolerance);
-RENDERER_TODO(set_graphics_state_from_dict);
+
+RENDERER_HANDLER(set_graphics_state_from_dict)
+{
+    VERIFY(m_page.resources->contains(CommonNames::ExtGState));
+    auto dict_name = m_document->resolve_to<NameObject>(args[0])->name();
+    auto ext_gstate_dict = m_page.resources->get_dict(m_document, CommonNames::ExtGState);
+    auto target_dict = ext_gstate_dict->get_dict(m_document, dict_name);
+    set_graphics_state_from_dict(target_dict);
+}
 
 RENDERER_HANDLER(path_move)
 {
@@ -363,13 +327,9 @@ RENDERER_HANDLER(text_set_font)
         font_variant = "Regular";
     }
 
-    auto specified_font_size = args[1].to_float();
-    // FIXME: This scaling should occur when drawing the glyph rather than selecting the font.
-    // This should be removed when the painter supports arbitrary bitmap scaling.
-    specified_font_size *= state().ctm.x_scale();
+    text_state().font_size = args[1].to_float();
+    text_state().font_variant = font_variant;
 
-    text_state().font = Gfx::FontDatabase::the().get("Liberation Serif", font_variant, static_cast<int>(specified_font_size));
-    VERIFY(text_state().font);
     m_text_rendering_matrix_is_dirty = true;
 }
 
@@ -431,70 +391,88 @@ RENDERER_HANDLER(text_next_line_show_string)
 }
 
 RENDERER_TODO(text_next_line_show_string_set_spacing);
-RENDERER_TODO(text_show_string_array);
+
+RENDERER_HANDLER(text_show_string_array)
+{
+    auto elements = m_document->resolve_to<ArrayObject>(args[0])->elements();
+    float next_shift = 0.0f;
+
+    for (auto& element : elements) {
+        if (element.is_number()) {
+            next_shift = element.to_float();
+        } else {
+            VERIFY(element.is_object());
+            auto obj = element.as_object();
+            VERIFY(obj->is_string());
+            auto str = object_cast<StringObject>(obj)->string();
+            show_text(str, next_shift);
+        }
+    }
+}
+
 RENDERER_TODO(type3_font_set_glyph_width);
 RENDERER_TODO(type3_font_set_glyph_width_and_bbox);
 
 RENDERER_HANDLER(set_stroking_space)
 {
     state().stroke_color_space = get_color_space(args[0]);
-    state().stroke_color = ColorSpace::default_color_for_color_space(state().stroke_color_space);
+    VERIFY(state().stroke_color_space);
 }
 
 RENDERER_HANDLER(set_painting_space)
 {
     state().paint_color_space = get_color_space(args[0]);
-    state().paint_color = ColorSpace::default_color_for_color_space(state().paint_color_space);
+    VERIFY(state().paint_color_space);
 }
 
 RENDERER_HANDLER(set_stroking_color)
 {
-    state().stroke_color = ColorSpace::color_from_parameters(state().stroke_color_space, args);
+    state().stroke_color = state().stroke_color_space->color(args);
 }
 
 RENDERER_TODO(set_stroking_color_extended);
 
 RENDERER_HANDLER(set_painting_color)
 {
-    state().paint_color = ColorSpace::color_from_parameters(state().paint_color_space, args);
+    state().paint_color = state().paint_color_space->color(args);
 }
 
 RENDERER_TODO(set_painting_color_extended);
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_gray)
 {
-    state().stroke_color_space = ColorSpace::Type::DeviceGray;
-    state().stroke_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceGray, args);
+    state().stroke_color_space = DeviceGrayColorSpace::the();
+    state().stroke_color = state().stroke_color_space->color(args);
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_gray)
 {
-    state().paint_color_space = ColorSpace::Type::DeviceGray;
-    state().paint_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceGray, args);
+    state().paint_color_space = DeviceGrayColorSpace::the();
+    state().paint_color = state().paint_color_space->color(args);
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_rgb)
 {
-    state().stroke_color_space = ColorSpace::Type::DeviceRGB;
-    state().stroke_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceRGB, args);
+    state().stroke_color_space = DeviceRGBColorSpace::the();
+    state().stroke_color = state().stroke_color_space->color(args);
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_rgb)
 {
-    state().paint_color_space = ColorSpace::Type::DeviceRGB;
-    state().paint_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceRGB, args);
+    state().paint_color_space = DeviceRGBColorSpace::the();
+    state().paint_color = state().paint_color_space->color(args);
 }
 
 RENDERER_HANDLER(set_stroking_color_and_space_to_cmyk)
 {
-    state().stroke_color_space = ColorSpace::Type::DeviceCMYK;
-    state().stroke_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceCMYK, args);
+    state().stroke_color_space = DeviceCMYKColorSpace::the();
+    state().stroke_color = state().stroke_color_space->color(args);
 }
 
 RENDERER_HANDLER(set_painting_color_and_space_to_cmyk)
 {
-    state().paint_color_space = ColorSpace::Type::DeviceCMYK;
-    state().paint_color = ColorSpace::color_from_parameters(ColorSpace::Type::DeviceCMYK, args);
+    state().paint_color_space = DeviceCMYKColorSpace::the();
+    state().paint_color = state().paint_color_space->color(args);
 }
 
 RENDERER_TODO(shade);
@@ -529,24 +507,49 @@ Gfx::Rect<T> Renderer::map(Gfx::Rect<T> rect) const
     return state().ctm.map(rect);
 }
 
-void Renderer::show_text(const String& string, int shift)
+void Renderer::set_graphics_state_from_dict(NonnullRefPtr<DictObject> dict)
+{
+    if (dict->contains(CommonNames::LW))
+        handle_set_line_width({ dict->get_value(CommonNames::LW) });
+
+    if (dict->contains(CommonNames::LC))
+        handle_set_line_cap({ dict->get_value(CommonNames::LC) });
+
+    if (dict->contains(CommonNames::LJ))
+        handle_set_line_join({ dict->get_value(CommonNames::LJ) });
+
+    if (dict->contains(CommonNames::ML))
+        handle_set_miter_limit({ dict->get_value(CommonNames::ML) });
+
+    if (dict->contains(CommonNames::D))
+        handle_set_dash_pattern(dict->get_array(m_document, CommonNames::D)->elements());
+
+    if (dict->contains(CommonNames::FL))
+        handle_set_flatness_tolerance({ dict->get_value(CommonNames::FL) });
+}
+
+void Renderer::show_text(String const& string, float shift)
 {
     auto utf = Utf8View(string);
-    auto& font = text_state().font;
+
+    auto& text_rendering_matrix = calculate_text_rendering_matrix();
+
+    auto font_size = static_cast<int>(text_rendering_matrix.x_scale() * text_state().font_size);
+    auto font = Gfx::FontDatabase::the().get(text_state().font_family, text_state().font_variant, font_size);
+    VERIFY(font);
+
+    auto glyph_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
+    // Account for the reversed font baseline
+    glyph_position.set_y(glyph_position.y() - static_cast<float>(font->baseline()));
+
+    auto original_position = glyph_position;
 
     for (auto code_point : utf) {
-        // FIXME: Don't calculate this matrix for every character
-        auto& text_rendering_matrix = calculate_text_rendering_matrix();
-
-        auto text_position = text_rendering_matrix.map(Gfx::FloatPoint { 0.0f, 0.0f });
-        text_position.set_y(static_cast<float>(m_bitmap->height()) - text_position.y());
-
-        // FIXME: For some reason, the space character in LiberationSerif is drawn as an exclamation point
         if (code_point != 0x20)
-            m_painter.draw_glyph(text_position.to_type<int>(), code_point, *text_state().font, state().paint_color);
+            m_painter.draw_glyph(glyph_position.to_type<int>(), code_point, *font, state().paint_color);
 
         auto glyph_width = static_cast<float>(font->glyph_width(code_point));
-        auto tx = (glyph_width - static_cast<float>(shift) / 1000.0f);
+        auto tx = (glyph_width - shift / 1000.0f);
         tx += text_state().character_spacing;
 
         if (code_point == ' ')
@@ -554,24 +557,50 @@ void Renderer::show_text(const String& string, int shift)
 
         tx *= text_state().horizontal_scaling;
 
-        m_text_rendering_matrix_is_dirty = true;
-        m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, tx, 0).multiply(m_text_matrix);
+        glyph_position += { tx, 0.0f };
     }
+
+    // Update text matrix
+    auto delta_x = glyph_position.x() - original_position.x();
+    m_text_rendering_matrix_is_dirty = true;
+    m_text_matrix = Gfx::AffineTransform(1, 0, 0, 1, delta_x, 0).multiply(m_text_matrix);
 }
 
-ColorSpace::Type Renderer::get_color_space(const Value& value)
+RefPtr<ColorSpace> Renderer::get_color_space(Value const& value)
 {
     auto name = object_cast<NameObject>(value.as_object())->name();
-    auto color_space_opt = ColorSpace::color_space_from_string(name);
-    if (!color_space_opt.has_value()) {
-        // The name is probably a key into the resource dictionary
-        TODO();
-    }
 
-    return color_space_opt.value();
+    // Simple color spaces with no parameters, which can be specified directly
+    if (name == CommonNames::DeviceGray)
+        return DeviceGrayColorSpace::the();
+    if (name == CommonNames::DeviceRGB)
+        return DeviceRGBColorSpace::the();
+    if (name == CommonNames::DeviceCMYK)
+        return DeviceCMYKColorSpace::the();
+    if (name == CommonNames::Pattern)
+        TODO();
+
+    // The color space is a complex color space with parameters that resides in
+    // the resource dictionary
+    auto color_space_resource_dict = m_page.resources->get_dict(m_document, CommonNames::ColorSpace);
+    if (!color_space_resource_dict->contains(name))
+        TODO();
+
+    auto color_space_array = color_space_resource_dict->get_array(m_document, name);
+    name = color_space_array->get_name_at(m_document, 0)->name();
+
+    Vector<Value> parameters;
+    parameters.ensure_capacity(color_space_array->size() - 1);
+    for (size_t i = 1; i < color_space_array->size(); i++)
+        parameters.unchecked_append(color_space_array->at(i));
+
+    if (name == CommonNames::CalRGB)
+        return CalRGBColorSpace::create(m_document, move(parameters));
+
+    TODO();
 }
 
-const Gfx::AffineTransform& Renderer::calculate_text_rendering_matrix()
+Gfx::AffineTransform const& Renderer::calculate_text_rendering_matrix()
 {
     if (m_text_rendering_matrix_is_dirty) {
         m_text_rendering_matrix = Gfx::AffineTransform(

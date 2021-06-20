@@ -473,7 +473,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             if (!parse_bracket_expression(sub_ops, length) || !sub_ops.size())
                 return set_error(Error::InvalidBracketContent);
 
-            bytecode.append(move(sub_ops));
+            bytecode.extend(move(sub_ops));
 
             consume(TokenType::RightBracket, Error::MismatchingBracket);
             should_parse_repetition_symbol = true;
@@ -559,7 +559,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             if (!parse_root(capture_group_bytecode, length))
                 return set_error(Error::InvalidPattern);
 
-            bytecode.append(move(capture_group_bytecode));
+            bytecode.extend(move(capture_group_bytecode));
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
@@ -586,7 +586,7 @@ ALWAYS_INLINE bool PosixExtendedParser::parse_sub_expression(ByteCode& stack, si
             return set_error(Error::InvalidRepetitionMarker);
     }
 
-    stack.append(move(bytecode));
+    stack.extend(move(bytecode));
     match_length_minimum += length;
 
     return true;
@@ -623,7 +623,7 @@ bool PosixExtendedParser::parse_root(ByteCode& stack, size_t& match_length_minim
     if (bytecode_left.is_empty())
         set_error(Error::EmptySubExpression);
 
-    stack.append(move(bytecode_left));
+    stack.extend(move(bytecode_left));
     match_length_minimum = match_length_minimum_left;
     return !has_error();
 }
@@ -648,7 +648,7 @@ bool ECMA262Parser::parse_internal(ByteCode& stack, size_t& match_length_minimum
         if (!res)
             return false;
 
-        stack.append(new_stack);
+        stack.extend(new_stack);
         match_length_minimum = new_match_length;
         return res;
     }
@@ -668,7 +668,7 @@ bool ECMA262Parser::parse_disjunction(ByteCode& stack, size_t& match_length_mini
         return false;
 
     if (!match(TokenType::Pipe)) {
-        stack.append(left_alternative_stack);
+        stack.extend(left_alternative_stack);
         match_length_minimum = left_alternative_min_length;
         return alt_ok;
     }
@@ -726,7 +726,7 @@ bool ECMA262Parser::parse_term(ByteCode& stack, size_t& match_length_minimum, bo
     if (!parse_with_quantifier())
         return false;
 
-    stack.append(move(atom_stack));
+    stack.extend(move(atom_stack));
     match_length_minimum += minimum_atom_length;
     return true;
 }
@@ -783,7 +783,7 @@ bool ECMA262Parser::parse_assertion(ByteCode& stack, [[maybe_unused]] size_t& ma
         if (m_should_use_browser_extended_grammar) {
             if (!unicode) {
                 if (parse_quantifiable_assertion(assertion_stack, match_length_minimum, named)) {
-                    stack.append(move(assertion_stack));
+                    stack.extend(move(assertion_stack));
                     return true;
                 }
             }
@@ -1656,7 +1656,7 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
 
             consume(TokenType::RightParen, Error::MismatchingParen);
 
-            stack.append(move(noncapture_group_bytecode));
+            stack.extend(move(noncapture_group_bytecode));
             match_length_minimum += length;
             return true;
         }
@@ -1680,7 +1680,7 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
 
             stack.insert_bytecode_group_capture_left(name);
             stack.insert_bytecode_group_capture_left(group_index);
-            stack.append(move(capture_group_bytecode));
+            stack.extend(move(capture_group_bytecode));
             stack.insert_bytecode_group_capture_right(name);
             stack.insert_bytecode_group_capture_right(group_index);
 
@@ -1704,7 +1704,7 @@ bool ECMA262Parser::parse_capture_group(ByteCode& stack, size_t& match_length_mi
     if (!parse_disjunction(capture_group_bytecode, length, unicode, named))
         return set_error(Error::InvalidPattern);
 
-    stack.append(move(capture_group_bytecode));
+    stack.extend(move(capture_group_bytecode));
 
     m_parser_state.capture_group_minimum_lengths.set(group_index, length);
 

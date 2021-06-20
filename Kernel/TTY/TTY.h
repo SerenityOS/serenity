@@ -53,12 +53,12 @@ public:
     virtual mode_t required_mode() const override { return 0620; }
 
 protected:
-    virtual ssize_t on_tty_write(const UserOrKernelBuffer&, ssize_t) = 0;
+    virtual KResultOr<size_t> on_tty_write(const UserOrKernelBuffer&, size_t) = 0;
     void set_size(unsigned short columns, unsigned short rows);
 
     TTY(unsigned major, unsigned minor);
     void emit(u8, bool do_evaluate_block_conditions = false);
-    virtual void echo(u8) = 0;
+    void echo_with_processing(u8);
 
     bool can_do_backspace() const;
     void do_backspace();
@@ -80,7 +80,8 @@ protected:
 private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
-    inline void echo_with_processing(u8);
+
+    virtual void echo(u8) = 0;
 
     template<typename Functor>
     void process_output(u8, Functor put_char);

@@ -160,7 +160,7 @@ public:
     void reset()
     {
         m_code_table.clear();
-        m_code_table.append(m_original_code_table);
+        m_code_table.extend(m_original_code_table);
         m_code_size = m_original_code_size;
         m_table_capacity = pow(2, m_code_size);
         m_output.clear();

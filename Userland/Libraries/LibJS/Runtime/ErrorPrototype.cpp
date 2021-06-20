@@ -29,7 +29,7 @@ void ErrorPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.toString, to_string, 0, attr);
 }
 
-// 20.5.3.4 Error.prototype.toString, https://tc39.es/ecma262/#sec-error.prototype.tostring
+// 20.5.3.4 Error.prototype.toString ( ), https://tc39.es/ecma262/#sec-error.prototype.tostring
 JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
 {
     auto this_value = vm.this_value(global_object);
@@ -81,7 +81,7 @@ JS_DEFINE_NATIVE_FUNCTION(ErrorPrototype::to_string)
         define_property(vm.names.message, js_string(vm, ""), attr);                      \
     }
 
-JS_ENUMERATE_ERROR_SUBCLASSES
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 
 }

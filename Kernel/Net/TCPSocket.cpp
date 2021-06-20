@@ -12,6 +12,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/NetworkingManagement.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
@@ -357,7 +358,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
 KResult TCPSocket::protocol_bind()
 {
     if (has_specific_local_address() && !m_adapter) {
-        m_adapter = NetworkAdapter::from_ipv4_address(local_address());
+        m_adapter = NetworkingManagement::the().from_ipv4_address(local_address());
         if (!m_adapter)
             return EADDRNOTAVAIL;
     }
@@ -581,6 +582,9 @@ void TCPSocket::retransmit_packets()
 bool TCPSocket::can_write(const FileDescription& file_description, size_t size) const
 {
     if (!IPv4Socket::can_write(file_description, size))
+        return false;
+
+    if (m_state == State::SynSent || m_state == State::SynReceived)
         return false;
 
     if (!file_description.is_blocking())

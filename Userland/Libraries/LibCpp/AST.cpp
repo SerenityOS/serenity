@@ -63,7 +63,7 @@ NonnullRefPtrVector<Declaration> FunctionDeclaration::declarations() const
     }
 
     if (m_definition)
-        declarations.append(m_definition->declarations());
+        declarations.extend(m_definition->declarations());
 
     return declarations;
 }
@@ -131,7 +131,7 @@ NonnullRefPtrVector<Declaration> FunctionDefinition::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& statement : m_statements) {
-        declarations.append(statement.declarations());
+        declarations.extend(statement.declarations());
     }
     return declarations;
 }
@@ -308,17 +308,6 @@ NonnullRefPtrVector<Declaration> StructOrClassDeclaration::declarations() const
     return declarations;
 }
 
-void MemberDeclaration::dump(FILE* output, size_t indent) const
-{
-    ASTNode::dump(output, indent);
-    m_type->dump(output, indent + 1);
-    print_indent(output, indent + 1);
-    outln(output, "{}", m_name);
-    if (m_initial_value) {
-        m_initial_value->dump(output, indent + 2);
-    }
-}
-
 void UnaryExpression::dump(FILE* output, size_t indent) const
 {
     ASTNode::dump(output, indent);
@@ -411,9 +400,9 @@ NonnullRefPtrVector<Declaration> ForStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     if (m_init)
-        declarations.append(m_init->declarations());
+        declarations.extend(m_init->declarations());
     if (m_body)
-        declarations.append(m_body->declarations());
+        declarations.extend(m_body->declarations());
     return declarations;
 }
 
@@ -421,7 +410,7 @@ NonnullRefPtrVector<Declaration> BlockStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     for (auto& statement : m_statements) {
-        declarations.append(statement.declarations());
+        declarations.extend(statement.declarations());
     }
     return declarations;
 }
@@ -450,11 +439,11 @@ NonnullRefPtrVector<Declaration> IfStatement::declarations() const
 {
     NonnullRefPtrVector<Declaration> declarations;
     if (m_predicate)
-        declarations.append(m_predicate->declarations());
+        declarations.extend(m_predicate->declarations());
     if (m_then)
-        declarations.append(m_then->declarations());
+        declarations.extend(m_then->declarations());
     if (m_else)
-        declarations.append(m_else->declarations());
+        declarations.extend(m_else->declarations());
     return declarations;
 }
 
@@ -542,6 +531,38 @@ void CStyleCastExpression::dump(FILE* output, size_t indent) const
         m_type->dump(output, indent + 1);
     if (m_expression)
         m_expression->dump(output, indent + 1);
+}
+
+void Constructor::dump(FILE* output, size_t indent) const
+{
+    print_indent(output, indent);
+    outln(output, "C'tor");
+    print_indent(output, indent + 1);
+    outln(output, "(");
+    for (const auto& arg : m_parameters) {
+        arg.dump(output, indent + 1);
+    }
+    print_indent(output, indent + 1);
+    outln(output, ")");
+    if (!m_definition.is_null()) {
+        m_definition->dump(output, indent + 1);
+    }
+}
+
+void Destructor::dump(FILE* output, size_t indent) const
+{
+    print_indent(output, indent);
+    outln(output, "D'tor");
+    print_indent(output, indent + 1);
+    outln(output, "(");
+    for (const auto& arg : m_parameters) {
+        arg.dump(output, indent + 1);
+    }
+    print_indent(output, indent + 1);
+    outln(output, ")");
+    if (!m_definition.is_null()) {
+        m_definition->dump(output, indent + 1);
+    }
 }
 
 }

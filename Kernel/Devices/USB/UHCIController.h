@@ -11,6 +11,8 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Devices/USB/UHCIDescriptorTypes.h>
+#include <Kernel/Devices/USB/USBDevice.h>
+#include <Kernel/Devices/USB/USBTransfer.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Device.h>
 #include <Kernel/Process.h>
@@ -24,7 +26,10 @@ class UHCIController final : public PCI::Device {
 public:
     static void detect();
     static UHCIController& the();
+
     virtual ~UHCIController() override;
+
+    virtual const char* purpose() const override { return "UHCI"; }
 
     void reset();
     void stop();
@@ -32,6 +37,11 @@ public:
     void spawn_port_proc();
 
     void do_debug_transfer();
+
+    KResultOr<size_t> submit_control_transfer(Transfer& transfer);
+
+    RefPtr<USB::Device> const get_device_at_port(USB::Device::PortNumber);
+    RefPtr<USB::Device> const get_device_from_address(u8 device_address);
 
 private:
     UHCIController(PCI::Address, PCI::ID);
@@ -54,10 +64,15 @@ private:
     void write_portsc1(u16 value) { m_io_base.offset(0x10).out(value); }
     void write_portsc2(u16 value) { m_io_base.offset(0x12).out(value); }
 
-    virtual void handle_irq(const RegisterState&) override;
+    virtual bool handle_irq(const RegisterState&) override;
 
     void create_structures();
     void setup_schedule();
+    size_t poll_transfer_queue(QueueHead& transfer_queue);
+
+    TransferDescriptor* create_transfer_descriptor(Pipe& pipe, PacketID direction, size_t data_len);
+    KResult create_chain(Pipe& pipe, PacketID direction, Ptr32<u8>& buffer_address, size_t max_size, size_t transfer_size, TransferDescriptor** td_chain, TransferDescriptor** last_td);
+    void free_descriptor_chain(TransferDescriptor* first_descriptor);
 
     QueueHead* allocate_queue_head() const;
     TransferDescriptor* allocate_transfer_descriptor() const;
@@ -78,7 +93,8 @@ private:
     OwnPtr<Region> m_framelist;
     OwnPtr<Region> m_qh_pool;
     OwnPtr<Region> m_td_pool;
-    OwnPtr<Region> m_td_buffer_region;
+
+    Array<RefPtr<USB::Device>, 2> m_devices; // Devices connected to the root ports (of which there are two)
 };
 
 }

@@ -39,7 +39,7 @@ void BrushTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
         return;
 
     draw_line(layer.bitmap(), m_editor->color_for(event), m_last_position, event.position());
-    layer.did_modify_bitmap(*m_editor->image());
+    layer.did_modify_bitmap();
     m_last_position = event.position();
     m_was_drawing = true;
 }
@@ -52,7 +52,7 @@ void BrushTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&)
     }
 }
 
-void BrushTool::draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& point)
+void BrushTool::draw_point(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& point)
 {
     for (int y = point.y() - m_size; y < point.y() + m_size; y++) {
         for (int x = point.x() - m_size; x < point.x() + m_size; x++) {
@@ -70,7 +70,7 @@ void BrushTool::draw_point(Gfx::Bitmap& bitmap, const Gfx::Color& color, const G
     }
 }
 
-void BrushTool::draw_line(Gfx::Bitmap& bitmap, const Gfx::Color& color, const Gfx::IntPoint& start, const Gfx::IntPoint& end)
+void BrushTool::draw_line(Gfx::Bitmap& bitmap, Gfx::Color const& color, Gfx::IntPoint const& start, Gfx::IntPoint const& end)
 {
     int length_x = end.x() - start.x();
     int length_y = end.y() - start.y();

@@ -23,13 +23,16 @@ public:
     virtual void on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent&) { }
     virtual void on_context_menu(Layer&, GUI::ContextMenuEvent&) { }
     virtual void on_tool_button_contextmenu(GUI::ContextMenuEvent&) { }
-    virtual void on_second_paint(const Layer&, GUI::PaintEvent&) { }
+    virtual void on_second_paint(Layer const&, GUI::PaintEvent&) { }
     virtual void on_keydown(GUI::KeyEvent&) { }
     virtual void on_keyup(GUI::KeyEvent&) { }
     virtual GUI::Widget* get_properties_widget() { return nullptr; }
 
     void clear() { m_editor = nullptr; }
     void setup(ImageEditor&);
+
+    ImageEditor const* editor() const { return m_editor; }
+    ImageEditor* editor() { return m_editor; }
 
     GUI::Action* action() { return m_action; }
     void set_action(GUI::Action*);

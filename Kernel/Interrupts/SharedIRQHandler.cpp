@@ -42,6 +42,14 @@ bool SharedIRQHandler::eoi()
     return true;
 }
 
+void SharedIRQHandler::enumerate_handlers(Function<void(GenericInterruptHandler&)>& callback)
+{
+    for (auto* handler : m_handlers) {
+        VERIFY(handler);
+        callback(*handler);
+    }
+}
+
 SharedIRQHandler::SharedIRQHandler(u8 irq)
     : GenericInterruptHandler(irq)
     , m_responsible_irq_controller(InterruptManagement::the().get_responsible_irq_controller(irq))
@@ -55,7 +63,7 @@ SharedIRQHandler::~SharedIRQHandler()
     disable_interrupt_vector();
 }
 
-void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
+bool SharedIRQHandler::handle_interrupt(const RegisterState& regs)
 {
     VERIFY_INTERRUPTS_DISABLED();
 
@@ -63,16 +71,19 @@ void SharedIRQHandler::handle_interrupt(const RegisterState& regs)
         dbgln("Interrupt @ {}", interrupt_number());
         dbgln("Interrupt Handlers registered - {}", m_handlers.size());
     }
-
     int i = 0;
+    bool was_handled = false;
     for (auto* handler : m_handlers) {
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {}", i, interrupt_number());
         VERIFY(handler != nullptr);
-        handler->increment_invoking_counter();
-        handler->handle_interrupt(regs);
+        if (handler->handle_interrupt(regs)) {
+            handler->increment_invoking_counter();
+            was_handled = true;
+        }
         dbgln_if(INTERRUPT_DEBUG, "Going for Interrupt Handling @ {}, Shared Interrupt {} - End", i, interrupt_number());
         i++;
     }
+    return was_handled;
 }
 
 void SharedIRQHandler::enable_interrupt_vector()

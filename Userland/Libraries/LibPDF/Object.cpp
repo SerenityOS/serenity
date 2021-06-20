@@ -15,7 +15,7 @@ NonnullRefPtr<Object> ArrayObject::get_object_at(Document* document, size_t inde
     return document->resolve_to<Object>(m_elements[index]);
 }
 
-NonnullRefPtr<Object> DictObject::get_object(Document* document, const FlyString& key) const
+NonnullRefPtr<Object> DictObject::get_object(Document* document, FlyString const& key) const
 {
     return document->resolve_to<Object>(get_value(key));
 }
@@ -26,7 +26,7 @@ NonnullRefPtr<Object> DictObject::get_object(Document* document, const FlyString
         return document->resolve_to<class_name>(m_elements[index]);                                        \
     }                                                                                                      \
                                                                                                            \
-    NonnullRefPtr<class_name> DictObject::get_##snake_name(Document* document, const FlyString& key) const \
+    NonnullRefPtr<class_name> DictObject::get_##snake_name(Document* document, FlyString const& key) const \
     {                                                                                                      \
         return document->resolve_to<class_name>(get(key).value());                                         \
     }

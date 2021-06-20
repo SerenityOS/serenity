@@ -101,7 +101,7 @@ SheetGlobalObject::~SheetGlobalObject()
 {
 }
 
-JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver, bool without_side_effects) const
+JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receiver, JS::AllowSideEffects allow_side_effects) const
 {
     if (name.is_string()) {
         if (name.as_string() == "value") {
@@ -117,7 +117,7 @@ JS::Value SheetGlobalObject::get(const JS::PropertyName& name, JS::Value receive
         }
     }
 
-    return GlobalObject::get(name, receiver, without_side_effects);
+    return GlobalObject::get(name, receiver, allow_side_effects);
 }
 
 bool SheetGlobalObject::put(const JS::PropertyName& name, JS::Value value, JS::Value receiver)
@@ -263,7 +263,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::parse_cell_name)
     if (!position.has_value())
         return JS::js_undefined();
 
-    auto object = JS::Object::create_empty(global_object);
+    auto object = JS::Object::create(global_object, global_object.object_prototype());
     object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.value().column)));
     object->put("row", JS::Value((unsigned)position.value().row));
 
@@ -293,7 +293,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::current_cell_position)
 
     auto position = current_cell->position();
 
-    auto object = JS::Object::create_empty(global_object);
+    auto object = JS::Object::create(global_object, global_object.object_prototype());
     object->put("column", JS::js_string(vm, sheet_object->m_sheet.column(position.column)));
     object->put("row", JS::Value((unsigned)position.row));
 
@@ -377,7 +377,7 @@ JS_DEFINE_NATIVE_FUNCTION(SheetGlobalObject::column_arithmetic)
 }
 
 WorkbookObject::WorkbookObject(Workbook& workbook)
-    : JS::Object(*JS::Object::create_empty(workbook.global_object()))
+    : JS::Object(*JS::Object::create(workbook.global_object(), workbook.global_object().object_prototype()))
     , m_workbook(workbook)
 {
 }

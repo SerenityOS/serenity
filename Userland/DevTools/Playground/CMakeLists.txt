@@ -1,3 +1,9 @@
+serenity_component(
+    Playground
+    RECOMMENDED
+    TARGETS Playground
+)
+
 set(SOURCES
     main.cpp
     GMLAutocompleteProvider.cpp

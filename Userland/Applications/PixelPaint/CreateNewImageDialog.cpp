@@ -64,8 +64,11 @@ CreateNewImageDialog::CreateNewImageDialog(GUI::Window* parent_window)
         m_image_size.set_height(value);
     };
 
-    width_spinbox.set_range(0, 16384);
-    height_spinbox.set_range(0, 16384);
+    width_spinbox.set_range(1, 16384);
+    height_spinbox.set_range(1, 16384);
+
+    width_spinbox.set_value(480);
+    height_spinbox.set_value(360);
 }
 
 }

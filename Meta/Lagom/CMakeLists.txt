@@ -69,6 +69,7 @@ file(GLOB LIBMARKDOWN_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibMar
 file(GLOB LIBX86_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibX86/*.cpp")
 file(GLOB LIBJS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*.cpp")
 file(GLOB LIBJS_SUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*.cpp")
+file(GLOB LIBJS_SUBSUBDIR_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibJS/*/*/*.cpp")
 file(GLOB LIBCOMPRESS_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCompress/*.cpp")
 file(GLOB LIBCOMPRESS_TESTS CONFIGURE_DEPENDS "../../Tests/LibCompress/*.cpp")
 file(GLOB LIBCRYPTO_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibCrypto/*.cpp")
@@ -84,14 +85,16 @@ file(GLOB LIBSQL_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibSQL/*.cp
 list(REMOVE_ITEM LIBSQL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/../../Userland/Libraries/LibSQL/SyntaxHighlighter.cpp")
 file(GLOB LIBSQL_TEST_SOURCES CONFIGURE_DEPENDS "../../Tests/LibSQL/*.cpp")
 file(GLOB LIBWASM_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibWasm/*/*.cpp")
-
+file(GLOB LIBIMAP_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibIMAP/*.cpp")
 file(GLOB LIBTEST_SOURCES CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/*.cpp")
 list(FILTER LIBTEST_SOURCES EXCLUDE REGEX ".*Main.cpp$")
 file(GLOB LIBTEST_MAIN CONFIGURE_DEPENDS "../../Userland/Libraries/LibTest/TestMain.cpp")
+file(GLOB LIBCRYPTO_TESTS CONFIGURE_DEPENDS "../../Tests/LibCrypto/*.cpp")
+file(GLOB LIBTLS_TESTS CONFIGURE_DEPENDS "../../Tests/LibTLS/*.cpp")
 
 set(LAGOM_REGEX_SOURCES ${LIBREGEX_LIBC_SOURCES} ${LIBREGEX_SOURCES})
 set(LAGOM_CORE_SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
-set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES}  ${LIBWASM_SOURCES})
+set(LAGOM_MORE_SOURCES ${LIBARCHIVE_SOURCES} ${LIBAUDIO_SOURCES} ${LIBELF_SOURCES} ${LIBIPC_SOURCES} ${LIBLINE_SOURCES} ${LIBJS_SOURCES} ${LIBJS_SUBDIR_SOURCES} ${LIBJS_SUBSUBDIR_SOURCES} ${LIBX86_SOURCES} ${LIBCRYPTO_SOURCES} ${LIBCOMPRESS_SOURCES} ${LIBCRYPTO_SUBDIR_SOURCES} ${LIBCRYPTO_SUBSUBDIR_SOURCES} ${LIBTLS_SOURCES} ${LIBTTF_SOURCES} ${LIBTEXTCODEC_SOURCES} ${LIBMARKDOWN_SOURCES} ${LIBGEMINI_SOURCES} ${LIBGFX_SOURCES} ${LIBGUI_GML_SOURCES} ${LIBHTTP_SOURCES} ${LAGOM_REGEX_SOURCES} ${SHELL_SOURCES} ${LIBSQL_SOURCES} ${LIBWASM_SOURCES} ${LIBIMAP_SOURCES})
 set(LAGOM_TEST_SOURCES ${LIBTEST_SOURCES})
 
 # FIXME: This is a hack, because the lagom stuff can be build individually or
@@ -199,6 +202,28 @@ if (BUILD_LAGOM)
         target_link_libraries(wasm_lagom Lagom)
         target_link_libraries(wasm_lagom stdc++)
 
+        foreach(source ${LIBCRYPTO_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBCRYPTO_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom Lagom LagomTest)
+            add_test(
+                    NAME ${name}_lagom
+                    COMMAND ${name}_lagom
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        endforeach()
+
+        foreach(source ${LIBTLS_TESTS})
+            get_filename_component(name ${source} NAME_WE)
+            add_executable(${name}_lagom ${source} ${LIBTLS_SOURCES} ${LIBTEST_MAIN})
+            target_link_libraries(${name}_lagom Lagom LagomTest)
+            add_test(
+                    NAME ${name}_lagom
+                    COMMAND ${name}_lagom
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/../../Tests/LibTLS
+            )
+        endforeach()
+
         foreach(TEST_PATH ${SHELL_TESTS})
             get_filename_component(TEST_NAME ${TEST_PATH} NAME_WE)
             add_test(
@@ -258,6 +283,8 @@ if (BUILD_LAGOM)
             )
         endforeach()
     endif()
+
+    install(TARGETS Lagom LagomCore)
 endif()
 
 if (ENABLE_FUZZER_SANITIZER OR ENABLE_OSS_FUZZ)

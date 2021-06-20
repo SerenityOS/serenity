@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
+ * Copyright (c) 2020-2021, Itamar S. <itamar8910@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -12,7 +12,7 @@
 
 namespace Debug::Dwarf {
 
-DIE::DIE(const CompilationUnit& unit, u32 offset)
+DIE::DIE(CompilationUnit const& unit, u32 offset, Optional<u32> parent_offset)
     : m_compilation_unit(unit)
     , m_offset(offset)
 {
@@ -37,9 +37,10 @@ DIE::DIE(const CompilationUnit& unit, u32 offset)
         }
     }
     m_size = stream.offset() - m_offset;
+    m_parent_offset = parent_offset;
 }
 
-Optional<AttributeValue> DIE::get_attribute(const Attribute& attribute) const
+Optional<AttributeValue> DIE::get_attribute(Attribute const& attribute) const
 {
     InputMemoryStream stream { m_compilation_unit.dwarf_info().debug_info_data() };
     stream.discard_or_error(m_data_offset);
@@ -56,18 +57,18 @@ Optional<AttributeValue> DIE::get_attribute(const Attribute& attribute) const
     return {};
 }
 
-void DIE::for_each_child(Function<void(const DIE& child)> callback) const
+void DIE::for_each_child(Function<void(DIE const& child)> callback) const
 {
     if (!m_has_children)
         return;
 
-    NonnullOwnPtr<DIE> current_child = make<DIE>(m_compilation_unit, m_offset + m_size);
+    NonnullOwnPtr<DIE> current_child = make<DIE>(m_compilation_unit, m_offset + m_size, m_offset);
     while (true) {
         callback(*current_child);
         if (current_child->is_null())
             break;
         if (!current_child->has_children()) {
-            current_child = make<DIE>(m_compilation_unit, current_child->offset() + current_child->size());
+            current_child = make<DIE>(m_compilation_unit, current_child->offset() + current_child->size(), m_offset);
             continue;
         }
 
@@ -80,18 +81,12 @@ void DIE::for_each_child(Function<void(const DIE& child)> callback) const
         if (!sibling.has_value()) {
             // NOTE: According to the spec, the compiler doesn't have to supply the sibling information.
             // When it doesn't, we have to recursively iterate the current child's children to find where they end
-            current_child->for_each_child([&](const DIE& sub_child) {
+            current_child->for_each_child([&](DIE const& sub_child) {
                 sibling_offset = sub_child.offset() + sub_child.size();
             });
         }
-        current_child = make<DIE>(m_compilation_unit, sibling_offset);
+        current_child = make<DIE>(m_compilation_unit, sibling_offset, m_offset);
     }
-}
-
-DIE DIE::get_die_at_offset(u32 offset) const
-{
-    VERIFY(offset >= m_compilation_unit.offset() && offset < m_compilation_unit.offset() + m_compilation_unit.size());
-    return DIE(m_compilation_unit, offset);
 }
 
 }

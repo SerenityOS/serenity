@@ -19,6 +19,7 @@
 #include <LibCore/ArgsParser.h>
 #include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
+#include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
@@ -26,6 +27,8 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/JSONObject.h>
 #include <LibJS/Runtime/TypedArray.h>
+#include <LibJS/Runtime/WeakMap.h>
+#include <LibJS/Runtime/WeakSet.h>
 #include <LibTest/Results.h>
 #include <fcntl.h>
 #include <sys/time.h>
@@ -103,6 +106,8 @@ static consteval size_t __testjs_last() { return (AK::Detail::IntegralConstant<s
 static constexpr auto TOP_LEVEL_TEST_NAME = "__$$TOP_LEVEL$$__";
 extern RefPtr<JS::VM> g_vm;
 extern bool g_collect_on_every_allocation;
+extern bool g_run_bytecode;
+extern bool g_dump_bytecode;
 extern String g_currently_running_test;
 extern String g_test_glob;
 struct FunctionWithLength {
@@ -384,12 +389,44 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
         m_test_program = result.value();
     }
 
-    interpreter->run(interpreter->global_object(), *m_test_program);
+    if (g_run_bytecode) {
+        auto unit = JS::Bytecode::Generator::generate(*m_test_program);
+        if (g_dump_bytecode) {
+            for (auto& block : unit.basic_blocks)
+                block.dump(unit);
+            if (!unit.string_table->is_empty()) {
+                outln();
+                unit.string_table->dump();
+            }
+        }
+
+        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object());
+        bytecode_interpreter.run(unit);
+    } else {
+        interpreter->run(interpreter->global_object(), *m_test_program);
+    }
+
+    VERIFY(!g_vm->exception());
 
     auto file_program = parse_file(test_path);
     if (file_program.is_error())
         return { test_path, file_program.error() };
-    interpreter->run(interpreter->global_object(), *file_program.value());
+    if (g_run_bytecode) {
+        auto unit = JS::Bytecode::Generator::generate(*file_program.value());
+        if (g_dump_bytecode) {
+            for (auto& block : unit.basic_blocks)
+                block.dump(unit);
+            if (!unit.string_table->is_empty()) {
+                outln();
+                unit.string_table->dump();
+            }
+        }
+
+        JS::Bytecode::Interpreter bytecode_interpreter(interpreter->global_object());
+        bytecode_interpreter.run(unit);
+    } else {
+        interpreter->run(interpreter->global_object(), *file_program.value());
+    }
 
     if (g_vm->exception())
         g_vm->clear_exception();

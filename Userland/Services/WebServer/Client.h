@@ -19,18 +19,18 @@ public:
     void start();
 
 private:
-    Client(NonnullRefPtr<Core::TCPSocket>, const String&, Core::Object* parent);
+    Client(NonnullRefPtr<Core::TCPSocket>, Core::Object* parent);
 
     void handle_request(ReadonlyBytes);
-    void send_response(InputStream&, const HTTP::HttpRequest&, const String& content_type);
-    void send_redirect(StringView redirect, const HTTP::HttpRequest& request);
-    void send_error_response(unsigned code, const StringView& message, const HTTP::HttpRequest&);
+    void send_response(InputStream&, HTTP::HttpRequest const&, String const& content_type);
+    void send_redirect(StringView redirect, HTTP::HttpRequest const&);
+    void send_error_response(unsigned code, HTTP::HttpRequest const&, Vector<String> const& headers = {});
     void die();
-    void log_response(unsigned code, const HTTP::HttpRequest&);
-    void handle_directory_listing(const String& requested_path, const String& real_path, const HTTP::HttpRequest&);
+    void log_response(unsigned code, HTTP::HttpRequest const&);
+    void handle_directory_listing(String const& requested_path, String const& real_path, HTTP::HttpRequest const&);
+    bool verify_credentials(Vector<HTTP::HttpRequest::Header> const&);
 
     NonnullRefPtr<Core::TCPSocket> m_socket;
-    String m_root_path;
 };
 
 }

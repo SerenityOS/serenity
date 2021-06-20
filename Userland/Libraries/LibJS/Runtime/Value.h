@@ -11,9 +11,13 @@
 #include <AK/BitCast.h>
 #include <AK/Format.h>
 #include <AK/Forward.h>
+#include <AK/Function.h>
+#include <AK/Result.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibJS/Forward.h>
+#include <LibJS/Runtime/BigInt.h>
+#include <LibJS/Runtime/PrimitiveString.h>
 #include <math.h>
 
 // 2 ** 53 - 1
@@ -59,10 +63,10 @@ public:
     bool is_native_property() const { return m_type == Type::NativeProperty; }
     bool is_nullish() const { return is_null() || is_undefined(); }
     bool is_cell() const { return is_string() || is_accessor() || is_object() || is_bigint() || is_symbol() || is_native_property(); }
-    bool is_array() const;
+    bool is_array(GlobalObject&) const;
     bool is_function() const;
     bool is_constructor() const;
-    bool is_regexp(GlobalObject& global_object) const;
+    bool is_regexp(GlobalObject&) const;
 
     bool is_nan() const { return is_number() && __builtin_isnan(as_double()); }
     bool is_infinity() const { return is_number() && __builtin_isinf(as_double()); }
@@ -70,7 +74,7 @@ public:
     bool is_negative_infinity() const { return is_number() && __builtin_isinf_sign(as_double()) < 0; }
     bool is_positive_zero() const { return is_number() && bit_cast<u64>(as_double()) == 0; }
     bool is_negative_zero() const { return is_number() && bit_cast<u64>(as_double()) == NEGATIVE_ZERO_BITS; }
-    bool is_integer() const { return is_finite_number() && (i32)as_double() == as_double(); }
+    bool is_integral_number() const { return is_finite_number() && static_cast<i64>(as_double()) == as_double(); }
     bool is_finite_number() const
     {
         if (!is_number())
@@ -253,6 +257,8 @@ public:
     i32 as_i32() const;
     u32 as_u32() const;
 
+    u64 encoded() const { return m_value.encoded; }
+
     String to_string(GlobalObject&, bool legacy_null_to_empty_string = false) const;
     PrimitiveString* to_primitive_string(GlobalObject&);
     Value to_primitive(GlobalObject&, PreferredType preferred_type = PreferredType::Default) const;
@@ -260,6 +266,8 @@ public:
     Value to_numeric(GlobalObject&) const;
     Value to_number(GlobalObject&) const;
     BigInt* to_bigint(GlobalObject&) const;
+    i64 to_bigint_int64(GlobalObject&) const;
+    u64 to_bigint_uint64(GlobalObject&) const;
     double to_double(GlobalObject&) const;
     StringOrSymbol to_property_key(GlobalObject&) const;
     i32 to_i32(GlobalObject& global_object) const
@@ -269,6 +277,11 @@ public:
         return to_i32_slow_case(global_object);
     }
     u32 to_u32(GlobalObject&) const;
+    i16 to_i16(GlobalObject&) const;
+    u16 to_u16(GlobalObject&) const;
+    i8 to_i8(GlobalObject&) const;
+    u8 to_u8(GlobalObject&) const;
+    u8 to_u8_clamp(GlobalObject&) const;
     size_t to_length(GlobalObject&) const;
     size_t to_index(GlobalObject&) const;
     double to_integer_or_infinity(GlobalObject&) const;
@@ -301,7 +314,9 @@ private:
         Accessor* as_accessor;
         BigInt* as_bigint;
         NativeProperty* as_native_property;
-    } m_value;
+
+        u64 encoded;
+    } m_value { .encoded = 0 };
 };
 
 inline Value js_undefined()
@@ -364,10 +379,27 @@ bool same_value(Value lhs, Value rhs);
 bool same_value_zero(Value lhs, Value rhs);
 bool same_value_non_numeric(Value lhs, Value rhs);
 TriState abstract_relation(GlobalObject&, bool left_first, Value lhs, Value rhs);
-Function* get_method(GlobalObject& global_object, Value, const PropertyName&);
-size_t length_of_array_like(GlobalObject&, const Object&);
-Object* species_constructor(GlobalObject&, const Object&, Object& default_constructor);
-Value require_object_coercible(GlobalObject&, Value);
+
+struct ValueTraits : public Traits<Value> {
+    static unsigned hash(Value value)
+    {
+        VERIFY(!value.is_empty());
+        if (value.is_string())
+            return value.as_string().string().hash();
+
+        if (value.is_bigint())
+            return value.as_bigint().big_integer().hash();
+
+        if (value.is_negative_zero())
+            value = Value(0);
+
+        return u64_hash(value.encoded()); // FIXME: Is this the best way to hash pointers, doubles & ints?
+    }
+    static bool equals(const Value a, const Value b)
+    {
+        return same_value_zero(a, b);
+    }
+};
 
 }
 

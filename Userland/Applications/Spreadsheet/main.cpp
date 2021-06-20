@@ -22,17 +22,12 @@
 
 int main(int argc, char* argv[])
 {
-    if (pledge("stdio recvfd sendfd rpath unix cpath wpath thread", nullptr) < 0) {
+    if (pledge("stdio recvfd sendfd rpath fattr unix cpath wpath thread", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     auto app = GUI::Application::construct(argc, argv);
-
-    if (pledge("stdio recvfd sendfd thread rpath cpath wpath unix", nullptr) < 0) {
-        perror("pledge");
-        return 1;
-    }
 
     const char* filename = nullptr;
 

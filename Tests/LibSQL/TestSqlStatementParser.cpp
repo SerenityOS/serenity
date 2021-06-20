@@ -738,3 +738,10 @@ TEST_CASE(common_table_expression)
     validate("WITH table (column1, column2) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column1", "column2" } } } });
     validate("WITH RECURSIVE table AS (SELECT * FROM table) DELETE FROM table;", { true, { { "table", {} } } });
 }
+
+TEST_CASE(nested_subquery_limit)
+{
+    auto subquery = String::formatted("{:(^{}}table{:)^{}}", "", SQL::Limits::maximum_subquery_depth - 1, "", SQL::Limits::maximum_subquery_depth - 1);
+    EXPECT(!parse(String::formatted("SELECT * FROM {};", subquery)).is_error());
+    EXPECT(parse(String::formatted("SELECT * FROM ({});", subquery)).is_error());
+}

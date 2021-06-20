@@ -19,12 +19,14 @@ class SharedIRQHandler final : public GenericInterruptHandler {
 public:
     static void initialize(u8 interrupt_number);
     virtual ~SharedIRQHandler();
-    virtual void handle_interrupt(const RegisterState& regs) override;
+    virtual bool handle_interrupt(const RegisterState& regs) override;
 
     void register_handler(GenericInterruptHandler&);
     void unregister_handler(GenericInterruptHandler&);
 
     virtual bool eoi() override;
+
+    void enumerate_handlers(Function<void(GenericInterruptHandler&)>&);
 
     virtual size_t sharing_devices_count() const override { return m_handlers.size(); }
     virtual bool is_shared_handler() const override { return true; }

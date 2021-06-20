@@ -189,12 +189,18 @@ public:
         double value,
         u8 base = 10,
         bool upper_case = false,
+        bool zero_pad = false,
         Align align = Align::Right,
         size_t min_width = 0,
         size_t precision = 6,
         char fill = ' ',
         SignMode sign_mode = SignMode::OnlyIfNeeded);
 #endif
+
+    void put_hexdump(
+        ReadonlyBytes,
+        size_t width,
+        char fill = ' ');
 
     const StringBuilder& builder() const
     {
@@ -261,6 +267,7 @@ struct StandardFormatter {
         Float,
         Hexfloat,
         HexfloatUppercase,
+        HexDump,
     };
 
     FormatBuilder::Align m_align = FormatBuilder::Align::Default;
@@ -296,6 +303,27 @@ struct Formatter<StringView> : StandardFormatter {
 
     void format(FormatBuilder&, StringView value);
 };
+
+template<>
+struct Formatter<ReadonlyBytes> : Formatter<StringView> {
+    void format(FormatBuilder& builder, ReadonlyBytes const& value)
+    {
+        if (m_mode == Mode::Pointer) {
+            Formatter<FlatPtr> formatter { *this };
+            formatter.format(builder, reinterpret_cast<FlatPtr>(value.data()));
+        } else if (m_mode == Mode::Default || m_mode == Mode::HexDump) {
+            m_mode = Mode::HexDump;
+            Formatter<StringView>::format(builder, value);
+        } else {
+            Formatter<StringView>::format(builder, value);
+        }
+    }
+};
+
+template<>
+struct Formatter<Bytes> : Formatter<ReadonlyBytes> {
+};
+
 template<>
 struct Formatter<const char*> : Formatter<StringView> {
     void format(FormatBuilder& builder, const char* value)

@@ -19,15 +19,6 @@ Date* Date::create(GlobalObject& global_object, Core::DateTime datetime, i16 mil
     return global_object.heap().allocate<Date>(global_object, datetime, milliseconds, is_invalid, *global_object.date_prototype());
 }
 
-Date* Date::now(GlobalObject& global_object)
-{
-    struct timeval tv;
-    gettimeofday(&tv, nullptr);
-    auto datetime = Core::DateTime::now();
-    auto milliseconds = static_cast<i16>(tv.tv_usec / 1000);
-    return create(global_object, datetime, milliseconds);
-}
-
 Date::Date(Core::DateTime datetime, i16 milliseconds, bool is_invalid, Object& prototype)
     : Object(prototype)
     , m_datetime(datetime)

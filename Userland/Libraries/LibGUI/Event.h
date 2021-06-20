@@ -52,7 +52,7 @@ public:
         DragMove,
         Drop,
         ThemeChange,
-        ScreenRectChange,
+        ScreenRectsChange,
         ActionEnter,
         ActionLeave,
 
@@ -392,18 +392,21 @@ public:
     }
 };
 
-class ScreenRectChangeEvent final : public Event {
+class ScreenRectsChangeEvent final : public Event {
 public:
-    explicit ScreenRectChangeEvent(const Gfx::IntRect& rect)
-        : Event(Type::ScreenRectChange)
-        , m_rect(rect)
+    explicit ScreenRectsChangeEvent(const Vector<Gfx::IntRect, 4>& rects, size_t main_screen_index)
+        : Event(Type::ScreenRectsChange)
+        , m_rects(rects)
+        , m_main_screen_index(main_screen_index)
     {
     }
 
-    const Gfx::IntRect& rect() const { return m_rect; }
+    const Vector<Gfx::IntRect, 4>& rects() const { return m_rects; }
+    size_t main_screen_index() const { return m_main_screen_index; }
 
 private:
-    Gfx::IntRect m_rect;
+    Vector<Gfx::IntRect, 4> m_rects;
+    size_t m_main_screen_index;
 };
 
 class FocusEvent final : public Event {

@@ -16,21 +16,9 @@
 #include <LibGfx/Point.h>
 #include <LibGfx/Rect.h>
 #include <LibGfx/Size.h>
+#include <LibPDF/ColorSpace.h>
 #include <LibPDF/Document.h>
 #include <LibPDF/Object.h>
-
-#define ENUMERATE_COLOR_SPACES(V) \
-    V(DeviceGray)                 \
-    V(DeviceRGB)                  \
-    V(DeviceCMYK)                 \
-    V(CalGray)                    \
-    V(CalRGB)                     \
-    V(Lab)                        \
-    V(ICCBased)                   \
-    V(Indexed)                    \
-    V(Pattern)                    \
-    V(Separation)                 \
-    V(DeviceN)
 
 namespace PDF {
 
@@ -67,29 +55,18 @@ struct TextState {
     float word_spacing { 5.0f };
     float horizontal_scaling { 1.0f };
     float leading { 0.0f };
-    RefPtr<Gfx::Font> font;
+    FlyString font_family { "Liberation Serif" };
+    String font_variant { "Regular" };
+    float font_size { 12.0f };
     TextRenderingMode rendering_mode { TextRenderingMode::Fill };
     float rise { 0.0f };
     bool knockout { true };
 };
 
-class ColorSpace {
-public:
-    enum class Type {
-#define ENUM(name) name,
-        ENUMERATE_COLOR_SPACES(ENUM)
-#undef ENUM
-    };
-
-    static Optional<ColorSpace::Type> color_space_from_string(const FlyString&);
-    static Color default_color_for_color_space(ColorSpace::Type);
-    static Color color_from_parameters(ColorSpace::Type color_space, const Vector<Value>& args);
-};
-
 struct GraphicsState {
     Gfx::AffineTransform ctm;
-    ColorSpace::Type stroke_color_space { ColorSpace::Type::DeviceGray };
-    ColorSpace::Type paint_color_space { ColorSpace::Type::DeviceGray };
+    RefPtr<ColorSpace> stroke_color_space { DeviceGrayColorSpace::the() };
+    RefPtr<ColorSpace> paint_color_space { DeviceGrayColorSpace::the() };
     Gfx::Color stroke_color { Gfx::Color::NamedColor::Black };
     Gfx::Color paint_color { Gfx::Color::NamedColor::Black };
     float line_width { 1.0f };
@@ -102,28 +79,29 @@ struct GraphicsState {
 
 class Renderer {
 public:
-    static void render(Document&, const Page&, RefPtr<Gfx::Bitmap>);
+    static void render(Document&, Page const&, RefPtr<Gfx::Bitmap>);
 
 private:
-    Renderer(RefPtr<Document>, const Page&, RefPtr<Gfx::Bitmap>);
+    Renderer(RefPtr<Document>, Page const&, RefPtr<Gfx::Bitmap>);
 
     void render();
 
-    void handle_command(const Command&);
+    void handle_command(Command const&);
 #define V(name, snake_name, symbol) \
-    void handle_##snake_name(const Vector<Value>& args);
+    void handle_##snake_name(Vector<Value> const& args);
     ENUMERATE_COMMANDS(V)
 #undef V
-    void handle_text_next_line_show_string(const Vector<Value>& args);
-    void handle_text_next_line_show_string_set_spacing(const Vector<Value>& args);
+    void handle_text_next_line_show_string(Vector<Value> const& args);
+    void handle_text_next_line_show_string_set_spacing(Vector<Value> const& args);
 
+    void set_graphics_state_from_dict(NonnullRefPtr<DictObject>);
     // shift is the manual advance given in the TJ command array
-    void show_text(const String&, int shift = 0);
-    ColorSpace::Type get_color_space(const Value&);
+    void show_text(String const&, float shift = 0.0f);
+    RefPtr<ColorSpace> get_color_space(Value const&);
 
-    ALWAYS_INLINE const GraphicsState& state() const { return m_graphics_state_stack.last(); }
+    ALWAYS_INLINE GraphicsState const& state() const { return m_graphics_state_stack.last(); }
     ALWAYS_INLINE GraphicsState& state() { return m_graphics_state_stack.last(); }
-    ALWAYS_INLINE const TextState& text_state() const { return state().text_state; }
+    ALWAYS_INLINE TextState const& text_state() const { return state().text_state; }
     ALWAYS_INLINE TextState& text_state() { return state().text_state; }
 
     template<typename T>
@@ -135,18 +113,17 @@ private:
     template<typename T>
     ALWAYS_INLINE Gfx::Rect<T> map(Gfx::Rect<T>) const;
 
-    const Gfx::AffineTransform& calculate_text_rendering_matrix();
+    Gfx::AffineTransform const& calculate_text_rendering_matrix();
 
     RefPtr<Document> m_document;
     RefPtr<Gfx::Bitmap> m_bitmap;
-    const Page& m_page;
+    Page const& m_page;
     Gfx::Painter m_painter;
 
     Gfx::Path m_current_path;
     Vector<GraphicsState> m_graphics_state_stack;
     Gfx::AffineTransform m_text_matrix;
     Gfx::AffineTransform m_text_line_matrix;
-    Gfx::AffineTransform m_userspace_matrix;
 
     bool m_text_rendering_matrix_is_dirty { true };
     Gfx::AffineTransform m_text_rendering_matrix;
@@ -158,7 +135,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::LineCapStyle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::LineCapStyle& style)
+    void format(FormatBuilder& builder, PDF::LineCapStyle const& style)
     {
         switch (style) {
         case PDF::LineCapStyle::ButtCap:
@@ -176,7 +153,7 @@ struct Formatter<PDF::LineCapStyle> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::LineJoinStyle> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::LineJoinStyle& style)
+    void format(FormatBuilder& builder, PDF::LineJoinStyle const& style)
     {
         switch (style) {
         case PDF::LineJoinStyle::Miter:
@@ -194,7 +171,7 @@ struct Formatter<PDF::LineJoinStyle> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::LineDashPattern& pattern)
+    void format(FormatBuilder& format_builder, PDF::LineDashPattern const& pattern)
     {
         StringBuilder builder;
         builder.append("[");
@@ -214,7 +191,7 @@ struct Formatter<PDF::LineDashPattern> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::TextRenderingMode> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::TextRenderingMode& style)
+    void format(FormatBuilder& builder, PDF::TextRenderingMode const& style)
     {
         switch (style) {
         case PDF::TextRenderingMode::Fill:
@@ -247,7 +224,7 @@ struct Formatter<PDF::TextRenderingMode> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::TextState> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::TextState& state)
+    void format(FormatBuilder& format_builder, PDF::TextState const& state)
     {
         StringBuilder builder;
         builder.append("TextState {\n");
@@ -255,7 +232,9 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
         builder.appendff("    word_spacing={}\n", state.word_spacing);
         builder.appendff("    horizontal_scaling={}\n", state.horizontal_scaling);
         builder.appendff("    leading={}\n", state.leading);
-        builder.appendff("    font={}\n", state.font ? state.font->name() : "<null>");
+        builder.appendff("    font_family={}\n", state.font_family);
+        builder.appendff("    font_variant={}\n", state.font_variant);
+        builder.appendff("    font_size={}\n", state.font_size);
         builder.appendff("    rendering_mode={}\n", state.rendering_mode);
         builder.appendff("    rise={}\n", state.rise);
         builder.appendff("    knockout={}\n", state.knockout);
@@ -266,7 +245,7 @@ struct Formatter<PDF::TextState> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::GraphicsState> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::GraphicsState& state)
+    void format(FormatBuilder& format_builder, PDF::GraphicsState const& state)
     {
         StringBuilder builder;
         builder.append("GraphicsState {\n");

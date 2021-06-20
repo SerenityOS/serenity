@@ -71,7 +71,7 @@ void OutOfProcessWebView::create_client()
 
     client().async_update_system_theme(Gfx::current_system_theme_buffer());
     client().async_update_system_fonts(Gfx::FontDatabase::default_font_query(), Gfx::FontDatabase::fixed_width_font_query());
-    client().async_update_screen_rect(GUI::Desktop::the().rect());
+    client().async_update_screen_rects(GUI::Desktop::the().rects(), GUI::Desktop::the().main_screen_index());
 }
 
 void OutOfProcessWebView::load(const URL& url)
@@ -192,9 +192,9 @@ void OutOfProcessWebView::theme_change_event(GUI::ThemeChangeEvent& event)
     request_repaint();
 }
 
-void OutOfProcessWebView::screen_rect_change_event(GUI::ScreenRectChangeEvent& event)
+void OutOfProcessWebView::screen_rects_change_event(GUI::ScreenRectsChangeEvent& event)
 {
-    client().async_update_screen_rect(event.rect());
+    client().async_update_screen_rects(event.rects(), event.main_screen_index());
 }
 
 void OutOfProcessWebView::notify_server_did_paint(Badge<WebContentClient>, i32 bitmap_id)

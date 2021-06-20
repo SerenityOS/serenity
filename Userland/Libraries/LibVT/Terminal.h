@@ -45,7 +45,7 @@ public:
     virtual void set_window_title(const StringView&) = 0;
     virtual void set_window_progress(int value, int max) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
-    virtual void terminal_history_changed() = 0;
+    virtual void terminal_history_changed(int delta) = 0;
     virtual void emit(const u8*, size_t) = 0;
     virtual void set_cursor_style(CursorStyle) = 0;
 };
@@ -74,12 +74,18 @@ public:
 
     void set_cursor(unsigned row, unsigned column, bool skip_debug = false);
 
+    void clear_including_history()
+    {
+        clear_history();
+        clear();
+    }
+
 #ifndef KERNEL
     void clear();
-    void clear_including_history();
+    void clear_history();
 #else
     virtual void clear() = 0;
-    virtual void clear_including_history() = 0;
+    virtual void clear_history() = 0;
 #endif
 
 #ifndef KERNEL
@@ -135,10 +141,11 @@ public:
     void set_max_history_size(size_t value)
     {
         if (value == 0) {
+            auto previous_size = m_history.size();
             m_max_history_lines = 0;
             m_history_start = 0;
             m_history.clear();
-            m_client.terminal_history_changed();
+            m_client.terminal_history_changed(-previous_size);
             return;
         }
 
@@ -152,7 +159,7 @@ public:
             }
             m_history = move(new_history);
             m_history_start = 0;
-            m_client.terminal_history_changed();
+            m_client.terminal_history_changed(value - existing_line_count);
         }
         m_max_history_lines = value;
     }
@@ -170,6 +177,11 @@ public:
     {
         return m_needs_bracketed_paste;
     };
+
+    bool is_within_scroll_region(u16 line) const
+    {
+        return line >= m_scroll_region_top && line <= m_scroll_region_bottom;
+    }
 
 protected:
     // ^EscapeSequenceExecutor
@@ -199,18 +211,23 @@ protected:
     };
 
     void carriage_return();
-#ifndef KERNEL
-    void scroll_up();
-    void scroll_down();
+    inline void scroll_up(size_t count = 1);
+    inline void scroll_down(size_t count = 1);
     void linefeed();
+#ifndef KERNEL
+    void scroll_up(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_down(u16 region_top, u16 region_bottom, size_t count);
+    void scroll_left(u16 row, u16 column, size_t count);
+    void scroll_right(u16 row, u16 column, size_t count);
     void put_character_at(unsigned row, unsigned column, u32 ch);
-    void set_window_title(const String&);
+    void clear_in_line(u16 row, u16 first_column, u16 last_column);
 #else
-    virtual void scroll_up() = 0;
-    virtual void scroll_down() = 0;
-    virtual void linefeed() = 0;
+    virtual void scroll_up(u16 region_top, u16 region_bottom, size_t count) = 0;
+    virtual void scroll_down(u16 region_top, u16 region_bottom, size_t count) = 0;
+    virtual void scroll_left(u16 row, u16 column, size_t count) = 0;
+    virtual void scroll_right(u16 row, u16 column, size_t count) = 0;
     virtual void put_character_at(unsigned row, unsigned column, u32 ch) = 0;
-    virtual void set_window_title(const String&) = 0;
+    virtual void clear_in_line(u16 row, u16 first_column, u16 last_column) = 0;
 #endif
 
     void unimplemented_control_code(u8);
@@ -288,18 +305,20 @@ protected:
     // RI - Reverse Index (move up)
     void RI();
 
+    // DECBI - Back Index
+    void DECBI();
+
+    // DECFI - Forward Index
+    void DECFI();
+
     // DSR - Device Status Reports
     void DSR(Parameters);
 
     // DECSCUSR - Set Cursor Style
     void DECSCUSR(Parameters);
 
-#ifndef KERNEL
     // ICH - Insert Character
     void ICH(Parameters);
-#else
-    virtual void ICH(Parameters) = 0;
-#endif
 
     // SU - Scroll Up (called "Pan Down" in VT510)
     void SU(Parameters);
@@ -307,18 +326,14 @@ protected:
     // SD - Scroll Down (called "Pan Up" in VT510)
     void SD(Parameters);
 
-#ifndef KERNEL
     // IL - Insert Line
     void IL(Parameters);
+
     // DCH - Delete Character
     void DCH(Parameters);
+
     // DL - Delete Line
     void DL(Parameters);
-#else
-    virtual void IL(Parameters) = 0;
-    virtual void DCH(Parameters) = 0;
-    virtual void DL(Parameters) = 0;
-#endif
 
     // CHA - Cursor Horizontal Absolute
     void CHA(Parameters);
@@ -343,6 +358,12 @@ protected:
 
     // FIXME: Find the right names for these.
     void XTERM_WM(Parameters);
+
+    // DECIC - Insert Column
+    void DECIC(Parameters);
+
+    // DECDC - Delete Column
+    void DECDC(Parameters);
 
 #ifndef KERNEL
     TerminalClient& m_client;

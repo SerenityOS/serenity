@@ -14,26 +14,7 @@ namespace GUI {
 Layout::Layout()
 {
     REGISTER_INT_PROPERTY("spacing", spacing, set_spacing);
-
-    register_property(
-        "margins",
-        [this] {
-            JsonObject margins_object;
-            margins_object.set("left", m_margins.left());
-            margins_object.set("right", m_margins.right());
-            margins_object.set("top", m_margins.top());
-            margins_object.set("bottom", m_margins.bottom());
-            return margins_object;
-        },
-        [this](auto value) {
-            if (!value.is_array() || value.as_array().size() != 4)
-                return false;
-            int m[4];
-            for (size_t i = 0; i < 4; ++i)
-                m[i] = value.as_array().at(i).to_i32();
-            set_margins({ m[0], m[1], m[2], m[3] });
-            return true;
-        });
+    REGISTER_MARGINS_PROPERTY("margins", margins, set_margins);
 
     register_property("entries",
         [this] {

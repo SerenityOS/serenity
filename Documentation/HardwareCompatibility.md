@@ -4,6 +4,15 @@ A list of hardware known to be at least partly working with SerenityOS.
 
 Serenity boots to a graphical desktop on all machines unless otherwise noted.
 
+### Network Adapters
+
+| Model                                    | Notes                         |
+| ---------------------------------------- | ----------------------------- |
+| RTL8139                                  |                               |
+| Intel 82545XX                            | Also known as e1000           |
+| NE2000 compatible cards                  |                               |
+| Intel 82574L                             | Also known as e1000e          |
+| RTL8168/8111 (Variants B & E-VL)         | Other variants are WIP        |
 
 ### Desktop machines
 

@@ -6,9 +6,21 @@
 
 Ensure your CMake version is >= 3.16 with `cmake --version`. If your system doesn't provide a suitable version of CMake, you can download a binary release from the [CMake website](https://cmake.org/download).
 
+Ensure your [QEMU](https://www.qemu.org/) version is >= 5 with `qemu-system-i386 -version`. Otherwise, install it. You can also build it using the `Toolchain/BuildQemu.sh` script.
+
 Ensure your gcc version is >= 10 with `gcc --version`. Otherwise, install it.
 
-On Ubuntu it's in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
+Make sure you have all the dependencies installed (`ninja` is optional, but is faster in practice):
+
+#### Debian / Ubuntu
+
+```console
+sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync
+```
+
+##### GCC 10
+
+On Ubuntu gcc-10 is available in the repositories of 20.04 (Focal) and later - add the `ubuntu-toolchain-r/test` PPA if you're running an older version:
 
 ```console
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
@@ -35,12 +47,13 @@ sudo sed -i '$d' /etc/apt/sources.list
 sudo apt update
 ```
 
-Make sure you have all the dependencies installed (`ninja` is optional, but is faster in practice):
+##### QEMU 5
 
-#### Debian / Ubuntu
+QUEMU version 5 is available in Ubuntu 20.10. For earlier versions, you can build it using the `Toolchain/BuildQemu.sh` script.
+You may need the gtk+ 3.0 dev package:
 
 ```console
-sudo apt install build-essential cmake curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs ninja-build qemu-system-i386 qemu-utils ccache rsync
+sudo apt install libgtk-3-dev
 ```
 
 #### Fedora
@@ -257,6 +270,8 @@ There are some optional features that can be enabled during compilation that are
 - `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speedup compilation.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests
+- `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components.
+- `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
 

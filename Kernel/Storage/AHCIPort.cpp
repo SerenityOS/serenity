@@ -523,7 +523,7 @@ bool AHCIPort::access_device(AsyncBlockDeviceRequest::RequestType direction, u64
     // AHCI controllers do care about this field! QEMU doesn't care if we don't
     // set the correct CFL field in this register, real hardware will set an
     // handshake error bit in PxSERR register if CFL is incorrect.
-    command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | AHCI::CommandHeaderAttributes::C | (is_atapi_attached() ? AHCI::CommandHeaderAttributes::A : 0) | (direction == AsyncBlockDeviceRequest::RequestType::Write ? AHCI::CommandHeaderAttributes::W : 0);
+    command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | (is_atapi_attached() ? AHCI::CommandHeaderAttributes::A : 0) | (direction == AsyncBlockDeviceRequest::RequestType::Write ? AHCI::CommandHeaderAttributes::W : 0);
 
     dbgln_if(AHCI_DEBUG, "AHCI Port {}: CLE: ctba=0x{:08x}, ctbau=0x{:08x}, prdbc=0x{:08x}, prdtl=0x{:04x}, attributes=0x{:04x}", representative_port_index(), (u32)command_list_entries[unused_command_header.value()].ctba, (u32)command_list_entries[unused_command_header.value()].ctbau, (u32)command_list_entries[unused_command_header.value()].prdbc, (u16)command_list_entries[unused_command_header.value()].prdtl, (u16)command_list_entries[unused_command_header.value()].attributes);
 
@@ -609,7 +609,7 @@ bool AHCIPort::identify_device(ScopedSpinLock<SpinLock<u8>>& main_lock)
 
     // Note: we must set the correct Dword count in this register. Real hardware AHCI controllers do care about this field!
     // QEMU doesn't care if we don't set the correct CFL field in this register, real hardware will set an handshake error bit in PxSERR register.
-    command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P | AHCI::CommandHeaderAttributes::C;
+    command_list_entries[unused_command_header.value()].attributes = (size_t)FIS::DwordCount::RegisterHostToDevice | AHCI::CommandHeaderAttributes::P;
 
     auto command_table_region = MM.allocate_kernel_region(m_command_table_pages[unused_command_header.value()].paddr().page_base(), page_round_up(sizeof(AHCI::CommandTable)), "AHCI Command Table", Region::Access::Read | Region::Access::Write);
     auto& command_table = *(volatile AHCI::CommandTable*)command_table_region->vaddr().as_ptr();

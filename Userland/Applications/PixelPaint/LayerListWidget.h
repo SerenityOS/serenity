@@ -57,7 +57,7 @@ private:
 
     bool is_moving_gadget() const { return m_moving_gadget_index.has_value(); }
 
-    Optional<size_t> gadget_at(const Gfx::IntPoint&);
+    Optional<size_t> gadget_at(Gfx::IntPoint const&);
 
     Vector<Gadget> m_gadgets;
     RefPtr<Image> m_image;

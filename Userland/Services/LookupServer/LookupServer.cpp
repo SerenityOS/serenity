@@ -25,6 +25,8 @@
 namespace LookupServer {
 
 static LookupServer* s_the;
+// NOTE: This is the TTL we return for the hostname or answers from /etc/hosts.
+static constexpr u32 s_static_ttl = 86400;
 
 LookupServer& LookupServer::the()
 {
@@ -42,6 +44,29 @@ LookupServer::LookupServer()
     m_nameservers = config->read_entry("DNS", "Nameservers", "1.1.1.1,1.0.0.1").split(',');
 
     load_etc_hosts();
+
+    auto maybe_file_watcher = Core::FileWatcher::create();
+    // NOTE: If this happens during startup, something is very wrong.
+    if (maybe_file_watcher.is_error()) {
+        dbgln("Core::FileWatcher::create(): {}", maybe_file_watcher.error());
+        VERIFY_NOT_REACHED();
+    }
+    m_file_watcher = maybe_file_watcher.release_value();
+
+    m_file_watcher->on_change = [this](auto&) {
+        dbgln("Reloading '/etc/hosts' because it was changed.");
+        load_etc_hosts();
+    };
+
+    auto result = m_file_watcher->add_watch("/etc/hosts", Core::FileWatcherEvent::Type::ContentModified | Core::FileWatcherEvent::Type::Deleted);
+    // NOTE: If this happens during startup, something is very wrong.
+    if (result.is_error()) {
+        dbgln("Core::FileWatcher::add_watch(): {}", result.error());
+        VERIFY_NOT_REACHED();
+    } else if (!result.value()) {
+        dbgln("Core::FileWatcher::add_watch(): {}", result.value());
+        VERIFY_NOT_REACHED();
+    }
 
     if (config->read_bool_entry("DNS", "EnableServer")) {
         m_dns_server = DNSServer::construct(this);
@@ -66,51 +91,62 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
-    // The TTL we return for static data from /etc/hosts.
-    // The value here is 1 day.
-    static constexpr u32 static_ttl = 86400;
-
+    m_etc_hosts.clear();
     auto add_answer = [this](const DNSName& name, DNSRecordType record_type, String data) {
         auto it = m_etc_hosts.find(name);
         if (it == m_etc_hosts.end()) {
             m_etc_hosts.set(name, {});
             it = m_etc_hosts.find(name);
         }
-        it->value.empend(name, record_type, DNSRecordClass::IN, static_ttl, data, false);
+        it->value.empend(name, record_type, DNSRecordClass::IN, s_static_ttl, data, false);
     };
 
     auto file = Core::File::construct("/etc/hosts");
-    if (!file->open(Core::OpenMode::ReadOnly))
+    if (!file->open(Core::OpenMode::ReadOnly)) {
+        dbgln("Failed to open '/etc/hosts'");
         return;
+    }
+
+    u32 line_number = 0;
     while (!file->eof()) {
-        auto line = file->read_line(1024);
-        if (line.is_empty())
+        auto original_line = file->read_line(1024);
+        ++line_number;
+        if (original_line.is_empty())
             break;
-        auto fields = line.split('\t');
+        auto trimmed_line = original_line.view().trim_whitespace();
+        auto fields = trimmed_line.split_view('\t', false);
 
-        auto sections = fields[0].split('.');
-        IPv4Address addr {
-            (u8)atoi(sections[0].characters()),
-            (u8)atoi(sections[1].characters()),
-            (u8)atoi(sections[2].characters()),
-            (u8)atoi(sections[3].characters()),
-        };
-        auto raw_addr = addr.to_in_addr_t();
+        if (fields.size() < 2) {
+            dbgln("Failed to parse line {} from '/etc/hosts': '{}'", line_number, original_line);
+            continue;
+        }
 
-        DNSName name = fields[1];
+        if (fields.size() > 2)
+            dbgln("Line {} from '/etc/hosts' ('{}') has more than two parts, only the first two are used.", line_number, original_line);
+
+        auto maybe_address = IPv4Address::from_string(fields[0]);
+        if (!maybe_address.has_value()) {
+            dbgln("Failed to parse line {} from '/etc/hosts': '{}'", line_number, original_line);
+            continue;
+        }
+
+        auto raw_addr = maybe_address->to_in_addr_t();
+
+        DNSName name { fields[1] };
         add_answer(name, DNSRecordType::A, String { (const char*)&raw_addr, sizeof(raw_addr) });
 
-        IPv4Address reverse_addr {
-            (u8)atoi(sections[3].characters()),
-            (u8)atoi(sections[2].characters()),
-            (u8)atoi(sections[1].characters()),
-            (u8)atoi(sections[0].characters()),
-        };
         StringBuilder builder;
-        builder.append(reverse_addr.to_string());
+        builder.append(maybe_address->to_string_reversed());
         builder.append(".in-addr.arpa");
         add_answer(builder.to_string(), DNSRecordType::PTR, name.as_string());
     }
+}
+
+static String get_hostname()
+{
+    char buffer[HOST_NAME_MAX];
+    VERIFY(gethostname(buffer, sizeof(buffer)) == 0);
+    return buffer;
 }
 
 Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record_type)
@@ -130,7 +166,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
         answers.append(answer_with_original_case);
     };
 
-    // First, try local data.
+    // First, try /etc/hosts.
     if (auto local_answers = m_etc_hosts.get(name); local_answers.has_value()) {
         for (auto& answer : local_answers.value()) {
             if (answer.type() == record_type)
@@ -140,7 +176,17 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
             return answers;
     }
 
-    // Second, try our cache.
+    // Second, try the hostname.
+    // NOTE: We don't cache the hostname since it could change during runtime.
+    if (record_type == DNSRecordType::A && get_hostname() == name) {
+        IPv4Address address = { 127, 0, 0, 1 };
+        auto raw_address = address.to_in_addr_t();
+        DNSAnswer answer { name, DNSRecordType::A, DNSRecordClass::IN, s_static_ttl, String { (const char*)&raw_address, sizeof(raw_address) }, false };
+        answers.append(move(answer));
+        return answers;
+    }
+
+    // Third, try our cache.
     if (auto cached_answers = m_lookup_cache.get(name); cached_answers.has_value()) {
         for (auto& answer : cached_answers.value()) {
             // TODO: Actually remove expired answers from the cache.
@@ -153,7 +199,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
             return answers;
     }
 
-    // Look up .local names using mDNS instead of DNS nameservers.
+    // Fourth, look up .local names using mDNS instead of DNS nameservers.
     if (name.as_string().ends_with(".local")) {
         answers = m_mdns->lookup(name, record_type);
         for (auto& answer : answers)
@@ -161,7 +207,7 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
         return answers;
     }
 
-    // Third, ask the upstream nameservers.
+    // Fifth, ask the upstream nameservers.
     for (auto& nameserver : m_nameservers) {
         dbgln_if(LOOKUPSERVER_DEBUG, "Doing lookup using nameserver '{}'", nameserver);
         bool did_get_response = false;
@@ -183,6 +229,8 @@ Vector<DNSAnswer> LookupServer::lookup(const DNSName& name, DNSRecordType record
                 dbgln("Received response from '{}' but no result(s), trying next nameserver", nameserver);
         }
     }
+
+    // Sixth, fail.
     if (answers.is_empty()) {
         dbgln("Tried all nameservers but never got a response :(");
         return {};

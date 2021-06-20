@@ -83,13 +83,14 @@ RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_i
     return buffer;
 }
 
-void WavLoaderPlugin::seek(const int position)
+void WavLoaderPlugin::seek(const int sample_index)
 {
-    if (position < 0 || position > m_total_samples)
+    dbgln_if(AWAVLOADER_DEBUG, "seek sample_index {}", sample_index);
+    if (sample_index < 0 || sample_index >= m_total_samples)
         return;
 
-    m_loaded_samples = position;
-    size_t byte_position = position * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8);
+    m_loaded_samples = sample_index;
+    size_t byte_position = m_byte_offset_of_data_samples + sample_index * m_num_channels * (pcm_bits_per_sample(m_sample_format) / 8);
 
     // AK::InputStream does not define seek.
     if (m_file) {
@@ -99,18 +100,21 @@ void WavLoaderPlugin::seek(const int position)
     }
 }
 
+// Specification reference: http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
 bool WavLoaderPlugin::parse_header()
 {
     if (!m_stream)
         return false;
 
     bool ok = true;
+    size_t bytes_read = 0;
 
     auto read_u8 = [&]() -> u8 {
         u8 value;
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 1;
         return value;
     };
 
@@ -119,6 +123,7 @@ bool WavLoaderPlugin::parse_header()
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 2;
         return value;
     };
 
@@ -127,6 +132,7 @@ bool WavLoaderPlugin::parse_header()
         *m_stream >> value;
         if (m_stream->handle_any_error())
             ok = false;
+        bytes_read += 4;
         return value;
     };
 
@@ -144,7 +150,7 @@ bool WavLoaderPlugin::parse_header()
     CHECK_OK("RIFF header");
 
     u32 sz = read_u32();
-    ok = ok && sz < 1024 * 1024 * 1024; // arbitrary
+    ok = ok && sz < maximum_wav_size;
     CHECK_OK("File size");
 
     u32 wave = read_u32();
@@ -152,16 +158,16 @@ bool WavLoaderPlugin::parse_header()
     CHECK_OK("WAVE header");
 
     u32 fmt_id = read_u32();
-    ok = ok && fmt_id == 0x20746D66; // "FMT"
+    ok = ok && fmt_id == 0x20746D66; // "fmt "
     CHECK_OK("FMT header");
 
     u32 fmt_size = read_u32();
-    ok = ok && fmt_size == 16;
+    ok = ok && (fmt_size == 16 || fmt_size == 18 || fmt_size == 40);
     CHECK_OK("FMT size");
 
     u16 audio_format = read_u16();
     CHECK_OK("Audio format"); // incomplete read check
-    ok = ok && (audio_format == WAVE_FORMAT_PCM || audio_format == WAVE_FORMAT_IEEE_FLOAT);
+    ok = ok && (audio_format == WAVE_FORMAT_PCM || audio_format == WAVE_FORMAT_IEEE_FLOAT || audio_format == WAVE_FORMAT_EXTENSIBLE);
     CHECK_OK("Audio format PCM/Float"); // value check
 
     m_num_channels = read_u16();
@@ -179,6 +185,25 @@ bool WavLoaderPlugin::parse_header()
 
     u16 bits_per_sample = read_u16();
     CHECK_OK("Bits per sample"); // incomplete read check
+
+    if (audio_format == WAVE_FORMAT_EXTENSIBLE) {
+        ok = ok && (fmt_size == 40);
+        CHECK_OK("Extensible fmt size"); // value check
+
+        // Discard everything until the GUID.
+        // We've already read 16 bytes from the stream. The GUID starts in another 8 bytes.
+        read_u32();
+        read_u32();
+        CHECK_OK("Discard until GUID");
+
+        // Get the underlying audio format from the first two bytes of GUID
+        u16 guid_subformat = read_u16();
+        ok = ok && (guid_subformat == WAVE_FORMAT_PCM || guid_subformat == WAVE_FORMAT_IEEE_FLOAT);
+        CHECK_OK("GUID SubFormat");
+
+        audio_format = guid_subformat;
+    }
+
     if (audio_format == WAVE_FORMAT_PCM) {
         ok = ok && (bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
         CHECK_OK("Bits per sample (PCM)"); // value check
@@ -245,6 +270,7 @@ bool WavLoaderPlugin::parse_header()
         bytes_per_sample,
         m_total_samples);
 
+    m_byte_offset_of_data_samples = bytes_read;
     return true;
 }
 

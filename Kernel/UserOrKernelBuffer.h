@@ -44,7 +44,7 @@ public:
     [[nodiscard]] bool is_kernel_buffer() const;
     [[nodiscard]] const void* user_or_kernel_ptr() const { return m_buffer; }
 
-    [[nodiscard]] UserOrKernelBuffer offset(ssize_t offset) const
+    [[nodiscard]] UserOrKernelBuffer offset(size_t offset) const
     {
         if (!m_buffer)
             return *this;
@@ -97,14 +97,15 @@ public:
         size_t nwritten = 0;
         while (nwritten < len) {
             auto to_copy = min(sizeof(buffer), len - nwritten);
-            ssize_t copied = f(buffer, to_copy);
-            if (copied < 0)
-                return copied;
-            VERIFY((size_t)copied <= to_copy);
-            if (!write(buffer, nwritten, (size_t)copied))
+            KResultOr<size_t> copied_or_error = f(buffer, to_copy);
+            if (copied_or_error.is_error())
+                return copied_or_error.error();
+            auto copied = copied_or_error.value();
+            VERIFY(copied <= to_copy);
+            if (!write(buffer, nwritten, copied))
                 return EFAULT;
-            nwritten += (size_t)copied;
-            if ((size_t)copied < to_copy)
+            nwritten += copied;
+            if (copied < to_copy)
                 break;
         }
         return nwritten;
@@ -133,12 +134,13 @@ public:
             auto to_copy = min(sizeof(buffer), len - nread);
             if (!read(buffer, nread, to_copy))
                 return EFAULT;
-            ssize_t copied = f(buffer, to_copy);
-            if (copied < 0)
-                return copied;
-            VERIFY((size_t)copied <= to_copy);
-            nread += (size_t)copied;
-            if ((size_t)copied < to_copy)
+            KResultOr<size_t> copied_or_error = f(buffer, to_copy);
+            if (copied_or_error.is_error())
+                return copied_or_error.error();
+            auto copied = copied_or_error.value();
+            VERIFY(copied <= to_copy);
+            nread += copied;
+            if (copied < to_copy)
                 break;
         }
         return nread;

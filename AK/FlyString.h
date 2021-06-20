@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "AK/StringUtils.h"
 #include <AK/String.h>
 
 namespace AK {
@@ -26,6 +27,14 @@ public:
     FlyString(const char* string)
         : FlyString(static_cast<String>(string))
     {
+    }
+
+    static FlyString from_fly_impl(NonnullRefPtr<StringImpl> impl)
+    {
+        VERIFY(impl->is_fly());
+        FlyString string;
+        string.m_impl = move(impl);
+        return string;
     }
 
     FlyString& operator=(const FlyString& other)
@@ -65,9 +74,9 @@ public:
     FlyString to_lowercase() const;
 
     template<typename T = int>
-    Optional<T> to_int() const;
+    Optional<T> to_int(TrimWhitespace = TrimWhitespace::Yes) const;
     template<typename T = unsigned>
-    Optional<T> to_uint() const;
+    Optional<T> to_uint(TrimWhitespace = TrimWhitespace::Yes) const;
 
     bool equals_ignoring_case(const StringView&) const;
     bool starts_with(const StringView&, CaseSensitivity = CaseSensitivity::CaseSensitive) const;

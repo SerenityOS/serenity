@@ -25,20 +25,4 @@ void Instruction::destroy(Instruction& instruction)
 #undef __BYTECODE_OP
 }
 
-size_t Instruction::length() const
-{
-    if (type() == Type::Call)
-        return static_cast<Op::Call const&>(*this).length();
-
-#define __BYTECODE_OP(op) \
-    case Type::op:        \
-        return sizeof(Op::op);
-
-    switch (type()) {
-        ENUMERATE_BYTECODE_OPS(__BYTECODE_OP)
-    default:
-        VERIFY_NOT_REACHED();
-    }
-}
-
 }

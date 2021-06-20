@@ -103,7 +103,7 @@ void LayerListWidget::paint_event(GUI::PaintEvent& event)
         paint_gadget(m_gadgets[m_moving_gadget_index.value()]);
 }
 
-Optional<size_t> LayerListWidget::gadget_at(const Gfx::IntPoint& position)
+Optional<size_t> LayerListWidget::gadget_at(Gfx::IntPoint const& position)
 {
     for (size_t i = 0; i < m_gadgets.size(); ++i) {
         if (m_gadgets[i].rect.contains(position))

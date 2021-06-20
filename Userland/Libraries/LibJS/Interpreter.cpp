@@ -43,7 +43,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
 
     VM::InterpreterExecutionScope scope(*this);
 
-    vm.set_last_value({}, {});
+    vm.set_last_value(Badge<Interpreter> {}, {});
 
     CallFrame global_call_frame;
     global_call_frame.current_node = &program;
@@ -55,11 +55,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);
     VERIFY(!vm.exception());
-    program.execute(*this, global_object);
-
-    // Whatever the promise jobs or on_call_stack_emptied do should not affect the effective
-    // 'last value'.
-    auto last_value = vm.last_value();
+    auto value = program.execute(*this, global_object);
+    vm.set_last_value(Badge<Interpreter> {}, value.value_or(js_undefined()));
 
     vm.pop_call_frame();
 
@@ -67,7 +64,9 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     // in which case this is a no-op.
     vm.run_queued_promise_jobs();
 
-    vm.set_last_value({}, last_value.value_or(js_undefined()));
+    vm.run_queued_finalization_registry_cleanup_jobs();
+
+    vm.finish_execution_generation();
 }
 
 GlobalObject& Interpreter::global_object()
@@ -84,7 +83,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
 {
     ScopeGuard guard([&] {
         for (auto& declaration : scope_node.functions()) {
-            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.is_strict_mode());
+            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.kind(), declaration.is_strict_mode());
             vm().set_variable(declaration.name(), function, global_object);
         }
     });
@@ -99,15 +98,17 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     HashMap<FlyString, Variable> scope_variables_with_declaration_kind;
     scope_variables_with_declaration_kind.ensure_capacity(16);
 
+    bool is_program_node = is<Program>(scope_node);
+
     for (auto& declaration : scope_node.variables()) {
         for (auto& declarator : declaration.declarations()) {
-            if (is<Program>(scope_node)) {
+            if (is_program_node && declaration.declaration_kind() == DeclarationKind::Var) {
                 declarator.target().visit(
                     [&](const NonnullRefPtr<Identifier>& id) {
                         global_object.put(id->string(), js_undefined());
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             global_object.put(name, js_undefined());
                         });
                     });
@@ -119,7 +120,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
                         scope_variables_with_declaration_kind.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             scope_variables_with_declaration_kind.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });
@@ -166,10 +167,11 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     auto& block = static_cast<const ScopeNode&>(statement);
     enter_scope(block, scope_type, global_object);
 
+    Value last_value;
     for (auto& node : block.children()) {
         auto value = node.execute(*this, global_object);
         if (!value.is_empty())
-            vm().set_last_value({}, value);
+            last_value = value;
         if (vm().should_unwind()) {
             if (!block.label().is_null() && vm().should_unwind_until(ScopeType::Breakable, block.label()))
                 vm().stop_unwind();
@@ -180,7 +182,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     if (scope_type == ScopeType::Function) {
         bool did_return = vm().unwind_until() == ScopeType::Function;
         if (!did_return)
-            vm().set_last_value({}, js_undefined());
+            last_value = js_undefined();
     }
 
     if (vm().unwind_until() == scope_type)
@@ -188,7 +190,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
 
     exit_scope(block);
 
-    return vm().last_value();
+    return last_value;
 }
 
 LexicalEnvironment* Interpreter::current_environment()

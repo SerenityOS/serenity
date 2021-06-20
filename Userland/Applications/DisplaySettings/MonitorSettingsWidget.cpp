@@ -80,23 +80,19 @@ void MonitorSettingsWidget::create_frame()
 
 void MonitorSettingsWidget::load_current_settings()
 {
-    auto ws_config = Core::ConfigFile::open("/etc/WindowServer.ini");
-
-    int scale_factor = ws_config->read_num_entry("Screen", "ScaleFactor", 1);
-    if (scale_factor != 1 && scale_factor != 2) {
-        dbgln("unexpected ScaleFactor {}, setting to 1", scale_factor);
-        scale_factor = 1;
+    m_screen_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    auto& screen = m_screen_layout.screens[m_screen_layout.main_screen_index];
+    if (screen.scale_factor != 1 && screen.scale_factor != 2) {
+        dbgln("unexpected ScaleFactor {}, setting to 1", screen.scale_factor);
+        screen.scale_factor = 1;
     }
-    (scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true);
-    m_monitor_widget->set_desktop_scale_factor(scale_factor);
+    (screen.scale_factor == 1 ? m_display_scale_radio_1x : m_display_scale_radio_2x)->set_checked(true);
+    m_monitor_widget->set_desktop_scale_factor(screen.scale_factor);
 
     // Let's attempt to find the current resolution and select it!
-    Gfx::IntSize find_size;
-    find_size.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
-    find_size.set_height(ws_config->read_num_entry("Screen", "Height", 768));
-    auto index = m_resolutions.find_first_index(find_size).value_or(0);
-    Gfx::IntSize m_current_resolution = m_resolutions.at(index);
-    m_monitor_widget->set_desktop_resolution(m_current_resolution);
+    auto index = m_resolutions.find_first_index(screen.resolution).value_or(0);
+    Gfx::IntSize current_resolution = m_resolutions.at(index);
+    m_monitor_widget->set_desktop_resolution(current_resolution);
     m_resolution_combo->set_selected_index(index);
 
     m_monitor_widget->update();
@@ -104,27 +100,19 @@ void MonitorSettingsWidget::load_current_settings()
 
 void MonitorSettingsWidget::apply_settings()
 {
-    // Store the current screen resolution and scale factor in case the user wants to revert to it.
-    auto ws_config(Core::ConfigFile::open("/etc/WindowServer.ini"));
-    Gfx::IntSize current_resolution;
-    current_resolution.set_width(ws_config->read_num_entry("Screen", "Width", 1024));
-    current_resolution.set_height(ws_config->read_num_entry("Screen", "Height", 768));
-    int current_scale_factor = ws_config->read_num_entry("Screen", "ScaleFactor", 1);
-    if (current_scale_factor != 1 && current_scale_factor != 2) {
-        dbgln("unexpected ScaleFactor {}, setting to 1", current_scale_factor);
-        current_scale_factor = 1;
-    }
+    // TODO: implement multi-screen support
+    auto& main_screen = m_screen_layout.screens[m_screen_layout.main_screen_index];
+    main_screen.resolution = m_monitor_widget->desktop_resolution();
+    main_screen.scale_factor = (m_display_scale_radio_2x->is_checked() ? 2 : 1);
 
-    if (current_resolution != m_monitor_widget->desktop_resolution() || current_scale_factor != m_monitor_widget->desktop_scale_factor()) {
-        auto result = GUI::WindowServerConnection::the().set_resolution(m_monitor_widget->desktop_resolution(), m_monitor_widget->desktop_scale_factor());
-        if (!result.success()) {
-            GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
-                "Unable to set resolution", GUI::MessageBox::Type::Error);
-        } else {
+    // Fetch the latest configuration again, in case it has been changed by someone else.
+    // This isn't technically race free, but if the user automates changing settings we can't help...
+    auto current_layout = GUI::WindowServerConnection::the().get_screen_layout();
+    if (m_screen_layout != current_layout) {
+        auto result = GUI::WindowServerConnection::the().set_screen_layout(m_screen_layout, false);
+        if (result.success()) {
             auto box = GUI::MessageBox::construct(window(), String::formatted("Do you want to keep the new settings? They will be reverted after 10 seconds."),
-                String::formatted("New screen resolution: {}x{} @ {}x", m_monitor_widget->desktop_resolution().width(), m_monitor_widget->desktop_resolution().height(),
-                    m_monitor_widget->desktop_scale_factor()),
-                GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
+                "Apply new screen layout", GUI::MessageBox::Type::Question, GUI::MessageBox::InputType::YesNo);
             box->set_icon(window()->icon());
 
             // If after 10 seconds the user doesn't close the message box, just close it.
@@ -134,12 +122,15 @@ void MonitorSettingsWidget::apply_settings()
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
             if (box->exec() != GUI::MessageBox::ExecYes) {
-                result = GUI::WindowServerConnection::the().set_resolution(current_resolution, current_scale_factor);
-                if (!result.success()) {
-                    GUI::MessageBox::show(nullptr, String::formatted("Reverting to resolution {}x{} @ {}x", result.resolution().width(), result.resolution().height(), result.scale_factor()),
-                        "Unable to set resolution", GUI::MessageBox::Type::Error);
+                auto save_result = GUI::WindowServerConnection::the().save_screen_layout();
+                if (!save_result.success()) {
+                    GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),
+                        "Unable to save setting", GUI::MessageBox::Type::Error);
                 }
             }
+        } else {
+            GUI::MessageBox::show(window(), String::formatted("Error setting screen layout: {}", result.error_msg()),
+                "Unable to apply changes", GUI::MessageBox::Type::Error);
         }
     }
 }

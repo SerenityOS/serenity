@@ -13,7 +13,7 @@
 
 namespace PixelPaint {
 
-CreateNewLayerDialog::CreateNewLayerDialog(const Gfx::IntSize& suggested_size, GUI::Window* parent_window)
+CreateNewLayerDialog::CreateNewLayerDialog(Gfx::IntSize const& suggested_size, GUI::Window* parent_window)
     : Dialog(parent_window)
 {
     set_title("Create new layer");
@@ -65,8 +65,8 @@ CreateNewLayerDialog::CreateNewLayerDialog(const Gfx::IntSize& suggested_size, G
         m_layer_size.set_height(value);
     };
 
-    width_spinbox.set_range(0, 16384);
-    height_spinbox.set_range(0, 16384);
+    width_spinbox.set_range(1, 16384);
+    height_spinbox.set_range(1, 16384);
 
     width_spinbox.set_value(suggested_size.width());
     height_spinbox.set_value(suggested_size.height());

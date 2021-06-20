@@ -1,4 +1,5 @@
 set(SOURCES
+    ColorSpace.cpp
     CommonNames.cpp
     Document.cpp
     Filter.cpp

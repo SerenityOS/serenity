@@ -99,7 +99,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
                         register_nested_token_pairs(proxy_client.corrected_token_pairs(highlighter.matching_token_pairs()));
                     }
 
-                    spans.append(proxy_client.corrected_spans());
+                    spans.extend(proxy_client.corrected_spans());
                     substring_builder.clear();
                 } else if (state == State::CSS) {
                     // FIXME: Highlight CSS code here instead.

@@ -32,8 +32,8 @@
                 spacing: 0
             }
 
-            @PixelPaint::ImageEditor {
-                name: "image_editor"
+            @GUI::TabWidget {
+                name: "tab_widget"
             }
 
             @PixelPaint::PaletteWidget {

@@ -10,8 +10,10 @@
 
 namespace PDF {
 
+constexpr long invalid_byte_offset = NumericLimits<long>::max();
+
 struct XRefEntry {
-    long byte_offset { -1L };
+    long byte_offset { invalid_byte_offset };
     u16 generation_number { 0 };
     bool in_use { false };
 };
@@ -22,9 +24,35 @@ struct XRefSection {
     Vector<XRefEntry> entries;
 };
 
-class XRefTable {
+class XRefTable final : public RefCounted<XRefTable> {
 public:
-    void add_section(const XRefSection& section)
+    bool merge(XRefTable&& other)
+    {
+        auto this_size = m_entries.size();
+        auto other_size = other.m_entries.size();
+        m_entries.ensure_capacity(other_size);
+
+        for (size_t i = 0; i < other_size; i++) {
+            auto other_entry = other.m_entries[i];
+            if (i >= this_size) {
+                m_entries.unchecked_append(other_entry);
+                continue;
+            }
+
+            auto this_entry = m_entries[i];
+
+            if (this_entry.byte_offset == invalid_byte_offset) {
+                m_entries[i] = other_entry;
+            } else if (other_entry.byte_offset != invalid_byte_offset) {
+                // Both xref tables have an entry for the same object index
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void add_section(XRefSection const& section)
     {
         m_entries.ensure_capacity(section.starting_index + section.count);
 
@@ -70,7 +98,7 @@ namespace AK {
 
 template<>
 struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const PDF::XRefEntry& entry)
+    void format(FormatBuilder& builder, PDF::XRefEntry const& entry)
     {
         Formatter<StringView>::format(builder,
             String::formatted("XRefEntry {{ offset={} generation={} used={} }}",
@@ -82,7 +110,7 @@ struct Formatter<PDF::XRefEntry> : Formatter<StringView> {
 
 template<>
 struct Formatter<PDF::XRefTable> : Formatter<StringView> {
-    void format(FormatBuilder& format_builder, const PDF::XRefTable& table)
+    void format(FormatBuilder& format_builder, PDF::XRefTable const& table)
     {
         StringBuilder builder;
         builder.append("XRefTable {");

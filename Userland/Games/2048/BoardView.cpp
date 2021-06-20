@@ -10,7 +10,7 @@
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
 
-BoardView::BoardView(const Game::Board* board)
+BoardView::BoardView(Game::Board const* board)
     : m_board(board)
 {
 }
@@ -19,8 +19,15 @@ BoardView::~BoardView()
 {
 }
 
-void BoardView::set_board(const Game::Board* board)
+void BoardView::set_board(Game::Board const* board)
 {
+    if (has_timer())
+        stop_timer();
+
+    slide_animation_frame = 0;
+    pop_in_animation_frame = 0;
+    start_timer(frame_duration_ms);
+
     if (m_board == board)
         return;
 
@@ -29,7 +36,7 @@ void BoardView::set_board(const Game::Board* board)
         return;
     }
 
-    bool must_resize = !m_board || m_board->size() != board->size();
+    bool must_resize = !m_board || m_board->tiles().size() != board->tiles().size();
 
     m_board = board;
 
@@ -44,7 +51,7 @@ void BoardView::pick_font()
     String best_font_name;
     int best_font_size = -1;
     auto& font_database = Gfx::FontDatabase::the();
-    font_database.for_each_font([&](const Gfx::Font& font) {
+    font_database.for_each_font([&](Gfx::Font const& font) {
         if (font.family() != "Liza" || font.weight() != 700)
             return;
         auto size = font.glyph_height();
@@ -56,22 +63,24 @@ void BoardView::pick_font()
 
     auto font = font_database.get_by_name(best_font_name);
     set_font(font);
+
+    m_min_cell_size = best_font_size;
 }
 
 size_t BoardView::rows() const
 {
     if (!m_board)
         return 0;
-    return m_board->size();
+    return m_board->tiles().size();
 }
 
 size_t BoardView::columns() const
 {
     if (!m_board)
         return 0;
-    if (m_board->is_empty())
+    if (m_board->tiles().is_empty())
         return 0;
-    return (*m_board)[0].size();
+    return m_board->tiles()[0].size();
 }
 
 void BoardView::resize_event(GUI::ResizeEvent&)
@@ -157,6 +166,19 @@ Gfx::Color BoardView::text_color_for_cell(u32 value)
     return Color::from_rgb(0xf9f6f2);
 }
 
+void BoardView::timer_event(Core::TimerEvent&)
+{
+    if (slide_animation_frame < animation_duration) {
+        slide_animation_frame++;
+        update();
+    } else if (pop_in_animation_frame < animation_duration) {
+        pop_in_animation_frame++;
+        update();
+        if (pop_in_animation_frame == animation_duration)
+            stop_timer();
+    }
+}
+
 void BoardView::paint_event(GUI::PaintEvent& event)
 {
     Frame::paint_event(event);
@@ -172,7 +194,7 @@ void BoardView::paint_event(GUI::PaintEvent& event)
         painter.fill_rect(rect(), background_color);
         return;
     }
-    auto& board = *m_board;
+    auto& tiles = m_board->tiles();
 
     Gfx::IntRect field_rect {
         0,
@@ -183,18 +205,51 @@ void BoardView::paint_event(GUI::PaintEvent& event)
     field_rect.center_within(rect());
     painter.fill_rect(field_rect, background_color);
 
-    for (size_t column = 0; column < columns(); ++column) {
-        for (size_t row = 0; row < rows(); ++row) {
-            auto rect = Gfx::IntRect {
-                field_rect.x() + m_padding + (m_cell_size + m_padding) * column,
-                field_rect.y() + m_padding + (m_cell_size + m_padding) * row,
-                m_cell_size,
-                m_cell_size,
-            };
-            auto entry = board[row][column];
-            painter.fill_rect(rect, background_color_for_cell(entry));
-            if (entry > 0)
-                painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+    auto tile_center = [&](size_t row, size_t column) {
+        return Gfx::IntPoint {
+            field_rect.x() + m_padding + (m_cell_size + m_padding) * column + m_cell_size / 2,
+            field_rect.y() + m_padding + (m_cell_size + m_padding) * row + m_cell_size / 2,
+        };
+    };
+
+    if (slide_animation_frame < animation_duration) {
+        // background
+        for (size_t column = 0; column < columns(); ++column) {
+            for (size_t row = 0; row < rows(); ++row) {
+                auto center = tile_center(row, column);
+                auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+                auto rect = Gfx::IntRect::centered_on(center, tile_size);
+                painter.fill_rect(rect, background_color_for_cell(0));
+            }
+        }
+
+        for (auto& sliding_tile : m_board->sliding_tiles()) {
+            auto center_from = tile_center(sliding_tile.row_from, sliding_tile.column_from);
+            auto center_to = tile_center(sliding_tile.row_to, sliding_tile.column_to);
+            auto offset = Gfx::FloatPoint(center_to - center_from);
+            auto center = center_from + Gfx::IntPoint(offset * (slide_animation_frame / (float)animation_duration));
+
+            auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+            auto rect = Gfx::IntRect::centered_on(center, tile_size);
+
+            painter.fill_rect(rect, background_color_for_cell(sliding_tile.value_from));
+            painter.draw_text(rect, String::number(sliding_tile.value_from), font(), Gfx::TextAlignment::Center, text_color_for_cell(sliding_tile.value_from));
+        }
+    } else {
+        for (size_t column = 0; column < columns(); ++column) {
+            for (size_t row = 0; row < rows(); ++row) {
+                auto center = tile_center(row, column);
+                auto tile_size = Gfx::IntSize { m_cell_size, m_cell_size };
+                if (pop_in_animation_frame < animation_duration && Game::Board::Position { row, column } == m_board->last_added_position()) {
+                    float pop_in_size = m_min_cell_size + (m_cell_size - m_min_cell_size) * (pop_in_animation_frame / (float)animation_duration);
+                    tile_size = Gfx::IntSize { pop_in_size, pop_in_size };
+                }
+                auto rect = Gfx::IntRect::centered_on(center, tile_size);
+                auto entry = tiles[row][column];
+                painter.fill_rect(rect, background_color_for_cell(entry));
+                if (entry > 0)
+                    painter.draw_text(rect, String::number(entry), font(), Gfx::TextAlignment::Center, text_color_for_cell(entry));
+            }
         }
     }
 }

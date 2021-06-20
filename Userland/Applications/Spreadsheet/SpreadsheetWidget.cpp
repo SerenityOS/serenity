@@ -171,11 +171,11 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
             m_current_cell_label->set_enabled(true);
             m_current_cell_label->set_text(builder.string_view());
 
-            Vector<Cell*> cells;
+            Vector<Cell&> cells;
             for (auto& position : selection)
-                cells.append(&sheet.ensure(position));
+                cells.append(sheet.ensure(position));
 
-            auto first_cell = cells.first();
+            auto& first_cell = cells.first();
             m_cell_value_editor->on_change = nullptr;
             m_cell_value_editor->set_text("");
             m_should_change_selected_cells = false;
@@ -191,14 +191,14 @@ void SpreadsheetWidget::setup_tabs(NonnullRefPtrVector<Sheet> new_sheets)
                     // FIXME: Lines?
                     auto offset = m_cell_value_editor->cursor().column();
                     try_generate_tip_for_input_expression(text, offset);
-                    for (auto* cell : cells)
-                        cell->set_data(text);
+                    for (auto& cell : cells)
+                        cell.set_data(text);
                     sheet.update();
                     update();
                 }
             };
             m_cell_value_editor->set_enabled(true);
-            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(first_cell);
+            static_cast<CellSyntaxHighlighter*>(const_cast<Syntax::Highlighter*>(m_cell_value_editor->syntax_highlighter()))->set_cell(&first_cell);
         };
         m_selected_view->on_selection_dropped = [&]() {
             m_cell_value_editor->set_enabled(false);
@@ -321,7 +321,7 @@ void SpreadsheetWidget::add_sheet(NonnullRefPtr<Sheet>&& sheet)
 
     NonnullRefPtrVector<Sheet> new_sheets;
     new_sheets.append(move(sheet));
-    m_workbook->sheets().append(new_sheets);
+    m_workbook->sheets().extend(new_sheets);
     setup_tabs(new_sheets);
 }
 

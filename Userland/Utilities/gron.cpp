@@ -10,6 +10,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/ArgsParser.h>
 #include <LibCore/File.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,15 +42,25 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    if (argc != 2 || !strcmp(argv[1], "--help")) {
-        warnln("usage: gron <file>");
-        warnln("Print each value in a JSON file with its fully expanded key.");
-        return argc != 2 ? 1 : 0;
-    }
-    auto file = Core::File::construct(argv[1]);
-    if (!file->open(Core::OpenMode::ReadOnly)) {
-        warnln("Failed to open {}: {}", file->name(), file->error_string());
-        return 1;
+    Core::ArgsParser args_parser;
+    args_parser.set_general_help("Print each value in a JSON file with its fully expanded key.");
+
+    const char* path = nullptr;
+    args_parser.add_positional_argument(path, "Input", "input", Core::ArgsParser::Required::No);
+
+    args_parser.parse(argc, argv);
+
+    RefPtr<Core::File> file;
+
+    if (!path) {
+        file = Core::File::standard_input();
+    } else {
+        auto file_or_error = Core::File::open(path, Core::OpenMode::ReadOnly);
+        if (file_or_error.is_error()) {
+            warnln("Failed to open {}: {}", path, file_or_error.error());
+            return 1;
+        }
+        file = file_or_error.value();
     }
 
     if (pledge("stdio", nullptr) < 0) {
@@ -59,7 +70,15 @@ int main(int argc, char** argv)
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
-    VERIFY(json.has_value());
+
+    if (!json.has_value()) {
+        if (path) {
+            warnln("Failed to parse '{}' as JSON", path);
+        } else {
+            warnln("Failed to parse stdin as JSON");
+        }
+        return 1;
+    }
 
     if (use_color) {
         color_name = "\033[33;1m";

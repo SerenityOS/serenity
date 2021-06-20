@@ -105,17 +105,14 @@ namespace Kernel {
 #define RX_BUFFER_SIZE 32768
 #define TX_BUFFER_SIZE PACKET_SIZE_MAX
 
-UNMAP_AFTER_INIT void RTL8139NetworkAdapter::detect()
+UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_initialize(PCI::Address address)
 {
     constexpr PCI::ID rtl8139_id = { 0x10EC, 0x8139 };
-    PCI::enumerate([&](const PCI::Address& address, PCI::ID id) {
-        if (address.is_null())
-            return;
-        if (id != rtl8139_id)
-            return;
-        u8 irq = PCI::get_interrupt_line(address);
-        [[maybe_unused]] auto& unused = adopt_ref(*new RTL8139NetworkAdapter(address, irq)).leak_ref();
-    });
+    auto id = PCI::get_id(address);
+    if (id != rtl8139_id)
+        return {};
+    u8 irq = PCI::get_interrupt_line(address);
+    return adopt_ref_if_nonnull(new RTL8139NetworkAdapter(address, irq));
 }
 
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)
@@ -158,8 +155,9 @@ UNMAP_AFTER_INIT RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
+bool RTL8139NetworkAdapter::handle_irq(const RegisterState&)
 {
+    bool was_handled = false;
     for (;;) {
         int status = in16(REG_ISR);
         out16(REG_ISR, status);
@@ -171,6 +169,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
         if ((status & (INT_RXOK | INT_RXERR | INT_TXOK | INT_TXERR | INT_RX_BUFFER_OVERFLOW | INT_LINK_CHANGE | INT_RX_FIFO_OVERFLOW | INT_LENGTH_CHANGE | INT_SYSTEM_ERROR)) == 0)
             break;
 
+        was_handled = true;
         if (status & INT_RXOK) {
             dbgln_if(RTL8139_DEBUG, "RTL8139: RX ready");
             receive();
@@ -204,6 +203,7 @@ void RTL8139NetworkAdapter::handle_irq(const RegisterState&)
             reset();
         }
     }
+    return was_handled;
 }
 
 void RTL8139NetworkAdapter::reset()

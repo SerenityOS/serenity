@@ -1,3 +1,9 @@
+serenity_component(
+    Snake
+    RECOMMENDED
+    TARGETS Snake
+)
+
 set(SOURCES
     main.cpp
     SnakeGame.cpp

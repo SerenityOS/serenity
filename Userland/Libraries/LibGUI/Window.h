@@ -40,6 +40,7 @@ public:
     void set_fullscreen(bool);
 
     bool is_maximized() const;
+    void set_maximized(bool);
 
     bool is_frameless() const { return m_frameless; }
     void set_frameless(bool);
@@ -172,7 +173,7 @@ public:
     void apply_icon();
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
 
-    Vector<Widget*> focusable_widgets(FocusSource) const;
+    Vector<Widget&> focusable_widgets(FocusSource) const;
 
     void schedule_relayout();
 
@@ -202,7 +203,7 @@ public:
 protected:
     Window(Core::Object* parent = nullptr);
     virtual void wm_event(WMEvent&);
-    virtual void screen_rect_change_event(ScreenRectChangeEvent&);
+    virtual void screen_rects_change_event(ScreenRectsChangeEvent&);
 
 private:
     void update_cursor();
@@ -217,7 +218,7 @@ private:
     void handle_became_active_or_inactive_event(Core::Event&);
     void handle_close_request();
     void handle_theme_change_event(ThemeChangeEvent&);
-    void handle_screen_rect_change_event(ScreenRectChangeEvent&);
+    void handle_screen_rects_change_event(ScreenRectsChangeEvent&);
     void handle_drag_move_event(DragEvent&);
     void handle_left_event();
 

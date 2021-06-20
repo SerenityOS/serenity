@@ -1,3 +1,9 @@
+serenity_component(
+    Solitaire
+    RECOMMENDED
+    TARGETS Solitaire
+)
+
 compile_gml(Solitaire.gml SolitaireGML.h solitaire_gml)
 
 set(SOURCES

@@ -97,7 +97,7 @@ private:
     };
 
     Atomic<FreeSlab*> m_freelist { nullptr };
-    Atomic<ssize_t, AK::MemoryOrder::memory_order_relaxed> m_num_allocated;
+    Atomic<size_t, AK::MemoryOrder::memory_order_relaxed> m_num_allocated;
     size_t m_slab_count;
     void* m_base { nullptr };
     void* m_end { nullptr };

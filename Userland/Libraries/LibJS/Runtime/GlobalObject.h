@@ -23,6 +23,7 @@ public:
 
     virtual Optional<Variable> get_from_scope(const FlyString&) const override;
     virtual void put_to_scope(const FlyString&, Variable) override;
+    virtual bool delete_from_scope(FlyString const&) override;
     virtual bool has_this_binding() const override;
     virtual Value get_this_binding(GlobalObject&) const override;
 
@@ -35,6 +36,9 @@ public:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
+
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
+    GeneratorObjectPrototype* generator_object_prototype() { return m_generator_object_prototype; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
@@ -51,9 +55,9 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
     template<typename ConstructorType>
-    void initialize_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
+    void initialize_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
     template<typename ConstructorType>
-    void add_constructor(const FlyString& property_name, ConstructorType*&, Object* prototype);
+    void add_constructor(PropertyName const&, ConstructorType*&, Object* prototype);
 
 private:
     virtual bool is_global_object() const final { return true; }
@@ -80,6 +84,9 @@ private:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* m_proxy_constructor { nullptr };
 
+    // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
+    GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \
     Object* m_##snake_name##_prototype { nullptr };
@@ -93,11 +100,11 @@ private:
 };
 
 template<typename ConstructorType>
-inline void GlobalObject::initialize_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::initialize_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
 {
     auto& vm = this->vm();
     constructor = heap().allocate<ConstructorType>(*this, *this);
-    constructor->define_property(vm.names.name, js_string(heap(), property_name), Attribute::Configurable);
+    constructor->define_property(vm.names.name, js_string(heap(), property_name.as_string()), Attribute::Configurable);
     if (vm.exception())
         return;
     if (prototype) {
@@ -108,9 +115,11 @@ inline void GlobalObject::initialize_constructor(const FlyString& property_name,
 }
 
 template<typename ConstructorType>
-inline void GlobalObject::add_constructor(const FlyString& property_name, ConstructorType*& constructor, Object* prototype)
+inline void GlobalObject::add_constructor(PropertyName const& property_name, ConstructorType*& constructor, Object* prototype)
 {
-    initialize_constructor(property_name, constructor, prototype);
+    // Some constructors are pre-initialized separately.
+    if (!constructor)
+        initialize_constructor(property_name, constructor, prototype);
     define_property(property_name, constructor, Attribute::Writable | Attribute::Configurable);
 }
 

@@ -48,14 +48,12 @@ KResultOr<int> Process::sys$getresgid(Userspace<gid_t*> rgid, Userspace<gid_t*> 
     return 0;
 }
 
-KResultOr<int> Process::sys$getgroups(ssize_t count, Userspace<gid_t*> user_gids)
+KResultOr<int> Process::sys$getgroups(size_t count, Userspace<gid_t*> user_gids)
 {
     REQUIRE_PROMISE(stdio);
-    if (count < 0)
-        return EINVAL;
     if (!count)
         return extra_gids().size();
-    if (count != (int)extra_gids().size())
+    if (count != extra_gids().size())
         return EINVAL;
 
     if (!copy_to_user(user_gids, extra_gids().data(), sizeof(gid_t) * count))

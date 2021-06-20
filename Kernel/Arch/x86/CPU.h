@@ -548,6 +548,7 @@ enum class CPUFeature : u32 {
     SSE4_2 = (1 << 20),
     XSAVE = (1 << 21),
     AVX = (1 << 22),
+    FXSR = (1 << 23),
 };
 
 class Thread;

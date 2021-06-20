@@ -252,6 +252,12 @@ TEST_CASE(yay_this_implementation_sucks)
     EXPECT_EQ(String::formatted("{:.0}", .99999999999), "0");
 }
 
+TEST_CASE(precision_with_trailing_zeros)
+{
+    EXPECT_EQ(String::formatted("{:0.3}", 1.12), "1.120");
+    EXPECT_EQ(String::formatted("{:0.1}", 1.12), "1.1");
+}
+
 TEST_CASE(magnitude_less_than_zero)
 {
     EXPECT_EQ(String::formatted("{}", -0.654), "-0.654");
@@ -288,4 +294,12 @@ TEST_CASE(long_long_regression)
     fmtbuilder.put_i64(0x0123456789abcdefLL);
 
     EXPECT_EQ(builder.string_view(), "81985529216486895");
+}
+
+TEST_CASE(hex_dump)
+{
+    EXPECT_EQ(String::formatted("{:hex-dump}", "0000"), "30303030");
+    EXPECT_EQ(String::formatted("{:>4hex-dump}", "0000"), "30303030    0000");
+    EXPECT_EQ(String::formatted("{:>2hex-dump}", "0000"), "3030    00\n3030    00");
+    EXPECT_EQ(String::formatted("{:*>4hex-dump}", "0000"), "30303030****0000");
 }

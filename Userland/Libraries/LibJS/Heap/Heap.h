@@ -70,6 +70,9 @@ public:
     void did_create_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
     void did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList&);
 
+    void did_create_weak_container(Badge<WeakContainer>, WeakContainer&);
+    void did_destroy_weak_container(Badge<WeakContainer>, WeakContainer&);
+
     void defer_gc(Badge<DeferGC>);
     void undefer_gc(Badge<DeferGC>);
 
@@ -105,6 +108,8 @@ private:
     HashTable<HandleImpl*> m_handles;
 
     HashTable<MarkedValueList*> m_marked_value_lists;
+
+    HashTable<WeakContainer*> m_weak_containers;
 
     BlockAllocator m_block_allocator;
 

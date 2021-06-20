@@ -424,9 +424,9 @@ static bool set_dib_bitmasks(BMPLoadingContext& context, InputStreamer& streamer
     auto& type = context.dib_type;
 
     if (type > DIBType::OSV2 && bpp == 16 && compression == Compression::RGB) {
-        context.dib.info.masks.append({ 0x7c00, 0x03e0, 0x001f });
-        context.dib.info.mask_shifts.append({ 7, 2, -3 });
-        context.dib.info.mask_sizes.append({ 5, 5, 5 });
+        context.dib.info.masks.extend({ 0x7c00, 0x03e0, 0x001f });
+        context.dib.info.mask_shifts.extend({ 7, 2, -3 });
+        context.dib.info.mask_sizes.extend({ 5, 5, 5 });
     } else if (type == DIBType::Info && (compression == Compression::BITFIELDS || compression == Compression::ALPHABITFIELDS)) {
         // Consume the extra BITFIELDS bytes
         auto number_of_mask_fields = compression == Compression::ALPHABITFIELDS ? 4 : 3;

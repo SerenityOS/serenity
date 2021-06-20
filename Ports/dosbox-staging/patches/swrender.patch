@@ -1,0 +1,11 @@
+diff -Naur dosbox-staging-0.76.0/src/gui/sdlmain.cpp dosbox-staging-0.76.0.serenity/src/gui/sdlmain.cpp
+--- dosbox-staging-0.76.0/src/gui/sdlmain.cpp	2020-12-03 19:36:19.000000000 +0100
++++ dosbox-staging-0.76.0.serenity/src/gui/sdlmain.cpp	2021-06-18 14:44:11.245266708 +0200
+@@ -1048,7 +1048,6 @@
+ 		if (sdl.render_driver != "auto")
+ 			SDL_SetHint(SDL_HINT_RENDER_DRIVER, sdl.render_driver.c_str());
+ 		sdl.renderer = SDL_CreateRenderer(sdl.window, -1,
+-		                                  SDL_RENDERER_ACCELERATED |
+ 		                                  (sdl.desktop.vsync ? SDL_RENDERER_PRESENTVSYNC : 0));
+ 		if (!sdl.renderer) {
+ 			LOG_MSG("%s\n", SDL_GetError());

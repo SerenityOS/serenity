@@ -59,6 +59,14 @@ CyrillicDecoder& cyrillic_decoder()
     return *decoder;
 }
 
+Latin9Decoder& latin9_decoder()
+{
+    static Latin9Decoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new Latin9Decoder;
+    return *decoder;
+}
+
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -77,6 +85,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &hebrew_decoder();
         if (encoding.value().equals_ignoring_case("windows-1251"))
             return &cyrillic_decoder();
+        if (encoding.value().equals_ignoring_case("iso-8859-15"))
+            return &latin9_decoder();
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
@@ -336,6 +346,39 @@ String CyrillicDecoder::to_utf8(const StringView& input)
         } else {
             builder.append_code_point(translation_table[ch - 0x80]);
         }
+    }
+    return builder.to_string();
+}
+
+String Latin9Decoder::to_utf8(const StringView& input)
+{
+    auto convert_latin9_to_utf8 = [](u8 ch) -> u32 {
+        // Latin9 is the same as the first 256 Unicode code points, except for 8 characters.
+        switch (ch) {
+        case 0xA4:
+            return 0x20AC;
+        case 0xA6:
+            return 0x160;
+        case 0xA8:
+            return 0x161;
+        case 0xB4:
+            return 0x17D;
+        case 0xB8:
+            return 0x17E;
+        case 0xBC:
+            return 0x152;
+        case 0xBD:
+            return 0x153;
+        case 0xBE:
+            return 0x178;
+        default:
+            return ch;
+        }
+    };
+
+    StringBuilder builder(input.length());
+    for (auto ch : input) {
+        builder.append_code_point(convert_latin9_to_utf8(ch));
     }
     return builder.to_string();
 }

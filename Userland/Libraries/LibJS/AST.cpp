@@ -37,7 +37,7 @@ class InterpreterNodeScope {
     AK_MAKE_NONMOVABLE(InterpreterNodeScope);
 
 public:
-    InterpreterNodeScope(Interpreter& interpreter, const ASTNode& node)
+    InterpreterNodeScope(Interpreter& interpreter, ASTNode const& node)
         : m_interpreter(interpreter)
         , m_chain_node { nullptr, node }
     {
@@ -61,7 +61,7 @@ String ASTNode::class_name() const
     return demangle(typeid(*this).name()).substring(4);
 }
 
-static void update_function_name(Value value, const FlyString& name)
+static void update_function_name(Value value, FlyString const& name)
 {
     if (!value.is_function())
         return;
@@ -100,7 +100,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), is_strict_mode() || interpreter.vm().in_strict_mode(), m_is_arrow_function);
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -126,7 +126,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     }
 
     if (is<MemberExpression>(*m_callee)) {
-        auto& member_expression = static_cast<const MemberExpression&>(*m_callee);
+        auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         Value callee;
         Object* this_value = nullptr;
 
@@ -184,9 +184,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (is<Identifier>(*m_callee) || is<MemberExpression>(*m_callee)) {
             String expression_string;
             if (is<Identifier>(*m_callee)) {
-                expression_string = static_cast<const Identifier&>(*m_callee).string();
+                expression_string = static_cast<Identifier const&>(*m_callee).string();
             } else {
-                expression_string = static_cast<const MemberExpression&>(*m_callee).to_string_approximation();
+                expression_string = static_cast<MemberExpression const&>(*m_callee).to_string_approximation();
             }
             vm.throw_exception<TypeError>(global_object, ErrorType::IsNotAEvaluatedFrom, callee.to_string_without_side_effects(), call_type, expression_string);
         } else {
@@ -222,7 +222,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
     Object* new_object = nullptr;
     Value result;
     if (is<NewExpression>(*this)) {
-        result = vm.construct(function, function, move(arguments), global_object);
+        result = vm.construct(function, function, move(arguments));
         if (result.is_object())
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
@@ -239,7 +239,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
             return {};
         }
-        result = vm.construct(static_cast<Function&>(*super_constructor), function, move(arguments), global_object);
+        result = vm.construct(static_cast<Function&>(*super_constructor), function, move(arguments));
         if (vm.exception())
             return {};
 
@@ -257,6 +257,12 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         return new_object;
     }
     return result;
+}
+
+Value YieldExpression::execute(Interpreter&, GlobalObject&) const
+{
+    // This should be transformed to a return.
+    VERIFY_NOT_REACHED();
 }
 
 Value ReturnStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -302,8 +308,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     auto* with_scope = interpreter.heap().allocate<WithScope>(global_object, *object, interpreter.vm().call_frame().scope);
     TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, with_scope);
-    interpreter.execute_statement(global_object, m_body);
-    return {};
+    return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
 
 Value WhileStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -372,10 +377,10 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
     RefPtr<BlockStatement> wrapper;
 
-    if (m_init && is<VariableDeclaration>(*m_init) && static_cast<const VariableDeclaration&>(*m_init).declaration_kind() != DeclarationKind::Var) {
+    if (m_init && is<VariableDeclaration>(*m_init) && static_cast<VariableDeclaration const&>(*m_init).declaration_kind() != DeclarationKind::Var) {
         wrapper = create_ast_node<BlockStatement>(source_range());
         NonnullRefPtrVector<VariableDeclaration> decls;
-        decls.append(*static_cast<const VariableDeclaration*>(m_init.ptr()));
+        decls.append(*static_cast<VariableDeclaration const*>(m_init.ptr()));
         wrapper->add_variables(decls);
         interpreter.enter_scope(*wrapper, ScopeType::Block, global_object);
     }
@@ -444,10 +449,10 @@ Value ForStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
     return last_value;
 }
 
-static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, const ASTNode& node, RefPtr<BlockStatement> wrapper)
+static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variable_from_for_declaration(Interpreter& interpreter, GlobalObject& global_object, ASTNode const& node, RefPtr<BlockStatement> wrapper)
 {
     if (is<VariableDeclaration>(node)) {
-        auto& variable_declaration = static_cast<const VariableDeclaration&>(node);
+        auto& variable_declaration = static_cast<VariableDeclaration const&>(node);
         VERIFY(!variable_declaration.declarations().is_empty());
         if (variable_declaration.declaration_kind() != DeclarationKind::Var) {
             wrapper = create_ast_node<BlockStatement>(node.source_range());
@@ -458,7 +463,7 @@ static Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>> variabl
     }
 
     if (is<Identifier>(node)) {
-        return NonnullRefPtr(static_cast<const Identifier&>(node));
+        return NonnullRefPtr(static_cast<Identifier const&>(node));
     }
 
     VERIFY_NOT_REACHED();
@@ -663,6 +668,8 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
 
 Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
 {
+    if (m_argument_index.has_value())
+        return Reference(Reference::CallFrameArgument, m_argument_index.value(), string());
     return interpreter.vm().get_reference(string());
 }
 
@@ -686,16 +693,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         auto reference = m_lhs->to_reference(interpreter, global_object);
         if (interpreter.exception())
             return {};
-        if (reference.is_unresolvable())
-            return Value(true);
-        // FIXME: Support deleting locals
-        VERIFY(!reference.is_local_variable());
-        if (reference.is_global_variable())
-            return Value(global_object.delete_property(reference.name()));
-        auto* base_object = reference.base().to_object(global_object);
-        if (!base_object)
-            return {};
-        return Value(base_object->delete_property(reference.name()));
+        return Value(reference.delete_(global_object));
     }
 
     Value lhs_result;
@@ -775,7 +773,6 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             return {};
         }
         class_constructor->set_constructor_kind(Function::ConstructorKind::Derived);
-        Object* prototype = Object::create_empty(global_object);
 
         Object* super_constructor_prototype = nullptr;
         if (!super_constructor.is_null()) {
@@ -789,7 +786,7 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
             if (super_constructor_prototype_value.is_object())
                 super_constructor_prototype = &super_constructor_prototype_value.as_object();
         }
-        prototype->set_prototype(super_constructor_prototype);
+        auto* prototype = Object::create(global_object, super_constructor_prototype);
 
         prototype->define_property(vm.names.constructor, class_constructor, 0);
         if (interpreter.exception())
@@ -819,20 +816,24 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception())
             return {};
 
+        auto property_key = key.to_property_key(global_object);
+        if (interpreter.exception())
+            return {};
+
         auto& target = method.is_static() ? *class_constructor : class_prototype.as_object();
         method_function.set_home_object(&target);
 
         switch (method.kind()) {
         case ClassMethod::Kind::Method:
-            target.define_property(key.to_property_key(global_object), method_value);
+            target.define_property(property_key, method_value);
             break;
         case ClassMethod::Kind::Getter:
             update_function_name(method_value, String::formatted("get {}", get_function_name(global_object, key)));
-            target.define_accessor(key.to_property_key(global_object), &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(property_key, &method_function, nullptr, Attribute::Configurable | Attribute::Enumerable);
             break;
         case ClassMethod::Kind::Setter:
             update_function_name(method_value, String::formatted("set {}", get_function_name(global_object, key)));
-            target.define_accessor(key.to_property_key(global_object), nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
+            target.define_accessor(property_key, nullptr, &method_function, Attribute::Configurable | Attribute::Enumerable);
             break;
         default:
             VERIFY_NOT_REACHED();
@@ -1132,36 +1133,48 @@ void BindingPattern::dump(int indent) const
 {
     print_indent(indent);
     outln("BindingPattern {}", kind == Kind::Array ? "Array" : "Object");
-    print_indent(++indent);
-    outln("(Properties)");
-    for (auto& property : properties) {
+
+    for (auto& entry : entries) {
         print_indent(indent + 1);
-        outln("(Identifier)");
-        if (property.name) {
-            property.name->dump(indent + 2);
-        } else {
+        outln("(Property)");
+
+        if (kind == Kind::Object) {
             print_indent(indent + 2);
-            outln("(None)");
+            outln("(Identifier)");
+            if (entry.name.has<NonnullRefPtr<Identifier>>()) {
+                entry.name.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
+            } else {
+                entry.name.get<NonnullRefPtr<Expression>>()->dump(indent + 3);
+            }
+        } else if (entry.is_elision()) {
+            print_indent(indent + 2);
+            outln("(Elision)");
+            continue;
         }
 
-        print_indent(indent + 1);
-        outln("(Pattern)");
-        if (property.pattern) {
-            property.pattern->dump(indent + 2);
+        print_indent(indent + 2);
+        outln("(Pattern{})", entry.is_rest ? " rest=true" : "");
+        if (entry.alias.has<NonnullRefPtr<Identifier>>()) {
+            entry.alias.get<NonnullRefPtr<Identifier>>()->dump(indent + 3);
+        } else if (entry.alias.has<NonnullRefPtr<BindingPattern>>()) {
+            entry.alias.get<NonnullRefPtr<BindingPattern>>()->dump(indent + 3);
         } else {
-            print_indent(indent + 2);
-            outln("(None)");
+            print_indent(indent + 3);
+            outln("<empty>");
         }
 
-        print_indent(indent + 1);
-        outln("(Is Rest = {})", property.is_rest);
+        if (entry.initializer) {
+            print_indent(indent + 2);
+            outln("(Initializer)");
+            entry.initializer->dump(indent + 3);
+        }
     }
 }
 
-void FunctionNode::dump(int indent, const String& class_name) const
+void FunctionNode::dump(int indent, String const& class_name) const
 {
     print_indent(indent);
-    outln("{} '{}'", class_name, name());
+    outln("{}{} '{}'", class_name, m_kind == FunctionKind::Generator ? "*" : "", name());
     if (!m_parameters.is_empty()) {
         print_indent(indent + 1);
         outln("(Parameters)");
@@ -1171,10 +1184,10 @@ void FunctionNode::dump(int indent, const String& class_name) const
             if (parameter.is_rest)
                 out("...");
             parameter.binding.visit(
-                [&](const FlyString& name) {
+                [&](FlyString const& name) {
                     outln("{}", name);
                 },
-                [&](const BindingPattern& pattern) {
+                [&](BindingPattern const& pattern) {
                     pattern.dump(indent + 2);
                 });
             if (parameter.default_value)
@@ -1201,6 +1214,13 @@ void FunctionDeclaration::dump(int indent) const
 void FunctionExpression::dump(int indent) const
 {
     FunctionNode::dump(indent, class_name());
+}
+
+void YieldExpression::dump(int indent) const
+{
+    ASTNode::dump(indent);
+    if (argument())
+        argument()->dump(indent + 1);
 }
 
 void ReturnStatement::dump(int indent) const
@@ -1298,6 +1318,9 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
+    if (m_argument_index.has_value())
+        return interpreter.vm().argument(m_argument_index.value());
+
     auto value = interpreter.vm().get_variable(string(), global_object);
     if (value.is_empty()) {
         if (!interpreter.exception())
@@ -1310,7 +1333,10 @@ Value Identifier::execute(Interpreter& interpreter, GlobalObject& global_object)
 void Identifier::dump(int indent) const
 {
     print_indent(indent);
-    outln("Identifier \"{}\"", m_string);
+    if (m_argument_index.has_value())
+        outln("Identifier \"{}\" (argument #{})", m_string, m_argument_index.value());
+    else
+        outln("Identifier \"{}\"", m_string);
 }
 
 void SpreadExpression::dump(int indent) const
@@ -1586,13 +1612,13 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
             if (interpreter.exception())
                 return {};
             declarator.target().visit(
-                [&](const NonnullRefPtr<Identifier>& id) {
+                [&](NonnullRefPtr<Identifier> const& id) {
                     auto variable_name = id->string();
                     if (is<ClassExpression>(*init))
                         update_function_name(initalizer_result, variable_name);
                     interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
                 },
-                [&](const NonnullRefPtr<BindingPattern>& pattern) {
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
                     interpreter.vm().assign(pattern, initalizer_result, global_object, true);
                 });
         }
@@ -1672,14 +1698,14 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 {
     InterpreterNodeScope node_scope { interpreter, *this };
 
-    auto* object = Object::create_empty(global_object);
+    auto* object = Object::create(global_object, global_object.object_prototype());
     for (auto& property : m_properties) {
         auto key = property.key().execute(interpreter, global_object);
         if (interpreter.exception())
             return {};
 
         if (property.type() == ObjectProperty::Type::Spread) {
-            if (key.is_array()) {
+            if (key.is_object() && key.as_object().is_array()) {
                 auto& array_to_spread = static_cast<Array&>(key.as_object());
                 for (auto& entry : array_to_spread.indexed_properties()) {
                     object->indexed_properties().put(object, entry.index(), entry.value_and_attributes(&array_to_spread).value);
@@ -1705,7 +1731,6 @@ Value ObjectExpression::execute(Interpreter& interpreter, GlobalObject& global_o
                         return {};
                 }
             }
-
             continue;
         }
 
@@ -1759,7 +1784,7 @@ PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, 
 {
     if (!is_computed()) {
         VERIFY(is<Identifier>(*m_property));
-        return static_cast<const Identifier&>(*m_property).string();
+        return static_cast<Identifier const&>(*m_property).string();
     }
     auto value = m_property->execute(interpreter, global_object);
     if (interpreter.exception())
@@ -1772,11 +1797,11 @@ String MemberExpression::to_string_approximation() const
 {
     String object_string = "<object>";
     if (is<Identifier>(*m_object))
-        object_string = static_cast<const Identifier&>(*m_object).string();
+        object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
         return String::formatted("{}[<computed>]", object_string);
     VERIFY(is<Identifier>(*m_property));
-    return String::formatted("{}.{}", object_string, static_cast<const Identifier&>(*m_property).string());
+    return String::formatted("{}.{}", object_string, static_cast<Identifier const&>(*m_property).string());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -1828,6 +1853,16 @@ Value NumericLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 Value BigIntLiteral::execute(Interpreter& interpreter, GlobalObject&) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
+    Crypto::SignedBigInteger integer;
+    if (m_value[0] == '0' && m_value.length() >= 3) {
+        if (m_value[1] == 'x' || m_value[1] == 'X') {
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base16(m_value.substring(2, m_value.length() - 3)));
+        } else if (m_value[1] == 'o' || m_value[1] == 'O') {
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base8(m_value.substring(2, m_value.length() - 3)));
+        } else if (m_value[1] == 'b' || m_value[1] == 'B') {
+            return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base2(m_value.substring(2, m_value.length() - 3)));
+        }
+    }
     return js_bigint(interpreter.heap(), Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
 }
 
@@ -2085,6 +2120,7 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
         return {};
 
     bool falling_through = false;
+    auto last_value = js_undefined();
 
     for (auto& switch_case : m_cases) {
         if (!falling_through && switch_case.test()) {
@@ -2097,24 +2133,25 @@ Value SwitchStatement::execute(Interpreter& interpreter, GlobalObject& global_ob
         falling_through = true;
 
         for (auto& statement : switch_case.consequent()) {
-            auto last_value = statement.execute(interpreter, global_object);
+            auto value = statement.execute(interpreter, global_object);
+            if (!value.is_empty())
+                last_value = value;
             if (interpreter.exception())
                 return {};
             if (interpreter.vm().should_unwind()) {
                 if (interpreter.vm().should_unwind_until(ScopeType::Continuable, m_label)) {
                     // No stop_unwind(), the outer loop will handle that - we just need to break out of the switch/case.
-                    return {};
+                    return last_value;
                 } else if (interpreter.vm().should_unwind_until(ScopeType::Breakable, m_label)) {
                     interpreter.vm().stop_unwind();
-                    return {};
+                    return last_value;
                 } else {
                     return last_value;
                 }
             }
         }
     }
-
-    return js_undefined();
+    return last_value;
 }
 
 Value SwitchCase::execute(Interpreter& interpreter, GlobalObject&) const
@@ -2226,12 +2263,12 @@ Value DebuggerStatement::execute(Interpreter& interpreter, GlobalObject&) const
 
 void ScopeNode::add_variables(NonnullRefPtrVector<VariableDeclaration> variables)
 {
-    m_variables.append(move(variables));
+    m_variables.extend(move(variables));
 }
 
 void ScopeNode::add_functions(NonnullRefPtrVector<FunctionDeclaration> functions)
 {
-    m_functions.append(move(functions));
+    m_functions.extend(move(functions));
 }
 
 }

@@ -16,6 +16,7 @@
 #include <LibJS/Heap/HeapBlock.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/WeakContainer.h>
 #include <setjmp.h>
 
 namespace JS {
@@ -182,18 +183,22 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     dbgln_if(HEAP_DEBUG, "sweep_dead_cells:");
     Vector<HeapBlock*, 32> empty_blocks;
     Vector<HeapBlock*, 32> full_blocks_that_became_usable;
+    Vector<Cell*> sweeped_cells;
 
     size_t collected_cells = 0;
     size_t live_cells = 0;
     size_t collected_cell_bytes = 0;
     size_t live_cell_bytes = 0;
 
+    auto should_store_sweeped_cells = !m_weak_containers.is_empty();
     for_each_block([&](auto& block) {
         bool block_has_live_cells = false;
         bool block_was_full = block.is_full();
         block.template for_each_cell_in_state<Cell::State::Live>([&](Cell* cell) {
             if (!cell->is_marked()) {
                 dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
+                if (should_store_sweeped_cells)
+                    sweeped_cells.append(cell);
                 block.deallocate(cell);
                 ++collected_cells;
                 collected_cell_bytes += block.cell_size();
@@ -220,6 +225,9 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
         dbgln_if(HEAP_DEBUG, " - HeapBlock usable again @ {}: cell_size={}", block, block->cell_size());
         allocator_for_size(block->cell_size()).block_did_become_usable({}, *block);
     }
+
+    for (auto* weak_container : m_weak_containers)
+        weak_container->remove_sweeped_cells({}, sweeped_cells);
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {
@@ -270,6 +278,18 @@ void Heap::did_destroy_marked_value_list(Badge<MarkedValueList>, MarkedValueList
 {
     VERIFY(m_marked_value_lists.contains(&list));
     m_marked_value_lists.remove(&list);
+}
+
+void Heap::did_create_weak_container(Badge<WeakContainer>, WeakContainer& set)
+{
+    VERIFY(!m_weak_containers.contains(&set));
+    m_weak_containers.set(&set);
+}
+
+void Heap::did_destroy_weak_container(Badge<WeakContainer>, WeakContainer& set)
+{
+    VERIFY(m_weak_containers.contains(&set));
+    m_weak_containers.remove(&set);
 }
 
 void Heap::defer_gc(Badge<DeferGC>)

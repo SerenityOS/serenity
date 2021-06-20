@@ -27,7 +27,7 @@ size_t SignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) cons
     return m_unsigned_data.export_data(bytes_view, remove_leading_zeros) + 1;
 }
 
-SignedBigInteger SignedBigInteger::from_base10(StringView str)
+static bool parse_sign(StringView& str)
 {
     bool sign = false;
     if (str.length() > 1) {
@@ -39,7 +39,34 @@ SignedBigInteger SignedBigInteger::from_base10(StringView str)
         if (maybe_sign == '+')
             str = str.substring_view(1, str.length() - 1);
     }
+    return sign;
+}
+
+SignedBigInteger SignedBigInteger::from_base10(StringView str)
+{
+    auto sign = parse_sign(str);
     auto unsigned_data = UnsignedBigInteger::from_base10(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base2(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base2(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base8(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base8(str);
+    return { move(unsigned_data), sign };
+}
+
+SignedBigInteger SignedBigInteger::from_base16(StringView str)
+{
+    auto sign = parse_sign(str);
+    auto unsigned_data = UnsignedBigInteger::from_base16(str);
     return { move(unsigned_data), sign };
 }
 
@@ -53,6 +80,14 @@ String SignedBigInteger::to_base10() const
     builder.append(m_unsigned_data.to_base10());
 
     return builder.to_string();
+}
+
+u64 SignedBigInteger::to_u64() const
+{
+    u64 unsigned_value = m_unsigned_data.to_u64();
+    if (!m_sign)
+        return unsigned_value;
+    return ~(unsigned_value - 1); // equivalent to `-unsigned_value`, but doesnt trigger UBSAN
 }
 
 FLATTEN SignedBigInteger SignedBigInteger::plus(const SignedBigInteger& other) const
@@ -215,6 +250,11 @@ FLATTEN SignedDivisionResult SignedBigInteger::divided_by(const SignedBigInteger
         { move(unsigned_division_result.quotient), result_sign },
         { move(unsigned_division_result.remainder), m_sign }
     };
+}
+
+u32 SignedBigInteger::hash() const
+{
+    return m_unsigned_data.hash() * (1 - (2 * m_sign));
 }
 
 void SignedBigInteger::set_bit_inplace(size_t bit_index)

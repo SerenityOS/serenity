@@ -1,3 +1,8 @@
+serenity_component(
+    Welcome
+    TARGETS Welcome
+)
+
 compile_gml(WelcomeWindow.gml WelcomeWindowGML.h welcome_window_gml)
 
 set(SOURCES

@@ -9,6 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Ptr32.h>
 #include <AK/Types.h>
+#include <Kernel/Devices/USB/USBTransfer.h>
 
 namespace Kernel::USB {
 
@@ -17,6 +18,21 @@ enum class PacketID : u8 {
     OUT = 0xe1,
     SETUP = 0x2d
 };
+
+// Transfer Descriptor register bit offsets/masks
+constexpr u16 TD_CONTROL_STATUS_ACTLEN = 0x7ff;
+constexpr u8 TD_CONTROL_STATUS_ACTIVE_SHIFT = 23;
+constexpr u8 TD_CONTROL_STATUS_INT_ON_COMPLETE_SHIFT = 24;
+constexpr u8 TD_CONTROL_STATUS_ISOCHRONOUS_SHIFT = 25;
+constexpr u8 TD_CONTROL_STATUS_LS_DEVICE_SHIFT = 26;
+constexpr u8 TD_CONTROL_STATUS_ERR_CTR_SHIFT_SHIFT = 27;
+constexpr u8 TD_CONTROL_STATUS_SPD_SHIFT = 29;
+
+constexpr u8 TD_TOKEN_PACKET_ID_SHIFT = 0;
+constexpr u8 TD_TOKEN_DEVICE_ADDR_SHIFT = 8;
+constexpr u8 TD_TOKEN_ENDPOINT_SHIFT = 15;
+constexpr u8 TD_TOKEN_DATA_TOGGLE_SHIFT = 19;
+constexpr u8 TD_TOKEN_MAXLEN_SHIFT = 21;
 
 //
 // Transfer Descriptor
@@ -28,13 +44,13 @@ enum class PacketID : u8 {
 //
 struct QueueHead;
 struct alignas(16) TransferDescriptor final {
-    enum class LinkPointerBits : u32 {
+    enum LinkPointerBits {
         Terminate = 1,
         QHSelect = 2,
         DepthFlag = 4,
     };
 
-    enum class StatusBits : u32 {
+    enum StatusBits {
         Reserved = (1 << 16),
         BitStuffError = (1 << 17),
         CRCTimeoutError = (1 << 18),
@@ -42,12 +58,15 @@ struct alignas(16) TransferDescriptor final {
         BabbleDetected = (1 << 20),
         DataBufferError = (1 << 21),
         Stalled = (1 << 22),
-        Active = (1 << 23)
+        Active = (1 << 23),
+        ErrorMask = BitStuffError | CRCTimeoutError | NAKReceived | BabbleDetected | DataBufferError | Stalled
     };
 
-    enum class ControlBits : u32 {
+    enum ControlBits {
         InterruptOnComplete = (1 << 24),
         IsochronousSelect = (1 << 25),
+        LowSpeedDevice = (1 << 26),
+        ShortPacketDetect = (1 << 29),
     };
 
     TransferDescriptor() = delete;
@@ -59,26 +78,56 @@ struct alignas(16) TransferDescriptor final {
 
     u32 link_ptr() const { return m_link_ptr; }
     u32 paddr() const { return m_paddr; }
-    u32 status() const { return (m_control_status >> 16) & 0xff; }
+    u32 status() const { return m_control_status; }
     u32 token() const { return m_token; }
     u32 buffer_ptr() const { return m_buffer_ptr; }
+    u16 actual_packet_length() const { return (m_control_status + 1) & 0x7ff; }
 
     bool in_use() const { return m_in_use; }
-    bool stalled() const { return m_control_status & static_cast<u32>(StatusBits::Stalled); }
-    bool last_in_chain() const { return m_link_ptr & static_cast<u32>(LinkPointerBits::Terminate); }
-    bool active() const { return m_link_ptr & static_cast<u32>(StatusBits::Active); }
+    bool stalled() const { return m_control_status & StatusBits::Stalled; }
+    bool last_in_chain() const { return m_link_ptr & LinkPointerBits::Terminate; }
+    bool active() const { return m_control_status & StatusBits::Active; }
 
     void set_active()
     {
         u32 ctrl = m_control_status;
-        ctrl |= static_cast<u32>(StatusBits::Active);
+        ctrl |= StatusBits::Active;
         m_control_status = ctrl;
     }
 
     void set_isochronous()
     {
         u32 ctrl = m_control_status;
-        ctrl |= static_cast<u32>(ControlBits::IsochronousSelect);
+        ctrl |= ControlBits::IsochronousSelect;
+        m_control_status = ctrl;
+    }
+
+    void set_interrupt_on_complete()
+    {
+        u32 ctrl = m_control_status;
+        ctrl |= ControlBits::InterruptOnComplete;
+        m_control_status = ctrl;
+    }
+
+    void set_lowspeed()
+    {
+        u32 ctrl = m_control_status;
+        ctrl |= ControlBits::LowSpeedDevice;
+        m_control_status = ctrl;
+    }
+
+    void set_error_retry_counter(u8 num_retries)
+    {
+        VERIFY(num_retries <= 3);
+        u32 ctrl = m_control_status;
+        ctrl |= (num_retries << 27);
+        m_control_status = ctrl;
+    }
+
+    void set_short_packet_detect()
+    {
+        u32 ctrl = m_control_status;
+        ctrl |= ControlBits::ShortPacketDetect;
         m_control_status = ctrl;
     }
 
@@ -90,25 +139,36 @@ struct alignas(16) TransferDescriptor final {
         m_token |= (max_len << 21);
     }
 
+    void set_device_endpoint(u8 endpoint)
+    {
+        VERIFY(endpoint <= 0xf);
+        m_token |= (endpoint << 18);
+    }
+
     void set_device_address(u8 address)
     {
         VERIFY(address <= 0x7f);
         m_token |= (address << 8);
     }
 
+    void set_data_toggle(bool toggle)
+    {
+        m_token |= ((toggle ? (1 << 19) : 0));
+    }
+
     void set_packet_id(PacketID pid) { m_token |= static_cast<u32>(pid); }
     void link_queue_head(u32 qh_paddr)
     {
         m_link_ptr = qh_paddr;
-        m_link_ptr |= static_cast<u32>(LinkPointerBits::QHSelect);
+        m_link_ptr |= LinkPointerBits::QHSelect;
     }
 
     void print()
     {
-        dbgln("UHCI: TD({}) @ {}: link_ptr={}, status={}, token={}, buffer_ptr={}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
+        dbgln("UHCI: TD({:#04x}) @ {:#04x}: link_ptr={:#04x}, status={:#04x}, token={:#04x}, buffer_ptr={:#04x}", this, m_paddr, m_link_ptr, (u32)m_control_status, m_token, m_buffer_ptr);
 
         // Now let's print the flags!
-        dbgln("UHCI: TD({}) @ {}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
+        dbgln("UHCI: TD({:#04x}) @ {:#04x}: link_ptr={}{}{}, status={}{}{}{}{}{}{}",
             this,
             m_paddr,
             (last_in_chain()) ? "T " : "",
@@ -144,7 +204,11 @@ struct alignas(16) TransferDescriptor final {
 
     void terminate() { m_link_ptr |= static_cast<u32>(LinkPointerBits::Terminate); }
 
-    void set_buffer_address(u32 buffer) { m_buffer_ptr = buffer; }
+    void set_buffer_address(Ptr32<u8> buffer)
+    {
+        u8* buffer_address = &*buffer;
+        m_buffer_ptr = reinterpret_cast<uintptr_t>(buffer_address);
+    }
 
     // DEBUG FUNCTIONS!
     void set_token(u32 token)
@@ -155,6 +219,14 @@ struct alignas(16) TransferDescriptor final {
     void set_status(u32 status)
     {
         m_control_status = status;
+    }
+
+    void free()
+    {
+        m_link_ptr = 0;
+        m_control_status = 0;
+        m_token = 0;
+        m_in_use = false;
     }
 
 private:
@@ -214,7 +286,18 @@ struct alignas(16) QueueHead {
     {
         m_link_ptr = qh->paddr();
         m_link_ptr |= static_cast<u32>(LinkPointerBits::QHSelect);
-        set_next_qh(qh);
+    }
+
+    void attach_transfer_queue(QueueHead& qh)
+    {
+        m_element_link_ptr = qh.paddr();
+        m_element_link_ptr = m_element_link_ptr | static_cast<u32>(LinkPointerBits::QHSelect);
+    }
+
+    // FIXME: Find out best way to walk queue and free everything
+    void free_transfer_queue([[maybe_unused]] QueueHead* qh)
+    {
+        TODO();
     }
 
     void terminate_with_stray_descriptor(TransferDescriptor* td)
@@ -230,6 +313,11 @@ struct alignas(16) QueueHead {
         m_element_link_ptr = td->paddr();
     }
 
+    TransferDescriptor* get_first_td()
+    {
+        return m_first_td;
+    }
+
     void terminate() { m_link_ptr |= static_cast<u32>(LinkPointerBits::Terminate); }
 
     void terminate_element_link_ptr()
@@ -237,15 +325,28 @@ struct alignas(16) QueueHead {
         m_element_link_ptr = static_cast<u32>(LinkPointerBits::Terminate);
     }
 
-    // Clean the chain of transfer descriptors
-    void clean_chain()
+    void set_transfer(Transfer* transfer)
     {
-        // TODO
+        m_transfer = transfer;
+    }
+
+    Transfer* transfer()
+    {
+        return m_transfer;
     }
 
     void print()
     {
-        dbgln("UHCI: QH({}) @ {}: link_ptr={}, element_link_ptr={}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
+        dbgln("UHCI: QH({:#04x}) @ {:#04x}: link_ptr={:#04x}, element_link_ptr={:#04x}", this, m_paddr, m_link_ptr, (FlatPtr)m_element_link_ptr);
+    }
+
+    void free()
+    {
+        m_link_ptr = 0;
+        m_element_link_ptr = 0;
+        m_first_td = nullptr;
+        m_transfer = nullptr;
+        m_in_use = false;
     }
 
 private:
@@ -258,6 +359,7 @@ private:
     Ptr32<QueueHead> m_next_qh { nullptr };           // Next QH
     Ptr32<QueueHead> m_prev_qh { nullptr };           // Previous QH
     Ptr32<TransferDescriptor> m_first_td { nullptr }; // Pointer to first TD
+    Ptr32<Transfer> m_transfer { nullptr };           // Pointer to transfer linked to this queue head
     bool m_in_use { false };                          // Is this QH currently in use?
 };
 

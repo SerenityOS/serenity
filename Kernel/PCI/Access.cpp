@@ -80,7 +80,7 @@ u16 Access::early_read_type(Address address)
     return (early_read8_field(address, PCI_CLASS) << 8u) | early_read8_field(address, PCI_SUBCLASS);
 }
 
-void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive)
+UNMAP_AFTER_INIT void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Function<void(Address, ID)>& callback, bool recursive)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating function type={}, bus={}, device={}, function={}", type, bus, device, function);
     Address address(0, bus, device, function);
@@ -95,7 +95,7 @@ void Access::enumerate_functions(int type, u8 bus, u8 device, u8 function, Funct
     }
 }
 
-void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive)
+UNMAP_AFTER_INIT void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address, ID)>& callback, bool recursive)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating device type={}, bus={}, device={}", type, bus, device);
     Address address(0, bus, device, 0);
@@ -111,7 +111,7 @@ void Access::enumerate_device(int type, u8 bus, u8 device, Function<void(Address
     }
 }
 
-void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback, bool recursive)
+UNMAP_AFTER_INIT void Access::enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback, bool recursive)
 {
     dbgln_if(PCI_DEBUG, "PCI: Enumerating bus type={}, bus={}", type, bus);
     for (u8 device = 0; device < 32; ++device)
@@ -130,7 +130,7 @@ void enumerate(Function<void(Address, ID)> callback)
     Access::the().enumerate(callback);
 }
 
-Optional<u8> get_capabilities_pointer(Address address)
+UNMAP_AFTER_INIT Optional<u8> get_capabilities_pointer(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Getting capabilities pointer for {}", address);
     if (PCI::read16(address, PCI_STATUS) & (1 << 4)) {
@@ -146,7 +146,7 @@ PhysicalID get_physical_id(Address address)
     return Access::the().get_physical_id(address);
 }
 
-Vector<Capability> get_capabilities(Address address)
+UNMAP_AFTER_INIT Vector<Capability> get_capabilities(Address address)
 {
     dbgln_if(PCI_DEBUG, "PCI: Getting capabilities for {}", address);
     auto capabilities_pointer = PCI::get_capabilities_pointer(address);

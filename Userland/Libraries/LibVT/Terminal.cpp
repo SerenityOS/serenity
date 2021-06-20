@@ -30,19 +30,19 @@ Terminal::Terminal(Kernel::VirtualConsole& client)
 #ifndef KERNEL
 void Terminal::clear()
 {
+    dbgln_if(TERMINAL_DEBUG, "Clear the entire screen");
     for (size_t i = 0; i < rows(); ++i)
-        active_buffer()[i].clear(m_current_state.attribute);
+        active_buffer()[i].clear();
     set_cursor(0, 0);
 }
 
-void Terminal::clear_including_history()
+void Terminal::clear_history()
 {
+    dbgln_if(TERMINAL_DEBUG, "Clear history");
+    auto previous_history_size = m_history.size();
     m_history.clear();
     m_history_start = 0;
-
-    clear();
-
-    m_client.terminal_history_changed();
+    m_client.terminal_history_changed(-previous_history_size);
 }
 #endif
 
@@ -557,10 +557,10 @@ void Terminal::ECH(Parameters params)
     unsigned num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
-    // Clear from cursor to end of line.
-    for (unsigned i = cursor_column(); i < num; ++i) {
-        put_character_at(cursor_row(), i, ' ');
-    }
+    // Clear num characters from the right of the cursor.
+    auto clear_end = min<unsigned>(m_columns, cursor_column() + num - 1);
+    dbgln_if(TERMINAL_DEBUG, "Erase characters {}-{} on line {}", cursor_column(), clear_end, cursor_row());
+    clear_in_line(cursor_row(), cursor_column(), clear_end);
 }
 
 void Terminal::EL(Parameters params)
@@ -570,22 +570,16 @@ void Terminal::EL(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        // Clear from cursor to end of line.
-        for (int i = cursor_column(); i < m_columns; ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} from cursor column ({}) to the end", cursor_row(), cursor_column());
+        clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
         break;
     case 1:
-        // Clear from cursor to beginning of line.
-        for (int i = 0; i <= cursor_column(); ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} from the start to cursor column ({})", cursor_row(), cursor_column());
+        clear_in_line(cursor_row(), 0, cursor_column());
         break;
     case 2:
-        // Clear the complete line
-        for (int i = 0; i < m_columns; ++i) {
-            put_character_at(cursor_row(), i, ' ');
-        }
+        dbgln_if(TERMINAL_DEBUG, "Clear line {} completely", cursor_row());
+        clear_in_line(cursor_row(), 0, m_columns - 1);
         break;
     default:
         unimplemented_csi_sequence(params, {}, 'K');
@@ -600,31 +594,22 @@ void Terminal::ED(Parameters params)
         mode = params[0];
     switch (mode) {
     case 0:
-        // Clear from cursor to end of screen.
-        for (int i = cursor_column(); i < m_columns; ++i)
-            put_character_at(cursor_row(), i, ' ');
-        for (int row = cursor_row() + 1; row < m_rows; ++row) {
-            for (int column = 0; column < m_columns; ++column) {
-                put_character_at(row, column, ' ');
-            }
-        }
+        dbgln_if(TERMINAL_DEBUG, "Clear from cursor ({},{}) to end of screen", cursor_row(), cursor_column());
+        clear_in_line(cursor_row(), cursor_column(), m_columns - 1);
+        for (int row = cursor_row() + 1; row < m_rows; ++row)
+            clear_in_line(row, 0, m_columns - 1);
         break;
     case 1:
-        // Clear from cursor to beginning of screen.
-        for (int i = cursor_column(); i >= 0; --i)
-            put_character_at(cursor_row(), i, ' ');
-        for (int row = cursor_row() - 1; row >= 0; --row) {
-            for (int column = 0; column < m_columns; ++column) {
-                put_character_at(row, column, ' ');
-            }
-        }
+        dbgln_if(TERMINAL_DEBUG, "Clear from beginning of screen to cursor ({},{})", cursor_row(), cursor_column());
+        clear_in_line(cursor_row(), 0, cursor_column());
+        for (int row = cursor_row() - 1; row >= 0; --row)
+            clear_in_line(row, 0, m_columns - 1);
         break;
     case 2:
         clear();
         break;
     case 3:
-        // FIXME: <esc>[3J should also clear the scrollback buffer.
-        clear();
+        clear_history();
         break;
     default:
         unimplemented_csi_sequence(params, {}, 'J');
@@ -638,8 +623,7 @@ void Terminal::SU(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (u16 i = 0; i < count; i++)
-        scroll_up();
+    scroll_up(count);
 }
 
 void Terminal::SD(Parameters params)
@@ -648,8 +632,7 @@ void Terminal::SD(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
 
-    for (u16 i = 0; i < count; i++)
-        scroll_down();
+    scroll_down(count);
 }
 
 void Terminal::DECSCUSR(Parameters params)
@@ -681,52 +664,33 @@ void Terminal::DECSCUSR(Parameters params)
     }
 }
 
-#ifndef KERNEL
 void Terminal::IL(Parameters params)
 {
-    unsigned count = 1;
+    size_t count = 1;
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
-    invalidate_cursor();
-    for (; count > 0; --count) {
-        active_buffer().insert(cursor_row(), make<Line>(m_columns));
-        if (m_scroll_region_bottom + 1 < active_buffer().size())
-            active_buffer().remove(m_scroll_region_bottom + 1);
-        else
-            active_buffer().remove(active_buffer().size() - 1);
+    if (!is_within_scroll_region(cursor_row())) {
+        dbgln("Shenanigans! Tried to insert line outside the scroll region");
+        return;
     }
-
-    m_need_full_flush = true;
+    scroll_down(cursor_row(), m_scroll_region_bottom, count);
 }
-#endif
 
 void Terminal::DA(Parameters)
 {
     emit_string("\033[?1;0c");
 }
 
-#ifndef KERNEL
 void Terminal::DL(Parameters params)
 {
-    int count = 1;
+    size_t count = 1;
     if (params.size() >= 1 && params[0] != 0)
         count = params[0];
-
-    if (count == 1 && cursor_row() == 0) {
-        scroll_up();
+    if (!is_within_scroll_region(cursor_row())) {
+        dbgln("Shenanigans! Tried to delete line outside the scroll region");
         return;
     }
-
-    int max_count = m_rows - (m_scroll_region_top + cursor_row());
-    count = min(count, max_count);
-
-    for (int c = count; c > 0; --c) {
-        active_buffer().remove(cursor_row());
-        if (m_scroll_region_bottom < active_buffer().size())
-            active_buffer().insert(m_scroll_region_bottom, make<Line>(m_columns));
-        else
-            active_buffer().append(make<Line>(m_columns));
-    }
+    scroll_up(cursor_row(), m_scroll_region_bottom, count);
 }
 
 void Terminal::DCH(Parameters params)
@@ -735,18 +699,9 @@ void Terminal::DCH(Parameters params)
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
 
-    auto& line = active_buffer()[cursor_row()];
-    // Move n characters of line to the left
-    for (size_t i = cursor_column(); i < line.length() - num; i++)
-        line.set_code_point(i, line.code_point(i + num));
-
-    // Fill remainder of line with blanks
-    for (size_t i = line.length() - num; i < line.length(); i++)
-        line.set_code_point(i, ' ');
-
-    line.set_dirty(true);
+    num = min<int>(num, columns() - cursor_column());
+    scroll_left(cursor_row(), cursor_column(), num);
 }
-#endif
 
 void Terminal::linefeed()
 {
@@ -763,33 +718,114 @@ void Terminal::linefeed()
 
 void Terminal::carriage_return()
 {
+    dbgln_if(TERMINAL_DEBUG, "Carriage return");
     set_cursor(cursor_row(), 0);
 }
 
-#ifndef KERNEL
-void Terminal::scroll_up()
+void Terminal::scroll_up(size_t count)
 {
-    dbgln_if(TERMINAL_DEBUG, "Scroll up 1 line");
-    // NOTE: We have to invalidate the cursor first.
-    invalidate_cursor();
-    if (m_scroll_region_top == 0 && !m_use_alternate_screen_buffer) {
-        auto line = move(active_buffer().ptr_at(m_scroll_region_top));
-        add_line_to_history(move(line));
-        m_client.terminal_history_changed();
-    }
-    active_buffer().remove(m_scroll_region_top);
-    active_buffer().insert(m_scroll_region_bottom, make<Line>(m_columns));
-    m_need_full_flush = true;
+    scroll_up(m_scroll_region_top, m_scroll_region_bottom, count);
 }
 
-void Terminal::scroll_down()
+void Terminal::scroll_down(size_t count)
 {
-    dbgln_if(TERMINAL_DEBUG, "Scroll down 1 line");
+    scroll_down(m_scroll_region_top, m_scroll_region_bottom, count);
+}
+
+#ifndef KERNEL
+// Insert `count` blank lines at the bottom of the region. Text moves up, top lines get added to the scrollback.
+void Terminal::scroll_up(u16 region_top, u16 region_bottom, size_t count)
+{
+    VERIFY(region_top <= region_bottom);
+    VERIFY(region_bottom < rows());
+    // Only the specified region should be affected.
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    dbgln_if(TERMINAL_DEBUG, "Scroll up {} lines in region {}-{}", count, region_top, region_bottom);
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
-    active_buffer().remove(m_scroll_region_bottom);
-    active_buffer().insert(m_scroll_region_top, make<Line>(m_columns));
-    m_need_full_flush = true;
+
+    int history_delta = -count;
+    bool should_move_to_scrollback = !m_use_alternate_screen_buffer && max_history_size() != 0;
+    if (should_move_to_scrollback) {
+        auto remaining_lines = max_history_size() - history_size();
+        history_delta = (count > remaining_lines) ? remaining_lines - count : 0;
+        for (size_t i = 0; i < count; ++i)
+            add_line_to_history(move(active_buffer().ptr_at(region_top + i)));
+    }
+
+    // Move lines into their new place.
+    for (u16 row = region_top; row + count <= region_bottom; ++row)
+        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row + count));
+    // Clear 'new' lines at the bottom.
+    if (should_move_to_scrollback) {
+        // Since we moved the previous lines into history, we can't just clear them.
+        for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
+            active_buffer().ptr_at(row) = make<Line>(columns());
+    } else {
+        // The new lines haven't been moved and we don't want to leak memory.
+        for (u16 row = region_bottom + 1 - count; row <= region_bottom; ++row)
+            active_buffer()[row].clear();
+    }
+    // Set dirty flag on swapped lines.
+    // The other lines have implicitly been set dirty by being cleared.
+    for (u16 row = region_top; row <= region_bottom - count; ++row)
+        active_buffer()[row].set_dirty(true);
+    m_client.terminal_history_changed(history_delta);
+}
+
+// Insert `count` blank lines at the top of the region. Text moves down. Does not affect the scrollback buffer.
+void Terminal::scroll_down(u16 region_top, u16 region_bottom, size_t count)
+{
+    VERIFY(region_top <= region_bottom);
+    VERIFY(region_bottom < rows());
+    // Only the specified region should be affected.
+    size_t region_size = region_bottom - region_top + 1;
+    count = min(count, region_size);
+    dbgln_if(TERMINAL_DEBUG, "Scroll down {} lines in region {}-{}", count, region_top, region_bottom);
+    // NOTE: We have to invalidate the cursor first.
+    invalidate_cursor();
+
+    // Move lines into their new place.
+    for (int row = region_bottom; row >= static_cast<int>(region_top + count); --row)
+        swap(active_buffer().ptr_at(row), active_buffer().ptr_at(row - count));
+    // Clear the 'new' lines at the top.
+    for (u16 row = region_top; row < region_top + count; ++row)
+        active_buffer()[row].clear();
+    // Set dirty flag on swapped lines.
+    // The other lines have implicitly been set dirty by being cleared.
+    for (u16 row = region_top + count; row <= region_bottom; ++row)
+        active_buffer()[row].set_dirty(true);
+}
+
+// Insert `count` blank cells at the end of the line. Text moves left.
+void Terminal::scroll_left(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    dbgln_if(TERMINAL_DEBUG, "Scroll left {} columns from line {} column {}", count, row, column);
+
+    auto& line = active_buffer()[row];
+    for (size_t i = column; i < columns() - count; ++i)
+        swap(line.cell_at(i), line.cell_at(i + count));
+    clear_in_line(row, columns() - count, columns() - 1);
+    line.set_dirty(true);
+}
+
+// Insert `count` blank cells after `row`. Text moves right.
+void Terminal::scroll_right(u16 row, u16 column, size_t count)
+{
+    VERIFY(row < rows());
+    VERIFY(column < columns());
+    count = min<size_t>(count, columns() - column);
+    dbgln_if(TERMINAL_DEBUG, "Scroll right {} columns from line {} column {}", count, row, column);
+
+    auto& line = active_buffer()[row];
+    for (int i = columns() - 1; i >= static_cast<int>(column + count); --i)
+        swap(line.cell_at(i), line.cell_at(i - count));
+    clear_in_line(row, column, column + count - 1);
+    line.set_dirty(true);
 }
 
 void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
@@ -803,6 +839,12 @@ void Terminal::put_character_at(unsigned row, unsigned column, u32 code_point)
     line.set_dirty(true);
 
     m_last_code_point = code_point;
+}
+
+void Terminal::clear_in_line(u16 row, u16 first_column, u16 last_column)
+{
+    VERIFY(row < rows());
+    active_buffer()[row].clear_range(first_column, last_column);
 }
 #endif
 
@@ -849,6 +891,44 @@ void Terminal::RI()
         set_cursor(cursor_row() - 1, cursor_column());
 }
 
+void Terminal::DECFI()
+{
+    if (cursor_column() == columns() - 1)
+        scroll_left(cursor_row(), 0, 1);
+    else
+        set_cursor(cursor_row(), cursor_column() + 1);
+}
+
+void Terminal::DECBI()
+{
+    if (cursor_column() == 0)
+        scroll_right(cursor_row(), 0, 1);
+    else
+        set_cursor(cursor_row(), cursor_column() - 1);
+}
+
+void Terminal::DECIC(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+
+    num = min<unsigned>(num, columns() - cursor_column());
+    for (unsigned row = cursor_row(); row <= m_scroll_region_bottom; ++row)
+        scroll_right(row, cursor_column(), num);
+}
+
+void Terminal::DECDC(Parameters params)
+{
+    unsigned num = 1;
+    if (params.size() >= 1 && params[0] != 0)
+        num = params[0];
+
+    num = min<unsigned>(num, columns() - cursor_column());
+    for (unsigned row = cursor_row(); row <= m_scroll_region_bottom; ++row)
+        scroll_left(row, cursor_column(), num);
+}
+
 void Terminal::DSR(Parameters params)
 {
     if (params.size() == 1 && params[0] == 5) {
@@ -862,25 +942,15 @@ void Terminal::DSR(Parameters params)
     }
 }
 
-#ifndef KERNEL
 void Terminal::ICH(Parameters params)
 {
     unsigned num = 1;
     if (params.size() >= 1 && params[0] != 0)
         num = params[0];
 
-    auto& line = active_buffer()[cursor_row()];
-    // Move characters after cursor to the right
-    for (unsigned i = line.length() - num; i >= cursor_column(); --i)
-        line.set_code_point(i + num, line.code_point(i));
-
-    // Fill n characters after cursor with blanks
-    for (unsigned i = 0; i < num; i++)
-        line.set_code_point(cursor_column() + i, ' ');
-
-    line.set_dirty(true);
+    num = min<unsigned>(num, columns() - cursor_column());
+    scroll_right(cursor_row(), cursor_column(), num);
 }
-#endif
 
 void Terminal::on_input(u8 byte)
 {
@@ -962,11 +1032,17 @@ void Terminal::execute_escape_sequence(Intermediates intermediates, bool ignore,
         case '\\':
             // ST (string terminator) -- do nothing
             return;
+        case '6':
+            DECBI();
+            return;
         case '7':
             DECSC();
             return;
         case '8':
             DECRC();
+            return;
+        case '9':
+            DECFI();
             return;
         }
     } else if (intermediates[0] == '#') {
@@ -1092,6 +1168,18 @@ void Terminal::execute_csi_sequence(Parameters parameters, Intermediates interme
         break;
     case 'u':
         SCORC();
+        break;
+    case '}':
+        if (intermediates.size() >= 1 && intermediates[0] == '\'')
+            DECIC(parameters);
+        else
+            unimplemented_csi_sequence(parameters, intermediates, last_byte);
+        break;
+    case '~':
+        if (intermediates.size() >= 1 && intermediates[0] == '\'')
+            DECDC(parameters);
+        else
+            unimplemented_csi_sequence(parameters, intermediates, last_byte);
         break;
     default:
         unimplemented_csi_sequence(parameters, intermediates, last_byte);

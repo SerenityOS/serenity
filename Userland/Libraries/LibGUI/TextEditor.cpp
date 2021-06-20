@@ -127,7 +127,7 @@ void TextEditor::update_content_size()
         content_width = max(frame_inner_rect().width(), content_width);
 
     set_content_size({ content_width, content_height });
-    set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
+    set_size_occupied_by_fixed_elements({ ruler_width() + gutter_width(), 0 });
 }
 
 TextPosition TextEditor::text_position_at_content_position(const Gfx::IntPoint& content_position) const
@@ -195,7 +195,7 @@ TextPosition TextEditor::text_position_at(const Gfx::IntPoint& widget_position) 
 {
     auto content_position = widget_position;
     content_position.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
-    content_position.translate_by(-(m_horizontal_content_padding + ruler_width()), 0);
+    content_position.translate_by(-(m_horizontal_content_padding + ruler_width() + gutter_width()), 0);
     content_position.translate_by(-frame_thickness(), -frame_thickness());
     return text_position_at_content_position(content_position);
 }
@@ -339,8 +339,15 @@ int TextEditor::ruler_width() const
     if (!m_ruler_visible)
         return 0;
     int line_count_digits = static_cast<int>(log10(line_count())) + 1;
-    constexpr size_t padding = 20;
+    constexpr size_t padding = 5;
     return line_count() < 10 ? (line_count_digits + 1) * font().glyph_width('x') + padding : line_count_digits * font().glyph_width('x') + padding;
+}
+
+int TextEditor::gutter_width() const
+{
+    if (!m_gutter_visible)
+        return 0;
+    return line_height(); // square gutter
 }
 
 Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
@@ -355,9 +362,26 @@ Gfx::IntRect TextEditor::ruler_content_rect(size_t line_index) const
     };
 }
 
+Gfx::IntRect TextEditor::gutter_content_rect(size_t line_index) const
+{
+    if (!m_gutter_visible)
+        return {};
+    return {
+        0 - ruler_width() - gutter_width() + horizontal_scrollbar().value(),
+        line_content_rect(line_index).y(),
+        gutter_width(),
+        line_content_rect(line_index).height()
+    };
+}
+
 Gfx::IntRect TextEditor::ruler_rect_in_inner_coordinates() const
 {
-    return { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
+    return { gutter_width(), 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
+}
+
+Gfx::IntRect TextEditor::gutter_rect_in_inner_coordinates() const
+{
+    return { 0, 0, gutter_width(), height() - height_occupied_by_horizontal_scrollbar() };
 }
 
 Gfx::IntRect TextEditor::visible_text_rect_in_inner_coordinates() const
@@ -398,16 +422,22 @@ void TextEditor::paint_event(PaintEvent& event)
 
     painter.translate(frame_thickness(), frame_thickness());
 
-    auto ruler_rect = ruler_rect_in_inner_coordinates();
+    if (m_gutter_visible) {
+        auto gutter_rect = gutter_rect_in_inner_coordinates();
+        painter.fill_rect(gutter_rect, palette().gutter());
+        if (!m_ruler_visible)
+            painter.draw_line(gutter_rect.top_right(), gutter_rect.bottom_right(), palette().gutter_border());
+    }
 
     if (m_ruler_visible) {
+        auto ruler_rect = ruler_rect_in_inner_coordinates();
         painter.fill_rect(ruler_rect, palette().ruler());
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), palette().ruler_border());
     }
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
-    if (m_ruler_visible)
-        painter.translate(ruler_width(), 0);
+    painter.translate(gutter_width(), 0);
+    painter.translate(ruler_width(), 0);
 
     size_t first_visible_line = text_position_at(event.rect().top_left()).line();
     size_t last_visible_line = text_position_at(event.rect().bottom_right()).line();
@@ -428,14 +458,19 @@ void TextEditor::paint_event(PaintEvent& event)
         }
     }
 
+    auto text_left = 0;
+    if (m_ruler_visible)
+        text_left = ruler_rect_in_inner_coordinates().right() + 1;
+    else if (m_gutter_visible)
+        text_left = gutter_rect_in_inner_coordinates().right() + 1;
+    text_left += frame_thickness();
+
     Gfx::IntRect text_clip_rect {
-        (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + frame_thickness() + 1) : frame_thickness()),
+        0,
         frame_thickness(),
-        width() - width_occupied_by_vertical_scrollbar() - ruler_width(),
+        width() - width_occupied_by_vertical_scrollbar() - text_left,
         height() - height_occupied_by_horizontal_scrollbar()
     };
-    if (m_ruler_visible)
-        text_clip_rect.translate_by(-ruler_width(), 0);
     text_clip_rect.translate_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
     painter.add_clip_rect(text_clip_rect);
 
@@ -1170,24 +1205,25 @@ bool TextEditor::write_to_file(const String& path)
         return false;
     }
 
-    if (file_size == 0)
-        return true;
-
-    for (size_t i = 0; i < line_count(); ++i) {
-        auto& line = this->line(i);
-        if (line.length()) {
-            auto line_as_utf8 = line.to_utf8();
-            ssize_t nwritten = write(fd, line_as_utf8.characters(), line_as_utf8.length());
-            if (nwritten < 0) {
+    if (file_size == 0) {
+        // A size 0 file doesn't need a data copy.
+    } else {
+        for (size_t i = 0; i < line_count(); ++i) {
+            auto& line = this->line(i);
+            if (line.length()) {
+                auto line_as_utf8 = line.to_utf8();
+                ssize_t nwritten = write(fd, line_as_utf8.characters(), line_as_utf8.length());
+                if (nwritten < 0) {
+                    perror("write");
+                    return false;
+                }
+            }
+            char ch = '\n';
+            ssize_t nwritten = write(fd, &ch, 1);
+            if (nwritten != 1) {
                 perror("write");
                 return false;
             }
-        }
-        char ch = '\n';
-        ssize_t nwritten = write(fd, &ch, 1);
-        if (nwritten != 1) {
-            perror("write");
-            return false;
         }
     }
     document().set_unmodified();
@@ -1357,10 +1393,6 @@ void TextEditor::leave_event(Core::Event&)
 {
     if (m_in_drag_select)
         m_automatic_selection_scroll_timer->start();
-    if (m_autocomplete_timer)
-        m_autocomplete_timer->stop();
-    if (m_autocomplete_box)
-        m_autocomplete_box->close();
 }
 
 void TextEditor::did_change()
@@ -1859,6 +1891,15 @@ void TextEditor::set_ruler_visible(bool visible)
     if (m_ruler_visible == visible)
         return;
     m_ruler_visible = visible;
+    recompute_all_visual_lines();
+    update();
+}
+
+void TextEditor::set_gutter_visible(bool visible)
+{
+    if (m_gutter_visible == visible)
+        return;
+    m_gutter_visible = visible;
     recompute_all_visual_lines();
     update();
 }

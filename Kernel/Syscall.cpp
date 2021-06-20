@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/ScopeGuard.h>
 #include <Kernel/API/Syscall.h>
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Panic.h>
@@ -120,15 +121,7 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         return ENOSYS;
     }
 
-    // This appears to be a bogus warning, as s_syscall_table is always
-    // initialized, and the index (function) is always bounded.
-    // TODO: Figure out how to avoid the suppression.
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
-
     return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
-
-#pragma GCC diagnostic pop
 }
 
 }
@@ -137,6 +130,14 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 {
     auto& regs = *trap->regs;
     auto current_thread = Thread::current();
+    {
+        ScopedSpinLock lock(g_scheduler_lock);
+        current_thread->set_may_die_immediately(false);
+    }
+    ScopeGuard reset_may_die_immediately = [&current_thread] {
+        ScopedSpinLock lock(g_scheduler_lock);
+        current_thread->set_may_die_immediately(true);
+    };
     VERIFY(current_thread->previous_mode() == Thread::PreviousMode::UserMode);
     auto& process = current_thread->process();
 

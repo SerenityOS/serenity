@@ -29,7 +29,7 @@ public:
     void for_each_menu(Callback callback)
     {
         for (auto& menu : m_menus) {
-            if (callback(*menu) == IterationDecision::Break)
+            if (callback(menu) == IterationDecision::Break)
                 return;
         }
     }
@@ -39,7 +39,7 @@ private:
 
     ClientConnection& m_client;
     int m_menubar_id { 0 };
-    Vector<Menu*> m_menus;
+    Vector<Menu&> m_menus;
 };
 
 }

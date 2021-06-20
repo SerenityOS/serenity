@@ -22,7 +22,7 @@ EraseTool::~EraseTool()
 {
 }
 
-Gfx::IntRect EraseTool::build_rect(const Gfx::IntPoint& pos, const Gfx::IntRect& widget_rect)
+Gfx::IntRect EraseTool::build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect)
 {
     const int base_eraser_size = 10;
     const int eraser_size = (base_eraser_size * m_thickness);
@@ -39,7 +39,7 @@ void EraseTool::on_mousedown(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
     Gfx::IntRect r = build_rect(event.position(), layer.rect());
     GUI::Painter painter(layer.bitmap());
     painter.clear_rect(r, get_color());
-    layer.did_modify_bitmap(*m_editor->image());
+    layer.did_modify_bitmap();
 }
 
 void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEvent&)
@@ -48,7 +48,7 @@ void EraseTool::on_mousemove(Layer& layer, GUI::MouseEvent& event, GUI::MouseEve
         Gfx::IntRect r = build_rect(event.position(), layer.rect());
         GUI::Painter painter(layer.bitmap());
         painter.clear_rect(r, get_color());
-        layer.did_modify_bitmap(*m_editor->image());
+        layer.did_modify_bitmap();
     }
 }
 

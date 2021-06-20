@@ -6,6 +6,7 @@
 
 #include <AK/Debug.h>
 #include <AK/HashMap.h>
+#include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
 #include <AK/ScopeGuard.h>
@@ -30,6 +31,7 @@
 namespace GUI {
 
 static i32 s_next_backing_store_serial;
+static IDAllocator s_window_id_allocator;
 
 class WindowBackingStore {
 public:
@@ -118,7 +120,10 @@ void Window::show()
 
     auto* parent_window = find_parent_window();
 
-    m_window_id = WindowServerConnection::the().create_window(
+    m_window_id = s_window_id_allocator.allocate();
+
+    WindowServerConnection::the().async_create_window(
+        m_window_id,
         m_rect_when_windowless,
         !m_moved_by_client,
         m_has_alpha_channel,
@@ -375,7 +380,7 @@ void Window::handle_multi_paint_event(MultiPaintEvent& event)
         // It's possible that there had been some calls to update() that
         // haven't been flushed. We can handle these right now, avoiding
         // another round trip.
-        rects.append(move(m_pending_paint_event_rects));
+        rects.extend(move(m_pending_paint_event_rects));
     }
     VERIFY(!rects.is_empty());
     if (m_back_store && m_back_store->size() != event.window_size()) {
@@ -490,11 +495,11 @@ void Window::handle_theme_change_event(ThemeChangeEvent& event)
     dispatch_theme_change(*m_main_widget.ptr(), dispatch_theme_change);
 }
 
-void Window::handle_screen_rect_change_event(ScreenRectChangeEvent& event)
+void Window::handle_screen_rects_change_event(ScreenRectsChangeEvent& event)
 {
     if (!m_main_widget)
         return;
-    auto dispatch_screen_rect_change = [&](auto& widget, auto recursive) {
+    auto dispatch_screen_rects_change = [&](auto& widget, auto recursive) {
         widget.dispatch_event(event, this);
         widget.for_each_child_widget([&](auto& widget) -> IterationDecision {
             widget.dispatch_event(event, this);
@@ -502,8 +507,8 @@ void Window::handle_screen_rect_change_event(ScreenRectChangeEvent& event)
             return IterationDecision::Continue;
         });
     };
-    dispatch_screen_rect_change(*m_main_widget.ptr(), dispatch_screen_rect_change);
-    screen_rect_change_event(event);
+    dispatch_screen_rects_change(*m_main_widget.ptr(), dispatch_screen_rects_change);
+    screen_rects_change_event(event);
 }
 
 void Window::handle_drag_move_event(DragEvent& event)
@@ -573,8 +578,8 @@ void Window::event(Core::Event& event)
     if (event.type() == Event::ThemeChange)
         return handle_theme_change_event(static_cast<ThemeChangeEvent&>(event));
 
-    if (event.type() == Event::ScreenRectChange)
-        return handle_screen_rect_change_event(static_cast<ScreenRectChangeEvent&>(event));
+    if (event.type() == Event::ScreenRectsChange)
+        return handle_screen_rects_change_event(static_cast<ScreenRectsChangeEvent&>(event));
 
     Core::Object::event(event);
 }
@@ -806,7 +811,7 @@ void Window::wm_event(WMEvent&)
 {
 }
 
-void Window::screen_rect_change_event(ScreenRectChangeEvent&)
+void Window::screen_rects_change_event(ScreenRectsChangeEvent&)
 {
 }
 
@@ -843,13 +848,13 @@ void Window::start_interactive_resize()
     WindowServerConnection::the().async_start_window_resize(m_window_id);
 }
 
-Vector<Widget*> Window::focusable_widgets(FocusSource source) const
+Vector<Widget&> Window::focusable_widgets(FocusSource source) const
 {
     if (!m_main_widget)
         return {};
 
     HashTable<Widget*> seen_widgets;
-    Vector<Widget*> collected_widgets;
+    Vector<Widget&> collected_widgets;
 
     Function<void(Widget&)> collect_focusable_widgets = [&](auto& widget) {
         bool widget_accepts_focus = false;
@@ -868,7 +873,7 @@ Vector<Widget*> Window::focusable_widgets(FocusSource source) const
         if (widget_accepts_focus) {
             auto& effective_focus_widget = widget.focus_proxy() ? *widget.focus_proxy() : widget;
             if (seen_widgets.set(&effective_focus_widget) == AK::HashSetResult::InsertedNewEntry)
-                collected_widgets.append(&effective_focus_widget);
+                collected_widgets.append(effective_focus_widget);
         }
         widget.for_each_child_widget([&](auto& child) {
             if (!child.is_visible())
@@ -913,6 +918,11 @@ bool Window::is_maximized() const
         return false;
 
     return WindowServerConnection::the().is_maximized(m_window_id);
+}
+
+void Window::set_maximized(bool maximized)
+{
+    WindowServerConnection::the().async_set_maximized(m_window_id, maximized);
 }
 
 void Window::schedule_relayout()
@@ -1056,7 +1066,7 @@ void Window::focus_a_widget_if_possible(FocusSource source)
 {
     auto focusable_widgets = this->focusable_widgets(source);
     if (!focusable_widgets.is_empty())
-        set_focused_widget(focusable_widgets[0], source);
+        set_focused_widget(&focusable_widgets[0], source);
 }
 
 void Window::did_disable_focused_widget(Badge<Widget>)

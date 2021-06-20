@@ -22,4 +22,13 @@ test("arguments that evaluate to true", () => {
     expect(Array.isArray(new Array(10))).toBeTrue();
     expect(Array.isArray(new Array("a", "b", "c"))).toBeTrue();
     expect(Array.isArray(Array.prototype)).toBeTrue();
+    expect(Array.isArray(new Proxy([], {}))).toBeTrue();
+});
+
+test("Revoked Proxy as argument throws", () => {
+    const revocable = Proxy.revocable([], {});
+    revocable.revoke();
+    expect(() => {
+        Array.isArray(revocable.proxy);
+    }).toThrowWithMessage(TypeError, "An operation was performed on a revoked Proxy object");
 });

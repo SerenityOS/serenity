@@ -34,20 +34,25 @@ String OutlineItem::to_string(int indent) const
     return builder.to_string();
 }
 
-Document::Document(const ReadonlyBytes& bytes)
-    : m_parser(Parser({}, bytes))
+RefPtr<Document> Document::create(ReadonlyBytes const& bytes)
 {
-    m_parser.set_document(this);
+    auto parser = adopt_ref(*new Parser({}, bytes));
+    auto document = adopt_ref(*new Document(parser));
 
-    VERIFY(m_parser.perform_validation());
-    auto [xref_table, trailer] = m_parser.parse_last_xref_table_and_trailer();
+    if (!parser->initialize())
+        return {};
 
-    m_xref_table = xref_table;
-    m_trailer = trailer;
+    document->m_catalog = parser->trailer()->get_dict(document, CommonNames::Root);
+    document->build_page_tree();
+    document->build_outline();
 
-    m_catalog = m_trailer->get_dict(this, CommonNames::Root);
-    build_page_tree();
-    build_outline();
+    return document;
+}
+
+Document::Document(NonnullRefPtr<Parser> const& parser)
+    : m_parser(parser)
+{
+    m_parser->set_document(this);
 }
 
 Value Document::get_or_load_value(u32 index)
@@ -56,13 +61,9 @@ Value Document::get_or_load_value(u32 index)
     if (value)
         return value;
 
-    VERIFY(m_xref_table.has_object(index));
-    auto byte_offset = m_xref_table.byte_offset_for_object(index);
-    auto indirect_value = m_parser.parse_indirect_value_at_offset(byte_offset);
-    VERIFY(indirect_value->index() == index);
-    value = indirect_value->value();
-    m_values.set(index, value);
-    return value;
+    auto object = m_parser->parse_object_with_index(index);
+    m_values.set(index, object);
+    return object;
 }
 
 u32 Document::get_first_page_index() const
@@ -87,6 +88,11 @@ Page Document::get_page(u32 index)
 
     auto page_object_index = m_page_object_indices[index];
     auto raw_page_object = resolve_to<DictObject>(get_or_load_value(page_object_index));
+
+    if (!raw_page_object->contains(CommonNames::Resources)) {
+        // This page inherits its resource dictionary
+        TODO();
+    }
 
     auto resources = raw_page_object->get_dict(this, CommonNames::Resources);
     auto contents = raw_page_object->get_object(this, CommonNames::Contents);
@@ -125,7 +131,7 @@ Page Document::get_page(u32 index)
     return page;
 }
 
-Value Document::resolve(const Value& value)
+Value Document::resolve(Value const& value)
 {
     if (value.is_ref()) {
         // FIXME: Surely indirect PDF objects can't contain another indirect PDF object,
@@ -145,14 +151,19 @@ Value Document::resolve(const Value& value)
     return obj;
 }
 
-void Document::build_page_tree()
+bool Document::build_page_tree()
 {
+    if (!m_catalog->contains(CommonNames::Pages))
+        return false;
     auto page_tree = m_catalog->get_dict(this, CommonNames::Pages);
-    add_page_tree_node_to_page_tree(page_tree);
+    return add_page_tree_node_to_page_tree(page_tree);
 }
 
-void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tree)
+bool Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> const& page_tree)
 {
+    if (!page_tree->contains(CommonNames::Kids) || !page_tree->contains(CommonNames::Count))
+        return false;
+
     auto kids_array = page_tree->get_array(this, CommonNames::Kids);
     auto page_count = page_tree->get(CommonNames::Count).value().as_int();
 
@@ -162,21 +173,24 @@ void Document::add_page_tree_node_to_page_tree(NonnullRefPtr<DictObject> page_tr
 
         for (auto& value : *kids_array) {
             auto reference_index = value.as_ref_index();
-            auto byte_offset = m_xref_table.byte_offset_for_object(reference_index);
-            auto maybe_page_tree_node = m_parser.conditionally_parse_page_tree_node_at_offset(byte_offset);
+            bool ok;
+            auto maybe_page_tree_node = m_parser->conditionally_parse_page_tree_node(reference_index, ok);
+            if (!ok)
+                return false;
             if (maybe_page_tree_node) {
-                add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull());
+                if (!add_page_tree_node_to_page_tree(maybe_page_tree_node.release_nonnull()))
+                    return false;
             } else {
                 m_page_object_indices.append(reference_index);
             }
         }
-
-        return;
+    } else {
+        // We know all of the kids are leaf nodes
+        for (auto& value : *kids_array)
+            m_page_object_indices.append(value.as_ref_index());
     }
 
-    // We know all of the kids are leaf nodes
-    for (auto& value : *kids_array)
-        m_page_object_indices.append(value.as_ref_index());
+    return true;
 }
 
 void Document::build_outline()
@@ -187,8 +201,8 @@ void Document::build_outline()
     auto outline_dict = m_catalog->get_dict(this, CommonNames::Outlines);
     if (!outline_dict->contains(CommonNames::First))
         return;
-
-    VERIFY(outline_dict->contains(CommonNames::Last));
+    if (!outline_dict->contains(CommonNames::Last))
+        return;
 
     auto first_ref = outline_dict->get_value(CommonNames::First);
     auto last_ref = outline_dict->get_value(CommonNames::Last);
@@ -202,7 +216,7 @@ void Document::build_outline()
         m_outline->count = outline_dict->get_value(CommonNames::Count).as_int();
 }
 
-NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> outline_item_dict)
+NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject> const& outline_item_dict)
 {
     auto outline_item = adopt_ref(*new OutlineItem {});
 
@@ -270,7 +284,7 @@ NonnullRefPtr<OutlineItem> Document::build_outline_item(NonnullRefPtr<DictObject
     return outline_item;
 }
 
-NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(const Value& first_ref, const Value& last_ref)
+NonnullRefPtrVector<OutlineItem> Document::build_outline_item_chain(Value const& first_ref, Value const& last_ref)
 {
     VERIFY(first_ref.is_ref());
     VERIFY(last_ref.is_ref());

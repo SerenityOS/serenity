@@ -20,7 +20,7 @@ static void finalizer_task(void*)
     }
 };
 
-void FinalizerTask::spawn()
+UNMAP_AFTER_INIT void FinalizerTask::spawn()
 {
     RefPtr<Thread> finalizer_thread;
     auto finalizer_process = Process::create_kernel_process(finalizer_thread, "FinalizerTask", finalizer_task, nullptr);

@@ -16,25 +16,30 @@ class Error : public Object {
     JS_OBJECT(Error, Object);
 
 public:
-    static Error* create(GlobalObject&, const String& message = {});
+    static Error* create(GlobalObject&);
+    static Error* create(GlobalObject&, String const& message);
 
     explicit Error(Object& prototype);
     virtual ~Error() override = default;
 };
 
-#define DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName) \
-    class ClassName final : public Error {                                            \
-        JS_OBJECT(ClassName, Error);                                                  \
-                                                                                      \
-    public:                                                                           \
-        static ClassName* create(GlobalObject&, const String& message = {});          \
-                                                                                      \
-        explicit ClassName(Object& prototype);                                        \
-        virtual ~ClassName() override = default;                                      \
+// NOTE: Making these inherit from Error is not required by the spec but
+//       our way of implementing the [[ErrorData]] internal slot, which is
+//       used in Object.prototype.toString().
+#define DECLARE_NATIVE_ERROR(ClassName, snake_name, PrototypeName, ConstructorName) \
+    class ClassName final : public Error {                                          \
+        JS_OBJECT(ClassName, Error);                                                \
+                                                                                    \
+    public:                                                                         \
+        static ClassName* create(GlobalObject&);                                    \
+        static ClassName* create(GlobalObject&, String const& message);             \
+                                                                                    \
+        explicit ClassName(Object& prototype);                                      \
+        virtual ~ClassName() override = default;                                    \
     };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
-    DECLARE_ERROR_SUBCLASS(ClassName, snake_name, PrototypeName, ConstructorName)
-JS_ENUMERATE_ERROR_SUBCLASSES
+    DECLARE_NATIVE_ERROR(ClassName, snake_name, PrototypeName, ConstructorName)
+JS_ENUMERATE_NATIVE_ERRORS
 #undef __JS_ENUMERATE
 }

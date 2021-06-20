@@ -9,53 +9,77 @@
 #include <AK/Forward.h>
 #include <LibJS/Forward.h>
 
-#define ENUMERATE_BYTECODE_OPS(O) \
-    O(Load)                       \
-    O(LoadRegister)               \
-    O(Add)                        \
-    O(Sub)                        \
-    O(Mul)                        \
-    O(Div)                        \
-    O(Mod)                        \
-    O(Exp)                        \
-    O(GreaterThan)                \
-    O(GreaterThanEquals)          \
-    O(LessThan)                   \
-    O(LessThanEquals)             \
-    O(AbstractInequals)           \
-    O(AbstractEquals)             \
-    O(TypedInequals)              \
-    O(TypedEquals)                \
-    O(NewString)                  \
-    O(NewObject)                  \
-    O(GetVariable)                \
-    O(SetVariable)                \
-    O(PutById)                    \
-    O(GetById)                    \
-    O(Jump)                       \
-    O(JumpIfFalse)                \
-    O(JumpIfTrue)                 \
-    O(Call)                       \
-    O(EnterScope)                 \
-    O(Return)                     \
-    O(BitwiseAnd)                 \
-    O(BitwiseOr)                  \
-    O(BitwiseXor)                 \
-    O(BitwiseNot)                 \
-    O(Not)                        \
-    O(UnaryPlus)                  \
-    O(UnaryMinus)                 \
-    O(Typeof)                     \
-    O(LeftShift)                  \
-    O(RightShift)                 \
-    O(UnsignedRightShift)         \
-    O(In)                         \
-    O(InstanceOf)
+#define ENUMERATE_BYTECODE_OPS(O)    \
+    O(Load)                          \
+    O(LoadImmediate)                 \
+    O(Store)                         \
+    O(Add)                           \
+    O(Sub)                           \
+    O(Mul)                           \
+    O(Div)                           \
+    O(Mod)                           \
+    O(Exp)                           \
+    O(GreaterThan)                   \
+    O(GreaterThanEquals)             \
+    O(LessThan)                      \
+    O(LessThanEquals)                \
+    O(AbstractInequals)              \
+    O(AbstractEquals)                \
+    O(TypedInequals)                 \
+    O(TypedEquals)                   \
+    O(NewBigInt)                     \
+    O(NewArray)                      \
+    O(IteratorToArray)               \
+    O(NewString)                     \
+    O(NewObject)                     \
+    O(CopyObjectExcludingProperties) \
+    O(GetVariable)                   \
+    O(SetVariable)                   \
+    O(PutById)                       \
+    O(GetById)                       \
+    O(PutByValue)                    \
+    O(GetByValue)                    \
+    O(Jump)                          \
+    O(JumpConditional)               \
+    O(JumpNullish)                   \
+    O(JumpUndefined)                 \
+    O(Call)                          \
+    O(NewFunction)                   \
+    O(Return)                        \
+    O(BitwiseAnd)                    \
+    O(BitwiseOr)                     \
+    O(BitwiseXor)                    \
+    O(BitwiseNot)                    \
+    O(Not)                           \
+    O(UnaryPlus)                     \
+    O(UnaryMinus)                    \
+    O(Typeof)                        \
+    O(LeftShift)                     \
+    O(RightShift)                    \
+    O(UnsignedRightShift)            \
+    O(In)                            \
+    O(InstanceOf)                    \
+    O(ConcatString)                  \
+    O(Increment)                     \
+    O(Decrement)                     \
+    O(Throw)                         \
+    O(PushLexicalEnvironment)        \
+    O(LoadArgument)                  \
+    O(EnterUnwindContext)            \
+    O(LeaveUnwindContext)            \
+    O(ContinuePendingUnwind)         \
+    O(Yield)                         \
+    O(GetIterator)                   \
+    O(IteratorNext)                  \
+    O(IteratorResultDone)            \
+    O(IteratorResultValue)
 
 namespace JS::Bytecode {
 
 class Instruction {
 public:
+    constexpr static bool IsTerminator = false;
+
     enum class Type {
 #define __BYTECODE_OP(op) \
     op,
@@ -63,10 +87,12 @@ public:
 #undef __BYTECODE_OP
     };
 
+    bool is_terminator() const;
     Type type() const { return m_type; }
     size_t length() const;
-    String to_string() const;
+    String to_string(Bytecode::Executable const&) const;
     void execute(Bytecode::Interpreter&) const;
+    void replace_references(BasicBlock const&, BasicBlock const&);
     static void destroy(Instruction&);
 
 protected:
@@ -78,5 +104,4 @@ protected:
 private:
     Type m_type {};
 };
-
 }

@@ -18,6 +18,7 @@ TEST_CASE(should_parse_valid_data)
                       4, 5, 6
                       """x", y"z, 9)~~~";
         auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        csv.parse();
         EXPECT(!csv.has_error());
 
         EXPECT_EQ(csv[0]["Foo"], "1");
@@ -31,6 +32,7 @@ TEST_CASE(should_parse_valid_data)
                       4, "5 "       , 6
                       """x", y"z, 9                       )~~~";
         auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces | Reader::ParserBehaviour::TrimTrailingFieldSpaces };
+        csv.parse();
         EXPECT(!csv.has_error());
 
         EXPECT_EQ(csv[0]["Foo"], "1");
@@ -46,6 +48,7 @@ TEST_CASE(should_fail_nicely)
         auto data = R"~~~(Foo, Bar, Baz
                       x, y)~~~";
         auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        csv.parse();
         EXPECT(csv.has_error());
         EXPECT_EQ(csv.error(), Reader::ReadError::NonConformingColumnCount);
     }
@@ -54,6 +57,7 @@ TEST_CASE(should_fail_nicely)
         auto data = R"~~~(Foo, Bar, Baz
                       x, y, "z)~~~";
         auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+        csv.parse();
         EXPECT(csv.has_error());
         EXPECT_EQ(csv.error(), Reader::ReadError::QuoteFailure);
     }
@@ -66,6 +70,7 @@ TEST_CASE(should_iterate_rows)
                       4, 5, 6
                       """x", y"z, 9)~~~";
     auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders | Reader::ParserBehaviour::TrimLeadingFieldSpaces };
+    csv.parse();
     EXPECT(!csv.has_error());
 
     bool ran = false;
@@ -82,6 +87,7 @@ BENCHMARK_CASE(fairly_big_data)
 
     auto data = file_or_error.value()->read_all();
     auto csv = Reader::CSV { data, Reader::default_behaviours() | Reader::ParserBehaviour::ReadHeaders };
+    csv.parse();
 
     EXPECT(!csv.has_error());
     EXPECT_EQ(csv.size(), 100000u);

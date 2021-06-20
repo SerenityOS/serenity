@@ -15,10 +15,11 @@ Value::~Value()
         m_as_object->unref();
 }
 
-Value& Value::operator=(const Value& other)
+Value& Value::operator=(Value const& other)
 {
     m_type = other.m_type;
     switch (m_type) {
+    case Type::Empty:
     case Type::Null:
         break;
     case Type::Bool:
@@ -45,6 +46,8 @@ Value& Value::operator=(const Value& other)
 String Value::to_string(int indent) const
 {
     switch (m_type) {
+    case Type::Empty:
+        return "<empty>";
     case Type::Null:
         return "null";
     case Type::Bool:

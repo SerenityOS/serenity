@@ -25,7 +25,7 @@ public:
 
 private:
     Gfx::Color get_color() const;
-    Gfx::IntRect build_rect(const Gfx::IntPoint& pos, const Gfx::IntRect& widget_rect);
+    Gfx::IntRect build_rect(Gfx::IntPoint const& pos, Gfx::IntRect const& widget_rect);
     RefPtr<GUI::Menu> m_context_menu;
 
     bool m_use_secondary_color { false };

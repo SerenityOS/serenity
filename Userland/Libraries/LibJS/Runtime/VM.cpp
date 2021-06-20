@@ -11,6 +11,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -161,6 +162,29 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
     global_object.put(name, value);
 }
 
+bool VM::delete_variable(FlyString const& name)
+{
+    ScopeObject* specific_scope = nullptr;
+    Optional<Variable> possible_match;
+    if (!m_call_stack.is_empty()) {
+        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+            possible_match = scope->get_from_scope(name);
+            if (possible_match.has_value()) {
+                specific_scope = scope;
+                break;
+            }
+        }
+    }
+
+    if (!possible_match.has_value())
+        return false;
+    if (possible_match.value().declaration_kind == DeclarationKind::Const)
+        return false;
+
+    VERIFY(specific_scope);
+    return specific_scope->delete_from_scope(name);
+}
+
 void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
 {
     set_variable(target, move(value), global_object, first_assignment, specific_scope);
@@ -184,18 +208,15 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
         if (!iterator)
             return;
 
-        size_t index = 0;
-        while (true) {
+        for (size_t i = 0; i < binding.entries.size(); i++) {
             if (exception())
                 return;
 
-            if (index >= binding.properties.size())
-                break;
+            auto& entry = binding.entries[i];
 
-            auto pattern_property = binding.properties[index];
-            ++index;
+            if (entry.is_rest) {
+                VERIFY(i == binding.entries.size() - 1);
 
-            if (pattern_property.is_rest) {
                 auto* array = Array::create(global_object);
                 for (;;) {
                     auto next_object = iterator_next(*iterator);
@@ -216,7 +237,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                     array->indexed_properties().append(next_value);
                 }
                 value = array;
-            } else {
+            } else if (iterator) {
                 auto next_object = iterator_next(*iterator);
                 if (!next_object)
                     return;
@@ -225,66 +246,83 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
                 if (exception())
                     return;
 
-                if (!done_property.is_empty() && done_property.to_boolean())
-                    break;
+                if (!done_property.is_empty() && done_property.to_boolean()) {
+                    iterator = nullptr;
+                    value = js_undefined();
+                } else {
+                    value = next_object->get(names.value);
+                    if (exception())
+                        return;
+                }
+            } else {
+                value = js_undefined();
+            }
 
-                value = next_object->get(names.value);
+            if (value.is_undefined() && entry.initializer) {
+                value = entry.initializer->execute(interpreter(), global_object);
                 if (exception())
                     return;
             }
 
-            if (value.is_undefined() && pattern_property.initializer)
-                value = pattern_property.initializer->execute(interpreter(), global_object);
+            entry.alias.visit(
+                [&](Empty) {},
+                [&](NonnullRefPtr<Identifier> const& identifier) {
+                    set_variable(identifier->string(), value, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                    assign(pattern, value, global_object, first_assignment, specific_scope);
+                });
 
-            if (exception())
-                return;
-
-            if (pattern_property.name) {
-                set_variable(pattern_property.name->string(), value, global_object, first_assignment, specific_scope);
-                if (pattern_property.is_rest)
-                    break;
-                continue;
-            }
-
-            if (pattern_property.pattern) {
-                assign(NonnullRefPtr(*pattern_property.pattern), value, global_object, first_assignment, specific_scope);
-                if (pattern_property.is_rest)
-                    break;
-                continue;
-            }
+            if (entry.is_rest)
+                break;
         }
+
         break;
     }
     case BindingPattern::Kind::Object: {
         auto object = value.to_object(global_object);
-        HashTable<FlyString> seen_names;
-        for (auto& property : binding.properties) {
-            VERIFY(!property.pattern);
+        HashTable<PropertyName, PropertyNameTraits> seen_names;
+        for (auto& property : binding.entries) {
+            VERIFY(!property.is_elision());
+
+            PropertyName assignment_name;
             JS::Value value_to_assign;
             if (property.is_rest) {
-                auto* rest_object = Object::create_empty(global_object);
-                rest_object->set_prototype(nullptr);
-                for (auto& property : object->shape().property_table()) {
-                    if (!property.value.attributes.has_enumerable())
+                VERIFY(property.name.has<NonnullRefPtr<Identifier>>());
+                assignment_name = property.name.get<NonnullRefPtr<Identifier>>()->string();
+
+                auto* rest_object = Object::create(global_object, global_object.object_prototype());
+                for (auto& object_property : object->shape().property_table()) {
+                    if (!object_property.value.attributes.has_enumerable())
                         continue;
-                    if (seen_names.contains(property.key.to_display_string()))
+                    if (seen_names.contains(object_property.key.to_display_string()))
                         continue;
-                    rest_object->put(property.key, object->get(property.key));
+                    rest_object->put(object_property.key, object->get(object_property.key));
                     if (exception())
                         return;
                 }
+
                 value_to_assign = rest_object;
             } else {
-                value_to_assign = object->get(property.name->string());
+                property.name.visit(
+                    [&](Empty) { VERIFY_NOT_REACHED(); },
+                    [&](NonnullRefPtr<Identifier> const& identifier) {
+                        assignment_name = identifier->string();
+                    },
+                    [&](NonnullRefPtr<Expression> const& expression) {
+                        auto result = expression->execute(interpreter(), global_object);
+                        if (exception())
+                            return;
+                        assignment_name = result.to_property_key(global_object);
+                    });
+
+                if (exception())
+                    break;
+
+                value_to_assign = object->get(assignment_name);
             }
 
-            seen_names.set(property.name->string());
-            if (exception())
-                break;
-
-            auto assignment_name = property.name->string();
-            if (property.alias)
-                assignment_name = property.alias->string();
+            seen_names.set(assignment_name);
 
             if (value_to_assign.is_empty())
                 value_to_assign = js_undefined();
@@ -295,7 +333,18 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
             if (exception())
                 break;
 
-            set_variable(assignment_name, value_to_assign, global_object, first_assignment, specific_scope);
+            property.alias.visit(
+                [&](Empty) {
+                    set_variable(assignment_name.to_string(), value_to_assign, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<Identifier> const& identifier) {
+                    VERIFY(!property.is_rest);
+                    set_variable(identifier->string(), value_to_assign, global_object, first_assignment, specific_scope);
+                },
+                [&](NonnullRefPtr<BindingPattern> const& pattern) {
+                    VERIFY(!property.is_rest);
+                    assign(pattern, value_to_assign, global_object, first_assignment, specific_scope);
+                });
 
             if (property.is_rest)
                 break;
@@ -308,7 +357,7 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (!m_call_stack.is_empty()) {
-        if (name == names.arguments && !call_frame().callee.is_empty()) {
+        if (name == names.arguments.as_string() && !call_frame().callee.is_empty()) {
             // HACK: Special handling for the name "arguments":
             //       If the name "arguments" is defined in the current scope, for example via
             //       a function parameter, or by a local var declaration, we use that.
@@ -355,15 +404,16 @@ Reference VM::get_reference(const FlyString& name)
     return { Reference::GlobalVariable, name };
 }
 
-Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments, GlobalObject& global_object)
+Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
 {
+    auto& global_object = function.global_object();
     CallFrame call_frame;
     call_frame.callee = &function;
     if (auto* interpreter = interpreter_if_exists())
         call_frame.current_node = interpreter->current_node();
     call_frame.is_strict_mode = function.is_strict_mode();
 
-    push_call_frame(call_frame, function.global_object());
+    push_call_frame(call_frame, global_object);
     if (exception())
         return {};
     ArmedScopeGuard call_frame_popper = [&] {
@@ -373,15 +423,17 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.function_name = function.name();
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.append(arguments.value().values());
+        call_frame.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment();
     call_frame.scope = environment;
-    environment->set_new_target(&new_target);
+    if (environment)
+        environment->set_new_target(&new_target);
 
     Object* new_object = nullptr;
     if (function.constructor_kind() == Function::ConstructorKind::Base) {
-        new_object = Object::create_empty(global_object);
-        environment->bind_this_value(global_object, new_object);
+        new_object = Object::create(global_object, nullptr);
+        if (environment)
+            environment->bind_this_value(global_object, new_object);
         if (exception())
             return {};
         auto prototype = new_target.get(names.prototype);
@@ -399,15 +451,18 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.this_value = this_value;
     auto result = function.construct(new_target);
 
-    this_value = call_frame.scope->get_this_binding(global_object);
+    if (environment)
+        this_value = environment->get_this_binding(global_object);
     pop_call_frame();
     call_frame_popper.disarm();
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
-        VERIFY(is<LexicalEnvironment>(current_scope()));
-        static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
+        if (environment) {
+            VERIFY(is<LexicalEnvironment>(current_scope()));
+            static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
+        }
         auto prototype = new_target.get(names.prototype);
         if (exception())
             return {};
@@ -480,12 +535,15 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.this_value = function.bound_this().value_or(this_value);
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.append(arguments.value().values());
+        call_frame.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment();
     call_frame.scope = environment;
 
-    VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
-    environment->bind_this_value(function.global_object(), call_frame.this_value);
+    if (environment) {
+        VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+        environment->bind_this_value(function.global_object(), call_frame.this_value);
+    }
+
     if (exception())
         return {};
 
@@ -519,13 +577,27 @@ void VM::run_queued_promise_jobs()
     VERIFY(!m_exception);
 }
 
-// 9.4.4 HostEnqueuePromiseJob, https://tc39.es/ecma262/#sec-hostenqueuepromisejob
+// 9.5.4 HostEnqueuePromiseJob ( job, realm ), https://tc39.es/ecma262/#sec-hostenqueuepromisejob
 void VM::enqueue_promise_job(NativeFunction& job)
 {
     m_promise_jobs.append(&job);
 }
 
-// 27.2.1.9 HostPromiseRejectionTracker, https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
+void VM::run_queued_finalization_registry_cleanup_jobs()
+{
+    while (!m_finalization_registry_cleanup_jobs.is_empty()) {
+        auto* registry = m_finalization_registry_cleanup_jobs.take_first();
+        registry->cleanup();
+    }
+}
+
+// 9.10.4.1 HostEnqueueFinalizationRegistryCleanupJob ( finalizationRegistry ), https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry
+void VM::enqueue_finalization_registry_cleanup_job(FinalizationRegistry& registry)
+{
+    m_finalization_registry_cleanup_jobs.append(&registry);
+}
+
+// 27.2.1.9 HostPromiseRejectionTracker ( promise, operation ), https://tc39.es/ecma262/#sec-host-promise-rejection-tracker
 void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOperation operation) const
 {
     switch (operation) {

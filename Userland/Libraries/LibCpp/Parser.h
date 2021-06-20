@@ -47,12 +47,15 @@ private:
         Function,
         Variable,
         Enum,
-        Struct,
-        Namespace,
         Class,
+        Namespace,
+        Constructor,
+        Destructor,
     };
 
     Optional<DeclarationType> match_declaration_in_translation_unit();
+    Optional<Parser::DeclarationType> match_class_member(const StringView& class_name);
+
     bool match_function_declaration();
     bool match_comment();
     bool match_preprocessor();
@@ -62,7 +65,6 @@ private:
     bool match_secondary_expression();
     bool match_enum_declaration();
     bool match_class_declaration();
-    bool match_struct_declaration();
     bool match_literal();
     bool match_unary_expression();
     bool match_boolean_literal();
@@ -76,6 +78,9 @@ private:
     bool match_sizeof_expression();
     bool match_braced_init_list();
     bool match_type();
+    bool match_access_specifier();
+    bool match_constructor(const StringView& class_name);
+    bool match_destructor(const StringView& class_name);
 
     Optional<NonnullRefPtrVector<Parameter>> parse_parameter_list(ASTNode& parent);
     Optional<Token> consume_whitespace();
@@ -93,8 +98,7 @@ private:
     NonnullRefPtr<StringLiteral> parse_string_literal(ASTNode& parent);
     NonnullRefPtr<ReturnStatement> parse_return_statement(ASTNode& parent);
     NonnullRefPtr<EnumDeclaration> parse_enum_declaration(ASTNode& parent);
-    NonnullRefPtr<StructOrClassDeclaration> parse_struct_or_class_declaration(ASTNode& parent, StructOrClassDeclaration::Type);
-    NonnullRefPtr<MemberDeclaration> parse_member_declaration(ASTNode& parent);
+    NonnullRefPtr<StructOrClassDeclaration> parse_class_declaration(ASTNode& parent);
     NonnullRefPtr<Expression> parse_literal(ASTNode& parent);
     NonnullRefPtr<UnaryExpression> parse_unary_expression(ASTNode& parent);
     NonnullRefPtr<BooleanLiteral> parse_boolean_literal(ASTNode& parent);
@@ -114,6 +118,9 @@ private:
     NonnullRefPtr<SizeofExpression> parse_sizeof_expression(ASTNode& parent);
     NonnullRefPtr<BracedInitList> parse_braced_init_list(ASTNode& parent);
     NonnullRefPtr<CStyleCastExpression> parse_c_style_cast_expression(ASTNode& parent);
+    NonnullRefPtrVector<Declaration> parse_class_members(StructOrClassDeclaration& parent);
+    NonnullRefPtr<Constructor> parse_constructor(ASTNode& parent);
+    NonnullRefPtr<Destructor> parse_destructor(ASTNode& parent);
 
     bool match(Token::Type);
     Token consume(Token::Type);
@@ -163,11 +170,18 @@ private:
 
     bool match_attribute_specification();
     void consume_attribute_specification();
+    void consume_access_specifier();
     bool match_ellipsis();
     void initialize_program_tokens(const StringView& program);
     void add_tokens_for_preprocessor(Token& replaced_token, Preprocessor::DefinedValue&);
     Vector<StringView> parse_type_qualifiers();
     Vector<StringView> parse_function_qualifiers();
+
+    enum class CtorOrDtor {
+        Ctor,
+        Dtor,
+    };
+    void parse_constructor_or_destructor_impl(FunctionDeclaration&, CtorOrDtor);
 
     Preprocessor::Definitions m_preprocessor_definitions;
     String m_filename;

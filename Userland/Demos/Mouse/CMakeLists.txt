@@ -1,3 +1,8 @@
+serenity_component(
+    Mouse
+    TARGETS Mouse
+)
+
 set(SOURCES
     main.cpp
 )

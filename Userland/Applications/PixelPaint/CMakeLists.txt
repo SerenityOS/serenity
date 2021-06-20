@@ -1,3 +1,10 @@
+serenity_component(
+    PixelPaint
+    RECOMMENDED
+    TARGETS PixelPaint
+    DEPENDS ImageDecoder
+)
+
 compile_gml(PixelPaintWindow.gml PixelPaintWindowGML.h pixel_paint_window_gml)
 
 set(SOURCES
@@ -20,6 +27,8 @@ set(SOURCES
     PickerTool.cpp
     PixelPaintWindowGML.h
     RectangleTool.cpp
+    RectangleSelectTool.cpp
+    Selection.cpp
     SprayTool.cpp
     ToolboxWidget.cpp
     ToolPropertiesWidget.cpp
@@ -28,4 +37,4 @@ set(SOURCES
 )
 
 serenity_app(PixelPaint ICON app-pixel-paint)
-target_link_libraries(PixelPaint LibGUI LibGfx)
+target_link_libraries(PixelPaint LibImageDecoderClient LibGUI LibGfx)

@@ -42,7 +42,7 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
         return nullptr;
 
     auto image = make<ELF::Image>(file_or_error.value()->bytes());
-    auto info = make<ELFObjectInfo>(file_or_error.release_value(), Debug::DebugInfo { move(image) });
+    auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
     auto* info_ptr = info.ptr();
     s_debug_info_cache.set(path, move(info));
     return info_ptr;
@@ -53,8 +53,16 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
 {
     uint32_t* ebp = (uint32_t*)m_thread_info.regs.ebp;
     uint32_t* eip = (uint32_t*)m_thread_info.regs.eip;
+    bool first_frame = true;
     while (ebp && eip) {
-        add_entry(coredump, (FlatPtr)eip);
+        // We use eip - 1 because the return address from a function frame
+        // is the instruction that comes after the 'call' instruction.
+        // However, because the first frame represents the faulting
+        // instruction rather than the return address we don't subtract
+        // 1 there.
+        VERIFY((FlatPtr)eip > 0);
+        add_entry(coredump, (FlatPtr)eip - (first_frame ? 0 : 1));
+        first_frame = false;
         auto next_eip = coredump.peek_memory((FlatPtr)(ebp + 1));
         auto next_ebp = coredump.peek_memory((FlatPtr)(ebp));
         if (!next_eip.has_value() || !next_ebp.has_value())
@@ -81,8 +89,10 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
     auto* object_info = object_info_for_region(*region);
     if (!object_info)
         return;
-    auto function_name = object_info->debug_info.elf().symbolicate(eip - region->region_start);
-    auto source_position = object_info->debug_info.get_source_position(eip - region->region_start);
+
+    auto function_name = object_info->debug_info->elf().symbolicate(eip - region->region_start);
+    auto source_position = object_info->debug_info->get_source_position_with_inlines(eip - region->region_start);
+
     m_entries.append({ eip, object_name, function_name, source_position });
 }
 
@@ -95,11 +105,30 @@ String Backtrace::Entry::to_string(bool color) const
         return builder.build();
     }
     builder.appendff("[{}] {}", object_name, function_name.is_empty() ? "???" : function_name);
-    if (source_position.has_value()) {
-        auto& source_position = this->source_position.value();
-        auto fmt = color ? " (\033[34;1m{}\033[0m:{})" : " ({}:{})";
-        builder.appendff(fmt, LexicalPath(source_position.file_path).basename(), source_position.line_number);
+    builder.append(" (");
+
+    Vector<Debug::DebugInfo::SourcePosition> source_positions;
+
+    for (auto& position : source_position_with_inlines.inline_chain) {
+        if (!source_positions.contains_slow(position))
+            source_positions.append(position);
     }
+
+    if (source_position_with_inlines.source_position.has_value() && !source_positions.contains_slow(source_position_with_inlines.source_position.value())) {
+        source_positions.insert(0, source_position_with_inlines.source_position.value());
+    }
+
+    for (size_t i = 0; i < source_positions.size(); ++i) {
+        auto& position = source_positions[i];
+        auto fmt = color ? "\033[34;1m{}\033[0m:{}" : "{}:{}";
+        builder.appendff(fmt, LexicalPath(position.file_path).basename(), position.line_number);
+        if (i != source_positions.size() - 1) {
+            builder.append(" => ");
+        }
+    }
+
+    builder.append(")");
+
     return builder.build();
 }
 

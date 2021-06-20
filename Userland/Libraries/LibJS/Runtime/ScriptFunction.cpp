@@ -7,13 +7,17 @@
 #include <AK/Debug.h>
 #include <AK/Function.h>
 #include <LibJS/AST.h>
-#include <LibJS/Bytecode/Block.h>
+#include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <LibJS/Bytecode/Interpreter.h>
+#include <LibJS/Bytecode/PassManager.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/GeneratorObject.h>
+#include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
+#include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
@@ -31,18 +35,28 @@ static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<ScriptFunction*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, bool is_strict, bool is_arrow_function)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
-    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *global_object.function_prototype(), is_strict, is_arrow_function);
+    Object* prototype = nullptr;
+    switch (kind) {
+    case FunctionKind::Regular:
+        prototype = global_object.function_prototype();
+        break;
+    case FunctionKind::Generator:
+        prototype = global_object.generator_function_prototype();
+        break;
+    }
+    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, bool is_strict, bool is_arrow_function)
-    : Function(prototype, is_arrow_function ? vm().this_value(global_object) : Value(), {})
+ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+    : Function(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
     , m_parent_scope(parent_scope)
     , m_function_length(m_function_length)
+    , m_kind(kind)
     , m_is_strict(is_strict)
     , m_is_arrow_function(is_arrow_function)
 {
@@ -53,8 +67,16 @@ void ScriptFunction::initialize(GlobalObject& global_object)
     auto& vm = this->vm();
     Function::initialize(global_object);
     if (!m_is_arrow_function) {
-        Object* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
-        prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+        auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
+        switch (m_kind) {
+        case FunctionKind::Regular:
+            prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
+            break;
+        case FunctionKind::Generator:
+            // prototype is "g1.prototype" in figure-2 (https://tc39.es/ecma262/img/figure-2.png)
+            prototype->set_prototype(global_object.generator_object_prototype());
+            break;
+        }
         define_property(vm.names.prototype, prototype, Attribute::Writable);
     }
     define_native_property(vm.names.length, length_getter, {}, Attribute::Configurable);
@@ -78,7 +100,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
         parameter.binding.visit(
             [&](const FlyString& name) { variables.set(name, { js_undefined(), DeclarationKind::Var }); },
             [&](const NonnullRefPtr<BindingPattern>& binding) {
-                binding->for_each_assigned_name([&](const auto& name) {
+                binding->for_each_bound_name([&](const auto& name) {
                     variables.set(name, { js_undefined(), DeclarationKind::Var });
                 });
             });
@@ -92,7 +114,7 @@ LexicalEnvironment* ScriptFunction::create_environment()
                         variables.set(id->string(), { js_undefined(), declaration.declaration_kind() });
                     },
                     [&](const NonnullRefPtr<BindingPattern>& binding) {
-                        binding->for_each_assigned_name([&](const auto& name) {
+                        binding->for_each_bound_name([&](const auto& name) {
                             variables.set(name, { js_undefined(), declaration.declaration_kind() });
                         });
                     });
@@ -141,6 +163,9 @@ Value ScriptFunction::execute_function_body()
                         argument_value = js_undefined();
                     }
 
+                    if (i >= call_frame_args.size())
+                        call_frame_args.resize(i + 1);
+                    call_frame_args[i] = argument_value;
                     vm.assign(param, argument_value, global_object(), true, vm.current_scope());
                 });
 
@@ -151,16 +176,24 @@ Value ScriptFunction::execute_function_body()
 
     if (bytecode_interpreter) {
         prepare_arguments();
-        if (!m_bytecode_block) {
-            m_bytecode_block = Bytecode::Generator::generate(m_body);
-            VERIFY(m_bytecode_block);
+        if (!m_bytecode_executable.has_value()) {
+            m_bytecode_executable = Bytecode::Generator::generate(m_body, m_kind == FunctionKind::Generator);
+            auto& passes = JS::Bytecode::Interpreter::optimization_pipeline();
+            passes.perform(*m_bytecode_executable);
             if constexpr (JS_BYTECODE_DEBUG) {
+                dbgln("Optimisation passes took {}us", passes.elapsed());
                 dbgln("Compiled Bytecode::Block for function '{}':", m_name);
-                m_bytecode_block->dump();
+                for (auto& block : m_bytecode_executable->basic_blocks)
+                    block.dump(*m_bytecode_executable);
             }
         }
-        return bytecode_interpreter->run(*m_bytecode_block);
+        auto result = bytecode_interpreter->run(*m_bytecode_executable);
+        if (m_kind != FunctionKind::Generator)
+            return result;
+
+        return GeneratorObject::create(global_object(), result, this, vm.call_frame().scope, bytecode_interpreter->snapshot_frame());
     } else {
+        VERIFY(m_kind != FunctionKind::Generator);
         OwnPtr<Interpreter> local_interpreter;
         ast_interpreter = vm.interpreter_if_exists();
 
@@ -190,7 +223,7 @@ Value ScriptFunction::call()
 
 Value ScriptFunction::construct(Function&)
 {
-    if (m_is_arrow_function) {
+    if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
         return {};
     }

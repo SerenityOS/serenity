@@ -1,3 +1,9 @@
+serenity_component(
+    InspectorServer
+    REQUIRED
+    TARGETS InspectorServer
+)
+
 compile_ipc(InspectorServer.ipc InspectorServerEndpoint.h)
 compile_ipc(InspectorClient.ipc InspectorClientEndpoint.h)
 

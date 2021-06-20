@@ -24,13 +24,16 @@ void ArrayIteratorPrototype::initialize(GlobalObject& global_object)
     Object::initialize(global_object);
 
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
-    define_property(global_object.vm().well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
+
+    // 23.1.5.2.2 %ArrayIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%arrayiteratorprototype%-@@tostringtag
+    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Array Iterator"), Attribute::Configurable);
 }
 
 ArrayIteratorPrototype::~ArrayIteratorPrototype()
 {
 }
 
+// 23.1.5.2.1 %ArrayIteratorPrototype%.next ( ), https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next
 JS_DEFINE_NATIVE_FUNCTION(ArrayIteratorPrototype::next)
 {
     auto this_value = vm.this_value(global_object);
