@@ -42,6 +42,8 @@ private:
     virtual String device_name() const override { return String::formatted("hvc{}", minor()); }
     virtual void handle_queue_update(u16 queue_index) override;
 
+    void init_receive_buffer();
+    
     OwnPtr<RingBuffer> m_receive_buffer;
     OwnPtr<RingBuffer> m_transmit_buffer;
 
