@@ -237,7 +237,7 @@ int main(int argc, char** argv)
         auto* editor = current_image_editor();
         if (!editor->active_layer())
             return;
-        editor->selection().set(editor->active_layer()->relative_rect());
+        editor->selection().merge(editor->active_layer()->relative_rect(), PixelPaint::Selection::MergeMode::Set);
     }));
     edit_menu.add_action(GUI::Action::create(
         "Clear &Selection", { Mod_Ctrl | Mod_Shift, Key_A }, [&](auto&) {
