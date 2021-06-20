@@ -67,9 +67,9 @@ public:
     TrackType track_type() const { return m_track_type; }
     void set_track_type(TrackType track_type) { m_track_type = track_type; }
     FlyString language() const { return m_language; }
-    void set_language(const FlyString& language) { m_language = language; }
+    void set_language(FlyString const& language) { m_language = language; }
     FlyString codec_id() const { return m_codec_id; }
-    void set_codec_id(const FlyString& codec_id) { m_codec_id = codec_id; }
+    void set_codec_id(FlyString const& codec_id) { m_codec_id = codec_id; }
     Optional<VideoTrack> video_track() const
     {
         if (track_type() != Video)
@@ -122,8 +122,8 @@ public:
     bool discardable() const { return m_discardable; }
     void set_discardable(bool discardable) { m_discardable = discardable; }
     u64 frame_count() const { return m_frames.size(); }
-    const ByteBuffer& frame(size_t index) const { return m_frames.at(index); }
-    void add_frame(const ByteBuffer& frame) { m_frames.append(move(frame)); }
+    ByteBuffer const& frame(size_t index) const { return m_frames.at(index); }
+    void add_frame(ByteBuffer frame) { m_frames.append(move(frame)); }
 
 private:
     u64 m_track_number { 0 };
@@ -140,7 +140,7 @@ public:
     u64 timestamp() const { return m_timestamp; }
     void set_timestamp(u64 timestamp) { m_timestamp = timestamp; }
     NonnullOwnPtrVector<Block>& blocks() { return m_blocks; }
-    const NonnullOwnPtrVector<Block>& blocks() const { return m_blocks; }
+    NonnullOwnPtrVector<Block> const& blocks() const { return m_blocks; }
 
 private:
     u64 m_timestamp { 0 };
@@ -154,7 +154,7 @@ public:
     {
     }
 
-    const EBMLHeader& header() const { return m_header; }
+    EBMLHeader const& header() const { return m_header; }
 
     Optional<SegmentInformation> segment_information() const
     {
@@ -163,7 +163,7 @@ public:
         return *m_segment_information;
     }
     void set_segment_information(OwnPtr<SegmentInformation> segment_information) { m_segment_information = move(segment_information); }
-    const HashMap<u64, NonnullOwnPtr<TrackEntry>>& tracks() const { return m_tracks; }
+    HashMap<u64, NonnullOwnPtr<TrackEntry>> const& tracks() const { return m_tracks; }
     Optional<TrackEntry> track_for_track_number(u64 track_number) const
     {
         auto track = m_tracks.get(track_number);

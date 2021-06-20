@@ -23,28 +23,28 @@ int main(int, char**)
         outln("Writing app is \"{}\"", segment_information.value().writing_app().as_string().to_string().characters());
     }
     outln("Document has {} tracks", document->tracks().size());
-    for (const auto& track_entry : document->tracks()) {
-        const auto& track = *track_entry.value;
+    for (auto const& track_entry : document->tracks()) {
+        auto const& track = *track_entry.value;
         outln("\tTrack #{} with TrackID {}", track.track_number(), track.track_uid());
         outln("\tTrack has TrackType {}", static_cast<u8>(track.track_type()));
         outln("\tTrack has Language \"{}\"", track.language().characters());
         outln("\tTrack has CodecID \"{}\"", track.codec_id().characters());
 
         if (track.track_type() == Video::TrackEntry::TrackType::Video) {
-            const auto video_track = track.video_track().value();
+            auto const video_track = track.video_track().value();
             outln("\t\tVideo is {} pixels wide by {} pixels tall", video_track.pixel_width, video_track.pixel_height);
         } else if (track.track_type() == Video::TrackEntry::TrackType::Audio) {
-            const auto audio_track = track.audio_track().value();
+            auto const audio_track = track.audio_track().value();
             outln("\t\tAudio has {} channels with a bit depth of {}", audio_track.channels, audio_track.bit_depth);
         }
     }
 
     outln("Document has {} clusters", document->clusters().size());
-    for (const auto& cluster : document->clusters()) {
+    for (auto const& cluster : document->clusters()) {
         outln("\tCluster timestamp is {}", cluster.timestamp());
 
         outln("\tCluster has {} blocks", cluster.blocks().size());
-        for (const auto& block : cluster.blocks()) {
+        for (auto const& block : cluster.blocks()) {
             (void)block;
             outln("\t\tBlock for track #{} has {} frames", block.track_number(), block.frame_count());
             outln("\t\tBlock's timestamp is {}", block.timestamp());
