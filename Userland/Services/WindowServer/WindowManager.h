@@ -231,6 +231,8 @@ public:
 
     WindowStack& window_stack() { return m_window_stack; }
 
+    MultiScaleBitmaps const* overlay_rect_shadow() const { return m_overlay_rect_shadow.ptr(); }
+
 private:
     RefPtr<Cursor> get_cursor(String const& name);
 
@@ -272,6 +274,8 @@ private:
     RefPtr<Cursor> m_drag_cursor;
     RefPtr<Cursor> m_wait_cursor;
     RefPtr<Cursor> m_crosshair_cursor;
+
+    RefPtr<MultiScaleBitmaps> m_overlay_rect_shadow;
 
     WindowStack m_window_stack;
 

@@ -22,6 +22,7 @@ set(SOURCES
     MenuItem.cpp
     MenuManager.cpp
     MultiScaleBitmaps.cpp
+    Overlays.cpp
     Screen.cpp
     ScreenLayout.cpp
     Window.cpp

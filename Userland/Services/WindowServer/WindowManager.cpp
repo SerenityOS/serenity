@@ -85,6 +85,18 @@ void WindowManager::reload_config()
     reload_cursor(m_wait_cursor, "Wait");
     reload_cursor(m_crosshair_cursor, "Crosshair");
 
+    auto reload_graphic = [&](RefPtr<MultiScaleBitmaps>& bitmap, String const& name) {
+        if (bitmap) {
+            if (!bitmap->load(name))
+                bitmap = nullptr;
+        } else {
+            bitmap = MultiScaleBitmaps::create(name);
+        }
+    };
+
+    reload_graphic(m_overlay_rect_shadow, m_config->read_entry("Graphics", "OverlayRectShadow"));
+    Compositor::the().invalidate_after_theme_or_font_change();
+
     WindowFrame::reload_config();
 }
 
@@ -1531,8 +1543,7 @@ void WindowManager::invalidate_after_theme_or_font_change()
     });
     MenuManager::the().did_change_theme();
     AppletManager::the().did_change_theme();
-    Compositor::the().invalidate_occlusions();
-    Compositor::the().invalidate_screen();
+    Compositor::the().invalidate_after_theme_or_font_change();
 }
 
 bool WindowManager::update_theme(String theme_path, String theme_name)
