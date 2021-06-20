@@ -8,6 +8,7 @@
 #include "ClientConnection.h"
 #include "Event.h"
 #include "EventLoop.h"
+#include "MultiScaleBitmaps.h"
 #include "Screen.h"
 #include "Window.h"
 #include "WindowManager.h"
@@ -76,7 +77,7 @@ const Gfx::Bitmap& Compositor::front_bitmap_for_screenshot(Badge<ClientConnectio
     return *m_screen_data[screen.index()].m_front_bitmap;
 }
 
-void Compositor::ScreenData::init_bitmaps(Screen& screen)
+void Compositor::ScreenData::init_bitmaps(Compositor& compositor, Screen& screen)
 {
     auto size = screen.size();
 
@@ -97,13 +98,21 @@ void Compositor::ScreenData::init_bitmaps(Screen& screen)
 
     m_buffers_are_flipped = false;
     m_screen_can_set_buffer = screen.can_set_buffer();
+
+    // Recreate the screen-number overlay as the Screen instances may have changed, or get rid of it if we no longer need it
+    if (compositor.showing_screen_numbers()) {
+        m_screen_number_overlay = compositor.create_overlay<ScreenNumberOverlay>(screen);
+        m_screen_number_overlay->set_enabled(true);
+    } else {
+        m_screen_number_overlay = nullptr;
+    }
 }
 
 void Compositor::init_bitmaps()
 {
     m_screen_data.resize(Screen::count());
     Screen::for_each([&](auto& screen) {
-        m_screen_data[screen.index()].init_bitmaps(screen);
+        m_screen_data[screen.index()].init_bitmaps(*this, screen);
         return IterationDecision::Continue;
     });
 
@@ -142,6 +151,9 @@ void Compositor::compose()
         m_occlusions_dirty = false;
         recompute_occlusions();
     }
+
+    // We should have recomputed occlusions if any overlay rects were changed
+    VERIFY(!m_overlay_rects_changed);
 
     auto dirty_screen_rects = move(m_dirty_screen_rects);
     auto* dnd_client = wm.dnd_client();
@@ -517,6 +529,11 @@ void Compositor::compose()
             return is_overlapping;
         }());
 
+        if (!m_overlay_list.is_empty()) {
+            // Render everything to the temporary buffer before we copy it back
+            render_overlays();
+        }
+
         // Copy anything rendered to the temporary buffer to the back buffer
         Screen::for_each([&](auto& screen) {
             auto screen_rect = screen.rect();
@@ -828,6 +845,7 @@ void Compositor::screen_resolution_changed()
 
     init_bitmaps();
     invalidate_occlusions();
+    overlay_rects_changed();
     compose();
 }
 
@@ -914,6 +932,54 @@ void Compositor::change_cursor(const Cursor* cursor)
     }
 }
 
+void Compositor::render_overlays()
+{
+    // NOTE: overlays should always be rendered to the temporary buffer!
+    for (auto& overlay : m_overlay_list) {
+        for (auto* screen : overlay.m_screens) {
+            auto& screen_data = m_screen_data[screen->index()];
+            auto& painter = screen_data.overlay_painter();
+            screen_data.for_each_intersected_flushing_rect(overlay.current_render_rect(), [&](auto& intersected_overlay_rect) {
+                Gfx::PainterStateSaver saver(painter);
+                painter.add_clip_rect(intersected_overlay_rect);
+                painter.translate(overlay.m_current_rect.location());
+                overlay.render(painter, *screen);
+                return IterationDecision::Continue;
+            });
+        }
+    }
+}
+
+void Compositor::add_overlay(Overlay& overlay)
+{
+    VERIFY(!overlay.m_list_node.is_in_list());
+    auto zorder = overlay.zorder();
+    bool did_insert = false;
+    for (auto& other_overlay : m_overlay_list) {
+        if (other_overlay.zorder() > zorder) {
+            m_overlay_list.insert_before(other_overlay, overlay);
+            did_insert = true;
+            break;
+        }
+    }
+    if (!did_insert)
+        m_overlay_list.append(overlay);
+
+    overlay.clear_invalidated();
+    overlay_rects_changed();
+    auto& rect = overlay.rect();
+    if (!rect.is_empty())
+        invalidate_screen(rect);
+}
+
+void Compositor::remove_overlay(Overlay& overlay)
+{
+    auto& current_render_rect = overlay.current_render_rect();
+    if (!current_render_rect.is_empty())
+        invalidate_screen(current_render_rect);
+    m_overlay_list.remove(overlay);
+}
+
 void Compositor::ScreenData::draw_cursor(Screen& screen, const Gfx::IntRect& cursor_rect)
 {
     auto& wm = WindowManager::the();
@@ -944,6 +1010,11 @@ bool Compositor::ScreenData::restore_cursor_back(Screen& screen, Gfx::IntRect& l
     return true;
 }
 
+void Compositor::update_fonts()
+{
+    ScreenNumberOverlay::pick_font();
+}
+
 void Compositor::notify_display_links()
 {
     ClientConnection::for_each_client([](auto& client) {
@@ -964,6 +1035,35 @@ void Compositor::decrement_display_link_count(Badge<ClientConnection>)
     --m_display_link_count;
     if (!m_display_link_count)
         m_display_link_notify_timer->stop();
+}
+
+void Compositor::invalidate_current_screen_number_rects()
+{
+    for (auto& screen_data : m_screen_data) {
+        if (screen_data.m_screen_number_overlay)
+            screen_data.m_screen_number_overlay->invalidate();
+    }
+}
+
+void Compositor::increment_show_screen_number(Badge<ClientConnection>)
+{
+    if (m_show_screen_number_count++ == 0) {
+        Screen::for_each([&](auto& screen) {
+            auto& screen_data = m_screen_data[screen.index()];
+            VERIFY(!screen_data.m_screen_number_overlay);
+            screen_data.m_screen_number_overlay = create_overlay<ScreenNumberOverlay>(screen);
+            screen_data.m_screen_number_overlay->set_enabled(true);
+            return IterationDecision::Continue;
+        });
+    }
+}
+void Compositor::decrement_show_screen_number(Badge<ClientConnection>)
+{
+    if (--m_show_screen_number_count == 0) {
+        invalidate_current_screen_number_rects();
+        for (auto& screen_data : m_screen_data)
+            screen_data.m_screen_number_overlay = nullptr;
+    }
 }
 
 bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_window, const Gfx::IntRect& rect)
@@ -992,6 +1092,50 @@ bool Compositor::any_opaque_window_above_this_one_contains_rect(const Window& a_
     return found_containing_window;
 };
 
+void Compositor::overlays_theme_changed()
+{
+    for (auto& overlay : m_overlay_list)
+        overlay.theme_changed();
+    overlay_rects_changed();
+}
+
+void Compositor::overlay_rects_changed()
+{
+    if (m_overlay_rects_changed)
+        return;
+    m_overlay_rects_changed = true;
+    m_invalidated_any = true;
+    invalidate_occlusions();
+    for (auto& rect : m_overlay_rects.rects())
+        invalidate_screen(rect);
+}
+
+void Compositor::recompute_overlay_rects()
+{
+    // The purpose of this is to gather all areas that we will render over
+    // regular window contents. This effectively just forces those areas to
+    // be rendered as transparency areas, which allows us to render these
+    // flicker-free.
+    m_overlay_rects.clear_with_capacity();
+    for (auto& overlay : m_overlay_list) {
+        auto& render_rect = overlay.rect();
+        m_overlay_rects.add(render_rect);
+
+        // Save the rectangle we are using for rendering from now on
+        overlay.did_recompute_occlusions();
+
+        // Cache which screens this overlay are rendered on
+        overlay.m_screens.clear_with_capacity();
+        Screen::for_each([&](auto& screen) {
+            if (render_rect.intersects(screen.rect()))
+                overlay.m_screens.append(&screen);
+            return IterationDecision::Continue;
+        });
+
+        invalidate_screen(render_rect);
+    }
+}
+
 void Compositor::recompute_occlusions()
 {
     auto& wm = WindowManager::the();
@@ -1007,7 +1151,16 @@ void Compositor::recompute_occlusions()
         return IterationDecision::Continue;
     });
 
-    dbgln_if(OCCLUSIONS_DEBUG, "OCCLUSIONS:");
+    if (m_overlay_rects_changed) {
+        m_overlay_rects_changed = false;
+        recompute_overlay_rects();
+    }
+
+    if constexpr (OCCLUSIONS_DEBUG) {
+        dbgln("OCCLUSIONS:");
+        for (auto& rect : m_overlay_rects.rects())
+            dbgln("  overlay: {}", rect);
+    }
 
     auto& main_screen = Screen::main();
     if (auto* fullscreen_window = wm.active_fullscreen_window()) {
@@ -1126,6 +1279,13 @@ void Compositor::recompute_occlusions()
 
                 return IterationDecision::Continue;
             });
+
+            if (!m_overlay_rects.is_empty() && m_overlay_rects.intersects(visible_opaque)) {
+                // In order to render overlays flicker-free we need to force these area into the
+                // temporary transparency rendering buffer
+                transparency_rects.add(m_overlay_rects.intersected(visible_opaque));
+                visible_opaque = visible_opaque.shatter(m_overlay_rects);
+            }
 
             bool have_opaque = !visible_opaque.is_empty();
             if (!transparency_rects.is_empty())
