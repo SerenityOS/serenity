@@ -42,6 +42,7 @@ public:
 
     Layer* layer_at_editor_position(Gfx::IntPoint const&);
 
+    float scale() const { return m_scale; }
     void scale_centered_on_position(Gfx::IntPoint const&, float);
     void reset_scale_and_position();
     void scale_by(float);
