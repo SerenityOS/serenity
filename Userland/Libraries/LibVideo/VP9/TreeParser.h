@@ -25,16 +25,16 @@ public:
     class TreeSelection {
     public:
         union TreeSelectionValue {
-            const int* m_tree;
+            int const* m_tree;
             int m_value;
         };
 
-        TreeSelection(const int* values);
+        TreeSelection(int const* values);
         TreeSelection(int value);
 
         bool is_single_value() const { return m_is_single_value; }
         int get_single_value() const { return m_value.m_value; }
-        const int* get_tree_value() const { return m_value.m_tree; }
+        int const* get_tree_value() const { return m_value.m_tree; }
 
     private:
         bool m_is_single_value;

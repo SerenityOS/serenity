@@ -45,10 +45,10 @@ public:
     void load_probs(size_t index);
     void load_probs2(size_t index);
 
-    const ParetoTable& pareto_table() const;
-    const KfPartitionProbs& kf_partition_probs() const;
-    const KfYModeProbs& kf_y_mode_probs() const;
-    const KfUVModeProbs& kf_uv_mode_prob() const;
+    ParetoTable const& pareto_table() const;
+    KfPartitionProbs const& kf_partition_probs() const;
+    KfYModeProbs const& kf_y_mode_probs() const;
+    KfUVModeProbs const& kf_uv_mode_prob() const;
 
     PartitionProbs& partition_probs() { return m_current_probability_table.partition_probs; };
     YModeProbs& y_mode_probs() { return m_current_probability_table.y_mode_probs; };

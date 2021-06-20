@@ -41,7 +41,7 @@ constexpr u32 BIT_DEPTH_ID = 0x6264;
 constexpr u32 SIMPLE_BLOCK_ID = 0xA3;
 constexpr u32 TIMESTAMP_ID = 0xE7;
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(const StringView& path)
+OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(StringView const& path)
 {
     auto mapped_file_result = MappedFile::map(path);
     if (mapped_file_result.is_error())
@@ -51,7 +51,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_file(const StringVi
     return parse_matroska_from_data((u8*)mapped_file->data(), mapped_file->size());
 }
 
-OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_data(const u8* data, size_t size)
+OwnPtr<MatroskaDocument> MatroskaReader::parse_matroska_from_data(u8 const* data, size_t size)
 {
     MatroskaReader reader(data, size);
     return reader.parse();
@@ -83,7 +83,7 @@ OwnPtr<MatroskaDocument> MatroskaReader::parse()
     return matroska_document;
 }
 
-bool MatroskaReader::parse_master_element([[maybe_unused]] const StringView& element_name, Function<bool(u64)> element_consumer)
+bool MatroskaReader::parse_master_element([[maybe_unused]] StringView const& element_name, Function<bool(u64)> element_consumer)
 {
     auto element_data_size = m_streamer.read_variable_size_integer();
     CHECK_HAS_VALUE(element_data_size);

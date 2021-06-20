@@ -265,7 +265,7 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     }
 }
 
-TreeParser::TreeSelection::TreeSelection(const int* values)
+TreeParser::TreeSelection::TreeSelection(int const* values)
     : m_is_single_value(false)
     , m_value { .m_tree = values }
 {

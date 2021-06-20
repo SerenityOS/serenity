@@ -20,11 +20,11 @@ int main(int argc, char** argv)
     auto window = GUI::Window::construct();
 
     auto document = Video::MatroskaReader::parse_matroska_from_file("/home/anon/Videos/test-webm.webm");
-    const auto& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
+    auto const& optional_track = document->track_for_track_type(Video::TrackEntry::TrackType::Video);
     if (!optional_track.has_value())
         return 1;
-    const auto& track = optional_track.value();
-    const auto video_track = track.video_track().value();
+    auto const& track = optional_track.value();
+    auto const video_track = track.video_track().value();
 
     auto image = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, Gfx::IntSize(video_track.pixel_height, video_track.pixel_width));
     auto& main_widget = window->set_main_widget<GUI::Widget>();
@@ -36,12 +36,12 @@ int main(int argc, char** argv)
     main_widget.add_child(image_widget);
 
     Video::VP9::Decoder vp9_decoder;
-    for (const auto& cluster : document->clusters()) {
-        for (const auto& block : cluster.blocks()) {
+    for (auto const& cluster : document->clusters()) {
+        for (auto const& block : cluster.blocks()) {
             if (block.track_number() != track.track_number())
                 continue;
 
-            const auto& frame = block.frame(0);
+            auto const& frame = block.frame(0);
             dbgln("Reading frame 0 from block @ {}", block.timestamp());
             vp9_decoder.parse_frame(frame);
             vp9_decoder.dump_info();
