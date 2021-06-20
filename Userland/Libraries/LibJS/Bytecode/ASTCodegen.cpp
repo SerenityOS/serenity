@@ -991,8 +991,6 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
     // jump always (true) end
     // end
 
-    // If the 'false' branch doesn't exist, we're just gonna substitute it for 'end' and elide the last two entries above.
-
     auto& true_block = generator.make_block();
     auto& false_block = generator.make_block();
 
@@ -1004,32 +1002,24 @@ void IfStatement::generate_bytecode(Bytecode::Generator& generator) const
     Bytecode::Op::Jump* true_block_jump { nullptr };
 
     generator.switch_to_basic_block(true_block);
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
     m_consequent->generate_bytecode(generator);
     if (!generator.is_current_block_terminated())
         true_block_jump = &generator.emit<Bytecode::Op::Jump>();
 
     generator.switch_to_basic_block(false_block);
-    if (m_alternate) {
-        auto& end_block = generator.make_block();
+    auto& end_block = generator.make_block();
 
+    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+    if (m_alternate)
         m_alternate->generate_bytecode(generator);
-        if (!generator.is_current_block_terminated())
-            generator.emit<Bytecode::Op::Jump>().set_targets(
-                Bytecode::Label { end_block },
-                {});
+    if (!generator.is_current_block_terminated())
+        generator.emit<Bytecode::Op::Jump>().set_targets(Bytecode::Label { end_block }, {});
 
-        if (true_block_jump)
-            true_block_jump->set_targets(
-                Bytecode::Label { end_block },
-                {});
+    if (true_block_jump)
+        true_block_jump->set_targets(Bytecode::Label { end_block }, {});
 
-        generator.switch_to_basic_block(end_block);
-    } else {
-        if (true_block_jump)
-            true_block_jump->set_targets(
-                Bytecode::Label { false_block },
-                {});
-    }
+    generator.switch_to_basic_block(end_block);
 }
 
 void ContinueStatement::generate_bytecode(Bytecode::Generator& generator) const
