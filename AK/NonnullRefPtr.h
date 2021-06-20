@@ -335,6 +335,12 @@ inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
     a.swap(b);
 }
 
+template<typename T, class... Args>
+inline NonnullRefPtr<T> create(Args&&... args)
+{
+    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *new T(forward<Args>(args)...));
+}
+
 }
 
 template<typename T>
@@ -346,4 +352,5 @@ struct Traits<NonnullRefPtr<T>> : public GenericTraits<NonnullRefPtr<T>> {
 };
 
 using AK::adopt_ref;
+using AK::create;
 using AK::NonnullRefPtr;

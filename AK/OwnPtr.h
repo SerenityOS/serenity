@@ -206,6 +206,12 @@ inline OwnPtr<T> adopt_own_if_nonnull(T* object)
     return {};
 }
 
+template<typename T, class... Args>
+inline OwnPtr<T> try_make(Args&&... args)
+{
+    return adopt_own_if_nonnull(new (nothrow) T(forward<Args>(args)...));
+}
+
 template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     using PeekType = T*;
@@ -218,3 +224,4 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
 
 using AK::adopt_own_if_nonnull;
 using AK::OwnPtr;
+using AK::try_make;

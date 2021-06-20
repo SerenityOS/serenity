@@ -154,8 +154,7 @@ inline NonnullOwnPtr<T> adopt_own(T& object)
 #endif
 
 template<class T, class... Args>
-inline NonnullOwnPtr<T>
-make(Args&&... args)
+inline NonnullOwnPtr<T> make(Args&&... args)
 {
     return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *new T(forward<Args>(args)...));
 }
