@@ -108,7 +108,7 @@ public:
         return sqrt(m_x * m_x + m_y * m_y);
     }
 
-    constexpr String to_string() const
+    String to_string() const
     {
         return String::formatted("[{},{}]", x(), y());
     }
