@@ -30,6 +30,9 @@ PDFViewerWidget::PDFViewerWidget()
     m_sidebar->set_fixed_width(0);
 
     m_viewer = splitter.add<PDFViewer>();
+    m_viewer->on_page_change = [&](auto new_page) {
+        m_page_text_box->set_current_number(new_page + 1);
+    };
 }
 
 void PDFViewerWidget::initialize_menubar(GUI::Menubar& menubar)
