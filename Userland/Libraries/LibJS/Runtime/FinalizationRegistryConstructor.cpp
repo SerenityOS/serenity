@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FinalizationRegistryConstructor.h>
@@ -40,17 +41,17 @@ Value FinalizationRegistryConstructor::call()
 }
 
 // 26.2.1.1 FinalizationRegistry ( cleanupCallback ), https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback
-Value FinalizationRegistryConstructor::construct(Function&)
+Value FinalizationRegistryConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
     auto cleanup_callback = vm.argument(0);
     if (!cleanup_callback.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, cleanup_callback.to_string_without_side_effects());
         return {};
     }
-
-    // FIXME: Use OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistry.prototype%")
-    return FinalizationRegistry::create(global_object(), cleanup_callback.as_function());
+    return ordinary_create_from_constructor<FinalizationRegistry>(global_object, new_target, &GlobalObject::finalization_registry_prototype, cleanup_callback.as_function());
 }
 
 }

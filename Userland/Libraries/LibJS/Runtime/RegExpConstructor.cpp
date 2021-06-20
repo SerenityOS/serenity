@@ -55,6 +55,7 @@ Value RegExpConstructor::construct(Function&)
         if (vm.exception())
             return {};
     }
+    // FIXME: Use RegExpAlloc (which uses OrdinaryCreateFromConstructor)
     return RegExpObject::create(global_object(), pattern, flags);
 }
 

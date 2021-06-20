@@ -63,19 +63,21 @@ ObjectConstructor::~ObjectConstructor()
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
 Value ObjectConstructor::call()
 {
+    return construct(*this);
+}
+
+// 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
+Value ObjectConstructor::construct(Function& new_target)
+{
     auto& vm = this->vm();
     auto& global_object = this->global_object();
 
+    if (&new_target != this)
+        return ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype);
     auto value = vm.argument(0);
     if (value.is_nullish())
         return Object::create(global_object, global_object.object_prototype());
     return value.to_object(global_object);
-}
-
-// 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
-Value ObjectConstructor::construct(Function&)
-{
-    return call();
 }
 
 // 20.1.2.10 Object.getOwnPropertyNames ( O ), https://tc39.es/ecma262/#sec-object.getownpropertynames

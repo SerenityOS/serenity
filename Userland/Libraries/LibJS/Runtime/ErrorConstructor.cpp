@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/ErrorConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -33,16 +34,19 @@ Value ErrorConstructor::call()
 }
 
 // 20.5.1.1 Error ( message ), https://tc39.es/ecma262/#sec-error-message
-Value ErrorConstructor::construct(Function&)
+Value ErrorConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    // FIXME: Use OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%")
-    auto* error = Error::create(global_object());
+    auto& global_object = this->global_object();
+
+    auto* error = ordinary_create_from_constructor<Error>(global_object, new_target, &GlobalObject::error_prototype);
+    if (vm.exception())
+        return {};
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     if (!vm.argument(0).is_undefined()) {
-        auto message = vm.argument(0).to_string(global_object());
+        auto message = vm.argument(0).to_string(global_object);
         if (vm.exception())
             return {};
         error->define_property(vm.names.message, js_string(vm, message), attr);
@@ -82,17 +86,20 @@ Value ErrorConstructor::construct(Function&)
     }                                                                                    \
                                                                                          \
     /* 20.5.6.1.1 NativeError ( message ), https://tc39.es/ecma262/#sec-nativeerror */   \
-    Value ConstructorName::construct(Function&)                                          \
+    Value ConstructorName::construct(Function& new_target)                               \
     {                                                                                    \
         auto& vm = this->vm();                                                           \
-        /* FIXME: Use OrdinaryCreateFromConstructor(                                     \
-         * FIXME:     newTarget, "%NativeError.prototype%"). */                          \
-        auto* error = ClassName::create(global_object());                                \
+        auto& global_object = this->global_object();                                     \
+                                                                                         \
+        auto* error = ordinary_create_from_constructor<ClassName>(                       \
+            global_object, new_target, &GlobalObject::snake_name##_prototype);           \
+        if (vm.exception())                                                              \
+            return {};                                                                   \
                                                                                          \
         u8 attr = Attribute::Writable | Attribute::Configurable;                         \
                                                                                          \
         if (!vm.argument(0).is_undefined()) {                                            \
-            auto message = vm.argument(0).to_string(global_object());                    \
+            auto message = vm.argument(0).to_string(global_object);                      \
             if (vm.exception())                                                          \
                 return {};                                                               \
             error->define_property(vm.names.message, js_string(vm, message), attr);      \

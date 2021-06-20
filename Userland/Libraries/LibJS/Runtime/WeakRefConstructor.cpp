@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/WeakRef.h>
@@ -40,17 +41,17 @@ Value WeakRefConstructor::call()
 }
 
 // 26.1.1.1 WeakRef ( target ), https://tc39.es/ecma262/#sec-weak-ref-target
-Value WeakRefConstructor::construct(Function&)
+Value WeakRefConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
     auto target = vm.argument(0);
     if (!target.is_object()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, target.to_string_without_side_effects());
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, target.to_string_without_side_effects());
         return {};
     }
-
-    // FIXME: Use OrdinaryCreateFromConstructor(newTarget, "%WeakRef.prototype%")
-    return WeakRef::create(global_object(), &target.as_object());
+    return ordinary_create_from_constructor<WeakRef>(global_object, new_target, &GlobalObject::weak_ref_prototype, &target.as_object());
 }
 
 }

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -41,25 +42,30 @@ Value WeakMapConstructor::call()
 }
 
 // 24.3.1.1 WeakMap ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakmap-iterable
-Value WeakMapConstructor::construct(Function&)
+Value WeakMapConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    if (vm.argument(0).is_nullish())
-        return WeakMap::create(global_object());
+    auto& global_object = this->global_object();
 
-    auto* weak_map = WeakMap::create(global_object());
+    auto* weak_map = ordinary_create_from_constructor<WeakMap>(global_object, new_target, &GlobalObject::weak_map_prototype);
+    if (vm.exception())
+        return {};
+
+    if (vm.argument(0).is_nullish())
+        return weak_map;
+
     auto adder = weak_map->get(vm.names.set);
     if (vm.exception())
         return {};
     if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, "'set' property of WeakMap");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of WeakMap");
         return {};
     }
-    get_iterator_values(global_object(), vm.argument(0), [&](Value iterator_value) {
+    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
         if (vm.exception())
             return IterationDecision::Break;
         if (!iterator_value.is_object()) {
-            vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
         auto key = iterator_value.as_object().get(0).value_or(js_undefined());
