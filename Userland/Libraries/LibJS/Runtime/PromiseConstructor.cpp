@@ -5,6 +5,7 @@
  */
 
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -50,15 +51,21 @@ Value PromiseConstructor::call()
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
-Value PromiseConstructor::construct(Function&)
+Value PromiseConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
+
     auto executor = vm.argument(0);
     if (!executor.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::PromiseExecutorNotAFunction);
+        vm.throw_exception<TypeError>(global_object, ErrorType::PromiseExecutorNotAFunction);
         return {};
     }
-    auto* promise = Promise::create(global_object());
+
+    auto* promise = ordinary_create_from_constructor<Promise>(global_object, new_target, &GlobalObject::promise_prototype);
+    if (vm.exception())
+        return {};
+
     auto [resolve_function, reject_function] = promise->create_resolving_functions();
 
     auto completion_value = vm.call(executor.as_function(), js_undefined(), &resolve_function, &reject_function);

@@ -9,6 +9,7 @@
 #include <AK/CharacterTypes.h>
 #include <AK/GenericLexer.h>
 #include <LibCore/DateTime.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/DateConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -144,23 +145,43 @@ DateConstructor::~DateConstructor()
 {
 }
 
-// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
-Value DateConstructor::call()
+struct DatetimeAndMilliseconds {
+    Core::DateTime datetime;
+    i16 milliseconds { 0 };
+};
+
+static DatetimeAndMilliseconds now()
 {
-    return js_string(heap(), Date::now(global_object())->string());
+    struct timeval tv;
+    gettimeofday(&tv, nullptr);
+    auto datetime = Core::DateTime::now();
+    auto milliseconds = static_cast<i16>(tv.tv_usec / 1000);
+    return { datetime, milliseconds };
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
-Value DateConstructor::construct(Function&)
+Value DateConstructor::call()
+{
+    auto [datetime, milliseconds] = JS::now();
+    auto* date = Date::create(global_object(), datetime, milliseconds);
+    return js_string(heap(), date->string());
+}
+
+// 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
+Value DateConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    if (vm.argument_count() == 0)
-        return Date::now(global_object());
+    auto& global_object = this->global_object();
 
-    auto create_invalid_date = [this]() {
+    if (vm.argument_count() == 0) {
+        auto [datetime, milliseconds] = JS::now();
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
+    }
+
+    auto create_invalid_date = [&global_object, &new_target]() {
         auto datetime = Core::DateTime::create(1970, 1, 1, 0, 0, 0);
         auto milliseconds = static_cast<i16>(0);
-        return Date::create(global_object(), datetime, milliseconds, true);
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, true);
     };
 
     if (vm.argument_count() == 1) {
@@ -168,7 +189,7 @@ Value DateConstructor::construct(Function&)
         if (value.is_string())
             value = parse_simplified_iso8601(value.as_string().string());
         else
-            value = value.to_number(global_object());
+            value = value.to_number(global_object);
 
         if (vm.exception())
             return {};
@@ -183,13 +204,15 @@ Value DateConstructor::construct(Function&)
             return create_invalid_date();
         auto datetime = Core::DateTime::from_timestamp(static_cast<time_t>(value_as_double / 1000));
         auto milliseconds = static_cast<i16>(fmod(value_as_double, 1000));
-        return Date::create(global_object(), datetime, milliseconds);
+        return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
     }
 
     // A date/time in components, in local time.
-    auto arg_or = [&vm, this](size_t i, i32 fallback) { return vm.argument_count() > i ? vm.argument(i).to_number(global_object()) : Value(fallback); };
+    auto arg_or = [&vm, &global_object](size_t i, i32 fallback) {
+        return vm.argument_count() > i ? vm.argument(i).to_number(global_object) : Value(fallback);
+    };
 
-    auto year_value = vm.argument(0).to_number(global_object());
+    auto year_value = vm.argument(0).to_number(global_object);
     if (vm.exception())
         return {};
     if (!year_value.is_finite_number()) {
@@ -197,7 +220,7 @@ Value DateConstructor::construct(Function&)
     }
     auto year = year_value.as_i32();
 
-    auto month_index_value = vm.argument(1).to_number(global_object());
+    auto month_index_value = vm.argument(1).to_number(global_object);
     if (vm.exception())
         return {};
     if (!month_index_value.is_finite_number()) {
@@ -256,10 +279,10 @@ Value DateConstructor::construct(Function&)
         year += 1900;
     int month = month_index + 1;
     auto datetime = Core::DateTime::create(year, month, day, hours, minutes, seconds);
-    auto* date = Date::create(global_object(), datetime, milliseconds);
-    if (date->time() > Date::time_clip)
+    auto time = datetime.timestamp() * 1000.0 + milliseconds;
+    if (time > Date::time_clip)
         return create_invalid_date();
-    return date;
+    return ordinary_create_from_constructor<Date>(global_object, new_target, &GlobalObject::date_prototype, datetime, milliseconds, false);
 }
 
 // 21.4.3.1 Date.now ( ), https://tc39.es/ecma262/#sec-date.now
