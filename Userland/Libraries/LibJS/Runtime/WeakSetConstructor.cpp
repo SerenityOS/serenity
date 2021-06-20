@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -41,21 +42,26 @@ Value WeakSetConstructor::call()
 }
 
 // 24.4.1.1 WeakSet ( [ iterable ] ), https://tc39.es/ecma262/#sec-weakset-iterable
-Value WeakSetConstructor::construct(Function&)
+Value WeakSetConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    if (vm.argument(0).is_nullish())
-        return WeakSet::create(global_object());
+    auto& global_object = this->global_object();
 
-    auto* weak_set = WeakSet::create(global_object());
+    auto* weak_set = ordinary_create_from_constructor<WeakSet>(global_object, new_target, &GlobalObject::weak_set_prototype);
+    if (vm.exception())
+        return {};
+
+    if (vm.argument(0).is_nullish())
+        return weak_set;
+
     auto adder = weak_set->get(vm.names.add);
     if (vm.exception())
         return {};
     if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, "'add' property of WeakSet");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of WeakSet");
         return {};
     }
-    get_iterator_values(global_object(), vm.argument(0), [&](Value iterator_value) {
+    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
         if (vm.exception())
             return IterationDecision::Break;
         (void)vm.call(adder.as_function(), Value(weak_set), iterator_value);

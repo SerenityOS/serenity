@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NumberConstructor.h>
@@ -94,7 +95,7 @@ Value NumberConstructor::call()
 }
 
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
-Value NumberConstructor::construct(Function&)
+Value NumberConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
@@ -102,8 +103,7 @@ Value NumberConstructor::construct(Function&)
     auto number = get_value_from_constructor_argument(global_object);
     if (vm.exception())
         return {};
-    // FIXME: Use OrdinaryCreateFromConstructor(NewTarget, "%Number.prototype%")
-    return NumberObject::create(global_object, number.as_double());
+    return ordinary_create_from_constructor<NumberObject>(global_object, new_target, &GlobalObject::number_prototype, number.as_double());
 }
 
 // 21.1.2.2 Number.isFinite ( number ), https://tc39.es/ecma262/#sec-number.isfinite

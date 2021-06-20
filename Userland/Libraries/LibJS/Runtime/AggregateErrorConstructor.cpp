@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateError.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
 #include <LibJS/Runtime/Array.h>
@@ -36,16 +37,19 @@ Value AggregateErrorConstructor::call()
 }
 
 // 20.5.7.1.1 AggregateError ( errors, message ), https://tc39.es/ecma262/#sec-aggregate-error
-Value AggregateErrorConstructor::construct(Function&)
+Value AggregateErrorConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    // FIXME: Use OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%")
-    auto* aggregate_error = AggregateError::create(global_object());
+    auto& global_object = this->global_object();
+
+    auto* aggregate_error = ordinary_create_from_constructor<AggregateError>(global_object, new_target, &GlobalObject::aggregate_error_prototype);
+    if (vm.exception())
+        return {};
 
     u8 attr = Attribute::Writable | Attribute::Configurable;
 
     if (!vm.argument(1).is_undefined()) {
-        auto message = vm.argument(1).to_string(global_object());
+        auto message = vm.argument(1).to_string(global_object);
         if (vm.exception())
             return {};
         aggregate_error->define_property(vm.names.message, js_string(vm, message), attr);
@@ -55,11 +59,11 @@ Value AggregateErrorConstructor::construct(Function&)
     if (vm.exception())
         return {};
 
-    auto errors_list = iterable_to_list(global_object(), vm.argument(0));
+    auto errors_list = iterable_to_list(global_object, vm.argument(0));
     if (vm.exception())
         return {};
 
-    aggregate_error->define_property(vm.names.errors, Array::create_from(global_object(), errors_list), attr);
+    aggregate_error->define_property(vm.names.errors, Array::create_from(global_object, errors_list), attr);
 
     return aggregate_error;
 }

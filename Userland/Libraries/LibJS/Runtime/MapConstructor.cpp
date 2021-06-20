@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -43,12 +44,15 @@ Value MapConstructor::call()
 }
 
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
-Value MapConstructor::construct(Function&)
+Value MapConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
+    auto& global_object = this->global_object();
 
-    // FIXME: Use OrdinaryCreateFromConstructor(newTarget, "%Map.prototype%")
-    auto* map = Map::create(global_object());
+    auto* map = ordinary_create_from_constructor<Map>(global_object, new_target, &GlobalObject::map_prototype);
+    if (vm.exception())
+        return {};
+
     if (vm.argument(0).is_nullish())
         return map;
 
@@ -56,14 +60,14 @@ Value MapConstructor::construct(Function&)
     if (vm.exception())
         return {};
     if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, "'set' property of Map");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'set' property of Map");
         return {};
     }
-    get_iterator_values(global_object(), vm.argument(0), [&](Value iterator_value) {
+    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
         if (vm.exception())
             return IterationDecision::Break;
         if (!iterator_value.is_object()) {
-            vm.throw_exception<TypeError>(global_object(), ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
+            vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, String::formatted("Iterator value {}", iterator_value.to_string_without_side_effects()));
             return IterationDecision::Break;
         }
         auto key = iterator_value.as_object().get(0).value_or(js_undefined());

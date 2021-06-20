@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
@@ -43,21 +44,26 @@ Value SetConstructor::call()
 }
 
 // 24.2.1.1 Set ( [ iterable ] ), https://tc39.es/ecma262/#sec-set-iterable
-Value SetConstructor::construct(Function&)
+Value SetConstructor::construct(Function& new_target)
 {
     auto& vm = this->vm();
-    if (vm.argument(0).is_nullish())
-        return Set::create(global_object());
+    auto& global_object = this->global_object();
 
-    auto* set = Set::create(global_object());
+    auto* set = ordinary_create_from_constructor<Set>(global_object, new_target, &GlobalObject::set_prototype);
+    if (vm.exception())
+        return {};
+
+    if (vm.argument(0).is_nullish())
+        return set;
+
     auto adder = set->get(vm.names.add);
     if (vm.exception())
         return {};
     if (!adder.is_function()) {
-        vm.throw_exception<TypeError>(global_object(), ErrorType::NotAFunction, "'add' property of Set");
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, "'add' property of Set");
         return {};
     }
-    get_iterator_values(global_object(), vm.argument(0), [&](Value iterator_value) {
+    get_iterator_values(global_object, vm.argument(0), [&](Value iterator_value) {
         if (vm.exception())
             return IterationDecision::Break;
         (void)vm.call(adder.as_function(), Value(set), iterator_value);
