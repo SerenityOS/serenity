@@ -124,7 +124,7 @@ public:
         return sqrt(m_x * m_x + m_y * m_y + m_z * m_z + m_w * m_w);
     }
 
-    constexpr String to_string() const
+    String to_string() const
     {
         return String::formatted("[{},{},{},{}]", x(), y(), z(), w());
     }
