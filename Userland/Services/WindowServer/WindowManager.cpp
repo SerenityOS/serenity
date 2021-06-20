@@ -581,7 +581,7 @@ bool WindowManager::process_ongoing_window_move(MouseEvent& event)
                     m_move_window->set_tiled(WindowTileType::BottomLeft);
                 else
                     m_move_window->set_tiled(WindowTileType::Left);
-            } else if (is_resizable && event.x() >= Screen::the().width() - tiling_deadzone) {
+            } else if (is_resizable && event.x() >= Screen::the().virtual_width() - tiling_deadzone) {
                 if (event.y() <= tiling_deadzone + desktop.top())
                     m_move_window->set_tiled(WindowTileType::TopRight);
                 else if (event.y() >= desktop.height() - tiling_deadzone)
@@ -1117,8 +1117,8 @@ Gfx::IntRect WindowManager::desktop_rect() const
     return {
         0,
         0,
-        Screen::the().width(),
-        Screen::the().height() - 28
+        Screen::the().virtual_width(),
+        Screen::the().virtual_height() - 28
     };
 }
 
@@ -1578,8 +1578,8 @@ Gfx::IntPoint WindowManager::get_recommended_window_position(Gfx::IntPoint const
     Gfx::IntPoint point;
     if (overlap_window) {
         point = overlap_window->position() + shift;
-        point = { point.x() % Screen::the().width(),
-            (point.y() >= (Screen::the().height() - taskbar_height))
+        point = { point.x() % Screen::the().virtual_width(),
+            (point.y() >= (Screen::the().virtual_height() - taskbar_height))
                 ? Gfx::WindowTheme::current().titlebar_height(Gfx::WindowTheme::WindowType::Normal, palette())
                 : point.y() };
     } else {

@@ -28,22 +28,22 @@ public:
     bool can_set_buffer() { return m_can_set_buffer; }
     void set_buffer(int index);
 
-    int physical_width() const { return width() * scale_factor(); }
-    int physical_height() const { return height() * scale_factor(); }
+    int virtual_width() const { return m_width; }
+    int virtual_height() const { return m_height; }
     size_t pitch() const { return m_pitch; }
 
-    int width() const { return m_width; }
-    int height() const { return m_height; }
+    int real_width() const { return m_width * m_scale_factor; }
+    int real_height() const { return m_height * m_scale_factor; }
     int scale_factor() const { return m_scale_factor; }
 
     Gfx::RGBA32* scanline(int y);
 
     static Screen& the();
 
-    Gfx::IntSize physical_size() const { return { physical_width(), physical_height() }; }
+    Gfx::IntSize physical_size() const { return { real_width(), real_height() }; }
     Gfx::IntRect physical_rect() const { return { { 0, 0 }, physical_size() }; }
 
-    Gfx::IntSize size() const { return { width(), height() }; }
+    Gfx::IntSize size() const { return { virtual_width(), virtual_height() }; }
     Gfx::IntRect rect() const { return { { 0, 0 }, size() }; }
 
     Gfx::IntPoint cursor_location() const { return m_physical_cursor_location / m_scale_factor; }

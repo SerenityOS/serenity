@@ -768,42 +768,42 @@ Gfx::IntRect Window::tiled_rect(WindowTileType tiled) const
     case WindowTileType::Left:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             max_height);
     case WindowTileType::Right:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(Screen::the().virtual_width() / 2 + frame_width,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             max_height);
     case WindowTileType::Top:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width(),
+            Screen::the().virtual_width(),
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::Bottom:
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width(),
+            Screen::the().virtual_width(),
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::TopLeft:
         return Gfx::IntRect(0,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::TopRight:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(Screen::the().virtual_width() / 2 + frame_width,
             menu_height,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::BottomLeft:
         return Gfx::IntRect(0,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             (max_height - titlebar_height) / 2 - frame_width);
     case WindowTileType::BottomRight:
-        return Gfx::IntRect(Screen::the().width() / 2 + frame_width,
+        return Gfx::IntRect(Screen::the().virtual_width() / 2 + frame_width,
             menu_height + (titlebar_height + max_height) / 2 + frame_width,
-            Screen::the().width() / 2 - frame_width,
+            Screen::the().virtual_width() / 2 - frame_width,
             (max_height - titlebar_height) / 2 - frame_width);
     default:
         VERIFY_NOT_REACHED();

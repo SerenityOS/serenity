@@ -52,15 +52,13 @@ Screen::~Screen()
 
 bool Screen::set_resolution(int width, int height, int new_scale_factor)
 {
-    int new_physical_width = width * new_scale_factor;
-    int new_physical_height = height * new_scale_factor;
-    if (physical_width() == new_physical_width && physical_height() == new_physical_height) {
+    if (real_width() == width && real_height() == height) {
         VERIFY(scale_factor() != new_scale_factor);
-        on_change_resolution(m_pitch, physical_width(), physical_height(), new_scale_factor);
+        on_change_resolution(m_pitch, width, height, new_scale_factor);
         return true;
     }
 
-    FBResolution physical_resolution { 0, (unsigned)new_physical_width, (unsigned)new_physical_height };
+    FBResolution physical_resolution { 0, (unsigned)width, (unsigned)height };
     int rc = fb_set_resolution(m_framebuffer_fd, &physical_resolution);
     dbgln_if(WSSCREEN_DEBUG, "fb_set_resolution() - return code {}", rc);
 
@@ -78,7 +76,7 @@ bool Screen::set_resolution(int width, int height, int new_scale_factor)
 
 void Screen::on_change_resolution(int pitch, int new_physical_width, int new_physical_height, int new_scale_factor)
 {
-    if (physical_width() != new_physical_width || physical_height() != new_physical_height) {
+    if (real_width() != new_physical_width || real_height() != new_physical_height) {
         if (m_framebuffer) {
             size_t previous_size_in_bytes = m_size_in_bytes;
             int rc = munmap(m_framebuffer, previous_size_in_bytes);
@@ -126,7 +124,7 @@ void Screen::on_receive_mouse_data(const MousePacket& packet)
         m_physical_cursor_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
         dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_physical_cursor_location);
     } else {
-        m_physical_cursor_location = { packet.x * physical_width() / 0xffff, packet.y * physical_height() / 0xffff };
+        m_physical_cursor_location = { packet.x * real_width() / 0xffff, packet.y * real_height() / 0xffff };
         dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_physical_cursor_location);
     }
 

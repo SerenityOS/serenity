@@ -74,7 +74,7 @@ void Compositor::init_bitmaps()
     m_front_painter = make<Gfx::Painter>(*m_front_bitmap);
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.physical_height()));
+        m_back_bitmap = Gfx::Bitmap::create_wrapper(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor(), screen.pitch(), screen.scanline(screen.real_height()));
     else
         m_back_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRx8888, size, screen.scale_factor());
     m_back_painter = make<Gfx::Painter>(*m_back_bitmap);
@@ -225,13 +225,13 @@ void Compositor::compose()
         painter.fill_rect(rect, background_color);
         if (m_wallpaper) {
             if (m_wallpaper_mode == WallpaperMode::Center) {
-                Gfx::IntPoint offset { (ws.width() - m_wallpaper->width()) / 2, (ws.height() - m_wallpaper->height()) / 2 };
+                Gfx::IntPoint offset { (ws.virtual_width() - m_wallpaper->width()) / 2, (ws.virtual_height() - m_wallpaper->height()) / 2 };
                 painter.blit_offset(rect.location(), *m_wallpaper, rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 painter.draw_tiled_bitmap(rect, *m_wallpaper);
             } else if (m_wallpaper_mode == WallpaperMode::Stretch) {
-                float hscale = (float)m_wallpaper->width() / (float)ws.width();
-                float vscale = (float)m_wallpaper->height() / (float)ws.height();
+                float hscale = (float)m_wallpaper->width() / (float)ws.virtual_width();
+                float vscale = (float)m_wallpaper->height() / (float)ws.virtual_height();
 
                 // TODO: this may look ugly, we should scale to a backing bitmap and then blit
                 auto src_rect = Gfx::FloatRect { rect.x() * hscale, rect.y() * vscale, rect.width() * hscale, rect.height() * vscale };
