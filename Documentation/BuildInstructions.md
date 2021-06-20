@@ -270,7 +270,7 @@ There are some optional features that can be enabled during compilation that are
 - `PRECOMPILE_COMMON_HEADERS`: precompiles some common headers to speedup compilation.
 - `ENABLE_KERNEL_LTO`: builds the kernel with link-time optimization.
 - `INCLUDE_WASM_SPEC_TESTS`: downloads and includes the WebAssembly spec testsuite tests
-- `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components.
+- `BUILD_<component>`: builds the specified component, e.g. `BUILD_HEARTS` (note: must be all caps). Check the components.ini file in your build directory for a list of available components. Make sure to run `ninja clean` and `rm -rf Build/i686/Root` after disabling components. These options can be easily configured by using the `ConfigureComponents` utility. See the [Component Configuration](#component-configuration) section below.
 - `BUILD_EVERYTHING`: builds all optional components, overrides other `BUILD_<component>` flags when enabled
 
 Many parts of the SerenityOS codebase have debug functionality, mostly consisting of additional messages printed to the debug console. This is done via the `<component_name>_DEBUG` macros, which can be enabled individually at build time. They are listed in [this file](../Meta/CMake/all_the_debug_macros.cmake).
@@ -282,6 +282,18 @@ $ cmake ../.. -G Ninja -DPROCESS_DEBUG=ON -DENABLE_PCI_IDS_DOWNLOAD=OFF
 ```
 
 For the changes to take effect, SerenityOS needs to be recompiled and the disk image needs to be rebuilt.
+
+## Component Configuration
+
+For selecting which components of the system to build and install, a helper program, `ConfigureComponents` is available.
+
+It requires `whiptail` as a dependency, which is available on most systems in the `newt` or `libnewt` package. To build and run it, run the following commands from the `Build/i686` directory:
+```console
+$ cmake ../.. -G Ninja        # Only required if CMake hasn't been run before.
+$ ninja configure-components
+```
+
+This will prompt you which build type you want to use and allows you to customize it by manually adding or removing certain components. It will then run a CMake command based on the selection as well as `ninja clean` and `rm -rf Root` to remove old build artifacts.
 
 ## Ports
 
