@@ -251,8 +251,7 @@ JS::Value to_js_value(Wasm::Value& wasm_value, JS::GlobalObject& global_object)
 {
     switch (wasm_value.type().kind()) {
     case Wasm::ValueType::I64:
-        // FIXME: This is extremely silly...
-        return global_object.heap().allocate<JS::BigInt>(global_object, Crypto::SignedBigInteger::from_base10(String::number(wasm_value.to<i64>().value())));
+        return global_object.heap().allocate<JS::BigInt>(global_object, Crypto::SignedBigInteger::create_from(wasm_value.to<i64>().value()));
     case Wasm::ValueType::I32:
         return JS::Value(wasm_value.to<i32>().value());
     case Wasm::ValueType::F64:
