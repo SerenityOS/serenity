@@ -162,6 +162,24 @@ public:
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 };
 
+class NewRegExp final : public Instruction {
+public:
+    NewRegExp(StringTableIndex source_index, StringTableIndex flags_index)
+        : Instruction(Type::NewRegExp)
+        , m_source_index(source_index)
+        , m_flags_index(flags_index)
+    {
+    }
+
+    void execute_impl(Bytecode::Interpreter&) const;
+    String to_string_impl(Bytecode::Executable const&) const;
+    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+private:
+    StringTableIndex m_source_index;
+    StringTableIndex m_flags_index;
+};
+
 // NOTE: This instruction is variable-width depending on the number of excluded names
 class CopyObjectExcludingProperties final : public Instruction {
 public:
