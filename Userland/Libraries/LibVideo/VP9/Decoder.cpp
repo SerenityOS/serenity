@@ -22,7 +22,7 @@ Decoder::Decoder()
 {
 }
 
-bool Decoder::parse_frame(const ByteBuffer& frame_data)
+bool Decoder::parse_frame(ByteBuffer const& frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
     m_syntax_element_counter = make<SyntaxElementCounter>();
@@ -301,13 +301,11 @@ bool Decoder::segmentation_params()
 
     m_segmentation_update_map = m_bit_stream->read_bit();
     if (m_segmentation_update_map) {
-        for (auto i = 0; i < 7; i++) {
+        for (auto i = 0; i < 7; i++)
             m_segmentation_tree_probs[i] = read_prob();
-        }
         m_segmentation_temporal_update = m_bit_stream->read_bit();
-        for (auto i = 0; i < 3; i++) {
+        for (auto i = 0; i < 3; i++)
             m_segmentation_pred_prob[i] = m_segmentation_temporal_update ? read_prob() : 255;
-        }
     }
 
     SAFE_CALL(m_bit_stream->read_bit());
