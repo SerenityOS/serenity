@@ -358,20 +358,19 @@ void TabWidget::mouseup_event(MouseEvent& event)
     if (event.button() != MouseButton::Left)
         return;
 
-    if (!m_close_button_enabled)
+    if (!m_close_button_enabled || m_pressed_close_button_index == -1)
         return;
 
-    for (size_t i = 0; i < m_tabs.size(); ++i) {
-        auto close_button_rect = this->close_button_rect(i);
-        if (close_button_rect.contains(event.position())) {
-            auto* widget = m_tabs[i].widget;
-            deferred_invoke([this, widget](auto&) {
-                if (on_tab_close_click && widget)
-                    on_tab_close_click(*widget);
-            });
-            m_pressed_close_button_index = -1;
-            return;
-        }
+    auto close_button_rect = this->close_button_rect(m_pressed_close_button_index);
+
+    if (close_button_rect.contains(event.position())) {
+        auto* widget = m_tabs[m_pressed_close_button_index].widget;
+        deferred_invoke([this, widget](auto&) {
+            if (on_tab_close_click && widget)
+                on_tab_close_click(*widget);
+        });
+        m_pressed_close_button_index = -1;
+        return;
     }
 }
 
