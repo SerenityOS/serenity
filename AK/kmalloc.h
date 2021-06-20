@@ -41,34 +41,49 @@ inline size_t malloc_good_size(size_t size) { return size; }
 
 #    ifdef __serenity__
 
+#        include <AK/Assertions.h>
 #        include <new>
 
 inline void* operator new(size_t size)
 {
+    void* ptr = kmalloc(size);
+    VERIFY(ptr);
+    return ptr;
+}
+
+inline void* operator new(size_t size, const std::nothrow_t&) noexcept
+{
     return kmalloc(size);
 }
 
-inline void operator delete(void* ptr)
+inline void operator delete(void* ptr) noexcept
 {
     return kfree(ptr);
 }
 
-inline void operator delete(void* ptr, size_t)
+inline void operator delete(void* ptr, size_t) noexcept
 {
     return kfree(ptr);
 }
 
 inline void* operator new[](size_t size)
 {
+    void* ptr = kmalloc(size);
+    VERIFY(ptr);
+    return ptr;
+}
+
+inline void* operator new[](size_t size, const std::nothrow_t&) noexcept
+{
     return kmalloc(size);
 }
 
-inline void operator delete[](void* ptr)
+inline void operator delete[](void* ptr) noexcept
 {
     return kfree(ptr);
 }
 
-inline void operator delete[](void* ptr, size_t)
+inline void operator delete[](void* ptr, size_t) noexcept
 {
     return kfree(ptr);
 }
@@ -76,3 +91,5 @@ inline void operator delete[](void* ptr, size_t)
 #    endif
 
 #endif
+
+using std::nothrow;
