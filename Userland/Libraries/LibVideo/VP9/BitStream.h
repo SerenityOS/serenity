@@ -13,7 +13,7 @@ namespace Video::VP9 {
 
 class BitStream {
 public:
-    BitStream(const u8* data, size_t size)
+    BitStream(u8 const* data, size_t size)
         : m_data_ptr(data)
         , m_bytes_remaining(size)
     {
@@ -36,7 +36,7 @@ public:
     bool exit_bool();
 
 private:
-    const u8* m_data_ptr { nullptr };
+    u8 const* m_data_ptr { nullptr };
     size_t m_bytes_remaining { 0 };
     Optional<u8> m_current_byte;
     i8 m_current_bit_position { 0 };
