@@ -89,6 +89,12 @@ add_custom_target(install-ports
     USES_TERMINAL
 )
 
+add_custom_target(configure-components
+    COMMAND ConfigureComponents
+    DEPENDS ConfigureComponents
+    USES_TERMINAL
+)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -131,6 +137,7 @@ endif()
 add_subdirectory(Userland/DevTools/IPCCompiler)
 add_subdirectory(Userland/DevTools/StateMachineGenerator)
 add_subdirectory(Userland/Libraries/LibWeb/CodeGenerators)
+add_subdirectory(Meta/CMake/ConfigureComponents)
 
 set(write_if_different ${CMAKE_SOURCE_DIR}/Meta/write-only-on-difference.sh)
 
