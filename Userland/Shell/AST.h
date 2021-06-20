@@ -20,11 +20,7 @@
 
 namespace Shell::AST {
 
-template<typename T, typename... Args>
-static inline NonnullRefPtr<T> create(Args... args)
-{
-    return adopt_ref(*new T(args...));
-}
+using AK::create;
 
 template<typename T>
 static inline NonnullRefPtr<T> create(std::initializer_list<NonnullRefPtr<Value>> arg)

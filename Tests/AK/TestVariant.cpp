@@ -160,7 +160,7 @@ TEST_CASE(return_values)
 
 TEST_CASE(return_values_by_reference)
 {
-    auto ref = adopt_ref_if_nonnull(new Object());
+    auto ref = adopt_ref_if_nonnull(new (nothrow) Object());
     Variant<int, String, float> the_value { 42.0f };
 
     auto& value = the_value.visit(

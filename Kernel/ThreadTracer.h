@@ -15,7 +15,7 @@ namespace Kernel {
 
 class ThreadTracer {
 public:
-    static OwnPtr<ThreadTracer> create(ProcessID tracer) { return adopt_own_if_nonnull(new ThreadTracer(tracer)); }
+    static OwnPtr<ThreadTracer> create(ProcessID tracer) { return try_make<ThreadTracer>(tracer); }
 
     ProcessID tracer_pid() const { return m_tracer_pid; }
     bool has_pending_signal(u32 signal) const { return m_pending_signals & (1 << (signal - 1)); }

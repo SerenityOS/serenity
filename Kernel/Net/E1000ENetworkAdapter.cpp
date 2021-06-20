@@ -188,7 +188,7 @@ UNMAP_AFTER_INIT RefPtr<E1000ENetworkAdapter> E1000ENetworkAdapter::try_to_initi
     if (!is_valid_device_id(id.device_id))
         return {};
     u8 irq = PCI::get_interrupt_line(address);
-    auto adapter = adopt_ref_if_nonnull(new E1000ENetworkAdapter(address, irq));
+    auto adapter = adopt_ref_if_nonnull(new (nothrow) E1000ENetworkAdapter(address, irq));
     if (!adapter)
         return {};
     if (adapter->initialize())

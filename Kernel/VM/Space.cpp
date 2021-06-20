@@ -20,7 +20,7 @@ OwnPtr<Space> Space::create(Process& process, const Space* parent)
     auto page_directory = PageDirectory::create_for_userspace(parent ? &parent->page_directory().range_allocator() : nullptr);
     if (!page_directory)
         return {};
-    auto space = adopt_own_if_nonnull(new Space(process, page_directory.release_nonnull()));
+    auto space = adopt_own_if_nonnull(new (nothrow) Space(process, page_directory.release_nonnull()));
     if (!space)
         return {};
     space->page_directory().set_space({}, *space);

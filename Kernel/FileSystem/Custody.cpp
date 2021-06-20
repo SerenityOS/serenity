@@ -17,7 +17,7 @@ KResultOr<NonnullRefPtr<Custody>> Custody::try_create(Custody* parent, StringVie
     auto name_kstring = KString::try_create(name);
     if (!name_kstring)
         return ENOMEM;
-    auto custody = adopt_ref_if_nonnull(new Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
+    auto custody = adopt_ref_if_nonnull(new (nothrow) Custody(parent, name_kstring.release_nonnull(), inode, mount_flags));
     if (!custody)
         return ENOMEM;
     return custody.release_nonnull();

@@ -13,7 +13,7 @@ RefPtr<ScatterGatherList> ScatterGatherList::create(AsyncBlockDeviceRequest& req
     auto vm_object = AnonymousVMObject::create_with_physical_pages(allocated_pages);
     if (!vm_object)
         return {};
-    return adopt_ref_if_nonnull(new ScatterGatherList(vm_object.release_nonnull(), request, device_block_size));
+    return adopt_ref_if_nonnull(new (nothrow) ScatterGatherList(vm_object.release_nonnull(), request, device_block_size));
 }
 
 ScatterGatherList::ScatterGatherList(NonnullRefPtr<AnonymousVMObject> vm_object, AsyncBlockDeviceRequest& request, size_t device_block_size)

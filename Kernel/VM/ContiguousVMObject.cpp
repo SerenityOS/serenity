@@ -15,7 +15,7 @@ RefPtr<ContiguousVMObject> ContiguousVMObject::create_with_size(size_t size, siz
     auto contiguous_physical_pages = MM.allocate_contiguous_supervisor_physical_pages(size, physical_alignment);
     if (contiguous_physical_pages.is_empty())
         return {};
-    return adopt_ref_if_nonnull(new ContiguousVMObject(size, contiguous_physical_pages));
+    return adopt_ref_if_nonnull(new (nothrow) ContiguousVMObject(size, contiguous_physical_pages));
 }
 
 ContiguousVMObject::ContiguousVMObject(size_t size, NonnullRefPtrVector<PhysicalPage>& contiguous_physical_pages)

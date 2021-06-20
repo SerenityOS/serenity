@@ -113,7 +113,7 @@ UNMAP_AFTER_INIT RefPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::try_to_ini
     if (id != rtl8139_id)
         return {};
     u8 irq = PCI::get_interrupt_line(address);
-    return adopt_ref_if_nonnull(new RTL8139NetworkAdapter(address, irq));
+    return adopt_ref_if_nonnull(new (nothrow) RTL8139NetworkAdapter(address, irq));
 }
 
 UNMAP_AFTER_INIT RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address address, u8 irq)

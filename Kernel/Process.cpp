@@ -213,7 +213,7 @@ void Process::unprotect_data()
 
 RefPtr<Process> Process::create(RefPtr<Thread>& first_thread, const String& name, uid_t uid, gid_t gid, ProcessID ppid, bool is_kernel_process, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
 {
-    auto process = adopt_ref_if_nonnull(new Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
+    auto process = adopt_ref_if_nonnull(new (nothrow) Process(name, uid, gid, ppid, is_kernel_process, move(cwd), move(executable), tty));
     if (!process)
         return {};
     auto result = process->attach_resources(first_thread, fork_parent);

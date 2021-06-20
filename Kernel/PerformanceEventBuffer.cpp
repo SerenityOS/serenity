@@ -257,7 +257,7 @@ OwnPtr<PerformanceEventBuffer> PerformanceEventBuffer::try_create_with_size(size
     auto buffer = KBuffer::try_create_with_size(buffer_size, Region::Access::Read | Region::Access::Write, "Performance events", AllocationStrategy::AllocateNow);
     if (!buffer)
         return {};
-    return adopt_own_if_nonnull(new PerformanceEventBuffer(buffer.release_nonnull()));
+    return adopt_own_if_nonnull(new (nothrow) PerformanceEventBuffer(buffer.release_nonnull()));
 }
 
 void PerformanceEventBuffer::add_process(const Process& process, ProcessEventType event_type)

@@ -27,7 +27,7 @@ struct WatchDescription {
 
     static KResultOr<NonnullOwnPtr<WatchDescription>> create(int wd, Inode& inode, unsigned event_mask)
     {
-        auto description = adopt_own_if_nonnull(new WatchDescription(wd, inode, event_mask));
+        auto description = adopt_own_if_nonnull(new (nothrow) WatchDescription(wd, inode, event_mask));
         if (description)
             return description.release_nonnull();
         return ENOMEM;
