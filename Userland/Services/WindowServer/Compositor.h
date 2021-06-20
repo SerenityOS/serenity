@@ -11,12 +11,14 @@
 #include <LibCore/Object.h>
 #include <LibGfx/Color.h>
 #include <LibGfx/DisjointRectSet.h>
-#include <WindowServer/Screen.h>
+#include <LibGfx/Font.h>
+#include <WindowServer/Overlays.h>
 
 namespace WindowServer {
 
 class ClientConnection;
 class Cursor;
+class MultiScaleBitmaps;
 class Window;
 class WindowManager;
 
@@ -29,6 +31,8 @@ enum class WallpaperMode {
 
 class Compositor final : public Core::Object {
     C_OBJECT(Compositor)
+    friend class Overlay;
+
 public:
     static Compositor& the();
 
@@ -54,7 +58,37 @@ public:
     void increment_display_link_count(Badge<ClientConnection>);
     void decrement_display_link_count(Badge<ClientConnection>);
 
+    void increment_show_screen_number(Badge<ClientConnection>);
+    void decrement_show_screen_number(Badge<ClientConnection>);
+    bool showing_screen_numbers() const { return m_show_screen_number_count > 0; }
+
+    void invalidate_after_theme_or_font_change()
+    {
+        update_fonts();
+        invalidate_occlusions();
+        overlays_theme_changed();
+        invalidate_screen();
+    }
+
     void invalidate_occlusions() { m_occlusions_dirty = true; }
+    void overlay_rects_changed();
+
+    template<typename T, typename... Args>
+    OwnPtr<T> create_overlay(Args&&... args)
+    {
+        return adopt_own(*new T(forward<Args>(args)...));
+    }
+
+    template<typename F>
+    IterationDecision for_each_overlay(F f)
+    {
+        for (auto& overlay : m_overlay_list) {
+            IterationDecision decision = f(overlay);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    }
 
     void did_construct_window_manager(Badge<WindowManager>);
 
@@ -66,8 +100,16 @@ private:
     void init_bitmaps();
     bool render_animation_frame(Screen&, Gfx::DisjointRectSet&);
     void step_animations();
+    void invalidate_current_screen_number_rects();
+    void overlays_theme_changed();
+
+    void render_overlays();
+    void add_overlay(Overlay&);
+    void remove_overlay(Overlay&);
+    void update_fonts();
     void notify_display_links();
     void start_compose_async_timer();
+    void recompute_overlay_rects();
     void recompute_occlusions();
     bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
     void change_cursor(const Cursor*);
@@ -81,6 +123,7 @@ private:
     bool m_invalidated_any { true };
     bool m_invalidated_window { false };
     bool m_invalidated_cursor { false };
+    bool m_overlay_rects_changed { false };
 
     struct ScreenData {
         RefPtr<Gfx::Bitmap> m_front_bitmap;
@@ -92,6 +135,7 @@ private:
         RefPtr<Gfx::Bitmap> m_cursor_back_bitmap;
         OwnPtr<Gfx::Painter> m_cursor_back_painter;
         Gfx::IntRect m_last_cursor_rect;
+        OwnPtr<ScreenNumberOverlay> m_screen_number_overlay;
         bool m_buffers_are_flipped { false };
         bool m_screen_can_set_buffer { false };
         bool m_cursor_back_is_valid { false };
@@ -100,14 +144,41 @@ private:
         Gfx::DisjointRectSet m_flush_transparent_rects;
         Gfx::DisjointRectSet m_flush_special_rects;
 
-        void init_bitmaps(Screen&);
+        Gfx::Painter& overlay_painter() { return *m_temp_painter; }
+
+        void init_bitmaps(Compositor&, Screen&);
         void flip_buffers(Screen&);
         void draw_cursor(Screen&, const Gfx::IntRect&);
         bool restore_cursor_back(Screen&, Gfx::IntRect&);
+
+        template<typename F>
+        IterationDecision for_each_intersected_flushing_rect(Gfx::IntRect const& intersecting_rect, F f)
+        {
+            auto iterate_flush_rects = [&](Gfx::DisjointRectSet const& flush_rects) {
+                for (auto& rect : flush_rects.rects()) {
+                    auto intersection = intersecting_rect.intersected(rect);
+                    if (intersection.is_empty())
+                        continue;
+                    IterationDecision decision = f(intersection);
+                    if (decision != IterationDecision::Continue)
+                        return decision;
+                }
+                return IterationDecision::Continue;
+            };
+            auto decision = iterate_flush_rects(m_flush_rects);
+            if (decision != IterationDecision::Continue)
+                return decision;
+            // We do not have to iterate m_flush_special_rects here as these
+            // technically should be removed anyway. m_flush_rects and
+            // m_flush_transparent_rects should cover everything already
+            return iterate_flush_rects(m_flush_transparent_rects);
+        }
     };
     friend class ScreenData;
     Vector<ScreenData, default_screen_count> m_screen_data;
 
+    IntrusiveList<Overlay, RawPtr<Overlay>, &Overlay::m_list_node> m_overlay_list;
+    Gfx::DisjointRectSet m_overlay_rects;
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
 
@@ -126,6 +197,7 @@ private:
     RefPtr<Core::Timer> m_display_link_notify_timer;
     size_t m_display_link_count { 0 };
 
+    size_t m_show_screen_number_count { 0 };
     Optional<Gfx::Color> m_custom_background_color;
 };
 

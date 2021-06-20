@@ -96,6 +96,7 @@ endpoint WindowServer
     set_screen_layout(::WindowServer::ScreenLayout screen_layout, bool save) => (bool success, String error_msg)
     get_screen_layout() => (::WindowServer::ScreenLayout screen_layout)
     save_screen_layout() => (bool success, String error_msg)
+    show_screen_numbers(bool show) =|
 
     set_window_icon_bitmap(i32 window_id, Gfx::ShareableBitmap icon) =|
 

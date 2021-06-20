@@ -25,6 +25,17 @@ const Gfx::Bitmap& MultiScaleBitmaps::bitmap(int scale_factor) const
     return it->value;
 }
 
+Gfx::Bitmap const* MultiScaleBitmaps::find_bitmap(int scale_factor) const
+{
+    auto it = m_bitmaps.find(scale_factor);
+    return it != m_bitmaps.end() ? it->value.ptr() : nullptr;
+}
+
+RefPtr<MultiScaleBitmaps> MultiScaleBitmaps::create_empty()
+{
+    return adopt_ref(*new MultiScaleBitmaps());
+}
+
 RefPtr<MultiScaleBitmaps> MultiScaleBitmaps::create(StringView const& filename, StringView const& default_filename)
 {
     auto per_scale_bitmap = adopt_ref(*new MultiScaleBitmaps());
@@ -51,6 +62,7 @@ bool MultiScaleBitmaps::load(StringView const& filename, StringView const& defau
                 did_load_any = true;
                 m_bitmaps.set(scale_factor, bitmap.release_nonnull());
             } else {
+                // Gracefully ignore, we have at least one bitmap already
                 dbgln("Bitmap {} (scale {}) has format inconsistent with the other per-scale bitmaps", path, bitmap->scale());
             }
         }
@@ -67,6 +79,19 @@ bool MultiScaleBitmaps::load(StringView const& filename, StringView const& defau
         });
     }
     return did_load_any;
+}
+
+void MultiScaleBitmaps::add_bitmap(int scale_factor, NonnullRefPtr<Gfx::Bitmap>&& bitmap)
+{
+    auto bitmap_format = bitmap->format();
+    if (m_format == Gfx::BitmapFormat::Invalid || m_format == bitmap_format) {
+        if (m_format == Gfx::BitmapFormat::Invalid)
+            m_format = bitmap_format;
+        m_bitmaps.set(scale_factor, move(bitmap));
+    } else {
+        dbgln("MultiScaleBitmaps::add_bitmap (scale {}) has format inconsistent with the other per-scale bitmaps", bitmap->scale());
+        VERIFY_NOT_REACHED(); // The caller of this function should have made sure it is consistent!
+    }
 }
 
 }

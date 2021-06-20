@@ -130,6 +130,7 @@ private:
     virtual Messages::WindowServer::SetScreenLayoutResponse set_screen_layout(ScreenLayout const&, bool) override;
     virtual Messages::WindowServer::GetScreenLayoutResponse get_screen_layout() override;
     virtual Messages::WindowServer::SaveScreenLayoutResponse save_screen_layout() override;
+    virtual void show_screen_numbers(bool) override;
     virtual void set_window_cursor(i32, i32) override;
     virtual void set_window_custom_cursor(i32, Gfx::ShareableBitmap const&) override;
     virtual void popup_menu(i32, Gfx::IntPoint const&) override;
@@ -168,6 +169,7 @@ private:
     RefPtr<Core::Timer> m_ping_timer;
 
     bool m_has_display_link { false };
+    bool m_show_screen_number { false };
     bool m_unresponsive { false };
 
     // Need this to get private client connection stuff
