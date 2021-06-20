@@ -60,7 +60,7 @@ void RectangleSelectTool::on_mouseup(Layer&, GUI::MouseEvent&, GUI::MouseEvent& 
     m_editor->update();
 
     auto rect_in_image = Gfx::IntRect::from_two_points(m_selection_start, m_selection_end);
-    m_editor->selection().set(rect_in_image);
+    m_editor->selection().merge(rect_in_image, Selection::MergeMode::Set);
 }
 
 void RectangleSelectTool::on_keydown(GUI::KeyEvent& key_event)

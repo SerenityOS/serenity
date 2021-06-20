@@ -18,12 +18,27 @@ class ImageEditor;
 // Coordinates are image-relative.
 class Selection {
 public:
+    enum class MergeMode {
+        Set,
+        Add,
+        Subtract,
+        Intersect,
+        __Count,
+    };
+
     explicit Selection(ImageEditor&);
 
     bool is_empty() const { return m_mask.is_null(); }
     void clear();
-    void set(Gfx::IntRect const& rect) { m_mask = Mask::full(rect); }
+    void merge(Mask const&, MergeMode);
+    void merge(Gfx::IntRect const& rect, MergeMode mode) { merge(Mask::full(rect), mode); }
     Gfx::IntRect bounding_rect() const { return m_mask.bounding_rect(); }
+
+    [[nodiscard]] bool is_selected(int x, int y) const { return m_mask.get(x, y) > 0; }
+    [[nodiscard]] bool is_selected(Gfx::IntPoint const& point) const { return is_selected(point.x(), point.y()); }
+
+    [[nodiscard]] u8 get_selection_alpha(int x, int y) const { return m_mask.get(x, y); }
+    [[nodiscard]] u8 get_selection_alpha(Gfx::IntPoint const& point) const { return get_selection_alpha(point.x(), point.y()); }
 
     void paint(Gfx::Painter&);
 
