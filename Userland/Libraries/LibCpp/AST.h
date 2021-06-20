@@ -505,6 +505,12 @@ public:
     {
     }
 
+    enum class Type {
+        RegularEnum,
+        EnumClass
+    };
+
+    Type type { Type::RegularEnum };
     Vector<StringView> m_entries;
 };
 
