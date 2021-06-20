@@ -47,6 +47,8 @@ public:
     ALWAYS_INLINE const RefPtr<PDF::Document>& document() const { return m_document; }
     void set_document(RefPtr<PDF::Document>);
 
+    Function<void(u32 new_page)> on_page_change;
+
 protected:
     PDFViewer();
 
