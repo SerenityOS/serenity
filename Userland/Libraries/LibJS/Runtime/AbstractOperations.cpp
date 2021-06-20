@@ -7,12 +7,16 @@
 
 #include <AK/Function.h>
 #include <AK/Result.h>
+#include <AK/TemporaryChange.h>
+#include <LibJS/Interpreter.h>
+#include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectEnvironmentRecord.h>
@@ -196,6 +200,32 @@ Object* get_super_constructor(VM& vm)
     auto& active_function = static_cast<FunctionEnvironmentRecord&>(env).function_object();
     auto* super_constructor = active_function.prototype();
     return super_constructor;
+}
+
+// 19.2.1.1 PerformEval ( x, callerRealm, strictCaller, direct ), https://tc39.es/ecma262/#sec-performeval
+Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller, EvalMode direct)
+{
+    VERIFY(direct == EvalMode::Direct || strict_caller == CallerMode::NonStrict);
+    if (!x.is_string())
+        return x;
+
+    auto& vm = caller_realm.vm();
+    auto& code_string = x.as_string();
+    Parser parser { Lexer { code_string.string() } };
+    auto program = parser.parse_program(strict_caller == CallerMode::Strict);
+
+    if (parser.has_errors()) {
+        auto& error = parser.errors()[0];
+        vm.throw_exception<SyntaxError>(caller_realm, error.to_string());
+        return {};
+    }
+
+    auto& interpreter = vm.interpreter();
+    if (direct == EvalMode::Direct)
+        return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+
+    TemporaryChange scope_change(vm.call_frame().lexical_environment, static_cast<EnvironmentRecord*>(&caller_realm.environment_record()));
+    return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 }
 
 }

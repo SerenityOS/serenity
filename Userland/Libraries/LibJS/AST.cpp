@@ -220,6 +220,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         }
     }
 
+    if (!is<NewExpression>(*this) && is<Identifier>(*m_callee) && static_cast<Identifier const&>(*m_callee).string() == vm.names.eval.as_string() && &callee.as_function() == global_object.eval_function()) {
+        auto script_value = arguments.size() == 0 ? js_undefined() : arguments[0];
+        return perform_eval(script_value, global_object, vm.in_strict_mode() ? CallerMode::Strict : CallerMode::NonStrict, EvalMode::Direct);
+    }
+
     vm.call_frame().current_node = interpreter.current_node();
     Object* new_object = nullptr;
     Value result;

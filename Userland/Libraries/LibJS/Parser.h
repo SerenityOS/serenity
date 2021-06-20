@@ -37,7 +37,7 @@ class Parser {
 public:
     explicit Parser(Lexer lexer);
 
-    NonnullRefPtr<Program> parse_program();
+    NonnullRefPtr<Program> parse_program(bool starts_in_strict_mode = false);
 
     template<typename FunctionNodeType>
     NonnullRefPtr<FunctionNodeType> parse_function_node(u8 parse_options = FunctionNodeParseOptions::CheckForFunctionAndName);

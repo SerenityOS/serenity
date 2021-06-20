@@ -25,6 +25,16 @@ Function* species_constructor(GlobalObject&, Object const&, Function& default_co
 GlobalObject* get_function_realm(GlobalObject&, Function const&);
 Object* get_prototype_from_constructor(GlobalObject&, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 
+enum class CallerMode {
+    Strict,
+    NonStrict
+};
+enum class EvalMode {
+    Direct,
+    Indirect
+};
+Value perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
+
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
 T* ordinary_create_from_constructor(GlobalObject& global_object, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)

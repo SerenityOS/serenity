@@ -8,13 +8,13 @@
 #include <AK/CharacterTypes.h>
 #include <AK/Hex.h>
 #include <AK/Platform.h>
-#include <AK/TemporaryChange.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Console.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/AggregateErrorConstructor.h>
 #include <LibJS/Runtime/AggregateErrorPrototype.h>
 #include <LibJS/Runtime/ArrayBufferConstructor.h>
@@ -140,6 +140,8 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.parseFloat, parse_float, 1, attr);
     define_native_function(vm.names.parseInt, parse_int, 2, attr);
     define_native_function(vm.names.eval, eval, 1, attr);
+    m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
+
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
     define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
@@ -223,6 +225,8 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_##snake_name##_prototype);
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
+
+    visitor.visit(m_eval_function);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)
@@ -335,23 +339,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {
-    if (!vm.argument(0).is_string())
-        return vm.argument(0);
-    auto& code_string = vm.argument(0).as_string();
-    JS::Parser parser { JS::Lexer { code_string.string() } };
-    auto program = parser.parse_program();
-
-    if (parser.has_errors()) {
-        auto& error = parser.errors()[0];
-        vm.throw_exception<SyntaxError>(global_object, error.to_string());
-        return {};
-    }
-
-    auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
-    TemporaryChange scope_change(vm.call_frame().lexical_environment, caller_frame->lexical_environment);
-
-    auto& interpreter = vm.interpreter();
-    return interpreter.execute_statement(global_object, program).value_or(js_undefined());
+    return perform_eval(vm.argument(0), global_object, CallerMode::NonStrict, EvalMode::Indirect);
 }
 
 // 19.2.6.1.1 Encode ( string, unescapedSet ), https://tc39.es/ecma262/#sec-encode

@@ -30,3 +30,46 @@ test("returns 1st argument unless 1st argument is a string", () => {
     var stringObject = new String("1 + 2");
     expect(eval(stringObject)).toBe(stringObject);
 });
+
+// These eval scope tests use function expressions due to bug #8198
+var testValue = "outer";
+test("eval only touches locals if direct use", function () {
+    var testValue = "inner";
+    expect(globalThis.eval("testValue")).toEqual("outer");
+});
+
+test("alias to eval works as a global eval", function () {
+    var testValue = "inner";
+    var eval1 = globalThis.eval;
+    expect(eval1("testValue")).toEqual("outer");
+});
+
+test("eval evaluates all args", function () {
+    var i = 0;
+    expect(eval("testValue", i++, i++, i++)).toEqual("outer");
+    expect(i).toEqual(3);
+});
+
+test("eval tests for exceptions", function () {
+    var i = 0;
+    expect(function () {
+        eval("testValue", i++, i++, j, i++);
+    }).toThrowWithMessage(ReferenceError, "'j' is not defined");
+    expect(i).toEqual(2);
+});
+
+test("direct eval inherits non-strict evaluation", function () {
+    expect(eval("01")).toEqual(1);
+});
+
+test("direct eval inherits strict evaluation", function () {
+    "use strict";
+    expect(() => {
+        eval("01");
+    }).toThrowWithMessage(SyntaxError, "Unprefixed octal number not allowed in strict mode");
+});
+
+test("global eval evaluates as non-strict", function () {
+    "use strict";
+    expect(globalThis.eval("01"));
+});

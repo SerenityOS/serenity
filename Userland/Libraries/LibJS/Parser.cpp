@@ -226,11 +226,15 @@ Associativity Parser::operator_associativity(TokenType type) const
     }
 }
 
-NonnullRefPtr<Program> Parser::parse_program()
+NonnullRefPtr<Program> Parser::parse_program(bool starts_in_strict_mode)
 {
     auto rule_start = push_start();
     ScopePusher scope(*this, ScopePusher::Var | ScopePusher::Let | ScopePusher::Function);
     auto program = adopt_ref(*new Program({ m_filename, rule_start.position(), position() }));
+    if (starts_in_strict_mode) {
+        program->set_strict_mode();
+        m_state.strict_mode = true;
+    }
 
     bool first = true;
     while (!done()) {
