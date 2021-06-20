@@ -15,6 +15,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/LexicalEnvironment.h>
+#include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/ScopeObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
@@ -167,6 +168,14 @@ void NewString::execute_impl(Bytecode::Interpreter& interpreter) const
 void NewObject::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = Object::create(interpreter.global_object(), interpreter.global_object().object_prototype());
+}
+
+void NewRegExp::execute_impl(Bytecode::Interpreter& interpreter) const
+{
+    auto source = interpreter.current_executable().get_string(m_source_index);
+    auto flags = interpreter.current_executable().get_string(m_flags_index);
+
+    interpreter.accumulator() = RegExpObject::create(interpreter.global_object(), source, flags);
 }
 
 void CopyObjectExcludingProperties::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -496,6 +505,11 @@ String NewString::to_string_impl(Bytecode::Executable const& executable) const
 String NewObject::to_string_impl(Bytecode::Executable const&) const
 {
     return "NewObject";
+}
+
+String NewRegExp::to_string_impl(Bytecode::Executable const& executable) const
+{
+    return String::formatted("NewRegExp source:{} (\"{}\") flags:{} (\"{}\")", m_source_index, executable.get_string(m_source_index), m_flags_index, executable.get_string(m_flags_index));
 }
 
 String CopyObjectExcludingProperties::to_string_impl(const Bytecode::Executable&) const

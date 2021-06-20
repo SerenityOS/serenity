@@ -32,6 +32,7 @@
     O(IteratorToArray)               \
     O(NewString)                     \
     O(NewObject)                     \
+    O(NewRegExp)                     \
     O(CopyObjectExcludingProperties) \
     O(GetVariable)                   \
     O(SetVariable)                   \

@@ -258,6 +258,13 @@ void StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
     generator.emit<Bytecode::Op::NewString>(generator.intern_string(m_value));
 }
 
+void RegExpLiteral::generate_bytecode(Bytecode::Generator& generator) const
+{
+    auto source_index = generator.intern_string(m_pattern);
+    auto flags_index = generator.intern_string(m_flags);
+    generator.emit<Bytecode::Op::NewRegExp>(source_index, flags_index);
+}
+
 void Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
     if (m_argument_index.has_value())
