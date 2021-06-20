@@ -13,7 +13,7 @@ namespace Kernel {
 
 RefPtr<TmpFS> TmpFS::create()
 {
-    return adopt_ref_if_nonnull(new TmpFS);
+    return adopt_ref_if_nonnull(new (nothrow) TmpFS);
 }
 
 TmpFS::TmpFS()
@@ -86,7 +86,7 @@ TmpFSInode::~TmpFSInode()
 
 RefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
 {
-    auto inode = adopt_ref_if_nonnull(new TmpFSInode(fs, metadata, parent));
+    auto inode = adopt_ref_if_nonnull(new (nothrow) TmpFSInode(fs, metadata, parent));
     if (inode)
         fs.register_inode(*inode);
     return inode;

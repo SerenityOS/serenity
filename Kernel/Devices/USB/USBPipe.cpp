@@ -13,7 +13,7 @@ namespace Kernel::USB {
 
 KResultOr<NonnullOwnPtr<Pipe>> Pipe::try_create_pipe(Type type, Direction direction, u8 endpoint_address, u16 max_packet_size, i8 device_address, u8 poll_interval)
 {
-    auto pipe = adopt_own_if_nonnull(new Pipe(type, direction, endpoint_address, max_packet_size, device_address, poll_interval));
+    auto pipe = adopt_own_if_nonnull(new (nothrow) Pipe(type, direction, endpoint_address, max_packet_size, device_address, poll_interval));
     if (!pipe)
         return ENOMEM;
 

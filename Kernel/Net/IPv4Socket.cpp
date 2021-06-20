@@ -50,7 +50,7 @@ KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
         return udp_socket.release_value();
     }
     if (type == SOCK_RAW) {
-        auto raw_socket = adopt_ref_if_nonnull(new IPv4Socket(type, protocol));
+        auto raw_socket = adopt_ref_if_nonnull(new (nothrow) IPv4Socket(type, protocol));
         if (raw_socket)
             return raw_socket.release_nonnull();
         return ENOMEM;

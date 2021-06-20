@@ -32,7 +32,7 @@ OwnPtr<CoreDump> CoreDump::create(NonnullRefPtr<Process> process, const String& 
     auto fd = create_target_file(process, output_path);
     if (!fd)
         return {};
-    return adopt_own_if_nonnull(new CoreDump(move(process), fd.release_nonnull()));
+    return adopt_own_if_nonnull(new (nothrow) CoreDump(move(process), fd.release_nonnull()));
 }
 
 CoreDump::CoreDump(NonnullRefPtr<Process> process, NonnullRefPtr<FileDescription>&& fd)

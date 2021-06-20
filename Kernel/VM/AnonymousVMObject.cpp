@@ -40,7 +40,7 @@ RefPtr<VMObject> AnonymousVMObject::clone()
     // one would keep the one it still has. This ensures that the original
     // one and this one, as well as the clone have sufficient resources
     // to cow all pages as needed
-    m_shared_committed_cow_pages = adopt_ref_if_nonnull(new CommittedCowPages(need_cow_pages));
+    m_shared_committed_cow_pages = try_create<CommittedCowPages>(need_cow_pages);
 
     if (!m_shared_committed_cow_pages) {
         MM.uncommit_user_physical_pages(need_cow_pages);
@@ -52,7 +52,7 @@ RefPtr<VMObject> AnonymousVMObject::clone()
     ensure_or_reset_cow_map();
 
     // FIXME: If this allocation fails, we need to rollback all changes.
-    return adopt_ref_if_nonnull(new AnonymousVMObject(*this));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(*this));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, AllocationStrategy commit)
@@ -62,17 +62,17 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size, Alloc
         if (!MM.commit_user_physical_pages(ceil_div(size, static_cast<size_t>(PAGE_SIZE))))
             return {};
     }
-    return adopt_ref_if_nonnull(new AnonymousVMObject(size, commit));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(size, commit));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_pages(NonnullRefPtrVector<PhysicalPage> physical_pages)
 {
-    return adopt_ref_if_nonnull(new AnonymousVMObject(physical_pages));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(physical_pages));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
 {
-    return adopt_ref_if_nonnull(new AnonymousVMObject(page));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(page));
 }
 
 RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
@@ -81,7 +81,7 @@ RefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalA
         dbgln("Shenanigans! create_for_physical_range({}, {}) would wrap around", paddr, size);
         return nullptr;
     }
-    return adopt_ref_if_nonnull(new AnonymousVMObject(paddr, size));
+    return adopt_ref_if_nonnull(new (nothrow) AnonymousVMObject(paddr, size));
 }
 
 AnonymousVMObject::AnonymousVMObject(size_t size, AllocationStrategy strategy)

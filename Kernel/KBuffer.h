@@ -32,7 +32,7 @@ public:
         auto region = MM.allocate_kernel_region(page_round_up(size), name, access, strategy);
         if (!region)
             return nullptr;
-        return adopt_ref_if_nonnull(new KBufferImpl(region.release_nonnull(), size, strategy));
+        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(region.release_nonnull(), size, strategy));
     }
 
     static RefPtr<KBufferImpl> try_create_with_bytes(ReadonlyBytes bytes, Region::Access access, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -42,7 +42,7 @@ public:
             return nullptr;
         memcpy(region->vaddr().as_ptr(), bytes.data(), bytes.size());
 
-        return adopt_ref_if_nonnull(new KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
+        return adopt_ref_if_nonnull(new (nothrow) KBufferImpl(region.release_nonnull(), bytes.size(), strategy));
     }
 
     static RefPtr<KBufferImpl> create_with_size(size_t size, Region::Access access, StringView name, AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -109,7 +109,7 @@ public:
         auto impl = KBufferImpl::try_create_with_size(size, access, name, strategy);
         if (!impl)
             return {};
-        return adopt_own_if_nonnull(new KBuffer(impl.release_nonnull()));
+        return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] static OwnPtr<KBuffer> try_create_with_bytes(ReadonlyBytes bytes, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)
@@ -117,7 +117,7 @@ public:
         auto impl = KBufferImpl::try_create_with_bytes(bytes, access, name, strategy);
         if (!impl)
             return {};
-        return adopt_own_if_nonnull(new KBuffer(impl.release_nonnull()));
+        return adopt_own_if_nonnull(new (nothrow) KBuffer(impl.release_nonnull()));
     }
 
     [[nodiscard]] static KBuffer create_with_size(size_t size, Region::Access access = Region::Access::Read | Region::Access::Write, StringView name = "KBuffer", AllocationStrategy strategy = AllocationStrategy::Reserve)

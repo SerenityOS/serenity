@@ -210,7 +210,7 @@ size_t Region::amount_shared() const
 
 NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable, bool shared)
 {
-    auto region = adopt_own_if_nonnull(new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
+    auto region = adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, shared));
     if (region && owner)
         region->m_owner = owner->make_weak_ptr();
     // FIXME: Return OwnPtr and propagate failure, currently there are too many assumptions made by down stream callers.
@@ -219,7 +219,7 @@ NonnullOwnPtr<Region> Region::create_user_accessible(Process* owner, const Range
 
 OwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, OwnPtr<KString> name, Region::Access access, Cacheable cacheable)
 {
-    return adopt_own_if_nonnull(new Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
+    return adopt_own_if_nonnull(new (nothrow) Region(range, move(vmobject), offset_in_vmobject, move(name), access, cacheable, false));
 }
 
 bool Region::should_cow(size_t page_index) const

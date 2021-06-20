@@ -149,7 +149,7 @@ TCPSocket::~TCPSocket()
 
 KResultOr<NonnullRefPtr<TCPSocket>> TCPSocket::create(int protocol)
 {
-    auto socket = adopt_ref_if_nonnull(new TCPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) TCPSocket(protocol));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;

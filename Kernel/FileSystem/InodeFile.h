@@ -16,7 +16,7 @@ class InodeFile final : public File {
 public:
     static KResultOr<NonnullRefPtr<InodeFile>> create(NonnullRefPtr<Inode>&& inode)
     {
-        auto file = adopt_ref_if_nonnull(new InodeFile(move(inode)));
+        auto file = adopt_ref_if_nonnull(new (nothrow) InodeFile(move(inode)));
         if (!file)
             return ENOMEM;
         return file.release_nonnull();

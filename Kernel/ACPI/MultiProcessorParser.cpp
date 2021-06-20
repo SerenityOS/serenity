@@ -22,7 +22,7 @@ UNMAP_AFTER_INIT OwnPtr<MultiProcessorParser> MultiProcessorParser::autodetect()
     auto floating_pointer = find_floating_pointer();
     if (!floating_pointer.has_value())
         return {};
-    auto parser = adopt_own_if_nonnull(new MultiProcessorParser(floating_pointer.value()));
+    auto parser = adopt_own_if_nonnull(new (nothrow) MultiProcessorParser(floating_pointer.value()));
     VERIFY(parser != nullptr);
     return parser;
 }

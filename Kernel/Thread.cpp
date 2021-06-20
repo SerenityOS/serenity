@@ -43,11 +43,11 @@ KResultOr<NonnullRefPtr<Thread>> Thread::try_create(NonnullRefPtr<Process> proce
         return ENOMEM;
     kernel_stack_region->set_stack(true);
 
-    auto block_timer = adopt_ref_if_nonnull(new Timer());
+    auto block_timer = AK::try_create<Timer>();
     if (!block_timer)
         return ENOMEM;
 
-    auto thread = adopt_ref_if_nonnull(new Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull()));
+    auto thread = adopt_ref_if_nonnull(new (nothrow) Thread(move(process), kernel_stack_region.release_nonnull(), block_timer.release_nonnull()));
     if (!thread)
         return ENOMEM;
 
