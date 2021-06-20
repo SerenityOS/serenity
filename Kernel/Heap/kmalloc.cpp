@@ -29,6 +29,10 @@
 #define POOL_SIZE (2 * MiB)
 #define ETERNAL_RANGE_SIZE (2 * MiB)
 
+namespace std {
+const nothrow_t nothrow;
+}
+
 static RecursiveSpinLock s_lock; // needs to be recursive because of dump_backtrace()
 
 static void kmalloc_allocate_backup_memory();
@@ -300,12 +304,26 @@ size_t kmalloc_good_size(size_t size)
     return size;
 }
 
-void* operator new(size_t size) noexcept
+void* operator new(size_t size)
+{
+    void* ptr = kmalloc(size);
+    VERIFY(ptr);
+    return ptr;
+}
+
+void* operator new(size_t size, const std::nothrow_t&) noexcept
 {
     return kmalloc(size);
 }
 
-void* operator new[](size_t size) noexcept
+void* operator new[](size_t size)
+{
+    void* ptr = kmalloc(size);
+    VERIFY(ptr);
+    return ptr;
+}
+
+void* operator new[](size_t size, const std::nothrow_t&) noexcept
 {
     return kmalloc(size);
 }
