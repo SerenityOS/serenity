@@ -1,3 +1,9 @@
+serenity_component(
+    FlappyBug
+    RECOMMENDED
+    TARGETS FlappyBug
+)
+
 set(SOURCES
     main.cpp
     Game.cpp
