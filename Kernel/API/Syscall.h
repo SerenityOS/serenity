@@ -376,6 +376,7 @@ struct SC_execve_params {
 };
 
 struct SC_readlink_params {
+    int dirfd;
     StringArgument path;
     MutableBufferArgument<char, size_t> buffer;
 };
@@ -402,6 +403,7 @@ struct SC_mknod_params {
 
 struct SC_symlink_params {
     StringArgument target;
+    int new_dirfd;
     StringArgument linkpath;
 };
 

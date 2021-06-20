@@ -457,7 +457,12 @@ int sethostname(const char* hostname, ssize_t size)
 
 ssize_t readlink(const char* path, char* buffer, size_t size)
 {
-    Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size } };
+    return readlinkat(AT_FDCWD, path, buffer, size);
+}
+
+ssize_t readlinkat(int dirfd, const char* path, char* buffer, size_t size)
+{
+    Syscall::SC_readlink_params params { dirfd, { path, strlen(path) }, { buffer, size } };
     int rc = syscall(SC_readlink, &params);
     // Return the number of bytes placed in the buffer, not the full path size.
     __RETURN_WITH_ERRNO(rc, min((size_t)rc, size), -1);
@@ -499,11 +504,16 @@ int unlinkat(int dirfd, const char* pathname, int flags)
 
 int symlink(const char* target, const char* linkpath)
 {
+    return symlinkat(target, AT_FDCWD, linkpath);
+}
+
+int symlinkat(const char* target, int newdirfd, const char* linkpath)
+{
     if (!target || !linkpath) {
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_symlink_params params { { target, strlen(target) }, { linkpath, strlen(linkpath) } };
+    Syscall::SC_symlink_params params { { target, strlen(target) }, newdirfd, { linkpath, strlen(linkpath) } };
     int rc = syscall(SC_symlink, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

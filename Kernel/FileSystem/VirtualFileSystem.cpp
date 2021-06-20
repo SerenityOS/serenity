@@ -707,10 +707,10 @@ KResult VFS::unlink(PathWithBase path_with_base, AtFlags flags)
     return KSuccess;
 }
 
-KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
+KResult VFS::symlink(StringView target, PathWithBase linkpath)
 {
     RefPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path(linkpath, base, &parent_custody);
+    auto existing_custody_or_error = resolve_path(linkpath, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return EEXIST;
     if (!parent_custody)
@@ -724,7 +724,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
     if (parent_custody->is_readonly())
         return EROFS;
 
-    LexicalPath p(linkpath);
+    LexicalPath p(linkpath.path);
     dbgln_if(VFS_DEBUG, "VFS::symlink: '{}' (-> '{}') in {}", p.basename(), target, parent_inode.identifier());
     auto inode_or_error = parent_inode.create_child(p.basename(), S_IFLNK | 0644, 0, current_process->euid(), current_process->egid());
     if (inode_or_error.is_error())

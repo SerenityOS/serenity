@@ -6,6 +6,7 @@
 
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <serenity.h>
 #include <string.h>
 #include <syscall.h>
@@ -110,6 +111,7 @@ int anon_create(size_t size, int options)
 int serenity_readlink(const char* path, size_t path_length, char* buffer, size_t buffer_size)
 {
     Syscall::SC_readlink_params small_params {
+        AT_FDCWD,
         { path, path_length },
         { buffer, buffer_size }
     };

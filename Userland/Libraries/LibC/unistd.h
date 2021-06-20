@@ -93,6 +93,7 @@ int usleep(useconds_t);
 int gethostname(char*, size_t);
 int sethostname(const char*, ssize_t);
 ssize_t readlink(const char* path, char* buffer, size_t);
+ssize_t readlinkat(int dirfd, const char* path, char* buffer, size_t);
 char* ttyname(int fd);
 int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
@@ -101,6 +102,7 @@ int linkat(int old_dirfd, const char* oldpath, int new_dirfd, const char* newpat
 int unlink(const char* pathname);
 int unlinkat(int dirfd, const char* pathname, int flags);
 int symlink(const char* target, const char* linkpath);
+int symlinkat(const char* target, int newdirfd, const char* linkpath);
 int rmdir(const char* pathname);
 int dup(int old_fd);
 int dup2(int old_fd, int new_fd);

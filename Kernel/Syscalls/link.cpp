@@ -40,10 +40,13 @@ KResultOr<int> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*>
     auto target = get_syscall_path_argument(params.target);
     if (target.is_error())
         return target.error();
+    auto new_dirfd = get_syscall_fd_argument(params.new_dirfd);
+    if (new_dirfd.is_error())
+        return new_dirfd.error();
     auto linkpath = get_syscall_path_argument(params.linkpath);
     if (linkpath.is_error())
         return linkpath.error();
-    return VFS::the().symlink(target.value()->view(), linkpath.value()->view(), current_directory());
+    return VFS::the().symlink(target.value()->view(), { *new_dirfd.value(), linkpath.value()->view() });
 }
 
 }
