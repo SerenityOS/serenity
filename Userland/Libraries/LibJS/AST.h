@@ -764,6 +764,7 @@ public:
 
     virtual Value execute(Interpreter&, GlobalObject&) const override;
     virtual void dump(int indent) const override;
+    virtual void generate_bytecode(Bytecode::Generator&) const override;
 
     String const& pattern() const { return m_pattern; }
     String const& flags() const { return m_flags; }
