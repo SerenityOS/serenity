@@ -121,6 +121,7 @@ static String read_next_piece()
         s_editor->add_to_history(line);
 
         piece.append(line);
+        piece.append('\n');
         auto lexer = JS::Lexer(line);
 
         enum {
