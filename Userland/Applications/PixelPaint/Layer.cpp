@@ -92,9 +92,36 @@ void Layer::set_name(String name)
 
 RefPtr<Gfx::Bitmap> Layer::try_copy_bitmap(Selection const& selection) const
 {
-    auto bounding_rect = selection.bounding_rect().translated(-m_location);
-    // FIXME: This needs to be smarter once we add more complex selections.
-    return m_bitmap->cropped(bounding_rect);
+    auto selection_rect = selection.bounding_rect();
+
+    auto result = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, selection_rect.size());
+    VERIFY(result->has_alpha_channel());
+
+    for (int y = selection_rect.top(); y <= selection_rect.bottom(); y++) {
+        for (int x = selection_rect.left(); x <= selection_rect.right(); x++) {
+
+            Gfx::IntPoint image_point { x, y };
+            auto layer_point = image_point - m_location;
+            auto result_point = image_point - selection_rect.top_left();
+
+            if (!m_bitmap->physical_rect().contains(layer_point)) {
+                result->set_pixel(result_point, Gfx::Color::Transparent);
+                continue;
+            }
+
+            auto pixel = m_bitmap->get_pixel(layer_point);
+
+            // Widen to int before multiplying to avoid overflow issues
+            auto pixel_alpha = static_cast<int>(pixel.alpha());
+            auto selection_alpha = static_cast<int>(selection.get_selection_alpha(image_point));
+            auto new_alpha = (pixel_alpha * selection_alpha) / 0xFF;
+            pixel.set_alpha(static_cast<u8>(clamp(new_alpha, 0, 0xFF)));
+
+            result->set_pixel(result_point, pixel);
+        }
+    }
+
+    return result;
 }
 
 }
