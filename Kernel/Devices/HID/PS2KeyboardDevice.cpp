@@ -68,20 +68,12 @@ void PS2KeyboardDevice::irq_handle_byte_read(u8 byte)
     case I8042_ACK:
         break;
     default:
-        if (m_modifiers & Mod_Alt) {
-            switch (ch) {
-            case 0x02 ... 0x01 + ConsoleManagement::s_max_virtual_consoles:
-                g_io_work->queue([this, ch]() {
-                    ConsoleManagement::the().switch_to(ch - 0x02);
-                });
-                break;
-            default:
-                key_state_changed(ch, pressed);
-                break;
-            }
-        } else {
-            key_state_changed(ch, pressed);
+        if ((m_modifiers & Mod_Alt) != 0 && ch >= 2 && ch <= ConsoleManagement::s_max_virtual_consoles + 1) {
+            g_io_work->queue([this, ch]() {
+                ConsoleManagement::the().switch_to(ch - 0x02);
+            });
         }
+        key_state_changed(ch, pressed);
     }
 }
 
