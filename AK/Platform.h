@@ -28,22 +28,22 @@
 #ifdef ALWAYS_INLINE
 #    undef ALWAYS_INLINE
 #endif
-#define ALWAYS_INLINE [[gnu::always_inline]] inline
+#define ALWAYS_INLINE __attribute__((always_inline)) inline
 
 #ifdef NEVER_INLINE
 #    undef NEVER_INLINE
 #endif
-#define NEVER_INLINE [[gnu::noinline]]
+#define NEVER_INLINE __attribute__((noinline))
 
 #ifdef FLATTEN
 #    undef FLATTEN
 #endif
-#define FLATTEN [[gnu::flatten]]
+#define FLATTEN __attribute__((flatten))
 
 #ifdef NO_SANITIZE_ADDRESS
 #    undef NO_SANITIZE_ADDRESS
 #endif
-#define NO_SANITIZE_ADDRESS [[gnu::no_sanitize_address]]
+#define NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
 
 // GCC doesn't have __has_feature but clang does
 #ifndef __has_feature
