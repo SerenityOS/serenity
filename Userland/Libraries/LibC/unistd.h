@@ -97,6 +97,7 @@ char* ttyname(int fd);
 int ttyname_r(int fd, char* buffer, size_t);
 off_t lseek(int fd, off_t, int whence);
 int link(const char* oldpath, const char* newpath);
+int linkat(int old_dirfd, const char* oldpath, int new_dirfd, const char* newpath, int flags);
 int unlink(const char* pathname);
 int unlinkat(int dirfd, const char* pathname, int flags);
 int symlink(const char* target, const char* linkpath);

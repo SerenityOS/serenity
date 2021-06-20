@@ -471,11 +471,16 @@ off_t lseek(int fd, off_t offset, int whence)
 
 int link(const char* old_path, const char* new_path)
 {
+    return linkat(AT_FDCWD, old_path, AT_FDCWD, new_path, 0);
+}
+
+int linkat(int old_dirfd, const char* old_path, int new_dirfd, const char* new_path, int flags)
+{
     if (!old_path || !new_path) {
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_link_params params { { old_path, strlen(old_path) }, { new_path, strlen(new_path) } };
+    Syscall::SC_link_params params { old_dirfd, { old_path, strlen(old_path) }, new_dirfd, { new_path, strlen(new_path) }, flags };
     int rc = syscall(SC_link, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

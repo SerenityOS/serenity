@@ -622,16 +622,24 @@ static bool hard_link_allowed(const Inode& inode)
     return false;
 }
 
-KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
+KResult VFS::link(PathWithBase old_path_with_base, PathWithBase new_path_with_base, AtFlags flags)
 {
-    auto old_custody_or_error = resolve_path(old_path, base);
-    if (old_custody_or_error.is_error())
-        return old_custody_or_error.error();
-    auto& old_custody = *old_custody_or_error.value();
-    auto& old_inode = old_custody.inode();
+    if (flags & ~(AT_EMPTY_PATH | AT_SYMLINK_FOLLOW))
+        return EINVAL;
+
+    RefPtr<Custody> old_custody;
+    if ((flags & AT_EMPTY_PATH) && old_path_with_base.path.is_empty()) {
+        old_custody = old_path_with_base.base;
+    } else {
+        auto old_custody_or_error = resolve_path(old_path_with_base, nullptr, (flags & AT_SYMLINK_FOLLOW) ? 0 : O_NOFOLLOW_NOERROR);
+        if (old_custody_or_error.is_error())
+            return old_custody_or_error.error();
+        old_custody = old_custody_or_error.value();
+    }
+    auto& old_inode = old_custody->inode();
 
     RefPtr<Custody> parent_custody;
-    auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
+    auto new_custody_or_error = resolve_path(new_path_with_base, &parent_custody);
     if (!new_custody_or_error.is_error())
         return EEXIST;
 
@@ -655,7 +663,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (!hard_link_allowed(old_inode))
         return EPERM;
 
-    return parent_inode.add_child(old_inode, LexicalPath(new_path).basename(), old_inode.mode());
+    return parent_inode.add_child(old_inode, LexicalPath(new_path_with_base.path).basename(), old_inode.mode());
 }
 
 KResult VFS::unlink(PathWithBase path_with_base, AtFlags flags)

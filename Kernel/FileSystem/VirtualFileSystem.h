@@ -82,8 +82,8 @@ public:
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     KResult mkdir(StringView path, mode_t mode, Custody& base);
-    KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult symlink(StringView target, StringView linkpath, Custody& base);
+    KResult link(PathWithBase old_path, PathWithBase new_path, AtFlags flags);
     KResult unlink(PathWithBase, AtFlags flags);
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(StringView path, mode_t, Custody& base);

@@ -381,8 +381,11 @@ struct SC_readlink_params {
 };
 
 struct SC_link_params {
+    int old_dirfd;
     StringArgument old_path;
+    int new_dirfd;
     StringArgument new_path;
+    int flags;
 };
 
 struct SC_chown_params {
