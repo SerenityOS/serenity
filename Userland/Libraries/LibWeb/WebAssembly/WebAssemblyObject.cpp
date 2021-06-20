@@ -35,7 +35,23 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
 NonnullOwnPtrVector<Wasm::ModuleInstance> WebAssemblyObject::s_instantiated_modules;
+Vector<WebAssemblyObject::ModuleCache> WebAssemblyObject::s_module_caches;
+WebAssemblyObject::GlobalModuleCache WebAssemblyObject::s_global_cache;
 Wasm::AbstractMachine WebAssemblyObject::s_abstract_machine;
+
+void WebAssemblyObject::visit_edges(Visitor& visitor)
+{
+    Base::visit_edges(visitor);
+
+    for (auto& entry : s_global_cache.function_instances)
+        visitor.visit(entry.value);
+    for (auto& module_cache : s_module_caches) {
+        for (auto& entry : module_cache.function_instances)
+            visitor.visit(entry.value);
+        for (auto& entry : module_cache.memory_instances)
+            visitor.visit(entry.value);
+    }
+}
 
 JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::validate)
 {
@@ -231,6 +247,7 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
     }
 
     s_instantiated_modules.append(instance_result.release_value());
+    s_module_caches.empend();
     promise->fulfill(vm.heap().allocate<WebAssemblyInstanceObject>(global_object, global_object, s_instantiated_modules.size() - 1));
     return promise;
 }
@@ -318,8 +335,10 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
 {
     Optional<Wasm::FunctionType> type;
     WebAssemblyObject::s_abstract_machine.store().get(address)->visit([&](const auto& value) { type = value.type(); });
-    // FIXME: Cache these.
-    return JS::NativeFunction::create(
+    if (auto entry = WebAssemblyObject::s_global_cache.function_instances.get(address); entry.has_value())
+        return *entry;
+
+    auto function = JS::NativeFunction::create(
         global_object,
         name,
         [address, type = type.release_value()](JS::VM& vm, JS::GlobalObject& global_object) -> JS::Value {
@@ -355,6 +374,9 @@ JS::NativeFunction* create_native_function(Wasm::FunctionAddress address, String
 
             return JS::Array::create_from(global_object, result_values);
         });
+
+    WebAssemblyObject::s_global_cache.function_instances.set(address, function);
+    return function;
 }
 
 void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
@@ -364,16 +386,24 @@ void WebAssemblyInstanceObject::initialize(JS::GlobalObject& global_object)
     VERIFY(!m_exports_object);
     m_exports_object = JS::Object::create(global_object, nullptr);
     auto& instance = this->instance();
+    auto& cache = this->cache();
     for (auto& export_ : instance.exports()) {
         export_.value().visit(
             [&](const Wasm::FunctionAddress& address) {
-                auto function = create_native_function(address, export_.name(), global_object);
-                m_exports_object->define_property(export_.name(), function);
+                auto object = cache.function_instances.get(address);
+                if (!object.has_value()) {
+                    object = create_native_function(address, export_.name(), global_object);
+                    cache.function_instances.set(address, *object);
+                }
+                m_exports_object->define_property(export_.name(), *object);
             },
             [&](const Wasm::MemoryAddress& address) {
-                // FIXME: Cache this.
-                auto memory = heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, address);
-                m_exports_object->define_property(export_.name(), memory);
+                auto object = cache.memory_instances.get(address);
+                if (!object.has_value()) {
+                    object = heap().allocate<WebAssemblyMemoryObject>(global_object, global_object, address);
+                    cache.memory_instances.set(address, *object);
+                }
+                m_exports_object->define_property(export_.name(), *object);
             },
             [&](const auto&) {
                 // FIXME: Implement other exports!
