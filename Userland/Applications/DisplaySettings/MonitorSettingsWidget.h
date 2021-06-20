@@ -19,7 +19,14 @@ class MonitorSettingsWidget : public GUI::Widget {
     C_OBJECT(MonitorSettingsWidget);
 
 public:
+    ~MonitorSettingsWidget() override
+    {
+        if (m_showing_screen_numbers)
+            show_screen_numbers(false);
+    }
+
     void apply_settings();
+    void show_screen_numbers(bool);
 
 private:
     MonitorSettingsWidget();
@@ -35,6 +42,8 @@ private:
     RefPtr<GUI::ComboBox> m_resolution_combo;
     RefPtr<GUI::RadioButton> m_display_scale_radio_1x;
     RefPtr<GUI::RadioButton> m_display_scale_radio_2x;
+
+    bool m_showing_screen_numbers { false };
 };
 
 }
