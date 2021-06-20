@@ -654,7 +654,23 @@ Optional<Parser::DeclarationType> Parser::match_class_member(const StringView& c
 
 bool Parser::match_enum_declaration()
 {
-    return match_keyword("enum");
+    save_state();
+    ScopeGuard state_guard = [this] { load_state(); };
+
+    if (!match_keyword("enum"))
+        return false;
+
+    consume(Token::Type::Keyword);
+
+    if (match_keyword("class"))
+        consume(Token::Type::Keyword);
+
+    if (!match(Token::Type::Identifier))
+        return false;
+
+    consume(Token::Type::Identifier);
+
+    return match(Token::Type::LeftCurly);
 }
 
 bool Parser::match_class_declaration()
@@ -1026,6 +1042,14 @@ NonnullRefPtr<EnumDeclaration> Parser::parse_enum_declaration(ASTNode& parent)
     ScopeLogger<CPP_DEBUG> logger;
     auto enum_decl = create_ast_node<EnumDeclaration>(parent, position(), {});
     consume_keyword("enum");
+
+    if (match_keyword("class")) {
+        consume(Token::Type::Keyword);
+        enum_decl->type = EnumDeclaration::Type::EnumClass;
+    } else {
+        enum_decl->type = EnumDeclaration::Type::RegularEnum;
+    }
+
     auto name_token = consume(Token::Type::Identifier);
     enum_decl->m_name = text_of_token(name_token);
     consume(Token::Type::LeftCurly);
