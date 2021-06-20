@@ -485,8 +485,15 @@ inline RefPtr<T> adopt_ref_if_nonnull(T* object)
     return {};
 }
 
+template<typename T, class... Args>
+inline RefPtr<T> try_create(Args&&... args)
+{
+    return adopt_ref_if_nonnull(new (nothrow) T(forward<Args>(args)...));
+}
+
 }
 
 using AK::adopt_ref_if_nonnull;
 using AK::RefPtr;
 using AK::static_ptr_cast;
+using AK::try_create;
