@@ -90,6 +90,8 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
             if (scrollbar.value() == scrollbar.max()) {
                 if (m_current_page_index < m_document->get_page_count() - 1) {
                     m_current_page_index++;
+                    if (on_page_change)
+                        on_page_change(m_current_page_index);
                     scrollbar.set_value(0);
                 }
             } else {
@@ -99,6 +101,8 @@ void PDFViewer::mousewheel_event(GUI::MouseEvent& event)
             if (scrollbar.value() == 0) {
                 if (m_current_page_index > 0) {
                     m_current_page_index--;
+                    if (on_page_change)
+                        on_page_change(m_current_page_index);
                     scrollbar.set_value(scrollbar.max());
                 }
             } else {
