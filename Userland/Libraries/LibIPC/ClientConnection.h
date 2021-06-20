@@ -22,7 +22,7 @@ class ClientConnection : public Connection<ServerEndpoint, ClientEndpoint>
     , public ClientEndpoint::template Proxy<ServerEndpoint> {
 public:
     using ServerStub = typename ServerEndpoint::Stub;
-    using IPCProxy = ClientEndpoint::template Proxy<ServerEndpoint>;
+    using IPCProxy = typename ClientEndpoint::template Proxy<ServerEndpoint>;
 
     ClientConnection(ServerStub& stub, NonnullRefPtr<Core::LocalSocket> socket, int client_id)
         : IPC::Connection<ServerEndpoint, ClientEndpoint>(stub, move(socket))

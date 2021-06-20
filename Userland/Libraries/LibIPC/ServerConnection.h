@@ -16,7 +16,7 @@ class ServerConnection : public IPC::Connection<ClientEndpoint, ServerEndpoint>
     , public ServerEndpoint::template Proxy<ClientEndpoint> {
 public:
     using ClientStub = typename ClientEndpoint::Stub;
-    using IPCProxy = ServerEndpoint::template Proxy<ClientEndpoint>;
+    using IPCProxy = typename ServerEndpoint::template Proxy<ClientEndpoint>;
 
     ServerConnection(ClientStub& local_endpoint, const StringView& address)
         : Connection<ClientEndpoint, ServerEndpoint>(local_endpoint, Core::LocalSocket::construct())
