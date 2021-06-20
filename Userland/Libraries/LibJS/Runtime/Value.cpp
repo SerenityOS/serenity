@@ -275,6 +275,9 @@ String Value::typeof() const
     case Value::Type::String:
         return "string";
     case Value::Type::Object:
+        // B.3.7.3 Changes to the typeof Operator, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-typeof
+        if (as_object().is_htmldda())
+            return "undefined";
         if (is_function())
             return "function";
         return "object";
@@ -383,6 +386,9 @@ bool Value::to_boolean() const
     case Type::BigInt:
         return m_value.as_bigint->big_integer() != BIGINT_ZERO;
     case Type::Object:
+        // B.3.7.1 Changes to ToBoolean, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-to-boolean
+        if (m_value.as_object->is_htmldda())
+            return false;
         return true;
     default:
         VERIFY_NOT_REACHED();
@@ -1327,6 +1333,12 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         return strict_eq(lhs, rhs);
 
     if (lhs.is_nullish() && rhs.is_nullish())
+        return true;
+
+    // B.3.7.2 Changes to IsLooselyEqual, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot-aec
+    if (lhs.is_object() && lhs.as_object().is_htmldda() && rhs.is_nullish())
+        return true;
+    if (lhs.is_nullish() && rhs.is_object() && rhs.as_object().is_htmldda())
         return true;
 
     if (lhs.is_number() && rhs.is_string())

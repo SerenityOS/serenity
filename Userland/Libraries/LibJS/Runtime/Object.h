@@ -110,6 +110,9 @@ public:
     virtual bool is_native_function() const { return false; }
     virtual bool is_lexical_environment() const { return false; }
 
+    // B.3.7 The [[IsHTMLDDA]] Internal Slot, https://tc39.es/ecma262/#sec-IsHTMLDDA-internal-slot
+    virtual bool is_htmldda() const { return false; }
+
     virtual const char* class_name() const override { return "Object"; }
     virtual void visit_edges(Cell::Visitor&) override;
 
