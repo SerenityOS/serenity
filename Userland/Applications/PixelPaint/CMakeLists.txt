@@ -28,6 +28,7 @@ set(SOURCES
     PixelPaintWindowGML.h
     RectangleTool.cpp
     RectangleSelectTool.cpp
+    Mask.cpp
     Selection.cpp
     SprayTool.cpp
     ToolboxWidget.cpp
