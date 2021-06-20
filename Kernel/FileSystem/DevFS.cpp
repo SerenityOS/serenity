@@ -275,7 +275,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
         }
         if (name != "pts")
             return EROFS;
-        auto new_directory_inode = adopt_ref_if_nonnull(new DevFSPtsDirectoryInode(m_parent_fs));
+        auto new_directory_inode = adopt_ref_if_nonnull(new (nothrow) DevFSPtsDirectoryInode(m_parent_fs));
         if (!new_directory_inode)
             return ENOMEM;
         if (!m_subfolders.try_ensure_capacity(m_subfolders.size() + 1))
@@ -291,7 +291,7 @@ KResultOr<NonnullRefPtr<Inode>> DevFSRootDirectoryInode::create_child(const Stri
             if (link.name() == name)
                 return EEXIST;
         }
-        auto new_link_inode = adopt_ref_if_nonnull(new DevFSLinkInode(m_parent_fs, name));
+        auto new_link_inode = adopt_ref_if_nonnull(new (nothrow) DevFSLinkInode(m_parent_fs, name));
         if (!new_link_inode)
             return ENOMEM;
         if (!m_links.try_ensure_capacity(m_links.size() + 1))

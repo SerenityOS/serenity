@@ -33,7 +33,7 @@ void LocalSocket::for_each(Function<void(const LocalSocket&)> callback)
 
 KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 {
-    auto socket = adopt_ref_if_nonnull(new LocalSocket(type));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;
@@ -41,7 +41,7 @@ KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 
 KResultOr<SocketPair> LocalSocket::create_connected_pair(int type)
 {
-    auto socket = adopt_ref_if_nonnull(new LocalSocket(type));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) LocalSocket(type));
     if (!socket)
         return ENOMEM;
 

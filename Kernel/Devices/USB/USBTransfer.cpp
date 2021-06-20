@@ -15,7 +15,7 @@ RefPtr<Transfer> Transfer::try_create(Pipe& pipe, u16 len)
     if (!vmobject)
         return nullptr;
 
-    return adopt_ref_if_nonnull(new Transfer(pipe, len, *vmobject));
+    return AK::try_create<Transfer>(pipe, len, *vmobject);
 }
 
 Transfer::Transfer(Pipe& pipe, u16 len, ContiguousVMObject& vmobject)

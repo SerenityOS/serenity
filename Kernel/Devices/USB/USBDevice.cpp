@@ -22,7 +22,7 @@ KResultOr<NonnullRefPtr<Device>> Device::try_create(PortNumber port, DeviceSpeed
     if (pipe_or_error.is_error())
         return pipe_or_error.error();
 
-    auto device = adopt_ref_if_nonnull(new Device(port, speed, pipe_or_error.release_value()));
+    auto device = AK::try_create<Device>(port, speed, pipe_or_error.release_value());
     if (!device)
         return ENOMEM;
 

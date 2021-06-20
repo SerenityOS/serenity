@@ -150,7 +150,7 @@ TEST_CASE(self_observers)
 
 TEST_CASE(adopt_ref_if_nonnull)
 {
-    RefPtr<SelfAwareObject> object = adopt_ref_if_nonnull(new SelfAwareObject);
+    RefPtr<SelfAwareObject> object = adopt_ref_if_nonnull(new (nothrow) SelfAwareObject);
     EXPECT_EQ(object.is_null(), false);
     EXPECT_EQ(object->ref_count(), 1u);
 

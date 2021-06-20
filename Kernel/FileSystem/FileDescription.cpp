@@ -30,7 +30,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
     if (inode_file.is_error())
         return inode_file.error();
 
-    auto description = adopt_ref_if_nonnull(new FileDescription(*inode_file.release_value()));
+    auto description = adopt_ref_if_nonnull(new (nothrow) FileDescription(*inode_file.release_value()));
     if (!description)
         return ENOMEM;
 
@@ -45,7 +45,7 @@ KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(Custody& custo
 
 KResultOr<NonnullRefPtr<FileDescription>> FileDescription::create(File& file)
 {
-    auto description = adopt_ref_if_nonnull(new FileDescription(file));
+    auto description = adopt_ref_if_nonnull(new (nothrow) FileDescription(file));
     if (!description)
         return ENOMEM;
     auto result = description->attach();

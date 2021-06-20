@@ -56,7 +56,7 @@ UDPSocket::~UDPSocket()
 
 KResultOr<NonnullRefPtr<UDPSocket>> UDPSocket::create(int protocol)
 {
-    auto socket = adopt_ref_if_nonnull(new UDPSocket(protocol));
+    auto socket = adopt_ref_if_nonnull(new (nothrow) UDPSocket(protocol));
     if (socket)
         return socket.release_nonnull();
     return ENOMEM;

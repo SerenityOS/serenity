@@ -264,7 +264,7 @@ struct ProcFSInodeData : public FileDescriptionData {
 
 RefPtr<ProcFS> ProcFS::create()
 {
-    return adopt_ref_if_nonnull(new ProcFS);
+    return adopt_ref_if_nonnull(new (nothrow) ProcFS);
 }
 
 ProcFS::~ProcFS()
@@ -1073,7 +1073,7 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
             return adopt_ref_if_nonnull(it->value);
         // We couldn't ref it, so just create a new one and replace the entry
     }
-    auto inode = adopt_ref_if_nonnull(new ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
+    auto inode = adopt_ref_if_nonnull(new (nothrow) ProcFSInode(const_cast<ProcFS&>(*this), inode_id.index()));
     if (!inode)
         return {};
     auto result = m_inodes.set(inode_id.index().value(), inode.ptr());
@@ -1163,7 +1163,7 @@ KResult ProcFSInode::refresh_data(FileDescription& description) const
     }
 
     if (!cached_data)
-        cached_data = adopt_own_if_nonnull(new ProcFSInodeData);
+        cached_data = adopt_own_if_nonnull(new (nothrow) ProcFSInodeData);
     auto& buffer = static_cast<ProcFSInodeData&>(*cached_data).buffer;
     if (buffer) {
         // If we're reusing the buffer, reset the size to 0 first. This

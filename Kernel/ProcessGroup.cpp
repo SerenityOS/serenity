@@ -19,7 +19,7 @@ ProcessGroup::~ProcessGroup()
 
 RefPtr<ProcessGroup> ProcessGroup::create(ProcessGroupID pgid)
 {
-    auto process_group = adopt_ref_if_nonnull(new ProcessGroup(pgid));
+    auto process_group = adopt_ref_if_nonnull(new (nothrow) ProcessGroup(pgid));
     if (process_group) {
         ScopedSpinLock lock(g_process_groups_lock);
         g_process_groups->prepend(*process_group);
