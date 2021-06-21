@@ -328,6 +328,10 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         }
         break;
     }
+    case GUI::Event::WM_SuperSpaceKeyPressed: {
+        dbgln("super and space was pressed down");
+        break;
+    }
     default:
         break;
     }

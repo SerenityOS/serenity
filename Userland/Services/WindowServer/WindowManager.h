@@ -156,6 +156,7 @@ public:
     void tell_wms_window_rect_changed(Window&);
     void tell_wms_applet_area_size_changed(Gfx::IntSize const&);
     void tell_wms_super_key_pressed();
+    void tell_wms_super_space_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
 

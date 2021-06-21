@@ -63,6 +63,7 @@ public:
         WM_WindowIconBitmapChanged,
         WM_AppletAreaSizeChanged,
         WM_SuperKeyPressed,
+        WM_SuperSpaceKeyPressed,
         __End_WM_Events,
     };
 
@@ -98,6 +99,14 @@ class WMSuperKeyPressedEvent : public WMEvent {
 public:
     explicit WMSuperKeyPressedEvent(int client_id)
         : WMEvent(Event::Type::WM_SuperKeyPressed, client_id, 0)
+    {
+    }
+};
+
+class WMSuperSpaceKeyPressedEvent : public WMEvent {
+public:
+    explicit WMSuperSpaceKeyPressedEvent(int client_id)
+        : WMEvent(Event::Type::WM_SuperSpaceKeyPressed, client_id, 0)
     {
     }
 };
