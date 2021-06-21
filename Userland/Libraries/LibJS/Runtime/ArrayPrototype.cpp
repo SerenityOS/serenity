@@ -298,7 +298,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::unshift)
                 if (vm.exception())
                     return {};
             } else {
-                this_object->delete_property(to);
+                this_object->delete_property(to, true);
                 if (vm.exception())
                     return {};
             }
@@ -340,7 +340,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::pop)
     auto element = this_object->get(index).value_or(js_undefined());
     if (vm.exception())
         return {};
-    this_object->delete_property(index);
+    this_object->delete_property(index, true);
     if (vm.exception())
         return {};
     this_object->put(vm.names.length, Value((i32)index));
@@ -382,13 +382,13 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::shift)
             if (vm.exception())
                 return {};
         } else {
-            this_object->delete_property(to);
+            this_object->delete_property(to, true);
             if (vm.exception())
                 return {};
         }
     }
 
-    this_object->delete_property(length - 1);
+    this_object->delete_property(length - 1, true);
     if (vm.exception())
         return {};
 
@@ -848,11 +848,11 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
             this_object->put(lower, upper_value);
             if (vm.exception())
                 return {};
-            this_object->delete_property(upper);
+            this_object->delete_property(upper, true);
             if (vm.exception())
                 return {};
         } else if (lower_exists && !upper_exists) {
-            this_object->delete_property(lower);
+            this_object->delete_property(lower, true);
             if (vm.exception())
                 return {};
             this_object->put(upper, lower_value);
@@ -1018,7 +1018,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::sort)
     // compare function. FIXME: For performance, a similar process could be used
     // for undefined, which are sorted to right before the empty values.
     for (size_t i = values_to_sort.size(); i < original_length; ++i) {
-        array->delete_property(i);
+        array->delete_property(i, true);
         if (vm.exception())
             return {};
     }
@@ -1229,14 +1229,14 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             if (!from.is_empty()) {
                 this_object->put(to, from);
             } else {
-                this_object->delete_property(to);
+                this_object->delete_property(to, true);
             }
             if (vm.exception())
                 return {};
         }
 
         for (size_t i = initial_length; i > new_length; --i) {
-            this_object->delete_property(i - 1);
+            this_object->delete_property(i - 1, true);
             if (vm.exception())
                 return {};
         }
@@ -1251,7 +1251,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::splice)
             if (!from.is_empty()) {
                 this_object->put(to, from);
             } else {
-                this_object->delete_property(to);
+                this_object->delete_property(to, true);
             }
             if (vm.exception())
                 return {};
@@ -1523,7 +1523,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::copy_within)
             if (vm.exception())
                 return {};
         } else {
-            this_object->delete_property(to_i);
+            this_object->delete_property(to_i, true);
             if (vm.exception())
                 return {};
         }
