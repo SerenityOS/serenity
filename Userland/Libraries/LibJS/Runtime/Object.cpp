@@ -57,11 +57,17 @@ PropertyDescriptor PropertyDescriptor::from_dictionary(VM& vm, const Object& obj
         return {};
     if (getter.is_function())
         descriptor.getter = &getter.as_function();
+    if (!getter.is_empty())
+        descriptor.attributes.set_has_getter();
+
     auto setter = object.get(vm.names.set);
     if (vm.exception())
         return {};
     if (setter.is_function())
         descriptor.setter = &setter.as_function();
+    if (!setter.is_empty())
+        descriptor.attributes.set_has_setter();
+
     return descriptor;
 }
 
@@ -326,11 +332,18 @@ MarkedValueList Object::get_own_properties(PropertyKind kind, bool only_enumerab
         if (kind == PropertyKind::Key) {
             properties.append(property.key.to_value(vm()));
         } else if (kind == PropertyKind::Value) {
-            properties.append(get(property.key));
+            Value v = get(property.key);
+            // Value may just have been deleted
+            if (!v.is_empty())
+                properties.append(v);
         } else {
+            Value val = get(property.key);
+            if (val.is_empty())
+                return;
+
             auto* entry_array = Array::create(global_object());
             entry_array->define_property(0, property.key.to_value(vm()));
-            entry_array->define_property(1, get(property.key));
+            entry_array->define_property(1, val);
             properties.append(entry_array);
         }
     };
