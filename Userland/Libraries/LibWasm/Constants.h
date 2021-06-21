@@ -36,4 +36,8 @@ static constexpr auto extern_global_tag = 0x03;
 
 static constexpr auto page_size = 64 * KiB;
 
+// Limits
+static constexpr auto max_allowed_call_stack_depth = 1000;
+static constexpr auto max_allowed_executed_instructions_per_call = 64 * 1024 * 1024;
+
 }
