@@ -32,6 +32,7 @@ public:
 
     DeclarativeEnvironmentRecord();
     DeclarativeEnvironmentRecord(EnvironmentRecordType);
+    explicit DeclarativeEnvironmentRecord(EnvironmentRecord* parent_scope);
     DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope);
     DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope, EnvironmentRecordType);
     virtual ~DeclarativeEnvironmentRecord() override;
