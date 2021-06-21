@@ -1,0 +1,63 @@
+/*
+ * Copyright (c) 2021, Ali Mohammad Pur <mpfard@serenityos.org>
+ *
+ * SPDX-License-Identifier: BSD-2-Clause
+ */
+
+#include <LibJS/Runtime/TypedArray.h>
+#include <LibWeb/WebAssembly/WebAssemblyMemoryPrototype.h>
+#include <LibWeb/WebAssembly/WebAssemblyObject.h>
+
+namespace Web::Bindings {
+
+void WebAssemblyMemoryPrototype::initialize(JS::GlobalObject& global_object)
+{
+    Object::initialize(global_object);
+    define_native_property("buffer", buffer_getter, nullptr);
+    define_native_function("grow", grow);
+}
+
+JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryPrototype::grow)
+{
+    auto page_count = vm.argument(0).to_u32(global_object);
+    if (vm.exception())
+        return {};
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Memory");
+        return {};
+    }
+    auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
+    auto address = memory_object->address();
+    auto* memory = WebAssemblyObject::s_abstract_machine.store().get(address);
+    if (!memory)
+        return JS::js_undefined();
+
+    auto previous_size = memory->size() / Wasm::Constants::page_size;
+    if (!memory->grow(page_count * Wasm::Constants::page_size)) {
+        vm.throw_exception<JS::TypeError>(global_object, "Memory.grow() grows past the stated limit of the memory instance");
+        return {};
+    }
+
+    return JS::Value(static_cast<u32>(previous_size));
+}
+
+JS_DEFINE_NATIVE_GETTER(WebAssemblyMemoryPrototype::buffer_getter)
+{
+    auto* this_object = vm.this_value(global_object).to_object(global_object);
+    if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
+        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Memory");
+        return {};
+    }
+    auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
+    auto address = memory_object->address();
+    auto* memory = WebAssemblyObject::s_abstract_machine.store().get(address);
+    if (!memory)
+        return JS::js_undefined();
+
+    auto array_buffer = JS::ArrayBuffer::create(global_object, &memory->data());
+    array_buffer->set_detach_key(JS::js_string(vm, "WebAssembly.Memory"));
+    return array_buffer;
+}
+
+}
