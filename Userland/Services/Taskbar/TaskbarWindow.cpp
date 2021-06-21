@@ -329,7 +329,29 @@ void TaskbarWindow::wm_event(GUI::WMEvent& event)
         break;
     }
     case GUI::Event::WM_SuperSpaceKeyPressed: {
-        dbgln("super and space was pressed down");
+        auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
+        auto af = Desktop::AppFile::open(af_path);
+        if (!af->is_valid()) {
+            warnln("invalid app file when trying to open Assistant");
+            return;
+        }
+        auto app_executable = af->executable();
+
+        pid_t pid = fork();
+        if (pid < 0) {
+            perror("fork");
+        } else if (pid == 0) {
+            if (chdir(Core::StandardPaths::home_directory().characters()) < 0) {
+                perror("chdir");
+                exit(1);
+            }
+            execl(app_executable.characters(), app_executable.characters(), nullptr);
+            perror("execl");
+            VERIFY_NOT_REACHED();
+        } else {
+            if (disown(pid) < 0)
+                perror("disown");
+        }
         break;
     }
     default:
