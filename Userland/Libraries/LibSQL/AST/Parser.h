@@ -21,14 +21,9 @@ constexpr size_t maximum_subquery_depth = 100;
 }
 
 class Parser {
-    struct Position {
-        size_t line { 0 };
-        size_t column { 0 };
-    };
-
     struct Error {
         String message;
-        Position position;
+        SourcePosition position;
 
         String to_string() const
         {
@@ -126,7 +121,7 @@ private:
     void expected(StringView what);
     void syntax_error(String message);
 
-    Position position() const;
+    SourcePosition position() const;
 
     ParserState m_parser_state;
 };
