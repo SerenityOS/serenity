@@ -113,3 +113,5 @@ If you're using the native Windows QEMU binary from the above steps, QEMU is not
 WSL2 installation without going via the 9P network file share. The root of your WSL2 distro will begin at the network path `\\wsl$\{distro-name}`.
 
 Alternatively, you may prefer to copy `Build/_disk_image` and `Build/Kernel/Kernel` to a native Windows partition (e.g. `/mnt/c`) before running `ninja run`, in which case `SERENITY_DISK_IMAGE` will be a regular Windows path (e.g. `'D:\serenity\_disk_image'`)
+
+When using Visual Studio Code as your IDE running on the Windows host, you can use the [Remote Development extension pack](https://code.visualstudio.com/docs/remote/wsl) to access the files in the WSL file system while not needing to leave your editor.
