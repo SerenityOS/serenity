@@ -251,7 +251,6 @@ bool Object::test_integrity_level(IntegrityLevel level)
 Value Object::get_own_property(const PropertyName& property_name, Value receiver, AllowSideEffects allow_side_effects) const
 {
     VERIFY(property_name.is_valid());
-    VERIFY(!receiver.is_empty());
 
     Value value_here;
 
@@ -269,6 +268,7 @@ Value Object::get_own_property(const PropertyName& property_name, Value receiver
 
     VERIFY(!value_here.is_empty());
     if (allow_side_effects == AllowSideEffects::Yes) {
+        VERIFY(!receiver.is_empty());
         if (value_here.is_accessor())
             return value_here.as_accessor().call_getter(receiver);
         if (value_here.is_native_property())
