@@ -144,7 +144,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
     while (!m_scope_stack.is_empty()) {
         auto popped_scope = m_scope_stack.take_last();
         if (popped_scope.pushed_environment)
-            vm().call_frame().environment_record = vm().call_frame().environment_record->parent();
+            vm().call_frame().environment_record = vm().call_frame().environment_record->outer_environment();
         if (popped_scope.scope_node.ptr() == &scope_node)
             break;
     }

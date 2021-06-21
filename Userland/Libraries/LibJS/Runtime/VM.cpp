@@ -135,10 +135,10 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 {
     Optional<Variable> possible_match;
     if (!specific_scope && m_call_stack.size()) {
-        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-            possible_match = scope->get_from_scope(name);
+        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+            possible_match = environment_record->get_from_scope(name);
             if (possible_match.has_value()) {
-                specific_scope = scope;
+                specific_scope = environment_record;
                 break;
             }
         }
@@ -167,10 +167,10 @@ bool VM::delete_variable(FlyString const& name)
     EnvironmentRecord* specific_scope = nullptr;
     Optional<Variable> possible_match;
     if (!m_call_stack.is_empty()) {
-        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-            possible_match = scope->get_from_scope(name);
+        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+            possible_match = environment_record->get_from_scope(name);
             if (possible_match.has_value()) {
-                specific_scope = scope;
+                specific_scope = environment_record;
                 break;
             }
         }
@@ -376,8 +376,8 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             return call_frame().arguments_object;
         }
 
-        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-            auto possible_match = scope->get_from_scope(name);
+        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+            auto possible_match = environment_record->get_from_scope(name);
             if (exception())
                 return {};
             if (possible_match.has_value())
@@ -393,10 +393,10 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 Reference VM::get_reference(const FlyString& name)
 {
     if (m_call_stack.size()) {
-        for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-            if (is<GlobalObject>(scope))
+        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+            if (is<GlobalObject>(environment_record))
                 break;
-            auto possible_match = scope->get_from_scope(name);
+            auto possible_match = environment_record->get_from_scope(name);
             if (possible_match.has_value())
                 return { Reference::LocalVariable, name };
         }
@@ -508,9 +508,9 @@ Value VM::resolve_this_binding(GlobalObject& global_object) const
 const EnvironmentRecord* VM::find_this_scope() const
 {
     // We will always return because the Global environment will always be reached, which has a |this| binding.
-    for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-        if (scope->has_this_binding())
-            return scope;
+    for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        if (environment_record->has_this_binding())
+            return environment_record;
     }
     VERIFY_NOT_REACHED();
 }
@@ -624,11 +624,11 @@ void VM::dump_backtrace() const
 
 void VM::dump_scope_chain() const
 {
-    for (auto* scope = current_scope(); scope; scope = scope->parent()) {
-        dbgln("+> {} ({:p})", scope->class_name(), scope);
-        if (is<DeclarativeEnvironmentRecord>(*scope)) {
-            auto& environment_record = static_cast<DeclarativeEnvironmentRecord const&>(*scope);
-            for (auto& variable : environment_record.variables()) {
+    for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        dbgln("+> {} ({:p})", environment_record->class_name(), environment_record);
+        if (is<DeclarativeEnvironmentRecord>(*environment_record)) {
+            auto& declarative_environment_record = static_cast<DeclarativeEnvironmentRecord const&>(*environment_record);
+            for (auto& variable : declarative_environment_record.variables()) {
                 dbgln("    {}", variable.key);
             }
         }

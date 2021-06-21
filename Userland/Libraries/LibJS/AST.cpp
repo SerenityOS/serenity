@@ -231,7 +231,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         //        and subsequently GetThisEnvironment() instead.
         auto* function_environment = interpreter.current_environment();
         if (!function_environment->current_function())
-            function_environment = static_cast<DeclarativeEnvironmentRecord*>(function_environment->parent());
+            function_environment = static_cast<DeclarativeEnvironmentRecord*>(function_environment->outer_environment());
 
         auto* super_constructor = function_environment->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.

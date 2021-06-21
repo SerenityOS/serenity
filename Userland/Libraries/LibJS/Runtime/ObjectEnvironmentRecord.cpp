@@ -41,12 +41,12 @@ bool ObjectEnvironmentRecord::delete_from_scope(FlyString const& name)
 
 bool ObjectEnvironmentRecord::has_this_binding() const
 {
-    return parent()->has_this_binding();
+    return outer_environment()->has_this_binding();
 }
 
 Value ObjectEnvironmentRecord::get_this_binding(GlobalObject& global_object) const
 {
-    return parent()->get_this_binding(global_object);
+    return outer_environment()->get_this_binding(global_object);
 }
 
 }
