@@ -1158,12 +1158,6 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
         auto& identifier = static_cast<Identifier const&>(*m_argument);
         generator.emit<Bytecode::Op::GetVariable>(generator.intern_string(identifier.string()));
 
-        Optional<Bytecode::Register> previous_value_for_postfix_reg;
-        if (!m_prefixed) {
-            previous_value_for_postfix_reg = generator.allocate_register();
-            generator.emit<Bytecode::Op::Store>(*previous_value_for_postfix_reg);
-        }
-
         if (m_op == UpdateOp::Increment)
             generator.emit<Bytecode::Op::Increment>();
         else
@@ -1171,8 +1165,14 @@ void UpdateExpression::generate_bytecode(Bytecode::Generator& generator) const
 
         generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(identifier.string()));
 
-        if (!m_prefixed)
-            generator.emit<Bytecode::Op::Load>(*previous_value_for_postfix_reg);
+        if (!m_prefixed) {
+            // Do the inverse operation to keep the old value in the accumulator
+            if (m_op == UpdateOp::Increment)
+                generator.emit<Bytecode::Op::Decrement>();
+            else
+                generator.emit<Bytecode::Op::Increment>();
+        }
+
         return;
     }
 
