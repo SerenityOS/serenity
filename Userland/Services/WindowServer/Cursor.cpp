@@ -106,6 +106,11 @@ Cursor::Cursor(NonnullRefPtr<Gfx::Bitmap>&& bitmap, int scale_factor, const Curs
     , m_rect(bitmap->rect())
 {
     m_bitmaps.set(scale_factor, move(bitmap));
+    update_rect_if_animated();
+}
+
+void Cursor::update_rect_if_animated()
+{
     if (m_params.frames() > 1) {
         VERIFY(m_rect.width() % m_params.frames() == 0);
         m_rect.set_width(m_rect.width() / m_params.frames());
@@ -129,17 +134,11 @@ RefPtr<Cursor> Cursor::create(const StringView& filename, const StringView& defa
 bool Cursor::load(const StringView& filename, const StringView& default_filename)
 {
     bool did_load_any = false;
-    bool first = true;
 
     auto load_bitmap = [&](const StringView& path, int scale_factor) {
         auto bitmap = Gfx::Bitmap::load_from_file(path, scale_factor);
         if (bitmap) {
             did_load_any = true;
-            if (first) {
-                m_params = CursorParams::parse_from_filename(filename, bitmap->rect().center());
-                m_rect = bitmap->rect();
-                first = false;
-            }
             m_bitmaps.set(scale_factor, bitmap.release_nonnull());
         }
     };
@@ -153,6 +152,12 @@ bool Cursor::load(const StringView& filename, const StringView& default_filename
             load_bitmap(default_filename, scale_factor);
             return IterationDecision::Continue;
         });
+    }
+    if (did_load_any) {
+        auto& bitmap = this->bitmap(1);
+        m_rect = bitmap.rect();
+        m_params = CursorParams::parse_from_filename(filename, m_rect.center()).constrained(bitmap);
+        update_rect_if_animated();
     }
     return did_load_any;
 }
