@@ -36,8 +36,13 @@ void BytecodeInterpreter::interpret(Configuration& configuration)
     auto& instructions = configuration.frame().expression().instructions();
     auto max_ip_value = InstructionPointer { instructions.size() };
     auto& current_ip_value = configuration.ip();
+    u64 executed_instructions = 0;
 
     while (current_ip_value < max_ip_value) {
+        if (executed_instructions++ >= Constants::max_allowed_executed_instructions_per_call) [[unlikely]] {
+            m_do_trap = true;
+            return;
+        }
         auto& instruction = instructions[current_ip_value.value()];
         auto old_ip = current_ip_value;
         interpret(configuration, current_ip_value, instruction);
@@ -122,6 +127,8 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
 
 void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAddress address)
 {
+    TRAP_IF_NOT(configuration.depth() <= Constants::max_allowed_call_stack_depth);
+
     auto instance = configuration.store().get(address);
     TRAP_IF_NOT(instance);
     FunctionType const* type { nullptr };
