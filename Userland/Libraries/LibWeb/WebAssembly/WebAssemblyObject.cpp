@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "WebAssemblyMemoryPrototype.h"
 #include <AK/ScopeGuard.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayBuffer.h>
@@ -31,6 +32,15 @@ void WebAssemblyObject::initialize(JS::GlobalObject& global_object)
     define_native_function("validate", validate, 1);
     define_native_function("compile", compile, 1);
     define_native_function("instantiate", instantiate, 1);
+
+    auto& vm = global_object.vm();
+
+    auto& window = static_cast<WindowObject&>(global_object);
+    auto& memory_constructor = window.ensure_web_prototype<WebAssemblyMemoryConstructor>("WebAssembly.Memory");
+    memory_constructor.define_property(vm.names.name, js_string(vm, "WebAssembly.Memory"), JS::Attribute::Configurable);
+    auto& memory_prototype = window.ensure_web_prototype<WebAssemblyMemoryPrototype>("WebAssemblyMemoryPrototype");
+    memory_prototype.define_property(vm.names.constructor, &memory_constructor, JS::Attribute::Writable | JS::Attribute::Configurable);
+    define_property("Memory", &memory_constructor);
 }
 
 NonnullOwnPtrVector<WebAssemblyObject::CompiledWebAssemblyModule> WebAssemblyObject::s_compiled_modules;
@@ -212,6 +222,45 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyObject::instantiate)
                     VERIFY(address.has_value());
 
                     resolved_imports.set(import_name, Wasm::ExternValue { Wasm::FunctionAddress { *address } });
+                },
+                [&](Wasm::GlobalType const& type) {
+                    Optional<Wasm::GlobalAddress> address;
+                    // https://webassembly.github.io/spec/js-api/#read-the-imports step 5.1
+                    if (import_.is_number() || import_.is_bigint()) {
+                        if (import_.is_number() && type.type().kind() == Wasm::ValueType::I64) {
+                            // FIXME: Throw a LinkError instead.
+                            vm.throw_exception<JS::TypeError>(global_object, "LinkError: Import resolution attempted to cast a Number to a BigInteger");
+                            return;
+                        }
+                        if (import_.is_bigint() && type.type().kind() != Wasm::ValueType::I64) {
+                            // FIXME: Throw a LinkError instead.
+                            vm.throw_exception<JS::TypeError>(global_object, "LinkError: Import resolution attempted to cast a BigInteger to a Number");
+                            return;
+                        }
+                        auto cast_value = to_webassembly_value(import_, type.type(), global_object);
+                        if (!cast_value.has_value())
+                            return;
+                        address = s_abstract_machine.store().allocate({ type.type(), false }, cast_value.release_value());
+                    } else {
+                        // FIXME: https://webassembly.github.io/spec/js-api/#read-the-imports step 5.2
+                        //        if v implements Global
+                        //            let globaladdr be v.[[Global]]
+
+                        // FIXME: Throw a LinkError instead
+                        vm.throw_exception<JS::TypeError>(global_object, "LinkError: Invalid value for global type");
+                        return;
+                    }
+
+                    resolved_imports.set(import_name, Wasm::ExternValue { *address });
+                },
+                [&](Wasm::MemoryType const&) {
+                    if (!import_.is_object() || !is<WebAssemblyMemoryObject>(import_.as_object())) {
+                        // FIXME: Throw a LinkError instead
+                        vm.throw_exception<JS::TypeError>(global_object, "LinkError: Expected an instance of WebAssembly.Memory for a memory import");
+                        return;
+                    }
+                    auto address = static_cast<WebAssemblyMemoryObject const&>(import_.as_object()).address();
+                    resolved_imports.set(import_name, Wasm::ExternValue { address });
                 },
                 [&](const auto&) {
                     // FIXME: Implement these.
@@ -420,59 +469,9 @@ void WebAssemblyInstanceObject::visit_edges(Cell::Visitor& visitor)
 }
 
 WebAssemblyMemoryObject::WebAssemblyMemoryObject(JS::GlobalObject& global_object, Wasm::MemoryAddress address)
-    : JS::Object(global_object)
+    : Object(static_cast<WindowObject&>(global_object).ensure_web_prototype<WebAssemblyMemoryPrototype>(class_name()))
     , m_address(address)
 {
-}
-
-void WebAssemblyMemoryObject::initialize(JS::GlobalObject& global_object)
-{
-    Object::initialize(global_object);
-    define_native_function("grow", grow, 1);
-    define_native_property("buffer", buffer, nullptr);
-}
-
-JS_DEFINE_NATIVE_FUNCTION(WebAssemblyMemoryObject::grow)
-{
-    auto page_count = vm.argument(0).to_u32(global_object);
-    if (vm.exception())
-        return {};
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Memory");
-        return {};
-    }
-    auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
-    auto address = memory_object->m_address;
-    auto* memory = WebAssemblyObject::s_abstract_machine.store().get(address);
-    if (!memory)
-        return JS::js_undefined();
-
-    auto previous_size = memory->size() / Wasm::Constants::page_size;
-    if (!memory->grow(page_count * Wasm::Constants::page_size)) {
-        vm.throw_exception<JS::TypeError>(global_object, "Memory.grow() grows past the stated limit of the memory instance");
-        return {};
-    }
-
-    return JS::Value(static_cast<u32>(previous_size));
-}
-
-JS_DEFINE_NATIVE_GETTER(WebAssemblyMemoryObject::buffer)
-{
-    auto* this_object = vm.this_value(global_object).to_object(global_object);
-    if (!this_object || !is<WebAssemblyMemoryObject>(this_object)) {
-        vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotA, "Memory");
-        return {};
-    }
-    auto* memory_object = static_cast<WebAssemblyMemoryObject*>(this_object);
-    auto address = memory_object->m_address;
-    auto* memory = WebAssemblyObject::s_abstract_machine.store().get(address);
-    if (!memory)
-        return JS::js_undefined();
-
-    auto array_buffer = JS::ArrayBuffer::create(global_object, &memory->data());
-    array_buffer->set_detach_key(JS::js_string(vm, "WebAssembly.Memory"));
-    return array_buffer;
 }
 
 }
