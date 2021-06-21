@@ -14,7 +14,7 @@
 #include <LibJS/Bytecode/Op.h>
 #include <LibJS/Bytecode/Register.h>
 #include <LibJS/Bytecode/StringTable.h>
-#include <LibJS/Runtime/ScopeObject.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 
 namespace JS {
 
@@ -63,7 +63,7 @@ void ScopeNode::generate_bytecode(Bytecode::Generator& generator) const
     }
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        generator.emit<Bytecode::Op::PushLexicalEnvironment>(move(scope_variables_with_declaration_kind));
+        generator.emit<Bytecode::Op::PushDeclarativeEnvironmentRecord>(move(scope_variables_with_declaration_kind));
     }
 
     for (auto& child : children()) {
@@ -1219,7 +1219,7 @@ void TryStatement::generate_bytecode(Bytecode::Generator& generator) const
         if (!m_finalizer)
             generator.emit<Bytecode::Op::LeaveUnwindContext>();
         if (!m_handler->parameter().is_empty()) {
-            // FIXME: We need a separate LexicalEnvironment here
+            // FIXME: We need a separate DeclarativeEnvironmentRecord here
             generator.emit<Bytecode::Op::SetVariable>(generator.intern_string(m_handler->parameter()));
         }
         m_handler->body().generate_bytecode(generator);

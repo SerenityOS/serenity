@@ -22,7 +22,7 @@ public:
 
     virtual Value construct(Function& new_target) override;
 
-    virtual LexicalEnvironment* create_environment() override;
+    virtual DeclarativeEnvironmentRecord* create_environment_record() override;
 
     virtual void visit_edges(Visitor&) override;
 

@@ -15,7 +15,7 @@ class GeneratorObject final : public Object {
     JS_OBJECT(GeneratorObject, Object);
 
 public:
-    static GeneratorObject* create(GlobalObject&, Value, ScriptFunction*, ScopeObject*, Bytecode::RegisterWindow);
+    static GeneratorObject* create(GlobalObject&, Value, ScriptFunction*, EnvironmentRecord*, Bytecode::RegisterWindow);
     GeneratorObject(GlobalObject&, Object& prototype);
     virtual void initialize(GlobalObject&) override;
     virtual ~GeneratorObject() override;
@@ -25,7 +25,7 @@ public:
     void set_done() { m_done = true; }
 
 private:
-    ScopeObject* m_scope { nullptr };
+    EnvironmentRecord* m_environment_record { nullptr };
     ScriptFunction* m_generating_function { nullptr };
     Value m_previous_value;
     Bytecode::RegisterWindow m_frame;

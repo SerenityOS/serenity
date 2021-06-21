@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,13 +8,13 @@
 
 #include <AK/FlyString.h>
 #include <AK/HashMap.h>
-#include <LibJS/Runtime/ScopeObject.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-class LexicalEnvironment final : public ScopeObject {
-    JS_OBJECT(LexicalEnvironment, ScopeObject);
+class DeclarativeEnvironmentRecord final : public EnvironmentRecord {
+    JS_OBJECT(DeclarativeEnvironmentRecord, EnvironmentRecord);
 
 public:
     enum class ThisBindingStatus {
@@ -30,13 +30,13 @@ public:
         Module,
     };
 
-    LexicalEnvironment();
-    LexicalEnvironment(EnvironmentRecordType);
-    LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope);
-    LexicalEnvironment(HashMap<FlyString, Variable> variables, ScopeObject* parent_scope, EnvironmentRecordType);
-    virtual ~LexicalEnvironment() override;
+    DeclarativeEnvironmentRecord();
+    DeclarativeEnvironmentRecord(EnvironmentRecordType);
+    DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope);
+    DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope, EnvironmentRecordType);
+    virtual ~DeclarativeEnvironmentRecord() override;
 
-    // ^ScopeObject
+    // ^EnvironmentRecord
     virtual Optional<Variable> get_from_scope(const FlyString&) const override;
     virtual void put_to_scope(const FlyString&, Variable) override;
     virtual bool delete_from_scope(FlyString const&) override;
@@ -66,7 +66,7 @@ public:
     EnvironmentRecordType type() const { return m_environment_record_type; }
 
 private:
-    virtual bool is_lexical_environment() const override { return true; }
+    virtual bool is_declarative_environment_record() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
     EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
@@ -80,6 +80,6 @@ private:
 };
 
 template<>
-inline bool Object::fast_is<LexicalEnvironment>() const { return is_lexical_environment(); }
+inline bool Object::fast_is<DeclarativeEnvironmentRecord>() const { return is_declarative_environment_record(); }
 
 }

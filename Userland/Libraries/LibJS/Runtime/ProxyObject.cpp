@@ -478,10 +478,10 @@ const FlyString& ProxyObject::name() const
     return static_cast<Function&>(m_target).name();
 }
 
-LexicalEnvironment* ProxyObject::create_environment()
+DeclarativeEnvironmentRecord* ProxyObject::create_environment_record()
 {
     VERIFY(is_function());
-    return static_cast<Function&>(m_target).create_environment();
+    return static_cast<Function&>(m_target).create_environment_record();
 }
 
 }

@@ -44,9 +44,9 @@ Value BoundFunction::construct(Function& new_target)
     return m_target_function->construct(new_target);
 }
 
-LexicalEnvironment* BoundFunction::create_environment()
+DeclarativeEnvironmentRecord* BoundFunction::create_environment_record()
 {
-    return m_target_function->create_environment();
+    return m_target_function->create_environment_record();
 }
 
 void BoundFunction::visit_edges(Visitor& visitor)

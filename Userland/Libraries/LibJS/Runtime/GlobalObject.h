@@ -7,13 +7,13 @@
 #pragma once
 
 #include <LibJS/Heap/Heap.h>
-#include <LibJS/Runtime/ScopeObject.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
-class GlobalObject : public ScopeObject {
-    JS_OBJECT(GlobalObject, ScopeObject);
+class GlobalObject : public EnvironmentRecord {
+    JS_OBJECT(GlobalObject, EnvironmentRecord);
 
 public:
     explicit GlobalObject();

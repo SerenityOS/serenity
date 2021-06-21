@@ -22,12 +22,12 @@
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
+#include <LibJS/Runtime/ObjectEnvironmentRecord.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
-#include <LibJS/Runtime/WithScope.h>
 #include <typeinfo>
 
 namespace JS {
@@ -227,11 +227,11 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
         // FIXME: This is merely a band-aid to make super() inside catch {} work (which constructs
-        //        a new LexicalEnvironment without current function). Implement GetSuperConstructor()
+        //        a new DeclarativeEnvironmentRecord without current function). Implement GetSuperConstructor()
         //        and subsequently GetThisEnvironment() instead.
         auto* function_environment = interpreter.current_environment();
         if (!function_environment->current_function())
-            function_environment = static_cast<LexicalEnvironment*>(function_environment->parent());
+            function_environment = static_cast<DeclarativeEnvironmentRecord*>(function_environment->parent());
 
         auto* super_constructor = function_environment->current_function()->prototype();
         // FIXME: Functions should track their constructor kind.
@@ -306,8 +306,8 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     VERIFY(object);
 
-    auto* with_scope = interpreter.heap().allocate<WithScope>(global_object, *object, interpreter.vm().call_frame().scope);
-    TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, with_scope);
+    auto* object_environment_record = interpreter.heap().allocate<ObjectEnvironmentRecord>(global_object, *object, interpreter.vm().call_frame().environment_record);
+    TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().environment_record, object_environment_record);
     return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
 
@@ -2055,8 +2055,8 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
             HashMap<FlyString, Variable> parameters;
             parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
-            auto* catch_scope = interpreter.heap().allocate<LexicalEnvironment>(global_object, move(parameters), interpreter.vm().call_frame().scope);
-            TemporaryChange<ScopeObject*> scope_change(interpreter.vm().call_frame().scope, catch_scope);
+            auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(parameters), interpreter.vm().call_frame().environment_record);
+            TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().environment_record, catch_scope);
             result = interpreter.execute_statement(global_object, m_handler->body());
         }
     }
