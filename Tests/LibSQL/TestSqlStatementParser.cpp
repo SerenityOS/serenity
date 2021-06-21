@@ -12,16 +12,16 @@
 #include <AK/StringView.h>
 #include <AK/TypeCasts.h>
 #include <AK/Vector.h>
-#include <LibSQL/Lexer.h>
-#include <LibSQL/Parser.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/Parser.h>
 
 namespace {
 
-using ParseResult = AK::Result<NonnullRefPtr<SQL::Statement>, String>;
+using ParseResult = AK::Result<NonnullRefPtr<SQL::AST::Statement>, String>;
 
 ParseResult parse(StringView sql)
 {
-    auto parser = SQL::Parser(SQL::Lexer(sql));
+    auto parser = SQL::AST::Parser(SQL::AST::Lexer(sql));
     auto statement = parser.next_statement();
 
     if (parser.has_errors()) {
@@ -70,9 +70,9 @@ TEST_CASE(create_table)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::CreateTable>(*statement));
+        EXPECT(is<SQL::AST::CreateTable>(*statement));
 
-        const auto& table = static_cast<const SQL::CreateTable&>(*statement);
+        const auto& table = static_cast<const SQL::AST::CreateTable&>(*statement);
         EXPECT_EQ(table.schema_name(), expected_schema);
         EXPECT_EQ(table.table_name(), expected_table);
         EXPECT_EQ(table.is_temporary(), expected_is_temporary);
@@ -145,9 +145,9 @@ TEST_CASE(alter_table_rename_table)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::RenameTable>(*statement));
+        EXPECT(is<SQL::AST::RenameTable>(*statement));
 
-        const auto& alter = static_cast<const SQL::RenameTable&>(*statement);
+        const auto& alter = static_cast<const SQL::AST::RenameTable&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.new_table_name(), expected_new_table);
@@ -173,9 +173,9 @@ TEST_CASE(alter_table_rename_column)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::RenameColumn>(*statement));
+        EXPECT(is<SQL::AST::RenameColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::RenameColumn&>(*statement);
+        const auto& alter = static_cast<const SQL::AST::RenameColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.column_name(), expected_column);
@@ -205,9 +205,9 @@ TEST_CASE(alter_table_add_column)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::AddColumn>(*statement));
+        EXPECT(is<SQL::AST::AddColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::AddColumn&>(*statement);
+        const auto& alter = static_cast<const SQL::AST::AddColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
 
@@ -252,9 +252,9 @@ TEST_CASE(alter_table_drop_column)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::DropColumn>(*statement));
+        EXPECT(is<SQL::AST::DropColumn>(*statement));
 
-        const auto& alter = static_cast<const SQL::DropColumn&>(*statement);
+        const auto& alter = static_cast<const SQL::AST::DropColumn&>(*statement);
         EXPECT_EQ(alter.schema_name(), expected_schema);
         EXPECT_EQ(alter.table_name(), expected_table);
         EXPECT_EQ(alter.column_name(), expected_column);
@@ -278,9 +278,9 @@ TEST_CASE(drop_table)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::DropTable>(*statement));
+        EXPECT(is<SQL::AST::DropTable>(*statement));
 
-        const auto& table = static_cast<const SQL::DropTable&>(*statement);
+        const auto& table = static_cast<const SQL::AST::DropTable&>(*statement);
         EXPECT_EQ(table.schema_name(), expected_schema);
         EXPECT_EQ(table.table_name(), expected_table);
         EXPECT_EQ(table.is_error_if_table_does_not_exist(), expected_is_error_if_table_does_not_exist);
@@ -306,14 +306,14 @@ TEST_CASE(insert)
     EXPECT(parse("INSERT OR INTO table DEFAULT VALUES;").is_error());
     EXPECT(parse("INSERT OR foo INTO table DEFAULT VALUES;").is_error());
 
-    auto validate = [](StringView sql, SQL::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<StringView> expected_column_names, Vector<size_t> expected_chain_sizes, bool expect_select_statement) {
+    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<StringView> expected_column_names, Vector<size_t> expected_chain_sizes, bool expect_select_statement) {
         auto result = parse(sql);
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::Insert>(*statement));
+        EXPECT(is<SQL::AST::Insert>(*statement));
 
-        const auto& insert = static_cast<const SQL::Insert&>(*statement);
+        const auto& insert = static_cast<const SQL::AST::Insert&>(*statement);
         EXPECT_EQ(insert.conflict_resolution(), expected_conflict_resolution);
         EXPECT_EQ(insert.schema_name(), expected_schema);
         EXPECT_EQ(insert.table_name(), expected_table);
@@ -335,7 +335,7 @@ TEST_CASE(insert)
                 EXPECT_EQ(expressions.size(), expected_chain_sizes[i]);
 
                 for (const auto& expression : expressions)
-                    EXPECT(!is<SQL::ErrorExpression>(expression));
+                    EXPECT(!is<SQL::AST::ErrorExpression>(expression));
             }
         }
 
@@ -343,13 +343,13 @@ TEST_CASE(insert)
         EXPECT_EQ(insert.default_values(), expected_chain_sizes.is_empty() && !expect_select_statement);
     };
 
-    validate("INSERT OR ABORT INTO table DEFAULT VALUES;", SQL::ConflictResolution::Abort, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR FAIL INTO table DEFAULT VALUES;", SQL::ConflictResolution::Fail, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR IGNORE INTO table DEFAULT VALUES;", SQL::ConflictResolution::Ignore, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR REPLACE INTO table DEFAULT VALUES;", SQL::ConflictResolution::Replace, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR ROLLBACK INTO table DEFAULT VALUES;", SQL::ConflictResolution::Rollback, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR ABORT INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Abort, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR FAIL INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Fail, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR IGNORE INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Ignore, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR REPLACE INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Replace, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR ROLLBACK INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Rollback, {}, "table", {}, {}, {}, false);
 
-    auto resolution = SQL::ConflictResolution::Abort;
+    auto resolution = SQL::AST::ConflictResolution::Abort;
     validate("INSERT INTO table DEFAULT VALUES;", resolution, {}, "table", {}, {}, {}, false);
     validate("INSERT INTO schema.table DEFAULT VALUES;", resolution, "schema", "table", {}, {}, {}, false);
     validate("INSERT INTO table AS foo DEFAULT VALUES;", resolution, {}, "table", "foo", {}, {}, false);
@@ -386,14 +386,14 @@ TEST_CASE(update)
     EXPECT(parse("UPDATE OR table SET column=4;").is_error());
     EXPECT(parse("UPDATE OR foo table SET column=4;").is_error());
 
-    auto validate = [](StringView sql, SQL::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<String>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
+    auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<String>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto result = parse(sql);
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::Update>(*statement));
+        EXPECT(is<SQL::AST::Update>(*statement));
 
-        const auto& update = static_cast<const SQL::Update&>(*statement);
+        const auto& update = static_cast<const SQL::AST::Update&>(*statement);
         EXPECT_EQ(update.conflict_resolution(), expected_conflict_resolution);
 
         const auto& qualified_table_name = update.qualified_table_name();
@@ -407,7 +407,7 @@ TEST_CASE(update)
             const auto& update_column = update_columns[i];
             const auto& expected_update_column = expected_update_columns[i];
             EXPECT_EQ(update_column.column_names.size(), expected_update_column.size());
-            EXPECT(!is<SQL::ErrorExpression>(*update_column.expression));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*update_column.expression));
 
             for (size_t j = 0; j < update_column.column_names.size(); ++j)
                 EXPECT_EQ(update_column.column_names[j], expected_update_column[j]);
@@ -416,7 +416,7 @@ TEST_CASE(update)
         const auto& where_clause = update.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
-            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
         const auto& returning_clause = update.returning_clause();
         EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
@@ -427,20 +427,20 @@ TEST_CASE(update)
                 const auto& column = returning_clause->columns()[i];
                 const auto& expected_column_alias = expected_returned_column_aliases[i];
 
-                EXPECT(!is<SQL::ErrorExpression>(*column.expression));
+                EXPECT(!is<SQL::AST::ErrorExpression>(*column.expression));
                 EXPECT_EQ(column.column_alias, expected_column_alias);
             }
         }
     };
 
     Vector<Vector<String>> update_columns { { "column" } };
-    validate("UPDATE OR ABORT table SET column=1;", SQL::ConflictResolution::Abort, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR FAIL table SET column=1;", SQL::ConflictResolution::Fail, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR IGNORE table SET column=1;", SQL::ConflictResolution::Ignore, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR REPLACE table SET column=1;", SQL::ConflictResolution::Replace, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR ROLLBACK table SET column=1;", SQL::ConflictResolution::Rollback, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR ABORT table SET column=1;", SQL::AST::ConflictResolution::Abort, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR FAIL table SET column=1;", SQL::AST::ConflictResolution::Fail, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR IGNORE table SET column=1;", SQL::AST::ConflictResolution::Ignore, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR REPLACE table SET column=1;", SQL::AST::ConflictResolution::Replace, {}, "table", {}, update_columns, false, false, {});
+    validate("UPDATE OR ROLLBACK table SET column=1;", SQL::AST::ConflictResolution::Rollback, {}, "table", {}, update_columns, false, false, {});
 
-    auto resolution = SQL::ConflictResolution::Abort;
+    auto resolution = SQL::AST::ConflictResolution::Abort;
     validate("UPDATE table SET column=1;", resolution, {}, "table", {}, update_columns, false, false, {});
     validate("UPDATE schema.table SET column=1;", resolution, "schema", "table", {}, update_columns, false, false, {});
     validate("UPDATE table AS foo SET column=1;", resolution, {}, "table", "foo", update_columns, false, false, {});
@@ -475,9 +475,9 @@ TEST_CASE(delete_)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::Delete>(*statement));
+        EXPECT(is<SQL::AST::Delete>(*statement));
 
-        const auto& delete_ = static_cast<const SQL::Delete&>(*statement);
+        const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
 
         const auto& qualified_table_name = delete_.qualified_table_name();
         EXPECT_EQ(qualified_table_name->schema_name(), expected_schema);
@@ -487,7 +487,7 @@ TEST_CASE(delete_)
         const auto& where_clause = delete_.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
-            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
         const auto& returning_clause = delete_.returning_clause();
         EXPECT_EQ(returning_clause.is_null(), !expect_returning_clause);
@@ -498,7 +498,7 @@ TEST_CASE(delete_)
                 const auto& column = returning_clause->columns()[i];
                 const auto& expected_column_alias = expected_returned_column_aliases[i];
 
-                EXPECT(!is<SQL::ErrorExpression>(*column.expression));
+                EXPECT(!is<SQL::AST::ErrorExpression>(*column.expression));
                 EXPECT_EQ(column.column_alias, expected_column_alias);
             }
         }
@@ -550,7 +550,7 @@ TEST_CASE(select)
     EXPECT(parse("SELECT * FROM table LIMIT 15, 16;").is_error());
 
     struct Type {
-        SQL::ResultType type;
+        SQL::AST::ResultType type;
         StringView table_name_or_column_alias {};
     };
 
@@ -562,8 +562,8 @@ TEST_CASE(select)
 
     struct Ordering {
         String collation_name;
-        SQL::Order order;
-        SQL::Nulls nulls;
+        SQL::AST::Order order;
+        SQL::AST::Nulls nulls;
     };
 
     auto validate = [](StringView sql, Vector<Type> expected_columns, Vector<From> expected_from_list, bool expect_where_clause, size_t expected_group_by_size, bool expect_having_clause, Vector<Ordering> expected_ordering, bool expect_limit_clause, bool expect_offset_clause) {
@@ -571,9 +571,9 @@ TEST_CASE(select)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::Select>(*statement));
+        EXPECT(is<SQL::AST::Select>(*statement));
 
-        const auto& select = static_cast<const SQL::Select&>(*statement);
+        const auto& select = static_cast<const SQL::AST::Select&>(*statement);
 
         const auto& result_column_list = select.result_column_list();
         EXPECT_EQ(result_column_list.size(), expected_columns.size());
@@ -583,13 +583,13 @@ TEST_CASE(select)
             EXPECT_EQ(result_column.type(), expected_column.type);
 
             switch (result_column.type()) {
-            case SQL::ResultType::All:
+            case SQL::AST::ResultType::All:
                 EXPECT(expected_column.table_name_or_column_alias.is_null());
                 break;
-            case SQL::ResultType::Table:
+            case SQL::AST::ResultType::Table:
                 EXPECT_EQ(result_column.table_name(), expected_column.table_name_or_column_alias);
                 break;
-            case SQL::ResultType::Expression:
+            case SQL::AST::ResultType::Expression:
                 EXPECT_EQ(result_column.column_alias(), expected_column.table_name_or_column_alias);
                 break;
             }
@@ -608,7 +608,7 @@ TEST_CASE(select)
         const auto& where_clause = select.where_clause();
         EXPECT_EQ(where_clause.is_null(), !expect_where_clause);
         if (where_clause)
-            EXPECT(!is<SQL::ErrorExpression>(*where_clause));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*where_clause));
 
         const auto& group_by_clause = select.group_by_clause();
         EXPECT_EQ(group_by_clause.is_null(), (expected_group_by_size == 0));
@@ -616,12 +616,12 @@ TEST_CASE(select)
             const auto& group_by_list = group_by_clause->group_by_list();
             EXPECT_EQ(group_by_list.size(), expected_group_by_size);
             for (size_t i = 0; i < group_by_list.size(); ++i)
-                EXPECT(!is<SQL::ErrorExpression>(group_by_list[i]));
+                EXPECT(!is<SQL::AST::ErrorExpression>(group_by_list[i]));
 
             const auto& having_clause = group_by_clause->having_clause();
             EXPECT_EQ(having_clause.is_null(), !expect_having_clause);
             if (having_clause)
-                EXPECT(!is<SQL::ErrorExpression>(*having_clause));
+                EXPECT(!is<SQL::AST::ErrorExpression>(*having_clause));
         }
 
         const auto& ordering_term_list = select.ordering_term_list();
@@ -629,7 +629,7 @@ TEST_CASE(select)
         for (size_t i = 0; i < ordering_term_list.size(); ++i) {
             const auto& result_order = ordering_term_list[i];
             const auto& expected_order = expected_ordering[i];
-            EXPECT(!is<SQL::ErrorExpression>(*result_order.expression()));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*result_order.expression()));
             EXPECT_EQ(result_order.collation_name(), expected_order.collation_name);
             EXPECT_EQ(result_order.order(), expected_order.order);
             EXPECT_EQ(result_order.nulls(), expected_order.nulls);
@@ -639,24 +639,24 @@ TEST_CASE(select)
         EXPECT_EQ(limit_clause.is_null(), !expect_limit_clause);
         if (limit_clause) {
             const auto& limit_expression = limit_clause->limit_expression();
-            EXPECT(!is<SQL::ErrorExpression>(*limit_expression));
+            EXPECT(!is<SQL::AST::ErrorExpression>(*limit_expression));
 
             const auto& offset_expression = limit_clause->offset_expression();
             EXPECT_EQ(offset_expression.is_null(), !expect_offset_clause);
             if (offset_expression)
-                EXPECT(!is<SQL::ErrorExpression>(*offset_expression));
+                EXPECT(!is<SQL::AST::ErrorExpression>(*offset_expression));
         }
     };
 
-    Vector<Type> all { { SQL::ResultType::All } };
+    Vector<Type> all { { SQL::AST::ResultType::All } };
     Vector<From> from { { {}, "table", {} } };
 
-    validate("SELECT * FROM table;", { { SQL::ResultType::All } }, from, false, 0, false, {}, false, false);
-    validate("SELECT table.* FROM table;", { { SQL::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT table.column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT schema.table.column AS alias FROM table;", { { SQL::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT column AS alias, *, table.* FROM table;", { { SQL::ResultType::Expression, "alias" }, { SQL::ResultType::All }, { SQL::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT * FROM table;", { { SQL::AST::ResultType::All } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table.* FROM table;", { { SQL::AST::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table.column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT schema.table.column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column AS alias, *, table.* FROM table;", { { SQL::AST::ResultType::Expression, "alias" }, { SQL::AST::ResultType::All }, { SQL::AST::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
 
     validate("SELECT * FROM table;", all, { { {}, "table", {} } }, false, 0, false, {}, false, false);
     validate("SELECT * FROM schema.table;", all, { { "schema", "table", {} } }, false, 0, false, {}, false, false);
@@ -669,13 +669,13 @@ TEST_CASE(select)
     validate("SELECT * FROM table GROUP BY column1, column2, column3;", all, from, false, 3, false, {}, false, false);
     validate("SELECT * FROM table GROUP BY column HAVING 'abc';", all, from, false, 1, true, {}, false, false);
 
-    validate("SELECT * FROM table ORDER BY column;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column COLLATE collation;", all, from, false, 0, false, { { "collation", SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column ASC;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column DESC;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table ORDER BY column ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table ORDER BY column DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First }, { {}, SQL::Order::Descending, SQL::Nulls::Last }, { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table ORDER BY column;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column COLLATE collation;", all, from, false, 0, false, { { "collation", SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column ASC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column DESC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table ORDER BY column ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table ORDER BY column DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First }, { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last }, { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
 
     validate("SELECT * FROM table LIMIT 15;", all, from, false, 0, false, {}, true, false);
     validate("SELECT * FROM table LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
@@ -710,9 +710,9 @@ TEST_CASE(common_table_expression)
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
-        EXPECT(is<SQL::Delete>(*statement));
+        EXPECT(is<SQL::AST::Delete>(*statement));
 
-        const auto& delete_ = static_cast<const SQL::Delete&>(*statement);
+        const auto& delete_ = static_cast<const SQL::AST::Delete&>(*statement);
 
         const auto& common_table_expression_list = delete_.common_table_expression_list();
         EXPECT(!common_table_expression_list.is_null());
@@ -741,7 +741,7 @@ TEST_CASE(common_table_expression)
 
 TEST_CASE(nested_subquery_limit)
 {
-    auto subquery = String::formatted("{:(^{}}table{:)^{}}", "", SQL::Limits::maximum_subquery_depth - 1, "", SQL::Limits::maximum_subquery_depth - 1);
+    auto subquery = String::formatted("{:(^{}}table{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
     EXPECT(!parse(String::formatted("SELECT * FROM {};", subquery)).is_error());
     EXPECT(parse(String::formatted("SELECT * FROM ({});", subquery)).is_error());
 }

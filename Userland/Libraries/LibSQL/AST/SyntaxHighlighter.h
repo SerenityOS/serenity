@@ -8,7 +8,7 @@
 
 #include <LibSyntax/Highlighter.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 class SyntaxHighlighter final : public Syntax::Highlighter {
 public:

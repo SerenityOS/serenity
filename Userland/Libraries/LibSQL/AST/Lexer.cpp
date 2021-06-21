@@ -8,7 +8,7 @@
 #include <AK/Debug.h>
 #include <ctype.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 HashMap<String, TokenType> Lexer::s_keywords;
 HashMap<char, TokenType> Lexer::s_one_char_tokens;

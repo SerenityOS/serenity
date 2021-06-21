@@ -36,7 +36,7 @@
 #include <LibGfx/Painter.h>
 #include <LibJS/SyntaxHighlighter.h>
 #include <LibMarkdown/Document.h>
-#include <LibSQL/SyntaxHighlighter.h>
+#include <LibSQL/AST/SyntaxHighlighter.h>
 #include <LibWeb/HTML/SyntaxHighlighter/SyntaxHighlighter.h>
 #include <LibWeb/OutOfProcessWebView.h>
 #include <Shell/SyntaxHighlighter.h>
@@ -582,7 +582,7 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     syntax_menu.add_action(*m_shell_highlight);
 
     m_sql_highlight = GUI::Action::create_checkable("S&QL File", [&](auto&) {
-        m_editor->set_syntax_highlighter(make<SQL::SyntaxHighlighter>());
+        m_editor->set_syntax_highlighter(make<SQL::AST::SyntaxHighlighter>());
         m_editor->update();
     });
     syntax_actions.add_action(*m_sql_highlight);
