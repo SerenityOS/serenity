@@ -97,7 +97,6 @@ KResultOr<size_t> TTY::write(FileDescription&, u64, const UserOrKernelBuffer& bu
             });
         }
         auto bytes_written_or_error = on_tty_write(UserOrKernelBuffer::for_kernel_buffer(modified_data), modified_data_size);
-        VERIFY(bytes_written_or_error.is_error() || bytes_written_or_error.value() != 0);
         if (bytes_written_or_error.is_error() || !(m_termios.c_oflag & OPOST) || !(m_termios.c_oflag & ONLCR))
             return bytes_written_or_error;
         auto bytes_written = bytes_written_or_error.value();
