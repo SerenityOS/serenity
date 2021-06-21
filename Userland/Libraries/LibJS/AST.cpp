@@ -100,7 +100,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_scope(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_environment_record(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -131,7 +131,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         Object* this_value = nullptr;
 
         if (is<SuperExpression>(member_expression.object())) {
-            auto super_base = interpreter.current_environment()->get_super_base();
+            auto super_base = interpreter.current_declarative_environment_record()->get_super_base();
             if (super_base.is_nullish()) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, super_base.to_string_without_side_effects());
                 return {};
@@ -229,7 +229,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         // FIXME: This is merely a band-aid to make super() inside catch {} work (which constructs
         //        a new DeclarativeEnvironmentRecord without current function). Implement GetSuperConstructor()
         //        and subsequently GetThisEnvironment() instead.
-        auto* function_environment = interpreter.current_environment();
+        auto* function_environment = interpreter.current_declarative_environment_record();
         if (!function_environment->current_function())
             function_environment = static_cast<DeclarativeEnvironmentRecord*>(function_environment->outer_environment());
 
@@ -853,7 +853,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.current_scope()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.current_environment_record()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return {};
 }

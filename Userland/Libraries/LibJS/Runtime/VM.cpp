@@ -135,7 +135,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 {
     Optional<Variable> possible_match;
     if (!specific_scope && m_call_stack.size()) {
-        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
@@ -167,7 +167,7 @@ bool VM::delete_variable(FlyString const& name)
     EnvironmentRecord* specific_scope = nullptr;
     Optional<Variable> possible_match;
     if (!m_call_stack.is_empty()) {
-        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
@@ -363,7 +363,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             //       a function parameter, or by a local var declaration, we use that.
             //       Otherwise, we return a lazily constructed Array with all the argument values.
             // FIXME: Do something much more spec-compliant.
-            auto possible_match = current_scope()->get_from_environment_record(name);
+            auto possible_match = current_environment_record()->get_from_environment_record(name);
             if (possible_match.has_value())
                 return possible_match.value().value;
             if (!call_frame().arguments_object) {
@@ -376,7 +376,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             return call_frame().arguments_object;
         }
 
-        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
             auto possible_match = environment_record->get_from_environment_record(name);
             if (exception())
                 return {};
@@ -393,7 +393,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 Reference VM::get_reference(const FlyString& name)
 {
     if (m_call_stack.size()) {
-        for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
             if (is<GlobalObject>(environment_record))
                 break;
             auto possible_match = environment_record->get_from_environment_record(name);
@@ -460,8 +460,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
-            VERIFY(is<DeclarativeEnvironmentRecord>(current_scope()));
-            static_cast<DeclarativeEnvironmentRecord*>(current_scope())->replace_this_binding(result);
+            VERIFY(is<DeclarativeEnvironmentRecord>(current_environment_record()));
+            static_cast<DeclarativeEnvironmentRecord*>(current_environment_record())->replace_this_binding(result);
         }
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -508,7 +508,7 @@ Value VM::resolve_this_binding(GlobalObject& global_object) const
 const EnvironmentRecord* VM::find_this_scope() const
 {
     // We will always return because the Global environment will always be reached, which has a |this| binding.
-    for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+    for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
         if (environment_record->has_this_binding())
             return environment_record;
     }
@@ -622,9 +622,9 @@ void VM::dump_backtrace() const
         dbgln("-> {}", m_call_stack[i]->function_name);
 }
 
-void VM::dump_scope_chain() const
+void VM::dump_environment_record_chain() const
 {
-    for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
+    for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
         dbgln("+> {} ({:p})", environment_record->class_name(), environment_record);
         if (is<DeclarativeEnvironmentRecord>(*environment_record)) {
             auto& declarative_environment_record = static_cast<DeclarativeEnvironmentRecord const&>(*environment_record);

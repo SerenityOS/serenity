@@ -312,7 +312,7 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
 void NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_scope(), m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.is_arrow_function());
+    interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.current_environment_record(), m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.is_arrow_function());
 }
 
 void Return::execute_impl(Bytecode::Interpreter& interpreter) const
@@ -386,7 +386,7 @@ void PushDeclarativeEnvironmentRecord::execute_impl(Bytecode::Interpreter& inter
     HashMap<FlyString, Variable> resolved_variables;
     for (auto& it : m_variables)
         resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
-    auto* environment_record = interpreter.vm().heap().allocate<DeclarativeEnvironmentRecord>(interpreter.global_object(), move(resolved_variables), interpreter.vm().current_scope());
+    auto* environment_record = interpreter.vm().heap().allocate<DeclarativeEnvironmentRecord>(interpreter.global_object(), move(resolved_variables), interpreter.vm().current_environment_record());
     interpreter.vm().call_frame().environment_record = environment_record;
 }
 
