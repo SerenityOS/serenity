@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -35,8 +36,6 @@ ParseResult parse(StringView sql)
 
 TEST_CASE(create_table)
 {
-    EXPECT(parse("").is_error());
-    EXPECT(parse("CREATE").is_error());
     EXPECT(parse("CREATE TABLE").is_error());
     EXPECT(parse("CREATE TABLE test").is_error());
     EXPECT(parse("CREATE TABLE test ()").is_error());
@@ -56,8 +55,8 @@ TEST_CASE(create_table)
     EXPECT(parse("CREATE TABLE test ( column1 varchar(.abc) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0x) )").is_error());
     EXPECT(parse("CREATE TABLE test ( column1 varchar(0xzzz) )").is_error());
-    EXPECT(parse("CREATE TABLE test ( column1 int ) AS SELECT * FROM table;").is_error());
-    EXPECT(parse("CREATE TABLE test AS SELECT * FROM table ( column1 int ) ;").is_error());
+    EXPECT(parse("CREATE TABLE test ( column1 int ) AS SELECT * FROM table_name;").is_error());
+    EXPECT(parse("CREATE TABLE test AS SELECT * FROM table_name ( column1 int ) ;").is_error());
 
     struct Column {
         StringView name;
@@ -67,6 +66,8 @@ TEST_CASE(create_table)
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, Vector<Column> expected_columns, bool expected_is_temporary = false, bool expected_is_error_if_table_exists = true) {
         auto result = parse(sql);
+        if (result.is_error())
+            outln("{}: {}", sql, result.error());
         EXPECT(!result.is_error());
 
         auto statement = result.release_value();
@@ -107,22 +108,26 @@ TEST_CASE(create_table)
         }
     };
 
-    validate("CREATE TABLE test ( column1 );", {}, "test", { { "column1", "BLOB" } });
-    validate("CREATE TABLE schema.test ( column1 );", "schema", "test", { { "column1", "BLOB" } });
-    validate("CREATE TEMP TABLE test ( column1 );", {}, "test", { { "column1", "BLOB" } }, true, true);
-    validate("CREATE TEMPORARY TABLE test ( column1 );", {}, "test", { { "column1", "BLOB" } }, true, true);
-    validate("CREATE TABLE IF NOT EXISTS test ( column1 );", {}, "test", { { "column1", "BLOB" } }, false, false);
+    validate("CREATE TABLE test ( column1 );", {}, "TEST", { { "COLUMN1", "BLOB" } });
+    validate("Create Table test ( column1 );", {}, "TEST", { { "COLUMN1", "BLOB" } });
+    validate(R"(CREATE TABLE "test" ( "column1" );)", {}, "test", { { "column1", "BLOB" } });
+    validate(R"(CREATE TABLE "te""st" ( "co""lumn1" );)", {}, "te\"st", { { "co\"lumn1", "BLOB" } });
+    validate("CREATE TABLE schema_name.test ( column1 );", "SCHEMA_NAME", "TEST", { { "COLUMN1", "BLOB" } });
+    validate("CREATE TABLE \"schema\".test ( column1 );", "schema", "TEST", { { "COLUMN1", "BLOB" } });
+    validate("CREATE TEMP TABLE test ( column1 );", {}, "TEST", { { "COLUMN1", "BLOB" } }, true, true);
+    validate("CREATE TEMPORARY TABLE test ( column1 );", {}, "TEST", { { "COLUMN1", "BLOB" } }, true, true);
+    validate("CREATE TABLE IF NOT EXISTS test ( column1 );", {}, "TEST", { { "COLUMN1", "BLOB" } }, false, false);
 
-    validate("CREATE TABLE test AS SELECT * FROM table;", {}, "test", {});
+    validate("CREATE TABLE test AS SELECT * FROM table_name;", {}, "TEST", {});
 
-    validate("CREATE TABLE test ( column1 int );", {}, "test", { { "column1", "int" } });
-    validate("CREATE TABLE test ( column1 varchar );", {}, "test", { { "column1", "varchar" } });
-    validate("CREATE TABLE test ( column1 varchar(255) );", {}, "test", { { "column1", "varchar", { 255 } } });
-    validate("CREATE TABLE test ( column1 varchar(255, 123) );", {}, "test", { { "column1", "varchar", { 255, 123 } } });
-    validate("CREATE TABLE test ( column1 varchar(255, -123) );", {}, "test", { { "column1", "varchar", { 255, -123 } } });
-    validate("CREATE TABLE test ( column1 varchar(0xff) );", {}, "test", { { "column1", "varchar", { 255 } } });
-    validate("CREATE TABLE test ( column1 varchar(3.14) );", {}, "test", { { "column1", "varchar", { 3.14 } } });
-    validate("CREATE TABLE test ( column1 varchar(1e3) );", {}, "test", { { "column1", "varchar", { 1000 } } });
+    validate("CREATE TABLE test ( column1 int );", {}, "TEST", { { "COLUMN1", "INT" } });
+    validate("CREATE TABLE test ( column1 varchar );", {}, "TEST", { { "COLUMN1", "VARCHAR" } });
+    validate("CREATE TABLE test ( column1 varchar(255) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 255 } } });
+    validate("CREATE TABLE test ( column1 varchar(255, 123) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 255, 123 } } });
+    validate("CREATE TABLE test ( column1 varchar(255, -123) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 255, -123 } } });
+    validate("CREATE TABLE test ( column1 varchar(0xff) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 255 } } });
+    validate("CREATE TABLE test ( column1 varchar(3.14) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 3.14 } } });
+    validate("CREATE TABLE test ( column1 varchar(1e3) );", {}, "TEST", { { "COLUMN1", "VARCHAR", { 1000 } } });
 }
 
 TEST_CASE(alter_table)
@@ -130,15 +135,15 @@ TEST_CASE(alter_table)
     // This test case only contains common error cases of the AlterTable subclasses.
     EXPECT(parse("ALTER").is_error());
     EXPECT(parse("ALTER TABLE").is_error());
-    EXPECT(parse("ALTER TABLE table").is_error());
-    EXPECT(parse("ALTER TABLE table;").is_error());
+    EXPECT(parse("ALTER TABLE table_name").is_error());
+    EXPECT(parse("ALTER TABLE table_name;").is_error());
 }
 
 TEST_CASE(alter_table_rename_table)
 {
-    EXPECT(parse("ALTER TABLE table RENAME").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME TO").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME TO new_table").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME TO").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME TO new_table").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_new_table) {
         auto result = parse(sql);
@@ -153,20 +158,20 @@ TEST_CASE(alter_table_rename_table)
         EXPECT_EQ(alter.new_table_name(), expected_new_table);
     };
 
-    validate("ALTER TABLE table RENAME TO new_table;", {}, "table", "new_table");
-    validate("ALTER TABLE schema.table RENAME TO new_table;", "schema", "table", "new_table");
+    validate("ALTER TABLE table_name RENAME TO new_table;", {}, "TABLE_NAME", "NEW_TABLE");
+    validate("ALTER TABLE schema_name.table_name RENAME TO new_table;", "SCHEMA_NAME", "TABLE_NAME", "NEW_TABLE");
 }
 
 TEST_CASE(alter_table_rename_column)
 {
-    EXPECT(parse("ALTER TABLE table RENAME").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME COLUMN").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME COLUMN column").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME COLUMN column TO").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME COLUMN column TO new_column").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME column").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME column TO").is_error());
-    EXPECT(parse("ALTER TABLE table RENAME column TO new_column").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME COLUMN column_name").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME COLUMN column_name TO").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME COLUMN column_name TO new_column").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME column_name").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME column_name TO").is_error());
+    EXPECT(parse("ALTER TABLE table_name RENAME column_name TO new_column").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column, StringView expected_new_column) {
         auto result = parse(sql);
@@ -182,17 +187,17 @@ TEST_CASE(alter_table_rename_column)
         EXPECT_EQ(alter.new_column_name(), expected_new_column);
     };
 
-    validate("ALTER TABLE table RENAME column TO new_column;", {}, "table", "column", "new_column");
-    validate("ALTER TABLE table RENAME COLUMN column TO new_column;", {}, "table", "column", "new_column");
-    validate("ALTER TABLE schema.table RENAME column TO new_column;", "schema", "table", "column", "new_column");
-    validate("ALTER TABLE schema.table RENAME COLUMN column TO new_column;", "schema", "table", "column", "new_column");
+    validate("ALTER TABLE table_name RENAME column_name TO new_column;", {}, "TABLE_NAME", "COLUMN_NAME", "NEW_COLUMN");
+    validate("ALTER TABLE table_name RENAME COLUMN column_name TO new_column;", {}, "TABLE_NAME", "COLUMN_NAME", "NEW_COLUMN");
+    validate("ALTER TABLE schema_name.table_name RENAME column_name TO new_column;", "SCHEMA_NAME", "TABLE_NAME", "COLUMN_NAME", "NEW_COLUMN");
+    validate("ALTER TABLE schema_name.table_name RENAME COLUMN column_name TO new_column;", "SCHEMA_NAME", "TABLE_NAME", "COLUMN_NAME", "NEW_COLUMN");
 }
 
 TEST_CASE(alter_table_add_column)
 {
-    EXPECT(parse("ALTER TABLE table ADD").is_error());
-    EXPECT(parse("ALTER TABLE table ADD COLUMN").is_error());
-    EXPECT(parse("ALTER TABLE table ADD COLUMN column").is_error());
+    EXPECT(parse("ALTER TABLE table_name ADD").is_error());
+    EXPECT(parse("ALTER TABLE table_name ADD COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table_name ADD COLUMN column_name").is_error());
 
     struct Column {
         StringView name;
@@ -227,25 +232,25 @@ TEST_CASE(alter_table_add_column)
         }
     };
 
-    validate("ALTER TABLE test ADD column1;", {}, "test", { "column1", "BLOB" });
-    validate("ALTER TABLE test ADD column1 int;", {}, "test", { "column1", "int" });
-    validate("ALTER TABLE test ADD column1 varchar;", {}, "test", { "column1", "varchar" });
-    validate("ALTER TABLE test ADD column1 varchar(255);", {}, "test", { "column1", "varchar", { 255 } });
-    validate("ALTER TABLE test ADD column1 varchar(255, 123);", {}, "test", { "column1", "varchar", { 255, 123 } });
+    validate("ALTER TABLE test ADD column1;", {}, "TEST", { "COLUMN1", "BLOB" });
+    validate("ALTER TABLE test ADD column1 int;", {}, "TEST", { "COLUMN1", "INT" });
+    validate("ALTER TABLE test ADD column1 varchar;", {}, "TEST", { "COLUMN1", "VARCHAR" });
+    validate("ALTER TABLE test ADD column1 varchar(255);", {}, "TEST", { "COLUMN1", "VARCHAR", { 255 } });
+    validate("ALTER TABLE test ADD column1 varchar(255, 123);", {}, "TEST", { "COLUMN1", "VARCHAR", { 255, 123 } });
 
-    validate("ALTER TABLE schema.test ADD COLUMN column1;", "schema", "test", { "column1", "BLOB" });
-    validate("ALTER TABLE schema.test ADD COLUMN column1 int;", "schema", "test", { "column1", "int" });
-    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar;", "schema", "test", { "column1", "varchar" });
-    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar(255);", "schema", "test", { "column1", "varchar", { 255 } });
-    validate("ALTER TABLE schema.test ADD COLUMN column1 varchar(255, 123);", "schema", "test", { "column1", "varchar", { 255, 123 } });
+    validate("ALTER TABLE schema_name.test ADD COLUMN column1;", "SCHEMA_NAME", "TEST", { "COLUMN1", "BLOB" });
+    validate("ALTER TABLE schema_name.test ADD COLUMN column1 int;", "SCHEMA_NAME", "TEST", { "COLUMN1", "INT" });
+    validate("ALTER TABLE schema_name.test ADD COLUMN column1 varchar;", "SCHEMA_NAME", "TEST", { "COLUMN1", "VARCHAR" });
+    validate("ALTER TABLE schema_name.test ADD COLUMN column1 varchar(255);", "SCHEMA_NAME", "TEST", { "COLUMN1", "VARCHAR", { 255 } });
+    validate("ALTER TABLE schema_name.test ADD COLUMN column1 varchar(255, 123);", "SCHEMA_NAME", "TEST", { "COLUMN1", "VARCHAR", { 255, 123 } });
 }
 
 TEST_CASE(alter_table_drop_column)
 {
-    EXPECT(parse("ALTER TABLE table DROP").is_error());
-    EXPECT(parse("ALTER TABLE table DROP COLUMN").is_error());
-    EXPECT(parse("ALTER TABLE table DROP column").is_error());
-    EXPECT(parse("ALTER TABLE table DROP COLUMN column").is_error());
+    EXPECT(parse("ALTER TABLE table_name DROP").is_error());
+    EXPECT(parse("ALTER TABLE table_name DROP COLUMN").is_error());
+    EXPECT(parse("ALTER TABLE table_name DROP column_name").is_error());
+    EXPECT(parse("ALTER TABLE table_name DROP COLUMN column_name").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_column) {
         auto result = parse(sql);
@@ -260,10 +265,10 @@ TEST_CASE(alter_table_drop_column)
         EXPECT_EQ(alter.column_name(), expected_column);
     };
 
-    validate("ALTER TABLE table DROP column;", {}, "table", "column");
-    validate("ALTER TABLE table DROP COLUMN column;", {}, "table", "column");
-    validate("ALTER TABLE schema.table DROP column;", "schema", "table", "column");
-    validate("ALTER TABLE schema.table DROP COLUMN column;", "schema", "table", "column");
+    validate("ALTER TABLE table_name DROP column_name;", {}, "TABLE_NAME", "COLUMN_NAME");
+    validate("ALTER TABLE table_name DROP COLUMN column_name;", {}, "TABLE_NAME", "COLUMN_NAME");
+    validate("ALTER TABLE schema_name.table_name DROP column_name;", "SCHEMA_NAME", "TABLE_NAME", "COLUMN_NAME");
+    validate("ALTER TABLE schema_name.table_name DROP COLUMN column_name;", "SCHEMA_NAME", "TABLE_NAME", "COLUMN_NAME");
 }
 
 TEST_CASE(drop_table)
@@ -286,25 +291,25 @@ TEST_CASE(drop_table)
         EXPECT_EQ(table.is_error_if_table_does_not_exist(), expected_is_error_if_table_does_not_exist);
     };
 
-    validate("DROP TABLE test;", {}, "test");
-    validate("DROP TABLE schema.test;", "schema", "test");
-    validate("DROP TABLE IF EXISTS test;", {}, "test", false);
+    validate("DROP TABLE test;", {}, "TEST");
+    validate("DROP TABLE schema_name.test;", "SCHEMA_NAME", "TEST");
+    validate("DROP TABLE IF EXISTS test;", {}, "TEST", false);
 }
 
 TEST_CASE(insert)
 {
     EXPECT(parse("INSERT").is_error());
     EXPECT(parse("INSERT INTO").is_error());
-    EXPECT(parse("INSERT INTO table").is_error());
-    EXPECT(parse("INSERT INTO table (column)").is_error());
-    EXPECT(parse("INSERT INTO table (column, ) DEFAULT VALUES;").is_error());
-    EXPECT(parse("INSERT INTO table VALUES").is_error());
-    EXPECT(parse("INSERT INTO table VALUES ();").is_error());
-    EXPECT(parse("INSERT INTO table VALUES (1)").is_error());
-    EXPECT(parse("INSERT INTO table SELECT").is_error());
-    EXPECT(parse("INSERT INTO table SELECT * from table").is_error());
-    EXPECT(parse("INSERT OR INTO table DEFAULT VALUES;").is_error());
-    EXPECT(parse("INSERT OR foo INTO table DEFAULT VALUES;").is_error());
+    EXPECT(parse("INSERT INTO table_name").is_error());
+    EXPECT(parse("INSERT INTO table_name (column_name)").is_error());
+    EXPECT(parse("INSERT INTO table_name (column_name, ) DEFAULT VALUES;").is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES").is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES ();").is_error());
+    EXPECT(parse("INSERT INTO table_name VALUES (1)").is_error());
+    EXPECT(parse("INSERT INTO table_name SELECT").is_error());
+    EXPECT(parse("INSERT INTO table_name SELECT * from table_name").is_error());
+    EXPECT(parse("INSERT OR INTO table_name DEFAULT VALUES;").is_error());
+    EXPECT(parse("INSERT OR foo INTO table_name DEFAULT VALUES;").is_error());
 
     auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<StringView> expected_column_names, Vector<size_t> expected_chain_sizes, bool expect_select_statement) {
         auto result = parse(sql);
@@ -343,48 +348,48 @@ TEST_CASE(insert)
         EXPECT_EQ(insert.default_values(), expected_chain_sizes.is_empty() && !expect_select_statement);
     };
 
-    validate("INSERT OR ABORT INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Abort, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR FAIL INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Fail, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR IGNORE INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Ignore, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR REPLACE INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Replace, {}, "table", {}, {}, {}, false);
-    validate("INSERT OR ROLLBACK INTO table DEFAULT VALUES;", SQL::AST::ConflictResolution::Rollback, {}, "table", {}, {}, {}, false);
+    validate("INSERT OR ABORT INTO table_name DEFAULT VALUES;", SQL::AST::ConflictResolution::Abort, {}, "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT OR FAIL INTO table_name DEFAULT VALUES;", SQL::AST::ConflictResolution::Fail, {}, "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT OR IGNORE INTO table_name DEFAULT VALUES;", SQL::AST::ConflictResolution::Ignore, {}, "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT OR REPLACE INTO table_name DEFAULT VALUES;", SQL::AST::ConflictResolution::Replace, {}, "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT OR ROLLBACK INTO table_name DEFAULT VALUES;", SQL::AST::ConflictResolution::Rollback, {}, "TABLE_NAME", {}, {}, {}, false);
 
     auto resolution = SQL::AST::ConflictResolution::Abort;
-    validate("INSERT INTO table DEFAULT VALUES;", resolution, {}, "table", {}, {}, {}, false);
-    validate("INSERT INTO schema.table DEFAULT VALUES;", resolution, "schema", "table", {}, {}, {}, false);
-    validate("INSERT INTO table AS foo DEFAULT VALUES;", resolution, {}, "table", "foo", {}, {}, false);
+    validate("INSERT INTO table_name DEFAULT VALUES;", resolution, {}, "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT INTO schema_name.table_name DEFAULT VALUES;", resolution, "SCHEMA_NAME", "TABLE_NAME", {}, {}, {}, false);
+    validate("INSERT INTO table_name AS foo DEFAULT VALUES;", resolution, {}, "TABLE_NAME", "FOO", {}, {}, false);
 
-    validate("INSERT INTO table (column) DEFAULT VALUES;", resolution, {}, "table", {}, { "column" }, {}, false);
-    validate("INSERT INTO table (column1, column2) DEFAULT VALUES;", resolution, {}, "table", {}, { "column1", "column2" }, {}, false);
+    validate("INSERT INTO table_name (column_name) DEFAULT VALUES;", resolution, {}, "TABLE_NAME", {}, { "COLUMN_NAME" }, {}, false);
+    validate("INSERT INTO table_name (column1, column2) DEFAULT VALUES;", resolution, {}, "TABLE_NAME", {}, { "COLUMN1", "COLUMN2" }, {}, false);
 
-    validate("INSERT INTO table VALUES (1);", resolution, {}, "table", {}, {}, { 1 }, false);
-    validate("INSERT INTO table VALUES (1, 2);", resolution, {}, "table", {}, {}, { 2 }, false);
-    validate("INSERT INTO table VALUES (1, 2), (3, 4, 5);", resolution, {}, "table", {}, {}, { 2, 3 }, false);
+    validate("INSERT INTO table_name VALUES (1);", resolution, {}, "TABLE_NAME", {}, {}, { 1 }, false);
+    validate("INSERT INTO table_name VALUES (1, 2);", resolution, {}, "TABLE_NAME", {}, {}, { 2 }, false);
+    validate("INSERT INTO table_name VALUES (1, 2), (3, 4, 5);", resolution, {}, "TABLE_NAME", {}, {}, { 2, 3 }, false);
 
-    validate("INSERT INTO table SELECT * FROM table;", resolution, {}, "table", {}, {}, {}, true);
+    validate("INSERT INTO table_name SELECT * FROM table_name;", resolution, {}, "TABLE_NAME", {}, {}, {}, true);
 }
 
 TEST_CASE(update)
 {
     EXPECT(parse("UPDATE").is_error());
-    EXPECT(parse("UPDATE table").is_error());
-    EXPECT(parse("UPDATE table SET").is_error());
-    EXPECT(parse("UPDATE table SET column").is_error());
-    EXPECT(parse("UPDATE table SET column=4").is_error());
-    EXPECT(parse("UPDATE table SET column=4, ;").is_error());
-    EXPECT(parse("UPDATE table SET (column)=4").is_error());
-    EXPECT(parse("UPDATE table SET (column)=4, ;").is_error());
-    EXPECT(parse("UPDATE table SET (column, )=4;").is_error());
-    EXPECT(parse("UPDATE table SET column=4 FROM").is_error());
-    EXPECT(parse("UPDATE table SET column=4 FROM table").is_error());
-    EXPECT(parse("UPDATE table SET column=4 WHERE").is_error());
-    EXPECT(parse("UPDATE table SET column=4 WHERE 1==1").is_error());
-    EXPECT(parse("UPDATE table SET column=4 RETURNING").is_error());
-    EXPECT(parse("UPDATE table SET column=4 RETURNING *").is_error());
-    EXPECT(parse("UPDATE table SET column=4 RETURNING column").is_error());
-    EXPECT(parse("UPDATE table SET column=4 RETURNING column AS").is_error());
-    EXPECT(parse("UPDATE OR table SET column=4;").is_error());
-    EXPECT(parse("UPDATE OR foo table SET column=4;").is_error());
+    EXPECT(parse("UPDATE table_name").is_error());
+    EXPECT(parse("UPDATE table_name SET").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4, ;").is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=4").is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name)=4, ;").is_error());
+    EXPECT(parse("UPDATE table_name SET (column_name, )=4;").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 FROM").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 FROM table_name").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 WHERE 1==1").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING *").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING column_name").is_error());
+    EXPECT(parse("UPDATE table_name SET column_name=4 RETURNING column_name AS").is_error());
+    EXPECT(parse("UPDATE OR table_name SET column_name=4;").is_error());
+    EXPECT(parse("UPDATE OR foo table_name SET column_name=4;").is_error());
 
     auto validate = [](StringView sql, SQL::AST::ConflictResolution expected_conflict_resolution, StringView expected_schema, StringView expected_table, StringView expected_alias, Vector<Vector<String>> expected_update_columns, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto result = parse(sql);
@@ -433,42 +438,42 @@ TEST_CASE(update)
         }
     };
 
-    Vector<Vector<String>> update_columns { { "column" } };
-    validate("UPDATE OR ABORT table SET column=1;", SQL::AST::ConflictResolution::Abort, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR FAIL table SET column=1;", SQL::AST::ConflictResolution::Fail, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR IGNORE table SET column=1;", SQL::AST::ConflictResolution::Ignore, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR REPLACE table SET column=1;", SQL::AST::ConflictResolution::Replace, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE OR ROLLBACK table SET column=1;", SQL::AST::ConflictResolution::Rollback, {}, "table", {}, update_columns, false, false, {});
+    Vector<Vector<String>> update_columns { { "COLUMN_NAME" } };
+    validate("UPDATE OR ABORT table_name SET column_name=1;", SQL::AST::ConflictResolution::Abort, {}, "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE OR FAIL table_name SET column_name=1;", SQL::AST::ConflictResolution::Fail, {}, "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE OR IGNORE table_name SET column_name=1;", SQL::AST::ConflictResolution::Ignore, {}, "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE OR REPLACE table_name SET column_name=1;", SQL::AST::ConflictResolution::Replace, {}, "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE OR ROLLBACK table_name SET column_name=1;", SQL::AST::ConflictResolution::Rollback, {}, "TABLE_NAME", {}, update_columns, false, false, {});
 
     auto resolution = SQL::AST::ConflictResolution::Abort;
-    validate("UPDATE table SET column=1;", resolution, {}, "table", {}, update_columns, false, false, {});
-    validate("UPDATE schema.table SET column=1;", resolution, "schema", "table", {}, update_columns, false, false, {});
-    validate("UPDATE table AS foo SET column=1;", resolution, {}, "table", "foo", update_columns, false, false, {});
+    validate("UPDATE table_name SET column_name=1;", resolution, {}, "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE schema_name.table_name SET column_name=1;", resolution, "SCHEMA_NAME", "TABLE_NAME", {}, update_columns, false, false, {});
+    validate("UPDATE table_name AS foo SET column_name=1;", resolution, {}, "TABLE_NAME", "FOO", update_columns, false, false, {});
 
-    validate("UPDATE table SET column=1;", resolution, {}, "table", {}, { { "column" } }, false, false, {});
-    validate("UPDATE table SET column1=1, column2=2;", resolution, {}, "table", {}, { { "column1" }, { "column2" } }, false, false, {});
-    validate("UPDATE table SET (column1, column2)=1, column3=2;", resolution, {}, "table", {}, { { "column1", "column2" }, { "column3" } }, false, false, {});
+    validate("UPDATE table_name SET column_name=1;", resolution, {}, "TABLE_NAME", {}, { { "COLUMN_NAME" } }, false, false, {});
+    validate("UPDATE table_name SET column1=1, column2=2;", resolution, {}, "TABLE_NAME", {}, { { "COLUMN1" }, { "COLUMN2" } }, false, false, {});
+    validate("UPDATE table_name SET (column1, column2)=1, column3=2;", resolution, {}, "TABLE_NAME", {}, { { "COLUMN1", "COLUMN2" }, { "COLUMN3" } }, false, false, {});
 
-    validate("UPDATE table SET column=1 WHERE 1==1;", resolution, {}, "table", {}, update_columns, true, false, {});
+    validate("UPDATE table_name SET column_name=1 WHERE 1==1;", resolution, {}, "TABLE_NAME", {}, update_columns, true, false, {});
 
-    validate("UPDATE table SET column=1 RETURNING *;", resolution, {}, "table", {}, update_columns, false, true, {});
-    validate("UPDATE table SET column=1 RETURNING column;", resolution, {}, "table", {}, update_columns, false, true, { {} });
-    validate("UPDATE table SET column=1 RETURNING column AS alias;", resolution, {}, "table", {}, update_columns, false, true, { "alias" });
-    validate("UPDATE table SET column=1 RETURNING column1 AS alias1, column2 AS alias2;", resolution, {}, "table", {}, update_columns, false, true, { "alias1", "alias2" });
+    validate("UPDATE table_name SET column_name=1 RETURNING *;", resolution, {}, "TABLE_NAME", {}, update_columns, false, true, {});
+    validate("UPDATE table_name SET column_name=1 RETURNING column_name;", resolution, {}, "TABLE_NAME", {}, update_columns, false, true, { {} });
+    validate("UPDATE table_name SET column_name=1 RETURNING column_name AS alias;", resolution, {}, "TABLE_NAME", {}, update_columns, false, true, { "ALIAS" });
+    validate("UPDATE table_name SET column_name=1 RETURNING column1 AS alias1, column2 AS alias2;", resolution, {}, "TABLE_NAME", {}, update_columns, false, true, { "ALIAS1", "ALIAS2" });
 }
 
 TEST_CASE(delete_)
 {
     EXPECT(parse("DELETE").is_error());
     EXPECT(parse("DELETE FROM").is_error());
-    EXPECT(parse("DELETE FROM table").is_error());
-    EXPECT(parse("DELETE FROM table WHERE").is_error());
-    EXPECT(parse("DELETE FROM table WHERE 15").is_error());
-    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING").is_error());
-    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING *").is_error());
-    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column").is_error());
-    EXPECT(parse("DELETE FROM table WHERE 15 RETURNING column AS;").is_error());
-    EXPECT(parse("DELETE FROM table WHERE (');").is_error());
+    EXPECT(parse("DELETE FROM table_name").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE 15").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING *").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING column_name").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE 15 RETURNING column_name AS;").is_error());
+    EXPECT(parse("DELETE FROM table_name WHERE (');").is_error());
 
     auto validate = [](StringView sql, StringView expected_schema, StringView expected_table, StringView expected_alias, bool expect_where_clause, bool expect_returning_clause, Vector<StringView> expected_returned_column_aliases) {
         auto result = parse(sql);
@@ -504,14 +509,14 @@ TEST_CASE(delete_)
         }
     };
 
-    validate("DELETE FROM table;", {}, "table", {}, false, false, {});
-    validate("DELETE FROM schema.table;", "schema", "table", {}, false, false, {});
-    validate("DELETE FROM schema.table AS alias;", "schema", "table", "alias", false, false, {});
-    validate("DELETE FROM table WHERE (1 == 1);", {}, "table", {}, true, false, {});
-    validate("DELETE FROM table RETURNING *;", {}, "table", {}, false, true, {});
-    validate("DELETE FROM table RETURNING column;", {}, "table", {}, false, true, { {} });
-    validate("DELETE FROM table RETURNING column AS alias;", {}, "table", {}, false, true, { "alias" });
-    validate("DELETE FROM table RETURNING column1 AS alias1, column2 AS alias2;", {}, "table", {}, false, true, { "alias1", "alias2" });
+    validate("DELETE FROM table_name;", {}, "TABLE_NAME", {}, false, false, {});
+    validate("DELETE FROM schema_name.table_name;", "SCHEMA_NAME", "TABLE_NAME", {}, false, false, {});
+    validate("DELETE FROM schema_name.table_name AS alias;", "SCHEMA_NAME", "TABLE_NAME", "ALIAS", false, false, {});
+    validate("DELETE FROM table_name WHERE (1 == 1);", {}, "TABLE_NAME", {}, true, false, {});
+    validate("DELETE FROM table_name RETURNING *;", {}, "TABLE_NAME", {}, false, true, {});
+    validate("DELETE FROM table_name RETURNING column_name;", {}, "TABLE_NAME", {}, false, true, { {} });
+    validate("DELETE FROM table_name RETURNING column_name AS alias;", {}, "TABLE_NAME", {}, false, true, { "ALIAS" });
+    validate("DELETE FROM table_name RETURNING column1 AS alias1, column2 AS alias2;", {}, "TABLE_NAME", {}, false, true, { "ALIAS1", "ALIAS2" });
 }
 
 TEST_CASE(select)
@@ -522,32 +527,32 @@ TEST_CASE(select)
     EXPECT(parse("SELECT ALL;").is_error());
     EXPECT(parse("SELECT *").is_error());
     EXPECT(parse("SELECT * FROM;").is_error());
-    EXPECT(parse("SELECT table. FROM table;").is_error());
-    EXPECT(parse("SELECT column AS FROM table;").is_error());
+    EXPECT(parse("SELECT table_name. FROM table_name;").is_error());
+    EXPECT(parse("SELECT column_name AS FROM table_name;").is_error());
     EXPECT(parse("SELECT * FROM (").is_error());
     EXPECT(parse("SELECT * FROM ()").is_error());
     EXPECT(parse("SELECT * FROM ();").is_error());
-    EXPECT(parse("SELECT * FROM (table1)").is_error());
-    EXPECT(parse("SELECT * FROM (table1, )").is_error());
-    EXPECT(parse("SELECT * FROM (table1, table2)").is_error());
-    EXPECT(parse("SELECT * FROM table").is_error());
-    EXPECT(parse("SELECT * FROM table AS;").is_error());
-    EXPECT(parse("SELECT * FROM table WHERE;").is_error());
-    EXPECT(parse("SELECT * FROM table WHERE 1 ==1").is_error());
-    EXPECT(parse("SELECT * FROM table GROUP;").is_error());
-    EXPECT(parse("SELECT * FROM table GROUP BY;").is_error());
-    EXPECT(parse("SELECT * FROM table GROUP BY column").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER:").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER BY column").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER BY column COLLATE:").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER BY column COLLATE collation").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER BY column NULLS;").is_error());
-    EXPECT(parse("SELECT * FROM table ORDER BY column NULLS SECOND;").is_error());
-    EXPECT(parse("SELECT * FROM table LIMIT;").is_error());
-    EXPECT(parse("SELECT * FROM table LIMIT 12").is_error());
-    EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET;").is_error());
-    EXPECT(parse("SELECT * FROM table LIMIT 12 OFFSET 15").is_error());
-    EXPECT(parse("SELECT * FROM table LIMIT 15, 16;").is_error());
+    EXPECT(parse("SELECT * FROM (table_name1)").is_error());
+    EXPECT(parse("SELECT * FROM (table_name1, )").is_error());
+    EXPECT(parse("SELECT * FROM (table_name1, table_name2)").is_error());
+    EXPECT(parse("SELECT * FROM table_name").is_error());
+    EXPECT(parse("SELECT * FROM table_name AS;").is_error());
+    EXPECT(parse("SELECT * FROM table_name WHERE;").is_error());
+    EXPECT(parse("SELECT * FROM table_name WHERE 1 ==1").is_error());
+    EXPECT(parse("SELECT * FROM table_name GROUP;").is_error());
+    EXPECT(parse("SELECT * FROM table_name GROUP BY;").is_error());
+    EXPECT(parse("SELECT * FROM table_name GROUP BY column_name").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER:").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER BY column_name").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER BY column_name COLLATE:").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER BY column_name COLLATE collation").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER BY column_name NULLS;").is_error());
+    EXPECT(parse("SELECT * FROM table_name ORDER BY column_name NULLS SECOND;").is_error());
+    EXPECT(parse("SELECT * FROM table_name LIMIT;").is_error());
+    EXPECT(parse("SELECT * FROM table_name LIMIT 12").is_error());
+    EXPECT(parse("SELECT * FROM table_name LIMIT 12 OFFSET;").is_error());
+    EXPECT(parse("SELECT * FROM table_name LIMIT 12 OFFSET 15").is_error());
+    EXPECT(parse("SELECT * FROM table_name LIMIT 15, 16;").is_error());
 
     struct Type {
         SQL::AST::ResultType type;
@@ -649,51 +654,51 @@ TEST_CASE(select)
     };
 
     Vector<Type> all { { SQL::AST::ResultType::All } };
-    Vector<From> from { { {}, "table", {} } };
+    Vector<From> from { { {}, "TABLE_NAME", {} } };
 
-    validate("SELECT * FROM table;", { { SQL::AST::ResultType::All } }, from, false, 0, false, {}, false, false);
-    validate("SELECT table.* FROM table;", { { SQL::AST::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT table.column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT schema.table.column AS alias FROM table;", { { SQL::AST::ResultType::Expression, "alias" } }, from, false, 0, false, {}, false, false);
-    validate("SELECT column AS alias, *, table.* FROM table;", { { SQL::AST::ResultType::Expression, "alias" }, { SQL::AST::ResultType::All }, { SQL::AST::ResultType::Table, "table" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT * FROM table_name;", { { SQL::AST::ResultType::All } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table_name.* FROM table_name;", { { SQL::AST::ResultType::Table, "TABLE_NAME" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column_name AS alias FROM table_name;", { { SQL::AST::ResultType::Expression, "ALIAS" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT table_name.column_name AS alias FROM table_name;", { { SQL::AST::ResultType::Expression, "ALIAS" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT schema_name.table_name.column_name AS alias FROM table_name;", { { SQL::AST::ResultType::Expression, "ALIAS" } }, from, false, 0, false, {}, false, false);
+    validate("SELECT column_name AS alias, *, table_name.* FROM table_name;", { { SQL::AST::ResultType::Expression, "ALIAS" }, { SQL::AST::ResultType::All }, { SQL::AST::ResultType::Table, "TABLE_NAME" } }, from, false, 0, false, {}, false, false);
 
-    validate("SELECT * FROM table;", all, { { {}, "table", {} } }, false, 0, false, {}, false, false);
-    validate("SELECT * FROM schema.table;", all, { { "schema", "table", {} } }, false, 0, false, {}, false, false);
-    validate("SELECT * FROM schema.table AS alias;", all, { { "schema", "table", "alias" } }, false, 0, false, {}, false, false);
-    validate("SELECT * FROM schema.table AS alias, table2, table3 AS table4;", all, { { "schema", "table", "alias" }, { {}, "table2", {} }, { {}, "table3", "table4" } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM table_name;", all, { { {}, "TABLE_NAME", {} } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema_name.table_name;", all, { { "SCHEMA_NAME", "TABLE_NAME", {} } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema_name.table_name AS alias;", all, { { "SCHEMA_NAME", "TABLE_NAME", "ALIAS" } }, false, 0, false, {}, false, false);
+    validate("SELECT * FROM schema_name.table_name AS alias, table_name2, table_name3 AS table_name4;", all, { { "SCHEMA_NAME", "TABLE_NAME", "ALIAS" }, { {}, "TABLE_NAME2", {} }, { {}, "TABLE_NAME3", "TABLE_NAME4" } }, false, 0, false, {}, false, false);
 
-    validate("SELECT * FROM table WHERE column IS NOT NULL;", all, from, true, 0, false, {}, false, false);
+    validate("SELECT * FROM table_name WHERE column_name IS NOT NULL;", all, from, true, 0, false, {}, false, false);
 
-    validate("SELECT * FROM table GROUP BY column;", all, from, false, 1, false, {}, false, false);
-    validate("SELECT * FROM table GROUP BY column1, column2, column3;", all, from, false, 3, false, {}, false, false);
-    validate("SELECT * FROM table GROUP BY column HAVING 'abc';", all, from, false, 1, true, {}, false, false);
+    validate("SELECT * FROM table_name GROUP BY column_name;", all, from, false, 1, false, {}, false, false);
+    validate("SELECT * FROM table_name GROUP BY column1, column2, column3;", all, from, false, 3, false, {}, false, false);
+    validate("SELECT * FROM table_name GROUP BY column_name HAVING 'abc';", all, from, false, 1, true, {}, false, false);
 
-    validate("SELECT * FROM table ORDER BY column;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column COLLATE collation;", all, from, false, 0, false, { { "collation", SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column ASC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column DESC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table ORDER BY column ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table ORDER BY column DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First }, { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last }, { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name COLLATE collation;", all, from, false, 0, false, { { "COLLATION", SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name ASC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name DESC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First }, { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last }, { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
 
-    validate("SELECT * FROM table LIMIT 15;", all, from, false, 0, false, {}, true, false);
-    validate("SELECT * FROM table LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
+    validate("SELECT * FROM table_name LIMIT 15;", all, from, false, 0, false, {}, true, false);
+    validate("SELECT * FROM table_name LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
 }
 
 TEST_CASE(common_table_expression)
 {
     EXPECT(parse("WITH").is_error());
     EXPECT(parse("WITH;").is_error());
-    EXPECT(parse("WITH DELETE FROM table;").is_error());
-    EXPECT(parse("WITH table DELETE FROM table;").is_error());
-    EXPECT(parse("WITH table AS DELETE FROM table;").is_error());
-    EXPECT(parse("WITH RECURSIVE table DELETE FROM table;").is_error());
-    EXPECT(parse("WITH RECURSIVE table AS DELETE FROM table;").is_error());
+    EXPECT(parse("WITH DELETE FROM table_name;").is_error());
+    EXPECT(parse("WITH table_name DELETE FROM table_name;").is_error());
+    EXPECT(parse("WITH table_name AS DELETE FROM table_name;").is_error());
+    EXPECT(parse("WITH RECURSIVE table_name DELETE FROM table_name;").is_error());
+    EXPECT(parse("WITH RECURSIVE table_name AS DELETE FROM table_name;").is_error());
 
     // Below are otherwise valid common-table-expressions, but attached to statements which do not allow them.
-    EXPECT(parse("WITH table AS (SELECT * AS TABLE) CREATE TABLE test ( column1 );").is_error());
-    EXPECT(parse("WITH table AS (SELECT * FROM table) DROP TABLE test;").is_error());
+    EXPECT(parse("WITH table_name AS (SELECT * AS TABLE) CREATE TABLE test ( column1 );").is_error());
+    EXPECT(parse("WITH table_name AS (SELECT * FROM table_name) DROP TABLE test;").is_error());
 
     struct SelectedTableList {
         struct SelectedTable {
@@ -733,15 +738,15 @@ TEST_CASE(common_table_expression)
         }
     };
 
-    validate("WITH table AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table" } } });
-    validate("WITH table (column) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column" } } } });
-    validate("WITH table (column1, column2) AS (SELECT * FROM table) DELETE FROM table;", { false, { { "table", { "column1", "column2" } } } });
-    validate("WITH RECURSIVE table AS (SELECT * FROM table) DELETE FROM table;", { true, { { "table", {} } } });
+    validate("WITH table_name AS (SELECT * FROM table_name) DELETE FROM table_name;", { false, { { "TABLE_NAME" } } });
+    validate("WITH table_name (column_name) AS (SELECT * FROM table_name) DELETE FROM table_name;", { false, { { "TABLE_NAME", { "COLUMN_NAME" } } } });
+    validate("WITH table_name (column1, column2) AS (SELECT * FROM table_name) DELETE FROM table_name;", { false, { { "TABLE_NAME", { "COLUMN1", "COLUMN2" } } } });
+    validate("WITH RECURSIVE table_name AS (SELECT * FROM table_name) DELETE FROM table_name;", { true, { { "TABLE_NAME", {} } } });
 }
 
 TEST_CASE(nested_subquery_limit)
 {
-    auto subquery = String::formatted("{:(^{}}table{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
+    auto subquery = String::formatted("{:(^{}}table_name{:)^{}}", "", SQL::AST::Limits::maximum_subquery_depth - 1, "", SQL::AST::Limits::maximum_subquery_depth - 1);
     EXPECT(!parse(String::formatted("SELECT * FROM {};", subquery)).is_error());
     EXPECT(parse(String::formatted("SELECT * FROM ({});", subquery)).is_error());
 }
