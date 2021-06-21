@@ -72,6 +72,7 @@ private:
     Cursor(NonnullRefPtr<Gfx::Bitmap>&&, int, const CursorParams&);
 
     bool load(const StringView&, const StringView&);
+    void update_rect_if_animated();
 
     HashMap<int, NonnullRefPtr<Gfx::Bitmap>> m_bitmaps;
     CursorParams m_params;
