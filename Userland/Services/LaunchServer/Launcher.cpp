@@ -331,6 +331,9 @@ bool Launcher::open_file_url(const URL& url)
                 filepath = String::formatted("{}:{}", filepath, line.value());
         }
     }
+
+    additional_parameters.append(filepath);
+
     return open_with_user_preferences(m_file_handlers, extension, additional_parameters, default_handler);
 }
 }
