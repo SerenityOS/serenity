@@ -10,7 +10,7 @@
 #include <AK/IntrusiveList.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
 #include <Kernel/VM/PageFaultResponse.h>

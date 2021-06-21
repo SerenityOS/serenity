@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/API/MousePacket.h>
 #include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/VMWareBackdoor.h>

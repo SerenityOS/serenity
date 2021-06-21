@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/ASM_wrapper.h>
 
 namespace Kernel {
 

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/DescriptorTable.h>
+#include <Kernel/Arch/x86/TrapFrame.h>
 // clang-format off
 asm(
     ".globl interrupt_common_asm_entry\n"

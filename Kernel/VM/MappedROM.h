@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/Region.h>
 
 namespace Kernel {

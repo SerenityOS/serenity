@@ -6,6 +6,7 @@
 
 #include <AK/ScopeGuard.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/TTY.h>

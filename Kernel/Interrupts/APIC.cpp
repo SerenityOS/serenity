@@ -9,7 +9,7 @@
 #include <AK/Singleton.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Parser.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/MSR.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>

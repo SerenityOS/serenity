@@ -10,7 +10,7 @@
 #include <AK/Time.h>
 #include <AK/Types.h>
 #include <Kernel/API/Syscall.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/NullDevice.h>

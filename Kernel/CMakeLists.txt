@@ -270,11 +270,21 @@ set(KERNEL_SOURCES
 
 set(KERNEL_SOURCES
     ${KERNEL_SOURCES}
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/Boot/boot.S
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/CPU.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/InterruptEntry.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/ProcessorInfo.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/${KERNEL_ARCH}/SafeMem.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ASM_wrapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Boot/boot.S
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/CPU.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ProcessorInfo.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/SafeMem.cpp
+)
+
+set(KERNEL_SOURCES
+    ${KERNEL_SOURCES}
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp
 )
 
 set(AK_SOURCES

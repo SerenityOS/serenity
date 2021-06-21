@@ -10,7 +10,8 @@
 #include <AK/Atomic.h>
 #include <AK/Noncopyable.h>
 #ifdef KERNEL
-#    include <Kernel/Arch/x86/CPU.h>
+#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/x86/ScopedCritical.h>
 #endif
 
 #ifndef __serenity__

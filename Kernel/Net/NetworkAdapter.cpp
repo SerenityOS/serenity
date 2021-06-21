@@ -7,6 +7,7 @@
 #include <AK/HashTable.h>
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/EtherType.h>

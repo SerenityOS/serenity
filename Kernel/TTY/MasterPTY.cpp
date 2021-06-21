@@ -7,6 +7,7 @@
 #include "MasterPTY.h"
 #include "PTYMultiplexer.h"
 #include "SlavePTY.h"
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>

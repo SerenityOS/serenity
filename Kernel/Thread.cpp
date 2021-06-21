@@ -8,8 +8,8 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
+#include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>

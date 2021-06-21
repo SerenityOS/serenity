@@ -8,6 +8,7 @@
 
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/AllocationStrategy.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageFaultResponse.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/VMObject.h>

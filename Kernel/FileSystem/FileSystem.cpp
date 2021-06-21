@@ -9,6 +9,7 @@
 #include <AK/Singleton.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
