@@ -91,7 +91,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     if (scope_type == ScopeType::Function) {
         push_scope({ scope_type, scope_node, false });
         for (auto& declaration : scope_node.functions())
-            current_scope()->put_to_scope(declaration.name(), { js_undefined(), DeclarationKind::Var });
+            current_scope()->put_into_environment_record(declaration.name(), { js_undefined(), DeclarationKind::Var });
         return;
     }
 
