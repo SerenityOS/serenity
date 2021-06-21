@@ -10,15 +10,15 @@
 #include <AK/Random.h>
 #include <AK/Vector.h>
 #include <LibGUI/Application.h>
+#include <LibGUI/Frame.h>
 #include <LibGUI/Painter.h>
-#include <LibGUI/Widget.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Font.h>
 #include <LibGfx/StandardCursor.h>
 
 namespace FlappyBug {
 
-class Game final : public GUI::Widget {
+class Game final : public GUI::Frame {
     C_OBJECT(Game);
 
 public:
