@@ -622,4 +622,17 @@ void VM::dump_backtrace() const
         dbgln("-> {}", m_call_stack[i]->function_name);
 }
 
+void VM::dump_scope_chain() const
+{
+    for (auto* scope = current_scope(); scope; scope = scope->parent()) {
+        dbgln("+> {} ({:p})", scope->class_name(), scope);
+        if (is<LexicalEnvironment>(*scope)) {
+            auto& lexical_environment = static_cast<LexicalEnvironment const&>(*scope);
+            for (auto& variable : lexical_environment.variables()) {
+                dbgln("    {}", variable.key);
+            }
+        }
+    }
+}
+
 }
