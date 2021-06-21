@@ -375,7 +375,7 @@ bool ProxyObject::put(const PropertyName& name, Value value, Value receiver)
     return true;
 }
 
-bool ProxyObject::delete_property(const PropertyName& name)
+bool ProxyObject::delete_property(PropertyName const& name, bool force_throw_exception)
 {
     auto& vm = this->vm();
     if (m_is_revoked) {
@@ -386,7 +386,7 @@ bool ProxyObject::delete_property(const PropertyName& name)
     if (vm.exception())
         return false;
     if (!trap)
-        return m_target.delete_property(name);
+        return m_target.delete_property(name, force_throw_exception);
     auto trap_result = vm.call(*trap, Value(&m_handler), Value(&m_target), name.to_value(vm));
     if (vm.exception())
         return false;

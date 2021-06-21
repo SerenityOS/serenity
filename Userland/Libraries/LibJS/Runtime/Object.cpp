@@ -768,18 +768,25 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
     return true;
 }
 
-bool Object::delete_property(const PropertyName& property_name)
+bool Object::delete_property(PropertyName const& property_name, bool force_throw_exception)
 {
     VERIFY(property_name.is_valid());
 
-    if (property_name.is_number())
-        return m_indexed_properties.remove(property_name.as_number());
+    if (property_name.is_number()) {
+        if (!m_indexed_properties.remove(property_name.as_number())) {
+            if (force_throw_exception || vm().in_strict_mode())
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.as_number());
+            return false;
+        }
+        return true;
+    }
+
 
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
         return true;
     if (!metadata.value().attributes.is_configurable()) {
-        if (vm().in_strict_mode())
+        if (force_throw_exception || vm().in_strict_mode())
             vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_name.to_string_or_symbol().to_display_string());
         return false;
     }
@@ -879,7 +886,7 @@ bool Object::put_by_index(u32 property_index, Value value)
         if (vm().exception())
             return {};
     }
-    return put_own_property_by_index(property_index, value, default_attributes, PutOwnPropertyMode::Put);
+    return put_own_property_by_index(property_index, value, default_attributes, PutOwnPropertyMode::Put, vm().in_strict_mode());
 }
 
 bool Object::put(const PropertyName& property_name, Value value, Value receiver)

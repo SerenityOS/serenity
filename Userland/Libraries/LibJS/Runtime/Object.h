@@ -99,7 +99,7 @@ public:
 
     void define_properties(Value properties);
 
-    virtual bool delete_property(const PropertyName&);
+    virtual bool delete_property(PropertyName const&, bool force_throw_exception = false);
 
     virtual bool is_array() const { return false; }
     virtual bool is_function() const { return false; }
