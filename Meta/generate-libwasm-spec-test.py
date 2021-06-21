@@ -34,6 +34,8 @@ def parse(sexp):
                 stack[-2].append(stack.pop())
             elif c == '\\':
                 i += 1
+                if sexp[i] != '"':
+                    stack[-1] += '\\'
                 stack[-1] += sexp[i]
             else:
                 stack[-1] += c
@@ -77,35 +79,107 @@ def generate_module_source_for_compilation(entries):
     return s + ')'
 
 
+def generate_binary_source(chunks):
+    res = b''
+    for chunk in chunks:
+        i = 0
+        while i < len(chunk):
+            c = chunk[i]
+            if c == '\\':
+                res += bytes.fromhex(chunk[i + 1: i + 3])
+                i += 3
+                continue
+            res += c.encode('utf-8')
+            i += 1
+    return res
+
+
+named_modules = {}
+named_modules_inverse = {}
+registered_modules = {}
+
+
 def generate(ast):
+    global named_modules, named_modules_inverse, registered_modules
+
     if type(ast) != list:
         return []
     tests = []
     for entry in ast:
         if len(entry) > 0 and entry[0] == ('module',):
+            name = None
+            mode = 'ast'  # binary, quote
+            start_index = 1
+            if len(entry) > 1:
+                if isinstance(entry[1], tuple) and isinstance(entry[1][0], str) and entry[1][0].startswith('$'):
+                    name = entry[1][0]
+                    if len(entry) > 2:
+                        if isinstance(entry[2], tuple) and entry[2][0] in ('binary', 'quote'):
+                            mode = entry[2][0]
+                            start_index = 3
+                        else:
+                            start_index = 2
+                elif isinstance(entry[1][0], str):
+                    mode = entry[1][0]
+                    start_index = 2
+
             tests.append({
-                "module": generate_module_source_for_compilation(entry),
+                "module": {
+                    'ast': lambda: ('parse', generate_module_source_for_compilation(entry)),
+                    'binary': lambda: ('literal', generate_binary_source(entry[start_index:])),
+                    # FIXME: Make this work when we have a WAT parser
+                    'quote': lambda: ('literal', entry[start_index]),
+                }[mode](),
                 "tests": []
             })
+
+            if name is not None:
+                named_modules[name] = len(tests) - 1
+                named_modules_inverse[len(tests) - 1] = (name, None)
         elif len(entry) in [2, 3] and entry[0][0].startswith('assert_'):
             if entry[1][0] == ('invoke',):
+                arg, name, module = 0, None, None
+                if isinstance(entry[1][1], str):
+                    name = entry[1][1]
+                else:
+                    name = entry[1][2]
+                    module = named_modules[entry[1][1][0]]
+                    arg = 1
                 tests[-1]["tests"].append({
                     "kind": entry[0][0][len('assert_'):],
                     "function": {
-                        "name": entry[1][1],
-                        "args": list(parse_typed_value(x) for x in entry[1][2:])
+                        "module": module,
+                        "name": name,
+                        "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
                     },
-                    "result": parse_typed_value(entry[2]) if len(entry) == 3 else None
+                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
+                })
+            elif entry[1][0] == ('get',):
+                arg, name, module = 0, None, None
+                if isinstance(entry[1][1], str):
+                    name = entry[1][1]
+                else:
+                    name = entry[1][2]
+                    module = named_modules[entry[1][1][0]]
+                    arg = 1
+                tests[-1]["tests"].append({
+                    "kind": entry[0][0][len('assert_'):],
+                    "get": {
+                        "name": name,
+                        "module": module,
+                    },
+                    "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
                 })
             else:
                 if not len(tests):
                     tests.append({
-                        "module": "",
+                        "module": ('literal', b""),
                         "tests": []
                     })
                 tests[-1]["tests"].append({
                     "kind": "testgen_fail",
                     "function": {
+                        "module": None,
                         "name": "<unknown>",
                         "args": []
                     },
@@ -113,23 +187,41 @@ def generate(ast):
                 })
         elif len(entry) >= 2 and entry[0][0] == 'invoke':
             # toplevel invoke :shrug:
+            arg, name, module = 0, None, None
+            if isinstance(entry[1][1], str):
+                name = entry[1][1]
+            else:
+                name = entry[1][2]
+                module = named_modules[entry[1][1][0]]
+                arg = 1
             tests[-1]["tests"].append({
                 "kind": "ignore",
                 "function": {
-                    "name": entry[1][1],
-                    "args": list(parse_typed_value(x) for x in entry[1][2:])
+                    "module": module,
+                    "name": name,
+                    "args": list(parse_typed_value(x) for x in entry[1][arg + 2:])
                 },
-                "result": parse_typed_value(entry[2]) if len(entry) == 3 else None
+                "result": parse_typed_value(entry[2]) if len(entry) == 3 + arg else None
             })
+        elif len(entry) > 1 and entry[0][0] == 'register':
+            if len(entry) == 3:
+                registered_modules[entry[1]] = named_modules[entry[2][0]]
+                x = named_modules_inverse[named_modules[entry[2][0]]]
+                named_modules_inverse[named_modules[entry[2][0]]] = (x[0], entry[1])
+            else:
+                index = len(tests) - 1
+                registered_modules[entry[1]] = index
+                named_modules_inverse[index] = (":" + entry[1], entry[1])
         else:
             if not len(tests):
                 tests.append({
-                    "module": "",
+                    "module": ('literal', b""),
                     "tests": []
                 })
             tests[-1]["tests"].append({
                 "kind": "testgen_fail",
                 "function": {
+                    "module": None,
                     "name": "<unknown>",
                     "args": []
                 },
@@ -190,22 +282,33 @@ all_names_in_main = {}
 
 
 def genresult(ident, entry):
+    expectation = f'expect().fail("Unknown result structure " + {json.dumps(entry)})'
+    if "function" in entry:
+        tmodule = 'module'
+        if entry['function']['module'] is not None:
+            tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry["function"]["module"]][0])}]'
+        expectation = (
+            f'{tmodule}.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])})'
+        )
+    elif "get" in entry:
+        expectation = f'module.getExport({ident})'
+
     if entry['kind'] == 'return':
-        return_check = f'expect({ident}_result).toBe({genarg(entry["result"])})' if entry["result"] is not None else ''
         return (
-            f'let {ident}_result ='
-            f' module.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])});\n        '
-            f'{return_check};\n    '
+            f'let {ident}_result = {expectation};\n    '
+            f'expect({ident}_result).toBe({genarg(entry["result"])})\n    ' if entry["result"] is not None else ''
         )
 
     if entry['kind'] == 'trap':
         return (
-            f'expect(() => module.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])}))'
-            '.toThrow(TypeError, "Execution trapped");\n    '
+            f'expect(() => {expectation}).toThrow(TypeError, "Execution trapped");\n    '
         )
 
     if entry['kind'] == 'ignore':
-        return f'module.invoke({ident}, {", ".join(genarg(x) for x in entry["function"]["args"])});\n    '
+        return expectation
+
+    if entry['kind'] == 'unlinkable':
+        return
 
     if entry['kind'] == 'testgen_fail':
         return f'throw Exception("Test Generator Failure: " + {json.dumps(entry["reason"])});\n    '
@@ -214,7 +317,8 @@ def genresult(ident, entry):
 
 
 def gentest(entry, main_name):
-    name = json.dumps(entry["function"]["name"])[1:-1]
+    isfunction = 'function' in entry
+    name = json.dumps((entry["function"] if isfunction else entry["get"])["name"])[1:-1]
     if type(name) != str:
         print("Unsupported test case (call to", name, ")", file=stderr)
         return '\n    '
@@ -222,9 +326,13 @@ def gentest(entry, main_name):
     count = all_names_in_main.get(name, 0)
     all_names_in_main[name] = count + 1
     test_name = f'execution of {main_name}: {name} (instance {count})'
+    tmodule = 'module'
+    key = "function" if "function" in entry else "get"
+    if entry[key]['module'] is not None:
+        tmodule = f'namedModules[{json.dumps(named_modules_inverse[entry[key]["module"]][0])}]'
     source = (
         f'test({json.dumps(test_name)}, () => {{\n'
-        f'let {ident} = module.getExport({json.dumps(name)});\n        '
+        f'let {ident} = {tmodule}.getExport({json.dumps(name)});\n        '
         f'expect({ident}).not.toBeUndefined();\n        '
         f'{genresult(ident, entry)}'
         '});\n\n    '
@@ -232,11 +340,25 @@ def gentest(entry, main_name):
     return source
 
 
-def gen_parse_module(name):
+def gen_parse_module(name, index):
+    export_string = ''
+    if index in named_modules_inverse:
+        entry = named_modules_inverse[index]
+        export_string += f'namedModules[{json.dumps(entry[0])}] = module;\n    '
+        if entry[1]:
+            export_string += f'globalImportObject[{json.dumps(entry[1])}] = module;\n    '
+
     return (
         f'let content = readBinaryWasmFile("Fixtures/SpecTests/{name}.wasm");\n    '
-        f'const module = parseWebAssemblyModule(content)\n    '
+        f'const module = parseWebAssemblyModule(content, globalImportObject)\n    '
+        f'{export_string}\n     '
     )
+
+
+def nth(a, x, y=None):
+    if y:
+        return a[x:y]
+    return a[x]
 
 
 def main():
@@ -245,20 +367,27 @@ def main():
     name = argv[2]
     module_output_path = argv[3]
     ast = parse(sexp)
+    print('let globalImportObject = {};')
+    print('let namedModules = {};\n')
     for index, description in enumerate(generate(ast)):
         testname = f'{name}_{index}'
         outpath = path.join(module_output_path, f'{testname}.wasm')
-        with NamedTemporaryFile("w+") as temp:
-            temp.write(description["module"])
-            temp.flush()
-            rc = call(["wasm-as", "-n", "-all", temp.name, "-o", outpath])
-            if rc != 0:
-                print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
-                continue
+        mod = description["module"]
+        if mod[0] == 'literal':
+            with open('outpath', 'wb+') as f:
+                f.write(mod[1])
+        elif mod[0] == 'parse':
+            with NamedTemporaryFile("w+") as temp:
+                temp.write(mod[1])
+                temp.flush()
+                rc = call(["wasm-as", "-n", "-all", temp.name, "-o", outpath])
+                if rc != 0:
+                    print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
+                    continue
 
         sep = ""
         print(f'''describe({json.dumps(testname)}, () => {{
-{gen_parse_module(testname)}
+{gen_parse_module(testname, index)}
 {sep.join(gentest(x, testname) for x in description["tests"])}
 }});
 ''')
