@@ -9,9 +9,9 @@
 
 namespace JS {
 
-EnvironmentRecord::EnvironmentRecord(EnvironmentRecord* parent)
+EnvironmentRecord::EnvironmentRecord(EnvironmentRecord* outer_environment)
     : Object(vm().environment_record_shape())
-    , m_parent(parent)
+    , m_outer_environment(outer_environment)
 {
 }
 
@@ -23,7 +23,7 @@ EnvironmentRecord::EnvironmentRecord(GlobalObjectTag tag)
 void EnvironmentRecord::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_parent);
+    visitor.visit(m_outer_environment);
 }
 
 }

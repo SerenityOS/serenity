@@ -25,8 +25,9 @@ public:
     virtual bool has_this_binding() const = 0;
     virtual Value get_this_binding(GlobalObject&) const = 0;
 
-    EnvironmentRecord* parent() { return m_parent; }
-    EnvironmentRecord const* parent() const { return m_parent; }
+    // [[OuterEnv]]
+    EnvironmentRecord* outer_environment() { return m_outer_environment; }
+    EnvironmentRecord const* outer_environment() const { return m_outer_environment; }
 
 protected:
     explicit EnvironmentRecord(EnvironmentRecord* parent);
@@ -35,7 +36,7 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
-    EnvironmentRecord* m_parent { nullptr };
+    EnvironmentRecord* m_outer_environment { nullptr };
 };
 
 }
