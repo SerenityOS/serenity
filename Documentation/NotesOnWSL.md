@@ -75,6 +75,8 @@ If Serenity freezes on boot with the log message: `Scheduler[0]: idle loop runni
 Please ensure you have installed the most recent version of [QEMU for Windows](https://qemu.weilnetz.de/) and that you have followed the step above to enable the maximum feature set available:
 `export SERENITY_QEMU_CPU="max,vmx=off"`.
 
+If the steps above do not fix the problem, check the boot log for `whpx: injection failed, MSI (0, 0) delivery: 0, dest_mode: 0, trigger mode: 0, vector: 0, lost (c0350005)`. If present, try disabling the KVM in-kernel interrupt handler by extending the above to `export SERENITY_EXTRA_QEMU_ARGS="-accel whpx,kernel-irqchip=off"`. This seems to be an issue for some users with QEMU 6.x.
+
 ##### Illegal instruction on boot
 
 Using `SERENITY_QEMU_CPU="max"` can trigger a QEMU bug where the OSXSAVE CPUID flag is erroneously set, playing havoc with feature detection logic in libgcc and resulting in this error.
