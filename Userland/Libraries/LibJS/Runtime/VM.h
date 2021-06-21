@@ -72,6 +72,7 @@ public:
     void clear_exception() { m_exception = nullptr; }
 
     void dump_backtrace() const;
+    void dump_scope_chain() const;
 
     class InterpreterExecutionScope {
     public:
