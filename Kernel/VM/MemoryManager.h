@@ -10,7 +10,7 @@
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/String.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Forward.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AllocationStrategy.h>

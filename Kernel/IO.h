@@ -9,7 +9,6 @@
 #include <AK/Assertions.h>
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/CPU.h>
 
 namespace IO {
 

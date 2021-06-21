@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 namespace Kernel {
 
@@ -32,5 +33,7 @@ void register_user_callable_interrupt_handler(u8 number, void (*handler)());
 GenericInterruptHandler& get_interrupt_handler(u8 interrupt_number);
 void register_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
 void unregister_generic_interrupt_handler(u8 number, GenericInterruptHandler&);
+
+void idt_init();
 
 }
