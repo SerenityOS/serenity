@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -20,14 +21,15 @@ public:
     Token next();
 
 private:
-    void consume();
+    void consume(StringBuilder* = nullptr);
 
     bool consume_whitespace_and_comments();
-    bool consume_numeric_literal();
-    bool consume_string_literal();
-    bool consume_blob_literal();
-    bool consume_exponent();
-    bool consume_hexadecimal_number();
+    bool consume_numeric_literal(StringBuilder&);
+    bool consume_string_literal(StringBuilder&);
+    bool consume_quoted_identifier(StringBuilder&);
+    bool consume_blob_literal(StringBuilder&);
+    bool consume_exponent(StringBuilder&);
+    bool consume_hexadecimal_number(StringBuilder&);
 
     bool match(char a, char b) const;
     bool is_identifier_start() const;
@@ -35,6 +37,8 @@ private:
     bool is_numeric_literal_start() const;
     bool is_string_literal_start() const;
     bool is_string_literal_end() const;
+    bool is_quoted_identifier_start() const;
+    bool is_quoted_identifier_end() const;
     bool is_blob_literal_start() const;
     bool is_line_comment_start() const;
     bool is_block_comment_start() const;

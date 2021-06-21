@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2021, Tim Flynn <trflynn89@pm.me>
+ * Copyright (c) 2021, Jan de Visser <jan@de-visser.net>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -7,6 +8,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace SQL::AST {
@@ -209,13 +211,18 @@ enum class TokenCategory {
     Punctuation,
 };
 
+struct SourcePosition {
+    size_t line { 0 };
+    size_t column { 0 };
+};
+
 class Token {
 public:
-    Token(TokenType type, StringView value, size_t line_number, size_t line_column)
+    Token(TokenType type, String value, SourcePosition start_position, SourcePosition end_position)
         : m_type(type)
-        , m_value(value)
-        , m_line_number(line_number)
-        , m_line_column(line_column)
+        , m_value(move(value))
+        , m_start_position(start_position)
+        , m_end_position(end_position)
     {
     }
 
@@ -226,17 +233,17 @@ public:
     TokenType type() const { return m_type; }
     TokenCategory category() const { return category(m_type); }
 
-    StringView value() const { return m_value; }
+    String const& value() const { return m_value; }
     double double_value() const;
 
-    size_t line_number() const { return m_line_number; }
-    size_t line_column() const { return m_line_column; }
+    SourcePosition const& start_position() const { return m_start_position; }
+    SourcePosition const& end_position() const { return m_end_position; }
 
 private:
     TokenType m_type;
-    StringView m_value;
-    size_t m_line_number;
-    size_t m_line_column;
+    String m_value;
+    SourcePosition m_start_position;
+    SourcePosition m_end_position;
 };
 
 }

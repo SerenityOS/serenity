@@ -47,22 +47,12 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 
     Vector<GUI::TextDocumentSpan> spans;
 
-    auto append_token = [&](StringView str, Token const& token) {
-        if (str.is_empty())
+    auto append_token = [&](Token const& token) {
+        if (token.value().is_empty())
             return;
-
-        GUI::TextPosition position { token.line_number() - 1, token.line_column() - 1 };
-        for (char c : str) {
-            if (c == '\n') {
-                position.set_line(position.line() + 1);
-                position.set_column(0);
-            } else
-                position.set_column(position.column() + 1);
-        }
-
         GUI::TextDocumentSpan span;
-        span.range.set_start({ token.line_number() - 1, token.line_column() - 1 });
-        span.range.set_end({ position.line(), position.column() });
+        span.range.set_start({ token.start_position().line - 1, token.start_position().column - 1 });
+        span.range.set_end({ token.end_position().line - 1, token.end_position().column - 1 });
         auto style = style_for_token_type(palette, token.type());
         span.attributes.color = style.color;
         span.attributes.bold = style.bold;
@@ -78,7 +68,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
 
     for (;;) {
         auto token = lexer.next();
-        append_token(token.value(), token);
+        append_token(token);
         if (token.type() == TokenType::Eof)
             break;
     }
