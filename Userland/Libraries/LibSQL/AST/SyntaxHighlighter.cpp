@@ -6,10 +6,10 @@
 
 #include <AK/Debug.h>
 #include <LibGfx/Palette.h>
-#include <LibSQL/Lexer.h>
-#include <LibSQL/SyntaxHighlighter.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/SyntaxHighlighter.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, TokenType type)
 {
@@ -35,19 +35,19 @@ static Syntax::TextStyle style_for_token_type(Gfx::Palette const& palette, Token
 
 bool SyntaxHighlighter::is_identifier(u64 token) const
 {
-    auto sql_token = static_cast<SQL::TokenType>(static_cast<size_t>(token));
-    return sql_token == SQL::TokenType::Identifier;
+    auto sql_token = static_cast<TokenType>(static_cast<size_t>(token));
+    return sql_token == TokenType::Identifier;
 }
 
 void SyntaxHighlighter::rehighlight(Palette const& palette)
 {
     auto text = m_client->get_text();
 
-    SQL::Lexer lexer(text);
+    Lexer lexer(text);
 
     Vector<GUI::TextDocumentSpan> spans;
 
-    auto append_token = [&](StringView str, SQL::Token const& token) {
+    auto append_token = [&](StringView str, Token const& token) {
         if (str.is_empty())
             return;
 
@@ -79,7 +79,7 @@ void SyntaxHighlighter::rehighlight(Palette const& palette)
     for (;;) {
         auto token = lexer.next();
         append_token(token.value(), token);
-        if (token.type() == SQL::TokenType::Eof)
+        if (token.type() == TokenType::Eof)
             break;
     }
 

@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/StringView.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 // https://sqlite.org/lang_keywords.html
 #define ENUMERATE_SQL_TOKENS                                              \

@@ -9,7 +9,7 @@
 #include <AK/String.h>
 #include <stdlib.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 StringView Token::name(TokenType type)
 {

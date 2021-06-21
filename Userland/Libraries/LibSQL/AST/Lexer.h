@@ -11,7 +11,7 @@
 #include <AK/String.h>
 #include <AK/StringView.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 class Lexer {
 public:

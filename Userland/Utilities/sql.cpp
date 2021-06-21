@@ -9,9 +9,9 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/StandardPaths.h>
 #include <LibLine/Editor.h>
-#include <LibSQL/Lexer.h>
-#include <LibSQL/Parser.h>
-#include <LibSQL/Token.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/Parser.h>
+#include <LibSQL/AST/Token.h>
 
 namespace {
 
@@ -48,7 +48,7 @@ String read_next_piece()
         }
 
         auto& line = line_result.value();
-        auto lexer = SQL::Lexer(line);
+        auto lexer = SQL::AST::Lexer(line);
 
         s_editor->add_to_history(line);
         piece.append(line);
@@ -57,18 +57,18 @@ String read_next_piece()
         bool is_command = false;
         bool last_token_ended_statement = false;
 
-        for (SQL::Token token = lexer.next(); token.type() != SQL::TokenType::Eof; token = lexer.next()) {
+        for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
             switch (token.type()) {
-            case SQL::TokenType::ParenOpen:
+            case SQL::AST::TokenType::ParenOpen:
                 ++s_repl_line_level;
                 break;
-            case SQL::TokenType::ParenClose:
+            case SQL::AST::TokenType::ParenClose:
                 --s_repl_line_level;
                 break;
-            case SQL::TokenType::SemiColon:
+            case SQL::AST::TokenType::SemiColon:
                 last_token_ended_statement = true;
                 break;
-            case SQL::TokenType::Period:
+            case SQL::AST::TokenType::Period:
                 if (is_first_token)
                     is_command = true;
                 break;
@@ -96,7 +96,7 @@ void handle_command(StringView command)
 
 void handle_statement(StringView statement_string)
 {
-    auto parser = SQL::Parser(SQL::Lexer(statement_string));
+    auto parser = SQL::AST::Parser(SQL::AST::Lexer(statement_string));
     [[maybe_unused]] auto statement = parser.next_statement();
 
     if (parser.has_errors()) {
@@ -132,38 +132,38 @@ int main()
         size_t open_indents = s_repl_line_level;
 
         auto line = editor.line();
-        SQL::Lexer lexer(line);
+        SQL::AST::Lexer lexer(line);
 
         bool indenters_starting_line = true;
-        for (SQL::Token token = lexer.next(); token.type() != SQL::TokenType::Eof; token = lexer.next()) {
+        for (SQL::AST::Token token = lexer.next(); token.type() != SQL::AST::TokenType::Eof; token = lexer.next()) {
             auto length = token.value().length();
             auto start = token.line_column() - 1;
             auto end = start + length;
 
             if (indenters_starting_line) {
-                if (token.type() != SQL::TokenType::ParenClose)
+                if (token.type() != SQL::AST::TokenType::ParenClose)
                     indenters_starting_line = false;
                 else
                     --open_indents;
             }
 
             switch (token.category()) {
-            case SQL::TokenCategory::Invalid:
+            case SQL::AST::TokenCategory::Invalid:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Red), Line::Style::Underline });
                 break;
-            case SQL::TokenCategory::Number:
+            case SQL::AST::TokenCategory::Number:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta) });
                 break;
-            case SQL::TokenCategory::String:
+            case SQL::AST::TokenCategory::String:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Green), Line::Style::Bold });
                 break;
-            case SQL::TokenCategory::Blob:
+            case SQL::AST::TokenCategory::Blob:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Magenta), Line::Style::Bold });
                 break;
-            case SQL::TokenCategory::Keyword:
+            case SQL::AST::TokenCategory::Keyword:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::Blue), Line::Style::Bold });
                 break;
-            case SQL::TokenCategory::Identifier:
+            case SQL::AST::TokenCategory::Identifier:
                 editor.stylize({ start, end }, { Line::Style::Foreground(Line::Style::XtermColor::White), Line::Style::Bold });
             default:
                 break;
