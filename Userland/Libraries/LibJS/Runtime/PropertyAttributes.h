@@ -61,6 +61,8 @@ public:
     bool operator==(const PropertyAttributes& other) const { return m_bits == other.m_bits; }
     bool operator!=(const PropertyAttributes& other) const { return m_bits != other.m_bits; }
 
+    PropertyAttributes overwrite(PropertyAttributes attr) const;
+
     u8 bits() const { return m_bits; }
 
 private:

@@ -96,6 +96,7 @@ set(SOURCES
     Runtime/PromisePrototype.cpp
     Runtime/PromiseReaction.cpp
     Runtime/PromiseResolvingFunction.cpp
+    Runtime/PropertyAttributes.cpp
     Runtime/ProxyConstructor.cpp
     Runtime/ProxyObject.cpp
     Runtime/Reference.cpp
