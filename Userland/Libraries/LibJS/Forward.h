@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -114,27 +114,29 @@
 namespace JS {
 
 class ASTNode;
-class CellAllocator;
+class Accessor;
 class BigInt;
 class BoundFunction;
 class Cell;
+class CellAllocator;
 class Console;
+class DeclarativeEnvironmentRecord;
 class DeferGC;
+class EnvironmentRecord;
 class Error;
 class ErrorType;
 class Exception;
 class Expression;
 class FunctionNode;
-class Accessor;
 class GlobalObject;
 class HandleImpl;
 class Heap;
 class HeapBlock;
 class Interpreter;
-class DeclarativeEnvironmentRecord;
 class MarkedValueList;
 class NativeFunction;
 class NativeProperty;
+class ObjectEnvironmentRecord;
 class PrimitiveString;
 class PromiseReaction;
 class PromiseReactionJob;
@@ -142,7 +144,6 @@ class PromiseResolveThenableJob;
 class PropertyName;
 class Reference;
 class ScopeNode;
-class EnvironmentRecord;
 class Shape;
 class Statement;
 class StringOrSymbol;
