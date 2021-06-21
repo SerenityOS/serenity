@@ -1608,18 +1608,18 @@ Value VariableDeclaration::execute(Interpreter& interpreter, GlobalObject& globa
 
     for (auto& declarator : m_declarations) {
         if (auto* init = declarator.init()) {
-            auto initalizer_result = init->execute(interpreter, global_object);
+            auto initializer_result = init->execute(interpreter, global_object);
             if (interpreter.exception())
                 return {};
             declarator.target().visit(
                 [&](NonnullRefPtr<Identifier> const& id) {
                     auto variable_name = id->string();
                     if (is<ClassExpression>(*init))
-                        update_function_name(initalizer_result, variable_name);
-                    interpreter.vm().set_variable(variable_name, initalizer_result, global_object, true);
+                        update_function_name(initializer_result, variable_name);
+                    interpreter.vm().set_variable(variable_name, initializer_result, global_object, true);
                 },
                 [&](NonnullRefPtr<BindingPattern> const& pattern) {
-                    interpreter.vm().assign(pattern, initalizer_result, global_object, true);
+                    interpreter.vm().assign(pattern, initializer_result, global_object, true);
                 });
         }
     }
