@@ -184,7 +184,7 @@ private:
     bool m_is_inter { false };
     IntraMode m_default_intra_mode { DcPred };
     u8 m_y_mode { 0 };
-    u8 m_sub_modes[4]; // FIXME: What size is this supposed to be?
+    u8 m_block_sub_modes[4];
     u8 m_num_4x4_w { 0 };
     u8 m_num_4x4_h { 0 };
     u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
@@ -200,6 +200,7 @@ private:
     InterMode m_mv[2];
     InterMode m_near_mv[2];
     InterMode m_nearest_mv[2];
+    Vector<Vector<Vector<IntraMode>>> m_sub_modes; // FIXME: Can we make these fixed sized allocations?
 
     bool m_use_hp { false };
 

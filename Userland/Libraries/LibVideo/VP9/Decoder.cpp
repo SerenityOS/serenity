@@ -829,19 +829,20 @@ bool Decoder::intra_frame_mode_info()
         m_default_intra_mode = m_tree_parser->parse_tree<IntraMode>(SyntaxElementType::DefaultIntraMode);
         m_y_mode = m_default_intra_mode;
         for (auto b = 0; b < 4; b++)
-            m_sub_modes[b] = m_y_mode;
+            m_block_sub_modes[b] = m_y_mode;
     } else {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
         for (auto idy = 0; idy < 2; idy += m_num_4x4_h) {
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
+                m_tree_parser->set_default_intra_mode_variables(idx, idy);
                 m_default_intra_mode = m_tree_parser->parse_tree<IntraMode>(SyntaxElementType::DefaultIntraMode);
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto index = (idy + y) * 2 + idx + x;
                         if (index > 3)
                             dbgln("Trying to access index {} on m_sub_modes", index);
-                        m_sub_modes[index] = m_default_intra_mode;
+                        m_block_sub_modes[index] = m_default_intra_mode;
                     }
                 }
             }
@@ -969,7 +970,7 @@ bool Decoder::intra_block_mode_info()
     if (m_mi_size >= Block_8x8) {
         m_y_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::IntraMode);
         for (auto b = 0; b < 4; b++)
-            m_sub_modes[b] = m_y_mode;
+            m_block_sub_modes[b] = m_y_mode;
     } else {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
@@ -979,7 +980,7 @@ bool Decoder::intra_block_mode_info()
                 sub_intra_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::SubIntraMode);
                 for (auto y = 0; y < m_num_4x4_h; y++) {
                     for (auto x = 0; x < m_num_4x4_w; x++) {
-                        m_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
+                        m_block_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
                     }
                 }
             }
