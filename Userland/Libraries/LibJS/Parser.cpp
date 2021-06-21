@@ -258,7 +258,7 @@ NonnullRefPtr<Program> Parser::parse_program()
         program->add_variables(m_state.let_scopes.last());
         program->add_functions(m_state.function_scopes.last());
     } else {
-        syntax_error("Unclosed scope");
+        syntax_error("Unclosed environment_record");
     }
     program->source_range().end = position();
     return program;

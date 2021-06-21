@@ -15,9 +15,9 @@
 #include <LibJS/Forward.h>
 #include <LibJS/Heap/DeferGC.h>
 #include <LibJS/Heap/Heap.h>
+#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Exception.h>
-#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/VM.h>
 #include <LibJS/Runtime/Value.h>
@@ -56,8 +56,8 @@ public:
     ALWAYS_INLINE Heap& heap() { return vm().heap(); }
     ALWAYS_INLINE Exception* exception() { return vm().exception(); }
 
-    ScopeObject* current_scope() { return vm().current_scope(); }
-    LexicalEnvironment* current_environment();
+    EnvironmentRecord* current_scope() { return vm().current_scope(); }
+    DeclarativeEnvironmentRecord* current_environment();
 
     void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);

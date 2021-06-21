@@ -1,20 +1,20 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #pragma once
 
-#include <LibJS/Runtime/ScopeObject.h>
+#include <LibJS/Runtime/EnvironmentRecord.h>
 
 namespace JS {
 
-class WithScope : public ScopeObject {
-    JS_OBJECT(WithScope, ScopeObject);
+class ObjectEnvironmentRecord : public EnvironmentRecord {
+    JS_OBJECT(ObjectEnvironmentRecord, EnvironmentRecord);
 
 public:
-    WithScope(Object&, ScopeObject* parent_scope);
+    ObjectEnvironmentRecord(Object&, EnvironmentRecord* parent_scope);
 
     virtual Optional<Variable> get_from_scope(const FlyString&) const override;
     virtual void put_to_scope(const FlyString&, Variable) override;

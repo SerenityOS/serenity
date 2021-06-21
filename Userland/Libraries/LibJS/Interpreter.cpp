@@ -9,8 +9,8 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/LexicalEnvironment.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/ScriptFunction.h>
@@ -50,7 +50,7 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     global_call_frame.function_name = global_execution_context_name;
-    global_call_frame.scope = &global_object;
+    global_call_frame.environment_record = &global_object;
     VERIFY(!vm.exception());
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);
@@ -128,15 +128,15 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
         }
     }
 
-    bool pushed_lexical_environment = false;
+    bool pushed_environment_record = false;
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* block_lexical_environment = heap().allocate<LexicalEnvironment>(global_object, move(scope_variables_with_declaration_kind), current_scope());
-        vm().call_frame().scope = block_lexical_environment;
-        pushed_lexical_environment = true;
+        auto* environment_record = heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(scope_variables_with_declaration_kind), current_scope());
+        vm().call_frame().environment_record = environment_record;
+        pushed_environment_record = true;
     }
 
-    push_scope({ scope_type, scope_node, pushed_lexical_environment });
+    push_scope({ scope_type, scope_node, pushed_environment_record });
 }
 
 void Interpreter::exit_scope(const ScopeNode& scope_node)
@@ -144,7 +144,7 @@ void Interpreter::exit_scope(const ScopeNode& scope_node)
     while (!m_scope_stack.is_empty()) {
         auto popped_scope = m_scope_stack.take_last();
         if (popped_scope.pushed_environment)
-            vm().call_frame().scope = vm().call_frame().scope->parent();
+            vm().call_frame().environment_record = vm().call_frame().environment_record->parent();
         if (popped_scope.scope_node.ptr() == &scope_node)
             break;
     }
@@ -193,10 +193,10 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     return last_value;
 }
 
-LexicalEnvironment* Interpreter::current_environment()
+DeclarativeEnvironmentRecord* Interpreter::current_environment()
 {
-    VERIFY(is<LexicalEnvironment>(vm().call_frame().scope));
-    return static_cast<LexicalEnvironment*>(vm().call_frame().scope);
+    VERIFY(is<DeclarativeEnvironmentRecord>(vm().call_frame().environment_record));
+    return static_cast<DeclarativeEnvironmentRecord*>(vm().call_frame().environment_record);
 }
 
 }

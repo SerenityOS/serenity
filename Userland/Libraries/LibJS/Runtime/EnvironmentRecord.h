@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -15,8 +15,8 @@ struct Variable {
     DeclarationKind declaration_kind;
 };
 
-class ScopeObject : public Object {
-    JS_OBJECT(ScopeObject, Object);
+class EnvironmentRecord : public Object {
+    JS_OBJECT(EnvironmentRecord, Object);
 
 public:
     virtual Optional<Variable> get_from_scope(const FlyString&) const = 0;
@@ -25,17 +25,17 @@ public:
     virtual bool has_this_binding() const = 0;
     virtual Value get_this_binding(GlobalObject&) const = 0;
 
-    ScopeObject* parent() { return m_parent; }
-    const ScopeObject* parent() const { return m_parent; }
+    EnvironmentRecord* parent() { return m_parent; }
+    const EnvironmentRecord* parent() const { return m_parent; }
 
 protected:
-    explicit ScopeObject(ScopeObject* parent);
-    explicit ScopeObject(GlobalObjectTag);
+    explicit EnvironmentRecord(EnvironmentRecord* parent);
+    explicit EnvironmentRecord(GlobalObjectTag);
 
     virtual void visit_edges(Visitor&) override;
 
 private:
-    ScopeObject* m_parent { nullptr };
+    EnvironmentRecord* m_parent { nullptr };
 };
 
 }

@@ -82,7 +82,7 @@
 namespace JS {
 
 GlobalObject::GlobalObject()
-    : ScopeObject(GlobalObjectTag::Tag)
+    : EnvironmentRecord(GlobalObjectTag::Tag)
     , m_console(make<Console>(*this))
 {
 }
@@ -372,7 +372,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     }
 
     auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
-    TemporaryChange scope_change(vm.call_frame().scope, caller_frame->scope);
+    TemporaryChange scope_change(vm.call_frame().environment_record, caller_frame->environment_record);
 
     auto& interpreter = vm.interpreter();
     return interpreter.execute_statement(global_object, program).value_or(js_undefined());

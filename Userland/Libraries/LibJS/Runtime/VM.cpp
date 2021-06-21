@@ -37,7 +37,7 @@ VM::VM()
         m_single_ascii_character_strings[i] = m_heap.allocate_without_global_object<PrimitiveString>(String::formatted("{:c}", i));
     }
 
-    m_scope_object_shape = m_heap.allocate_without_global_object<Shape>(Shape::ShapeWithoutGlobalObjectTag::Tag);
+    m_environment_record_shape = m_heap.allocate_without_global_object<Shape>(Shape::ShapeWithoutGlobalObjectTag::Tag);
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
     m_well_known_symbol_##snake_name = js_symbol(*this, "Symbol." #SymbolName, false);
@@ -91,7 +91,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     for (auto* string : m_single_ascii_character_strings)
         roots.set(string);
 
-    roots.set(m_scope_object_shape);
+    roots.set(m_environment_record_shape);
     roots.set(m_exception);
 
     if (m_last_value.is_cell())
@@ -105,7 +105,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             if (argument.is_cell())
                 roots.set(&argument.as_cell());
         }
-        roots.set(call_frame->scope);
+        roots.set(call_frame->environment_record);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -131,7 +131,7 @@ Symbol* VM::get_global_symbol(const String& description)
     return new_global_symbol;
 }
 
-void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
+void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
 {
     Optional<Variable> possible_match;
     if (!specific_scope && m_call_stack.size()) {
@@ -164,7 +164,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 
 bool VM::delete_variable(FlyString const& name)
 {
-    ScopeObject* specific_scope = nullptr;
+    EnvironmentRecord* specific_scope = nullptr;
     Optional<Variable> possible_match;
     if (!m_call_stack.is_empty()) {
         for (auto* scope = current_scope(); scope; scope = scope->parent()) {
@@ -185,12 +185,12 @@ bool VM::delete_variable(FlyString const& name)
     return specific_scope->delete_from_scope(name);
 }
 
-void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
+void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
 {
     set_variable(target, move(value), global_object, first_assignment, specific_scope);
 }
 
-void VM::assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
+void VM::assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>& target, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
 {
     if (auto id_ptr = target.get_pointer<NonnullRefPtr<Identifier>>())
         return assign((*id_ptr)->string(), move(value), global_object, first_assignment, specific_scope);
@@ -198,7 +198,7 @@ void VM::assign(const Variant<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPa
     assign(target.get<NonnullRefPtr<BindingPattern>>(), move(value), global_object, first_assignment, specific_scope);
 }
 
-void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, GlobalObject& global_object, bool first_assignment, ScopeObject* specific_scope)
+void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
 {
     auto& binding = *target;
 
@@ -424,8 +424,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
         call_frame.arguments.extend(arguments.value().values());
-    auto* environment = function.create_environment();
-    call_frame.scope = environment;
+    auto* environment = function.create_environment_record();
+    call_frame.environment_record = environment;
     if (environment)
         environment->set_new_target(&new_target);
 
@@ -460,8 +460,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
-            VERIFY(is<LexicalEnvironment>(current_scope()));
-            static_cast<LexicalEnvironment*>(current_scope())->replace_this_binding(result);
+            VERIFY(is<DeclarativeEnvironmentRecord>(current_scope()));
+            static_cast<DeclarativeEnvironmentRecord*>(current_scope())->replace_this_binding(result);
         }
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -505,7 +505,7 @@ Value VM::resolve_this_binding(GlobalObject& global_object) const
     return find_this_scope()->get_this_binding(global_object);
 }
 
-const ScopeObject* VM::find_this_scope() const
+const EnvironmentRecord* VM::find_this_scope() const
 {
     // We will always return because the Global environment will always be reached, which has a |this| binding.
     for (auto* scope = current_scope(); scope; scope = scope->parent()) {
@@ -517,8 +517,8 @@ const ScopeObject* VM::find_this_scope() const
 
 Value VM::get_new_target() const
 {
-    VERIFY(is<LexicalEnvironment>(find_this_scope()));
-    return static_cast<const LexicalEnvironment*>(find_this_scope())->new_target();
+    VERIFY(is<DeclarativeEnvironmentRecord>(find_this_scope()));
+    return static_cast<const DeclarativeEnvironmentRecord*>(find_this_scope())->new_target();
 }
 
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
@@ -536,11 +536,11 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.arguments = function.bound_arguments();
     if (arguments.has_value())
         call_frame.arguments.extend(arguments.value().values());
-    auto* environment = function.create_environment();
-    call_frame.scope = environment;
+    auto* environment = function.create_environment_record();
+    call_frame.environment_record = environment;
 
     if (environment) {
-        VERIFY(environment->this_binding_status() == LexicalEnvironment::ThisBindingStatus::Uninitialized);
+        VERIFY(environment->this_binding_status() == DeclarativeEnvironmentRecord::ThisBindingStatus::Uninitialized);
         environment->bind_this_value(function.global_object(), call_frame.this_value);
     }
 
@@ -626,9 +626,9 @@ void VM::dump_scope_chain() const
 {
     for (auto* scope = current_scope(); scope; scope = scope->parent()) {
         dbgln("+> {} ({:p})", scope->class_name(), scope);
-        if (is<LexicalEnvironment>(*scope)) {
-            auto& lexical_environment = static_cast<LexicalEnvironment const&>(*scope);
-            for (auto& variable : lexical_environment.variables()) {
+        if (is<DeclarativeEnvironmentRecord>(*scope)) {
+            auto& environment_record = static_cast<DeclarativeEnvironmentRecord const&>(*scope);
+            for (auto& variable : environment_record.variables()) {
                 dbgln("    {}", variable.key);
             }
         }

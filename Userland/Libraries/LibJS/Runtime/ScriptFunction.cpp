@@ -35,7 +35,7 @@ static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
     return static_cast<ScriptFunction*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -49,7 +49,7 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
     return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, ScopeObject* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
     : Function(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
@@ -93,7 +93,7 @@ void ScriptFunction::visit_edges(Visitor& visitor)
     visitor.visit(m_parent_scope);
 }
 
-LexicalEnvironment* ScriptFunction::create_environment()
+DeclarativeEnvironmentRecord* ScriptFunction::create_environment_record()
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -122,12 +122,12 @@ LexicalEnvironment* ScriptFunction::create_environment()
         }
     }
 
-    auto* environment = heap().allocate<LexicalEnvironment>(global_object(), move(variables), m_parent_scope, LexicalEnvironment::EnvironmentRecordType::Function);
+    auto* environment = heap().allocate<DeclarativeEnvironmentRecord>(global_object(), move(variables), m_parent_scope, DeclarativeEnvironmentRecord::EnvironmentRecordType::Function);
     environment->set_home_object(home_object());
     environment->set_current_function(*this);
     if (m_is_arrow_function) {
-        if (is<LexicalEnvironment>(m_parent_scope))
-            environment->set_new_target(static_cast<LexicalEnvironment*>(m_parent_scope)->new_target());
+        if (is<DeclarativeEnvironmentRecord>(m_parent_scope))
+            environment->set_new_target(static_cast<DeclarativeEnvironmentRecord*>(m_parent_scope)->new_target());
     }
     return environment;
 }
@@ -191,7 +191,7 @@ Value ScriptFunction::execute_function_body()
         if (m_kind != FunctionKind::Generator)
             return result;
 
-        return GeneratorObject::create(global_object(), result, this, vm.call_frame().scope, bytecode_interpreter->snapshot_frame());
+        return GeneratorObject::create(global_object(), result, this, vm.call_frame().environment_record, bytecode_interpreter->snapshot_frame());
     } else {
         VERIFY(m_kind != FunctionKind::Generator);
         OwnPtr<Interpreter> local_interpreter;
