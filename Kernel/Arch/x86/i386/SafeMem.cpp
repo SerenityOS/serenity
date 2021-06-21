@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/RegisterState.h>
 #include <Kernel/Arch/x86/SafeMem.h>
 
 #define CODE_SECTION(section_name) __attribute__((section(section_name)))

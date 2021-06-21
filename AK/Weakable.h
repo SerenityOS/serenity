@@ -12,7 +12,8 @@
 #include "RefPtr.h"
 #include "StdLibExtras.h"
 #ifdef KERNEL
-#    include <Kernel/Arch/x86/CPU.h>
+#    include <Kernel/Arch/x86/Processor.h>
+#    include <Kernel/Arch/x86/ScopedCritical.h>
 #endif
 
 namespace AK {

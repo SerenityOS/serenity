@@ -7,6 +7,7 @@
 #include <AK/Memory.h>
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>

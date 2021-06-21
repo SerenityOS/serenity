@@ -5,6 +5,7 @@
  */
 
 #include <AK/NonnullRefPtrVector.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/InodeVMObject.h>

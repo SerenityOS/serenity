@@ -5,7 +5,7 @@
  */
 
 #include <AK/Format.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Panic.h>
 

@@ -10,7 +10,7 @@
 #include <AK/JsonValue.h>
 #include <AK/ScopeGuard.h>
 #include <AK/UBSanitizer.h>
-#include <Kernel/Arch/x86/CPU.h>
+#include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/ConsoleDevice.h>
