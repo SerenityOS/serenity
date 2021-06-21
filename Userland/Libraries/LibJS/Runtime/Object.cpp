@@ -621,7 +621,7 @@ bool Object::put_own_property(const StringOrSymbol& property_name, Value value, 
 
     if (!is_extensible() && new_property) {
         dbgln_if(OBJECT_DEBUG, "Disallow define_property of non-extensible object");
-        if (throw_exceptions && vm().in_strict_mode())
+        if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_name.to_display_string());
         return false;
     }
@@ -729,7 +729,7 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
 
     if (!is_extensible() && new_property) {
         dbgln_if(OBJECT_DEBUG, "Disallow define_property of non-extensible object");
-        if (throw_exceptions && vm().in_strict_mode())
+        if (throw_exceptions)
             vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
         return false;
     }
@@ -780,7 +780,6 @@ bool Object::delete_property(PropertyName const& property_name, bool force_throw
         }
         return true;
     }
-
 
     auto metadata = shape().lookup(property_name.to_string_or_symbol());
     if (!metadata.has_value())
@@ -923,7 +922,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
         if (vm().exception())
             return false;
     }
-    return put_own_property(string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put);
+    return put_own_property(string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put, vm().in_strict_mode());
 }
 
 bool Object::define_native_function(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
