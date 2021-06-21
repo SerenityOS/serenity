@@ -196,15 +196,15 @@ jobs:
       run: |
         sudo apt-get purge -y clang-11
         sudo apt-get update
-        sudo apt-get install ninja-build binaryen
+        sudo apt-get install ninja-build wabt
         sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100
         sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100
       if: ${{ runner.os == 'Linux' }}
     - name: Install macOS dependencies
-      run: brew install ninja binaryen
+      run: brew install ninja wabt
       if: ${{ runner.os == 'macOS' }}
     - name: Check versions
-      run: set +e; clang --version; clang++ --version; ninja --version; wasm-as --version
+      run: set +e; clang --version; clang++ --version; ninja --version; wat2wasm --version
 
     # === PREPARE FOR BUILDING ===
 
