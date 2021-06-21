@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/ObjectEnvironmentRecord.h>
 #include <LibJS/Runtime/PropertyName.h>
 #include <LibJS/Runtime/ProxyObject.h>
 
@@ -163,6 +164,16 @@ DeclarativeEnvironmentRecord* new_declarative_environment(EnvironmentRecord& env
 {
     auto& global_object = environment_record.global_object();
     return global_object.heap().allocate<DeclarativeEnvironmentRecord>(global_object, &environment_record);
+}
+
+// 9.1.2.3 NewObjectEnvironment ( O, W, E ), https://tc39.es/ecma262/#sec-newobjectenvironment
+ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_environment, EnvironmentRecord* environment_record)
+{
+    auto& global_object = object.global_object();
+    if (!is_with_environment) {
+        TODO();
+    }
+    return global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, object, environment_record);
 }
 
 }

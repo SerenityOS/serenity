@@ -14,6 +14,7 @@
 #include <LibCrypto/BigInt/SignedBigInteger.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Accessor.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
@@ -306,7 +307,7 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     VERIFY(object);
 
-    auto* object_environment_record = interpreter.heap().allocate<ObjectEnvironmentRecord>(global_object, *object, interpreter.vm().call_frame().environment_record);
+    auto* object_environment_record = new_object_environment(*object, true, interpreter.vm().call_frame().environment_record);
     TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().environment_record, object_environment_record);
     return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
