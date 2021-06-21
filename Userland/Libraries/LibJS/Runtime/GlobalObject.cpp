@@ -328,7 +328,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
     return Value(sign * number);
 }
 
-Optional<Variable> GlobalObject::get_from_scope(const FlyString& name) const
+Optional<Variable> GlobalObject::get_from_environment_record(FlyString const& name) const
 {
     auto value = get(name);
     if (value.is_empty())
@@ -336,12 +336,12 @@ Optional<Variable> GlobalObject::get_from_scope(const FlyString& name) const
     return Variable { value, DeclarationKind::Var };
 }
 
-void GlobalObject::put_to_scope(const FlyString& name, Variable variable)
+void GlobalObject::put_into_environment_record(FlyString const& name, Variable variable)
 {
     put(name, variable.value);
 }
 
-bool GlobalObject::delete_from_scope(FlyString const& name)
+bool GlobalObject::delete_from_environment_record(FlyString const& name)
 {
     return delete_property(name);
 }

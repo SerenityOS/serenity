@@ -853,7 +853,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.current_scope()->put_to_scope(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.current_scope()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return {};
 }

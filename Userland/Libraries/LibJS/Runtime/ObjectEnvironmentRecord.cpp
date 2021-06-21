@@ -21,7 +21,7 @@ void ObjectEnvironmentRecord::visit_edges(Cell::Visitor& visitor)
     visitor.visit(&m_object);
 }
 
-Optional<Variable> ObjectEnvironmentRecord::get_from_scope(FlyString const& name) const
+Optional<Variable> ObjectEnvironmentRecord::get_from_environment_record(FlyString const& name) const
 {
     auto value = m_object.get(name);
     if (value.is_empty())
@@ -29,12 +29,12 @@ Optional<Variable> ObjectEnvironmentRecord::get_from_scope(FlyString const& name
     return Variable { value, DeclarationKind::Var };
 }
 
-void ObjectEnvironmentRecord::put_to_scope(FlyString const& name, Variable variable)
+void ObjectEnvironmentRecord::put_into_environment_record(FlyString const& name, Variable variable)
 {
     m_object.put(name, variable.value);
 }
 
-bool ObjectEnvironmentRecord::delete_from_scope(FlyString const& name)
+bool ObjectEnvironmentRecord::delete_from_environment_record(FlyString const& name)
 {
     return m_object.delete_property(name);
 }

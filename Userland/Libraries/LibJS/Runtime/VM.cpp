@@ -136,7 +136,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
     Optional<Variable> possible_match;
     if (!specific_scope && m_call_stack.size()) {
         for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
-            possible_match = environment_record->get_from_scope(name);
+            possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
                 break;
@@ -150,12 +150,12 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
             return;
         }
 
-        specific_scope->put_to_scope(name, { value, possible_match.value().declaration_kind });
+        specific_scope->put_into_environment_record(name, { value, possible_match.value().declaration_kind });
         return;
     }
 
     if (specific_scope) {
-        specific_scope->put_to_scope(name, { value, DeclarationKind::Var });
+        specific_scope->put_into_environment_record(name, { value, DeclarationKind::Var });
         return;
     }
 
@@ -168,7 +168,7 @@ bool VM::delete_variable(FlyString const& name)
     Optional<Variable> possible_match;
     if (!m_call_stack.is_empty()) {
         for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
-            possible_match = environment_record->get_from_scope(name);
+            possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
                 break;
@@ -182,7 +182,7 @@ bool VM::delete_variable(FlyString const& name)
         return false;
 
     VERIFY(specific_scope);
-    return specific_scope->delete_from_scope(name);
+    return specific_scope->delete_from_environment_record(name);
 }
 
 void VM::assign(const FlyString& target, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
@@ -363,7 +363,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             //       a function parameter, or by a local var declaration, we use that.
             //       Otherwise, we return a lazily constructed Array with all the argument values.
             // FIXME: Do something much more spec-compliant.
-            auto possible_match = current_scope()->get_from_scope(name);
+            auto possible_match = current_scope()->get_from_environment_record(name);
             if (possible_match.has_value())
                 return possible_match.value().value;
             if (!call_frame().arguments_object) {
@@ -377,7 +377,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
         }
 
         for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
-            auto possible_match = environment_record->get_from_scope(name);
+            auto possible_match = environment_record->get_from_environment_record(name);
             if (exception())
                 return {};
             if (possible_match.has_value())
@@ -396,7 +396,7 @@ Reference VM::get_reference(const FlyString& name)
         for (auto* environment_record = current_scope(); environment_record; environment_record = environment_record->outer_environment()) {
             if (is<GlobalObject>(environment_record))
                 break;
-            auto possible_match = environment_record->get_from_scope(name);
+            auto possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value())
                 return { Reference::LocalVariable, name };
         }
