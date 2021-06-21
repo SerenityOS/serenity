@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -8,6 +9,7 @@
 #include <AK/Result.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
+#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -154,6 +156,13 @@ Object* get_prototype_from_constructor(GlobalObject& global_object, Function con
         prototype = (realm->*intrinsic_default_prototype)();
     }
     return &prototype.as_object();
+}
+
+// 9.1.2.2 NewDeclarativeEnvironment ( E ), https://tc39.es/ecma262/#sec-newdeclarativeenvironment
+DeclarativeEnvironmentRecord* new_declarative_environment(EnvironmentRecord& environment_record)
+{
+    auto& global_object = environment_record.global_object();
+    return global_object.heap().allocate<DeclarativeEnvironmentRecord>(global_object, &environment_record);
 }
 
 }

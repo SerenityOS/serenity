@@ -24,6 +24,11 @@ DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecordType
 {
 }
 
+DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecord* parent_scope)
+    : EnvironmentRecord(parent_scope)
+{
+}
+
 DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope)
     : EnvironmentRecord(parent_scope)
     , m_variables(move(variables))
