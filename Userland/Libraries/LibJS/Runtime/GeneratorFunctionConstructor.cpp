@@ -62,7 +62,7 @@ Value GeneratorFunctionConstructor::construct(Function& new_target)
             block.dump(executable);
     }
 
-    return ScriptFunction::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().current_scope(), FunctionKind::Generator, function->is_strict_mode(), false);
+    return ScriptFunction::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().current_environment_record(), FunctionKind::Generator, function->is_strict_mode(), false);
 }
 
 }

@@ -56,8 +56,9 @@ public:
     ALWAYS_INLINE Heap& heap() { return vm().heap(); }
     ALWAYS_INLINE Exception* exception() { return vm().exception(); }
 
-    EnvironmentRecord* current_scope() { return vm().current_scope(); }
-    DeclarativeEnvironmentRecord* current_environment();
+    EnvironmentRecord* current_environment_record() { return vm().current_environment_record(); }
+
+    DeclarativeEnvironmentRecord* current_declarative_environment_record();
 
     void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);

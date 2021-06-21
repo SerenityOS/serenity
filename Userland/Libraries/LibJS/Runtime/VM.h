@@ -72,7 +72,7 @@ public:
     void clear_exception() { m_exception = nullptr; }
 
     void dump_backtrace() const;
-    void dump_scope_chain() const;
+    void dump_environment_record_chain() const;
 
     class InterpreterExecutionScope {
     public:
@@ -122,8 +122,8 @@ public:
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
 
-    const EnvironmentRecord* current_scope() const { return call_frame().environment_record; }
-    EnvironmentRecord* current_scope() { return call_frame().environment_record; }
+    EnvironmentRecord const* current_environment_record() const { return call_frame().environment_record; }
+    EnvironmentRecord* current_environment_record() { return call_frame().environment_record; }
 
     bool in_strict_mode() const;
 

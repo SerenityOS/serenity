@@ -83,7 +83,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
 {
     ScopeGuard guard([&] {
         for (auto& declaration : scope_node.functions()) {
-            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_scope(), declaration.kind(), declaration.is_strict_mode());
+            auto* function = ScriptFunction::create(global_object, declaration.name(), declaration.body(), declaration.parameters(), declaration.function_length(), current_environment_record(), declaration.kind(), declaration.is_strict_mode());
             vm().set_variable(declaration.name(), function, global_object);
         }
     });
@@ -91,7 +91,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     if (scope_type == ScopeType::Function) {
         push_scope({ scope_type, scope_node, false });
         for (auto& declaration : scope_node.functions())
-            current_scope()->put_into_environment_record(declaration.name(), { js_undefined(), DeclarationKind::Var });
+            current_environment_record()->put_into_environment_record(declaration.name(), { js_undefined(), DeclarationKind::Var });
         return;
     }
 
@@ -131,7 +131,7 @@ void Interpreter::enter_scope(const ScopeNode& scope_node, ScopeType scope_type,
     bool pushed_environment_record = false;
 
     if (!scope_variables_with_declaration_kind.is_empty()) {
-        auto* environment_record = heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(scope_variables_with_declaration_kind), current_scope());
+        auto* environment_record = heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(scope_variables_with_declaration_kind), current_environment_record());
         vm().call_frame().environment_record = environment_record;
         pushed_environment_record = true;
     }
@@ -193,7 +193,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     return last_value;
 }
 
-DeclarativeEnvironmentRecord* Interpreter::current_environment()
+DeclarativeEnvironmentRecord* Interpreter::current_declarative_environment_record()
 {
     VERIFY(is<DeclarativeEnvironmentRecord>(vm().call_frame().environment_record));
     return static_cast<DeclarativeEnvironmentRecord*>(vm().call_frame().environment_record);
