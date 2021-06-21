@@ -257,9 +257,12 @@ void Launcher::for_each_handler_for_path(const String& path, Function<bool(const
         return;
     }
 
-    // TODO: Make directory opening configurable
     if (S_ISDIR(st.st_mode)) {
-        f(get_handler_for_executable(Handler::Type::Default, "/bin/FileManager"));
+        auto handler_optional = m_file_handlers.get("directory");
+        if (!handler_optional.has_value())
+            return;
+        auto& handler = handler_optional.value();
+        f(get_handler_for_executable(Handler::Type::Default, handler));
         return;
     }
 
@@ -283,7 +286,6 @@ bool Launcher::open_file_url(const URL& url)
         return false;
     }
 
-    // TODO: Make directory opening configurable
     if (S_ISDIR(st.st_mode)) {
         Vector<String> fm_arguments;
         if (url.fragment().is_empty()) {
@@ -293,7 +295,13 @@ bool Launcher::open_file_url(const URL& url)
             fm_arguments.append("-r");
             fm_arguments.append(String::formatted("{}/{}", url.path(), url.fragment()));
         }
-        return spawn("/bin/FileManager", fm_arguments);
+
+        auto handler_optional = m_file_handlers.get("directory");
+        if (!handler_optional.has_value())
+            return false;
+        auto& handler = handler_optional.value();
+
+        return spawn(handler, fm_arguments);
     }
 
     if ((st.st_mode & S_IFMT) == S_IFREG && st.st_mode & (S_IXUSR | S_IXGRP | S_IXOTH))
@@ -304,7 +312,12 @@ bool Launcher::open_file_url(const URL& url)
     if (extension_parts.size() > 1)
         extension = extension_parts.last();
 
-    // Additional parameters parsing, specific for the file protocol and TextEditor
+    auto handler_optional = m_file_handlers.get("txt");
+    if (!handler_optional.has_value())
+        return false;
+    auto& default_handler = handler_optional.value();
+
+    // Additional parameters parsing, specific for the file protocol and txt file handlers
     Vector<String> additional_parameters;
     String filepath = url.path();
 
@@ -318,9 +331,6 @@ bool Launcher::open_file_url(const URL& url)
                 filepath = String::formatted("{}:{}", filepath, line.value());
         }
     }
-
-    additional_parameters.append(filepath);
-
-    return open_with_user_preferences(m_file_handlers, extension, additional_parameters, "/bin/TextEditor");
+    return open_with_user_preferences(m_file_handlers, extension, additional_parameters, default_handler);
 }
 }
