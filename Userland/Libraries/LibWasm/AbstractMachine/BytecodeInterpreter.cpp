@@ -82,7 +82,9 @@ void BytecodeInterpreter::load_and_push(Configuration& configuration, Instructio
         return;
     }
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    auto base = configuration.stack().peek().get<Value>().to<i32>();
+    auto& entry = configuration.stack().peek();
+    TRAP_IF_NOT(entry.has<Value>());
+    auto base = entry.get<Value>().to<i32>();
     if (!base.has_value()) {
         m_do_trap = true;
         return;
@@ -104,7 +106,9 @@ void BytecodeInterpreter::store_to_memory(Configuration& configuration, Instruct
     auto memory = configuration.store().get(address);
     TRAP_IF_NOT(memory);
     auto& arg = instruction.arguments().get<Instruction::MemoryArgument>();
-    auto base = configuration.stack().pop().get<Value>().to<i32>();
+    auto entry = configuration.stack().pop();
+    TRAP_IF_NOT(entry.has<Value>());
+    auto base = entry.get<Value>().to<i32>();
     TRAP_IF_NOT(base.has_value());
     auto instance_address = base.value() + static_cast<i64>(arg.offset);
     if (instance_address < 0 || static_cast<u64>(instance_address + data.size()) > memory->size()) {
@@ -153,8 +157,12 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                                       \
     do {                                                                                          \
-        auto rhs = configuration.stack().pop().get<Value>().to<type>();                           \
-        auto lhs = configuration.stack().peek().get<Value>().to<type>();                          \
+        auto rhs_entry = configuration.stack().pop();                                             \
+        auto& lhs_entry = configuration.stack().peek();                                           \
+        TRAP_IF_NOT(rhs_entry.has<Value>());                                                      \
+        TRAP_IF_NOT(lhs_entry.has<Value>());                                                      \
+        auto rhs = rhs_entry.get<Value>().to<type>();                                             \
+        auto lhs = lhs_entry.get<Value>().to<type>();                                             \
         TRAP_IF_NOT(lhs.has_value());                                                             \
         TRAP_IF_NOT(rhs.has_value());                                                             \
         __VA_ARGS__;                                                                              \
@@ -166,8 +174,12 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define OVF_CHECKED_BINARY_NUMERIC_OPERATION(type, operator, cast, ...)                            \
     do {                                                                                           \
-        auto rhs = configuration.stack().pop().get<Value>().to<type>();                            \
-        auto ulhs = configuration.stack().peek().get<Value>().to<type>();                          \
+        auto rhs_entry = configuration.stack().pop();                                              \
+        auto& lhs_entry = configuration.stack().peek();                                            \
+        TRAP_IF_NOT(rhs_entry.has<Value>());                                                       \
+        TRAP_IF_NOT(lhs_entry.has<Value>());                                                       \
+        auto rhs = rhs_entry.get<Value>().to<type>();                                              \
+        auto ulhs = lhs_entry.get<Value>().to<type>();                                             \
         TRAP_IF_NOT(ulhs.has_value());                                                             \
         TRAP_IF_NOT(rhs.has_value());                                                              \
         dbgln_if(WASM_TRACE_DEBUG, "{} {} {} = ??", ulhs.value(), #operator, rhs.value());         \
@@ -183,8 +195,12 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define BINARY_PREFIX_NUMERIC_OPERATION(type, operation, cast, ...)                                 \
     do {                                                                                            \
-        auto rhs = configuration.stack().pop().get<Value>().to<type>();                             \
-        auto lhs = configuration.stack().peek().get<Value>().to<type>();                            \
+        auto rhs_entry = configuration.stack().pop();                                               \
+        auto& lhs_entry = configuration.stack().peek();                                             \
+        TRAP_IF_NOT(rhs_entry.has<Value>());                                                        \
+        TRAP_IF_NOT(lhs_entry.has<Value>());                                                        \
+        auto rhs = rhs_entry.get<Value>().to<type>();                                               \
+        auto lhs = lhs_entry.get<Value>().to<type>();                                               \
         TRAP_IF_NOT(lhs.has_value());                                                               \
         TRAP_IF_NOT(rhs.has_value());                                                               \
         auto result = operation(lhs.value(), rhs.value());                                          \
@@ -195,7 +211,9 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
 
 #define UNARY_MAP(pop_type, operation, ...)                                               \
     do {                                                                                  \
-        auto value = configuration.stack().peek().get<Value>().to<pop_type>();            \
+        auto& entry = configuration.stack().peek();                                       \
+        TRAP_IF_NOT(entry.has<Value>());                                                  \
+        auto value = entry.get<Value>().to<pop_type>();                                   \
         TRAP_IF_NOT(value.has_value());                                                   \
         auto result = operation(value.value());                                           \
         dbgln_if(WASM_TRACE_DEBUG, "map({}) {} = {}", #operation, value.value(), result); \
@@ -211,12 +229,14 @@ void BytecodeInterpreter::call_address(Configuration& configuration, FunctionAdd
         return load_and_push<read_type, push_type>(configuration, instruction); \
     } while (false)
 
-#define POP_AND_STORE(pop_type, store_type)                                                                 \
-    do {                                                                                                    \
-        auto value = ConvertToRaw<store_type> {}(*configuration.stack().pop().get<Value>().to<pop_type>()); \
-        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type));               \
-        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });                        \
-        return;                                                                                             \
+#define POP_AND_STORE(pop_type, store_type)                                                   \
+    do {                                                                                      \
+        auto entry = configuration.stack().pop();                                             \
+        TRAP_IF_NOT(entry.has<Value>());                                                      \
+        auto value = ConvertToRaw<store_type> {}(*entry.get<Value>().to<pop_type>());         \
+        dbgln_if(WASM_TRACE_DEBUG, "stack({}) -> temporary({}b)", value, sizeof(store_type)); \
+        store_to_memory(configuration, instruction, { &value, sizeof(store_type) });          \
+        return;                                                                               \
     } while (false)
 
 template<typename T>
@@ -472,6 +492,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         return;
     case Instructions::local_set.value(): {
         auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
         configuration.frame().locals()[instruction.arguments().get<LocalIndex>().value()] = move(entry.get<Value>());
         return;
     }
@@ -510,6 +531,7 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
             arity = 1;
 
         auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
         auto value = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(value.has_value());
         auto end_label = Label(arity, args.end_ip.value());
@@ -565,7 +587,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::br.value():
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     case Instructions::br_if.value(): {
-        if (configuration.stack().pop().get<Value>().to<i32>().value_or(0) == 0)
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        if (entry.get<Value>().to<i32>().value_or(0) == 0)
             return;
         return branch_to_label(configuration, instruction.arguments().get<LabelIndex>());
     }
@@ -594,7 +618,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         TRAP_IF_NOT(args.table.value() < configuration.frame().module().tables().size());
         auto table_address = configuration.frame().module().tables()[args.table.value()];
         auto table_instance = configuration.store().get(table_address);
-        auto index = configuration.stack().pop().get<Value>().to<i32>();
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto index = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(index.has_value());
         TRAP_IF_NOT(index.value() >= 0);
         TRAP_IF_NOT(static_cast<size_t>(index.value()) < table_instance->elements().size());
@@ -653,7 +679,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::i64_store32.value():
         POP_AND_STORE(i64, i32);
     case Instructions::local_tee.value(): {
-        auto value = configuration.stack().peek().get<Value>();
+        auto& entry = configuration.stack().peek();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto value = entry.get<Value>();
         auto local_index = instruction.arguments().get<LocalIndex>();
         TRAP_IF_NOT(configuration.frame().locals().size() > local_index.value());
         dbgln_if(WASM_TRACE_DEBUG, "stack:peek -> locals({})", local_index.value());
@@ -673,7 +701,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto global_index = instruction.arguments().get<GlobalIndex>();
         TRAP_IF_NOT(configuration.frame().module().globals().size() > global_index.value());
         auto address = configuration.frame().module().globals()[global_index.value()];
-        auto value = configuration.stack().pop().get<Value>();
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto value = entry.get<Value>();
         dbgln_if(WASM_TRACE_DEBUG, "stack -> global({})", address.value());
         auto global = configuration.store().get(address);
         global->set_value(move(value));
@@ -693,7 +723,9 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
         auto address = configuration.frame().module().memories()[0];
         auto instance = configuration.store().get(address);
         i32 old_pages = instance->size() / Constants::page_size;
-        auto new_pages = configuration.stack().peek().get<Value>().to<i32>();
+        auto& entry = configuration.stack().peek();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto new_pages = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(new_pages.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "memory.grow({}), previously {} pages...", *new_pages, old_pages);
         if (instance->grow(new_pages.value() * Constants::page_size))
@@ -733,11 +765,17 @@ void BytecodeInterpreter::interpret(Configuration& configuration, InstructionPoi
     case Instructions::select.value():
     case Instructions::select_typed.value(): {
         // Note: The type seems to only be used for validation.
-        auto value = configuration.stack().pop().get<Value>().to<i32>();
+        auto entry = configuration.stack().pop();
+        TRAP_IF_NOT(entry.has<Value>());
+        auto value = entry.get<Value>().to<i32>();
         TRAP_IF_NOT(value.has_value());
         dbgln_if(WASM_TRACE_DEBUG, "select({})", value.value());
-        auto rhs = move(configuration.stack().pop().get<Value>());
-        auto lhs = move(configuration.stack().peek().get<Value>());
+        auto rhs_entry = configuration.stack().pop();
+        TRAP_IF_NOT(rhs_entry.has<Value>());
+        auto& lhs_entry = configuration.stack().peek();
+        TRAP_IF_NOT(lhs_entry.has<Value>());
+        auto rhs = move(rhs_entry.get<Value>());
+        auto lhs = move(lhs_entry.get<Value>());
         configuration.stack().peek() = value.value() != 0 ? move(lhs) : move(rhs);
         return;
     }
