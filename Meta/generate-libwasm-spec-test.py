@@ -380,7 +380,7 @@ def main():
             with NamedTemporaryFile("w+") as temp:
                 temp.write(mod[1])
                 temp.flush()
-                rc = call(["wasm-as", "-n", "-all", temp.name, "-o", outpath])
+                rc = call(["wat2wasm", temp.name, "-o", outpath])
                 if rc != 0:
                     print("Failed to compile", name, "module index", index, "skipping that test", file=stderr)
                     continue
