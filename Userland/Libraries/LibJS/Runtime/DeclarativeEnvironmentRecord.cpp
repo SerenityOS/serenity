@@ -52,12 +52,12 @@ void DeclarativeEnvironmentRecord::visit_edges(Visitor& visitor)
         visitor.visit(it.value.value);
 }
 
-Optional<Variable> DeclarativeEnvironmentRecord::get_from_scope(const FlyString& name) const
+Optional<Variable> DeclarativeEnvironmentRecord::get_from_scope(FlyString const& name) const
 {
     return m_variables.get(name);
 }
 
-void DeclarativeEnvironmentRecord::put_to_scope(const FlyString& name, Variable variable)
+void DeclarativeEnvironmentRecord::put_to_scope(FlyString const& name, Variable variable)
 {
     m_variables.set(name, variable);
 }

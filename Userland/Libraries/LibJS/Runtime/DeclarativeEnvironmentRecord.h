@@ -37,15 +37,13 @@ public:
     virtual ~DeclarativeEnvironmentRecord() override;
 
     // ^EnvironmentRecord
-    virtual Optional<Variable> get_from_scope(const FlyString&) const override;
-    virtual void put_to_scope(const FlyString&, Variable) override;
+    virtual Optional<Variable> get_from_scope(FlyString const&) const override;
+    virtual void put_to_scope(FlyString const&, Variable) override;
     virtual bool delete_from_scope(FlyString const&) override;
     virtual bool has_this_binding() const override;
     virtual Value get_this_binding(GlobalObject&) const override;
 
-    void clear();
-
-    const HashMap<FlyString, Variable>& variables() const { return m_variables; }
+    HashMap<FlyString, Variable> const& variables() const { return m_variables; }
 
     void set_home_object(Value object) { m_home_object = object; }
     bool has_super_binding() const;
