@@ -53,10 +53,13 @@ void Game::timer_event(Core::TimerEvent&)
 
 void Game::paint_event(GUI::PaintEvent& event)
 {
+    GUI::Frame::paint_event(event);
+
     GUI::Painter painter(*this);
+    painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    painter.draw_tiled_bitmap(rect(), *m_background_bitmap);
+    painter.draw_tiled_bitmap(frame_inner_rect(), *m_background_bitmap);
 
     painter.draw_scaled_bitmap(m_cloud.rect(), *m_cloud.bitmap(), m_cloud.bitmap()->rect(), 0.2f);
 
