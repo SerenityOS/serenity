@@ -265,6 +265,32 @@ int main(int argc, char** argv)
             }
         },
         window));
+    edit_menu.add_action(GUI::Action::create(
+        "&Load Color Palette", [&](auto&) {
+            auto open_path = GUI::FilePicker::get_open_filepath(window, "Load Color Palette");
+            if (!open_path.has_value())
+                return;
+
+            auto result = PixelPaint::PaletteWidget::load_palette_file(open_path.value());
+            if (result.is_error()) {
+                GUI::MessageBox::show_error(window, String::formatted("Loading color palette failed: {}", result.error()));
+                return;
+            }
+
+            palette_widget.display_color_list(result.value());
+        },
+        window));
+    edit_menu.add_action(GUI::Action::create(
+        "Sa&ve Color Palette", [&](auto&) {
+            auto save_path = GUI::FilePicker::get_save_filepath(window, "untitled", "palette");
+            if (!save_path.has_value())
+                return;
+
+            auto result = PixelPaint::PaletteWidget::save_palette_file(palette_widget.colors(), save_path.value());
+            if (result.is_error())
+                GUI::MessageBox::show_error(window, String::formatted("Writing color palette failed: {}", result.error()));
+        },
+        window));
 
     auto& view_menu = menubar->add_menu("&View");
 
