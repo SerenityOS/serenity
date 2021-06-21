@@ -26,7 +26,7 @@ test("parsing can pass", () => {
         0x01, 0x05, 0x63, 0x6c, 0x61, 0x6e, 0x67, 0x06, 0x31, 0x31, 0x2e, 0x31, 0x2e, 0x30,
     ]);
     // This just checks that the function actually works
-    parseWebAssemblyModule(binary);
+    expect(() => parseWebAssemblyModule(binary)).toThrowWithMessage(TypeError, "Link failed");
 });
 
 test("parsing can fail", () => {

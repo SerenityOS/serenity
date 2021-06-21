@@ -40,14 +40,22 @@ public:
     Wasm::Module& module() { return *m_module; }
     Wasm::ModuleInstance& module_instance() { return *m_module_instance; }
 
-    static WebAssemblyModule* create(JS::GlobalObject& global_object, Wasm::Module module)
+    static WebAssemblyModule* create(JS::GlobalObject& global_object, Wasm::Module module, HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& imports)
     {
         auto instance = global_object.heap().allocate<WebAssemblyModule>(global_object, *global_object.object_prototype());
         instance->m_module = move(module);
-        if (auto result = machine().instantiate(*instance->m_module, {}); result.is_error())
-            global_object.vm().throw_exception<JS::TypeError>(global_object, result.release_error().error);
-        else
-            instance->m_module_instance = result.release_value();
+        Wasm::Linker linker(*instance->m_module);
+        linker.link(imports);
+        linker.link(spec_test_namespace());
+        auto link_result = linker.finish();
+        if (link_result.is_error()) {
+            global_object.vm().throw_exception<JS::TypeError>(global_object, "Link failed");
+        } else {
+            if (auto result = machine().instantiate(*instance->m_module, link_result.release_value()); result.is_error())
+                global_object.vm().throw_exception<JS::TypeError>(global_object, result.release_error().error);
+            else
+                instance->m_module_instance = result.release_value();
+        }
         return instance;
     }
     void initialize(JS::GlobalObject&) override;
@@ -58,12 +66,31 @@ private:
     JS_DECLARE_NATIVE_FUNCTION(get_export);
     JS_DECLARE_NATIVE_FUNCTION(wasm_invoke);
 
+    static HashMap<Wasm::Linker::Name, Wasm::ExternValue> const& spec_test_namespace()
+    {
+        if (!s_spec_test_namespace.is_empty())
+            return s_spec_test_namespace;
+        Wasm::FunctionType print_i32_type { { Wasm::ValueType(Wasm::ValueType::I32) }, {} };
+
+        auto address = m_machine.store().allocate(Wasm::HostFunction {
+            [](auto&, auto&) -> Wasm::Result {
+                // Noop, this just needs to exist.
+                return Wasm::Result { Vector<Wasm::Value> {} };
+            },
+            print_i32_type });
+        s_spec_test_namespace.set({ "spectest", "print_i32", print_i32_type }, Wasm::ExternValue { *address });
+
+        return s_spec_test_namespace;
+    }
+
+    static HashMap<Wasm::Linker::Name, Wasm::ExternValue> s_spec_test_namespace;
     static Wasm::AbstractMachine m_machine;
     Optional<Wasm::Module> m_module;
     OwnPtr<Wasm::ModuleInstance> m_module_instance;
 };
 
 Wasm::AbstractMachine WebAssemblyModule::m_machine;
+HashMap<Wasm::Linker::Name, Wasm::ExternValue> WebAssemblyModule::s_spec_test_namespace;
 
 TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
 {
@@ -86,7 +113,24 @@ TESTJS_GLOBAL_FUNCTION(parse_webassembly_module, parseWebAssemblyModule)
         vm.throw_exception<JS::SyntaxError>(global_object, "Bianry stream contained errors");
         return {};
     }
-    return WebAssemblyModule::create(global_object, result.release_value());
+
+    HashMap<Wasm::Linker::Name, Wasm::ExternValue> imports;
+    auto import_value = vm.argument(1);
+    if (import_value.is_object()) {
+        auto& import_object = import_value.as_object();
+        for (auto& property : import_object.shape().property_table()) {
+            auto value = import_object.get_own_property(property.key, {}, JS::AllowSideEffects::No);
+            if (!value.is_object() || !is<WebAssemblyModule>(value.as_object()))
+                continue;
+            auto& module_object = static_cast<WebAssemblyModule&>(value.as_object());
+            for (auto& entry : module_object.module_instance().exports()) {
+                // FIXME: Don't pretend that everything is a function
+                imports.set({ property.key.as_string(), entry.name(), Wasm::TypeIndex(0) }, entry.value());
+            }
+        }
+    }
+
+    return WebAssemblyModule::create(global_object, result.release_value(), imports);
 }
 
 TESTJS_GLOBAL_FUNCTION(compare_typed_arrays, compareTypedArrays)
@@ -136,7 +180,16 @@ JS_DEFINE_NATIVE_FUNCTION(WebAssemblyModule::get_export)
             auto& value = entry.value();
             if (auto ptr = value.get_pointer<Wasm::FunctionAddress>())
                 return JS::Value(static_cast<unsigned long>(ptr->value()));
-            vm.throw_exception<JS::TypeError>(global_object, String::formatted("'{}' does not refer to a function", name));
+            if (auto v = value.get_pointer<Wasm::GlobalAddress>()) {
+                return m_machine.store().get(*v)->value().value().visit(
+                    [&](const auto& value) -> JS::Value { return JS::Value(static_cast<double>(value)); },
+                    [&](const Wasm::Reference& reference) -> JS::Value {
+                        return reference.ref().visit(
+                            [&](const Wasm::Reference::Null&) -> JS::Value { return JS::js_null(); },
+                            [&](const auto& ref) -> JS::Value { return JS::Value(static_cast<double>(ref.address.value())); });
+                    });
+            }
+            vm.throw_exception<JS::TypeError>(global_object, String::formatted("'{}' does not refer to a function or a global", name));
             return {};
         }
     }
