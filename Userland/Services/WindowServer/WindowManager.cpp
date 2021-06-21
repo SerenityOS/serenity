@@ -376,6 +376,17 @@ void WindowManager::tell_wms_super_key_pressed()
     });
 }
 
+void WindowManager::tell_wms_super_space_key_pressed()
+{
+    for_each_window_manager([](WMClientConnection& conn) {
+        if (conn.window_id() < 0)
+            return IterationDecision::Continue;
+
+        conn.async_super_space_key_pressed(conn.window_id());
+        return IterationDecision::Continue;
+    });
+}
+
 static bool window_type_has_title(WindowType type)
 {
     return type == WindowType::Normal || type == WindowType::ToolWindow;
@@ -1245,6 +1256,11 @@ void WindowManager::process_key_event(KeyEvent& event)
         m_previous_event_was_super_keydown = false;
         if (!m_dnd_client && !m_active_input_tracking_window && event.type() == Event::KeyUp && event.key() == Key_Super) {
             tell_wms_super_key_pressed();
+            return;
+        }
+
+        if (event.type() == Event::KeyDown && event.key() == Key_Space) {
+            tell_wms_super_space_key_pressed();
             return;
         }
     }
