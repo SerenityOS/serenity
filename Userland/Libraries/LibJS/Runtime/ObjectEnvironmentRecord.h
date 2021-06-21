@@ -16,8 +16,8 @@ class ObjectEnvironmentRecord : public EnvironmentRecord {
 public:
     ObjectEnvironmentRecord(Object&, EnvironmentRecord* parent_scope);
 
-    virtual Optional<Variable> get_from_scope(const FlyString&) const override;
-    virtual void put_to_scope(const FlyString&, Variable) override;
+    virtual Optional<Variable> get_from_scope(FlyString const&) const override;
+    virtual void put_to_scope(FlyString const&, Variable) override;
     virtual bool delete_from_scope(FlyString const&) override;
     virtual bool has_this_binding() const override;
     virtual Value get_this_binding(GlobalObject&) const override;
