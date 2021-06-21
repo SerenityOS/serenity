@@ -1,9 +1,9 @@
 #!/usr/bin/env -S bash ../.port_include.sh
 port=nano
-version=4.5
+version=5.8
 useconfigure="true"
-files="https://www.nano-editor.org/dist/v4/nano-${version}.tar.xz nano-${version}.tar.xz
-https://www.nano-editor.org/dist/v4/nano-${version}.tar.xz.asc nano-${version}.tar.xz.asc"
+files="https://www.nano-editor.org/dist/v5/nano-${version}.tar.xz nano-${version}.tar.xz
+https://www.nano-editor.org/dist/v5/nano-${version}.tar.xz.asc nano-${version}.tar.xz.asc"
 configopts="--target=${SERENITY_ARCH}-pc-serenity --disable-browser --disable-utf8"
 depends="ncurses"
 auth_type="sig"
