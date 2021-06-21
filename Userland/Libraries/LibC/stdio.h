@@ -30,6 +30,7 @@ __BEGIN_DECLS
 #define _IONBF 2
 
 #define L_tmpnam 256
+#define P_tmpdir "/tmp"
 
 extern FILE* stdin;
 extern FILE* stdout;
