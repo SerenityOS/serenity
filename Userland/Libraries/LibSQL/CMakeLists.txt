@@ -1,4 +1,8 @@
 set(SOURCES
+        AST/Lexer.cpp
+        AST/Parser.cpp
+        AST/SyntaxHighlighter.cpp
+        AST/Token.cpp
         BTree.cpp
         BTreeIterator.cpp
         Database.cpp
@@ -6,12 +10,8 @@ set(SOURCES
         Heap.cpp
         Index.cpp
         Key.cpp
-        Lexer.cpp
         Meta.cpp
-        Parser.cpp
         Row.cpp
-        SyntaxHighlighter.cpp
-        Token.cpp
         TreeNode.cpp
         Tuple.cpp
         Value.cpp

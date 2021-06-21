@@ -8,7 +8,7 @@
 #include <AK/ScopeGuard.h>
 #include <AK/TypeCasts.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 Parser::Parser(Lexer lexer)
     : m_parser_state(move(lexer))

@@ -11,10 +11,10 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <LibSQL/AST/Token.h>
 #include <LibSQL/Forward.h>
-#include <LibSQL/Token.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 template<class T, class... Args>
 static inline NonnullRefPtr<T>

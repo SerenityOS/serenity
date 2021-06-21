@@ -203,7 +203,7 @@ int Tuple::compare(const Tuple& other) const
     for (auto ix = 0u; ix < num_values; ix++) {
         auto ret = m_data[ix].compare(other.m_data[ix]);
         if (ret != 0) {
-            if ((ix < m_descriptor.size()) && m_descriptor[ix].order == Order::Descending)
+            if ((ix < m_descriptor.size()) && m_descriptor[ix].order == AST::Order::Descending)
                 ret = -ret;
             return ret;
         }
@@ -223,7 +223,7 @@ int Tuple::match(const Tuple& other) const
             return -1;
         auto ret = m_data[my_index.value()].compare(other_value);
         if (ret != 0)
-            return (m_descriptor[my_index.value()].order == Order::Descending) ? -ret : ret;
+            return (m_descriptor[my_index.value()].order == AST::Order::Descending) ? -ret : ret;
         other_index++;
     }
     return 0;

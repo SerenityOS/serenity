@@ -8,11 +8,11 @@
 
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <LibSQL/AST.h>
-#include <LibSQL/Lexer.h>
-#include <LibSQL/Token.h>
+#include <LibSQL/AST/AST.h>
+#include <LibSQL/AST/Lexer.h>
+#include <LibSQL/AST/Token.h>
 
-namespace SQL {
+namespace SQL::AST {
 
 namespace Limits {
 // https://www.sqlite.org/limits.html
