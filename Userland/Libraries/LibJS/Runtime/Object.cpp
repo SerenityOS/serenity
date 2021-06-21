@@ -742,23 +742,72 @@ bool Object::put_own_property_by_index(u32 property_index, Value value, Property
             attributes.set_has_setter();
     }
 
-    PropertyAttributes existing_attributes = new_property ? 0 : existing_property.value().attributes;
+    if (new_property) {
+        if (!is_extensible()) {
+            dbgln_if(OBJECT_DEBUG, "Disallow define_property of non-extensible object");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::NonExtensibleDefine, property_index);
+            return false;
+        }
 
-    if (!new_property && mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable() && attributes != existing_attributes) {
-        dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
-        if (throw_exceptions)
-            vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
-        return false;
-    }
+        m_indexed_properties.put(this, property_index, value, attributes, mode == PutOwnPropertyMode::Put ? AllowSideEffects::Yes : AllowSideEffects::No);
 
-    auto value_here = new_property ? Value() : existing_property.value().value;
-    if (!new_property && mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
-        dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
-        return false;
-    }
-
-    if (value.is_empty())
         return true;
+    }
+
+    if (attributes == 0 && value.is_empty())
+        return true;
+
+    PropertyAttributes existing_attributes = existing_property.value().attributes;
+    auto value_here = existing_property.value().value;
+
+    if (mode == PutOwnPropertyMode::DefineProperty && !existing_attributes.is_configurable()) {
+        if ((attributes.has_configurable() && attributes.is_configurable()) || (attributes.has_enumerable() && attributes.is_enumerable() != existing_attributes.is_enumerable())) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
+            return false;
+        }
+
+        if (value_here.is_accessor() != value.is_accessor()) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
+            return false;
+        }
+
+        if (!value_here.is_accessor() && !existing_attributes.is_writable() && ((attributes.has_writable() && attributes.is_writable()) || (!value.is_empty() && !same_value(value, value_here)))) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
+            return false;
+        }
+
+        if (value_here.is_accessor() && ((attributes.has_setter() && value.as_accessor().setter() != value_here.as_accessor().setter()) || (attributes.has_getter() && value.as_accessor().getter() != value_here.as_accessor().getter()))) {
+            dbgln_if(OBJECT_DEBUG, "Disallow reconfig of non-configurable property");
+            if (throw_exceptions)
+                vm().throw_exception<TypeError>(global_object(), ErrorType::DescChangeNonConfigurable, property_index);
+            return false;
+        }
+    }
+
+    if (mode == PutOwnPropertyMode::Put && !value_here.is_accessor() && !existing_attributes.is_writable()) {
+        dbgln_if(OBJECT_DEBUG, "Disallow write to non-writable property");
+        if (throw_exceptions)
+            vm().throw_exception<TypeError>(global_object(), ErrorType::DescWriteNonWritable, property_index);
+        return false;
+    }
+
+    PropertyAttributes combined_attributes = existing_attributes.overwrite(attributes);
+
+    if (value.is_empty()) {
+        if (combined_attributes == existing_attributes) {
+            return true;
+        }
+        value = value_here.value_or(js_undefined());
+    }
+
+    attributes = combined_attributes;
 
     if (value_here.is_native_property()) {
         call_native_property_setter(value_here.as_native_property(), this, value);
