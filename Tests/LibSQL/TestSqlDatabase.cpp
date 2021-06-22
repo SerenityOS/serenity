@@ -78,55 +78,55 @@ void verify_table_contents(SQL::Database& db, int expected_count)
 
 void insert_and_verify(int count)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         setup_table(db);
         db->commit();
     }
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         insert_into_table(db, count);
         db->commit();
     }
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         verify_table_contents(db, count);
     }
 }
 
 TEST_CASE(create_heap)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
-    auto heap = SQL::Heap::construct("test.db");
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto heap = SQL::Heap::construct("/tmp/test.db");
     EXPECT_EQ(heap->version(), 0x00000001u);
 }
 
 TEST_CASE(create_database)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
-    auto db = SQL::Database::construct("test.db");
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto db = SQL::Database::construct("/tmp/test.db");
     db->commit();
 }
 
 TEST_CASE(add_schema_to_database)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
-    auto db = SQL::Database::construct("test.db");
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto db = SQL::Database::construct("/tmp/test.db");
     setup_schema(db);
     db->commit();
 }
 
 TEST_CASE(get_schema_from_database)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         setup_schema(db);
         db->commit();
     }
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         auto schema = db->get_schema("TestSchema");
         EXPECT(schema);
     }
@@ -134,22 +134,22 @@ TEST_CASE(get_schema_from_database)
 
 TEST_CASE(add_table_to_database)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
-    auto db = SQL::Database::construct("test.db");
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
+    auto db = SQL::Database::construct("/tmp/test.db");
     setup_table(db);
     db->commit();
 }
 
 TEST_CASE(get_table_from_database)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         setup_table(db);
         db->commit();
     }
     {
-        auto db = SQL::Database::construct("test.db");
+        auto db = SQL::Database::construct("/tmp/test.db");
         auto table = db->get_table("TestSchema", "TestTable");
         EXPECT(table);
         EXPECT_EQ(table->name(), "TestTable");
