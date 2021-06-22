@@ -8,44 +8,13 @@
 #include "FileUtils.h"
 #include "FileOperationProgressWidget.h"
 #include <AK/LexicalPath.h>
-#include <LibCore/DirIterator.h>
 #include <LibCore/File.h>
 #include <LibGUI/MessageBox.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 namespace FileManager {
 
 HashTable<NonnullRefPtr<GUI::Window>> file_operation_windows;
-
-void delete_path(String const& path, GUI::Window* parent_window)
-{
-    struct stat st;
-    if (lstat(path.characters(), &st)) {
-        GUI::MessageBox::show(parent_window,
-            String::formatted("lstat({}) failed: {}", path, strerror(errno)),
-            "Delete failed",
-            GUI::MessageBox::Type::Error);
-    }
-
-    bool is_directory = S_ISDIR(st.st_mode);
-    auto result = Core::File::remove(path, Core::File::RecursionMode::Allowed, false);
-
-    if (result.is_error()) {
-        auto& error = result.error();
-        if (is_directory) {
-            GUI::MessageBox::show(parent_window,
-                String::formatted("Failed to delete directory \"{}\": {}", error.file, error.error_code),
-                "Delete failed",
-                GUI::MessageBox::Type::Error);
-        } else {
-            GUI::MessageBox::show(parent_window,
-                String::formatted("Failed to delete file \"{}\": {}", error.file, error.error_code),
-                "Delete failed",
-                GUI::MessageBox::Type::Error);
-        }
-    }
-}
 
 void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window* parent_window)
 {
@@ -66,9 +35,7 @@ void delete_paths(Vector<String> const& paths, bool should_confirm, GUI::Window*
             return;
     }
 
-    for (auto& path : paths) {
-        delete_path(path, parent_window);
-    }
+    run_file_operation(FileOperation::Delete, paths, {}, parent_window);
 }
 
 void run_file_operation(FileOperation operation, Vector<String> const& sources, String const& destination, GUI::Window* parent_window)
@@ -105,6 +72,9 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         case FileOperation::Move:
             file_operation_args.append("Move");
             break;
+        case FileOperation::Delete:
+            file_operation_args.append("Delete");
+            break;
         default:
             VERIFY_NOT_REACHED();
         }
@@ -112,7 +82,9 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         for (auto& source : sources)
             file_operation_args.append(source.characters());
 
-        file_operation_args.append(destination.characters());
+        if (operation != FileOperation::Delete)
+            file_operation_args.append(destination.characters());
+
         file_operation_args.append(nullptr);
 
         if (execvp(file_operation_args.first(), const_cast<char**>(file_operation_args.data())) < 0) {
@@ -139,6 +111,9 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         break;
     case FileOperation::Move:
         window->set_title("Moving Files...");
+        break;
+    case FileOperation::Delete:
+        window->set_title("Deleting Files...");
         break;
     default:
         VERIFY_NOT_REACHED();
