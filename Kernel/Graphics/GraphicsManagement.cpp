@@ -13,6 +13,7 @@
 #include <Kernel/Graphics/Console/TextModeConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/IntelNativeGraphicsAdapter.h>
+#include <Kernel/Graphics/QXLGraphicsAdapter.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/IO.h>
 #include <Kernel/Multiboot.h>
@@ -124,8 +125,10 @@ UNMAP_AFTER_INIT bool GraphicsManagement::initialize()
         // framebuffer console will take the control instead.
         RefPtr<GraphicsDevice> adapter;
         bool is_vga_compatible = is_vga_compatible_pci_device(address);
-        if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef)) {
-            adapter = BochsGraphicsAdapter::initialize(address);
+        if (id.vendor_id == 0x1b36 && id.device_id == 0x100) {
+            adapter = QXLGraphicsAdapter::initialize(address);
+        } else if ((id.vendor_id == 0x1234 && id.device_id == 0x1111) || (id.vendor_id == 0x80ee && id.device_id == 0xbeef)) {
+            //adapter = BochsGraphicsAdapter::initialize(address);
         } else if (is_vga_compatible) {
             if (id.vendor_id == 0x8086) {
                 adapter = IntelNativeGraphicsAdapter::initialize(address);

@@ -20,10 +20,12 @@ namespace Kernel {
 
 class BochsGraphicsAdapter;
 class IntelNativeGraphicsAdapter;
+class QXLGraphicsAdapter;
 class VGACompatibleAdapter;
 class GraphicsManagement {
     friend class BochsGraphicsAdapter;
     friend class IntelNativeGraphicsAdapter;
+    friend class QXLGraphicsAdapter;
     friend class VGACompatibleAdapter;
     AK_MAKE_ETERNAL
 

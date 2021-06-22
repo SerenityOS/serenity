@@ -18,6 +18,7 @@ public:
     enum class Type {
         VGACompatible,
         Bochs,
+        QXL,
         SVGA,
         Raw
     };

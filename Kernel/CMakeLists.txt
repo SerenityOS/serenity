@@ -66,6 +66,7 @@ set(KERNEL_SOURCES
     Graphics/FramebufferDevice.cpp
     Graphics/GraphicsManagement.cpp
     Graphics/IntelNativeGraphicsAdapter.cpp
+    Graphics/QXLGraphicsAdapter.cpp
     Graphics/VGACompatibleAdapter.cpp
     Storage/Partition/DiskPartition.cpp
     Storage/Partition/DiskPartitionMetadata.cpp
@@ -313,6 +314,7 @@ set(KEYBOARD_SOURCES
 
 set(CRYPTO_SOURCES
     ../Userland/Libraries/LibCrypto/Cipher/AES.cpp
+    ../Userland/Libraries/LibCrypto/Checksum/CRC32.cpp
     ../Userland/Libraries/LibCrypto/Hash/SHA2.cpp
 )
 
