@@ -102,7 +102,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.current_environment_record(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.lexical_environment(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -303,8 +303,8 @@ Value WithStatement::execute(Interpreter& interpreter, GlobalObject& global_obje
 
     VERIFY(object);
 
-    auto* object_environment_record = new_object_environment(*object, true, interpreter.vm().call_frame().environment_record);
-    TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().environment_record, object_environment_record);
+    auto* object_environment_record = new_object_environment(*object, true, interpreter.vm().call_frame().lexical_environment);
+    TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().lexical_environment, object_environment_record);
     return interpreter.execute_statement(global_object, m_body).value_or(js_undefined());
 }
 
@@ -850,7 +850,7 @@ Value ClassDeclaration::execute(Interpreter& interpreter, GlobalObject& global_o
     if (interpreter.exception())
         return {};
 
-    interpreter.current_environment_record()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
+    interpreter.lexical_environment()->put_into_environment_record(m_class_expression->name(), { class_constructor, DeclarationKind::Let });
 
     return {};
 }
@@ -2052,8 +2052,8 @@ Value TryStatement::execute(Interpreter& interpreter, GlobalObject& global_objec
 
             HashMap<FlyString, Variable> parameters;
             parameters.set(m_handler->parameter(), Variable { exception->value(), DeclarationKind::Var });
-            auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(parameters), interpreter.vm().call_frame().environment_record);
-            TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().environment_record, catch_scope);
+            auto* catch_scope = interpreter.heap().allocate<DeclarativeEnvironmentRecord>(global_object, move(parameters), interpreter.vm().call_frame().lexical_environment);
+            TemporaryChange<EnvironmentRecord*> scope_change(interpreter.vm().call_frame().lexical_environment, catch_scope);
             result = interpreter.execute_statement(global_object, m_handler->body());
         }
     }

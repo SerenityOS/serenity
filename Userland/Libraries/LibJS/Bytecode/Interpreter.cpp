@@ -48,7 +48,7 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
         global_call_frame.this_value = &global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";
         global_call_frame.function_name = global_execution_context_name;
-        global_call_frame.environment_record = &global_object();
+        global_call_frame.lexical_environment = &global_object();
         VERIFY(!vm().exception());
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
         // global_call_frame.is_strict_mode = ???;

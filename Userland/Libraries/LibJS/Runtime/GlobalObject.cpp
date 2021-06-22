@@ -362,7 +362,7 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
     }
 
     auto& caller_frame = vm.call_stack().at(vm.call_stack().size() - 2);
-    TemporaryChange scope_change(vm.call_frame().environment_record, caller_frame->environment_record);
+    TemporaryChange scope_change(vm.call_frame().lexical_environment, caller_frame->lexical_environment);
 
     auto& interpreter = vm.interpreter();
     return interpreter.execute_statement(global_object, program).value_or(js_undefined());

@@ -107,7 +107,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
             if (argument.is_cell())
                 roots.set(&argument.as_cell());
         }
-        roots.set(call_frame->environment_record);
+        roots.set(call_frame->lexical_environment);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -137,7 +137,7 @@ void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_o
 {
     Optional<Variable> possible_match;
     if (!specific_scope && m_call_stack.size()) {
-        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
@@ -169,7 +169,7 @@ bool VM::delete_variable(FlyString const& name)
     EnvironmentRecord* specific_scope = nullptr;
     Optional<Variable> possible_match;
     if (!m_call_stack.is_empty()) {
-        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
                 specific_scope = environment_record;
@@ -365,7 +365,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             //       a function parameter, or by a local var declaration, we use that.
             //       Otherwise, we return a lazily constructed Array with all the argument values.
             // FIXME: Do something much more spec-compliant.
-            auto possible_match = current_environment_record()->get_from_environment_record(name);
+            auto possible_match = lexical_environment()->get_from_environment_record(name);
             if (possible_match.has_value())
                 return possible_match.value().value;
             if (!call_frame().arguments_object) {
@@ -378,7 +378,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             return call_frame().arguments_object;
         }
 
-        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             auto possible_match = environment_record->get_from_environment_record(name);
             if (exception())
                 return {};
@@ -395,7 +395,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 Reference VM::get_reference(const FlyString& name)
 {
     if (m_call_stack.size()) {
-        for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
+        for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             if (is<GlobalObject>(environment_record))
                 break;
             auto possible_match = environment_record->get_from_environment_record(name);
@@ -427,7 +427,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     if (arguments.has_value())
         call_frame.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    call_frame.environment_record = environment;
+    call_frame.lexical_environment = environment;
+    call_frame.variable_environment = environment;
     if (environment)
         environment->set_new_target(&new_target);
 
@@ -462,8 +463,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
-            VERIFY(is<FunctionEnvironmentRecord>(current_environment_record()));
-            static_cast<FunctionEnvironmentRecord*>(current_environment_record())->replace_this_binding(result);
+            VERIFY(is<FunctionEnvironmentRecord>(lexical_environment()));
+            static_cast<FunctionEnvironmentRecord*>(lexical_environment())->replace_this_binding(result);
         }
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -525,7 +526,8 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     if (arguments.has_value())
         call_frame.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    call_frame.environment_record = environment;
+    call_frame.lexical_environment = environment;
+    call_frame.variable_environment = environment;
 
     if (environment) {
         VERIFY(environment->this_binding_status() == FunctionEnvironmentRecord::ThisBindingStatus::Uninitialized);
@@ -612,7 +614,7 @@ void VM::dump_backtrace() const
 
 void VM::dump_environment_record_chain() const
 {
-    for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
+    for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
         dbgln("+> {} ({:p})", environment_record->class_name(), environment_record);
         if (is<DeclarativeEnvironmentRecord>(*environment_record)) {
             auto& declarative_environment_record = static_cast<DeclarativeEnvironmentRecord const&>(*environment_record);
