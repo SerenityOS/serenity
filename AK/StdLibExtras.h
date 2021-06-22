@@ -59,19 +59,19 @@ constexpr SizeType array_size(T (&)[N])
 }
 
 template<typename T>
-constexpr T min(const T& a, const T& b)
+constexpr T min(const T& a, const IdentityType<T>& b)
 {
     return b < a ? b : a;
 }
 
 template<typename T>
-constexpr T max(const T& a, const T& b)
+constexpr T max(const T& a, const IdentityType<T>& b)
 {
     return a < b ? b : a;
 }
 
 template<typename T>
-constexpr T clamp(const T& value, const T& min, const T& max)
+constexpr T clamp(const T& value, const IdentityType<T>& min, const IdentityType<T>& max)
 {
     VERIFY(max >= min);
     if (value > max)
