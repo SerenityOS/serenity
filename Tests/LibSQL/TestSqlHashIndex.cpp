@@ -138,9 +138,9 @@ NonnullRefPtr<SQL::HashIndex> setup_hash_index(SQL::Heap& heap)
 
 void insert_and_get_to_and_from_hash_index(int num_keys)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto heap = SQL::Heap::construct("test.db");
+        auto heap = SQL::Heap::construct("/tmp/test.db");
         auto hash_index = setup_hash_index(heap);
 
         for (auto ix = 0; ix < num_keys; ix++) {
@@ -156,7 +156,7 @@ void insert_and_get_to_and_from_hash_index(int num_keys)
     }
 
     {
-        auto heap = SQL::Heap::construct("test.db");
+        auto heap = SQL::Heap::construct("/tmp/test.db");
         auto hash_index = setup_hash_index(heap);
 
         for (auto ix = 0; ix < num_keys; ix++) {
@@ -232,9 +232,9 @@ TEST_CASE(hash_index_50_keys)
 
 void insert_into_and_scan_hash_index(int num_keys)
 {
-    ScopeGuard guard([]() { unlink("test.db"); });
+    ScopeGuard guard([]() { unlink("/tmp/test.db"); });
     {
-        auto heap = SQL::Heap::construct("test.db");
+        auto heap = SQL::Heap::construct("/tmp/test.db");
         auto hash_index = setup_hash_index(heap);
 
         for (auto ix = 0; ix < num_keys; ix++) {
@@ -250,7 +250,7 @@ void insert_into_and_scan_hash_index(int num_keys)
     }
 
     {
-        auto heap = SQL::Heap::construct("test.db");
+        auto heap = SQL::Heap::construct("/tmp/test.db");
         auto hash_index = setup_hash_index(heap);
         Vector<bool> found;
         for (auto ix = 0; ix < num_keys; ix++) {
