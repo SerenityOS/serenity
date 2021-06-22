@@ -24,7 +24,7 @@ KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
     if (size > NumericLimits<ssize_t>::max())
         return EINVAL;
 
-    int new_fd = alloc_fd();
+    int new_fd = m_fds.allocate();
     if (new_fd < 0)
         return new_fd;
 

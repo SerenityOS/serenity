@@ -17,7 +17,7 @@ KResultOr<FlatPtr> Process::sys$create_inode_watcher(u32 flags)
 {
     REQUIRE_PROMISE(rpath);
 
-    int fd = alloc_fd();
+    int fd = m_fds.allocate();
     if (fd < 0)
         return fd;
 
@@ -48,7 +48,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
     if (!copy_from_user(&params, user_params))
         return EFAULT;
 
-    auto description = file_description(params.fd);
+    auto description = fds().file_description(params.fd);
     if (!description)
         return EBADF;
     if (!description->is_inode_watcher())
@@ -75,7 +75,7 @@ KResultOr<FlatPtr> Process::sys$inode_watcher_add_watch(Userspace<const Syscall:
 
 KResultOr<FlatPtr> Process::sys$inode_watcher_remove_watch(int fd, int wd)
 {
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     if (!description->is_inode_watcher())

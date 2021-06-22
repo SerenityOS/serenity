@@ -17,7 +17,7 @@ KResultOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_le
         return EFAULT;
     if (length < 0)
         return EINVAL;
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     if (!description->is_writable())

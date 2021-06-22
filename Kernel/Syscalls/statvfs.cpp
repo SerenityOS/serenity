@@ -87,7 +87,7 @@ KResultOr<FlatPtr> Process::sys$fstatvfs(int fd, statvfs* buf)
 {
     REQUIRE_PROMISE(stdio);
 
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
 

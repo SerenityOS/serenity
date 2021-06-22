@@ -228,9 +228,6 @@ public:
 
     bool in_group(gid_t) const;
 
-    RefPtr<FileDescription> file_description(int fd) const;
-    int fd_flags(int fd) const;
-
     // Breakable iteration functions
     template<IteratorFunction<Process&> Callback>
     static void for_each(Callback);
@@ -443,12 +440,6 @@ public:
     const Vector<String>& arguments() const { return m_arguments; };
     const Vector<String>& environment() const { return m_environment; };
 
-    int number_of_open_file_descriptors() const;
-    int max_open_file_descriptors() const
-    {
-        return m_max_open_file_descriptors;
-    }
-
     KResult exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
     KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
@@ -541,8 +532,6 @@ private:
 
     KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & elf_header, int nread, size_t file_size);
 
-    int alloc_fd(int first_candidate_fd = 0);
-
     KResult do_kill(Process&, int signal);
     KResult do_killpg(ProcessGroupID pgrp, int signal);
     KResult do_killall(int signal);
@@ -586,8 +575,6 @@ private:
 
     OwnPtr<ThreadTracer> m_tracer;
 
-    static constexpr int m_max_open_file_descriptors { FD_SETSIZE };
-
 public:
     class FileDescriptionAndFlags {
         friend class FileDescriptionRegistrar;
@@ -616,14 +603,62 @@ public:
         InodeIndex m_global_procfs_inode_index;
     };
 
-    // FIXME: We create a copy when trying to iterate the Vector because
-    // we don't want to put lots of locking when accessing this Vector.
-    // Maybe try to encapsulate the Vector inside a protective class with locking
-    // mechanism.
-    Vector<FileDescriptionAndFlags> fds() const { return m_fds; }
+    class FileDescriptions {
+        friend class Process;
+
+    public:
+        ALWAYS_INLINE const FileDescriptionAndFlags& operator[](size_t i) const { return at(i); }
+        ALWAYS_INLINE FileDescriptionAndFlags& operator[](size_t i) { return at(i); }
+
+        FileDescriptions& operator=(const Kernel::Process::FileDescriptions& other)
+        {
+            ScopedSpinLock lock(m_fds_lock);
+            ScopedSpinLock lock_other(other.m_fds_lock);
+            m_fds_metadatas = other.m_fds_metadatas;
+            for (auto& file_description_metadata : m_fds_metadatas) {
+                file_description_metadata.refresh_inode_index();
+            }
+            return *this;
+        }
+
+        const FileDescriptionAndFlags& at(size_t i) const;
+        FileDescriptionAndFlags& at(size_t i);
+
+        void enumerate(Function<void(const FileDescriptionAndFlags&)>) const;
+        void change_each(Function<void(FileDescriptionAndFlags&)>);
+
+        int allocate(int first_candidate_fd = 0);
+        size_t open_count() const;
+
+        bool try_resize(size_t size) { return m_fds_metadatas.try_resize(size); }
+
+        size_t max_open() const
+        {
+            return m_max_open_file_descriptors;
+        }
+
+        void clear()
+        {
+            ScopedSpinLock lock(m_fds_lock);
+            m_fds_metadatas.clear();
+        }
+
+        // FIXME: Consider to remove this somehow
+        RefPtr<FileDescription> file_description(int fd) const;
+        int fd_flags(int fd) const;
+
+    private:
+        FileDescriptions() = default;
+        static constexpr size_t m_max_open_file_descriptors { FD_SETSIZE };
+        mutable SpinLock<u8> m_fds_lock;
+        Vector<FileDescriptionAndFlags> m_fds_metadatas;
+    };
+
+    FileDescriptions& fds() { return m_fds; }
+    const FileDescriptions& fds() const { return m_fds; }
 
 private:
-    Vector<FileDescriptionAndFlags> m_fds;
+    FileDescriptions m_fds;
 
     mutable RecursiveSpinLock m_thread_list_lock;
 
@@ -659,7 +694,6 @@ private:
 
     FutexQueues m_futex_queues;
     SpinLock<u8> m_futex_lock;
-    mutable SpinLock<u8> m_fds_lock;
 
     // This member is used in the implementation of ptrace's PT_TRACEME flag.
     // If it is set to true, the process will stop at the next execve syscall

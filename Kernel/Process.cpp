@@ -159,7 +159,7 @@ RefPtr<Process> Process::create_user_process(RefPtr<Thread>& first_thread, const
     auto process = Process::create(first_thread, parts.take_last(), uid, gid, parent_pid, false, move(cwd), nullptr, tty);
     if (!first_thread)
         return {};
-    if (!process->m_fds.try_resize(m_max_open_file_descriptors)) {
+    if (!process->m_fds.try_resize(process->m_fds.max_open())) {
         first_thread = nullptr;
         return {};
     }
@@ -393,42 +393,68 @@ RefPtr<Process> Process::from_pid(ProcessID pid)
     return {};
 }
 
-RefPtr<FileDescription> Process::file_description(int fd) const
+const Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i) const
+{
+    ScopedSpinLock lock(m_fds_lock);
+    return m_fds_metadatas[i];
+}
+Process::FileDescriptionAndFlags& Process::FileDescriptions::at(size_t i)
+{
+    ScopedSpinLock lock(m_fds_lock);
+    return m_fds_metadatas[i];
+}
+
+RefPtr<FileDescription> Process::FileDescriptions::file_description(int fd) const
 {
     ScopedSpinLock lock(m_fds_lock);
     if (fd < 0)
         return nullptr;
-    if (static_cast<size_t>(fd) < m_fds.size())
-        return m_fds[fd].description();
+    if (static_cast<size_t>(fd) < m_fds_metadatas.size())
+        return m_fds_metadatas[fd].description();
     return nullptr;
 }
 
-int Process::fd_flags(int fd) const
+int Process::FileDescriptions::fd_flags(int fd) const
 {
     ScopedSpinLock lock(m_fds_lock);
     if (fd < 0)
         return -1;
-    if (static_cast<size_t>(fd) < m_fds.size())
-        return m_fds[fd].flags();
+    if (static_cast<size_t>(fd) < m_fds_metadatas.size())
+        return m_fds_metadatas[fd].flags();
     return -1;
 }
 
-int Process::number_of_open_file_descriptors() const
+void Process::FileDescriptions::enumerate(Function<void(const FileDescriptionAndFlags&)> callback) const
 {
     ScopedSpinLock lock(m_fds_lock);
-    int count = 0;
-    for (size_t index = 0; index < m_fds.size(); index++) {
-        if (m_fds[index].is_valid())
-            ++count;
+    for (auto& file_description_metadata : m_fds_metadatas) {
+        callback(file_description_metadata);
     }
+}
+
+void Process::FileDescriptions::change_each(Function<void(FileDescriptionAndFlags&)> callback)
+{
+    ScopedSpinLock lock(m_fds_lock);
+    for (auto& file_description_metadata : m_fds_metadatas) {
+        callback(file_description_metadata);
+    }
+}
+
+size_t Process::FileDescriptions::open_count() const
+{
+    size_t count = 0;
+    enumerate([&](auto& file_description_metadata) {
+        if (file_description_metadata.is_valid())
+            ++count;
+    });
     return count;
 }
 
-int Process::alloc_fd(int first_candidate_fd)
+int Process::FileDescriptions::allocate(int first_candidate_fd)
 {
     ScopedSpinLock lock(m_fds_lock);
-    for (int i = first_candidate_fd; i < (int)m_max_open_file_descriptors; ++i) {
-        if (!m_fds[i])
+    for (size_t i = first_candidate_fd; i < max_open(); ++i) {
+        if (!m_fds_metadatas[i])
             return i;
     }
     return -EMFILE;
