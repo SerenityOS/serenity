@@ -172,11 +172,11 @@ int main(int argc, char** argv)
     });
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
-        if (!file_path.is_empty() && window->is_modified()) {
+        if (window->is_modified()) {
             auto save_document_first_result = GUI::MessageBox::show(window, "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 save_action->activate();
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && window->is_modified())
                 return;
         }
 
