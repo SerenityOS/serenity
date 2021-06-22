@@ -186,6 +186,7 @@ bool TLSv12::check_connection_state(bool read)
         // an abrupt closure (the server is a jerk)
         dbgln_if(TLS_DEBUG, "Socket not open, assuming abrupt closure");
         m_context.connection_finished = true;
+        return false;
     }
     if (m_context.critical_error) {
         dbgln_if(TLS_DEBUG, "CRITICAL ERROR {} :(", m_context.critical_error);
