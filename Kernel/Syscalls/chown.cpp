@@ -12,7 +12,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
     REQUIRE_PROMISE(chown);
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     return description->chown(uid, gid);
