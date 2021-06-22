@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/IRQHandler.h>

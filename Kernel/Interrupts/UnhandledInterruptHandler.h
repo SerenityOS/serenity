@@ -8,7 +8,6 @@
 
 #include <AK/String.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 
 namespace Kernel {

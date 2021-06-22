@@ -4,10 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
-#include <limits.h>
 
 namespace Kernel {
 
