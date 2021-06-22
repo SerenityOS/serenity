@@ -12,7 +12,7 @@ namespace Kernel {
 
 KResultOr<int> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     if (request == FIONBIO) {

@@ -36,7 +36,7 @@ KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> use
     if (fs_type.is_null())
         return EFAULT;
 
-    auto description = file_description(source_fd);
+    auto description = fds().file_description(source_fd);
     if (!description.is_null())
         dbgln("mount {}: source fd {} @ {}", fs_type, source_fd, target);
     else

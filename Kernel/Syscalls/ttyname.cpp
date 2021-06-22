@@ -14,7 +14,7 @@ namespace Kernel {
 KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     if (!description->is_tty())
@@ -30,7 +30,7 @@ KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size
 KResultOr<int> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     auto* master_pty = description->master_pty();

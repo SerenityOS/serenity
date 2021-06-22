@@ -454,7 +454,7 @@ private:
             process_object.add("uid", process.uid());
             process_object.add("gid", process.gid());
             process_object.add("ppid", process.ppid().value());
-            process_object.add("nfds", process.number_of_open_file_descriptors());
+            process_object.add("nfds", process.fds().open_count());
             process_object.add("name", process.name());
             process_object.add("executable", process.executable() ? process.executable()->absolute_path() : "");
             process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
@@ -1239,7 +1239,7 @@ private:
 KResultOr<size_t> ProcFSProcessFileDescriptions::entries_count() const
 {
     Locker locker(m_lock);
-    return m_process_folder->m_associated_process->number_of_open_file_descriptors();
+    return m_process_folder->m_associated_process->fds().open_count();
 }
 KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Function<bool(const FS::DirectoryEntryView&)> callback) const
 {
@@ -1248,29 +1248,36 @@ KResult ProcFSProcessFileDescriptions::traverse_as_directory(unsigned fsid, Func
     callback({ "..", { fsid, m_parent_folder->component_index() }, 0 });
 
     auto process = m_process_folder->m_associated_process;
-    for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
-        auto description_metadata = process->fds()[i];
-        if (!description_metadata.is_valid())
-            continue;
-        InodeIdentifier identifier = { fsid, description_metadata.global_procfs_inode_index() };
-        callback({ String::number(i), identifier, 0 });
-    }
+    size_t count = 0;
+    m_process_folder->m_associated_process->fds().enumerate([&](auto& file_description_metadata) {
+        if (!file_description_metadata.is_valid()) {
+            count++;
+            return;
+        }
+        InodeIdentifier identifier = { fsid, file_description_metadata.global_procfs_inode_index() };
+        callback({ String::number(count), identifier, 0 });
+        count++;
+    });
     return KSuccess;
 }
 RefPtr<ProcFSExposedComponent> ProcFSProcessFileDescriptions::lookup(StringView name)
 {
     Locker locker(m_lock);
     auto process = m_process_folder->m_associated_process;
-    ScopedSpinLock lock(process->m_fds_lock);
-    for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
-        auto description_metadata = process->fds()[i];
-        if (!description_metadata.is_valid())
-            continue;
-        if (name == String::number(i)) {
-            return ProcFSProcessFileDescription::create(i, *description_metadata.description(), description_metadata.global_procfs_inode_index(), *this);
+    RefPtr<ProcFSProcessFileDescription> procfd_fd;
+    // FIXME: Try to exit the loop earlier
+    size_t count = 0;
+    m_process_folder->m_associated_process->fds().enumerate([&](auto& file_description_metadata) {
+        if (!file_description_metadata.is_valid()) {
+            count++;
+            return;
         }
-    }
-    return nullptr;
+        if (name == String::number(count)) {
+            procfd_fd = ProcFSProcessFileDescription::create(count, *file_description_metadata.description(), file_description_metadata.global_procfs_inode_index(), *this);
+        }
+        count++;
+    });
+    return procfd_fd;
 }
 
 class ProcFSProcessUnveil final : public ProcFSProcessInformation {
@@ -1350,19 +1357,21 @@ private:
     {
         JsonArraySerializer array { builder };
         auto process = m_parent_folder->m_associated_process;
-        if (process->number_of_open_file_descriptors() == 0) {
+        if (process->fds().open_count() == 0) {
             array.finish();
             return true;
         }
 
-        for (int i = 0; i < process->max_open_file_descriptors(); ++i) {
-            auto description = process->file_description(i);
-            if (!description)
-                continue;
-            bool cloexec = process->fd_flags(i) & FD_CLOEXEC;
-
+        size_t count = 0;
+        process->fds().enumerate([&](auto& file_description_metadata) {
+            if (!file_description_metadata.is_valid()) {
+                count++;
+                return;
+            }
+            bool cloexec = file_description_metadata.flags() & FD_CLOEXEC;
+            RefPtr<FileDescription> description = file_description_metadata.description();
             auto description_object = array.add_object();
-            description_object.add("fd", i);
+            description_object.add("fd", count);
             description_object.add("absolute_path", description->absolute_path());
             description_object.add("seekable", description->file().is_seekable());
             description_object.add("class", description->file().class_name());
@@ -1371,7 +1380,9 @@ private:
             description_object.add("blocking", description->is_blocking());
             description_object.add("can_read", description->can_read());
             description_object.add("can_write", description->can_write());
-        }
+            count++;
+        });
+
         array.finish();
         return true;
     }

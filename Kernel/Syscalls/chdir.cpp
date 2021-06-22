@@ -27,7 +27,7 @@ KResultOr<int> Process::sys$chdir(Userspace<const char*> user_path, size_t path_
 KResultOr<int> Process::sys$fchdir(int fd)
 {
     REQUIRE_PROMISE(stdio);
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
 

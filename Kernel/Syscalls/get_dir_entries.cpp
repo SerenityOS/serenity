@@ -14,7 +14,7 @@ KResultOr<size_t> Process::sys$get_dir_entries(int fd, Userspace<void*> user_buf
     REQUIRE_PROMISE(stdio);
     if (user_size > NumericLimits<ssize_t>::max())
         return EINVAL;
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     auto buffer = UserOrKernelBuffer::for_user_buffer(user_buffer, static_cast<size_t>(user_size));
