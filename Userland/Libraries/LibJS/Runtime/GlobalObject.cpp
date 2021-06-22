@@ -40,6 +40,7 @@
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionPrototype.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorPrototype.h>
 #include <LibJS/Runtime/JSONObject.h>
@@ -82,7 +83,7 @@
 namespace JS {
 
 GlobalObject::GlobalObject()
-    : EnvironmentRecord(GlobalObjectTag::Tag)
+    : Object(GlobalObjectTag::Tag)
     , m_console(make<Console>(*this))
 {
 }
@@ -97,6 +98,8 @@ void GlobalObject::initialize_global_object()
     m_empty_object_shape = heap().allocate_without_global_object<Shape>(*this);
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
+
+    m_environment_record = heap().allocate_without_global_object<GlobalEnvironmentRecord>(*this);
 
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
@@ -207,6 +210,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
     visitor.visit(m_new_script_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
+    visitor.visit(m_environment_record);
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     visitor.visit(m_##snake_name##_constructor);                                         \
@@ -326,24 +330,6 @@ JS_DEFINE_NATIVE_FUNCTION(GlobalObject::parse_int)
         return js_nan();
 
     return Value(sign * number);
-}
-
-Optional<Variable> GlobalObject::get_from_environment_record(FlyString const& name) const
-{
-    auto value = get(name);
-    if (value.is_empty())
-        return {};
-    return Variable { value, DeclarationKind::Var };
-}
-
-void GlobalObject::put_into_environment_record(FlyString const& name, Variable variable)
-{
-    put(name, variable.value);
-}
-
-bool GlobalObject::delete_from_environment_record(FlyString const& name)
-{
-    return delete_property(name);
 }
 
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x

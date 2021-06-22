@@ -10,6 +10,7 @@
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
@@ -50,8 +51,8 @@ void Interpreter::run(GlobalObject& global_object, const Program& program)
     global_call_frame.this_value = &global_object;
     static FlyString global_execution_context_name = "(global execution context)";
     global_call_frame.function_name = global_execution_context_name;
-    global_call_frame.lexical_environment = &global_object;
-    global_call_frame.variable_environment = &global_object;
+    global_call_frame.lexical_environment = &global_object.environment_record();
+    global_call_frame.variable_environment = &global_object.environment_record();
     VERIFY(!vm.exception());
     global_call_frame.is_strict_mode = program.is_strict_mode();
     vm.push_call_frame(global_call_frame, global_object);

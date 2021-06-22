@@ -32,7 +32,6 @@ public:
 
 protected:
     explicit EnvironmentRecord(EnvironmentRecord* parent);
-    explicit EnvironmentRecord(GlobalObjectTag);
 
     virtual void visit_edges(Visitor&) override;
 

@@ -10,6 +10,7 @@
 #include <LibJS/Bytecode/Instruction.h>
 #include <LibJS/Bytecode/Interpreter.h>
 #include <LibJS/Bytecode/Op.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS::Bytecode {
@@ -48,7 +49,8 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
         global_call_frame.this_value = &global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";
         global_call_frame.function_name = global_execution_context_name;
-        global_call_frame.lexical_environment = &global_object();
+        global_call_frame.lexical_environment = &global_object().environment_record();
+        global_call_frame.variable_environment = &global_object().environment_record();
         VERIFY(!vm().exception());
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
         // global_call_frame.is_strict_mode = ???;

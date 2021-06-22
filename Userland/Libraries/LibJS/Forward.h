@@ -129,6 +129,7 @@ class Exception;
 class Expression;
 class FunctionEnvironmentRecord;
 class FunctionNode;
+class GlobalEnvironmentRecord;
 class GlobalObject;
 class HandleImpl;
 class Heap;

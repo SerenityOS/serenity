@@ -14,6 +14,7 @@
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
 #include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -394,14 +395,10 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 
 Reference VM::get_reference(const FlyString& name)
 {
-    if (m_call_stack.size()) {
-        for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
-            if (is<GlobalObject>(environment_record))
-                break;
-            auto possible_match = environment_record->get_from_environment_record(name);
-            if (possible_match.has_value())
-                return { Reference::LocalVariable, name };
-        }
+    for (auto* environment_record = lexical_environment(); environment_record && environment_record->outer_environment(); environment_record = environment_record->outer_environment()) {
+        auto possible_match = environment_record->get_from_environment_record(name);
+        if (possible_match.has_value())
+            return { Reference::LocalVariable, name };
     }
     return { Reference::GlobalVariable, name };
 }

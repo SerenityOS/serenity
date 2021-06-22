@@ -108,6 +108,7 @@ public:
     virtual bool is_global_object() const { return false; }
     virtual bool is_proxy_object() const { return false; }
     virtual bool is_native_function() const { return false; }
+    virtual bool is_global_environment_record() const { return false; }
     virtual bool is_declarative_environment_record() const { return false; }
     virtual bool is_function_environment_record() const { return false; }
 
