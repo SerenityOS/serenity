@@ -52,8 +52,8 @@ private:
 };
 
 struct CursorPosition {
-    u16 row { 0 };
-    u16 column { 0 };
+    size_t row { 0 };
+    size_t column { 0 };
 
     void clamp(u16 max_row, u16 max_column)
     {
