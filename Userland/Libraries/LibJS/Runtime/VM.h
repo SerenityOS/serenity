@@ -49,7 +49,8 @@ struct CallFrame {
     Value this_value;
     Vector<Value> arguments;
     Array* arguments_object { nullptr };
-    EnvironmentRecord* environment_record { nullptr };
+    EnvironmentRecord* lexical_environment { nullptr };
+    EnvironmentRecord* variable_environment { nullptr };
     bool is_strict_mode { false };
 };
 
@@ -122,8 +123,11 @@ public:
     const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
     Vector<CallFrame*>& call_stack() { return m_call_stack; }
 
-    EnvironmentRecord const* current_environment_record() const { return call_frame().environment_record; }
-    EnvironmentRecord* current_environment_record() { return call_frame().environment_record; }
+    EnvironmentRecord const* lexical_environment() const { return call_frame().lexical_environment; }
+    EnvironmentRecord* lexical_environment() { return call_frame().lexical_environment; }
+
+    EnvironmentRecord const* variable_environment() const { return call_frame().variable_environment; }
+    EnvironmentRecord* variable_environment() { return call_frame().variable_environment; }
 
     bool in_strict_mode() const;
 

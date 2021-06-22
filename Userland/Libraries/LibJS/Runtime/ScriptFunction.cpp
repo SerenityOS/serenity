@@ -166,7 +166,7 @@ Value ScriptFunction::execute_function_body()
                     if (i >= call_frame_args.size())
                         call_frame_args.resize(i + 1);
                     call_frame_args[i] = argument_value;
-                    vm.assign(param, argument_value, global_object(), true, vm.current_environment_record());
+                    vm.assign(param, argument_value, global_object(), true, vm.lexical_environment());
                 });
 
             if (vm.exception())
@@ -191,7 +191,7 @@ Value ScriptFunction::execute_function_body()
         if (m_kind != FunctionKind::Generator)
             return result;
 
-        return GeneratorObject::create(global_object(), result, this, vm.call_frame().environment_record, bytecode_interpreter->snapshot_frame());
+        return GeneratorObject::create(global_object(), result, this, vm.call_frame().lexical_environment, bytecode_interpreter->snapshot_frame());
     } else {
         VERIFY(m_kind != FunctionKind::Generator);
         OwnPtr<Interpreter> local_interpreter;

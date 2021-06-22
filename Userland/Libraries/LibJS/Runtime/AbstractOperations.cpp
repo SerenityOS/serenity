@@ -181,7 +181,7 @@ ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_env
 EnvironmentRecord& get_this_environment(VM& vm)
 {
     // FIXME: Should be the *lexical* environment.
-    for (auto* env = vm.current_environment_record(); env; env = env->outer_environment()) {
+    for (auto* env = vm.lexical_environment(); env; env = env->outer_environment()) {
         if (env->has_this_binding())
             return *env;
     }

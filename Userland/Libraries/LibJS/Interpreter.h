@@ -56,7 +56,7 @@ public:
     ALWAYS_INLINE Heap& heap() { return vm().heap(); }
     ALWAYS_INLINE Exception* exception() { return vm().exception(); }
 
-    EnvironmentRecord* current_environment_record() { return vm().current_environment_record(); }
+    EnvironmentRecord* lexical_environment() { return vm().lexical_environment(); }
 
     FunctionEnvironmentRecord* current_function_environment_record();
 
