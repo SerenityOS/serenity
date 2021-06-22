@@ -267,10 +267,7 @@ void RegExpLiteral::generate_bytecode(Bytecode::Generator& generator) const
 
 void Identifier::generate_bytecode(Bytecode::Generator& generator) const
 {
-    if (m_argument_index.has_value())
-        generator.emit<Bytecode::Op::LoadArgument>(m_argument_index.value());
-    else
-        generator.emit<Bytecode::Op::GetVariable>(generator.intern_string(m_string));
+    generator.emit<Bytecode::Op::GetVariable>(generator.intern_string(m_string));
 }
 
 void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) const
