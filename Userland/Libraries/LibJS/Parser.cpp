@@ -659,23 +659,7 @@ Parser::PrimaryExpressionParseResult Parser::parse_primary_expression()
             set_try_parse_arrow_function_expression_failed_at_position(position(), true);
         }
         auto string = consume().value();
-        Optional<size_t> argument_index;
-        if (!m_state.function_parameters.is_empty()) {
-            size_t i = 0;
-            for (auto& parameter : m_state.function_parameters.last()) {
-                parameter.binding.visit(
-                    [&](FlyString const& name) {
-                        if (name == string) {
-                            argument_index = i;
-                        }
-                    },
-                    [&](BindingPattern const&) {
-                    });
-                ++i;
-            }
-        }
-        argument_index = {};
-        return { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, string, argument_index) };
+        return { create_ast_node<Identifier>({ m_state.current_token.filename(), rule_start.position(), position() }, string) };
     }
     case TokenType::NumericLiteral:
         return { create_ast_node<NumericLiteral>({ m_state.current_token.filename(), rule_start.position(), position() }, consume_and_validate_numeric_literal().double_value()) };

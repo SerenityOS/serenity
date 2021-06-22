@@ -429,11 +429,6 @@ void PutByValue::execute_impl(Bytecode::Interpreter& interpreter) const
     }
 }
 
-void LoadArgument::execute_impl(Bytecode::Interpreter& interpreter) const
-{
-    interpreter.accumulator() = interpreter.vm().argument(m_index);
-}
-
 void GetIterator::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     interpreter.accumulator() = get_iterator(interpreter.global_object(), interpreter.accumulator());
@@ -670,11 +665,6 @@ String GetByValue::to_string_impl(const Bytecode::Executable&) const
 String PutByValue::to_string_impl(const Bytecode::Executable&) const
 {
     return String::formatted("PutByValue base:{}, property:{}", m_base, m_property);
-}
-
-String LoadArgument::to_string_impl(const Bytecode::Executable&) const
-{
-    return String::formatted("LoadArgument {}", m_index);
 }
 
 String GetIterator::to_string_impl(Executable const&) const

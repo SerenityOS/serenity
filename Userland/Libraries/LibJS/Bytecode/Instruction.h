@@ -65,7 +65,6 @@
     O(Decrement)                        \
     O(Throw)                            \
     O(PushDeclarativeEnvironmentRecord) \
-    O(LoadArgument)                     \
     O(EnterUnwindContext)               \
     O(LeaveUnwindContext)               \
     O(ContinuePendingUnwind)            \

@@ -651,22 +651,6 @@ private:
     HashMap<u32, Variable> m_variables;
 };
 
-class LoadArgument final : public Instruction {
-public:
-    explicit LoadArgument(size_t index)
-        : Instruction(Type::LoadArgument)
-        , m_index(index)
-    {
-    }
-
-    void execute_impl(Bytecode::Interpreter&) const;
-    String to_string_impl(Bytecode::Executable const&) const;
-    void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
-
-private:
-    size_t m_index { 0 };
-};
-
 class GetIterator final : public Instruction {
 public:
     GetIterator()
