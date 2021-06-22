@@ -28,6 +28,7 @@ public:
     String category() const;
     Vector<String> launcher_file_types() const;
     Vector<String> launcher_protocols() const;
+    bool spawn() const;
 
     GUI::Icon icon() const { return GUI::FileIconProvider::icon_for_path(executable()); };
 
