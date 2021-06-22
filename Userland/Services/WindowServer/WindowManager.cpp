@@ -1007,8 +1007,10 @@ void WindowManager::process_mouse_event(MouseEvent& event)
         return;
 
     // 2. Send the mouse event to all windows with global cursor tracking enabled.
+    // The active input tracking window is excluded here because we're sending the event to it
+    // in the next step.
     m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
-        if (window.global_cursor_tracking())
+        if (window.global_cursor_tracking() && &window != m_active_input_tracking_window)
             deliver_mouse_event(window, event, false);
         return IterationDecision::Continue;
     });
