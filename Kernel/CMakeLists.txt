@@ -58,6 +58,7 @@ set(KERNEL_SOURCES
     Devices/HID/PS2KeyboardDevice.cpp
     Devices/HID/PS2MouseDevice.cpp
     Devices/HID/VMWareMouseDevice.cpp
+    GlobalProcessExposed.cpp
     Graphics/Console/GenericFramebufferConsole.cpp
     Graphics/Console/ContiguousFramebufferConsole.cpp
     Graphics/Console/TextModeConsole.cpp
@@ -149,6 +150,7 @@ set(KERNEL_SOURCES
     PerformanceEventBuffer.cpp
     Process.cpp
     ProcessExposed.cpp
+    ProcessSpecificExposed.cpp
     ProcessGroup.cpp
     RTC.cpp
     Random.cpp
