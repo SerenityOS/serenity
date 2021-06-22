@@ -28,14 +28,14 @@ void Game::reset()
 void Game::game_over()
 {
     if (on_game_end)
-        m_highscore = on_game_end(static_cast<u32>(m_difficulty));
+        m_high_score = on_game_end(static_cast<u32>(m_difficulty));
 
     reset();
 }
 
 bool Game::ready_to_start() const
 {
-    if (!m_highscore.has_value()) {
+    if (!m_high_score.has_value()) {
         return true;
     }
 
@@ -70,8 +70,8 @@ void Game::paint_event(GUI::PaintEvent& event)
 
     if (m_active) {
         painter.draw_text({ 10, 10, 100, 100 }, String::formatted("{:.0}", m_difficulty), Gfx::TextAlignment::TopLeft, Color::White);
-    } else if (m_highscore.has_value()) {
-        auto message = String::formatted("Your score: {:.0}\nHighscore: {:.0}\n\n{}", m_last_score, m_highscore.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
+    } else if (m_high_score.has_value()) {
+        auto message = String::formatted("Your score: {:.0}\nHigh score: {:.0}\n\n{}", m_last_score, m_high_score.value(), m_restart_cooldown < 0 ? "Press any key to play again" : " ");
         painter.draw_text(rect(), message, Gfx::TextAlignment::Center, Color::White);
     } else {
         painter.draw_text(rect(), "Press any key to start", Gfx::TextAlignment::Center, Color::White);
