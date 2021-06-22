@@ -143,7 +143,7 @@ private:
     Obstacle m_obstacle;
     Cloud m_cloud;
     bool m_active;
-    Optional<float> m_highscore {};
+    Optional<float> m_high_score {};
     float m_last_score {};
     float m_difficulty {};
     float m_restart_cooldown {};
