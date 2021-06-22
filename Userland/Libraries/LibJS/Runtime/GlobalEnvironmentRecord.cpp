@@ -42,7 +42,7 @@ void GlobalEnvironmentRecord::put_into_environment_record(FlyString const& name,
 bool GlobalEnvironmentRecord::delete_from_environment_record(FlyString const& name)
 {
     // FIXME: This should be a "composite" of the object record and the declarative record.
-    return object_record().delete_property(name);
+    return object_record().delete_from_environment_record(name);
 }
 
 Value GlobalEnvironmentRecord::get_this_binding(GlobalObject&) const
