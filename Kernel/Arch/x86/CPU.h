@@ -14,7 +14,6 @@
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
 
-#define PAGE_SIZE 4096
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
 #define IRQ_VECTOR_BASE 0x50
 #define GENERIC_INTERRUPT_HANDLERS_COUNT (256 - IRQ_VECTOR_BASE)
