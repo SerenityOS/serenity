@@ -47,6 +47,7 @@
             font_weight: "Bold"
             text_alignment: "CenterLeft"
             fixed_width: 80
+            name: "current_file_action_label"
         }
 
         @GUI::Label {

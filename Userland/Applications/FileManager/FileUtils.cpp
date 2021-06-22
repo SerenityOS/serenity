@@ -133,8 +133,18 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
     auto pipe_input_file = Core::File::construct();
     pipe_input_file->open(pipe_fds[0], Core::OpenMode::ReadOnly, Core::File::ShouldCloseFileDescriptor::Yes);
 
-    window->set_title("Copying Files...");
-    window->set_main_widget<FileOperationProgressWidget>(pipe_input_file);
+    switch (operation) {
+    case FileOperation::Copy:
+        window->set_title("Copying Files...");
+        break;
+    case FileOperation::Cut:
+        window->set_title("Moving Files...");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
+    window->set_main_widget<FileOperationProgressWidget>(operation, pipe_input_file);
     window->resize(320, 190);
     if (parent_window)
         window->center_within(*parent_window);
