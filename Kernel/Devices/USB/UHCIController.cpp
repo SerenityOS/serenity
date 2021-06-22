@@ -11,6 +11,7 @@
 #include <Kernel/Devices/USB/UHCIController.h>
 #include <Kernel/Devices/USB/USBRequest.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/AnonymousVMObject.h>

@@ -10,6 +10,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/DMI.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MappedROM.h>
 #include <Kernel/VM/TypedMapping.h>

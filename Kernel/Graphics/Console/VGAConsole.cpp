@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Graphics/Console/VGAConsole.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel::Graphics {
 

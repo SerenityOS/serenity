@@ -6,6 +6,7 @@
 
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/SpuriousInterruptHandler.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

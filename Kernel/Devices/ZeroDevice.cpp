@@ -4,10 +4,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "ZeroDevice.h"
 #include <AK/Memory.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

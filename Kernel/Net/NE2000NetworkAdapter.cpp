@@ -8,6 +8,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/NE2000NetworkAdapter.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

@@ -11,6 +11,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>

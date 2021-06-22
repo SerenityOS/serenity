@@ -14,6 +14,7 @@
 #include <Kernel/Lock.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Storage/AHCIController.h>
 #include <Kernel/Storage/AHCIPort.h>
 #include <Kernel/Storage/StorageDevice.h>

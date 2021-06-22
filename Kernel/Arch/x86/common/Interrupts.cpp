@@ -15,6 +15,7 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
 
 #include <LibC/mallocdefs.h>

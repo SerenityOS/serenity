@@ -10,6 +10,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/GenericInterruptHandler.h>
 #include <Kernel/Interrupts/PIC.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

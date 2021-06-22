@@ -9,6 +9,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 
 namespace Kernel {

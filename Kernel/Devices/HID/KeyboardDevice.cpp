@@ -10,10 +10,10 @@
 #include <AK/Singleton.h>
 #include <AK/StringView.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/KeyboardDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 #include <Kernel/TTY/VirtualConsole.h>
 
 namespace Kernel {

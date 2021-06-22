@@ -12,7 +12,6 @@
 #include <AK/Assertions.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Heap/Heap.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -21,6 +20,7 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Sections.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>

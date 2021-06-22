@@ -7,6 +7,7 @@
 #include <AK/Memory.h>
 #include <AK/StringView.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/PATADiskDevice.h>

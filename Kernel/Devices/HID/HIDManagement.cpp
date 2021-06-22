@@ -9,6 +9,7 @@
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Devices/HID/I8042Controller.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

@@ -10,6 +10,7 @@
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/IOAPIC.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>

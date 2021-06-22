@@ -9,14 +9,14 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/FramebufferDevice.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
+#include <Kernel/Panic.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/TypedMapping.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
-
-#include <Kernel/Panic.h>
 
 #define MAX_RESOLUTION_WIDTH 4096
 #define MAX_RESOLUTION_HEIGHT 2160

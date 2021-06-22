@@ -9,12 +9,12 @@
 #include "VirtualConsole.h"
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/ConsoleManagement.h>
 #include <LibVT/Color.h>

@@ -12,6 +12,7 @@
 #include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/PCI/WindowedMMIOAccess.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 namespace PCI {

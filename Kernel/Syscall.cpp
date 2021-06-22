@@ -10,6 +10,7 @@
 #include <Kernel/Arch/x86/TrapFrame.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/VM/MemoryManager.h>
 

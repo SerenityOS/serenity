@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Devices/PCISerialDevice.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

@@ -4,9 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include "NullDevice.h"
 #include <AK/Singleton.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

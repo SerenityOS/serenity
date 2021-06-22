@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/BMIDEChannel.h>
 #include <Kernel/Storage/IDEController.h>

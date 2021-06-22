@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/IOAccess.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 namespace PCI {

@@ -13,6 +13,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/TypedMapping.h>
 

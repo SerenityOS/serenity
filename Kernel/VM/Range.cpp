@@ -6,9 +6,9 @@
  */
 
 #include <AK/Vector.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Range.h>
+#include <LibC/limits.h>
 
 namespace Kernel {
 
