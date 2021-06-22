@@ -390,12 +390,13 @@ Token Lexer::next()
     size_t value_start_line_number = m_line_number;
     size_t value_start_column_number = m_line_column;
     auto token_type = TokenType::Invalid;
+    auto did_consume_whitespace_or_comments = trivia_start != value_start;
     // This is being used to communicate info about invalid tokens to the parser, which then
     // can turn that into more specific error messages - instead of us having to make up a
     // bunch of Invalid* tokens (bad numeric literals, unterminated comments etc.)
     String token_message;
 
-    if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && is_ascii_alpha(m_current_char)) {
+    if (m_current_token.type() == TokenType::RegexLiteral && !is_eof() && is_ascii_alpha(m_current_char) && !did_consume_whitespace_or_comments) {
         token_type = TokenType::RegexFlags;
         while (!is_eof() && is_ascii_alpha(m_current_char))
             consume();
