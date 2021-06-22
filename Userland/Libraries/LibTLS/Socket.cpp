@@ -205,7 +205,7 @@ bool TLSv12::check_connection_state(bool read)
                 m_context.tls_buffer.size(),
                 m_context.application_buffer.size());
         } else {
-            m_context.connection_finished = false;
+            m_context.connection_finished = true;
             dbgln_if(TLS_DEBUG, "FINISHED");
         }
         if (!m_context.application_buffer.size()) {
