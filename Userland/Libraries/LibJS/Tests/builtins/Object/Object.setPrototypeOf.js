@@ -9,6 +9,13 @@ describe("correct behavior", () => {
         expect(Object.setPrototypeOf(o, p)).toBe(o);
         expect(Object.getPrototypeOf(o)).toBe(p);
     });
+
+    test("non-object argument is returned without being coerced to object", () => {
+        let o = 42;
+        let p = {};
+        expect(Object.setPrototypeOf(o, p)).toBe(o);
+        expect(Object.getPrototypeOf(o)).toBe(Number.prototype);
+    });
 });
 
 describe("errors", () => {
