@@ -8,6 +8,7 @@
 
 #include <AK/Types.h>
 #include <Kernel/Debug.h>
+#include <LibC/limits.h>
 
 #define KMALLOC_SCRUB_BYTE 0xbb
 #define KFREE_SCRUB_BYTE 0xaa
