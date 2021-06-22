@@ -19,8 +19,6 @@ public:
     virtual Optional<Variable> get_from_environment_record(FlyString const&) const override;
     virtual void put_into_environment_record(FlyString const&, Variable) override;
     virtual bool delete_from_environment_record(FlyString const&) override;
-    virtual bool has_this_binding() const override;
-    virtual Value get_this_binding(GlobalObject&) const override;
 
 private:
     virtual void visit_edges(Visitor&) override;

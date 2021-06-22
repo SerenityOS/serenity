@@ -127,6 +127,7 @@ class Error;
 class ErrorType;
 class Exception;
 class Expression;
+class FunctionEnvironmentRecord;
 class FunctionNode;
 class GlobalObject;
 class HandleImpl;

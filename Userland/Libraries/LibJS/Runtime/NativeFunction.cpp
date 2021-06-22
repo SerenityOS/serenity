@@ -47,7 +47,7 @@ Value NativeFunction::construct(Function&)
     return {};
 }
 
-DeclarativeEnvironmentRecord* NativeFunction::create_environment_record()
+FunctionEnvironmentRecord* NativeFunction::create_environment_record()
 {
     return nullptr;
 }

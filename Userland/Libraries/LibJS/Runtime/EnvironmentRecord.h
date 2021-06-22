@@ -23,8 +23,8 @@ public:
     virtual void put_into_environment_record(FlyString const&, Variable) = 0;
     virtual bool delete_from_environment_record(FlyString const&) = 0;
 
-    virtual bool has_this_binding() const = 0;
-    virtual Value get_this_binding(GlobalObject&) const = 0;
+    virtual bool has_this_binding() const { return false; }
+    virtual Value get_this_binding(GlobalObject&) const { return {}; }
 
     // [[OuterEnv]]
     EnvironmentRecord* outer_environment() { return m_outer_environment; }

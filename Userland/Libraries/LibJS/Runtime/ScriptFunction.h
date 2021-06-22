@@ -35,11 +35,13 @@ public:
 
     auto& bytecode_executable() const { return m_bytecode_executable; }
 
+    virtual EnvironmentRecord* environment() override { return m_parent_scope; }
+
 protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
 
 private:
-    virtual DeclarativeEnvironmentRecord* create_environment_record() override;
+    virtual FunctionEnvironmentRecord* create_environment_record() override;
     virtual void visit_edges(Visitor&) override;
 
     Value execute_function_body();

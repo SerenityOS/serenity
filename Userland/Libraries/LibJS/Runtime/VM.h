@@ -222,9 +222,7 @@ public:
 
     String join_arguments(size_t start_index = 0) const;
 
-    Value resolve_this_binding(GlobalObject&) const;
-    const EnvironmentRecord* find_this_scope() const;
-    Value get_new_target() const;
+    Value get_new_target();
 
     template<typename... Args>
     [[nodiscard]] ALWAYS_INLINE Value call(Function& function, Value this_value, Args... args)

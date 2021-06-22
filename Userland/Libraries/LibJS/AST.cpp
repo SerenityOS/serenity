@@ -19,6 +19,7 @@
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/BigInt.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -132,7 +133,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
         Object* this_value = nullptr;
 
         if (is<SuperExpression>(member_expression.object())) {
-            auto super_base = interpreter.current_declarative_environment_record()->get_super_base();
+            auto super_base = interpreter.current_function_environment_record()->get_super_base();
             if (super_base.is_nullish()) {
                 vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeNullOrUndefinedOnSuperPropertyAccess, super_base.to_string_without_side_effects());
                 return {};
@@ -227,14 +228,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (result.is_object())
             new_object = &result.as_object();
     } else if (is<SuperExpression>(*m_callee)) {
-        // FIXME: This is merely a band-aid to make super() inside catch {} work (which constructs
-        //        a new DeclarativeEnvironmentRecord without current function). Implement GetSuperConstructor()
-        //        and subsequently GetThisEnvironment() instead.
-        auto* function_environment = interpreter.current_declarative_environment_record();
-        if (!function_environment->current_function())
-            function_environment = static_cast<DeclarativeEnvironmentRecord*>(function_environment->outer_environment());
-
-        auto* super_constructor = function_environment->current_function()->prototype();
+        auto* super_constructor = get_super_constructor(interpreter.vm());
         // FIXME: Functions should track their constructor kind.
         if (!super_constructor || !super_constructor->is_function()) {
             vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, "Super constructor");
@@ -244,7 +238,9 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
         if (vm.exception())
             return {};
 
-        function_environment->bind_this_value(global_object, result);
+        auto& this_er = get_this_environment(interpreter.vm());
+        VERIFY(is<FunctionEnvironmentRecord>(this_er));
+        static_cast<FunctionEnvironmentRecord&>(this_er).bind_this_value(global_object, result);
     } else {
         result = vm.call(function, this_value, move(arguments));
     }
@@ -1355,7 +1351,7 @@ Value SpreadExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 Value ThisExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return interpreter.vm().resolve_this_binding(global_object);
+    return get_this_environment(interpreter.vm()).get_this_binding(global_object);
 }
 
 void ThisExpression::dump(int indent) const

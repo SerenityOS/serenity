@@ -15,6 +15,8 @@ namespace JS {
 
 DeclarativeEnvironmentRecord* new_declarative_environment(EnvironmentRecord&);
 ObjectEnvironmentRecord* new_object_environment(Object&, bool is_with_environment, EnvironmentRecord*);
+EnvironmentRecord& get_this_environment(VM&);
+Object* get_super_constructor(VM&);
 Value require_object_coercible(GlobalObject&, Value);
 Function* get_method(GlobalObject& global_object, Value, PropertyName const&);
 size_t length_of_array_like(GlobalObject&, Object const&);
