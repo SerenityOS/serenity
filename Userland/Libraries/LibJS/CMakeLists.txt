@@ -67,6 +67,7 @@ set(SOURCES
     Runtime/GeneratorFunctionPrototype.cpp
     Runtime/GeneratorObject.cpp
     Runtime/GeneratorObjectPrototype.cpp
+    Runtime/GlobalEnvironmentRecord.cpp
     Runtime/GlobalObject.cpp
     Runtime/IndexedProperties.cpp
     Runtime/IteratorOperations.cpp

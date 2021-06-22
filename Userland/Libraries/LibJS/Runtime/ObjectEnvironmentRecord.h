@@ -20,6 +20,8 @@ public:
     virtual void put_into_environment_record(FlyString const&, Variable) override;
     virtual bool delete_from_environment_record(FlyString const&) override;
 
+    Object& object() { return m_object; }
+
 private:
     virtual void visit_edges(Visitor&) override;
 

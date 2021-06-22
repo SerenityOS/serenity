@@ -12,8 +12,8 @@
 
 namespace JS {
 
-class GlobalObject : public EnvironmentRecord {
-    JS_OBJECT(GlobalObject, EnvironmentRecord);
+class GlobalObject : public Object {
+    JS_OBJECT(GlobalObject, Object);
 
 public:
     explicit GlobalObject();
@@ -21,11 +21,7 @@ public:
 
     virtual ~GlobalObject() override;
 
-    virtual Optional<Variable> get_from_environment_record(FlyString const&) const override;
-    virtual void put_into_environment_record(FlyString const&, Variable) override;
-    virtual bool delete_from_environment_record(FlyString const&) override;
-    virtual bool has_this_binding() const final { return true; }
-    virtual Value get_this_binding(GlobalObject&) const final { return this; }
+    GlobalEnvironmentRecord& environment_record() { return *m_environment_record; }
 
     Console& console() { return *m_console; }
 
@@ -86,6 +82,8 @@ private:
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorObjectPrototype* m_generator_object_prototype { nullptr };
+
+    GlobalEnvironmentRecord* m_environment_record { nullptr };
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* m_##snake_name##_constructor { nullptr };                           \

@@ -15,11 +15,6 @@ EnvironmentRecord::EnvironmentRecord(EnvironmentRecord* outer_environment)
 {
 }
 
-EnvironmentRecord::EnvironmentRecord(GlobalObjectTag tag)
-    : Object(tag)
-{
-}
-
 void EnvironmentRecord::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
