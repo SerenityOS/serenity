@@ -12,6 +12,7 @@
 #include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
 #include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/ObjectEnvironmentRecord.h>
@@ -174,6 +175,27 @@ ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_env
         TODO();
     }
     return global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, object, environment_record);
+}
+
+// 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
+EnvironmentRecord& get_this_environment(VM& vm)
+{
+    // FIXME: Should be the *lexical* environment.
+    for (auto* env = vm.current_environment_record(); env; env = env->outer_environment()) {
+        if (env->has_this_binding())
+            return *env;
+    }
+    VERIFY_NOT_REACHED();
+}
+
+// 13.3.7.2 GetSuperConstructor ( ), https://tc39.es/ecma262/#sec-getsuperconstructor
+Object* get_super_constructor(VM& vm)
+{
+    auto& env = get_this_environment(vm);
+    VERIFY(is<FunctionEnvironmentRecord>(env));
+    auto& active_function = static_cast<FunctionEnvironmentRecord&>(env).function_object();
+    auto* super_constructor = active_function.prototype();
+    return super_constructor;
 }
 
 }

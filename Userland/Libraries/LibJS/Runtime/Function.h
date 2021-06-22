@@ -26,7 +26,7 @@ public:
     virtual Value call() = 0;
     virtual Value construct(Function& new_target) = 0;
     virtual const FlyString& name() const = 0;
-    virtual DeclarativeEnvironmentRecord* create_environment_record() = 0;
+    virtual FunctionEnvironmentRecord* create_environment_record() = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
@@ -41,6 +41,11 @@ public:
     void set_constructor_kind(ConstructorKind constructor_kind) { m_constructor_kind = constructor_kind; }
 
     virtual bool is_strict_mode() const { return false; }
+
+    // [[Environment]]
+    // The Environment Record that the function was closed over.
+    // Used as the outer environment when evaluating the code of the function.
+    virtual EnvironmentRecord* environment() { return nullptr; }
 
 protected:
     virtual void visit_edges(Visitor&) override;

@@ -9,7 +9,7 @@
 #include <AK/StringBuilder.h>
 #include <LibJS/AST.h>
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Reference.h>
@@ -193,10 +193,10 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
     return last_value;
 }
 
-DeclarativeEnvironmentRecord* Interpreter::current_declarative_environment_record()
+FunctionEnvironmentRecord* Interpreter::current_function_environment_record()
 {
-    VERIFY(is<DeclarativeEnvironmentRecord>(vm().call_frame().environment_record));
-    return static_cast<DeclarativeEnvironmentRecord*>(vm().call_frame().environment_record);
+    VERIFY(is<FunctionEnvironmentRecord>(vm().call_frame().environment_record));
+    return static_cast<FunctionEnvironmentRecord*>(vm().call_frame().environment_record);
 }
 
 }

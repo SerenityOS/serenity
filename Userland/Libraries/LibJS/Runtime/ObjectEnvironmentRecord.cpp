@@ -39,14 +39,4 @@ bool ObjectEnvironmentRecord::delete_from_environment_record(FlyString const& na
     return m_object.delete_property(name);
 }
 
-bool ObjectEnvironmentRecord::has_this_binding() const
-{
-    return outer_environment()->has_this_binding();
-}
-
-Value ObjectEnvironmentRecord::get_this_binding(GlobalObject& global_object) const
-{
-    return outer_environment()->get_this_binding(global_object);
-}
-
 }

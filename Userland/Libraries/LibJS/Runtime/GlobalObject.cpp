@@ -346,16 +346,6 @@ bool GlobalObject::delete_from_environment_record(FlyString const& name)
     return delete_property(name);
 }
 
-bool GlobalObject::has_this_binding() const
-{
-    return true;
-}
-
-Value GlobalObject::get_this_binding(GlobalObject&) const
-{
-    return Value(this);
-}
-
 // 19.2.1 eval ( x ), https://tc39.es/ecma262/#sec-eval-x
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::eval)
 {

@@ -61,6 +61,7 @@ set(SOURCES
     Runtime/FinalizationRegistryPrototype.cpp
     Runtime/FunctionConstructor.cpp
     Runtime/Function.cpp
+    Runtime/FunctionEnvironmentRecord.cpp
     Runtime/FunctionPrototype.cpp
     Runtime/GeneratorFunctionConstructor.cpp
     Runtime/GeneratorFunctionPrototype.cpp

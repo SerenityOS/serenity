@@ -44,7 +44,7 @@ Value BoundFunction::construct(Function& new_target)
     return m_target_function->construct(new_target);
 }
 
-DeclarativeEnvironmentRecord* BoundFunction::create_environment_record()
+FunctionEnvironmentRecord* BoundFunction::create_environment_record()
 {
     return m_target_function->create_environment_record();
 }

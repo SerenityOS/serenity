@@ -49,9 +49,6 @@ DeclarativeEnvironmentRecord::~DeclarativeEnvironmentRecord()
 void DeclarativeEnvironmentRecord::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(m_this_value);
-    visitor.visit(m_new_target);
-    visitor.visit(m_current_function);
     for (auto& it : m_variables)
         visitor.visit(it.value.value);
 }
@@ -69,53 +66,6 @@ void DeclarativeEnvironmentRecord::put_into_environment_record(FlyString const& 
 bool DeclarativeEnvironmentRecord::delete_from_environment_record(FlyString const& name)
 {
     return m_variables.remove(name);
-}
-
-Value DeclarativeEnvironmentRecord::get_super_base()
-{
-    if (m_environment_record_type != EnvironmentRecordType::Function)
-        return {};
-    VERIFY(m_current_function);
-    auto home_object = m_current_function->home_object();
-    if (!home_object.is_object())
-        return {};
-    return home_object.as_object().prototype();
-}
-
-bool DeclarativeEnvironmentRecord::has_this_binding() const
-{
-    // More like "is_capable_of_having_a_this_binding".
-    switch (m_environment_record_type) {
-    case EnvironmentRecordType::Declarative:
-    case EnvironmentRecordType::Object:
-        return false;
-    case EnvironmentRecordType::Function:
-        return this_binding_status() != ThisBindingStatus::Lexical;
-    case EnvironmentRecordType::Module:
-        return true;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-Value DeclarativeEnvironmentRecord::get_this_binding(GlobalObject& global_object) const
-{
-    VERIFY(has_this_binding());
-    if (this_binding_status() == ThisBindingStatus::Uninitialized) {
-        vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisHasNotBeenInitialized);
-        return {};
-    }
-    return m_this_value;
-}
-
-void DeclarativeEnvironmentRecord::bind_this_value(GlobalObject& global_object, Value this_value)
-{
-    VERIFY(has_this_binding());
-    if (m_this_binding_status == ThisBindingStatus::Initialized) {
-        vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisIsAlreadyInitialized);
-        return;
-    }
-    m_this_value = this_value;
-    m_this_binding_status = ThisBindingStatus::Initialized;
 }
 
 }

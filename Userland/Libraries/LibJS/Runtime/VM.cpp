@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
@@ -9,9 +9,11 @@
 #include <AK/ScopeGuard.h>
 #include <AK/StringBuilder.h>
 #include <LibJS/Interpreter.h>
+#include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/FinalizationRegistry.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
 #include <LibJS/Runtime/NativeFunction.h>
@@ -460,8 +462,8 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
-            VERIFY(is<DeclarativeEnvironmentRecord>(current_environment_record()));
-            static_cast<DeclarativeEnvironmentRecord*>(current_environment_record())->replace_this_binding(result);
+            VERIFY(is<FunctionEnvironmentRecord>(current_environment_record()));
+            static_cast<FunctionEnvironmentRecord*>(current_environment_record())->replace_this_binding(result);
         }
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -500,25 +502,11 @@ String VM::join_arguments(size_t start_index) const
     return joined_arguments.build();
 }
 
-Value VM::resolve_this_binding(GlobalObject& global_object) const
+Value VM::get_new_target()
 {
-    return find_this_scope()->get_this_binding(global_object);
-}
-
-const EnvironmentRecord* VM::find_this_scope() const
-{
-    // We will always return because the Global environment will always be reached, which has a |this| binding.
-    for (auto* environment_record = current_environment_record(); environment_record; environment_record = environment_record->outer_environment()) {
-        if (environment_record->has_this_binding())
-            return environment_record;
-    }
-    VERIFY_NOT_REACHED();
-}
-
-Value VM::get_new_target() const
-{
-    VERIFY(is<DeclarativeEnvironmentRecord>(find_this_scope()));
-    return static_cast<const DeclarativeEnvironmentRecord*>(find_this_scope())->new_target();
+    auto& env = get_this_environment(*this);
+    VERIFY(is<FunctionEnvironmentRecord>(env));
+    return static_cast<FunctionEnvironmentRecord&>(env).new_target();
 }
 
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
@@ -540,7 +528,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     call_frame.environment_record = environment;
 
     if (environment) {
-        VERIFY(environment->this_binding_status() == DeclarativeEnvironmentRecord::ThisBindingStatus::Uninitialized);
+        VERIFY(environment->this_binding_status() == FunctionEnvironmentRecord::ThisBindingStatus::Uninitialized);
         environment->bind_this_value(function.global_object(), call_frame.this_value);
     }
 

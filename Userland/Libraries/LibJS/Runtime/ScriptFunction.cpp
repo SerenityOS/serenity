@@ -14,6 +14,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
+#include <LibJS/Runtime/FunctionEnvironmentRecord.h>
 #include <LibJS/Runtime/GeneratorObject.h>
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
@@ -93,7 +94,7 @@ void ScriptFunction::visit_edges(Visitor& visitor)
     visitor.visit(m_parent_scope);
 }
 
-DeclarativeEnvironmentRecord* ScriptFunction::create_environment_record()
+FunctionEnvironmentRecord* ScriptFunction::create_environment_record()
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -122,11 +123,11 @@ DeclarativeEnvironmentRecord* ScriptFunction::create_environment_record()
         }
     }
 
-    auto* environment = heap().allocate<DeclarativeEnvironmentRecord>(global_object(), move(variables), m_parent_scope, DeclarativeEnvironmentRecord::EnvironmentRecordType::Function);
-    environment->set_current_function(*this);
+    auto* environment = heap().allocate<FunctionEnvironmentRecord>(global_object(), m_parent_scope, variables);
+    environment->set_function_object(*this);
     if (m_is_arrow_function) {
-        if (is<DeclarativeEnvironmentRecord>(m_parent_scope))
-            environment->set_new_target(static_cast<DeclarativeEnvironmentRecord*>(m_parent_scope)->new_target());
+        if (is<FunctionEnvironmentRecord>(m_parent_scope))
+            environment->set_new_target(static_cast<FunctionEnvironmentRecord*>(m_parent_scope)->new_target());
     }
     return environment;
 }

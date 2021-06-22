@@ -58,7 +58,7 @@ public:
 
     EnvironmentRecord* current_environment_record() { return vm().current_environment_record(); }
 
-    DeclarativeEnvironmentRecord* current_declarative_environment_record();
+    FunctionEnvironmentRecord* current_function_environment_record();
 
     void enter_scope(const ScopeNode&, ScopeType, GlobalObject&);
     void exit_scope(const ScopeNode&);
