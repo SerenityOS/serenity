@@ -137,7 +137,7 @@ void do_copy(Vector<String> const& selected_file_paths, FileOperation file_opera
         VERIFY_NOT_REACHED();
 
     StringBuilder copy_text;
-    if (file_operation == FileOperation::Cut) {
+    if (file_operation == FileOperation::Move) {
         copy_text.append("#cut\n"); // This exploits the comment lines in the text/uri-list specification, which might be a bit hackish
     }
     for (auto& path : selected_file_paths) {
@@ -162,7 +162,7 @@ void do_paste(String const& target_directory, GUI::Window* window)
 
     FileOperation file_operation = FileOperation::Copy;
     if (copied_lines[0] == "#cut") { // cut operation encoded as a text/uri-list comment
-        file_operation = FileOperation::Cut;
+        file_operation = FileOperation::Move;
         copied_lines.remove(0);
     }
 
@@ -299,7 +299,7 @@ int run_in_desktop_mode([[maybe_unused]] RefPtr<Core::ConfigFile> config)
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileOperation::Cut);
+            do_copy(paths, FileOperation::Move);
         },
         window);
     cut_action->set_enabled(false);
@@ -662,7 +662,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             if (paths.is_empty())
                 VERIFY_NOT_REACHED();
 
-            do_copy(paths, FileOperation::Cut);
+            do_copy(paths, FileOperation::Move);
             refresh_tree_view();
         },
         window);
