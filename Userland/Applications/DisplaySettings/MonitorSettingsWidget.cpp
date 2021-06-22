@@ -121,11 +121,17 @@ void MonitorSettingsWidget::apply_settings()
             });
 
             // If the user selects "No", closes the window or the window gets closed by the 10 seconds timer, revert the changes.
-            if (box->exec() != GUI::MessageBox::ExecYes) {
+            if (box->exec() == GUI::MessageBox::ExecYes) {
                 auto save_result = GUI::WindowServerConnection::the().save_screen_layout();
                 if (!save_result.success()) {
                     GUI::MessageBox::show(window(), String::formatted("Error saving settings: {}", save_result.error_msg()),
                         "Unable to save setting", GUI::MessageBox::Type::Error);
+                }
+            } else {
+                auto restore_result = GUI::WindowServerConnection::the().set_screen_layout(current_layout, false);
+                if (!restore_result.success()) {
+                    GUI::MessageBox::show(window(), String::formatted("Error restoring settings: {}", restore_result.error_msg()),
+                        "Unable to restore setting", GUI::MessageBox::Type::Error);
                 }
             }
         } else {
