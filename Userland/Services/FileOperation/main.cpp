@@ -36,19 +36,23 @@ static void report_warning(String message);
 int main(int argc, char** argv)
 {
     String operation;
-    Vector<String> sources;
-    String destination;
+    Vector<String> paths;
 
     Core::ArgsParser args_parser;
     args_parser.add_positional_argument(operation, "Operation: either 'Copy' or 'Move'", "operation", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(sources, "Sources", "sources", Core::ArgsParser::Required::Yes);
-    args_parser.add_positional_argument(destination, "Destination", "destination", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(paths, "Source paths, followed by a destination if applicable", "paths", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
 
+    String destination = paths.take_last();
+    if (paths.is_empty()) {
+        report_warning("At least one source and destination are required");
+        return 1;
+    }
+
     if (operation == "Copy")
-        return perform_copy(sources, destination);
+        return perform_copy(paths, destination);
     if (operation == "Move")
-        return perform_move(sources, destination);
+        return perform_move(paths, destination);
 
     report_warning(String::formatted("Unknown operation '{}'", operation));
     return 0;
