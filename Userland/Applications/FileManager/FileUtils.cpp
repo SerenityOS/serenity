@@ -102,7 +102,7 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
         case FileOperation::Copy:
             file_operation_args.append("Copy");
             break;
-        case FileOperation::Cut:
+        case FileOperation::Move:
             file_operation_args.append("Move");
             break;
         default:
@@ -137,7 +137,7 @@ void run_file_operation(FileOperation operation, Vector<String> const& sources, 
     case FileOperation::Copy:
         window->set_title("Copying Files...");
         break;
-    case FileOperation::Cut:
+    case FileOperation::Move:
         window->set_title("Moving Files...");
         break;
     default:

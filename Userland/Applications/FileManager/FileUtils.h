@@ -16,7 +16,7 @@ namespace FileManager {
 
 enum class FileOperation {
     Copy = 0,
-    Cut
+    Move
 };
 
 void delete_path(String const&, GUI::Window*);

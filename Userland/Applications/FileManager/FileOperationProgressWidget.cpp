@@ -49,7 +49,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         files_copied_label.set_text("Copying files...");
         current_file_action_label.set_text("Copying: ");
         break;
-    case FileOperation::Cut:
+    case FileOperation::Move:
         files_copied_label.set_text("Moving files...");
         current_file_action_label.set_text("Moving: ");
         break;
@@ -165,7 +165,7 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
     case FileOperation::Copy:
         files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
         break;
-    case FileOperation::Cut:
+    case FileOperation::Move:
         files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count));
         break;
     default:
