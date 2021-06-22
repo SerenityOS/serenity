@@ -159,16 +159,30 @@ int main(int argc, char** argv)
     auto menubar = GUI::Menubar::construct();
     auto& file_menu = menubar->add_menu("&File");
 
-    auto save_action = GUI::CommonActions::make_save_as_action([&](auto&) {
-        Optional<String> save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
-        if (!save_path.has_value())
+    auto save_as_action = GUI::CommonActions::make_save_as_action([&](auto&) {
+        Optional<String> new_save_path = GUI::FilePicker::get_save_filepath(window, "Untitled", "gml");
+        if (!new_save_path.has_value())
             return;
 
-        if (!editor.write_to_file(save_path.value())) {
+        if (!editor.write_to_file(new_save_path.value())) {
             GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
             return;
         }
+        file_path = new_save_path.value();
         update_title();
+    });
+
+    auto save_action = GUI::CommonActions::make_save_action([&](auto&) {
+        if (!file_path.is_empty()) {
+            if (!editor.write_to_file(file_path)) {
+                GUI::MessageBox::show(window, "Unable to save file.\n", "Error", GUI::MessageBox::Type::Error);
+                return;
+            }
+            update_title();
+            return;
+        }
+
+        save_as_action->activate();
     });
 
     file_menu.add_action(GUI::CommonActions::make_open_action([&](auto&) {
@@ -202,6 +216,7 @@ int main(int argc, char** argv)
     }));
 
     file_menu.add_action(save_action);
+    file_menu.add_action(save_as_action);
     file_menu.add_separator();
 
     file_menu.add_action(GUI::CommonActions::make_quit_action([&](auto&) {
