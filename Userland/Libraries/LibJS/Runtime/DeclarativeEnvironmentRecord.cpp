@@ -50,7 +50,6 @@ void DeclarativeEnvironmentRecord::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_this_value);
-    visitor.visit(m_home_object);
     visitor.visit(m_new_target);
     visitor.visit(m_current_function);
     for (auto& it : m_variables)
@@ -72,17 +71,15 @@ bool DeclarativeEnvironmentRecord::delete_from_environment_record(FlyString cons
     return m_variables.remove(name);
 }
 
-bool DeclarativeEnvironmentRecord::has_super_binding() const
-{
-    return m_environment_record_type == EnvironmentRecordType::Function && this_binding_status() != ThisBindingStatus::Lexical && m_home_object.is_object();
-}
-
 Value DeclarativeEnvironmentRecord::get_super_base()
 {
-    VERIFY(has_super_binding());
-    if (m_home_object.is_object())
-        return m_home_object.as_object().prototype();
-    return {};
+    if (m_environment_record_type != EnvironmentRecordType::Function)
+        return {};
+    VERIFY(m_current_function);
+    auto home_object = m_current_function->home_object();
+    if (!home_object.is_object())
+        return {};
+    return home_object.as_object().prototype();
 }
 
 bool DeclarativeEnvironmentRecord::has_this_binding() const
