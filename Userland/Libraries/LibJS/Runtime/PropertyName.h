@@ -113,6 +113,19 @@ public:
     bool try_coerce_into_number()
     {
         VERIFY(m_string_may_be_number);
+        if (m_string.is_empty()) {
+            m_string_may_be_number = false;
+            return false;
+        }
+
+        if (char first = m_string.characters()[0]; first < '0' || first > '9') {
+            m_string_may_be_number = false;
+            return false;
+        } else if (m_string.length() > 1 && first == '0') {
+            m_string_may_be_number = false;
+            return false;
+        }
+
         i32 property_index = m_string.to_int(TrimWhitespace::No).value_or(-1);
         if (property_index < 0) {
             m_string_may_be_number = false;
