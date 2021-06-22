@@ -1502,26 +1502,40 @@ void Terminal::set_size(u16 columns, u16 rows)
         return old_cursor;
     };
 
-    CursorPosition cursor_tracker { cursor_row(), cursor_column() };
-    resize_and_rewrap(m_normal_screen_buffer, cursor_tracker);
-    if (m_normal_screen_buffer.size() > rows) {
-        if (auto extra_lines = m_normal_screen_buffer.size() - rows) {
-            while (extra_lines > 0) {
-                if (m_normal_screen_buffer.size() <= cursor_tracker.row)
-                    break;
-                if (m_normal_screen_buffer.last().is_empty()) {
-                    if (m_normal_screen_buffer[m_normal_screen_buffer.size() - 2].termination_column().has_value())
-                        break;
-                    --extra_lines;
-                    m_normal_screen_buffer.take_last();
-                    continue;
-                }
+    auto old_history_size = m_history.size();
+    m_history.extend(move(m_normal_screen_buffer));
+    CursorPosition cursor_tracker { cursor_row() + old_history_size, cursor_column() };
+    resize_and_rewrap(m_history, cursor_tracker);
+    if (auto extra_lines = m_history.size() - rows) {
+        while (extra_lines > 0) {
+            if (m_history.size() <= cursor_tracker.row)
                 break;
+            if (m_history.last().is_empty()) {
+                if (m_history.size() >= 2 && m_history[m_history.size() - 2].termination_column().has_value())
+                    break;
+                --extra_lines;
+                m_history.take_last();
+                continue;
             }
-            for (size_t i = 0; i < extra_lines; ++i)
-                m_history.append(m_normal_screen_buffer.take_first());
-            m_client.terminal_history_changed(extra_lines);
+            break;
         }
+    }
+
+    // FIXME: This can use a more performant way to move the last N entries
+    //        from the history into the normal buffer
+    m_normal_screen_buffer.ensure_capacity(rows);
+    while (m_normal_screen_buffer.size() < rows) {
+        if (!m_history.is_empty())
+            m_normal_screen_buffer.prepend(m_history.take_last());
+        else
+            m_normal_screen_buffer.unchecked_append(make<Line>(columns));
+    }
+
+    cursor_tracker.row -= m_history.size();
+
+    if (m_history.size() != old_history_size) {
+        m_client.terminal_history_changed(-old_history_size);
+        m_client.terminal_history_changed(m_history.size());
     }
 
     CursorPosition dummy_cursor_tracker {};
