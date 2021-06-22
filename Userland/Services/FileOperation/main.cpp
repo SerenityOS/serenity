@@ -20,6 +20,7 @@ struct WorkItem {
         DeleteDirectory,
         CopyFile,
         MoveFile,
+        DeleteFile,
     };
     Type type;
     String source;
@@ -29,6 +30,7 @@ struct WorkItem {
 
 static int perform_copy(Vector<String> const& sources, String const& destination);
 static int perform_move(Vector<String> const& sources, String const& destination);
+static int perform_delete(Vector<String> const& sources);
 static int execute_work_items(Vector<WorkItem> const& items);
 static void report_error(String message);
 static void report_warning(String message);
@@ -39,9 +41,12 @@ int main(int argc, char** argv)
     Vector<String> paths;
 
     Core::ArgsParser args_parser;
-    args_parser.add_positional_argument(operation, "Operation: either 'Copy' or 'Move'", "operation", Core::ArgsParser::Required::Yes);
+    args_parser.add_positional_argument(operation, "Operation: either 'Copy', 'Move' or 'Delete'", "operation", Core::ArgsParser::Required::Yes);
     args_parser.add_positional_argument(paths, "Source paths, followed by a destination if applicable", "paths", Core::ArgsParser::Required::Yes);
     args_parser.parse(argc, argv);
+
+    if (operation == "Delete")
+        return perform_delete(paths);
 
     String destination = paths.take_last();
     if (paths.is_empty()) {
@@ -183,6 +188,56 @@ int perform_move(Vector<String> const& sources, String const& destination)
     return execute_work_items(items);
 }
 
+static bool collect_delete_work_items(String const& source, Vector<WorkItem>& items)
+{
+    struct stat st = {};
+    if (stat(source.characters(), &st) < 0) {
+        auto original_errno = errno;
+        report_error(String::formatted("stat: {}", strerror(original_errno)));
+        return false;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        // It's a file.
+        items.append(WorkItem {
+            .type = WorkItem::Type::DeleteFile,
+            .source = source,
+            .destination = {},
+            .size = st.st_size,
+        });
+        return true;
+    }
+
+    // It's a directory.
+    Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
+    while (dt.has_next()) {
+        auto name = dt.next_path();
+        if (!collect_delete_work_items(String::formatted("{}/{}", source, name), items))
+            return false;
+    }
+
+    items.append(WorkItem {
+        .type = WorkItem::Type::DeleteDirectory,
+        .source = source,
+        .destination = {},
+        .size = 0,
+    });
+
+    return true;
+}
+
+int perform_delete(Vector<String> const& sources)
+{
+    Vector<WorkItem> items;
+
+    for (auto& source : sources) {
+        if (!collect_delete_work_items(source, items))
+            return 1;
+    }
+
+    return execute_work_items(items);
+}
+
 int execute_work_items(Vector<WorkItem> const& items)
 {
     off_t total_work_bytes = 0;
@@ -284,6 +339,20 @@ int execute_work_items(Vector<WorkItem> const& items)
                 report_error(String::formatted("unlink: {}", strerror(original_errno)));
                 return 1;
             }
+
+            break;
+        }
+
+        case WorkItem::Type::DeleteFile: {
+            if (unlink(item.source.characters()) < 0) {
+                auto original_errno = errno;
+                report_error(String::formatted("unlink: {}", strerror(original_errno)));
+                return 1;
+            }
+
+            item_done += item.size;
+            executed_work_bytes += item.size;
+            print_progress();
 
             break;
         }
