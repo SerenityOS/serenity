@@ -27,9 +27,9 @@ void Game::reset()
 
 void Game::game_over()
 {
-    if (m_highscore.value_or(0) < m_difficulty) {
-        m_highscore = m_difficulty;
-    }
+    if (on_game_end)
+        m_highscore = on_game_end(static_cast<u32>(m_difficulty));
+
     reset();
 }
 
