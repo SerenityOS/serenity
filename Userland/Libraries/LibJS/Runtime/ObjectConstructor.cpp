@@ -110,25 +110,25 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::get_prototype_of)
 // 20.1.2.21 Object.setPrototypeOf ( O, proto ), https://tc39.es/ecma262/#sec-object.setprototypeof
 JS_DEFINE_NATIVE_FUNCTION(ObjectConstructor::set_prototype_of)
 {
-    auto* object = vm.argument(0).to_object(global_object);
+    auto argument = require_object_coercible(global_object, vm.argument(0));
     if (vm.exception())
         return {};
     auto prototype_value = vm.argument(1);
-    Object* prototype;
-    if (prototype_value.is_null()) {
-        prototype = nullptr;
-    } else if (prototype_value.is_object()) {
-        prototype = &prototype_value.as_object();
-    } else {
+    if (!prototype_value.is_object() && !prototype_value.is_null()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::ObjectPrototypeWrongType);
         return {};
     }
-    if (!object->set_prototype(prototype)) {
-        if (!vm.exception())
-            vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
+    if (!argument.is_object())
+        return argument;
+    auto* prototype = prototype_value.is_null() ? nullptr : &prototype_value.as_object();
+    auto status = argument.as_object().set_prototype(prototype);
+    if (vm.exception())
+        return {};
+    if (!status) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::ObjectSetPrototypeOfReturnedFalse);
         return {};
     }
-    return object;
+    return argument;
 }
 
 // 20.1.2.14 Object.isExtensible ( O ), https://tc39.es/ecma262/#sec-object.isextensible
