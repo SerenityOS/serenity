@@ -9,6 +9,7 @@
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/Graphics/VGACompatibleAdapter.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

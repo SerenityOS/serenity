@@ -8,6 +8,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
+#include <Kernel/Sections.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 

@@ -15,6 +15,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 

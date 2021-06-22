@@ -8,6 +8,7 @@
 #include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Storage/BMIDEChannel.h>
 #include <Kernel/Storage/IDEController.h>
 #include <Kernel/Storage/PATADiskDevice.h>

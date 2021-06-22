@@ -17,6 +17,7 @@
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Thread.h>
 #include <Kernel/ThreadTracer.h>
 #include <Kernel/TimerQueue.h>

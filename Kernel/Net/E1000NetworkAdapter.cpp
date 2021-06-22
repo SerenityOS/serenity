@@ -8,6 +8,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/PCI/IDs.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

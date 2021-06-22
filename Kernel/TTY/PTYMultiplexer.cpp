@@ -10,6 +10,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <LibC/errno_numbers.h>
 
 namespace Kernel {

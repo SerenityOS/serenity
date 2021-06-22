@@ -6,6 +6,7 @@
 
 #include <Kernel/Devices/HID/VMWareMouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

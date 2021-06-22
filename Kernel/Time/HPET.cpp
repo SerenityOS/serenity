@@ -8,6 +8,7 @@
 #include <Kernel/ACPI/Parser.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Interrupts/InterruptManagement.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>
 #include <Kernel/Time/TimeManagement.h>

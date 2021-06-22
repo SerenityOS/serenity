@@ -9,6 +9,7 @@
 #include <Kernel/Arch/x86/Processor.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Random.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/RTC.h>
 #include <Kernel/Time/TimeManagement.h>

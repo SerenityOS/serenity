@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/TypedMapping.h>
 

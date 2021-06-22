@@ -24,6 +24,7 @@
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/Thread.h>

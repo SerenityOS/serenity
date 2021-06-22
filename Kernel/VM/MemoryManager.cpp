@@ -7,12 +7,12 @@
 #include <AK/Assertions.h>
 #include <AK/Memory.h>
 #include <AK/StringView.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/ContiguousVMObject.h>
