@@ -5,6 +5,7 @@
  */
 
 #include "FileOperationProgressWidget.h"
+#include "FileUtils.h"
 #include <Applications/FileManager/FileOperationProgressGML.h>
 #include <LibCore/File.h>
 #include <LibCore/Notifier.h>
@@ -17,8 +18,9 @@
 
 namespace FileManager {
 
-FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::File> helper_pipe)
-    : m_helper_pipe(move(helper_pipe))
+FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation, NonnullRefPtr<Core::File> helper_pipe)
+    : m_operation(operation)
+    , m_helper_pipe(move(helper_pipe))
 {
     load_from_gml(file_operation_progress_gml);
 
@@ -38,6 +40,22 @@ FileOperationProgressWidget::FileOperationProgressWidget(NonnullRefPtr<Core::Fil
         close_pipe();
         window()->close();
     };
+
+    auto& files_copied_label = *find_descendant_of_type_named<GUI::Label>("files_copied_label");
+    auto& current_file_action_label = *find_descendant_of_type_named<GUI::Label>("current_file_action_label");
+
+    switch (m_operation) {
+    case FileOperation::Copy:
+        files_copied_label.set_text("Copying files...");
+        current_file_action_label.set_text("Copying: ");
+        break;
+    case FileOperation::Cut:
+        files_copied_label.set_text("Moving files...");
+        current_file_action_label.set_text("Moving: ");
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
 
     m_notifier = Core::Notifier::construct(m_helper_pipe->fd(), Core::Notifier::Read);
     m_notifier->on_ready_to_read = [this] {
@@ -143,7 +161,17 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
 
     current_file_label.set_text(current_filename);
 
-    files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+    switch (m_operation) {
+    case FileOperation::Copy:
+        files_copied_label.set_text(String::formatted("Copying file {} of {}", files_done, total_file_count));
+        break;
+    case FileOperation::Cut:
+        files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count));
+        break;
+    default:
+        VERIFY_NOT_REACHED();
+    }
+
     estimated_time_label.set_text(estimate_time(bytes_done, total_byte_count));
 
     if (total_byte_count) {

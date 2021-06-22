@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "FileUtils.h"
 #include <LibCore/ElapsedTimer.h>
 #include <LibGUI/Widget.h>
 
@@ -18,7 +19,7 @@ public:
     virtual ~FileOperationProgressWidget() override;
 
 private:
-    explicit FileOperationProgressWidget(NonnullRefPtr<Core::File> helper_pipe);
+    FileOperationProgressWidget(FileOperation, NonnullRefPtr<Core::File> helper_pipe);
 
     void did_finish();
     void did_error(String message);
@@ -29,6 +30,7 @@ private:
     String estimate_time(off_t bytes_done, off_t total_byte_count);
     Core::ElapsedTimer m_elapsed_timer;
 
+    FileOperation m_operation;
     RefPtr<Core::Notifier> m_notifier;
     RefPtr<Core::File> m_helper_pipe;
 };
