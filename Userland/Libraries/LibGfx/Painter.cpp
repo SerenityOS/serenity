@@ -352,6 +352,10 @@ void Painter::fill_rounded_corner(const IntRect& a_rect, int radius, Color color
     if (translated_a_rect.y() < rect.y())
         clip_offset = rect.y() - translated_a_rect.y();
 
+    radius *= scale();
+    rect *= scale();
+    clip_offset *= scale();
+
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
