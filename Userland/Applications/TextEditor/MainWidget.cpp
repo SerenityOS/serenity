@@ -249,7 +249,7 @@ MainWidget::MainWidget()
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
                 return;
         }
 
@@ -268,7 +268,7 @@ MainWidget::MainWidget()
             auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
             if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
                 m_save_action->activate();
-            if (save_document_first_result == GUI::Dialog::ExecResult::ExecCancel)
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && editor().document().is_modified())
                 return;
         }
 
