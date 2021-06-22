@@ -8,7 +8,6 @@
 
 #include <AK/Traits.h>
 #include <AK/Vector.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/Range.h>
 

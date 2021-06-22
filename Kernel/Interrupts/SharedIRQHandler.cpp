@@ -10,6 +10,7 @@
 #include <Kernel/Interrupts/InterruptManagement.h>
 #include <Kernel/Interrupts/PIC.h>
 #include <Kernel/Interrupts/SharedIRQHandler.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

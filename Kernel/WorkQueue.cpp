@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/WaitQueue.h>
 #include <Kernel/WorkQueue.h>

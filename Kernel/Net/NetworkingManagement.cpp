@@ -18,6 +18,7 @@
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 
 namespace Kernel {

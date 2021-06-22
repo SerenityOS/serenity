@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/NonnullRefPtr.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/PhysicalAddress.h>

@@ -7,8 +7,8 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/Singleton.h>
 #include <AK/Time.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/TimerQueue.h>
 

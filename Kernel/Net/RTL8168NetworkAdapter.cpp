@@ -9,6 +9,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8168NetworkAdapter.h>
 #include <Kernel/PCI/IDs.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

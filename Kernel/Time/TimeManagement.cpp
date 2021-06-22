@@ -13,6 +13,7 @@
 #include <Kernel/Interrupts/APIC.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Time/APICTimer.h>
 #include <Kernel/Time/HPET.h>
 #include <Kernel/Time/HPETComparator.h>

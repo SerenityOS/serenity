@@ -5,9 +5,9 @@
  */
 
 #include <AK/StringBuilder.h>
-#include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Panic.h>
+#include <Kernel/Sections.h>
 #include <Kernel/StdLib.h>
 
 namespace Kernel {

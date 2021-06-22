@@ -7,6 +7,7 @@
 #include <AK/Singleton.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/kstdio.h>
 

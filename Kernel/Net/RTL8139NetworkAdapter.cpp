@@ -8,6 +8,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 

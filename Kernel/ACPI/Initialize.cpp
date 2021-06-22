@@ -7,6 +7,7 @@
 
 #include <Kernel/ACPI/DynamicParser.h>
 #include <Kernel/CommandLine.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 namespace ACPI {

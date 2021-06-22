@@ -9,6 +9,7 @@
 #include <AK/StringView.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Storage/ATA.h>
 #include <Kernel/Storage/IDEChannel.h>
 #include <Kernel/Storage/IDEController.h>

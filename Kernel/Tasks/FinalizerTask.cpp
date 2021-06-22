@@ -5,6 +5,7 @@
  */
 
 #include <Kernel/Process.h>
+#include <Kernel/Sections.h>
 #include <Kernel/Tasks/FinalizerTask.h>
 
 namespace Kernel {

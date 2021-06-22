@@ -10,6 +10,7 @@
 #include <Kernel/Devices/HID/PS2MouseDevice.h>
 #include <Kernel/Devices/VMWareBackdoor.h>
 #include <Kernel/IO.h>
+#include <Kernel/Sections.h>
 
 namespace Kernel {
 
