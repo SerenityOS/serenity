@@ -26,6 +26,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
 
     auto& button = *find_descendant_of_type_named<GUI::Button>("button");
 
+    // FIXME: Show a different animation for deletions
     auto& file_copy_animation = *find_descendant_of_type_named<GUI::ImageWidget>("file_copy_animation");
     file_copy_animation.load_from_file("/res/graphics/file-flying-animation.gif");
     file_copy_animation.animate();
@@ -52,6 +53,10 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     case FileOperation::Move:
         files_copied_label.set_text("Moving files...");
         current_file_action_label.set_text("Moving: ");
+        break;
+    case FileOperation::Delete:
+        files_copied_label.set_text("Deleting files...");
+        current_file_action_label.set_text("Deleting: ");
         break;
     default:
         VERIFY_NOT_REACHED();
@@ -167,6 +172,9 @@ void FileOperationProgressWidget::did_progress(off_t bytes_done, off_t total_byt
         break;
     case FileOperation::Move:
         files_copied_label.set_text(String::formatted("Moving file {} of {}", files_done, total_file_count));
+        break;
+    case FileOperation::Delete:
+        files_copied_label.set_text(String::formatted("Deleting file {} of {}", files_done, total_file_count));
         break;
     default:
         VERIFY_NOT_REACHED();
