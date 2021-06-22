@@ -23,7 +23,7 @@ KResultOr<FlatPtr> Process::sys$chmod(Userspace<const char*> user_path, size_t p
 KResultOr<FlatPtr> Process::sys$fchmod(int fd, mode_t mode)
 {
     REQUIRE_PROMISE(fattr);
-    auto description = file_description(fd);
+    auto description = fds().file_description(fd);
     if (!description)
         return EBADF;
     return description->chmod(mode);

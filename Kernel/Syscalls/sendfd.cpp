@@ -13,7 +13,7 @@ namespace Kernel {
 KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
     REQUIRE_PROMISE(sendfd);
-    auto socket_description = file_description(sockfd);
+    auto socket_description = fds().file_description(sockfd);
     if (!socket_description)
         return EBADF;
     if (!socket_description->is_socket())
@@ -24,7 +24,7 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
     if (!socket.is_connected())
         return ENOTCONN;
 
-    auto passing_descriptor = file_description(fd);
+    auto passing_descriptor = fds().file_description(fd);
     if (!passing_descriptor)
         return EBADF;
 
@@ -35,7 +35,7 @@ KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
     REQUIRE_PROMISE(recvfd);
-    auto socket_description = file_description(sockfd);
+    auto socket_description = fds().file_description(sockfd);
     if (!socket_description)
         return EBADF;
     if (!socket_description->is_socket())
@@ -44,7 +44,7 @@ KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
     if (!socket.is_local())
         return EAFNOSUPPORT;
 
-    int new_fd = alloc_fd();
+    int new_fd = m_fds.allocate();
     if (new_fd < 0)
         return new_fd;
 
