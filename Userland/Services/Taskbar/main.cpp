@@ -87,8 +87,10 @@ Vector<String> discover_apps_and_categories()
 {
     HashTable<String> seen_app_categories;
     Desktop::AppFile::for_each([&](auto af) {
-        g_apps.append({ af->executable(), af->name(), af->category() });
-        seen_app_categories.set(af->category());
+        if (access(af->executable().characters(), X_OK) == 0) {
+            g_apps.append({ af->executable(), af->name(), af->category() });
+            seen_app_categories.set(af->category());
+        }
     });
     quick_sort(g_apps, [](auto& a, auto& b) { return a.name < b.name; });
 
