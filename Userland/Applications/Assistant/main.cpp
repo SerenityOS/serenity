@@ -121,7 +121,6 @@ public:
 
     void search(String const& query)
     {
-
         m_app_provider.query(query, [=, this](auto results) {
             recv_results(query, results);
         });
