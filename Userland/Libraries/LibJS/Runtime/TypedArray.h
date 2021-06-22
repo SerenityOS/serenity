@@ -101,6 +101,15 @@ public:
         return viewed_array_buffer()->template get_value<T>(indexed_position.value(), true, ArrayBuffer::Order::Unordered);
     }
 
+    // 10.4.5.2 [[HasProperty]] ( P ), https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p
+    bool has_property(const PropertyName& name) const override
+    {
+        if (name.is_number()) {
+            return is_valid_integer_index(name.as_number());
+        }
+        return Object::has_property(name);
+    }
+
     Span<const UnderlyingBufferDataType> data() const
     {
         return { reinterpret_cast<const UnderlyingBufferDataType*>(m_viewed_array_buffer->buffer().data() + m_byte_offset), m_array_length };
