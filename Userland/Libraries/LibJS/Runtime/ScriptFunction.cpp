@@ -123,7 +123,6 @@ DeclarativeEnvironmentRecord* ScriptFunction::create_environment_record()
     }
 
     auto* environment = heap().allocate<DeclarativeEnvironmentRecord>(global_object(), move(variables), m_parent_scope, DeclarativeEnvironmentRecord::EnvironmentRecordType::Function);
-    environment->set_home_object(home_object());
     environment->set_current_function(*this);
     if (m_is_arrow_function) {
         if (is<DeclarativeEnvironmentRecord>(m_parent_scope))

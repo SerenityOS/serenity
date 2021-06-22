@@ -46,8 +46,6 @@ public:
 
     HashMap<FlyString, Variable> const& variables() const { return m_variables; }
 
-    void set_home_object(Value object) { m_home_object = object; }
-    bool has_super_binding() const;
     Value get_super_base();
 
     ThisBindingStatus this_binding_status() const { return m_this_binding_status; }
@@ -71,7 +69,6 @@ private:
     EnvironmentRecordType m_environment_record_type : 8 { EnvironmentRecordType::Declarative };
     ThisBindingStatus m_this_binding_status : 8 { ThisBindingStatus::Uninitialized };
     HashMap<FlyString, Variable> m_variables;
-    Value m_home_object;
     Value m_this_value;
     Value m_new_target;
     // Corresponds to [[FunctionObject]]
