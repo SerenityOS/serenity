@@ -9,11 +9,33 @@
 
 namespace Matrix {
 
+String Room::display_name() const
+{
+    if (m_name.has_value())
+        return *m_name;
+    if (m_is_direct) {
+        VERIFY(m_members.size() == 2);
+        auto member_ids = m_members.keys();
+        auto& other_user_id = member_ids[0] == m_user_id ? member_ids[1] : member_ids[0];
+        auto other_user = m_members.get(other_user_id).value();
+        if (other_user.display_name.has_value())
+            return *other_user.display_name;
+    }
+    return m_id.value();
+}
+
 u64 Room::last_message_timestamp_in_milliseconds() const
 {
     if (m_messages.is_empty())
         return 0;
     return m_messages.last().metadata().timestamp_in_milliseconds();
+}
+
+void Room::set_direct(bool value)
+{
+    m_is_direct = value;
+    if (m_is_direct)
+        VERIFY(m_members.size() == 2);
 }
 
 void Room::add_message(NonnullOwnPtr<Message> message)

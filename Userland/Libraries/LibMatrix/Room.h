@@ -28,25 +28,31 @@ public:
         Optional<String> display_name;
     };
 
-    explicit Room(RoomId id)
+    Room(RoomId id, UserId user_id)
         : m_id(move(id))
+        , m_user_id(move(user_id))
     {
     }
 
     RoomId const& id() const { return m_id; }
+    bool is_direct() const { return m_is_direct; }
     NonnullOwnPtrVector<Message> const& messages() const { return m_messages; }
     HashMap<UserId, Membership> const& members() const { return m_members; }
 
     Optional<String> const& name() const { return m_name; }
     Optional<String> const& topic() const { return m_topic; }
 
+    String display_name() const;
     u64 last_message_timestamp_in_milliseconds() const;
 
+    void set_direct(bool);
     void add_message(NonnullOwnPtr<Message>);
     void process_state_event(StateEvent const&, bool should_append_to_message_log);
 
 private:
     RoomId m_id;
+    UserId m_user_id;
+    bool m_is_direct { false };
     NonnullOwnPtrVector<Message> m_messages;
     HashTable<EventId> m_processed_state_events;
     HashMap<UserId, Membership> m_members;

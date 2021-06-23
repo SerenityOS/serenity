@@ -101,7 +101,7 @@ void Device::process_sync_data(JsonObject const& data)
             joined_rooms.as_object().for_each_member([this](String const& key, JsonValue const& value) {
                 auto room_id = RoomId(key);
                 if (!m_rooms.contains(room_id)) {
-                    m_rooms.set(room_id, make<Room>(room_id));
+                    m_rooms.set(room_id, make<Room>(room_id, m_user_id));
                 }
 
                 Room& current_room = *(m_rooms.get(room_id).value());
@@ -143,6 +143,33 @@ void Device::process_sync_data(JsonObject const& data)
         }
 
         // FIXME: Also parse "invite" and "leave".
+    }
+
+    if (data.has("account_data")) {
+        auto account_data = data.get("account_data");
+        if (account_data.as_object().has("events")) {
+            auto events = account_data.as_object().get("events");
+            events.as_array().for_each([this](JsonValue const& value) {
+                if (!value.is_object() || !value.as_object().has("type") || !value.as_object().get("type").is_string()) {
+                    dbgln_if(MATRIX_DEBUG, "[Matrix] Invalid account data event ignored:\n{}", value.to_string());
+                    return;
+                }
+                auto type = value.as_object().get("type").as_string();
+
+                if (type == "m.direct") {
+                    auto content = value.as_object().get("content");
+                    content.as_object().for_each_member([this](auto&, auto& value) {
+                        value.as_array().for_each([this](JsonValue const& value) {
+                            RoomId room_id(value.as_string());
+                            VERIFY(m_rooms.contains(room_id));
+                            m_rooms.get(room_id).value()->set_direct(true);
+                        });
+                    });
+                } else {
+                    dbgln_if(MATRIX_DEBUG, "[Matrix] Invalid or unimplemented account data event ignored:\n{}", value.to_string());
+                }
+            });
+        }
     }
 
     // FIXME: Parse everything else.
