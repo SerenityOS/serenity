@@ -275,15 +275,16 @@ set(KERNEL_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/CPU.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/InterruptEntry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/Processor.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/ProcessorInfo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/${KERNEL_ARCH}/SafeMem.cpp
 )
 
 set(KERNEL_SOURCES
     ${KERNEL_SOURCES}
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ASM_wrapper.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/CPU.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Interrupts.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/Processor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/ProcessorInfo.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Arch/x86/common/TrapFrame.cpp
 )
 
@@ -395,7 +396,7 @@ if (ENABLE_KERNEL_LTO)
     check_ipo_supported()
     set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(Kernel kernel_heap gcc stdc++)
+target_link_libraries(Kernel kernel_heap gcc supc++)
 add_dependencies(Kernel kernel_heap)
 install(TARGETS Kernel RUNTIME DESTINATION boot)
 

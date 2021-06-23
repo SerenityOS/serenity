@@ -7,6 +7,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/Region.h>
@@ -43,6 +44,7 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     dbgln_if(FORK_DEBUG, "fork: child={}", child);
     child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
 
+#if ARCH(I386)
     auto& child_tss = child_first_thread->m_tss;
     child_tss.eax = 0; // fork() returns 0 in the child :^)
     child_tss.ebx = regs.ebx;
@@ -62,6 +64,10 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child_tss.ss = regs.userspace_ss;
 
     dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
+#else
+    (void)regs;
+    PANIC("Process::sys$fork() not implemented.");
+#endif
 
     {
         ScopedSpinLock lock(space().get_lock());

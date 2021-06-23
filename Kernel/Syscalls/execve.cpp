@@ -11,6 +11,7 @@
 #include <Kernel/Debug.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Random.h>
@@ -635,6 +636,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     new_main_thread->reset_fpu_state();
 
+#if ARCH(I386)
     auto& tss = new_main_thread->m_tss;
     tss.cs = GDT_SELECTOR_CODE3 | 3;
     tss.ds = GDT_SELECTOR_DATA3 | 3;
@@ -646,6 +648,10 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     tss.esp = new_userspace_esp;
     tss.cr3 = space().page_directory().cr3();
     tss.ss2 = pid().value();
+#else
+    (void)new_userspace_esp;
+    PANIC("Process::do_exec() not implemented");
+#endif
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);

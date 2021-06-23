@@ -20,6 +20,7 @@
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Module.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceEventBuffer.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
@@ -179,8 +180,14 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     auto process = Process::create(first_thread, move(name), (uid_t)0, (gid_t)0, ProcessID(0), true);
     if (!first_thread || !process)
         return {};
+#if ARCH(I386)
     first_thread->tss().eip = (FlatPtr)entry;
     first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
+#else
+    (void)entry;
+    (void)entry_data;
+    PANIC("Process::create_kernel_process() not implemented");
+#endif
 
     if (process->pid() != 0) {
         process->ref();
@@ -640,9 +647,15 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     if (!joinable)
         thread->detach();
 
+#if ARCH(I386)
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
     tss.esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
+#else
+    (void)entry;
+    (void)entry_data;
+    PANIC("Process::create_kernel_thread() not implemented");
+#endif
 
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_state(Thread::State::Runnable);

@@ -317,7 +317,8 @@ apic_ap_start32:
     movl $0x80000001, %eax
     cpuid
     testl $0x100000, %edx
-    je (1f - apic_ap_start + 0x8000)
+    // TODO: Uncomment this
+    //je (1f - apic_ap_start + 0x8000)
     /* turn on IA32_EFER.NXE */
     movl $0xc0000080, %ecx
     rdmsr

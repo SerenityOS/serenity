@@ -289,7 +289,7 @@ public:
     ALWAYS_INLINE static Thread* idle_thread()
     {
         // See comment in Processor::current_thread
-        return (Thread*)read_fs_u32(__builtin_offsetof(Processor, m_idle_thread));
+        return (Thread*)read_fs_ptr(__builtin_offsetof(Processor, m_idle_thread));
     }
 
     ALWAYS_INLINE u32 get_id() const
