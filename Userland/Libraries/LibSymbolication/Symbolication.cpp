@@ -21,7 +21,7 @@ struct CachedELF {
 
 static HashMap<String, OwnPtr<CachedELF>> s_cache;
 
-Optional<Symbol> symbolicate(String const& path, u32 address)
+Optional<Symbol> symbolicate(String const& path, FlatPtr address)
 {
     if (!s_cache.contains(path)) {
         auto mapped_file = MappedFile::map(path);
