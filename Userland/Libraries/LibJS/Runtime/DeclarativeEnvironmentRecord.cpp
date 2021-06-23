@@ -76,6 +76,7 @@ bool DeclarativeEnvironmentRecord::has_binding(FlyString const& name) const
     return m_bindings.contains(name);
 }
 
+// 9.1.1.1.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d
 void DeclarativeEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyString const& name, bool can_be_deleted)
 {
     auto result = m_bindings.set(name,
@@ -89,6 +90,7 @@ void DeclarativeEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyStri
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
+// 9.1.1.1.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s
 void DeclarativeEnvironmentRecord::create_immutable_binding(GlobalObject&, FlyString const& name, bool strict)
 {
     auto result = m_bindings.set(name,
@@ -102,6 +104,7 @@ void DeclarativeEnvironmentRecord::create_immutable_binding(GlobalObject&, FlySt
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
 }
 
+// 9.1.1.1.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
 void DeclarativeEnvironmentRecord::initialize_binding(GlobalObject&, FlyString const& name, Value value)
 {
     auto it = m_bindings.find(name);
@@ -111,6 +114,7 @@ void DeclarativeEnvironmentRecord::initialize_binding(GlobalObject&, FlyString c
     it->value.initialized = true;
 }
 
+// 9.1.1.1.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s
 void DeclarativeEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     auto it = m_bindings.find(name);
@@ -141,6 +145,7 @@ void DeclarativeEnvironmentRecord::set_mutable_binding(GlobalObject& global_obje
     }
 }
 
+// 9.1.1.1.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s
 Value DeclarativeEnvironmentRecord::get_binding_value(GlobalObject& global_object, FlyString const& name, bool)
 {
     auto it = m_bindings.find(name);
@@ -152,6 +157,7 @@ Value DeclarativeEnvironmentRecord::get_binding_value(GlobalObject& global_objec
     return it->value.value;
 }
 
+// 9.1.1.1.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n
 bool DeclarativeEnvironmentRecord::delete_binding(GlobalObject&, FlyString const& name)
 {
     auto it = m_bindings.find(name);
