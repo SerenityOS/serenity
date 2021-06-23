@@ -190,10 +190,10 @@ int main(int argc, char** argv)
     auto parse_messages = [&] {
         for (;;) {
             consume_whitespace();
-            parse_message();
-            consume_whitespace();
             if (lexer.peek() == '}')
                 break;
+            parse_message();
+            consume_whitespace();
         }
     };
 
@@ -366,7 +366,7 @@ public:
     static i32 static_message_id() { return (int)MessageID::@message.pascal_name@; }
     virtual const char* message_name() const override { return "@endpoint.name@::@message.pascal_name@"; }
 
-    static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, int sockfd)
+    static OwnPtr<@message.pascal_name@> decode(InputMemoryStream& stream, [[maybe_unused]] int sockfd)
     {
         IPC::Decoder decoder { stream, sockfd };
 )~~~");
@@ -629,7 +629,7 @@ public:
 
     static u32 static_magic() { return @endpoint.magic@; }
 
-    static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, int sockfd)
+    static OwnPtr<IPC::Message> decode_message(ReadonlyBytes buffer, [[maybe_unused]] int sockfd)
     {
         InputMemoryStream stream { buffer };
         u32 message_endpoint_magic = 0;
