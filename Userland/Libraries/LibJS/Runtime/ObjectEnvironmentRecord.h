@@ -11,7 +11,7 @@
 namespace JS {
 
 class ObjectEnvironmentRecord : public EnvironmentRecord {
-    JS_OBJECT(ObjectEnvironmentRecord, EnvironmentRecord);
+    JS_ENVIRONMENT_RECORD(ObjectEnvironmentRecord, EnvironmentRecord);
 
 public:
     ObjectEnvironmentRecord(Object&, EnvironmentRecord* parent_scope);

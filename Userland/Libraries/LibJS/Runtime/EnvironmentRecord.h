@@ -15,9 +15,12 @@ struct Variable {
     DeclarationKind declaration_kind;
 };
 
-class EnvironmentRecord : public Object {
-    JS_OBJECT(EnvironmentRecord, Object);
+#define JS_ENVIRONMENT_RECORD(class_, base_class) \
+public:                                           \
+    using Base = base_class;                      \
+    virtual char const* class_name() const override { return #class_; }
 
+class EnvironmentRecord : public Cell {
 public:
     GlobalObject& global_object() { return *m_global_object; }
     GlobalObject const& global_object() const { return *m_global_object; }
@@ -42,6 +45,15 @@ public:
     // [[OuterEnv]]
     EnvironmentRecord* outer_environment() { return m_outer_environment; }
     EnvironmentRecord const* outer_environment() const { return m_outer_environment; }
+
+    virtual bool is_global_environment_record() const { return false; }
+    virtual bool is_declarative_environment_record() const { return false; }
+    virtual bool is_function_environment_record() const { return false; }
+
+    template<typename T>
+    bool fast_is() const = delete;
+
+    virtual char const* class_name() const override { return "EnvironmentRecord"; }
 
 protected:
     explicit EnvironmentRecord(EnvironmentRecord* parent);

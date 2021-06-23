@@ -11,7 +11,7 @@
 namespace JS {
 
 class FunctionEnvironmentRecord final : public DeclarativeEnvironmentRecord {
-    JS_OBJECT(FunctionEnvironmentRecord, DeclarativeEnvironmentRecord);
+    JS_ENVIRONMENT_RECORD(FunctionEnvironmentRecord, DeclarativeEnvironmentRecord);
 
 public:
     enum class ThisBindingStatus : u8 {
@@ -61,6 +61,6 @@ private:
 };
 
 template<>
-inline bool Object::fast_is<FunctionEnvironmentRecord>() const { return is_function_environment_record(); }
+inline bool EnvironmentRecord::fast_is<FunctionEnvironmentRecord>() const { return is_function_environment_record(); }
 
 }
