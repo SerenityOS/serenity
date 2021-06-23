@@ -268,7 +268,7 @@ void ScreenInput::on_receive_mouse_data(const MousePacket& packet)
         m_cursor_location.translate_by(packet.x * m_acceleration_factor, packet.y * m_acceleration_factor);
         dbgln_if(WSSCREEN_DEBUG, "Screen: New Relative mouse point @ {}", m_cursor_location);
     } else {
-        m_cursor_location = { packet.x * current_screen.physical_width() / 0xffff, packet.y * current_screen.physical_height() / 0xffff };
+        m_cursor_location = { packet.x * current_screen.width() / 0xffff, packet.y * current_screen.height() / 0xffff };
         dbgln_if(WSSCREEN_DEBUG, "Screen: New Absolute mouse point @ {}", m_cursor_location);
     }
 
