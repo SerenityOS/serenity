@@ -22,7 +22,7 @@ struct Binding {
 };
 
 class DeclarativeEnvironmentRecord : public EnvironmentRecord {
-    JS_OBJECT(DeclarativeEnvironmentRecord, EnvironmentRecord);
+    JS_ENVIRONMENT_RECORD(DeclarativeEnvironmentRecord, EnvironmentRecord);
 
 public:
     enum class EnvironmentRecordType {
@@ -68,6 +68,6 @@ private:
 };
 
 template<>
-inline bool Object::fast_is<DeclarativeEnvironmentRecord>() const { return is_declarative_environment_record(); }
+inline bool EnvironmentRecord::fast_is<DeclarativeEnvironmentRecord>() const { return is_declarative_environment_record(); }
 
 }

@@ -11,7 +11,7 @@
 namespace JS {
 
 class GlobalEnvironmentRecord final : public EnvironmentRecord {
-    JS_OBJECT(GlobalEnvironmentRecord, EnvironmentRecord);
+    JS_ENVIRONMENT_RECORD(GlobalEnvironmentRecord, EnvironmentRecord);
 
 public:
     explicit GlobalEnvironmentRecord(GlobalObject&);
@@ -59,6 +59,5 @@ private:
 };
 
 template<>
-inline bool Object::fast_is<GlobalEnvironmentRecord>() const { return is_global_environment_record(); }
-
+inline bool EnvironmentRecord::fast_is<GlobalEnvironmentRecord>() const { return is_global_environment_record(); }
 }
