@@ -38,8 +38,6 @@ private:
     Client();
 
     virtual void die() override;
-
-    virtual void dummy() override;
 };
 
 }

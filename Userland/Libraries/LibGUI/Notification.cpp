@@ -30,7 +30,6 @@ private:
         , m_notification(notification)
     {
     }
-    virtual void dummy() override { }
     Notification* m_notification;
 };
 

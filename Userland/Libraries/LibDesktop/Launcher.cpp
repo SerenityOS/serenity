@@ -43,7 +43,6 @@ private:
         : IPC::ServerConnection<LaunchClientEndpoint, LaunchServerEndpoint>(*this, "/tmp/portal/launch")
     {
     }
-    virtual void dummy() override { }
 };
 
 static LaunchServerConnection& connection()

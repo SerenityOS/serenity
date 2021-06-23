@@ -1,4 +1,3 @@
 endpoint LaunchClient
 {
-    dummy() =|
 }
