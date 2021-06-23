@@ -145,7 +145,7 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
     return ret;
 }
 
-static void debugger_out(char ch)
+extern "C" void dbgputch(char ch)
 {
     if (serial_debug)
         serial_putch(ch);
@@ -158,7 +158,7 @@ extern "C" void dbgputstr(const char* characters, size_t length)
         return;
     ScopedSpinLock lock(s_log_lock);
     for (size_t i = 0; i < length; ++i)
-        debugger_out(characters[i]);
+        dbgputch(characters[i]);
 }
 
 extern "C" void kernelputstr(const char* characters, size_t length)
