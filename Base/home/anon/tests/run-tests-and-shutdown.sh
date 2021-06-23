@@ -30,11 +30,10 @@ run(index) {
 #     .inc: Shell test helper file that's not a test
 #     UserEmulator: Tests designed to run inside the Userspace Emulator
 #     stack-smash: Intentionally crashes by smashing the stack
-#     TestJSON: AK/TestJSON makes assumptions about $PWD to load its input files
 #     .frm,.txt: Test inputs that are not tests
 #     test-web: Requires the window server in order to work
 #     test-js: We start this one manually with the show progress flag set to false
-exclude_patterns='Kernel/Legacy|.inc|UserEmulator|stack-smash|TestJSON|.txt|.frm|test-web|test-js'
+exclude_patterns='Kernel/Legacy|.inc|UserEmulator|stack-smash|.txt|.frm|test-web|test-js'
 
 system_tests=((test-js --show-progress=false) (test-crypto -c -t test))
 all_tests=${concat_lists $system_tests $(find /usr/Tests -type f | grep -E -v $exclude_patterns | shuf) }
