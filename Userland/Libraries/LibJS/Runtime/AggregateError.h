@@ -11,7 +11,7 @@
 namespace JS {
 
 class AggregateError : public Object {
-    JS_OBJECT(Error, Object);
+    JS_OBJECT(AggregateError, Object);
 
 public:
     static AggregateError* create(GlobalObject&);
