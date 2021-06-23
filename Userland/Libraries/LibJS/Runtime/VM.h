@@ -242,8 +242,6 @@ public:
 
     CommonPropertyNames names;
 
-    Shape& environment_record_shape() { return *m_environment_record_shape; }
-
     void run_queued_promise_jobs();
     void enqueue_promise_job(NativeFunction&);
 
@@ -287,8 +285,6 @@ private:
     Symbol* m_well_known_symbol_##snake_name { nullptr };
     JS_ENUMERATE_WELL_KNOWN_SYMBOLS
 #undef __JS_ENUMERATE
-
-    Shape* m_environment_record_shape { nullptr };
 
     bool m_underscore_is_last_value { false };
 
