@@ -114,6 +114,7 @@ public:
     void redo();
 
     UndoStack const& undo_stack() const { return m_undo_stack; }
+    UndoStack& undo_stack() { return m_undo_stack; }
 
     void notify_did_change();
     void set_all_cursors(const TextPosition&);

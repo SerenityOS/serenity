@@ -133,7 +133,6 @@ public:
     void select_all();
     virtual void undo();
     virtual void redo();
-    void allow_undo(bool);
 
     Function<void()> on_change;
     Function<void(bool modified)> on_modified_change;
