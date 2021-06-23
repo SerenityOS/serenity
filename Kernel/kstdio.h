@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 
 extern "C" {
+void dbgputch(char);
 void dbgputstr(const char*, size_t);
 void kernelputstr(const char*, size_t);
 void kernelcriticalputstr(const char*, size_t);
