@@ -19,6 +19,11 @@ class EnvironmentRecord : public Object {
     JS_OBJECT(EnvironmentRecord, Object);
 
 public:
+    GlobalObject& global_object() { return *m_global_object; }
+    GlobalObject const& global_object() const { return *m_global_object; }
+
+    virtual void initialize(GlobalObject&) override;
+
     virtual Optional<Variable> get_from_environment_record(FlyString const&) const = 0;
     virtual void put_into_environment_record(FlyString const&, Variable) = 0;
     virtual bool delete_from_environment_record(FlyString const&) = 0;
@@ -44,6 +49,9 @@ protected:
     virtual void visit_edges(Visitor&) override;
 
 private:
+    virtual bool is_environment_record() const final { return true; }
+
+    GlobalObject* m_global_object { nullptr };
     EnvironmentRecord* m_outer_environment { nullptr };
 };
 
