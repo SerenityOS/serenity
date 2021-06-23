@@ -6,12 +6,13 @@
 
 #pragma once
 
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/Object.h>
 
 namespace JS {
 
-class AggregateError : public Object {
-    JS_OBJECT(AggregateError, Object);
+class AggregateError : public Error {
+    JS_OBJECT(AggregateError, Error);
 
 public:
     static AggregateError* create(GlobalObject&);

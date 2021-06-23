@@ -10,6 +10,8 @@ test("result for various object types", () => {
     expect(oToString([])).toBe("[object Array]");
     expect(oToString(function () {})).toBe("[object Function]");
     expect(oToString(new Error())).toBe("[object Error]");
+    expect(oToString(new TypeError())).toBe("[object Error]");
+    expect(oToString(new AggregateError([]))).toBe("[object Error]");
     expect(oToString(new Boolean())).toBe("[object Boolean]");
     expect(oToString(new Number())).toBe("[object Number]");
     expect(oToString(new Date())).toBe("[object Date]");

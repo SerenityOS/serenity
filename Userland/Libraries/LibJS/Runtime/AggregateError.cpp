@@ -5,7 +5,7 @@
  */
 
 #include <LibJS/Runtime/AggregateError.h>
-#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/Error.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -16,7 +16,7 @@ AggregateError* AggregateError::create(GlobalObject& global_object)
 }
 
 AggregateError::AggregateError(Object& prototype)
-    : Object(prototype)
+    : Error(prototype)
 {
 }
 
