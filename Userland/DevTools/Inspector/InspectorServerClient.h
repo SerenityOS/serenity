@@ -25,8 +25,6 @@ private:
         : IPC::ServerConnection<InspectorClientEndpoint, InspectorServerEndpoint>(*this, "/tmp/portal/inspector")
     {
     }
-
-    virtual void dummy() override { }
 };
 
 }
