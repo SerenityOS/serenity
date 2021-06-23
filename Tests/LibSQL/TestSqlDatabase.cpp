@@ -176,13 +176,3 @@ TEST_CASE(insert_100_into_table)
 {
     insert_and_verify(100);
 }
-
-TEST_CASE(insert_1000_into_table)
-{
-    insert_and_verify(1000);
-}
-
-TEST_CASE(insert_10000_into_table)
-{
-    insert_and_verify(10000);
-}
