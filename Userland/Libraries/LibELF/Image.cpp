@@ -13,6 +13,7 @@
 #include <AK/StringView.h>
 #include <LibELF/Image.h>
 #include <LibELF/Validation.h>
+#include <limits.h>
 
 namespace ELF {
 
