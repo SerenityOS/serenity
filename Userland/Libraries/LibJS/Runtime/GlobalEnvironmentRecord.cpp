@@ -63,6 +63,7 @@ bool GlobalEnvironmentRecord::has_binding(FlyString const& name) const
     return m_object_record->has_binding(name);
 }
 
+// 9.1.1.4.2 CreateMutableBinding ( N, D ), https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d
 void GlobalEnvironmentRecord::create_mutable_binding(GlobalObject& global_object, FlyString const& name, bool can_be_deleted)
 {
     if (m_declarative_record->has_binding(name)) {
@@ -72,6 +73,7 @@ void GlobalEnvironmentRecord::create_mutable_binding(GlobalObject& global_object
     m_declarative_record->create_mutable_binding(global_object, name, can_be_deleted);
 }
 
+// 9.1.1.4.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s
 void GlobalEnvironmentRecord::create_immutable_binding(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     if (m_declarative_record->has_binding(name)) {
@@ -81,6 +83,7 @@ void GlobalEnvironmentRecord::create_immutable_binding(GlobalObject& global_obje
     m_declarative_record->create_immutable_binding(global_object, name, strict);
 }
 
+// 9.1.1.4.4 InitializeBinding ( N, V ), https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
 void GlobalEnvironmentRecord::initialize_binding(GlobalObject& global_object, FlyString const& name, Value value)
 {
     if (m_declarative_record->has_binding(name)) {
@@ -90,6 +93,7 @@ void GlobalEnvironmentRecord::initialize_binding(GlobalObject& global_object, Fl
     m_object_record->initialize_binding(global_object, name, value);
 }
 
+// 9.1.1.4.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s
 void GlobalEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
     if (m_declarative_record->has_binding(name)) {
@@ -100,6 +104,7 @@ void GlobalEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, F
     m_object_record->set_mutable_binding(global_object, name, value, strict);
 }
 
+// 9.1.1.4.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s
 Value GlobalEnvironmentRecord::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
     if (m_declarative_record->has_binding(name))
@@ -107,6 +112,7 @@ Value GlobalEnvironmentRecord::get_binding_value(GlobalObject& global_object, Fl
     return m_object_record->get_binding_value(global_object, name, strict);
 }
 
+// 9.1.1.4.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n
 bool GlobalEnvironmentRecord::delete_binding(GlobalObject& global_object, FlyString const& name)
 {
     if (m_declarative_record->has_binding(name))
@@ -123,16 +129,19 @@ bool GlobalEnvironmentRecord::delete_binding(GlobalObject& global_object, FlyStr
     return true;
 }
 
+// 9.1.1.4.12 HasVarDeclaration ( N ), https://tc39.es/ecma262/#sec-hasvardeclaration
 bool GlobalEnvironmentRecord::has_var_declaration(FlyString const& name) const
 {
     return m_var_names.contains_slow(name);
 }
 
+// 9.1.1.4.13 HasLexicalDeclaration ( N ), https://tc39.es/ecma262/#sec-haslexicaldeclaration
 bool GlobalEnvironmentRecord::has_lexical_declaration(FlyString const& name) const
 {
     return m_declarative_record->has_binding(name);
 }
 
+// 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironmentRecord::has_restricted_global_property(FlyString const& name) const
 {
     auto existing_prop = m_global_object.get_own_property_descriptor(name);
@@ -143,6 +152,7 @@ bool GlobalEnvironmentRecord::has_restricted_global_property(FlyString const& na
     return true;
 }
 
+// 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
 bool GlobalEnvironmentRecord::can_declare_global_var(FlyString const& name) const
 {
     bool has_property = m_object_record->object().has_own_property(name);
@@ -151,6 +161,7 @@ bool GlobalEnvironmentRecord::can_declare_global_var(FlyString const& name) cons
     return m_object_record->object().is_extensible();
 }
 
+// 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
 bool GlobalEnvironmentRecord::can_declare_global_function(FlyString const& name) const
 {
     auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
@@ -163,6 +174,7 @@ bool GlobalEnvironmentRecord::can_declare_global_function(FlyString const& name)
     return false;
 }
 
+// 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 void GlobalEnvironmentRecord::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
     bool has_property = m_object_record->object().has_own_property(name);
@@ -175,6 +187,7 @@ void GlobalEnvironmentRecord::create_global_var_binding(FlyString const& name, b
         m_var_names.append(name);
 }
 
+// 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
 void GlobalEnvironmentRecord::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
     auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
