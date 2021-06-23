@@ -67,6 +67,14 @@ Latin9Decoder& latin9_decoder()
     return *decoder;
 }
 
+TurkishDecoder& turkish_decoder()
+{
+    static TurkishDecoder* decoder = nullptr;
+    if (!decoder)
+        decoder = new TurkishDecoder;
+    return *decoder;
+}
+
 }
 
 Decoder* decoder_for(const String& a_encoding)
@@ -87,6 +95,8 @@ Decoder* decoder_for(const String& a_encoding)
             return &cyrillic_decoder();
         if (encoding.value().equals_ignoring_case("iso-8859-15"))
             return &latin9_decoder();
+        if (encoding.value().equals_ignoring_case("windows-1254"))
+            return &turkish_decoder();
     }
     dbgln("TextCodec: No decoder implemented for encoding '{}'", a_encoding);
     return nullptr;
@@ -379,6 +389,35 @@ String Latin9Decoder::to_utf8(const StringView& input)
     StringBuilder builder(input.length());
     for (auto ch : input) {
         builder.append_code_point(convert_latin9_to_utf8(ch));
+    }
+    return builder.to_string();
+}
+
+String TurkishDecoder::to_utf8(const StringView& input)
+{
+    auto convert_turkish_to_utf8 = [](u8 ch) -> u32 {
+        // Turkish (aka ISO-8859-9, Windows-1254) is the same as the first 256 Unicode code points, except for 6 characters.
+        switch (ch) {
+        case 0xD0:
+            return 0x11E;
+        case 0xDD:
+            return 0x130;
+        case 0xDE:
+            return 0x15E;
+        case 0xF0:
+            return 0x11F;
+        case 0xFD:
+            return 0x131;
+        case 0xFE:
+            return 0x15F;
+        default:
+            return ch;
+        }
+    };
+
+    StringBuilder builder(input.length());
+    for (auto ch : input) {
+        builder.append_code_point(convert_turkish_to_utf8(ch));
     }
     return builder.to_string();
 }
