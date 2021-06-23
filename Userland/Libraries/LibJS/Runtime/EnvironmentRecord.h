@@ -26,6 +26,14 @@ public:
     virtual bool has_this_binding() const { return false; }
     virtual Value get_this_binding(GlobalObject&) const { return {}; }
 
+    virtual bool has_binding([[maybe_unused]] FlyString const& name) const { return false; }
+    virtual void create_mutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool can_be_deleted) { }
+    virtual void create_immutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool strict) { }
+    virtual void initialize_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, Value) { }
+    virtual void set_mutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, Value, [[maybe_unused]] bool strict) { }
+    virtual Value get_binding_value(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool strict) { return {}; }
+    virtual bool delete_binding(GlobalObject&, [[maybe_unused]] FlyString const& name) { return false; }
+
     // [[OuterEnv]]
     EnvironmentRecord* outer_environment() { return m_outer_environment; }
     EnvironmentRecord const* outer_environment() const { return m_outer_environment; }

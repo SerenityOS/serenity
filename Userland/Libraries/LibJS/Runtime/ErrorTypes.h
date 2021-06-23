@@ -15,6 +15,7 @@
     M(BigIntBadOperatorOtherType, "Cannot use {} operator with BigInt and other type")                                                  \
     M(BigIntIntArgument, "BigInt argument must be an integer")                                                                          \
     M(BigIntInvalidValue, "Invalid value for BigInt: {}")                                                                               \
+    M(BindingNotInitialized, "Binding {} is not initialized")                                                                           \
     M(ClassConstructorWithoutNew, "Class constructor {} must be called with 'new'")                                                     \
     M(ClassExtendsValueNotAConstructorOrNull, "Class extends value {} is not a constructor or null")                                    \
     M(ClassExtendsValueInvalidPrototype, "Class extends value has an invalid prototype {}")                                             \
@@ -160,12 +161,12 @@
     M(TypedArrayPrototypeOneArg, "TypedArray.prototype.{}() requires at least one argument")                                            \
     M(TypedArrayFailedSettingIndex, "Failed setting value of index {} of typed array")                                                  \
     M(UnknownIdentifier, "'{}' is not defined")                                                                                         \
-    M(URIMalformed, "URI malformed")                                                                                                    \
-    /* LibWeb bindings */                                                                                                               \
+    M(URIMalformed, "URI malformed") /* LibWeb bindings */                                                                              \
     M(NotAByteString, "Argument to {}() must be a byte string")                                                                         \
     M(BadArgCountOne, "{}() needs one argument")                                                                                        \
     M(BadArgCountAtLeastOne, "{}() needs at least one argument")                                                                        \
-    M(BadArgCountMany, "{}() needs {} arguments")
+    M(BadArgCountMany, "{}() needs {} arguments")                                                                                       \
+    M(FixmeAddAnErrorString, "FIXME: Add a string for this error.")
 
 namespace JS {
 
