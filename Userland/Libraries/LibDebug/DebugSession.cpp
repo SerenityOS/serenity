@@ -9,6 +9,7 @@
 #include <AK/JsonValue.h>
 #include <AK/LexicalPath.h>
 #include <AK/Optional.h>
+#include <AK/Platform.h>
 #include <LibCore/File.h>
 #include <LibRegex/Regex.h>
 #include <stdlib.h>
@@ -336,7 +337,11 @@ void* DebugSession::single_step()
     regs = get_registers();
     regs.eflags &= ~(TRAP_FLAG);
     set_registers(regs);
+#if ARCH(I386)
     return (void*)regs.eip;
+#else
+    TODO();
+#endif
 }
 
 void DebugSession::detach()
