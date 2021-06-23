@@ -8,6 +8,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Demangle.h>
 #include <AK/OwnPtr.h>
+#include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <LibC/sys/arch/i386/regs.h>
 #include <LibCore/ArgsParser.h>
@@ -81,6 +82,7 @@ static bool handle_disassemble_command(const String& command, void* first_instru
 
 static bool handle_backtrace_command(const PtraceRegisters& regs)
 {
+#if ARCH(I386)
     auto ebp_val = regs.ebp;
     auto eip_val = regs.eip;
     outln("Backtrace:");
@@ -98,6 +100,10 @@ static bool handle_backtrace_command(const PtraceRegisters& regs)
         eip_val = (u32)next_eip.value();
         ebp_val = (u32)next_ebp.value();
     }
+#else
+    (void)regs;
+    TODO();
+#endif
     return true;
 }
 
