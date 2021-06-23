@@ -69,6 +69,7 @@ public:
     virtual mode_t required_mode() const { return 0444; }
     virtual uid_t owner_user() const { return 0; }
     virtual gid_t owner_group() const { return 0; }
+    time_t modified_time() const { return TimeManagement::now().to_timeval().tv_sec; }
 
     virtual void prepare_for_deletion() { }
     virtual KResult refresh_data(FileDescription&) const

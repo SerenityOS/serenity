@@ -145,7 +145,7 @@ InodeMetadata ProcFSInode::metadata() const
     metadata.uid = m_associated_component->owner_user();
     metadata.gid = m_associated_component->owner_group();
     metadata.size = m_associated_component->size();
-    metadata.mtime = mepoch;
+    metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }
 
@@ -216,7 +216,7 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
     metadata.uid = m_associated_component->owner_user();
     metadata.gid = m_associated_component->owner_group();
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }
 KResult ProcFSDirectoryInode::traverse_as_directory(Function<bool(const FS::DirectoryEntryView&)> callback) const
@@ -258,7 +258,7 @@ InodeMetadata ProcFSLinkInode::metadata() const
     metadata.uid = m_associated_component->owner_user();
     metadata.gid = m_associated_component->owner_group();
     metadata.size = 0;
-    metadata.mtime = mepoch;
+    metadata.mtime = m_associated_component->modified_time();
     return metadata;
 }
 
