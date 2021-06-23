@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/IO.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/UserOrKernelBuffer.h>
+#include <Kernel/kstdio.h>
 
 namespace Kernel {
 
@@ -19,26 +19,20 @@ KResultOr<int> Process::sys$dump_backtrace()
 
 KResultOr<int> Process::sys$dbgputch(u8 ch)
 {
-    IO::out8(IO::BOCHS_DEBUG_PORT, ch);
+    dbgputch(ch);
     return 0;
 }
 
 KResultOr<size_t> Process::sys$dbgputstr(Userspace<const u8*> characters, size_t size)
 {
-    if (size <= 0)
+    if (size == 0)
         return 0;
 
-    if (size > NumericLimits<ssize_t>::max())
-        return EINVAL;
-
-    auto buffer = UserOrKernelBuffer::for_user_buffer(characters, size);
-    if (!buffer.has_value())
-        return EFAULT;
-    return buffer.value().read_buffered<1024>(size, [&](u8 const* buffer, size_t buffer_size) {
-        for (size_t i = 0; i < buffer_size; ++i)
-            IO::out8(IO::BOCHS_DEBUG_PORT, buffer[i]);
-        return buffer_size;
-    });
+    auto result = try_copy_kstring_from_user(reinterpret_cast<char const*>(characters.unsafe_userspace_ptr()), size);
+    if (result.is_error())
+        return result.error();
+    dbgputstr(reinterpret_cast<const char*>(result.value()->characters()), size);
+    return size;
 }
 
 }
