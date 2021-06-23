@@ -66,7 +66,7 @@ static int create_thread(pthread_t* thread, void* (*entry)(void*), void* argumen
     while (((uintptr_t)stack - 16) % 16 != 0)
         push_on_stack(nullptr);
 
-    push_on_stack((void*)thread_params->m_stack_size);
+    push_on_stack((void*)(uintptr_t)thread_params->m_stack_size);
     push_on_stack(thread_params->m_stack_location);
     push_on_stack(argument);
     push_on_stack((void*)entry);

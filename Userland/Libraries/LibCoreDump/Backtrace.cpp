@@ -6,6 +6,7 @@
 
 #include <AK/LexicalPath.h>
 #include <AK/MappedFile.h>
+#include <AK/Platform.h>
 #include <AK/StringBuilder.h>
 #include <AK/Types.h>
 #include <LibCore/File.h>
@@ -51,6 +52,7 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
 Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info)
     : m_thread_info(move(thread_info))
 {
+#if ARCH(I386)
     uint32_t* ebp = (uint32_t*)m_thread_info.regs.ebp;
     uint32_t* eip = (uint32_t*)m_thread_info.regs.eip;
     bool first_frame = true;
@@ -70,6 +72,10 @@ Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread
         eip = (uint32_t*)next_eip.value();
         ebp = (uint32_t*)next_ebp.value();
     }
+#else
+    (void)coredump;
+    TODO();
+#endif
 }
 
 Backtrace::~Backtrace()
