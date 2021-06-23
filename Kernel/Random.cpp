@@ -17,6 +17,7 @@
 namespace Kernel {
 
 static AK::Singleton<KernelRng> s_the;
+static Atomic<u32, AK::MemoryOrder::memory_order_relaxed> s_next_random_value = 1;
 
 KernelRng& KernelRng::the()
 {
@@ -88,7 +89,6 @@ size_t EntropySource::next_source { static_cast<size_t>(EntropySource::Static::M
 
 static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
 {
-    static Atomic<u32, AK::MemoryOrder::memory_order_relaxed> next = 1;
 
     union {
         u8 bytes[4];
@@ -97,10 +97,10 @@ static void do_get_fast_random_bytes(u8* buffer, size_t buffer_size)
     size_t offset = 4;
     for (size_t i = 0; i < buffer_size; ++i) {
         if (offset >= 4) {
-            auto current_next = next.load();
+            auto current_next = s_next_random_value.load();
             for (;;) {
                 auto new_next = current_next * 1103515245 + 12345;
-                if (next.compare_exchange_strong(current_next, new_next)) {
+                if (s_next_random_value.compare_exchange_strong(current_next, new_next)) {
                     u.value = new_next;
                     break;
                 }
