@@ -10,6 +10,7 @@
 #include <AK/String.h>
 #include <LibC/elf.h>
 #include <LibELF/Validation.h>
+#include <limits.h>
 
 namespace ELF {
 
