@@ -88,6 +88,7 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // TODO: handle NT?
     VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
 
+#if 0
     auto& tss = thread.tss();
     bool return_to_user = (tss.cs & 3) != 0;
 
@@ -116,7 +117,6 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // However, the first step is to always start in kernel mode with thread_context_first_enter
     RegisterState& iretframe = *reinterpret_cast<RegisterState*>(stack_top);
     // FIXME: copy state to be recovered through TSS
-    TODO();
 
     // make space for a trap frame
     stack_top -= sizeof(TrapFrame);
@@ -161,6 +161,9 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     tss.gs = GDT_SELECTOR_DATA0;
     tss.ss = GDT_SELECTOR_DATA0;
     tss.fs = GDT_SELECTOR_PROC;
+#else
+    TODO();
+#endif
     return stack_top;
 }
 
@@ -202,11 +205,15 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
 
     auto& tss = initial_thread.tss();
     m_tss = tss;
+#if 0
     m_tss.esp0 = tss.esp0;
     m_tss.ss0 = GDT_SELECTOR_DATA0;
     // user mode needs to be able to switch to kernel mode:
     m_tss.cs = m_tss.ds = m_tss.es = m_tss.gs = m_tss.ss = GDT_SELECTOR_CODE0 | 3;
     m_tss.fs = GDT_SELECTOR_PROC | 3;
+#else
+    TODO();
+#endif
 
     m_scheduler_initialized = true;
 

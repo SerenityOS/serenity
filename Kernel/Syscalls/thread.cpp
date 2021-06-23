@@ -8,6 +8,7 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/StringView.h>
+#include <Kernel/Panic.h>
 #include <Kernel/PerformanceManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -60,11 +61,16 @@ KResultOr<int> Process::sys$create_thread(void* (*entry)(void*), Userspace<const
     if (!is_thread_joinable)
         thread->detach();
 
+#if ARCH(I386)
     auto& tss = thread->tss();
     tss.eip = (FlatPtr)entry;
     tss.eflags = 0x0202;
     tss.cr3 = space().page_directory().cr3();
     tss.esp = user_esp.value();
+#else
+    (void)entry;
+    PANIC("Process::sys$create_thread() not implemented");
+#endif
 
     auto tsr_result = thread->make_thread_specific_region({});
     if (tsr_result.is_error())

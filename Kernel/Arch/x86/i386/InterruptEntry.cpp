@@ -6,6 +6,7 @@
 
 #include <Kernel/Arch/x86/DescriptorTable.h>
 #include <Kernel/Arch/x86/TrapFrame.h>
+
 // clang-format off
 asm(
     ".globl interrupt_common_asm_entry\n"

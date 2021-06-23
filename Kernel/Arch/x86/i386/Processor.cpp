@@ -37,7 +37,6 @@ asm(
 );
 // clang-format on
 
-#if ARCH(I386)
 // clang-format off
 asm(
 ".global do_assume_context \n"
@@ -59,7 +58,6 @@ asm(
 "    jmp enter_thread_context \n"
 );
 // clang-format on
-#endif
 
 String Processor::platform_string() const
 {
