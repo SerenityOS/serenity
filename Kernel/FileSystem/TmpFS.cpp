@@ -159,7 +159,7 @@ KResultOr<size_t> TmpFSInode::write_bytes(off_t offset, size_t size, const UserO
 
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
-    if ((offset + size) > new_size)
+    if (offset + size > (size_t)new_size)
         new_size = offset + size;
 
     if (new_size > old_size) {
