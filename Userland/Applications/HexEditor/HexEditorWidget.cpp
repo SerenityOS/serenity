@@ -92,6 +92,14 @@ HexEditorWidget::HexEditorWidget()
         if (!open_path.has_value())
             return;
 
+        if (m_document_dirty) {
+            auto save_document_first_result = GUI::MessageBox::show(window(), "Save changes to current document first?", "Warning", GUI::MessageBox::Type::Warning, GUI::MessageBox::InputType::YesNoCancel);
+            if (save_document_first_result == GUI::Dialog::ExecResult::ExecYes)
+                m_save_action->activate();
+            if (save_document_first_result != GUI::Dialog::ExecResult::ExecNo && m_document_dirty)
+                return;
+        }
+
         open_file(open_path.value());
     });
 
