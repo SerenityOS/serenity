@@ -19,7 +19,7 @@ public:
     Ptr32(T* const ptr)
         : m_ptr((u32) reinterpret_cast<FlatPtr>(ptr))
     {
-        VERIFY((reinterpret_cast<FlatPtr>(ptr) & 0xFFFFFFFFULL) == reinterpret_cast<FlatPtr>(m_ptr));
+        VERIFY((reinterpret_cast<FlatPtr>(ptr) & 0xFFFFFFFFULL) == static_cast<FlatPtr>(m_ptr));
     }
     T& operator*() { return *static_cast<T*>(*this); }
     T const& operator*() const { return *static_cast<T const*>(*this); }
