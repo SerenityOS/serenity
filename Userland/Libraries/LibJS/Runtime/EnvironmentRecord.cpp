@@ -15,6 +15,12 @@ EnvironmentRecord::EnvironmentRecord(EnvironmentRecord* outer_environment)
 {
 }
 
+void EnvironmentRecord::initialize(GlobalObject& global_object)
+{
+    m_global_object = &global_object;
+    Base::initialize(global_object);
+}
+
 void EnvironmentRecord::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
