@@ -86,6 +86,7 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     reset_fpu_state();
     m_tss.iomapbase = sizeof(TSS32);
 
+#if ARCH(I386)
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
 
@@ -106,10 +107,14 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
     }
 
     m_tss.cr3 = m_process->space().page_directory().cr3();
+#else
+    PANIC("Thread::Thread() not implemented");
+#endif
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
+#if ARCH(I386)
     if (m_process->is_kernel_process()) {
         m_tss.esp = m_tss.esp0 = m_kernel_stack_top;
     } else {
@@ -118,6 +123,9 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
         m_tss.ss0 = GDT_SELECTOR_DATA0;
         m_tss.esp0 = m_kernel_stack_top;
     }
+#else
+    PANIC("Thread::Thread() not implemented");
+#endif
 
     // We need to add another reference if we could successfully create
     // all the resources needed for this thread. The reason for this is that
@@ -801,11 +809,11 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         FlatPtr old_esp = *stack;
         FlatPtr ret_eip = state.eip;
         FlatPtr ret_eflags = state.eflags;
+
+        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 #elif ARCH(X86_64)
         FlatPtr* stack = &state.userspace_esp;
 #endif
-
-        dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 
 #if ARCH(I386)
         // Align the stack to 16 bytes.
@@ -826,8 +834,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
         push_value_on_user_stack(stack, state.esi);
         push_value_on_user_stack(stack, state.edi);
 
-#elif ARCH(X86_64)
+#else
         // FIXME
+        PANIC("Thread:dispatch_signal() not implemented");
 #endif
 
         // PUSH old_signal_mask
@@ -848,7 +857,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     setup_stack(regs);
     regs.eip = process.signal_trampoline().get();
 
+#if ARCH(I386)
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
+#else
+    PANIC("Thread:dispatch_signal() not implemented");
+#endif
+
     return DispatchSignalResult::Continue;
 }
 
