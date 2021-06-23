@@ -142,8 +142,8 @@ InodeMetadata ProcFSInode::metadata() const
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = m_associated_component->required_mode();
-    metadata.uid = 0;
-    metadata.gid = 0;
+    metadata.uid = m_associated_component->owner_user();
+    metadata.gid = m_associated_component->owner_group();
     metadata.size = m_associated_component->size();
     metadata.mtime = mepoch;
     return metadata;
@@ -212,9 +212,9 @@ InodeMetadata ProcFSDirectoryInode::metadata() const
     Locker locker(m_lock);
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
-    metadata.mode = S_IFDIR | S_IRUSR | S_IRGRP | S_IROTH | S_IXOTH;
-    metadata.uid = 0;
-    metadata.gid = 0;
+    metadata.mode = S_IFDIR | m_associated_component->required_mode();
+    metadata.uid = m_associated_component->owner_user();
+    metadata.gid = m_associated_component->owner_group();
     metadata.size = 0;
     metadata.mtime = mepoch;
     return metadata;
@@ -255,8 +255,8 @@ InodeMetadata ProcFSLinkInode::metadata() const
     InodeMetadata metadata;
     metadata.inode = { fsid(), m_associated_component->component_index() };
     metadata.mode = S_IFLNK | m_associated_component->required_mode();
-    metadata.uid = 0;
-    metadata.gid = 0;
+    metadata.uid = m_associated_component->owner_user();
+    metadata.gid = m_associated_component->owner_group();
     metadata.size = 0;
     metadata.mtime = mepoch;
     return metadata;
