@@ -80,12 +80,22 @@ boot_pd3 : 512 pde's
     13: boot_pd3_pts[13] (3098-3100MB) (pseudo 512 4KB pages)
     14: boot_pd3_pts[14] (3100-3102MB) (pseudo 512 4KB pages)
     15: boot_pd3_pts[15] (3102-3104MB) (pseudo 512 4KB pages)
-    
+
     16: boot_pd3_pt1023 (4094-4096MB) (for page table mappings)
 
 the 9 page tables each contain 512 pte's that map individual 4KB pages
 
 */
+
+gdt64:
+    .quad 0
+gdt64code:
+    .quad (1<<43) | (1<<44) | (1<<47) | (1<<53) /* executable, code segment, present, 64-bit */
+gdt64ptr:
+    .short . - gdt64 - 1
+    .quad gdt64
+
+.set code64_sel,  gdt64code - gdt64
 
 start:
     cli
@@ -250,8 +260,13 @@ start:
     addl $0xc0000000, %ebx
     movl %ebx, multiboot_info_ptr
 
+    lgdt gdt64ptr
+    ljmpl $code64_sel, $1f
+
+.code64
+1:
     call init
-    add $4, %esp
+    add $4, %rsp
 
     cli
 loop:
@@ -319,7 +334,8 @@ apic_ap_start32:
     movl $0x80000001, %eax
     cpuid
     testl $0x100000, %edx
-    je (1f - apic_ap_start + 0x8000)
+    // TODO: Uncomment this
+    //je (1f - apic_ap_start + 0x8000)
     /* turn on IA32_EFER.NXE */
     movl $0xc0000080, %ecx
     rdmsr
