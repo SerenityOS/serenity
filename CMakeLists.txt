@@ -40,7 +40,7 @@ option(ENABLE_KERNEL_LTO "Build the kernel with link-time optimization" OFF)
 include(Meta/CMake/wasm_spec_tests.cmake)
 
 add_custom_target(run
-    COMMAND ${CMAKE_SOURCE_DIR}/Meta/run.sh
+    COMMAND ${CMAKE_COMMAND} -E env "SERENITY_ARCH=${SERENITY_ARCH}" ${CMAKE_SOURCE_DIR}/Meta/run.sh
     USES_TERMINAL
 )
 
