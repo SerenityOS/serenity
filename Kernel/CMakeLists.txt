@@ -387,22 +387,35 @@ else()
     link_directories(${TOOLCHAIN_ROOT}/Kernel/lib/gcc/${SERENITY_ARCH}-pc-serenity/${GCC_VERSION}/)
 endif()
 
-add_executable(Kernel ${SOURCES})
-add_dependencies(Kernel generate_EscapeSequenceStateMachine.h)
+if ("${SERENITY_ARCH}" STREQUAL "i686")
+    set(KERNEL_TARGET Kernel32)
+else()
+    set(KERNEL_TARGET Kernel64)
+endif()
 
-set_target_properties(Kernel PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
+add_executable(${KERNEL_TARGET} ${SOURCES})
+add_dependencies(${KERNEL_TARGET} generate_EscapeSequenceStateMachine.h)
+
+set_target_properties(${KERNEL_TARGET} PROPERTIES LINK_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/linker.ld)
 
 if (ENABLE_KERNEL_LTO)
     include(CheckIPOSupported)
     check_ipo_supported()
-    set_property(TARGET Kernel PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET ${KERNEL_TARGET} PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 endif()
-target_link_libraries(Kernel kernel_heap gcc supc++)
-add_dependencies(Kernel kernel_heap)
-install(TARGETS Kernel RUNTIME DESTINATION boot)
+target_link_libraries(${KERNEL_TARGET} kernel_heap gcc supc++)
+add_dependencies(${KERNEL_TARGET} kernel_heap)
 
 add_custom_command(
-    TARGET Kernel
+    TARGET ${KERNEL_TARGET} POST_BUILD
+    COMMAND ${TOOLCHAIN_PREFIX}objcopy -O elf32-i386 ${CMAKE_CURRENT_BINARY_DIR}/${KERNEL_TARGET} ${CMAKE_CURRENT_BINARY_DIR}/Kernel
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/Kernel
+)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Kernel" DESTINATION boot)
+
+add_custom_command(
+    TARGET ${KERNEL_TARGET} POST_BUILD
     COMMAND sh ${CMAKE_CURRENT_SOURCE_DIR}/mkmap.sh
 )
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/kernel.map DESTINATION res)
