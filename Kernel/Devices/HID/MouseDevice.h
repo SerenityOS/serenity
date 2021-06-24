@@ -29,7 +29,7 @@ public:
     virtual bool can_write(const FileDescription&, size_t) const override { return true; }
 
     // ^HIDDevice
-    virtual Type instrument_type() const { return Type::Mouse; }
+    virtual Type instrument_type() const override { return Type::Mouse; }
 
     // ^Device
     virtual mode_t required_mode() const override { return 0440; }
