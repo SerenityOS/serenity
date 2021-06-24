@@ -10,43 +10,52 @@ namespace VT {
 
 Line::Line(size_t length)
 {
-    set_length(length, nullptr, nullptr);
+    set_length(length);
 }
 
 Line::~Line()
 {
 }
 
-void Line::set_length(size_t new_length, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line)
+void Line::rewrap(size_t new_length, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line)
 {
     size_t old_length = length();
     if (old_length == new_length)
         return;
 
     // Drop the empty cells
-    if (m_terminated_at.has_value())
+    if (m_terminated_at.has_value() && m_cells.size() > m_terminated_at.value())
         m_cells.remove(m_terminated_at.value(), m_cells.size() - m_terminated_at.value());
 
     if (!next_line)
         return m_cells.resize(new_length);
 
     if (old_length < new_length)
-        take_cells_from_next_line(old_length, new_length, next_line, cursor_is_on_next_line, cursor);
+        take_cells_from_next_line(new_length, next_line, cursor_is_on_next_line, cursor);
     else
-        push_cells_into_next_line(old_length, new_length, next_line, cursor_is_on_next_line, cursor);
-
-    m_cells.resize(max(new_length, static_cast<size_t>(m_terminated_at.value_or(new_length))));
+        push_cells_into_next_line(new_length, next_line, cursor_is_on_next_line, cursor);
 }
 
-void Line::push_cells_into_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor)
+void Line::set_length(size_t new_length)
 {
+    m_cells.resize(new_length);
+}
+
+void Line::push_cells_into_next_line(size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor)
+{
+    if (is_empty())
+        return;
+
+    if (length() <= new_length)
+        return;
+
     // Push as many cells as _wouldn't_ fit into the next line.
     auto cells_to_preserve = !next_line->m_terminated_at.has_value() && next_line->is_empty() ? 0 : m_terminated_at.value_or(0);
-    auto cells_to_push_into_next_line = min(old_length - new_length, length() - cells_to_preserve);
+    auto preserved_cells = max(new_length, cells_to_preserve);
+    auto cells_to_push_into_next_line = length() - preserved_cells;
     if (!cells_to_push_into_next_line)
         return;
 
-    auto preserved_cells = length() - cells_to_push_into_next_line;
     if (next_line->m_terminated_at.has_value())
         next_line->m_terminated_at = next_line->m_terminated_at.value() + cells_to_push_into_next_line;
 
@@ -71,18 +80,20 @@ void Line::push_cells_into_next_line(size_t old_length, size_t new_length, Line*
         m_terminated_at = m_terminated_at.value() - cells_to_push_into_next_line;
 }
 
-void Line::take_cells_from_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor)
+void Line::take_cells_from_next_line(size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor)
 {
     // Take as many cells as would fit from the next line
     if (m_terminated_at.has_value())
         return;
 
-    auto cells_to_grab_from_next_line = min(new_length - old_length, next_line->length());
+    if (length() >= new_length)
+        return;
+
+    auto cells_to_grab_from_next_line = min(new_length - length(), next_line->length());
     auto clear_next_line = false;
     if (next_line->m_terminated_at.has_value()) {
-        cells_to_grab_from_next_line = min(cells_to_grab_from_next_line, static_cast<size_t>(next_line->m_terminated_at.value()));
         if (cells_to_grab_from_next_line == *next_line->m_terminated_at) {
-            m_terminated_at = old_length + *next_line->m_terminated_at;
+            m_terminated_at = length() + *next_line->m_terminated_at;
             next_line->m_terminated_at.clear();
             clear_next_line = true;
         } else {
