@@ -43,7 +43,7 @@ private:
 };
 
 template<typename T>
-class alignas(T) [[nodiscard]] KResultOr {
+class [[nodiscard]] KResultOr {
 public:
     KResultOr(KResult error)
         : m_error(error)
