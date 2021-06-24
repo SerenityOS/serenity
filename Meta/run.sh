@@ -27,7 +27,13 @@ fi
 
 SERENITY_RUN="${SERENITY_RUN:-$1}"
 
-[ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-i386"
+if [ -z "$SERENITY_QEMU_BIN" ]; then
+    if [ "$SERENITY_ARCH" = "x86_64" ]; then
+        SERENITY_QEMU_BIN="qemu-system-x86_64"
+    else
+        SERENITY_QEMU_BIN="qemu-system-i386"
+    fi
+fi
 
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
 
