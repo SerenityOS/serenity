@@ -12,7 +12,7 @@
 namespace JS {
 
 FunctionEnvironmentRecord::FunctionEnvironmentRecord(EnvironmentRecord* parent_scope, HashMap<FlyString, Variable> variables)
-    : DeclarativeEnvironmentRecord(variables, parent_scope, DeclarativeEnvironmentRecord::EnvironmentRecordType::Function)
+    : DeclarativeEnvironmentRecord(variables, parent_scope)
 {
 }
 
