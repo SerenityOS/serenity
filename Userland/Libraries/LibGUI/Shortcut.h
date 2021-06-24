@@ -19,6 +19,11 @@ public:
         , m_key(key)
     {
     }
+    Shortcut(KeyCode key)
+        : m_modifiers(0)
+        , m_key(key)
+    {
+    }
 
     bool is_valid() const { return m_key != KeyCode::Key_Invalid; }
     u8 modifiers() const { return m_modifiers; }
