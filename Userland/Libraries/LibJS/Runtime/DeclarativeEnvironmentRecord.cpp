@@ -18,12 +18,6 @@ DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord()
 {
 }
 
-DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecordType environment_record_type)
-    : EnvironmentRecord(nullptr)
-    , m_environment_record_type(environment_record_type)
-{
-}
-
 DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecord* parent_scope)
     : EnvironmentRecord(parent_scope)
 {
@@ -31,13 +25,6 @@ DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(EnvironmentRecord* pa
 
 DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope)
     : EnvironmentRecord(parent_scope)
-    , m_variables(move(variables))
-{
-}
-
-DeclarativeEnvironmentRecord::DeclarativeEnvironmentRecord(HashMap<FlyString, Variable> variables, EnvironmentRecord* parent_scope, EnvironmentRecordType environment_record_type)
-    : EnvironmentRecord(parent_scope)
-    , m_environment_record_type(environment_record_type)
     , m_variables(move(variables))
 {
 }
