@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Concepts.h>
+#include <AK/Find.h>
 #include <AK/Iterator.h>
 
 namespace AK {
@@ -17,22 +18,16 @@ constexpr bool all_of(
     TEndIterator const& end,
     auto const& predicate)
 {
-    for (auto iter = begin; iter != end; ++iter) {
-        if (!predicate(*iter)) {
-            return false;
-        }
-    }
-    return true;
+    constexpr auto negated_predicate = [](auto const& pred) {
+        return [&](auto const& elem) { return !pred(elem); };
+    };
+    return !(find_if(begin, end, negated_predicate(predicate)) != end);
 }
 
 template<IterableContainer Container>
 constexpr bool all_of(Container&& container, auto const& predicate)
 {
-    for (auto&& entry : container) {
-        if (!predicate(entry))
-            return false;
-    }
-    return true;
+    return all_of(container.begin(), container.end(), predicate);
 }
 
 }
