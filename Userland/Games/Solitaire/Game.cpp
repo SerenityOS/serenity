@@ -85,7 +85,7 @@ void Game::set_background_fill_enabled(bool enabled)
 
 void Game::start_game_over_animation()
 {
-    if (m_game_over_animation)
+    if (m_game_over_animation || m_start_game_over_animation_next_frame)
         return;
 
     m_last_move = {};
