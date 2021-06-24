@@ -34,10 +34,7 @@ void compare_value_output_over(u32 range, auto& old_function, auto& new_function
     }
 }
 
-TEST_CASE(is_ascii)
-{
-    compare_bool_output_over(UNICODE, isascii, is_ascii);
-}
+// NOTE: Avoid comparing over UNICODE in "TEST_CASE" due to test runtime becoming too long.
 
 TEST_CASE(is_ascii_alphanumeric)
 {
@@ -101,12 +98,12 @@ TEST_CASE(is_ascii_upper_alpha)
 
 TEST_CASE(to_ascii_lowercase)
 {
-    compare_value_output_over(UNICODE, tolower, to_ascii_lowercase);
+    compare_value_output_over(ASCII, tolower, to_ascii_lowercase);
 }
 
 TEST_CASE(to_ascii_uppercase)
 {
-    compare_value_output_over(UNICODE, toupper, to_ascii_uppercase);
+    compare_value_output_over(ASCII, toupper, to_ascii_uppercase);
 }
 
 TEST_CASE(parse_ascii_digit)
@@ -132,4 +129,19 @@ TEST_CASE(parse_ascii_hex_digit)
         parse_ascii_hex_digit('g');
         return Test::Crash::Failure::DidNotCrash;
     });
+}
+
+BENCHMARK_CASE(is_ascii)
+{
+    compare_bool_output_over(UNICODE, isascii, is_ascii);
+}
+
+BENCHMARK_CASE(to_ascii_lowercase_unicode)
+{
+    compare_value_output_over(UNICODE, tolower, to_ascii_lowercase);
+}
+
+BENCHMARK_CASE(to_ascii_uppercase_unicode)
+{
+    compare_value_output_over(UNICODE, toupper, to_ascii_uppercase);
 }
