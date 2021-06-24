@@ -112,11 +112,11 @@ struct SignalHandlersInfo {
     int next_signal_id { 0 };
 };
 
+static AK::Singleton<SignalHandlersInfo> s_signals;
 template<bool create_if_null = true>
 inline SignalHandlersInfo* signals_info()
 {
-    static SignalHandlersInfo* s_signals;
-    return AK::Singleton<SignalHandlersInfo>::get(s_signals);
+    return s_signals.ptr();
 }
 
 pid_t EventLoop::s_pid;
