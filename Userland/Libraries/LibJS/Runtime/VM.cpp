@@ -358,7 +358,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
     if (!m_execution_context_stack.is_empty()) {
         auto& context = running_execution_context();
-        if (name == names.arguments.as_string() && context.callee) {
+        if (name == names.arguments.as_string() && context.function) {
             // HACK: Special handling for the name "arguments":
             //       If the name "arguments" is defined in the current scope, for example via
             //       a function parameter, or by a local var declaration, we use that.
@@ -369,7 +369,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
                 return possible_match.value().value;
             if (!context.arguments_object) {
                 context.arguments_object = Array::create(global_object);
-                context.arguments_object->put(names.callee, context.callee);
+                context.arguments_object->put(names.callee, context.function);
                 for (auto argument : context.arguments) {
                     context.arguments_object->indexed_properties().append(argument);
                 }
@@ -405,7 +405,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 {
     auto& global_object = function.global_object();
     ExecutionContext execution_context;
-    execution_context.callee = &function;
+    execution_context.function = &function;
     if (auto* interpreter = interpreter_if_exists())
         execution_context.current_node = interpreter->current_node();
     execution_context.is_strict_mode = function.is_strict_mode();
@@ -511,7 +511,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     VERIFY(!this_value.is_empty());
 
     ExecutionContext execution_context;
-    execution_context.callee = &function;
+    execution_context.function = &function;
     if (auto* interpreter = interpreter_if_exists())
         execution_context.current_node = interpreter->current_node();
     execution_context.is_strict_mode = function.is_strict_mode();

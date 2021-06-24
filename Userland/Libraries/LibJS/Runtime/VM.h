@@ -45,7 +45,7 @@ struct ScopeFrame {
 struct ExecutionContext {
     const ASTNode* current_node { nullptr };
     FlyString function_name;
-    Value callee;
+    Function* function { nullptr };
     Value this_value;
     Vector<Value> arguments;
     Array* arguments_object { nullptr };
