@@ -272,11 +272,11 @@ FileSystemModel::FileSystemModel(String root_path, Mode mode)
             auto canonical_event_path = LexicalPath::canonicalized_path(event.event_path);
             if (m_root_path.starts_with(canonical_event_path)) {
                 // Deleted directory contains our root, so navigate to our nearest parent.
-                auto new_path = LexicalPath(m_root_path).dirname();
-                while (!Core::File::is_directory(new_path))
-                    new_path = LexicalPath(new_path).dirname();
+                auto new_path = LexicalPath(m_root_path).parent();
+                while (!Core::File::is_directory(new_path.string()))
+                    new_path = new_path.parent();
 
-                set_root_path(new_path);
+                set_root_path(new_path.string());
             } else if (node.parent) {
                 refresh_node(*node.parent);
             }
