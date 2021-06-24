@@ -7,6 +7,7 @@
 #pragma once
 
 #include "WindowList.h"
+#include <LibDesktop/AppFile.h>
 #include <LibGUI/Widget.h>
 #include <LibGUI/Window.h>
 
@@ -40,4 +41,6 @@ private:
     Gfx::IntSize m_applet_area_size;
     RefPtr<GUI::Frame> m_applet_area_container;
     RefPtr<GUI::Button> m_start_button;
+
+    RefPtr<Desktop::AppFile> m_assistant_app_file;
 };
