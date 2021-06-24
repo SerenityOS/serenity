@@ -93,6 +93,22 @@ public:
     {
     }
 
+    template<typename T, std::size_t S>
+    String(T (& characters)[S], ShouldChomp shouldChomp = NoChomp)
+    {
+        std::size_t length = S-1;
+#pragma GCC unroll 128
+        for (std::size_t i = 0; i < S; ++i)
+        {
+            if (characters[i]==0)
+            {
+                length=i;
+                break;
+            }
+        }
+        m_impl = StringImpl::create((const char*)characters, length, shouldChomp);
+    }
+
     String(const FlyString&);
 
     [[nodiscard]] static String repeated(char, size_t count);
