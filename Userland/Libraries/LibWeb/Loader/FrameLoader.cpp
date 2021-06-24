@@ -277,7 +277,7 @@ void FrameLoader::resource_did_load()
     if (auto* host_element = browsing_context().host_element()) {
         // FIXME: Perhaps in the future we'll have a better common base class for <frame> and <iframe>
         VERIFY(is<HTML::HTMLIFrameElement>(*host_element));
-        downcast<HTML::HTMLIFrameElement>(*host_element).nested_browsing_context_did_load({});
+        verify_cast<HTML::HTMLIFrameElement>(*host_element).nested_browsing_context_did_load({});
     }
 
     if (auto* page = browsing_context().page())

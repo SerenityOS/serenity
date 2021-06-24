@@ -103,13 +103,13 @@ void TreeBuilder::create_layout_tree(DOM::Node& dom_node)
         }
     }
 
-    auto* shadow_root = is<DOM::Element>(dom_node) ? downcast<DOM::Element>(dom_node).shadow_root() : nullptr;
+    auto* shadow_root = is<DOM::Element>(dom_node) ? verify_cast<DOM::Element>(dom_node).shadow_root() : nullptr;
 
     if ((dom_node.has_children() || shadow_root) && layout_node->can_have_children()) {
-        push_parent(downcast<NodeWithStyle>(*layout_node));
+        push_parent(verify_cast<NodeWithStyle>(*layout_node));
         if (shadow_root)
             create_layout_tree(*shadow_root);
-        downcast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
+        verify_cast<DOM::ParentNode>(dom_node).for_each_child([&](auto& dom_child) {
             create_layout_tree(dom_child);
         });
         pop_parent();
@@ -121,7 +121,7 @@ RefPtr<Node> TreeBuilder::build(DOM::Node& dom_node)
     if (dom_node.parent()) {
         // We're building a partial layout tree, so start by building up the stack of parent layout nodes.
         for (auto* ancestor = dom_node.parent()->layout_node(); ancestor; ancestor = ancestor->parent())
-            m_parent_stack.prepend(downcast<NodeWithStyle>(ancestor));
+            m_parent_stack.prepend(verify_cast<NodeWithStyle>(ancestor));
     }
 
     create_layout_tree(dom_node);

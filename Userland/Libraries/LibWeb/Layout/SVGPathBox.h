@@ -16,7 +16,7 @@ public:
     SVGPathBox(DOM::Document&, SVG::SVGPathElement&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~SVGPathBox() override = default;
 
-    SVG::SVGPathElement& dom_node() { return downcast<SVG::SVGPathElement>(SVGGraphicsBox::dom_node()); }
+    SVG::SVGPathElement& dom_node() { return verify_cast<SVG::SVGPathElement>(SVGGraphicsBox::dom_node()); }
 
     virtual void prepare_for_replaced_layout() override;
     virtual void paint(PaintContext& context, PaintPhase phase) override;

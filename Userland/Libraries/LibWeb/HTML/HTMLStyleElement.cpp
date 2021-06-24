@@ -30,7 +30,7 @@ void HTMLStyleElement::children_changed()
     StringBuilder builder;
     for_each_child([&](auto& child) {
         if (is<DOM::Text>(child))
-            builder.append(downcast<DOM::Text>(child).text_content());
+            builder.append(verify_cast<DOM::Text>(child).text_content());
     });
     m_css_loader.load_from_text(builder.to_string());
 

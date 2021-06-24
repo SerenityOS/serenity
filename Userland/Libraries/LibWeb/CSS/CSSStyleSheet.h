@@ -36,9 +36,9 @@ public:
     {
         for (auto& rule : m_rules)
             if (rule.type() == CSSRule::Type::Style) {
-                callback(downcast<CSSStyleRule>(rule));
+                callback(verify_cast<CSSStyleRule>(rule));
             } else if (rule.type() == CSSRule::Type::Import) {
-                const auto& import_rule = downcast<CSSImportRule>(rule);
+                const auto& import_rule = verify_cast<CSSImportRule>(rule);
                 if (import_rule.has_import_result())
                     import_rule.loaded_style_sheet()->for_each_effective_style_rule(callback);
             }
@@ -49,7 +49,7 @@ public:
     {
         for (auto& rule : m_rules)
             if (rule.type() == CSSRule::Type::Import) {
-                auto& import_rule = downcast<CSSImportRule>(rule);
+                auto& import_rule = verify_cast<CSSImportRule>(rule);
                 if (!import_rule.has_import_result()) {
                     callback(import_rule);
                     return true;

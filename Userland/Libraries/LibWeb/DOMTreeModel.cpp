@@ -110,10 +110,10 @@ GUI::Variant DOMTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole rol
     }
     if (role == GUI::ModelRole::Display) {
         if (node.is_text())
-            return with_whitespace_collapsed(downcast<DOM::Text>(node).data());
+            return with_whitespace_collapsed(verify_cast<DOM::Text>(node).data());
         if (!node.is_element())
             return node.node_name();
-        auto& element = downcast<DOM::Element>(node);
+        auto& element = verify_cast<DOM::Element>(node);
         StringBuilder builder;
         builder.append('<');
         builder.append(element.local_name());

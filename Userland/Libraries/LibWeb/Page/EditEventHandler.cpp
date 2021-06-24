@@ -39,8 +39,8 @@ void EditEventHandler::handle_delete_character_after(const DOM::Position& cursor
 // This method is quite convoluted but this is necessary to make editing feel intuitive.
 void EditEventHandler::handle_delete(DOM::Range& range)
 {
-    auto* start = downcast<DOM::Text>(range.start_container());
-    auto* end = downcast<DOM::Text>(range.end_container());
+    auto* start = verify_cast<DOM::Text>(range.start_container());
+    auto* end = verify_cast<DOM::Text>(range.end_container());
 
     if (start == end) {
         StringBuilder builder;
@@ -100,7 +100,7 @@ void EditEventHandler::handle_delete(DOM::Range& range)
 void EditEventHandler::handle_insert(DOM::Position position, u32 code_point)
 {
     if (is<DOM::Text>(*position.node())) {
-        auto& node = downcast<DOM::Text>(*position.node());
+        auto& node = verify_cast<DOM::Text>(*position.node());
 
         StringBuilder builder;
         builder.append(node.data().substring_view(0, position.offset()));

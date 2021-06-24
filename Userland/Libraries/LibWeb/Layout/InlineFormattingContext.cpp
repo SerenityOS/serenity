@@ -75,7 +75,7 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
     containing_block().for_each_child([&](auto& child) {
         VERIFY(child.is_inline());
         if (is<Box>(child) && child.is_absolutely_positioned()) {
-            layout_absolutely_positioned_element(downcast<Box>(child));
+            layout_absolutely_positioned_element(verify_cast<Box>(child));
             return;
         }
 
@@ -181,14 +181,14 @@ void InlineFormattingContext::run(Box&, LayoutMode layout_mode)
 void InlineFormattingContext::dimension_box_on_line(Box& box, LayoutMode layout_mode)
 {
     if (is<ReplacedBox>(box)) {
-        auto& replaced = downcast<ReplacedBox>(box);
+        auto& replaced = verify_cast<ReplacedBox>(box);
         replaced.set_width(compute_width_for_replaced_element(replaced));
         replaced.set_height(compute_height_for_replaced_element(replaced));
         return;
     }
 
     if (box.is_inline_block()) {
-        auto& inline_block = const_cast<BlockBox&>(downcast<BlockBox>(box));
+        auto& inline_block = const_cast<BlockBox&>(verify_cast<BlockBox>(box));
 
         if (inline_block.computed_values().width().is_undefined_or_auto()) {
             auto result = calculate_shrink_to_fit_widths(inline_block);

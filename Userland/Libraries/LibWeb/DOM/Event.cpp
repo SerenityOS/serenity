@@ -18,11 +18,11 @@ void Event::append_to_path(EventTarget& invocation_target, RefPtr<EventTarget> s
     bool root_of_closed_tree = false;
 
     if (is<Node>(invocation_target)) {
-        auto& invocation_target_node = downcast<Node>(invocation_target);
+        auto& invocation_target_node = verify_cast<Node>(invocation_target);
         if (is<ShadowRoot>(invocation_target_node.root()))
             invocation_target_in_shadow_tree = true;
         if (is<ShadowRoot>(invocation_target_node)) {
-            auto& invocation_target_shadow_root = downcast<ShadowRoot>(invocation_target_node);
+            auto& invocation_target_shadow_root = verify_cast<ShadowRoot>(invocation_target_node);
             root_of_closed_tree = invocation_target_shadow_root.closed();
         }
     }

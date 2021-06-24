@@ -35,14 +35,14 @@ static EventTarget* retarget(EventTarget* left, [[maybe_unused]] EventTarget* ri
         if (!is<Node>(left))
             return left;
 
-        auto* left_node = downcast<Node>(left);
+        auto* left_node = verify_cast<Node>(left);
         auto* left_root = left_node->root();
         if (!is<ShadowRoot>(left_root))
             return left;
 
         // FIXME: If right is a node and left’s root is a shadow-including inclusive ancestor of right, return left.
 
-        auto* left_shadow_root = downcast<ShadowRoot>(left_root);
+        auto* left_shadow_root = verify_cast<ShadowRoot>(left_root);
         left = left_shadow_root->host();
     }
 }
@@ -76,7 +76,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
         RefPtr<Event> current_event;
 
         if (is<Bindings::WindowObject>(global)) {
-            auto& bindings_window_global = downcast<Bindings::WindowObject>(global);
+            auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
             auto& window_impl = bindings_window_global.impl();
             current_event = window_impl.current_event();
             if (!invocation_target_in_shadow_tree)
@@ -97,7 +97,7 @@ bool EventDispatcher::inner_invoke(Event& event, Vector<EventTarget::EventListen
 
         event.set_in_passive_listener(false);
         if (is<Bindings::WindowObject>(global)) {
-            auto& bindings_window_global = downcast<Bindings::WindowObject>(global);
+            auto& bindings_window_global = verify_cast<Bindings::WindowObject>(global);
             auto& window_impl = bindings_window_global.impl();
             window_impl.set_current_event(current_event);
         }
@@ -162,7 +162,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         target_override = target;
     } else {
         // NOTE: This can be done because legacy_target_override is only set for events targeted at Window.
-        target_override = downcast<Window>(*target).document();
+        target_override = verify_cast<Window>(*target).document();
     }
 
     RefPtr<EventTarget> activation_target;
@@ -232,13 +232,13 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         VERIFY(clear_targets_struct.has_value());
 
         if (is<Node>(clear_targets_struct.value().shadow_adjusted_target.ptr())) {
-            auto& shadow_adjusted_target_node = downcast<Node>(*clear_targets_struct.value().shadow_adjusted_target);
+            auto& shadow_adjusted_target_node = verify_cast<Node>(*clear_targets_struct.value().shadow_adjusted_target);
             if (is<ShadowRoot>(shadow_adjusted_target_node.root()))
                 clear_targets = true;
         }
 
         if (!clear_targets && is<Node>(clear_targets_struct.value().related_target.ptr())) {
-            auto& related_target_node = downcast<Node>(*clear_targets_struct.value().related_target);
+            auto& related_target_node = verify_cast<Node>(*clear_targets_struct.value().related_target);
             if (is<ShadowRoot>(related_target_node.root()))
                 clear_targets = true;
         }
@@ -246,7 +246,7 @@ bool EventDispatcher::dispatch(NonnullRefPtr<EventTarget> target, NonnullRefPtr<
         if (!clear_targets) {
             for (auto touch_target : clear_targets_struct.value().touch_target_list) {
                 if (is<Node>(*touch_target.ptr())) {
-                    auto& touch_target_node = downcast<Node>(*touch_target.ptr());
+                    auto& touch_target_node = verify_cast<Node>(*touch_target.ptr());
                     if (is<ShadowRoot>(touch_target_node.root())) {
                         clear_targets = true;
                         break;

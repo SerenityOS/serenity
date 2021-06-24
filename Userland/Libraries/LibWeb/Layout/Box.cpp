@@ -50,7 +50,7 @@ void Box::paint(PaintContext& context, PaintPhase phase)
         context.painter().draw_rect(enclosing_int_rect(content_rect), Color::Magenta);
     }
 
-    if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && downcast<DOM::Element>(*dom_node()).is_focused()) {
+    if (phase == PaintPhase::FocusOutline && dom_node() && dom_node()->is_element() && verify_cast<DOM::Element>(*dom_node()).is_focused()) {
         context.painter().draw_rect(enclosing_int_rect(absolute_rect()), context.palette().focus_outline());
     }
 }
@@ -347,7 +347,7 @@ StackingContext* Box::enclosing_stacking_context()
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
         if (!is<Box>(ancestor))
             continue;
-        auto& ancestor_box = downcast<Box>(*ancestor);
+        auto& ancestor_box = verify_cast<Box>(*ancestor);
         if (!ancestor_box.establishes_stacking_context())
             continue;
         VERIFY(ancestor_box.stacking_context());

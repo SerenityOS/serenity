@@ -263,7 +263,7 @@ public:
     {
         for (auto* node = first_child(); node; node = node->next_sibling()) {
             if (is<U>(node))
-                callback(downcast<U>(*node));
+                callback(verify_cast<U>(*node));
         }
     }
 
@@ -284,7 +284,7 @@ public:
     {
         for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
             if (is<U>(*sibling))
-                return &downcast<U>(*sibling);
+                return &verify_cast<U>(*sibling);
         }
         return nullptr;
     }
@@ -300,7 +300,7 @@ public:
     {
         for (auto* sibling = previous_sibling(); sibling; sibling = sibling->previous_sibling()) {
             if (is<U>(*sibling))
-                return &downcast<U>(*sibling);
+                return &verify_cast<U>(*sibling);
         }
         return nullptr;
     }
@@ -322,7 +322,7 @@ public:
     {
         for (auto* child = first_child(); child; child = child->next_sibling()) {
             if (is<U>(*child))
-                return &downcast<U>(*child);
+                return &verify_cast<U>(*child);
         }
         return nullptr;
     }
@@ -332,7 +332,7 @@ public:
     {
         for (auto* child = last_child(); child; child = child->previous_sibling()) {
             if (is<U>(*child))
-                return &downcast<U>(*child);
+                return &verify_cast<U>(*child);
         }
         return nullptr;
     }
@@ -354,7 +354,7 @@ public:
     {
         for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
             if (is<U>(*ancestor))
-                return &downcast<U>(*ancestor);
+                return &verify_cast<U>(*ancestor);
         }
         return nullptr;
     }

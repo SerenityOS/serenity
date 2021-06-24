@@ -22,7 +22,7 @@ void InspectorWidget::set_inspected_node(Web::DOM::Node* node)
 {
     m_document->set_inspected_node(node);
     if (node && node->is_element()) {
-        auto& element = downcast<Web::DOM::Element>(*node);
+        auto& element = verify_cast<Web::DOM::Element>(*node);
         if (element.specified_css_values()) {
             m_style_table_view->set_model(Web::StylePropertiesModel::create(*element.specified_css_values()));
             m_computed_style_table_view->set_model(Web::StylePropertiesModel::create(*element.computed_style()));

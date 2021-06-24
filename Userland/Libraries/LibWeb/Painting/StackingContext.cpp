@@ -107,7 +107,7 @@ HitTestResult StackingContext::hit_test(const Gfx::IntPoint& position, HitTestTy
     } else {
         // NOTE: InitialContainingBlockBox::hit_test() merely calls StackingContext::hit_test()
         //       so we call its base class instead.
-        result = downcast<InitialContainingBlockBox>(m_box).BlockBox::hit_test(position, type);
+        result = verify_cast<InitialContainingBlockBox>(m_box).BlockBox::hit_test(position, type);
     }
 
     int z_index = m_box.computed_values().z_index().value_or(0);

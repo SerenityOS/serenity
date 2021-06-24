@@ -108,7 +108,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
     }
     if (role == GUI::ModelRole::Display) {
         if (is<Layout::TextNode>(node))
-            return String::formatted("TextNode: {}", with_whitespace_collapsed(downcast<Layout::TextNode>(node).text_for_rendering()));
+            return String::formatted("TextNode: {}", with_whitespace_collapsed(verify_cast<Layout::TextNode>(node).text_for_rendering()));
         StringBuilder builder;
         builder.append(node.class_name());
         builder.append(' ');
@@ -117,7 +117,7 @@ GUI::Variant LayoutTreeModel::data(const GUI::ModelIndex& index, GUI::ModelRole 
         } else if (!node.dom_node()->is_element()) {
             builder.append(node.dom_node()->node_name());
         } else {
-            auto& element = downcast<DOM::Element>(*node.dom_node());
+            auto& element = verify_cast<DOM::Element>(*node.dom_node());
             builder.append('<');
             builder.append(element.local_name());
             element.for_each_attribute([&](auto& name, auto& value) {

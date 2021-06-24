@@ -16,8 +16,8 @@ public:
     ReplacedBox(DOM::Document&, DOM::Element&, NonnullRefPtr<CSS::StyleProperties>);
     virtual ~ReplacedBox() override;
 
-    const DOM::Element& dom_node() const { return downcast<DOM::Element>(*Node::dom_node()); }
-    DOM::Element& dom_node() { return downcast<DOM::Element>(*Node::dom_node()); }
+    const DOM::Element& dom_node() const { return verify_cast<DOM::Element>(*Node::dom_node()); }
+    DOM::Element& dom_node() { return verify_cast<DOM::Element>(*Node::dom_node()); }
 
     bool has_intrinsic_width() const { return m_has_intrinsic_width; }
     bool has_intrinsic_height() const { return m_has_intrinsic_height; }

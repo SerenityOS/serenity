@@ -479,7 +479,7 @@ GUI::TabWidget& BrowserWindow::tab_widget()
 
 Tab& BrowserWindow::active_tab()
 {
-    return downcast<Tab>(*tab_widget().active_widget());
+    return verify_cast<Tab>(*tab_widget().active_widget());
 }
 
 void BrowserWindow::set_window_title_for_tab(Tab const& tab)

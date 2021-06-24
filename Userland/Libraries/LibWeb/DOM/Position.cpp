@@ -34,7 +34,7 @@ bool Position::increment_offset()
     if (!is<DOM::Text>(*m_node))
         return false;
 
-    auto& node = downcast<DOM::Text>(*m_node);
+    auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = Utf8View(node.data());
 
     for (auto iterator = text.begin(); !iterator.done(); ++iterator) {
@@ -53,7 +53,7 @@ bool Position::decrement_offset()
     if (m_offset == 0 || !is<DOM::Text>(*m_node))
         return false;
 
-    auto& node = downcast<DOM::Text>(*m_node);
+    auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = Utf8View(node.data());
 
     size_t last_smaller_offset = 0;
@@ -76,7 +76,7 @@ bool Position::offset_is_at_end_of_node() const
     if (!is<DOM::Text>(*m_node))
         return false;
 
-    auto& node = downcast<DOM::Text>(*m_node);
+    auto& node = verify_cast<DOM::Text>(*m_node);
     auto text = node.data();
     return m_offset == text.length();
 }
