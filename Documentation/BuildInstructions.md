@@ -243,6 +243,11 @@ $ ninja image
 $ ninja run
 ```
 
+You could also skip the last three commands and replace them with one command
+```console
+$  ninja setup-and-run
+```
+
 Note that the `anon` user is able to become `root` without password by default, as a development convenience.
 To prevent this, remove `anon` from the `wheel` group and he will no longer be able to run `/bin/su`.
 
