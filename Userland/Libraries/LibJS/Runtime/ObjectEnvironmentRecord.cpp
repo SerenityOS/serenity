@@ -10,9 +10,10 @@
 
 namespace JS {
 
-ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& object, EnvironmentRecord* parent_scope)
+ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& object, IsWithEnvironment is_with_environment, EnvironmentRecord* parent_scope)
     : EnvironmentRecord(parent_scope)
     , m_object(object)
+    , m_with_environment(is_with_environment == IsWithEnvironment::Yes)
 {
 }
 

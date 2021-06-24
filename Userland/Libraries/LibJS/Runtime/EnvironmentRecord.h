@@ -34,6 +34,8 @@ public:
     virtual bool has_this_binding() const { return false; }
     virtual Value get_this_binding(GlobalObject&) const { return {}; }
 
+    virtual Object* with_base_object() const { return nullptr; }
+
     virtual bool has_binding([[maybe_unused]] FlyString const& name) const { return false; }
     virtual void create_mutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool can_be_deleted) { }
     virtual void create_immutable_binding(GlobalObject&, [[maybe_unused]] FlyString const& name, [[maybe_unused]] bool strict) { }
