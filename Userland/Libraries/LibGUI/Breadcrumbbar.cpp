@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -72,7 +73,7 @@ void Breadcrumbbar::clear_segments()
     remove_all_children();
 }
 
-void Breadcrumbbar::append_segment(String text, const Gfx::Bitmap* icon, String data, String tooltip)
+void Breadcrumbbar::append_segment(String text, Gfx::Bitmap const* icon, String data, String tooltip)
 {
     auto& button = add<BreadcrumbButton>();
     button.set_button_style(Gfx::ButtonStyle::Coolbar);
@@ -103,6 +104,23 @@ void Breadcrumbbar::append_segment(String text, const Gfx::Bitmap* icon, String 
     Segment segment { icon, text, data, button.make_weak_ptr<GUI::Button>() };
 
     m_segments.append(move(segment));
+}
+
+void Breadcrumbbar::remove_end_segments(size_t start_segment_index)
+{
+    while (segment_count() > start_segment_index) {
+        auto segment = m_segments.take_last();
+        remove_child(*segment.button);
+    }
+}
+
+Optional<size_t> Breadcrumbbar::find_segment_with_data(String const& data)
+{
+    for (size_t i = 0; i < segment_count(); ++i) {
+        if (segment_data(i) == data)
+            return i;
+    }
+    return {};
 }
 
 void Breadcrumbbar::set_selected_segment(Optional<size_t> index)
