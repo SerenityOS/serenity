@@ -87,7 +87,7 @@ static bool collect_copy_work_items(String const& source, String const& destinat
         items.append(WorkItem {
             .type = WorkItem::Type::CopyFile,
             .source = source,
-            .destination = String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+            .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
         });
         return true;
@@ -97,7 +97,7 @@ static bool collect_copy_work_items(String const& source, String const& destinat
     items.append(WorkItem {
         .type = WorkItem::Type::CreateDirectory,
         .source = {},
-        .destination = String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+        .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
         .size = 0,
     });
 
@@ -105,8 +105,8 @@ static bool collect_copy_work_items(String const& source, String const& destinat
     while (dt.has_next()) {
         auto name = dt.next_path();
         if (!collect_copy_work_items(
-                String::formatted("{}/{}", source, name),
-                String::formatted("{}/{}", destination, LexicalPath::basename(source)),
+                LexicalPath::join(source, name).string(),
+                LexicalPath::join(destination, LexicalPath::basename(source)).string(),
                 items)) {
             return false;
         }
@@ -141,7 +141,7 @@ static bool collect_move_work_items(String const& source, String const& destinat
         items.append(WorkItem {
             .type = WorkItem::Type::MoveFile,
             .source = source,
-            .destination = String::formatted("{}/{}", destination, LexicalPath(source).basename()),
+            .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
             .size = st.st_size,
         });
         return true;
@@ -151,7 +151,7 @@ static bool collect_move_work_items(String const& source, String const& destinat
     items.append(WorkItem {
         .type = WorkItem::Type::CreateDirectory,
         .source = {},
-        .destination = String::formatted("{}/{}", destination, LexicalPath(source).basename()),
+        .destination = LexicalPath::join(destination, LexicalPath::basename(source)).string(),
         .size = 0,
     });
 
@@ -159,8 +159,8 @@ static bool collect_move_work_items(String const& source, String const& destinat
     while (dt.has_next()) {
         auto name = dt.next_path();
         if (!collect_move_work_items(
-                String::formatted("{}/{}", source, name),
-                String::formatted("{}/{}", destination, LexicalPath(source).basename()),
+                LexicalPath::join(source, name).string(),
+                LexicalPath::join(destination, LexicalPath::basename(source)).string(),
                 items)) {
             return false;
         }
@@ -212,7 +212,7 @@ static bool collect_delete_work_items(String const& source, Vector<WorkItem>& it
     Core::DirIterator dt(source, Core::DirIterator::SkipParentAndBaseDir);
     while (dt.has_next()) {
         auto name = dt.next_path();
-        if (!collect_delete_work_items(String::formatted("{}/{}", source, name), items))
+        if (!collect_delete_work_items(LexicalPath::join(source, name).string(), items))
             return false;
     }
 
