@@ -63,8 +63,7 @@ void MallocTracer::target_did_malloc(Badge<Emulator>, FlatPtr address, size_t si
         return;
     auto* region = m_emulator.mmu().find_region({ 0x23, address });
     VERIFY(region);
-    VERIFY(is<MmapRegion>(*region));
-    auto& mmap_region = static_cast<MmapRegion&>(*region);
+    auto& mmap_region = verify_cast<MmapRegion>(*region);
 
     auto* shadow_bits = mmap_region.shadow_data() + address - mmap_region.base();
     memset(shadow_bits, 0, size);
@@ -93,8 +92,7 @@ void MallocTracer::target_did_change_chunk_size(Badge<Emulator>, FlatPtr block, 
         return;
     auto* region = m_emulator.mmu().find_region({ 0x23, block });
     VERIFY(region);
-    VERIFY(is<MmapRegion>(*region));
-    auto& mmap_region = static_cast<MmapRegion&>(*region);
+    auto& mmap_region = verify_cast<MmapRegion>(*region);
     update_metadata(mmap_region, chunk_size);
 }
 
@@ -153,8 +151,7 @@ void MallocTracer::target_did_realloc(Badge<Emulator>, FlatPtr address, size_t s
         return;
     auto* region = m_emulator.mmu().find_region({ 0x23, address });
     VERIFY(region);
-    VERIFY(is<MmapRegion>(*region));
-    auto& mmap_region = static_cast<MmapRegion&>(*region);
+    auto& mmap_region = verify_cast<MmapRegion>(*region);
 
     VERIFY(mmap_region.is_malloc_block());
 

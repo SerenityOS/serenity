@@ -459,8 +459,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
     if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
-            VERIFY(is<FunctionEnvironmentRecord>(lexical_environment()));
-            static_cast<FunctionEnvironmentRecord*>(lexical_environment())->replace_this_binding(result);
+            verify_cast<FunctionEnvironmentRecord>(lexical_environment())->replace_this_binding(result);
         }
         auto prototype = new_target.get(names.prototype);
         if (exception())
@@ -502,8 +501,7 @@ String VM::join_arguments(size_t start_index) const
 Value VM::get_new_target()
 {
     auto& env = get_this_environment(*this);
-    VERIFY(is<FunctionEnvironmentRecord>(env));
-    return static_cast<FunctionEnvironmentRecord&>(env).new_target();
+    return verify_cast<FunctionEnvironmentRecord>(env).new_target();
 }
 
 Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)

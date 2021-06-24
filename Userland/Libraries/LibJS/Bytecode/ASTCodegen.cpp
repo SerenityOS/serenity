@@ -390,9 +390,8 @@ void AssignmentExpression::generate_bytecode(Bytecode::Generator& generator) con
             m_rhs->generate_bytecode(generator);
             generator.emit<Bytecode::Op::PutByValue>(object_reg, property_reg);
         } else {
-            VERIFY(is<Identifier>(expression.property()));
             m_rhs->generate_bytecode(generator);
-            auto identifier_table_ref = generator.intern_string(static_cast<Identifier const&>(expression.property()).string());
+            auto identifier_table_ref = generator.intern_string(verify_cast<Identifier>(expression.property()).string());
             generator.emit<Bytecode::Op::PutById>(object_reg, identifier_table_ref);
         }
         return;
@@ -628,8 +627,7 @@ void MemberExpression::generate_bytecode(Bytecode::Generator& generator) const
         property().generate_bytecode(generator);
         generator.emit<Bytecode::Op::GetByValue>(object_reg);
     } else {
-        VERIFY(is<Identifier>(property()));
-        auto identifier_table_ref = generator.intern_string(static_cast<Identifier const&>(property()).string());
+        auto identifier_table_ref = generator.intern_string(verify_cast<Identifier>(property()).string());
         generator.emit<Bytecode::Op::GetById>(identifier_table_ref);
     }
 }

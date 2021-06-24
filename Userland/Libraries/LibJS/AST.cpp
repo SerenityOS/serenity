@@ -244,8 +244,7 @@ Value CallExpression::execute(Interpreter& interpreter, GlobalObject& global_obj
             return {};
 
         auto& this_er = get_this_environment(interpreter.vm());
-        VERIFY(is<FunctionEnvironmentRecord>(this_er));
-        static_cast<FunctionEnvironmentRecord&>(this_er).bind_this_value(global_object, result);
+        verify_cast<FunctionEnvironmentRecord>(this_er).bind_this_value(global_object, result);
     } else {
         result = vm.call(function, this_value, move(arguments));
     }
@@ -1776,10 +1775,9 @@ void MemberExpression::dump(int indent) const
 
 PropertyName MemberExpression::computed_property_name(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    if (!is_computed()) {
-        VERIFY(is<Identifier>(*m_property));
-        return static_cast<Identifier const&>(*m_property).string();
-    }
+    if (!is_computed())
+        return verify_cast<Identifier>(*m_property).string();
+
     auto value = m_property->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
@@ -1794,8 +1792,7 @@ String MemberExpression::to_string_approximation() const
         object_string = static_cast<Identifier const&>(*m_object).string();
     if (is_computed())
         return String::formatted("{}[<computed>]", object_string);
-    VERIFY(is<Identifier>(*m_property));
-    return String::formatted("{}.{}", object_string, static_cast<Identifier const&>(*m_property).string());
+    return String::formatted("{}.{}", object_string, verify_cast<Identifier>(*m_property).string());
 }
 
 Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
