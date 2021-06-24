@@ -113,11 +113,13 @@ void Application::quit(int exit_code)
 void Application::register_global_shortcut_action(Badge<Action>, Action& action)
 {
     m_global_shortcut_actions.set(action.shortcut(), &action);
+    m_global_shortcut_actions.set(action.alternate_shortcut(), &action);
 }
 
 void Application::unregister_global_shortcut_action(Badge<Action>, Action& action)
 {
     m_global_shortcut_actions.remove(action.shortcut());
+    m_global_shortcut_actions.remove(action.alternate_shortcut());
 }
 
 Action* Application::action_for_key_event(const KeyEvent& event)
