@@ -14,6 +14,10 @@
 #cmakedefine01 AWAVLOADER_DEBUG
 #endif
 
+#ifndef AFLACLOADER_DEBUG
+#cmakedefine01 AFLACLOADER_DEBUG
+#endif
+
 #ifndef BACKTRACE_DEBUG
 #cmakedefine01 BACKTRACE_DEBUG
 #endif
