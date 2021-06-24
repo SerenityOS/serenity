@@ -891,16 +891,19 @@ Vector<Widget&> Widget::child_widgets() const
 void Widget::set_palette(const Palette& palette)
 {
     m_palette = palette.impl();
+    update();
 }
 
 void Widget::set_background_role(ColorRole role)
 {
     m_background_role = role;
+    update();
 }
 
 void Widget::set_foreground_role(ColorRole role)
 {
     m_foreground_role = role;
+    update();
 }
 
 Gfx::Palette Widget::palette() const
