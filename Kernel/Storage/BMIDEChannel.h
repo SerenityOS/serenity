@@ -42,9 +42,9 @@ private:
     virtual bool handle_irq(const RegisterState&) override;
 
     //* IDEChannel
-    virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const;
-    virtual void ata_read_sectors(bool, u16);
-    virtual void ata_write_sectors(bool, u16);
+    virtual void send_ata_io_command(LBAMode lba_mode, Direction direction) const override;
+    virtual void ata_read_sectors(bool, u16) override;
+    virtual void ata_write_sectors(bool, u16) override;
 
     PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_region->vaddr().as_ptr()); }
     OwnPtr<Region> m_prdt_region;
