@@ -1186,6 +1186,12 @@ void WindowManager::process_key_event(KeyEvent& event)
         return;
     }
 
+    // FIXME: This is fragile, the kernel should send a signal when we switch back to the WindowManager's framebuffer
+    if (event.type() == Event::KeyDown && (event.modifiers() & Mod_Alt) && (event.key() == Key_ExclamationPoint || event.key() == Key_1)) {
+        Compositor::the().invalidate_screen();
+        return;
+    }
+
     if (event.type() == Event::KeyDown && (event.modifiers() == (Mod_Ctrl | Mod_Super | Mod_Shift) && event.key() == Key_I)) {
         reload_icon_bitmaps_after_scale_change();
         Compositor::the().invalidate_screen();
