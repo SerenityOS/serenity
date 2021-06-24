@@ -77,8 +77,8 @@ public:
     String const& status_tip() const { return m_status_tip; }
     void set_status_tip(String status_tip) { m_status_tip = move(status_tip); }
 
-    Shortcut shortcut() const { return m_shortcut; }
-    Shortcut alternate_shortcut() const { return m_alternate_shortcut; }
+    Shortcut const& shortcut() const { return m_shortcut; }
+    Shortcut const& alternate_shortcut() const { return m_alternate_shortcut; }
     const Gfx::Bitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const Gfx::Bitmap*);
 
