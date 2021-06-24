@@ -10,6 +10,9 @@ kernel_cmdline:
 
 .section .page_tables, "aw", @nobits
 .align 4096
+.global boot_pml4t
+boot_pml4t:
+.skip 4096
 .global boot_pdpt
 boot_pdpt:
 .skip 4096
@@ -41,7 +44,11 @@ boot_pd3_pt1023:
 .type multiboot_info_ptr, @object
 
 /*
-    construct the following (32-bit PAE) page table layout:
+    construct the following (64-bit PML4T) page table layout:
+
+pml4t:
+
+    0: pdpt (0-512GB)
 
 pdpt
 
@@ -97,6 +104,18 @@ start:
     movl $(kernel_cmdline - 0xc0000000), %edi
     rep movsl
 
+    /* clear pml4t */
+    movl $(boot_pml4t - 0xc0000000), %edi
+    movl $1024, %ecx
+    xorl %eax, %eax
+    rep stosl
+
+    /* set up pml4t[0] */
+    movl $(boot_pml4t - 0xc0000000), %edi
+    movl $(boot_pdpt - 0xc0000000), 0(%edi)
+    /* R/W + Present */
+    orl $0x3, 0(%edi)
+
     /* clear pdpt */
     movl $(boot_pdpt - 0xc0000000), %edi
     movl $1024, %ecx
@@ -105,8 +124,8 @@ start:
 
     /* set up pdpt[0] and pdpt[3] */
     movl $(boot_pdpt - 0xc0000000), %edi
-    movl $((boot_pd0 - 0xc0000000) + 1), 0(%edi)
-    movl $((boot_pd3 - 0xc0000000) + 1), 24(%edi)
+    movl $((boot_pd0 - 0xc0000000) + 3), 0(%edi)
+    movl $((boot_pd3 - 0xc0000000) + 3), 24(%edi)
 
     /* clear pd0 */
     movl $(boot_pd0 - 0xc0000000), %edi
@@ -184,8 +203,8 @@ start:
     orl $0x3, 4088(%edi)
     movl $0, 4092(%edi)
 
-    /* point CR3 to PDPT */
-    movl $(boot_pdpt - 0xc0000000), %eax
+    /* point CR3 to PML4T */
+    movl $(boot_pml4t - 0xc0000000), %eax
     movl %eax, %cr3
 
     /* enable PAE + PSE */
