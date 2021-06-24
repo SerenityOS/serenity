@@ -1097,11 +1097,7 @@ void TerminalWidget::context_menu_event(GUI::ContextMenuEvent& event)
 
 void TerminalWidget::drop_event(GUI::DropEvent& event)
 {
-    if (event.mime_data().has_text()) {
-        event.accept();
-        auto text = event.mime_data().text();
-        send_non_user_input(text.bytes());
-    } else if (event.mime_data().has_urls()) {
+    if (event.mime_data().has_urls()) {
         event.accept();
         auto urls = event.mime_data().urls();
         bool first = true;
@@ -1116,6 +1112,10 @@ void TerminalWidget::drop_event(GUI::DropEvent& event)
 
             first = false;
         }
+    } else if (event.mime_data().has_text()) {
+        event.accept();
+        auto text = event.mime_data().text();
+        send_non_user_input(text.bytes());
     }
 }
 
