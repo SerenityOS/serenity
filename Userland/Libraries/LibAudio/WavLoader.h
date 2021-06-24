@@ -39,7 +39,7 @@ public:
     virtual bool sniff() override { return valid; }
 
     virtual bool has_error() override { return !m_error_string.is_null(); }
-    virtual const char* error_string() override { return m_error_string.characters(); }
+    virtual const String& error_string() override { return m_error_string; }
 
     // The Buffer returned contains input data resampled at the
     // destination audio device sample rate.
