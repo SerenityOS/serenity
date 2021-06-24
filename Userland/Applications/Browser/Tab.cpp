@@ -281,7 +281,7 @@ Tab::Tab(BrowserWindow& window, Type type)
     }
 
     auto focus_location_box_action = GUI::Action::create(
-        "Focus location box", { Mod_Ctrl, Key_L }, [this](auto&) {
+        "Focus location box", { Mod_Ctrl, Key_L }, Key_F6, [this](auto&) {
             m_location_box->select_all();
             m_location_box->set_focus(true);
         },
