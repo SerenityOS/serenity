@@ -30,10 +30,10 @@ namespace Kernel {
 READONLY_AFTER_INIT FPUState Processor::s_clean_fpu_state;
 
 READONLY_AFTER_INIT static ProcessorContainer s_processors {};
-READONLY_AFTER_INIT volatile u32 Processor::g_total_processors;
+READONLY_AFTER_INIT Atomic<u32> Processor::g_total_processors;
 static volatile bool s_smp_enabled;
 
-static volatile ProcessorMessage* s_message_pool;
+static Atomic<ProcessorMessage*> s_message_pool;
 Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 
 extern "C" void thread_context_first_enter(void);
@@ -300,9 +300,9 @@ UNMAP_AFTER_INIT void Processor::early_initialize(u32 cpu)
     m_halt_requested = false;
     if (cpu == 0) {
         s_smp_enabled = false;
-        atomic_store(&g_total_processors, 1u, AK::MemoryOrder::memory_order_release);
+        g_total_processors.store(1u, AK::MemoryOrder::memory_order_release);
     } else {
-        atomic_fetch_add(&g_total_processors, 1u, AK::MemoryOrder::memory_order_acq_rel);
+        g_total_processors.fetch_add(1u, AK::MemoryOrder::memory_order_acq_rel);
     }
 
     deferred_call_pool_init();
@@ -624,7 +624,7 @@ void Processor::smp_return_to_pool(ProcessorMessage& msg)
     ProcessorMessage* next = nullptr;
     do {
         msg.next = next;
-    } while (!atomic_compare_exchange_strong(&s_message_pool, next, &msg, AK::MemoryOrder::memory_order_acq_rel));
+    } while (s_message_pool.compare_exchange_strong(next, &msg, AK::MemoryOrder::memory_order_acq_rel));
 }
 
 ProcessorMessage& Processor::smp_get_from_pool()
@@ -633,7 +633,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
 
     // The assumption is that messages are never removed from the pool!
     for (;;) {
-        msg = atomic_load(&s_message_pool, AK::MemoryOrder::memory_order_consume);
+        msg = s_message_pool.load(AK::MemoryOrder::memory_order_consume);
         if (!msg) {
             if (!Processor::current().smp_process_pending_messages()) {
                 // TODO: pause for a bit?
@@ -645,7 +645,7 @@ ProcessorMessage& Processor::smp_get_from_pool()
         // this because the expected value "msg" and pool would
         // no longer match, and the compare_exchange will fail. But accessing
         // "msg->next" is always safe here.
-        if (atomic_compare_exchange_strong(&s_message_pool, msg, msg->next, AK::MemoryOrder::memory_order_acq_rel)) {
+        if (s_message_pool.compare_exchange_strong(msg, msg->next, AK::MemoryOrder::memory_order_acq_rel)) {
             // We successfully "popped" this available message
             break;
         }
@@ -720,7 +720,7 @@ UNMAP_AFTER_INIT void Processor::smp_enable()
             msg_entries[msg_entry_i + k].msg = &msg;
     }
 
-    atomic_store(&s_message_pool, &msgs[0], AK::MemoryOrder::memory_order_release);
+    s_message_pool.store(&msgs[0], AK::MemoryOrder::memory_order_release);
 
     // Start sending IPI messages
     s_smp_enabled = true;
@@ -743,7 +743,7 @@ bool Processor::smp_process_pending_messages()
     u32 prev_flags;
     enter_critical(prev_flags);
 
-    if (auto pending_msgs = atomic_exchange(&m_message_queue, nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
+    if (auto pending_msgs = m_message_queue.exchange(nullptr, AK::MemoryOrder::memory_order_acq_rel)) {
         // We pulled the stack of pending messages in LIFO order, so we need to reverse the list first
         auto reverse_list =
             [](ProcessorMessageEntry* list) -> ProcessorMessageEntry* {
@@ -786,7 +786,7 @@ bool Processor::smp_process_pending_messages()
             }
 
             bool is_async = msg->async; // Need to cache this value *before* dropping the ref count!
-            auto prev_refs = atomic_fetch_sub(&msg->refs, 1u, AK::MemoryOrder::memory_order_acq_rel);
+            auto prev_refs = msg->refs.fetch_sub(1u, AK::MemoryOrder::memory_order_acq_rel);
             VERIFY(prev_refs != 0);
             if (prev_refs == 1) {
                 // All processors handled this. If this is an async message,
@@ -819,7 +819,7 @@ bool Processor::smp_queue_message(ProcessorMessage& msg)
     ProcessorMessageEntry* next = nullptr;
     do {
         msg_entry.next = next;
-    } while (!atomic_compare_exchange_strong(&m_message_queue, next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel));
+    } while (m_message_queue.compare_exchange_strong(next, &msg_entry, AK::MemoryOrder::memory_order_acq_rel));
     return next == nullptr;
 }
 
@@ -829,7 +829,7 @@ void Processor::smp_broadcast_message(ProcessorMessage& msg)
 
     dbgln_if(SMP_DEBUG, "SMP[{}]: Broadcast message {} to cpus: {} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), count(), VirtualAddress(&cur_proc));
 
-    atomic_store(&msg.refs, count() - 1, AK::MemoryOrder::memory_order_release);
+    msg.refs.store(count() - 1, AK::MemoryOrder::memory_order_release);
     VERIFY(msg.refs > 0);
     bool need_broadcast = false;
     for_each(
@@ -851,7 +851,7 @@ void Processor::smp_broadcast_wait_sync(ProcessorMessage& msg)
     VERIFY(!msg.async);
     // If synchronous then we must cleanup and return the message back
     // to the pool. Otherwise, the last processor to complete it will return it
-    while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
+    while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
         // TODO: pause for a bit?
 
         // We need to process any messages that may have been sent to
@@ -884,7 +884,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
 
     dbgln_if(SMP_DEBUG, "SMP[{}]: Send message {} to cpu #{} proc: {}", cur_proc.get_id(), VirtualAddress(&msg), cpu, VirtualAddress(&target_proc));
 
-    atomic_store(&msg.refs, 1u, AK::MemoryOrder::memory_order_release);
+    msg.refs.store(1u, AK::MemoryOrder::memory_order_release);
     if (target_proc->smp_queue_message(msg)) {
         APIC::the().send_ipi(cpu);
     }
@@ -892,7 +892,7 @@ void Processor::smp_unicast_message(u32 cpu, ProcessorMessage& msg, bool async)
     if (!async) {
         // If synchronous then we must cleanup and return the message back
         // to the pool. Otherwise, the last processor to complete it will return it
-        while (atomic_load(&msg.refs, AK::MemoryOrder::memory_order_consume) != 0) {
+        while (msg.refs.load(AK::MemoryOrder::memory_order_consume) != 0) {
             // TODO: pause for a bit?
 
             // We need to process any messages that may have been sent to
@@ -1116,5 +1116,4 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     // clang-format on
 #endif
 }
-
 }

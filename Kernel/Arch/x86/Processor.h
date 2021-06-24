@@ -40,7 +40,7 @@ struct ProcessorMessage {
         Callback,
     };
     Type type;
-    volatile u32 refs; // atomic
+    Atomic<u32> refs;
     union {
         ProcessorMessage* next; // only valid while in the pool
         alignas(CallbackFunction) u8 callback_storage[sizeof(CallbackFunction)];
@@ -115,7 +115,7 @@ class Processor {
     TSS m_tss;
     static FPUState s_clean_fpu_state;
     CPUFeature m_features;
-    static volatile u32 g_total_processors; // atomic
+    static Atomic<u32> g_total_processors;
     u8 m_physical_address_bit_width;
 
     ProcessorInfo* m_info;
@@ -124,7 +124,7 @@ class Processor {
     Thread* m_current_thread;
     Thread* m_idle_thread;
 
-    volatile ProcessorMessageEntry* m_message_queue; // atomic, LIFO
+    Atomic<ProcessorMessageEntry*> m_message_queue;
 
     bool m_invoke_scheduler_async;
     bool m_scheduler_initialized;
@@ -178,8 +178,8 @@ public:
     static u32 count()
     {
         // NOTE: because this value never changes once all APs are booted,
-        // we don't really need to do an atomic_load() on this variable
-        return g_total_processors;
+        // we can safely bypass loading it atomically.
+        return *g_total_processors.ptr();
     }
 
     ALWAYS_INLINE static void wait_check()
