@@ -15,6 +15,7 @@
 #include <AK/NonnullOwnPtr.h>
 #include <AK/OwnPtr.h>
 #include <AK/Traits.h>
+#include <AK/TypeCasts.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 
@@ -720,31 +721,27 @@ ALWAYS_INLINE bool is<OpCode_Compare>(const OpCode& opcode)
 }
 
 template<typename T>
-ALWAYS_INLINE const T& to(const OpCode& opcode)
+ALWAYS_INLINE T const& to(OpCode const& opcode)
 {
-    VERIFY(is<T>(opcode));
-    return static_cast<const T&>(opcode);
+    return verify_cast<T>(opcode);
 }
 
 template<typename T>
 ALWAYS_INLINE T* to(OpCode* opcode)
 {
-    VERIFY(is<T>(opcode));
-    return static_cast<T*>(opcode);
+    return verify_cast<T>(opcode);
 }
 
 template<typename T>
-ALWAYS_INLINE const T* to(const OpCode* opcode)
+ALWAYS_INLINE T const* to(OpCode const* opcode)
 {
-    VERIFY(is<T>(opcode));
-    return static_cast<const T*>(opcode);
+    return verify_cast<T>(opcode);
 }
 
 template<typename T>
 ALWAYS_INLINE T& to(OpCode& opcode)
 {
-    VERIFY(is<T>(opcode));
-    return static_cast<T&>(opcode);
+    return verify_cast<T>(opcode);
 }
 
 }

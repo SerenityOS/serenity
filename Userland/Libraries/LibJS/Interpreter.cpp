@@ -200,8 +200,7 @@ Value Interpreter::execute_statement(GlobalObject& global_object, const Statemen
 
 FunctionEnvironmentRecord* Interpreter::current_function_environment_record()
 {
-    VERIFY(is<FunctionEnvironmentRecord>(vm().running_execution_context().lexical_environment));
-    return static_cast<FunctionEnvironmentRecord*>(vm().running_execution_context().lexical_environment);
+    return verify_cast<FunctionEnvironmentRecord>(vm().running_execution_context().lexical_environment);
 }
 
 }

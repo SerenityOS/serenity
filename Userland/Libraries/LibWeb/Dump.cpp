@@ -450,13 +450,13 @@ void dump_sheet(const CSS::StyleSheet& sheet)
     dbgln("{}", builder.string_view());
 }
 
-void dump_sheet(StringBuilder& builder, const CSS::StyleSheet& sheet)
+void dump_sheet(StringBuilder& builder, CSS::StyleSheet const& sheet)
 {
-    VERIFY(is<CSS::CSSStyleSheet>(sheet));
+    auto& css_stylesheet = verify_cast<CSS::CSSStyleSheet>(sheet);
 
-    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, static_cast<const CSS::CSSStyleSheet&>(sheet).rules().size());
+    builder.appendff("CSSStyleSheet{{{}}}: {} rule(s)\n", &sheet, css_stylesheet.rules().size());
 
-    for (auto& rule : static_cast<const CSS::CSSStyleSheet&>(sheet).rules()) {
+    for (auto& rule : css_stylesheet.rules()) {
         dump_rule(builder, rule);
     }
 }

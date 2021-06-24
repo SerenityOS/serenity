@@ -193,8 +193,7 @@ EnvironmentRecord& get_this_environment(VM& vm)
 Object* get_super_constructor(VM& vm)
 {
     auto& env = get_this_environment(vm);
-    VERIFY(is<FunctionEnvironmentRecord>(env));
-    auto& active_function = static_cast<FunctionEnvironmentRecord&>(env).function_object();
+    auto& active_function = verify_cast<FunctionEnvironmentRecord>(env).function_object();
     auto* super_constructor = active_function.prototype();
     return super_constructor;
 }

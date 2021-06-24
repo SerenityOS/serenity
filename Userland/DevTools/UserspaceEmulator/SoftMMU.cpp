@@ -61,8 +61,7 @@ void SoftMMU::ensure_split_at(X86::LogicalAddress address)
 
     // If we get here, we know that the page exists and belongs to a region, that there is
     // a previous page, and that it belongs to the same region.
-    VERIFY(is<MmapRegion>(m_page_to_region_map[page_index]));
-    auto* old_region = static_cast<MmapRegion*>(m_page_to_region_map[page_index]);
+    auto* old_region = verify_cast<MmapRegion>(m_page_to_region_map[page_index]);
 
     //dbgln("splitting at {:p}", address.offset());
     //dbgln("    old region: {:p}-{:p}", old_region->base(), old_region->end() - 1);
