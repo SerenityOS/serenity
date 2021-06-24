@@ -982,7 +982,7 @@ Action* Window::action_for_key_event(const KeyEvent& event)
     Shortcut shortcut(event.modifiers(), (KeyCode)event.key());
     Action* found_action = nullptr;
     for_each_child_of_type<Action>([&](auto& action) {
-        if (action.shortcut() == shortcut) {
+        if (action.shortcut() == shortcut || action.alternate_shortcut() == shortcut) {
             found_action = &action;
             return IterationDecision::Break;
         }
