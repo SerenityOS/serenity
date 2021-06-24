@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -922,16 +923,18 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         {
             LexicalPath lexical_path(new_path);
 
-            auto segment_index_of_new_path_in_breadcrumbbar = [&]() -> Optional<size_t> {
-                for (size_t i = 0; i < breadcrumbbar.segment_count(); ++i) {
-                    if (breadcrumbbar.segment_data(i) == new_path)
-                        return i;
-                }
-                return {};
-            }();
+            auto segment_index_of_new_path_in_breadcrumbbar = breadcrumbbar.find_segment_with_data(new_path);
 
             if (segment_index_of_new_path_in_breadcrumbbar.has_value()) {
-                breadcrumbbar.set_selected_segment(segment_index_of_new_path_in_breadcrumbbar.value());
+                auto new_segment_index = segment_index_of_new_path_in_breadcrumbbar.value();
+                breadcrumbbar.set_selected_segment(new_segment_index);
+
+                // If the path change was because the directory we were in was deleted,
+                // remove the breadcrumbs for it.
+                if ((new_segment_index + 1 < breadcrumbbar.segment_count())
+                    && !Core::File::is_directory(breadcrumbbar.segment_data(new_segment_index + 1))) {
+                    breadcrumbbar.remove_end_segments(new_segment_index + 1);
+                }
             } else {
                 breadcrumbbar.clear_segments();
 
@@ -949,7 +952,15 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
                 breadcrumbbar.set_selected_segment(breadcrumbbar.segment_count() - 1);
 
                 breadcrumbbar.on_segment_click = [&](size_t segment_index) {
-                    directory_view.open(breadcrumbbar.segment_data(segment_index));
+                    auto selected_path = breadcrumbbar.segment_data(segment_index);
+                    if (Core::File::is_directory(selected_path)) {
+                        directory_view.open(selected_path);
+                    } else {
+                        dbgln("Breadcrumb path '{}' doesn't exist", selected_path);
+                        breadcrumbbar.remove_end_segments(segment_index);
+                        auto existing_path_segment = breadcrumbbar.find_segment_with_data(directory_view.path());
+                        breadcrumbbar.set_selected_segment(existing_path_segment.value());
+                    }
                 };
             }
         }
