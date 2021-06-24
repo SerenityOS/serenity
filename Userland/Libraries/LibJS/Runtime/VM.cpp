@@ -106,6 +106,7 @@ void VM::gather_roots(HashTable<Cell*>& roots)
                 roots.set(&argument.as_cell());
         }
         roots.set(execution_context->lexical_environment);
+        roots.set(execution_context->variable_environment);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
