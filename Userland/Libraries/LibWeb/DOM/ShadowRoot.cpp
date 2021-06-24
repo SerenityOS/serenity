@@ -19,7 +19,7 @@ ShadowRoot::ShadowRoot(Document& document, Element& host)
 EventTarget* ShadowRoot::get_parent(const Event& event)
 {
     if (!event.composed()) {
-        auto& events_first_invocation_target = downcast<Node>(*event.path().first().invocation_target);
+        auto& events_first_invocation_target = verify_cast<Node>(*event.path().first().invocation_target);
         if (events_first_invocation_target.root() == this)
             return nullptr;
     }

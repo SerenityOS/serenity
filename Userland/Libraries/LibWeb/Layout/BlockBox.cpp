@@ -88,11 +88,11 @@ HitTestResult BlockBox::hit_test(const Gfx::IntPoint& position, HitTestType type
     HitTestResult last_good_candidate;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (is<Box>(fragment.layout_node()) && downcast<Box>(fragment.layout_node()).stacking_context())
+            if (is<Box>(fragment.layout_node()) && verify_cast<Box>(fragment.layout_node()).stacking_context())
                 continue;
             if (enclosing_int_rect(fragment.absolute_rect()).contains(position)) {
                 if (is<BlockBox>(fragment.layout_node()))
-                    return downcast<BlockBox>(fragment.layout_node()).hit_test(position, type);
+                    return verify_cast<BlockBox>(fragment.layout_node()).hit_test(position, type);
                 return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
             if (fragment.absolute_rect().top() <= position.y())

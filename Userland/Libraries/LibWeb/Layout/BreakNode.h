@@ -16,7 +16,7 @@ public:
     BreakNode(DOM::Document&, HTML::HTMLBRElement&);
     virtual ~BreakNode() override;
 
-    const HTML::HTMLBRElement& dom_node() const { return downcast<HTML::HTMLBRElement>(*Node::dom_node()); }
+    const HTML::HTMLBRElement& dom_node() const { return verify_cast<HTML::HTMLBRElement>(*Node::dom_node()); }
 
 private:
     virtual void split_into_lines(InlineFormattingContext&, LayoutMode) override;

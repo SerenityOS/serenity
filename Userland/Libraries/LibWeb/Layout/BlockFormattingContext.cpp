@@ -72,7 +72,7 @@ void BlockFormattingContext::compute_width(Box& box)
 
     if (is<ReplacedBox>(box)) {
         // FIXME: This should not be done *by* ReplacedBox
-        auto& replaced = downcast<ReplacedBox>(box);
+        auto& replaced = verify_cast<ReplacedBox>(box);
         replaced.prepare_for_replaced_layout();
         compute_width_for_block_level_replaced_element_in_normal_flow(replaced);
         return;
@@ -304,7 +304,7 @@ float BlockFormattingContext::compute_theoretical_height(const Box& box)
     // Then work out what the height is, based on box type and CSS properties.
     float height = 0;
     if (is<ReplacedBox>(box)) {
-        height = compute_height_for_replaced_element(downcast<ReplacedBox>(box));
+        height = compute_height_for_replaced_element(verify_cast<ReplacedBox>(box));
     } else {
         if (box.computed_values().height().is_undefined_or_auto()
             || (computed_values.height().is_percentage() && !containing_block.computed_values().height().is_absolute())) {
@@ -410,10 +410,10 @@ void BlockFormattingContext::layout_block_level_children(Box& box, LayoutMode la
         // FIXME: This should be factored differently. It's uncool that we mutate the tree *during* layout!
         //        Instead, we should generate the marker box during the tree build.
         if (is<ListItemBox>(child_box))
-            downcast<ListItemBox>(child_box).layout_marker();
+            verify_cast<ListItemBox>(child_box).layout_marker();
 
         content_height = max(content_height, child_box.effective_offset().y() + child_box.height() + child_box.box_model().margin_box().bottom);
-        content_width = max(content_width, downcast<Box>(child_box).width());
+        content_width = max(content_width, verify_cast<Box>(child_box).width());
         return IterationDecision::Continue;
     });
 
@@ -526,7 +526,7 @@ void BlockFormattingContext::layout_initial_containing_block(LayoutMode layout_m
 {
     auto viewport_rect = context_box().browsing_context().viewport_rect();
 
-    auto& icb = downcast<Layout::InitialContainingBlockBox>(context_box());
+    auto& icb = verify_cast<Layout::InitialContainingBlockBox>(context_box());
     icb.build_stacking_context_tree();
 
     icb.set_width(viewport_rect.width());
@@ -551,7 +551,7 @@ static Gfx::FloatRect rect_in_coordinate_space(const Box& box, const Box& contex
     Gfx::FloatRect rect = box.margin_box_as_relative_rect();
     for (auto* ancestor = box.parent(); ancestor; ancestor = ancestor->parent()) {
         if (is<Box>(*ancestor)) {
-            auto offset = downcast<Box>(*ancestor).effective_offset();
+            auto offset = verify_cast<Box>(*ancestor).effective_offset();
             rect.translate_by(offset);
         }
         if (ancestor == &context_box)

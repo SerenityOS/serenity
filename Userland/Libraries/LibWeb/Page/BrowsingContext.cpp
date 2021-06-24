@@ -165,7 +165,7 @@ void BrowsingContext::scroll_to_anchor(const String& fragment)
         auto candidates = document()->get_elements_by_name(fragment);
         for (auto& candidate : candidates->collect_matching_elements()) {
             if (is<HTML::HTMLAnchorElement>(*candidate)) {
-                element = downcast<HTML::HTMLAnchorElement>(*candidate);
+                element = verify_cast<HTML::HTMLAnchorElement>(*candidate);
                 break;
             }
         }
@@ -181,7 +181,7 @@ void BrowsingContext::scroll_to_anchor(const String& fragment)
 
     Gfx::FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)viewport_rect().width(), (float)viewport_rect().height() } };
     if (is<Layout::Box>(layout_node)) {
-        auto& layout_box = downcast<Layout::Box>(layout_node);
+        auto& layout_box = verify_cast<Layout::Box>(layout_node);
         auto padding_box = layout_box.box_model().padding_box();
         float_rect.translate_by(-padding_box.left, -padding_box.top);
     }
@@ -244,13 +244,13 @@ String BrowsingContext::selected_text() const
     if (selection.start().layout_node == selection.end().layout_node) {
         if (!is<Layout::TextNode>(*selection.start().layout_node))
             return "";
-        return downcast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
+        return verify_cast<Layout::TextNode>(*selection.start().layout_node).text_for_rendering().substring(selection.start().index_in_node, selection.end().index_in_node - selection.start().index_in_node);
     }
 
     // Start node
     auto layout_node = selection.start().layout_node;
     if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
+        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(selection.start().index_in_node, text.length() - selection.start().index_in_node));
     }
 
@@ -258,7 +258,7 @@ String BrowsingContext::selected_text() const
     layout_node = layout_node->next_in_pre_order();
     while (layout_node && layout_node != selection.end().layout_node) {
         if (is<Layout::TextNode>(*layout_node))
-            builder.append(downcast<Layout::TextNode>(*layout_node).text_for_rendering());
+            builder.append(verify_cast<Layout::TextNode>(*layout_node).text_for_rendering());
         else if (is<Layout::BreakNode>(*layout_node) || is<Layout::BlockBox>(*layout_node))
             builder.append('\n');
 
@@ -268,7 +268,7 @@ String BrowsingContext::selected_text() const
     // End node
     VERIFY(layout_node == selection.end().layout_node);
     if (is<Layout::TextNode>(*layout_node)) {
-        auto& text = downcast<Layout::TextNode>(*layout_node).text_for_rendering();
+        auto& text = verify_cast<Layout::TextNode>(*layout_node).text_for_rendering();
         builder.append(text.substring(0, selection.end().index_in_node));
     }
 

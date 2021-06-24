@@ -158,7 +158,7 @@ bool EventHandler::handle_mouseup(const Gfx::IntPoint& position, unsigned button
     if (result.layout_node && result.layout_node->dom_node()) {
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
+            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mouseup(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
@@ -202,7 +202,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
             return false;
 
         if (is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
+            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mousedown(position.translated(compute_mouse_event_offset({}, *result.layout_node)), button, modifiers);
             return false;
         }
@@ -219,7 +219,7 @@ bool EventHandler::handle_mousedown(const Gfx::IntPoint& position, unsigned butt
         return true;
 
     if (button == GUI::MouseButton::Right && is<HTML::HTMLImageElement>(*node)) {
-        auto& image_element = downcast<HTML::HTMLImageElement>(*node);
+        auto& image_element = verify_cast<HTML::HTMLImageElement>(*node);
         auto image_url = image_element.document().complete_url(image_element.src());
         if (auto* page = m_frame.page())
             page->client().page_did_request_image_context_menu(m_frame.to_top_level_position(position), image_url, "", modifiers, image_element.bitmap());
@@ -299,7 +299,7 @@ bool EventHandler::handle_mousemove(const Gfx::IntPoint& position, unsigned butt
         RefPtr<DOM::Node> node = result.layout_node->dom_node();
 
         if (node && is<HTML::HTMLIFrameElement>(*node)) {
-            if (auto* subframe = downcast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
+            if (auto* subframe = verify_cast<HTML::HTMLIFrameElement>(*node).nested_browsing_context())
                 return subframe->event_handler().handle_mousemove(position.translated(compute_mouse_event_offset({}, *result.layout_node)), buttons, modifiers);
             return false;
         }

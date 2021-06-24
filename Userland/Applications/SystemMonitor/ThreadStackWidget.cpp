@@ -74,7 +74,7 @@ void ThreadStackWidget::refresh()
 
 void ThreadStackWidget::custom_event(Core::CustomEvent& event)
 {
-    auto& completion_event = downcast<CompletionEvent>(event);
+    auto& completion_event = verify_cast<CompletionEvent>(event);
 
     StringBuilder builder;
 

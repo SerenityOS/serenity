@@ -245,7 +245,7 @@ public:
     {
         for_each_child([&](auto& child) {
             if (is<Widget>(child))
-                return callback(downcast<Widget>(child));
+                return callback(verify_cast<Widget>(child));
             return IterationDecision::Continue;
         });
     }
@@ -370,13 +370,13 @@ private:
 inline Widget* Widget::parent_widget()
 {
     if (parent() && is<Widget>(*parent()))
-        return &downcast<Widget>(*parent());
+        return &verify_cast<Widget>(*parent());
     return nullptr;
 }
 inline const Widget* Widget::parent_widget() const
 {
     if (parent() && is<Widget>(*parent()))
-        return &downcast<const Widget>(*parent());
+        return &verify_cast<const Widget>(*parent());
     return nullptr;
 }
 }

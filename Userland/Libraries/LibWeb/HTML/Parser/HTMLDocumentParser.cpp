@@ -411,7 +411,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
         auto last_table = m_stack_of_open_elements.last_element_with_tag_name(HTML::TagNames::table);
         if (last_template.element && (!last_table.element || last_template.index > last_table.index)) {
             // This returns the template content, so no need to check the parent is a template.
-            return { downcast<HTMLTemplateElement>(last_template.element)->content(), nullptr };
+            return { verify_cast<HTMLTemplateElement>(last_template.element)->content(), nullptr };
         }
         if (!last_table.element) {
             VERIFY(m_parsing_fragment);
@@ -428,7 +428,7 @@ HTMLDocumentParser::AdjustedInsertionLocation HTMLDocumentParser::find_appropria
     }
 
     if (is<HTMLTemplateElement>(*adjusted_insertion_location.parent))
-        return { downcast<HTMLTemplateElement>(*adjusted_insertion_location.parent).content(), nullptr };
+        return { verify_cast<HTMLTemplateElement>(*adjusted_insertion_location.parent).content(), nullptr };
 
     return adjusted_insertion_location;
 }
@@ -497,7 +497,7 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
 
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::head) {
         auto element = insert_html_element(token);
-        m_head_element = downcast<HTMLHeadElement>(*element);
+        m_head_element = verify_cast<HTMLHeadElement>(*element);
         m_insertion_mode = InsertionMode::InHead;
         return;
     }
@@ -512,7 +512,7 @@ void HTMLDocumentParser::handle_before_head(HTMLToken& token)
     }
 
 AnythingElse:
-    m_head_element = downcast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
+    m_head_element = verify_cast<HTMLHeadElement>(*insert_html_element(HTMLToken::make_start_tag(HTML::TagNames::head)));
     m_insertion_mode = InsertionMode::InHead;
     process_using_the_rules_for(InsertionMode::InHead, token);
     return;
@@ -583,7 +583,7 @@ void HTMLDocumentParser::handle_in_head(HTMLToken& token)
     if (token.is_start_tag() && token.tag_name() == HTML::TagNames::script) {
         auto adjusted_insertion_location = find_appropriate_place_for_inserting_node();
         auto element = create_element_for(token, Namespace::HTML);
-        auto& script_element = downcast<HTMLScriptElement>(*element);
+        auto& script_element = verify_cast<HTMLScriptElement>(*element);
         script_element.set_parser_document({}, document());
         script_element.set_non_blocking({}, false);
 
@@ -706,7 +706,7 @@ DOM::Text* HTMLDocumentParser::find_character_insertion_node()
     if (adjusted_insertion_location.parent->is_document())
         return nullptr;
     if (adjusted_insertion_location.parent->last_child() && adjusted_insertion_location.parent->last_child()->is_text())
-        return downcast<DOM::Text>(adjusted_insertion_location.parent->last_child());
+        return verify_cast<DOM::Text>(adjusted_insertion_location.parent->last_child());
     auto new_text_node = adopt_ref(*new DOM::Text(document(), ""));
     adjusted_insertion_location.parent->append_child(new_text_node);
     return new_text_node;
@@ -1268,7 +1268,7 @@ void HTMLDocumentParser::handle_in_body(HTMLToken& token)
             close_a_p_element();
         auto element = insert_html_element(token);
         if (!m_stack_of_open_elements.contains(HTML::TagNames::template_))
-            m_form_element = downcast<HTMLFormElement>(*element);
+            m_form_element = verify_cast<HTMLFormElement>(*element);
         return;
     }
 
@@ -1877,7 +1877,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
     if (token.is_end_of_file()) {
         log_parse_error();
         if (current_node().local_name() == HTML::TagNames::script)
-            downcast<HTMLScriptElement>(current_node()).set_already_started({}, true);
+            verify_cast<HTMLScriptElement>(current_node()).set_already_started({}, true);
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         process_using_the_rules_for(m_insertion_mode, token);
@@ -1887,7 +1887,7 @@ void HTMLDocumentParser::handle_text(HTMLToken& token)
         // Make sure the <script> element has up-to-date text content before preparing the script.
         flush_character_insertions();
 
-        NonnullRefPtr<HTMLScriptElement> script = downcast<HTMLScriptElement>(current_node());
+        NonnullRefPtr<HTMLScriptElement> script = verify_cast<HTMLScriptElement>(current_node());
         m_stack_of_open_elements.pop();
         m_insertion_mode = m_original_insertion_mode;
         // FIXME: Handle tokenizer insertion point stuff here.
@@ -2289,7 +2289,7 @@ void HTMLDocumentParser::handle_in_table(HTMLToken& token)
             return;
         }
 
-        m_form_element = downcast<HTMLFormElement>(*insert_html_element(token));
+        m_form_element = verify_cast<HTMLFormElement>(*insert_html_element(token));
 
         // FIXME: See previous FIXME, as this is the same situation but for form.
         m_stack_of_open_elements.pop();
@@ -3025,7 +3025,7 @@ NonnullRefPtrVector<DOM::Node> HTMLDocumentParser::parse_html_fragment(DOM::Elem
 
     for (auto* form_candidate = &context_element; form_candidate; form_candidate = form_candidate->parent_element()) {
         if (is<HTMLFormElement>(*form_candidate)) {
-            parser.m_form_element = downcast<HTMLFormElement>(*form_candidate);
+            parser.m_form_element = verify_cast<HTMLFormElement>(*form_candidate);
             break;
         }
     }

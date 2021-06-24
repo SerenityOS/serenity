@@ -158,13 +158,13 @@ public:
     void for_each_child_in_paint_order(Callback callback) const
     {
         for_each_child([&](auto& child) {
-            if (is<Box>(child) && downcast<Box>(child).stacking_context())
+            if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
                 return;
             if (!child.is_positioned())
                 callback(child);
         });
         for_each_child([&](auto& child) {
-            if (is<Box>(child) && downcast<Box>(child).stacking_context())
+            if (is<Box>(child) && verify_cast<Box>(child).stacking_context())
                 return;
             if (child.is_positioned())
                 callback(child);

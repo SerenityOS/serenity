@@ -261,7 +261,7 @@ void TextNode::handle_mousedown(Badge<EventHandler>, const Gfx::IntPoint& positi
 {
     if (!parent() || !is<Label>(*parent()))
         return;
-    downcast<Label>(*parent()).handle_mousedown_on_label({}, position, button);
+    verify_cast<Label>(*parent()).handle_mousedown_on_label({}, position, button);
     browsing_context().event_handler().set_mouse_event_tracking_layout_node(this);
 }
 
@@ -273,7 +273,7 @@ void TextNode::handle_mouseup(Badge<EventHandler>, const Gfx::IntPoint& position
     // NOTE: Changing the state of the DOM node may run arbitrary JS, which could disappear this node.
     NonnullRefPtr protect = *this;
 
-    downcast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
+    verify_cast<Label>(*parent()).handle_mouseup_on_label({}, position, button);
     browsing_context().event_handler().set_mouse_event_tracking_layout_node(nullptr);
 }
 
@@ -281,7 +281,7 @@ void TextNode::handle_mousemove(Badge<EventHandler>, const Gfx::IntPoint& positi
 {
     if (!parent() || !is<Label>(*parent()))
         return;
-    downcast<Label>(*parent()).handle_mousemove_on_label({}, position, button);
+    verify_cast<Label>(*parent()).handle_mousemove_on_label({}, position, button);
 }
 
 TextNode::ChunkIterator::ChunkIterator(StringView const& text, LayoutMode layout_mode, bool wrap_lines, bool wrap_breaks)

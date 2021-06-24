@@ -81,7 +81,7 @@ void InProcessWebView::select_all()
 
     int last_layout_node_index_in_node = 0;
     if (is<Layout::TextNode>(*last_layout_node))
-        last_layout_node_index_in_node = downcast<Layout::TextNode>(*last_layout_node).text_for_rendering().length() - 1;
+        last_layout_node_index_in_node = verify_cast<Layout::TextNode>(*last_layout_node).text_for_rendering().length() - 1;
 
     layout_root->set_selection({ { first_layout_node, 0 }, { last_layout_node, last_layout_node_index_in_node } });
     update();

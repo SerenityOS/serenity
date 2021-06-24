@@ -110,7 +110,7 @@ String HTMLElement::inner_text()
     Function<void(const Layout::Node&)> recurse = [&](auto& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             if (is<Layout::TextNode>(child))
-                builder.append(downcast<Layout::TextNode>(*child).text_for_rendering());
+                builder.append(verify_cast<Layout::TextNode>(*child).text_for_rendering());
             if (is<Layout::BreakNode>(child))
                 builder.append('\n');
             recurse(*child);

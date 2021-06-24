@@ -254,7 +254,7 @@ float FormattingContext::tentative_width_for_replaced_element(const ReplacedBox&
 void FormattingContext::compute_width_for_absolutely_positioned_element(Box& box)
 {
     if (is<ReplacedBox>(box))
-        compute_width_for_absolutely_positioned_replaced_element(downcast<ReplacedBox>(box));
+        compute_width_for_absolutely_positioned_replaced_element(verify_cast<ReplacedBox>(box));
     else
         compute_width_for_absolutely_positioned_non_replaced_element(box);
 }
@@ -262,7 +262,7 @@ void FormattingContext::compute_width_for_absolutely_positioned_element(Box& box
 void FormattingContext::compute_height_for_absolutely_positioned_element(Box& box)
 {
     if (is<ReplacedBox>(box))
-        compute_height_for_absolutely_positioned_replaced_element(downcast<ReplacedBox>(box));
+        compute_height_for_absolutely_positioned_replaced_element(verify_cast<ReplacedBox>(box));
     else
         compute_height_for_absolutely_positioned_non_replaced_element(box);
 }

@@ -278,11 +278,11 @@ Optional<float> StyleProperties::flex_grow_factor() const
     auto value = property(CSS::PropertyID::FlexGrow);
     if (!value.has_value())
         return {};
-    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+    if (value.value()->is_length() && verify_cast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
         return { 0 };
     if (!value.value()->is_numeric())
         return {};
-    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
     return numeric->value();
 }
 
@@ -291,11 +291,11 @@ Optional<float> StyleProperties::flex_shrink_factor() const
     auto value = property(CSS::PropertyID::FlexShrink);
     if (!value.has_value())
         return {};
-    if (value.value()->is_length() && downcast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
+    if (value.value()->is_length() && verify_cast<CSS::LengthStyleValue>(value.value().ptr())->to_length().raw_value() == 0)
         return { 0 };
     if (!value.value()->is_numeric())
         return {};
-    auto numeric = downcast<CSS::NumericStyleValue>(value.value().ptr());
+    auto numeric = verify_cast<CSS::NumericStyleValue>(value.value().ptr());
     return numeric->value();
 }
 

@@ -41,7 +41,7 @@ bool CSSStyleDeclarationWrapper::put(const JS::PropertyName& name, JS::Value val
         return false;
 
     ScopeGuard style_invalidation_guard = [&] {
-        auto& declaration = downcast<CSS::ElementInlineCSSStyleDeclaration>(impl());
+        auto& declaration = verify_cast<CSS::ElementInlineCSSStyleDeclaration>(impl());
         if (auto* element = declaration.element())
             element->invalidate_style();
     };

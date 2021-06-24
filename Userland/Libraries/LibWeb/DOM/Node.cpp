@@ -51,8 +51,8 @@ Node::~Node()
 const HTML::HTMLAnchorElement* Node::enclosing_link_element() const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTML::HTMLAnchorElement>(*node) && downcast<HTML::HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
-            return downcast<HTML::HTMLAnchorElement>(node);
+        if (is<HTML::HTMLAnchorElement>(*node) && verify_cast<HTML::HTMLAnchorElement>(*node).has_attribute(HTML::AttributeNames::href))
+            return verify_cast<HTML::HTMLAnchorElement>(node);
     }
     return nullptr;
 }
@@ -65,8 +65,8 @@ const HTML::HTMLElement* Node::enclosing_html_element() const
 const HTML::HTMLElement* Node::enclosing_html_element_with_attribute(const FlyString& attribute) const
 {
     for (auto* node = this; node; node = node->parent()) {
-        if (is<HTML::HTMLElement>(*node) && downcast<HTML::HTMLElement>(*node).has_attribute(attribute))
-            return downcast<HTML::HTMLElement>(node);
+        if (is<HTML::HTMLElement>(*node) && verify_cast<HTML::HTMLElement>(*node).has_attribute(attribute))
+            return verify_cast<HTML::HTMLElement>(node);
     }
     return nullptr;
 }
@@ -83,7 +83,7 @@ String Node::text_content() const
 void Node::set_text_content(const String& content)
 {
     if (is_text()) {
-        downcast<Text>(this)->set_data(content);
+        verify_cast<Text>(this)->set_data(content);
     } else {
         remove_all_children();
         append_child(document().create_text_node(content));
@@ -123,9 +123,9 @@ String Node::child_text_content() const
         return String::empty();
 
     StringBuilder builder;
-    downcast<ParentNode>(*this).for_each_child([&](auto& child) {
+    verify_cast<ParentNode>(*this).for_each_child([&](auto& child) {
         if (is<Text>(child))
-            builder.append(downcast<Text>(child).text_content());
+            builder.append(verify_cast<Text>(child).text_content());
     });
     return builder.build();
 }
@@ -142,7 +142,7 @@ Node* Node::shadow_including_root()
 {
     auto node_root = root();
     if (is<ShadowRoot>(node_root))
-        return downcast<ShadowRoot>(node_root)->host()->shadow_including_root();
+        return verify_cast<ShadowRoot>(node_root)->host()->shadow_including_root();
     return node_root;
 }
 
@@ -155,14 +155,14 @@ Element* Node::parent_element()
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return downcast<Element>(parent());
+    return verify_cast<Element>(parent());
 }
 
 const Element* Node::parent_element() const
 {
     if (!parent() || !is<Element>(parent()))
         return nullptr;
-    return downcast<Element>(parent());
+    return verify_cast<Element>(parent());
 }
 
 // https://dom.spec.whatwg.org/#concept-node-ensure-pre-insertion-validity
@@ -187,7 +187,7 @@ ExceptionOr<void> Node::ensure_pre_insertion_validity(NonnullRefPtr<Node> node, 
 
     if (is<Document>(this)) {
         if (is<DocumentFragment>(*node)) {
-            auto node_element_child_count = downcast<DocumentFragment>(*node).child_element_count();
+            auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (has_child_of_type<Element>() || is<DocumentType>(child.ptr()) /* FIXME: or child is non-null and a doctype is following child. */))) {
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
@@ -209,7 +209,7 @@ void Node::insert_before(NonnullRefPtr<Node> node, RefPtr<Node> child, bool supp
 {
     NonnullRefPtrVector<Node> nodes;
     if (is<DocumentFragment>(*node))
-        nodes = downcast<DocumentFragment>(*node).child_nodes();
+        nodes = verify_cast<DocumentFragment>(*node).child_nodes();
     else
         nodes.append(node);
 
@@ -369,7 +369,7 @@ ExceptionOr<NonnullRefPtr<Node>> Node::replace_child(NonnullRefPtr<Node> node, N
 
     if (is<Document>(this)) {
         if (is<DocumentFragment>(*node)) {
-            auto node_element_child_count = downcast<DocumentFragment>(*node).child_element_count();
+            auto node_element_child_count = verify_cast<DocumentFragment>(*node).child_element_count();
             if ((node_element_child_count > 1 || node->has_child_of_type<Text>())
                 || (node_element_child_count == 1 && (first_child_of_type<Element>() != child /* FIXME: or a doctype is following child. */))) {
                 return DOM::HierarchyRequestError::create("Invalid node type for insertion");
@@ -411,7 +411,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         document = m_document;
     RefPtr<Node> copy;
     if (is<Element>(this)) {
-        auto& element = *downcast<Element>(this);
+        auto& element = *verify_cast<Element>(this);
         auto qualified_name = QualifiedName(element.local_name(), element.prefix(), element.namespace_());
         auto element_copy = adopt_ref(*new Element(*document, move(qualified_name)));
         element.for_each_attribute([&](auto& name, auto& value) {
@@ -419,7 +419,7 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         });
         copy = move(element_copy);
     } else if (is<Document>(this)) {
-        auto document_ = downcast<Document>(this);
+        auto document_ = verify_cast<Document>(this);
         auto document_copy = Document::create(document_->url());
         document_copy->set_encoding(document_->encoding());
         document_copy->set_content_type(document_->content_type());
@@ -428,22 +428,22 @@ NonnullRefPtr<Node> Node::clone_node(Document* document, bool clone_children) co
         // FIXME: Set type ("xml" or "html")
         copy = move(document_copy);
     } else if (is<DocumentType>(this)) {
-        auto document_type = downcast<DocumentType>(this);
+        auto document_type = verify_cast<DocumentType>(this);
         auto document_type_copy = adopt_ref(*new DocumentType(*document));
         document_type_copy->set_name(document_type->name());
         document_type_copy->set_public_id(document_type->public_id());
         document_type_copy->set_system_id(document_type->system_id());
         copy = move(document_type_copy);
     } else if (is<Text>(this)) {
-        auto text = downcast<Text>(this);
+        auto text = verify_cast<Text>(this);
         auto text_copy = adopt_ref(*new Text(*document, text->data()));
         copy = move(text_copy);
     } else if (is<Comment>(this)) {
-        auto comment = downcast<Comment>(this);
+        auto comment = verify_cast<Comment>(this);
         auto comment_copy = adopt_ref(*new Comment(*document, comment->data()));
         copy = move(comment_copy);
     } else if (is<ProcessingInstruction>(this)) {
-        auto processing_instruction = downcast<ProcessingInstruction>(this);
+        auto processing_instruction = verify_cast<ProcessingInstruction>(this);
         auto processing_instruction_copy = adopt_ref(*new ProcessingInstruction(*document, processing_instruction->data(), processing_instruction->target()));
         copy = move(processing_instruction_copy);
     } else {
@@ -490,7 +490,7 @@ JS::Object* Node::create_wrapper(JS::GlobalObject& global_object)
 void Node::removed_last_ref()
 {
     if (is<Document>(*this)) {
-        downcast<Document>(*this).removed_last_ref();
+        verify_cast<Document>(*this).removed_last_ref();
         return;
     }
     m_deletion_has_begun = true;
@@ -534,8 +534,8 @@ void Node::inserted()
 ParentNode* Node::parent_or_shadow_host()
 {
     if (is<ShadowRoot>(*this))
-        return downcast<ShadowRoot>(*this).host();
-    return downcast<ParentNode>(parent());
+        return verify_cast<ShadowRoot>(*this).host();
+    return verify_cast<ParentNode>(parent());
 }
 
 NonnullRefPtrVector<Node> Node::child_nodes() const
@@ -595,7 +595,7 @@ u16 Node::compare_document_position(RefPtr<Node> other)
 // https://dom.spec.whatwg.org/#concept-tree-host-including-inclusive-ancestor
 bool Node::is_host_including_inclusive_ancestor_of(const Node& other) const
 {
-    return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && downcast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*downcast<DocumentFragment>(other.root())->host().ptr()));
+    return is_inclusive_ancestor_of(other) || (is<DocumentFragment>(other.root()) && verify_cast<DocumentFragment>(other.root())->host() && is_inclusive_ancestor_of(*verify_cast<DocumentFragment>(other.root())->host().ptr()));
 }
 
 // https://dom.spec.whatwg.org/#dom-node-ownerdocument

@@ -19,8 +19,8 @@ public:
     virtual void paint(PaintContext&, PaintPhase) override;
     virtual void prepare_for_replaced_layout() override;
 
-    const HTML::HTMLIFrameElement& dom_node() const { return downcast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
-    HTML::HTMLIFrameElement& dom_node() { return downcast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
+    const HTML::HTMLIFrameElement& dom_node() const { return verify_cast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
+    HTML::HTMLIFrameElement& dom_node() { return verify_cast<HTML::HTMLIFrameElement>(ReplacedBox::dom_node()); }
 
 private:
     virtual void did_set_rect() override;

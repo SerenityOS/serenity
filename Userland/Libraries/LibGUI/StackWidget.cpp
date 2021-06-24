@@ -54,7 +54,7 @@ void StackWidget::child_event(Core::ChildEvent& event)
 {
     if (!event.child() || !is<Widget>(*event.child()))
         return Widget::child_event(event);
-    auto& child = downcast<Widget>(*event.child());
+    auto& child = verify_cast<Widget>(*event.child());
     if (event.type() == Event::ChildAdded) {
         if (!m_active_widget)
             set_active_widget(&child);

@@ -28,7 +28,7 @@ ALWAYS_INLINE bool is(InputType* input)
 }
 
 template<typename OutputType, typename InputType>
-ALWAYS_INLINE CopyConst<InputType, OutputType>* downcast(InputType* input)
+ALWAYS_INLINE CopyConst<InputType, OutputType>* verify_cast(InputType* input)
 {
     static_assert(IsBaseOf<InputType, OutputType>);
     VERIFY(!input || is<OutputType>(*input));
@@ -36,7 +36,7 @@ ALWAYS_INLINE CopyConst<InputType, OutputType>* downcast(InputType* input)
 }
 
 template<typename OutputType, typename InputType>
-ALWAYS_INLINE CopyConst<InputType, OutputType>& downcast(InputType& input)
+ALWAYS_INLINE CopyConst<InputType, OutputType>& verify_cast(InputType& input)
 {
     static_assert(IsBaseOf<InputType, OutputType>);
     VERIFY(is<OutputType>(input));
@@ -45,5 +45,5 @@ ALWAYS_INLINE CopyConst<InputType, OutputType>& downcast(InputType& input)
 
 }
 
-using AK::downcast;
 using AK::is;
+using AK::verify_cast;

@@ -84,7 +84,7 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_head()
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
-            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
             if (table_section_element->tag_name() == TagNames::thead)
                 return table_section_element;
         }
@@ -110,7 +110,7 @@ DOM::ExceptionOr<void> HTMLTableElement::set_t_head(HTMLTableSectionElement& the
         if (is<HTMLTableCaptionElement>(*child))
             continue;
         if (is<HTMLTableColElement>(*child)) {
-            auto table_col_element = &downcast<HTMLTableColElement>(*child);
+            auto table_col_element = &verify_cast<HTMLTableColElement>(*child);
             if (table_col_element->tag_name() == TagNames::colgroup)
                 continue;
         }
@@ -141,7 +141,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_head()
         if (is<HTMLTableCaptionElement>(*child))
             continue;
         if (is<HTMLTableColElement>(*child)) {
-            auto table_col_element = &downcast<HTMLTableColElement>(*child);
+            auto table_col_element = &verify_cast<HTMLTableColElement>(*child);
             if (table_col_element->tag_name() == TagNames::colgroup)
                 continue;
         }
@@ -168,7 +168,7 @@ RefPtr<HTMLTableSectionElement> HTMLTableElement::t_foot()
 {
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<HTMLTableSectionElement>(*child)) {
-            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
             if (table_section_element->tag_name() == TagNames::tfoot)
                 return table_section_element;
         }
@@ -228,7 +228,7 @@ NonnullRefPtr<HTMLTableSectionElement> HTMLTableElement::create_t_body()
         if (!is<HTMLElement>(*child))
             continue;
         if (is<HTMLTableSectionElement>(*child)) {
-            auto table_section_element = &downcast<HTMLTableSectionElement>(*child);
+            auto table_section_element = &verify_cast<HTMLTableSectionElement>(*child);
             if (table_section_element->tag_name() == TagNames::tbody) {
                 // We have found an element which is a <tbody> we'll insert after this
                 child_to_append_after = child->next_sibling();

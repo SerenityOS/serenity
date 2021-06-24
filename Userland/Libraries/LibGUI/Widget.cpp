@@ -147,22 +147,22 @@ void Widget::child_event(Core::ChildEvent& event)
     if (event.type() == Event::ChildAdded) {
         if (event.child() && is<Widget>(*event.child()) && layout()) {
             if (event.insertion_before_child() && is<Widget>(event.insertion_before_child()))
-                layout()->insert_widget_before(downcast<Widget>(*event.child()), downcast<Widget>(*event.insertion_before_child()));
+                layout()->insert_widget_before(verify_cast<Widget>(*event.child()), verify_cast<Widget>(*event.insertion_before_child()));
             else
-                layout()->add_widget(downcast<Widget>(*event.child()));
+                layout()->add_widget(verify_cast<Widget>(*event.child()));
         }
         if (window() && event.child() && is<Widget>(*event.child()))
-            window()->did_add_widget({}, downcast<Widget>(*event.child()));
+            window()->did_add_widget({}, verify_cast<Widget>(*event.child()));
     }
     if (event.type() == Event::ChildRemoved) {
         if (layout()) {
             if (event.child() && is<Widget>(*event.child()))
-                layout()->remove_widget(downcast<Widget>(*event.child()));
+                layout()->remove_widget(verify_cast<Widget>(*event.child()));
             else
                 invalidate_layout();
         }
         if (window() && event.child() && is<Widget>(*event.child()))
-            window()->did_remove_widget({}, downcast<Widget>(*event.child()));
+            window()->did_remove_widget({}, verify_cast<Widget>(*event.child()));
         update();
     }
     return Core::Object::child_event(event);
@@ -563,7 +563,7 @@ Widget* Widget::child_at(const Gfx::IntPoint& point) const
     for (int i = children().size() - 1; i >= 0; --i) {
         if (!is<Widget>(children()[i]))
             continue;
-        auto& child = downcast<Widget>(children()[i]);
+        auto& child = verify_cast<Widget>(children()[i]);
         if (!child.is_visible())
             continue;
         if (child.content_rect().contains(point))

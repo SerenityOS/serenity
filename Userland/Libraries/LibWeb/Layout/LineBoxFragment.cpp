@@ -41,7 +41,7 @@ StringView LineBoxFragment::text() const
 {
     if (!is<TextNode>(layout_node()))
         return {};
-    return downcast<TextNode>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
+    return verify_cast<TextNode>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
 const Gfx::FloatRect LineBoxFragment::absolute_rect() const
@@ -56,7 +56,7 @@ int LineBoxFragment::text_index_at(float x) const
 {
     if (!is<TextNode>(layout_node()))
         return 0;
-    auto& layout_text = downcast<TextNode>(layout_node());
+    auto& layout_text = verify_cast<TextNode>(layout_node());
     auto& font = layout_text.font();
     Utf8View view(text());
 

@@ -68,7 +68,7 @@ int main(int argc, char** argv)
     auto current_image_editor = [&]() -> PixelPaint::ImageEditor* {
         if (!tab_widget.active_widget())
             return nullptr;
-        return downcast<PixelPaint::ImageEditor>(tab_widget.active_widget());
+        return verify_cast<PixelPaint::ImageEditor>(tab_widget.active_widget());
     };
 
     Function<PixelPaint::ImageEditor&(NonnullRefPtr<PixelPaint::Image>)> create_new_editor;
@@ -552,14 +552,14 @@ int main(int argc, char** argv)
     };
 
     tab_widget.on_tab_close_click = [&](auto& widget) {
-        auto& image_editor = downcast<PixelPaint::ImageEditor>(widget);
+        auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         tab_widget.deferred_invoke([&](auto&) {
             tab_widget.remove_tab(image_editor);
         });
     };
 
     tab_widget.on_change = [&](auto& widget) {
-        auto& image_editor = downcast<PixelPaint::ImageEditor>(widget);
+        auto& image_editor = verify_cast<PixelPaint::ImageEditor>(widget);
         palette_widget.set_image_editor(image_editor);
         layer_list_widget.set_image(&image_editor.image());
         layer_properties_widget.set_layer(nullptr);
