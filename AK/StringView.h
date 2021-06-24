@@ -42,6 +42,22 @@ public:
         , m_length(bytes.size())
     {
     }
+    template<typename T, std::size_t S>
+    ALWAYS_INLINE StringView(T (& characters)[S])
+        : m_characters((const char*)characters)
+        , m_length(S-1)
+    {
+#pragma GCC unroll 128
+        for (std::size_t i = 0; i < S; ++i)
+        {
+            if (characters[i]==0)
+            {
+                m_length=i;
+                break;
+            }
+        }
+        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, m_length));
+    }
 
     StringView(const ByteBuffer&);
     StringView(const String&);
