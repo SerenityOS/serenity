@@ -63,6 +63,11 @@ public:
         return true;
     }
 
+    bool seek(size_t offset, SeekMode whence = SeekMode::SetPosition)
+    {
+        return m_file->seek(offset, whence);
+    }
+
     bool discard_or_error(size_t count) override { return m_file->seek(count, SeekMode::FromCurrentPosition); }
 
     bool unreliable_eof() const override { return m_file->eof(); }
