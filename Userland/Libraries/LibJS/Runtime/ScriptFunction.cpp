@@ -140,7 +140,7 @@ Value ScriptFunction::execute_function_body()
     auto* bytecode_interpreter = Bytecode::Interpreter::current();
 
     auto prepare_arguments = [&] {
-        auto& call_frame_args = vm.call_frame().arguments;
+        auto& execution_context_arguments = vm.running_execution_context().arguments;
         for (size_t i = 0; i < m_parameters.size(); ++i) {
             auto& parameter = m_parameters[i];
             parameter.binding.visit(
@@ -148,11 +148,11 @@ Value ScriptFunction::execute_function_body()
                     Value argument_value;
                     if (parameter.is_rest) {
                         auto* array = Array::create(global_object());
-                        for (size_t rest_index = i; rest_index < call_frame_args.size(); ++rest_index)
-                            array->indexed_properties().append(call_frame_args[rest_index]);
+                        for (size_t rest_index = i; rest_index < execution_context_arguments.size(); ++rest_index)
+                            array->indexed_properties().append(execution_context_arguments[rest_index]);
                         argument_value = move(array);
-                    } else if (i < call_frame_args.size() && !call_frame_args[i].is_undefined()) {
-                        argument_value = call_frame_args[i];
+                    } else if (i < execution_context_arguments.size() && !execution_context_arguments[i].is_undefined()) {
+                        argument_value = execution_context_arguments[i];
                     } else if (parameter.default_value) {
                         // FIXME: Support default arguments in the bytecode world!
                         if (!bytecode_interpreter)
@@ -163,9 +163,9 @@ Value ScriptFunction::execute_function_body()
                         argument_value = js_undefined();
                     }
 
-                    if (i >= call_frame_args.size())
-                        call_frame_args.resize(i + 1);
-                    call_frame_args[i] = argument_value;
+                    if (i >= execution_context_arguments.size())
+                        execution_context_arguments.resize(i + 1);
+                    execution_context_arguments[i] = argument_value;
                     vm.assign(param, argument_value, global_object(), true, vm.lexical_environment());
                 });
 
@@ -191,7 +191,7 @@ Value ScriptFunction::execute_function_body()
         if (m_kind != FunctionKind::Generator)
             return result;
 
-        return GeneratorObject::create(global_object(), result, this, vm.call_frame().lexical_environment, bytecode_interpreter->snapshot_frame());
+        return GeneratorObject::create(global_object(), result, this, vm.running_execution_context().lexical_environment, bytecode_interpreter->snapshot_frame());
     } else {
         VERIFY(m_kind != FunctionKind::Generator);
         OwnPtr<Interpreter> local_interpreter;

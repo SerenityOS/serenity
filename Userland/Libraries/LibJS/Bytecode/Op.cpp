@@ -387,8 +387,8 @@ void PushDeclarativeEnvironmentRecord::execute_impl(Bytecode::Interpreter& inter
     for (auto& it : m_variables)
         resolved_variables.set(interpreter.current_executable().get_string(it.key), it.value);
     auto* environment_record = interpreter.vm().heap().allocate<DeclarativeEnvironmentRecord>(interpreter.global_object(), move(resolved_variables), interpreter.vm().lexical_environment());
-    interpreter.vm().call_frame().lexical_environment = environment_record;
-    interpreter.vm().call_frame().variable_environment = environment_record;
+    interpreter.vm().running_execution_context().lexical_environment = environment_record;
+    interpreter.vm().running_execution_context().variable_environment = environment_record;
 }
 
 void Yield::execute_impl(Bytecode::Interpreter& interpreter) const
