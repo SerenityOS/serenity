@@ -66,7 +66,7 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
     m_notifier->on_ready_to_read = [this] {
         auto line = m_helper_pipe->read_line();
         if (line.is_null()) {
-            did_error("Read from pipe returned null.");
+            did_error("Read from pipe returned null."sv);
             return;
         }
 
@@ -74,12 +74,12 @@ FileOperationProgressWidget::FileOperationProgressWidget(FileOperation operation
         VERIFY(!parts.is_empty());
 
         if (parts[0] == "ERROR"sv) {
-            did_error(line.substring(6));
+            did_error(line.substring_view(6));
             return;
         }
 
         if (parts[0] == "WARN"sv) {
-            did_error(line.substring(5));
+            did_error(line.substring_view(5));
             return;
         }
 
@@ -115,7 +115,7 @@ void FileOperationProgressWidget::did_finish()
     window()->close();
 }
 
-void FileOperationProgressWidget::did_error(String const message)
+void FileOperationProgressWidget::did_error(StringView const& message)
 {
     // FIXME: Communicate more with the user about errors.
     close_pipe();
