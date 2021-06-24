@@ -76,6 +76,7 @@ enum PcmSampleFormat : u8 {
     Uint8,
     Int16,
     Int24,
+    Int32,
     Float32,
     Float64,
 };
