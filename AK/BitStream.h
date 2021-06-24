@@ -61,9 +61,9 @@ public:
         return m_stream.discard_or_error(count);
     }
 
-    u32 read_bits(size_t count)
+    u64 read_bits(size_t count)
     {
-        u32 result = 0;
+        u64 result = 0;
 
         size_t nread = 0;
         while (nread < count) {
@@ -88,7 +88,45 @@ public:
         return result;
     }
 
+    u64 read_bits_big_endian(size_t count)
+    {
+        u64 result = 0;
+
+        size_t nread = 0;
+        while (nread < count) {
+            if (m_stream.has_any_error()) {
+                set_fatal_error();
+                return 0;
+            }
+
+            if (m_next_byte.has_value()) {
+                // read an entire byte
+                if (((count - nread) >= 8) && m_bit_offset == 0) {
+                    // shift existing bytes over
+                    result <<= 8;
+                    result |= m_next_byte.value();
+                    nread += 8;
+                    m_next_byte.clear();
+                } else {
+                    const auto bit = (m_next_byte.value() >> (7 - m_bit_offset)) & 1;
+                    result <<= 1;
+                    result |= bit;
+                    ++nread;
+                    if (m_bit_offset++ == 7)
+                        m_next_byte.clear();
+                }
+            } else {
+                m_stream >> m_next_byte;
+                m_bit_offset = 0;
+            }
+        }
+
+        return result;
+    }
+
     bool read_bit() { return static_cast<bool>(read_bits(1)); }
+
+    bool read_bit_big_endian() { return static_cast<bool>(read_bits_big_endian(1)); }
 
     void align_to_byte_boundary()
     {
