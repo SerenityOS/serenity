@@ -1151,32 +1151,32 @@ Value Object::invoke_internal(const StringOrSymbol& property_name, Optional<Mark
 Value Object::call_native_property_getter(NativeProperty& property, Value this_value) const
 {
     auto& vm = this->vm();
-    CallFrame call_frame;
+    ExecutionContext execution_context;
     if (auto* interpreter = vm.interpreter_if_exists())
-        call_frame.current_node = interpreter->current_node();
-    call_frame.is_strict_mode = vm.in_strict_mode();
-    call_frame.this_value = this_value;
-    vm.push_call_frame(call_frame, global_object());
+        execution_context.current_node = interpreter->current_node();
+    execution_context.is_strict_mode = vm.in_strict_mode();
+    execution_context.this_value = this_value;
+    vm.push_execution_context(execution_context, global_object());
     if (vm.exception())
         return {};
     auto result = property.get(vm, global_object());
-    vm.pop_call_frame();
+    vm.pop_execution_context();
     return result;
 }
 
 void Object::call_native_property_setter(NativeProperty& property, Value this_value, Value setter_value) const
 {
     auto& vm = this->vm();
-    CallFrame call_frame;
+    ExecutionContext execution_context;
     if (auto* interpreter = vm.interpreter_if_exists())
-        call_frame.current_node = interpreter->current_node();
-    call_frame.is_strict_mode = vm.in_strict_mode();
-    call_frame.this_value = this_value;
-    vm.push_call_frame(call_frame, global_object());
+        execution_context.current_node = interpreter->current_node();
+    execution_context.is_strict_mode = vm.in_strict_mode();
+    execution_context.this_value = this_value;
+    vm.push_execution_context(execution_context, global_object());
     if (vm.exception())
         return;
     property.set(vm, global_object(), setter_value);
-    vm.pop_call_frame();
+    vm.pop_execution_context();
 }
 
 }

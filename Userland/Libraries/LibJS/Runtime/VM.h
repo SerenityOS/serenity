@@ -42,7 +42,7 @@ struct ScopeFrame {
     bool pushed_environment { false };
 };
 
-struct CallFrame {
+struct ExecutionContext {
     const ASTNode* current_node { nullptr };
     FlyString function_name;
     Value callee;
@@ -100,7 +100,7 @@ public:
         return *m_single_ascii_character_strings[character];
     }
 
-    void push_call_frame(CallFrame& call_frame, GlobalObject& global_object)
+    void push_execution_context(ExecutionContext& context, GlobalObject& global_object)
     {
         VERIFY(!exception());
         // Ensure we got some stack space left, so the next function call doesn't kill us.
@@ -108,58 +108,58 @@ public:
         if (m_stack_info.size_free() < 32 * KiB)
             throw_exception<Error>(global_object, "Call stack size limit exceeded");
         else
-            m_call_stack.append(&call_frame);
+            m_execution_context_stack.append(&context);
     }
 
-    void pop_call_frame()
+    void pop_execution_context()
     {
-        m_call_stack.take_last();
-        if (m_call_stack.is_empty() && on_call_stack_emptied)
+        m_execution_context_stack.take_last();
+        if (m_execution_context_stack.is_empty() && on_call_stack_emptied)
             on_call_stack_emptied();
     }
 
-    CallFrame& call_frame() { return *m_call_stack.last(); }
-    const CallFrame& call_frame() const { return *m_call_stack.last(); }
-    const Vector<CallFrame*>& call_stack() const { return m_call_stack; }
-    Vector<CallFrame*>& call_stack() { return m_call_stack; }
+    ExecutionContext& running_execution_context() { return *m_execution_context_stack.last(); }
+    ExecutionContext const& running_execution_context() const { return *m_execution_context_stack.last(); }
+    Vector<ExecutionContext*> const& execution_context_stack() const { return m_execution_context_stack; }
+    Vector<ExecutionContext*>& execution_context_stack() { return m_execution_context_stack; }
 
-    EnvironmentRecord const* lexical_environment() const { return call_frame().lexical_environment; }
-    EnvironmentRecord* lexical_environment() { return call_frame().lexical_environment; }
+    EnvironmentRecord const* lexical_environment() const { return running_execution_context().lexical_environment; }
+    EnvironmentRecord* lexical_environment() { return running_execution_context().lexical_environment; }
 
-    EnvironmentRecord const* variable_environment() const { return call_frame().variable_environment; }
-    EnvironmentRecord* variable_environment() { return call_frame().variable_environment; }
+    EnvironmentRecord const* variable_environment() const { return running_execution_context().variable_environment; }
+    EnvironmentRecord* variable_environment() { return running_execution_context().variable_environment; }
 
     bool in_strict_mode() const;
 
     template<typename Callback>
     void for_each_argument(Callback callback)
     {
-        if (m_call_stack.is_empty())
+        if (m_execution_context_stack.is_empty())
             return;
-        for (auto& value : call_frame().arguments)
+        for (auto& value : running_execution_context().arguments)
             callback(value);
     }
 
     size_t argument_count() const
     {
-        if (m_call_stack.is_empty())
+        if (m_execution_context_stack.is_empty())
             return 0;
-        return call_frame().arguments.size();
+        return running_execution_context().arguments.size();
     }
 
     Value argument(size_t index) const
     {
-        if (m_call_stack.is_empty())
+        if (m_execution_context_stack.is_empty())
             return {};
-        auto& arguments = call_frame().arguments;
+        auto& arguments = running_execution_context().arguments;
         return index < arguments.size() ? arguments[index] : js_undefined();
     }
 
     Value this_value(Object& global_object) const
     {
-        if (m_call_stack.is_empty())
+        if (m_execution_context_stack.is_empty())
             return &global_object;
-        return call_frame().this_value;
+        return running_execution_context().this_value;
     }
 
     Value last_value() const { return m_last_value; }
@@ -264,7 +264,7 @@ private:
     Heap m_heap;
     Vector<Interpreter*> m_interpreters;
 
-    Vector<CallFrame*> m_call_stack;
+    Vector<ExecutionContext*> m_execution_context_stack;
 
     Value m_last_value;
     ScopeType m_unwind_until { ScopeType::None };

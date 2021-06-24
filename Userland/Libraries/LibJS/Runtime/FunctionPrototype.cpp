@@ -79,7 +79,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
 
     Vector<Value> arguments;
     if (vm.argument_count() > 1) {
-        arguments = vm.call_frame().arguments;
+        arguments = vm.running_execution_context().arguments;
         arguments.remove(0);
     }
 

@@ -107,7 +107,7 @@ Value GeneratorObject::next_impl(VM& vm, GlobalObject& global_object, Optional<V
     }
 
     // Temporarily switch to the captured environment record
-    TemporaryChange change { vm.call_frame().lexical_environment, m_environment_record };
+    TemporaryChange change { vm.running_execution_context().lexical_environment, m_environment_record };
 
     m_previous_value = bytecode_interpreter->run(*m_generating_function->bytecode_executable(), next_block);
 

@@ -44,17 +44,17 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
 
     vm().set_last_value(Badge<Interpreter> {}, {});
 
-    CallFrame global_call_frame;
-    if (vm().call_stack().is_empty()) {
-        global_call_frame.this_value = &global_object();
+    ExecutionContext execution_context;
+    if (vm().execution_context_stack().is_empty()) {
+        execution_context.this_value = &global_object();
         static FlyString global_execution_context_name = "(*BC* global execution context)";
-        global_call_frame.function_name = global_execution_context_name;
-        global_call_frame.lexical_environment = &global_object().environment_record();
-        global_call_frame.variable_environment = &global_object().environment_record();
+        execution_context.function_name = global_execution_context_name;
+        execution_context.lexical_environment = &global_object().environment_record();
+        execution_context.variable_environment = &global_object().environment_record();
         VERIFY(!vm().exception());
         // FIXME: How do we know if we're in strict mode? Maybe the Bytecode::Block should know this?
-        // global_call_frame.is_strict_mode = ???;
-        vm().push_call_frame(global_call_frame, global_object());
+        // execution_context.is_strict_mode = ???;
+        vm().push_execution_context(execution_context, global_object());
         VERIFY(!vm().exception());
     }
 
@@ -140,8 +140,8 @@ Value Interpreter::run(Executable const& executable, BasicBlock const* entry_poi
     if (!m_register_windows.is_empty())
         m_register_windows.last()[0] = return_value;
 
-    if (vm().call_stack().size() == 1)
-        vm().pop_call_frame();
+    if (vm().execution_context_stack().size() == 1)
+        vm().pop_execution_context();
 
     vm().finish_execution_generation();
 

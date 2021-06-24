@@ -97,15 +97,15 @@ void VM::gather_roots(HashTable<Cell*>& roots)
     if (m_last_value.is_cell())
         roots.set(&m_last_value.as_cell());
 
-    for (auto& call_frame : m_call_stack) {
-        if (call_frame->this_value.is_cell())
-            roots.set(&call_frame->this_value.as_cell());
-        roots.set(call_frame->arguments_object);
-        for (auto& argument : call_frame->arguments) {
+    for (auto& execution_context : m_execution_context_stack) {
+        if (execution_context->this_value.is_cell())
+            roots.set(&execution_context->this_value.as_cell());
+        roots.set(execution_context->arguments_object);
+        for (auto& argument : execution_context->arguments) {
             if (argument.is_cell())
                 roots.set(&argument.as_cell());
         }
-        roots.set(call_frame->lexical_environment);
+        roots.set(execution_context->lexical_environment);
     }
 
 #define __JS_ENUMERATE(SymbolName, snake_name) \
@@ -134,7 +134,7 @@ Symbol* VM::get_global_symbol(const String& description)
 void VM::set_variable(const FlyString& name, Value value, GlobalObject& global_object, bool first_assignment, EnvironmentRecord* specific_scope)
 {
     Optional<Variable> possible_match;
-    if (!specific_scope && m_call_stack.size()) {
+    if (!specific_scope && m_execution_context_stack.size()) {
         for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
@@ -166,7 +166,7 @@ bool VM::delete_variable(FlyString const& name)
 {
     EnvironmentRecord* specific_scope = nullptr;
     Optional<Variable> possible_match;
-    if (!m_call_stack.is_empty()) {
+    if (!m_execution_context_stack.is_empty()) {
         for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
             possible_match = environment_record->get_from_environment_record(name);
             if (possible_match.has_value()) {
@@ -356,8 +356,9 @@ void VM::assign(const NonnullRefPtr<BindingPattern>& target, Value value, Global
 
 Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 {
-    if (!m_call_stack.is_empty()) {
-        if (name == names.arguments.as_string() && !call_frame().callee.is_empty()) {
+    if (!m_execution_context_stack.is_empty()) {
+        auto& context = running_execution_context();
+        if (name == names.arguments.as_string() && context.callee) {
             // HACK: Special handling for the name "arguments":
             //       If the name "arguments" is defined in the current scope, for example via
             //       a function parameter, or by a local var declaration, we use that.
@@ -366,14 +367,14 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             auto possible_match = lexical_environment()->get_from_environment_record(name);
             if (possible_match.has_value())
                 return possible_match.value().value;
-            if (!call_frame().arguments_object) {
-                call_frame().arguments_object = Array::create(global_object);
-                call_frame().arguments_object->put(names.callee, call_frame().callee);
-                for (auto argument : call_frame().arguments) {
-                    call_frame().arguments_object->indexed_properties().append(argument);
+            if (!context.arguments_object) {
+                context.arguments_object = Array::create(global_object);
+                context.arguments_object->put(names.callee, context.callee);
+                for (auto argument : context.arguments) {
+                    context.arguments_object->indexed_properties().append(argument);
                 }
             }
-            return call_frame().arguments_object;
+            return context.arguments_object;
         }
 
         for (auto* environment_record = lexical_environment(); environment_record; environment_record = environment_record->outer_environment()) {
@@ -403,26 +404,26 @@ Reference VM::get_reference(const FlyString& name)
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
-    CallFrame call_frame;
-    call_frame.callee = &function;
+    ExecutionContext execution_context;
+    execution_context.callee = &function;
     if (auto* interpreter = interpreter_if_exists())
-        call_frame.current_node = interpreter->current_node();
-    call_frame.is_strict_mode = function.is_strict_mode();
+        execution_context.current_node = interpreter->current_node();
+    execution_context.is_strict_mode = function.is_strict_mode();
 
-    push_call_frame(call_frame, global_object);
+    push_execution_context(execution_context, global_object);
     if (exception())
         return {};
-    ArmedScopeGuard call_frame_popper = [&] {
-        pop_call_frame();
+    ArmedScopeGuard pop_guard = [&] {
+        pop_execution_context();
     };
 
-    call_frame.function_name = function.name();
-    call_frame.arguments = function.bound_arguments();
+    execution_context.function_name = function.name();
+    execution_context.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.extend(arguments.value().values());
+        execution_context.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    call_frame.lexical_environment = environment;
-    call_frame.variable_environment = environment;
+    execution_context.lexical_environment = environment;
+    execution_context.variable_environment = environment;
     if (environment)
         environment->set_new_target(&new_target);
 
@@ -445,13 +446,13 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     Value this_value = function.constructor_kind() == Function::ConstructorKind::Base ? new_object : Value {};
-    call_frame.this_value = this_value;
+    execution_context.this_value = this_value;
     auto result = function.construct(new_target);
 
     if (environment)
         this_value = environment->get_this_binding(global_object);
-    pop_call_frame();
-    call_frame_popper.disarm();
+    pop_execution_context();
+    pop_guard.disarm();
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
@@ -509,41 +510,41 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());
 
-    CallFrame call_frame;
-    call_frame.callee = &function;
+    ExecutionContext execution_context;
+    execution_context.callee = &function;
     if (auto* interpreter = interpreter_if_exists())
-        call_frame.current_node = interpreter->current_node();
-    call_frame.is_strict_mode = function.is_strict_mode();
-    call_frame.function_name = function.name();
-    call_frame.this_value = function.bound_this().value_or(this_value);
-    call_frame.arguments = function.bound_arguments();
+        execution_context.current_node = interpreter->current_node();
+    execution_context.is_strict_mode = function.is_strict_mode();
+    execution_context.function_name = function.name();
+    execution_context.this_value = function.bound_this().value_or(this_value);
+    execution_context.arguments = function.bound_arguments();
     if (arguments.has_value())
-        call_frame.arguments.extend(arguments.value().values());
+        execution_context.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    call_frame.lexical_environment = environment;
-    call_frame.variable_environment = environment;
+    execution_context.lexical_environment = environment;
+    execution_context.variable_environment = environment;
 
     if (environment) {
         VERIFY(environment->this_binding_status() == FunctionEnvironmentRecord::ThisBindingStatus::Uninitialized);
-        environment->bind_this_value(function.global_object(), call_frame.this_value);
+        environment->bind_this_value(function.global_object(), execution_context.this_value);
     }
 
     if (exception())
         return {};
 
-    push_call_frame(call_frame, function.global_object());
+    push_execution_context(execution_context, function.global_object());
     if (exception())
         return {};
     auto result = function.call();
-    pop_call_frame();
+    pop_execution_context();
     return result;
 }
 
 bool VM::in_strict_mode() const
 {
-    if (call_stack().is_empty())
+    if (execution_context_stack().is_empty())
         return false;
-    return call_frame().is_strict_mode;
+    return running_execution_context().is_strict_mode;
 }
 
 void VM::run_queued_promise_jobs()
@@ -602,8 +603,8 @@ void VM::promise_rejection_tracker(const Promise& promise, Promise::RejectionOpe
 
 void VM::dump_backtrace() const
 {
-    for (ssize_t i = m_call_stack.size() - 1; i >= 0; --i)
-        dbgln("-> {}", m_call_stack[i]->function_name);
+    for (ssize_t i = m_execution_context_stack.size() - 1; i >= 0; --i)
+        dbgln("-> {}", m_execution_context_stack[i]->function_name);
 }
 
 void VM::dump_environment_record_chain() const

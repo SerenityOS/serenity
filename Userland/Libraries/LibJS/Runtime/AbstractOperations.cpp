@@ -221,7 +221,7 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
     if (direct == EvalMode::Direct)
         return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 
-    TemporaryChange scope_change(vm.call_frame().lexical_environment, static_cast<EnvironmentRecord*>(&caller_realm.environment_record()));
+    TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<EnvironmentRecord*>(&caller_realm.environment_record()));
     return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
 }
 
