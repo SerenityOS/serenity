@@ -1455,14 +1455,14 @@ void Terminal::set_size(u16 columns, u16 rows)
                     auto next_line = is_at_seam ? nullptr : &buffer[buffer.size() - i + 1];
                     auto& line = buffer[buffer.size() - i];
                     auto next_cursor = cursor_on_line(buffer.size() - i + 1);
-                    line.set_length(columns, next_line, next_cursor ?: cursor_on_line(buffer.size() - i), !!next_cursor);
+                    line.rewrap(columns, next_line, next_cursor ?: cursor_on_line(buffer.size() - i), !!next_cursor);
                 }
             } else {
                 for (size_t i = 0; i < buffer.size(); ++i) {
                     auto is_at_seam = i + 1 == buffer.size();
                     auto next_line = is_at_seam ? nullptr : &buffer[i + 1];
                     auto next_cursor = cursor_on_line(i + 1);
-                    buffer[i].set_length(columns, next_line, next_cursor ?: cursor_on_line(i), !!next_cursor);
+                    buffer[i].rewrap(columns, next_line, next_cursor ?: cursor_on_line(i), !!next_cursor);
                 }
             }
 
@@ -1478,7 +1478,7 @@ void Terminal::set_size(u16 columns, u16 rows)
                 auto next_line = is_at_seam ? nullptr : &buffer[index + 1];
                 auto& line = buffer[index];
                 auto next_cursor = cursor_on_line(index + 1);
-                line.set_length(columns, next_line, next_cursor ?: cursor_on_line(index), !!next_cursor);
+                line.rewrap(columns, next_line, next_cursor ?: cursor_on_line(index), !!next_cursor);
                 if (line.length() > columns) {
                     auto current_cursor = cursor_on_line(index);
                     // Split the line into two (or more)
@@ -1486,7 +1486,7 @@ void Terminal::set_size(u16 columns, u16 rows)
                     ++rows_inserted;
                     buffer.insert(index, make<Line>(0));
                     VERIFY(buffer[index].length() == 0);
-                    line.set_length(columns, &buffer[index], current_cursor, false);
+                    line.rewrap(columns, &buffer[index], current_cursor, false);
                     // If we inserted a line and the old cursor was after that line, increment its row
                     if (!current_cursor && old_cursor.row >= index)
                         ++old_cursor.row;
@@ -1498,6 +1498,9 @@ void Terminal::set_size(u16 columns, u16 rows)
                     lines_to_reevaluate.enqueue(index + 1);
             }
         }
+
+        for (auto& line : buffer)
+            line.set_length(columns);
 
         return old_cursor;
     };

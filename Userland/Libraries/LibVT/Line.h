@@ -53,7 +53,8 @@ public:
     {
         return m_cells.size();
     }
-    void set_length(size_t, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line = true);
+    void set_length(size_t);
+    void rewrap(size_t new_length, Line* next_line, CursorPosition* cursor, bool cursor_is_on_next_line = true);
 
     u32 code_point(size_t index) const
     {
@@ -78,8 +79,8 @@ public:
     void set_terminated(u16 column) { m_terminated_at = column; }
 
 private:
-    void take_cells_from_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
-    void push_cells_into_next_line(size_t old_length, size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
+    void take_cells_from_next_line(size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
+    void push_cells_into_next_line(size_t new_length, Line* next_line, bool cursor_is_on_next_line, CursorPosition* cursor);
 
     Vector<Cell> m_cells;
     bool m_dirty { false };
