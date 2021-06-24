@@ -21,6 +21,7 @@ u16 pcm_bits_per_sample(PcmSampleFormat format)
         return 16;
     case Int24:
         return 24;
+    case Int32:
     case Float32:
         return 32;
     case Float64:
