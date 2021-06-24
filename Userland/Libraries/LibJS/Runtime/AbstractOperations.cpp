@@ -175,10 +175,7 @@ DeclarativeEnvironmentRecord* new_declarative_environment(EnvironmentRecord& env
 ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_environment, EnvironmentRecord* environment_record)
 {
     auto& global_object = object.global_object();
-    if (!is_with_environment) {
-        TODO();
-    }
-    return global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, object, environment_record);
+    return global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, object, is_with_environment ? ObjectEnvironmentRecord::IsWithEnvironment::Yes : ObjectEnvironmentRecord::IsWithEnvironment::No, environment_record);
 }
 
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment

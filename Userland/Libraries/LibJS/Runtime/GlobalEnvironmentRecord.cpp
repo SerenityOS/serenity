@@ -16,7 +16,7 @@ GlobalEnvironmentRecord::GlobalEnvironmentRecord(GlobalObject& global_object)
     : EnvironmentRecord(nullptr)
     , m_global_object(global_object)
 {
-    m_object_record = global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, global_object, nullptr);
+    m_object_record = global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, global_object, ObjectEnvironmentRecord::IsWithEnvironment::No, nullptr);
     m_declarative_record = global_object.heap().allocate<DeclarativeEnvironmentRecord>(global_object);
 }
 
