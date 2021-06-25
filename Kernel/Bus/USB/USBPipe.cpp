@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/USB/PacketTypes.h>
-#include <Kernel/Devices/USB/UHCIController.h>
-#include <Kernel/Devices/USB/USBPipe.h>
-#include <Kernel/Devices/USB/USBTransfer.h>
+#include <Kernel/Bus/USB/PacketTypes.h>
+#include <Kernel/Bus/USB/UHCIController.h>
+#include <Kernel/Bus/USB/USBPipe.h>
+#include <Kernel/Bus/USB/USBTransfer.h>
 
 namespace Kernel::USB {
 
