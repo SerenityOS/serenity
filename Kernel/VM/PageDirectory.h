@@ -32,7 +32,14 @@ public:
 
     ~PageDirectory();
 
-    u32 cr3() const { return m_directory_table->paddr().get(); }
+    u32 cr3() const
+    {
+#if ARCH(X86_64)
+        return m_pml4t->paddr().get();
+#else
+        return m_directory_table->paddr().get();
+#endif
+    }
 
     RangeAllocator& range_allocator() { return m_range_allocator; }
     const RangeAllocator& range_allocator() const { return m_range_allocator; }
@@ -55,6 +62,9 @@ private:
     Space* m_space { nullptr };
     RangeAllocator m_range_allocator;
     RangeAllocator m_identity_range_allocator;
+#if ARCH(X86_64)
+    RefPtr<PhysicalPage> m_pml4t;
+#endif
     RefPtr<PhysicalPage> m_directory_table;
     RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<u32, RefPtr<PhysicalPage>> m_page_tables;

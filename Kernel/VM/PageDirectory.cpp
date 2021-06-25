@@ -28,6 +28,9 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
+#if ARCH(X86_64)
+extern "C" PageDirectoryEntry boot_pml4t[1024];
+#endif
 extern "C" PageDirectoryEntry* boot_pdpt[4];
 extern "C" PageDirectoryEntry boot_pd0[1024];
 extern "C" PageDirectoryEntry boot_pd3[1024];
@@ -38,6 +41,11 @@ UNMAP_AFTER_INIT PageDirectory::PageDirectory()
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 
     // Adopt the page tables already set up by boot.S
+#if ARCH(X86_64)
+    PhysicalAddress boot_pml4t_paddr(virtual_to_low_physical((FlatPtr)boot_pml4t));
+    dmesgln("MM: boot_pml4t @ {}", boot_pml4t_paddr);
+    m_pml4t = PhysicalPage::create(boot_pml4t_paddr, true, false);
+#endif
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((FlatPtr)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((FlatPtr)boot_pd0));
     PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((FlatPtr)boot_pd3));
@@ -64,6 +72,11 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     }
 
     // Set up a userspace page directory
+#if ARCH(X86_64)
+    m_pml4t = MM.allocate_user_physical_page();
+    if (!m_pml4t)
+        return;
+#endif
     m_directory_table = MM.allocate_user_physical_page();
     if (!m_directory_table)
         return;
@@ -79,12 +92,27 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=0xc0000000)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
+#if ARCH(X86_64)
+    {
+        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_pml4t);
+        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 3;
+        MM.unquickmap_page();
+    }
+#endif
+
     {
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
+#if ARCH(I386)
         table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 1;
         table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 1;
         table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 1;
         table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 1;
+#else
+        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 3;
+        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 3;
+        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 3;
+        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 3;
+#endif
 
         // 2 ** MAXPHYADDR - 1
         // Where MAXPHYADDR = physical_address_bit_width
