@@ -97,8 +97,8 @@ public:
         return !m_this_value.is_empty();
     }
 
-    void put(GlobalObject&, Value);
-    Value get(GlobalObject&, bool throw_if_undefined = true);
+    void put_value(GlobalObject&, Value);
+    Value get_value(GlobalObject&, bool throw_if_undefined = true);
     bool delete_(GlobalObject&);
 
     String to_string() const;

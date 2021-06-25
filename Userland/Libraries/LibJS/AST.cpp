@@ -142,7 +142,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             if (!property_name.is_valid())
                 return {};
             auto reference = Reference { super_base, property_name, super_base };
-            callee = reference.get(global_object);
+            callee = reference.get_value(global_object);
             if (vm.exception())
                 return {};
             this_value = &vm.this_value(global_object).as_object();
@@ -150,7 +150,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             auto reference = member_expression.to_reference(interpreter, global_object);
             if (vm.exception())
                 return {};
-            callee = reference.get(global_object);
+            callee = reference.get_value(global_object);
             if (vm.exception())
                 return {};
             this_value = reference.get_this_value();
@@ -708,7 +708,7 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (reference.is_unresolvable()) {
             lhs_result = js_undefined();
         } else {
-            lhs_result = reference.get(global_object, false);
+            lhs_result = reference.get_value(global_object, false);
         }
     } else {
         lhs_result = m_lhs->execute(interpreter, global_object);
@@ -1467,7 +1467,7 @@ Value AssignmentExpression::execute(Interpreter& interpreter, GlobalObject& glob
         return {};
     }
 
-    reference.put(global_object, rhs_result);
+    reference.put_value(global_object, rhs_result);
     if (interpreter.exception())
         return {};
 
@@ -1482,7 +1482,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
 
     if (interpreter.exception())
         return {};
-    auto old_value = reference.get(global_object);
+    auto old_value = reference.get_value(global_object);
     if (interpreter.exception())
         return {};
     old_value = old_value.to_numeric(global_object);
@@ -1507,7 +1507,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
         VERIFY_NOT_REACHED();
     }
 
-    reference.put(global_object, new_value);
+    reference.put_value(global_object, new_value);
     if (interpreter.exception())
         return {};
     return m_prefixed ? new_value : old_value;
@@ -1805,7 +1805,7 @@ Value MemberExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     auto reference = to_reference(interpreter, global_object);
     if (interpreter.exception())
         return {};
-    return reference.get(global_object);
+    return reference.get_value(global_object);
 }
 
 void MetaProperty::dump(int indent) const
