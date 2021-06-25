@@ -646,12 +646,12 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::slice)
     size_t index = 0;
 
     while (actual_start < final) {
-        bool present = this_object->has_property(actual_start);
+        bool present = this_object->has_property((u32)actual_start);
         if (vm.exception())
             return {};
 
         if (present) {
-            auto value = this_object->get(actual_start).value_or(js_undefined());
+            auto value = this_object->get((u32)actual_start).value_or(js_undefined());
             if (vm.exception())
                 return {};
 
