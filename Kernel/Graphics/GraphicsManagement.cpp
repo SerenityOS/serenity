@@ -6,6 +6,7 @@
 
 #include <AK/Checked.h>
 #include <AK/Singleton.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
@@ -16,7 +17,6 @@
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGraphicsAdapter.h>
 #include <Kernel/IO.h>
 #include <Kernel/Multiboot.h>
-#include <Kernel/PCI/IDs.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>

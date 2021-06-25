@@ -11,7 +11,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
-#include <Kernel/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/VM/Region.h>
 
 namespace Kernel {

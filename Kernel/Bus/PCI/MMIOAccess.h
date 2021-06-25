@@ -11,7 +11,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
-#include <Kernel/PCI/Access.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/SpinLock.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalRegion.h>
