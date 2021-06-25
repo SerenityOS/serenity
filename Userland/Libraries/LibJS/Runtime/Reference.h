@@ -108,7 +108,7 @@ private:
 
     BaseType m_base_type { BaseType::Unresolvable };
     union {
-        Value m_base_value;
+        Value m_base_value {};
         EnvironmentRecord* m_base_environment_record;
     };
     PropertyName m_name;
