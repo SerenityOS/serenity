@@ -3,6 +3,7 @@ set(SOURCES
     ClientConnection.cpp
     Loader.cpp
     WavLoader.cpp
+    FlacLoader.cpp
     WavWriter.cpp
 )
 
