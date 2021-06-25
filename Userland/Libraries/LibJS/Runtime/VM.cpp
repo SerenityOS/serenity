@@ -393,16 +393,16 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
 }
 
 // 9.4.2 ResolveBinding ( name [ , env ] ), https://tc39.es/ecma262/#sec-resolvebinding
-Reference VM::resolve_binding(FlyString const& name)
+Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name, EnvironmentRecord*)
 {
     // FIXME: This implementation of ResolveBinding is non-conforming.
 
     for (auto* environment_record = lexical_environment(); environment_record && environment_record->outer_environment(); environment_record = environment_record->outer_environment()) {
         auto possible_match = environment_record->get_from_environment_record(name);
         if (possible_match.has_value())
-            return { Reference::LocalVariable, name };
+            return Reference { *environment_record, name };
     }
-    return { Reference::GlobalVariable, name };
+    return Reference { global_object.environment_record(), name };
 }
 
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
