@@ -10,11 +10,11 @@
 #include <AK/Platform.h>
 
 #include <AK/NonnullOwnPtr.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/Devices/USB/UHCIDescriptorTypes.h>
 #include <Kernel/Devices/USB/USBDevice.h>
 #include <Kernel/Devices/USB/USBTransfer.h>
 #include <Kernel/IO.h>
-#include <Kernel/PCI/Device.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>
 #include <Kernel/VM/ContiguousVMObject.h>

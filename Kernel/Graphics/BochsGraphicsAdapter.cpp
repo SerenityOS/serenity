@@ -7,13 +7,13 @@
 #include <AK/Atomic.h>
 #include <AK/Checked.h>
 #include <AK/Singleton.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/Debug.h>
 #include <Kernel/Graphics/Bochs.h>
 #include <Kernel/Graphics/BochsGraphicsAdapter.h>
 #include <Kernel/Graphics/Console/ContiguousFramebufferConsole.h>
 #include <Kernel/Graphics/GraphicsManagement.h>
 #include <Kernel/IO.h>
-#include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/AnonymousVMObject.h>

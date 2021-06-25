@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/CommandLine.h>
-#include <Kernel/PCI/IDs.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VirtIO/VirtIO.h>
 #include <Kernel/VirtIO/VirtIOConsole.h>
