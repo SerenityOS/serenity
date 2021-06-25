@@ -26,6 +26,7 @@ public:
 
     enum class ZOrder {
         WindowGeometry,
+        Dnd,
         ScreenNumber,
     };
     [[nodiscard]] virtual ZOrder zorder() const = 0;
@@ -39,7 +40,7 @@ public:
 
     virtual void theme_changed()
     {
-        rect_changed();
+        rect_changed(m_rect);
     }
 
     bool invalidate();
@@ -49,7 +50,7 @@ protected:
 
     void set_rect(Gfx::IntRect const&);
 
-    virtual void rect_changed() {};
+    virtual void rect_changed(Gfx::IntRect const&) {};
 
 private:
     void clear_invalidated() { m_invalidated = false; }
@@ -76,7 +77,7 @@ protected:
     BitmapOverlay();
 
     void clear_bitmaps();
-    virtual void rect_changed() override;
+    virtual void rect_changed(Gfx::IntRect const&) override;
 
 private:
     RefPtr<MultiScaleBitmaps> m_bitmaps;
@@ -97,10 +98,16 @@ protected:
     void set_content_rect(Gfx::IntRect const&);
 
     void clear_bitmaps();
-    virtual void rect_changed() override;
+    virtual void rect_changed(Gfx::IntRect const&) override;
+
+    void rerender_on_location_change(bool value)
+    {
+        m_rerender_on_location_change = value;
+    }
 
 private:
     RefPtr<MultiScaleBitmaps> m_rendered_bitmaps;
+    bool m_rerender_on_location_change { false };
 };
 
 class ScreenNumberOverlay : public RectangularOverlay {
@@ -140,6 +147,27 @@ private:
 
     WeakPtr<Window> m_window;
     String m_label;
+    Gfx::IntRect m_label_rect;
+};
+
+class DndOverlay : public BitmapOverlay {
+public:
+    DndOverlay(String const&, Gfx::Bitmap const*);
+
+    void cursor_moved()
+    {
+        update_rect();
+    }
+
+    virtual ZOrder zorder() const override { return ZOrder::Dnd; }
+    virtual RefPtr<Gfx::Bitmap> create_bitmap(int) override;
+
+private:
+    Gfx::Font const& font();
+    void update_rect();
+
+    RefPtr<Gfx::Bitmap> m_bitmap;
+    String m_text;
     Gfx::IntRect m_label_rect;
 };
 

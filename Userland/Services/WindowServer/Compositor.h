@@ -181,8 +181,6 @@ private:
     Gfx::DisjointRectSet m_dirty_screen_rects;
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
 
-    Gfx::IntRect m_last_dnd_rect;
-
     String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
     RefPtr<Gfx::Bitmap> m_wallpaper;

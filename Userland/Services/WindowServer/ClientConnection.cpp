@@ -58,6 +58,10 @@ ClientConnection::ClientConnection(NonnullRefPtr<Core::LocalSocket> client_socke
 
 ClientConnection::~ClientConnection()
 {
+    auto& wm = WindowManager::the();
+    if (wm.dnd_client() == this)
+        wm.end_dnd_drag();
+
     if (m_has_display_link)
         Compositor::the().decrement_display_link_count({});
 

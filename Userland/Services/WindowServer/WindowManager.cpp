@@ -776,6 +776,8 @@ bool WindowManager::process_ongoing_drag(MouseEvent& event)
         return false;
 
     if (event.type() == Event::MouseMove) {
+        m_dnd_overlay->cursor_moved();
+
         // We didn't let go of the drag yet, see if we should send some drag move events..
         m_window_stack.for_each_visible_window_from_front_to_back([&](Window& window) {
             if (!window.rect().contains(event.position()))
@@ -1523,7 +1525,8 @@ void WindowManager::start_dnd_drag(ClientConnection& client, String const& text,
     VERIFY(!m_dnd_client);
     m_dnd_client = client;
     m_dnd_text = text;
-    m_dnd_bitmap = bitmap;
+    m_dnd_overlay = Compositor::the().create_overlay<DndOverlay>(text, bitmap);
+    m_dnd_overlay->set_enabled(true);
     m_dnd_mime_data = mime_data;
     Compositor::the().invalidate_cursor();
     m_active_input_tracking_window = nullptr;
@@ -1535,17 +1538,7 @@ void WindowManager::end_dnd_drag()
     Compositor::the().invalidate_cursor();
     m_dnd_client = nullptr;
     m_dnd_text = {};
-    m_dnd_bitmap = nullptr;
-}
-
-Gfx::IntRect WindowManager::dnd_rect() const
-{
-    int bitmap_width = m_dnd_bitmap ? m_dnd_bitmap->width() : 0;
-    int bitmap_height = m_dnd_bitmap ? m_dnd_bitmap->height() : 0;
-    int width = font().width(m_dnd_text) + bitmap_width;
-    int height = max((int)font().glyph_height(), bitmap_height);
-    auto location = Compositor::the().current_cursor_rect().center().translated(8, 8);
-    return Gfx::IntRect(location, { width, height }).inflated(16, 8);
+    m_dnd_overlay = nullptr;
 }
 
 void WindowManager::invalidate_after_theme_or_font_change()

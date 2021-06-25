@@ -156,22 +156,6 @@ void Compositor::compose()
     VERIFY(!m_overlay_rects_changed);
 
     auto dirty_screen_rects = move(m_dirty_screen_rects);
-    auto* dnd_client = wm.dnd_client();
-    if (!m_last_dnd_rect.is_empty() || (m_invalidated_cursor && dnd_client)) {
-        Screen::for_each([&](auto& screen) {
-            if (!m_last_dnd_rect.is_empty()) {
-                auto rect = m_last_dnd_rect.intersected(screen.rect());
-                if (!rect.is_empty())
-                    dirty_screen_rects.add(rect);
-            }
-            if (m_invalidated_cursor && dnd_client) {
-                auto rect = wm.dnd_rect().intersected(screen.rect());
-                if (!rect.is_empty())
-                    dirty_screen_rects.add(rect);
-            }
-            return IterationDecision::Continue;
-        });
-    }
 
     // Mark window regions as dirty that need to be re-rendered
     wm.window_stack().for_each_visible_window_from_back_to_front([&](Window& window) {
@@ -542,60 +526,6 @@ void Compositor::compose()
     m_invalidated_any = false;
     m_invalidated_window = false;
     m_invalidated_cursor = false;
-
-    if (wm.dnd_client()) {
-        auto dnd_rect = wm.dnd_rect();
-
-        Screen::for_each([&](auto& screen) {
-            auto screen_rect = screen.rect();
-            auto render_dnd_rect = screen_rect.intersected(dnd_rect);
-            if (render_dnd_rect.is_empty())
-                return IterationDecision::Continue;
-            auto& screen_data = m_screen_data[screen.index()];
-            auto& back_painter = *screen_data.m_back_painter;
-
-            // TODO: render once into a backing bitmap, then just blit...
-            auto render_dnd = [&]() {
-                back_painter.fill_rect(dnd_rect, wm.palette().selection().with_alpha(200));
-                back_painter.draw_rect(dnd_rect, wm.palette().selection());
-                if (!wm.dnd_text().is_empty()) {
-                    auto text_rect = dnd_rect;
-                    if (wm.dnd_bitmap())
-                        text_rect.translate_by(wm.dnd_bitmap()->width() + 8, 0);
-                    back_painter.draw_text(text_rect, wm.dnd_text(), Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
-                }
-                if (wm.dnd_bitmap()) {
-                    back_painter.blit(dnd_rect.top_left().translated(4, 4), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
-                }
-            };
-
-            dirty_screen_rects.for_each_intersected(dnd_rect, [&](const Gfx::IntRect& render_rect) {
-                auto screen_render_rect = render_rect.intersected(screen_rect);
-                if (screen_render_rect.is_empty())
-                    return IterationDecision::Continue;
-                Gfx::PainterStateSaver saver(back_painter);
-                back_painter.add_clip_rect(screen_render_rect);
-                render_dnd();
-                return IterationDecision::Continue;
-            });
-            screen_data.m_flush_transparent_rects.for_each_intersected(dnd_rect, [&](const Gfx::IntRect& render_rect) {
-                auto screen_render_rect = render_rect.intersected(screen_rect);
-                if (screen_render_rect.is_empty())
-                    return IterationDecision::Continue;
-                Gfx::PainterStateSaver saver(back_painter);
-                back_painter.add_clip_rect(screen_render_rect);
-                render_dnd();
-                return IterationDecision::Continue;
-            });
-            m_last_dnd_rect = dnd_rect;
-            return IterationDecision::Continue;
-        });
-    } else {
-        if (!m_last_dnd_rect.is_empty()) {
-            invalidate_screen(m_last_dnd_rect);
-            m_last_dnd_rect = {};
-        }
-    }
 
     bool did_render_animation = false;
     Screen::for_each([&](auto& screen) {

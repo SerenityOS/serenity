@@ -37,6 +37,7 @@ class Window;
 class ClientConnection;
 class WindowSwitcher;
 class Button;
+class DndOverlay;
 class WindowGeometryOverlay;
 
 enum class ResizeDirection {
@@ -84,10 +85,7 @@ public:
     Gfx::IntRect maximized_window_rect(Window const&, bool relative_to_window_screen = false) const;
 
     ClientConnection const* dnd_client() const { return m_dnd_client.ptr(); }
-    String const& dnd_text() const { return m_dnd_text; }
     Core::MimeData const& dnd_mime_data() const { return *m_dnd_mime_data; }
-    Gfx::Bitmap const* dnd_bitmap() const { return m_dnd_bitmap; }
-    Gfx::IntRect dnd_rect() const;
 
     void start_dnd_drag(ClientConnection&, String const& text, Gfx::Bitmap const*, Core::MimeData const&);
     void end_dnd_drag();
@@ -345,10 +343,11 @@ private:
 
     RefPtr<Core::ConfigFile> m_config;
 
+    OwnPtr<DndOverlay> m_dnd_overlay;
     WeakPtr<ClientConnection> m_dnd_client;
     String m_dnd_text;
+
     RefPtr<Core::MimeData> m_dnd_mime_data;
-    RefPtr<Gfx::Bitmap> m_dnd_bitmap;
 };
 
 template<typename Callback>

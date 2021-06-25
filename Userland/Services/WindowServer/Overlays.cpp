@@ -41,11 +41,12 @@ void Overlay::set_rect(Gfx::IntRect const& rect)
 {
     if (m_rect == rect)
         return;
+    auto previous_rect = m_rect;
     m_rect = rect;
     invalidate();
     if (is_enabled())
         Compositor::the().overlay_rects_changed();
-    rect_changed();
+    rect_changed(previous_rect);
 }
 
 BitmapOverlay::BitmapOverlay()
@@ -53,10 +54,11 @@ BitmapOverlay::BitmapOverlay()
     clear_bitmaps();
 }
 
-void BitmapOverlay::rect_changed()
+void BitmapOverlay::rect_changed(Gfx::IntRect const& previous_rect)
 {
-    clear_bitmaps();
-    Overlay::rect_changed();
+    if (rect().size() != previous_rect.size())
+        clear_bitmaps();
+    Overlay::rect_changed(previous_rect);
 }
 
 void BitmapOverlay::clear_bitmaps()
@@ -84,9 +86,10 @@ RectangularOverlay::RectangularOverlay()
     clear_bitmaps();
 }
 
-void RectangularOverlay::rect_changed()
+void RectangularOverlay::rect_changed(Gfx::IntRect const& previous_rect)
 {
-    clear_bitmaps();
+    if (m_rerender_on_location_change || rect().size() != previous_rect.size())
+        clear_bitmaps();
 }
 
 void RectangularOverlay::clear_bitmaps()
@@ -208,6 +211,7 @@ Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& scre
 WindowGeometryOverlay::WindowGeometryOverlay(Window& window)
     : m_window(window)
 {
+    rerender_on_location_change(true);
     update_rect();
 }
 
@@ -251,6 +255,51 @@ void WindowGeometryOverlay::window_rect_changed()
 {
     update_rect();
     invalidate();
+}
+
+DndOverlay::DndOverlay(String const& text, Gfx::Bitmap const* bitmap)
+    : m_bitmap(bitmap)
+    , m_text(text)
+{
+    update_rect();
+}
+
+Gfx::Font const& DndOverlay::font()
+{
+    return WindowManager::the().font();
+}
+
+void DndOverlay::update_rect()
+{
+    int bitmap_width = m_bitmap ? m_bitmap->width() : 0;
+    int bitmap_height = m_bitmap ? m_bitmap->height() : 0;
+    auto& font = this->font();
+    int width = font.width(m_text) + bitmap_width;
+    int height = max((int)font.glyph_height(), bitmap_height);
+    auto location = Compositor::the().current_cursor_rect().center().translated(8, 8);
+    set_rect(Gfx::IntRect(location, { width, height }).inflated(16, 8));
+}
+
+RefPtr<Gfx::Bitmap> DndOverlay::create_bitmap(int scale_factor)
+{
+    auto new_bitmap = Gfx::Bitmap::create(Gfx::BitmapFormat::BGRA8888, rect().size(), scale_factor);
+    if (!new_bitmap)
+        return {};
+
+    auto& wm = WindowManager::the();
+    Gfx::Painter bitmap_painter(*new_bitmap);
+    auto bitmap_rect = new_bitmap->rect();
+    bitmap_painter.fill_rect(bitmap_rect, wm.palette().selection().with_alpha(200));
+    bitmap_painter.draw_rect(bitmap_rect, wm.palette().selection());
+    if (!m_text.is_empty()) {
+        auto text_rect = bitmap_rect;
+        if (m_bitmap)
+            text_rect.translate_by(m_bitmap->width() + 8, 0);
+        bitmap_painter.draw_text(text_rect, m_text, Gfx::TextAlignment::CenterLeft, wm.palette().selection_text());
+    }
+    if (m_bitmap)
+        bitmap_painter.blit(bitmap_rect.top_left().translated(4, 4), *m_bitmap, m_bitmap->rect());
+    return new_bitmap;
 }
 
 }
