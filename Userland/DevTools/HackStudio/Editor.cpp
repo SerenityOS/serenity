@@ -440,33 +440,18 @@ CodeDocument& Editor::code_document()
 
 void Editor::set_document(GUI::TextDocument& doc)
 {
+    if (has_document() && &document() == &doc)
+        return;
+
     VERIFY(doc.is_code_document());
     GUI::TextEditor::set_document(doc);
 
     set_override_cursor(Gfx::StandardCursor::IBeam);
 
-    CodeDocument& code_document = static_cast<CodeDocument&>(doc);
-    switch (code_document.language()) {
-    case Language::Cpp:
-        set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
-        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
-        break;
-    case Language::GML:
-        set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
-        break;
-    case Language::JavaScript:
-        set_syntax_highlighter(make<JS::SyntaxHighlighter>());
-        break;
-    case Language::Ini:
-        set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
-        break;
-    case Language::Shell:
-        set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
-        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
-        break;
-    default:
-        set_syntax_highlighter({});
-    }
+    auto& code_document = static_cast<CodeDocument&>(doc);
+
+    set_syntax_highlighter_for(code_document);
+    set_language_client_for(code_document);
 
     if (m_language_client) {
         set_autocomplete_provider(make<LanguageServerAidedAutocompleteProvider>(*m_language_client));
@@ -584,6 +569,41 @@ void Editor::on_identifier_click(const GUI::TextDocumentSpan& span)
 void Editor::set_cursor(const GUI::TextPosition& a_position)
 {
     TextEditor::set_cursor(a_position);
+}
+
+void Editor::set_syntax_highlighter_for(const CodeDocument& document)
+{
+    switch (document.language()) {
+    case Language::Cpp:
+        set_syntax_highlighter(make<Cpp::SyntaxHighlighter>());
+        break;
+    case Language::GML:
+        set_syntax_highlighter(make<GUI::GMLSyntaxHighlighter>());
+        break;
+    case Language::JavaScript:
+        set_syntax_highlighter(make<JS::SyntaxHighlighter>());
+        break;
+    case Language::Ini:
+        set_syntax_highlighter(make<GUI::IniSyntaxHighlighter>());
+        break;
+    case Language::Shell:
+        set_syntax_highlighter(make<Shell::SyntaxHighlighter>());
+        break;
+    default:
+        set_syntax_highlighter({});
+    }
+}
+
+void Editor::set_language_client_for(const CodeDocument& document)
+{
+    if (m_language_client && m_language_client->language() == document.language())
+        return;
+
+    if (document.language() == Language::Cpp)
+        m_language_client = get_language_client<LanguageClients::Cpp::ServerConnection>(project().root_path());
+
+    if (document.language() == Language::Shell)
+        m_language_client = get_language_client<LanguageClients::Shell::ServerConnection>(project().root_path());
 }
 
 }
