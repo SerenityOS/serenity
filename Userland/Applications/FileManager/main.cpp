@@ -679,6 +679,25 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
         window);
     cut_action->set_enabled(false);
 
+    auto open_in_new_window_action
+        = GUI::Action::create(
+            "Open in New &Window",
+            {},
+            Gfx::Bitmap::load_from_file("/res/icons/16x16/app-file-manager.png"),
+            [&](GUI::Action const& action) {
+                Vector<String> paths;
+                if (action.activator() == tree_view_directory_context_menu)
+                    paths = tree_view_selected_file_paths();
+                else
+                    paths = directory_view.selected_file_paths();
+
+                for (auto& path : paths) {
+                    if (Core::File::is_directory(path))
+                        Desktop::Launcher::open(URL::create_with_file_protocol(path));
+                }
+            },
+            window);
+
     auto shortcut_action
         = GUI::Action::create(
             "Create Desktop &Shortcut",
@@ -984,6 +1003,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
             || !directory_view.current_view().selection().is_empty());
     };
 
+    directory_context_menu->add_action(open_in_new_window_action);
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(cut_action);
     directory_context_menu->add_action(folder_specific_paste_action);
@@ -1001,6 +1021,7 @@ int run_in_windowed_mode(RefPtr<Core::ConfigFile> config, String initial_locatio
     directory_view_context_menu->add_separator();
     directory_view_context_menu->add_action(properties_action);
 
+    tree_view_directory_context_menu->add_action(open_in_new_window_action);
     tree_view_directory_context_menu->add_action(copy_action);
     tree_view_directory_context_menu->add_action(cut_action);
     tree_view_directory_context_menu->add_action(paste_action);
