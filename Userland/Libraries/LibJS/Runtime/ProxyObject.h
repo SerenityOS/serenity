@@ -22,7 +22,7 @@ public:
     virtual Value call() override;
     virtual Value construct(Function& new_target) override;
     virtual const FlyString& name() const override;
-    virtual FunctionEnvironmentRecord* create_environment_record() override;
+    virtual FunctionEnvironmentRecord* create_environment_record(Function&) override;
 
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }
