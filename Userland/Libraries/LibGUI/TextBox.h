@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <LibGUI/Action.h>
 #include <LibGUI/TextEditor.h>
 
 namespace GUI {
@@ -34,6 +35,12 @@ private:
     Vector<String> m_history;
     int m_history_index { -1 };
     String m_saved_input;
+};
+
+class PasswordBox : public TextBox {
+    C_OBJECT(PasswordBox)
+public:
+    PasswordBox();
 };
 
 }
