@@ -1047,13 +1047,16 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::last_index_of)
         return Value(-1);
     i32 from_index = length - 1;
     if (vm.argument_count() >= 2) {
-        from_index = vm.argument(1).to_i32(global_object);
+        double from_argument = vm.argument(1).to_integer_or_infinity(global_object);
         if (vm.exception())
             return {};
-        if (from_index >= 0)
-            from_index = min(from_index, length - 1);
+        if (vm.argument(1).is_negative_infinity()) {
+            return Value(-1);
+        }
+        if (from_argument >= 0)
+            from_index = min(from_argument, length - 1.);
         else
-            from_index = length + from_index;
+            from_index = length + from_argument;
     }
     auto search_element = vm.argument(0);
     for (i32 i = from_index; i >= 0; --i) {
