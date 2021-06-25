@@ -10,13 +10,14 @@
 #include <AK/Types.h>
 #include <Kernel/VirtualAddress.h>
 
-#define GDT_SELECTOR_CODE0 0x08
-#define GDT_SELECTOR_DATA0 0x10
-#define GDT_SELECTOR_CODE3 0x18
-#define GDT_SELECTOR_DATA3 0x20
-#define GDT_SELECTOR_TLS 0x28
-#define GDT_SELECTOR_PROC 0x30
-#define GDT_SELECTOR_TSS 0x38
+#if ARCH(I386)
+#    define GDT_SELECTOR_CODE0 0x08
+#    define GDT_SELECTOR_DATA0 0x10
+#    define GDT_SELECTOR_CODE3 0x18
+#    define GDT_SELECTOR_DATA3 0x20
+#    define GDT_SELECTOR_TLS 0x28
+#    define GDT_SELECTOR_PROC 0x30
+#    define GDT_SELECTOR_TSS 0x38
 
 // SYSENTER makes certain assumptions on how the GDT is structured:
 static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
@@ -24,6 +25,12 @@ static_assert(GDT_SELECTOR_CODE0 + 8 == GDT_SELECTOR_DATA0); // SS0 = CS0 + 8
 // SYSEXIT makes certain assumptions on how the GDT is structured:
 static_assert(GDT_SELECTOR_CODE0 + 16 == GDT_SELECTOR_CODE3); // CS3 = CS0 + 16
 static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
+#else
+#    define GDT_SELECTOR_CODE0 0x08
+#    define GDT_SELECTOR_CODE3 0x10
+#    define GDT_SELECTOR_TSS 0x18
+#    define GDT_SELECTOR_TSS_PART2 0x20
+#endif
 
 namespace Kernel {
 
@@ -82,6 +89,7 @@ union [[gnu::packed]] Descriptor {
         base_lo = base.get() & 0xffffu;
         base_hi = (base.get() >> 16u) & 0xffu;
         base_hi2 = (base.get() >> 24u) & 0xffu;
+        VERIFY(base.get() <= 0xffffffff);
     }
 
     void set_limit(u32 length)
@@ -90,6 +98,8 @@ union [[gnu::packed]] Descriptor {
         limit_hi = (length >> 16) & 0xf;
     }
 };
+
+static_assert(sizeof(Descriptor) == 8);
 
 enum class IDTEntryType {
     TaskGate32 = 0b0101,

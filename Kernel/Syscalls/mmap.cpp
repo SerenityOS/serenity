@@ -607,9 +607,13 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     if (tsr_result.is_error())
         return EFAULT;
 
+#if ARCH(I386)
     auto& tls_descriptor = Processor::current().get_gdt_entry(GDT_SELECTOR_TLS);
     tls_descriptor.set_base(main_thread->thread_specific_data());
     tls_descriptor.set_limit(main_thread->thread_specific_region_size());
+#else
+    TODO();
+#endif
 
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
