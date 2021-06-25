@@ -44,4 +44,14 @@ describe("normal behavior", () => {
         b.length = 0x80000001;
         expect(b.length).toEqual(0x80000001);
     });
+
+    test("should not remove non-configurable values", () => {
+        var a = [1, undefined, 3];
+        Object.defineProperty(a, 1, { configurable: false, value: 2 });
+        expect(a.length).toEqual(3);
+
+        expect((a.length = 1)).toEqual(1);
+        expect(a.length).toEqual(2);
+        expect(a[1]).toEqual(2);
+    });
 });
