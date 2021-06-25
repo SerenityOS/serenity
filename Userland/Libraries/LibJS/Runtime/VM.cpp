@@ -490,6 +490,13 @@ void VM::throw_exception(Exception& exception)
     unwind(ScopeType::Try);
 }
 
+// 9.4.4 ResolveThisBinding ( ), https://tc39.es/ecma262/#sec-resolvethisbinding
+Value VM::resolve_this_binding(GlobalObject& global_object)
+{
+    auto& environment = get_this_environment(*this);
+    return environment.get_this_binding(global_object);
+}
+
 String VM::join_arguments(size_t start_index) const
 {
     StringBuilder joined_arguments;

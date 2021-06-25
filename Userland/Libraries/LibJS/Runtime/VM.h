@@ -162,6 +162,8 @@ public:
         return running_execution_context().this_value;
     }
 
+    Value resolve_this_binding(GlobalObject&);
+
     Value last_value() const { return m_last_value; }
     void set_last_value(Badge<Bytecode::Interpreter>, Value value) { m_last_value = value; }
     void set_last_value(Badge<Interpreter>, Value value) { m_last_value = value; }
