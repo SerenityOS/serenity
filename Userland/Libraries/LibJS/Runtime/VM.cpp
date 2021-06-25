@@ -425,7 +425,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     callee_context.arguments = function.bound_arguments();
     if (arguments.has_value())
         callee_context.arguments.extend(arguments.value().values());
-    auto* environment = function.create_environment_record();
+    auto* environment = function.create_environment_record(function);
     callee_context.lexical_environment = environment;
     callee_context.variable_environment = environment;
     if (environment)
@@ -529,7 +529,7 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     callee_context.arguments = function.bound_arguments();
     if (arguments.has_value())
         callee_context.arguments.extend(arguments.value().values());
-    auto* environment = function.create_environment_record();
+    auto* environment = function.create_environment_record(function);
     callee_context.lexical_environment = environment;
     callee_context.variable_environment = environment;
 

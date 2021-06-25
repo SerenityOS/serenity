@@ -26,7 +26,7 @@ public:
     virtual Value call() = 0;
     virtual Value construct(Function& new_target) = 0;
     virtual const FlyString& name() const = 0;
-    virtual FunctionEnvironmentRecord* create_environment_record() = 0;
+    virtual FunctionEnvironmentRecord* create_environment_record(Function&) = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 

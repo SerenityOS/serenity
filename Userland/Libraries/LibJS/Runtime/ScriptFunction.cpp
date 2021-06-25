@@ -94,7 +94,7 @@ void ScriptFunction::visit_edges(Visitor& visitor)
     visitor.visit(m_parent_scope);
 }
 
-FunctionEnvironmentRecord* ScriptFunction::create_environment_record()
+FunctionEnvironmentRecord* ScriptFunction::create_environment_record(Function& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -124,7 +124,7 @@ FunctionEnvironmentRecord* ScriptFunction::create_environment_record()
     }
 
     auto* environment = heap().allocate<FunctionEnvironmentRecord>(global_object(), m_parent_scope, variables);
-    environment->set_function_object(*this);
+    environment->set_function_object(function_being_invoked);
     if (m_is_arrow_function) {
         if (is<FunctionEnvironmentRecord>(m_parent_scope))
             environment->set_new_target(static_cast<FunctionEnvironmentRecord*>(m_parent_scope)->new_target());
