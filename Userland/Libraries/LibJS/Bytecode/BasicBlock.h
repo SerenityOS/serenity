@@ -15,7 +15,7 @@ namespace JS::Bytecode {
 
 class InstructionStreamIterator {
 public:
-    explicit InstructionStreamIterator(ReadonlyBytes bytes)
+    explicit InstructionStreamIterator(Bytes bytes)
         : m_bytes(bytes)
     {
     }
@@ -29,12 +29,14 @@ public:
     }
 
     Instruction const& operator*() const { return dereference(); }
+    Instruction& operator*() { return dereference(); }
     void operator++();
 
 private:
     Instruction const& dereference() const { return *reinterpret_cast<Instruction const*>(m_bytes.data() + offset()); }
+    Instruction& dereference() { return *reinterpret_cast<Instruction*>(m_bytes.data() + offset()); }
 
-    ReadonlyBytes m_bytes;
+    Bytes m_bytes;
     size_t m_offset { 0 };
 };
 
@@ -53,7 +55,7 @@ public:
     void seal();
 
     void dump(Executable const&) const;
-    ReadonlyBytes instruction_stream() const { return ReadonlyBytes { m_buffer, m_buffer_size }; }
+    Bytes instruction_stream() const { return Bytes { m_buffer, m_buffer_size }; }
     size_t size() const { return m_buffer_size; }
 
     void* next_slot() { return m_buffer + m_buffer_size; }

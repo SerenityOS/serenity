@@ -31,6 +31,8 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
+    Vector<Register*> read_registers_impl() { return { &m_src }; }
+
 private:
     Register m_src;
 };
@@ -62,6 +64,8 @@ public:
     void execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+    Vector<Register*> write_registers_impl() { return { &m_dst }; }
 
 private:
     Register m_dst;
@@ -103,6 +107,8 @@ private:
         void execute_impl(Bytecode::Interpreter&) const;                       \
         String to_string_impl(Bytecode::Executable const&) const;              \
         void replace_references_impl(BasicBlock const&, BasicBlock const&) { } \
+                                                                               \
+        Vector<Register*> read_registers_impl() { return { &m_lhs_reg }; }     \
                                                                                \
     private:                                                                   \
         Register m_lhs_reg;                                                    \
@@ -198,6 +204,15 @@ public:
 
     size_t length_impl() const { return sizeof(*this) + sizeof(Register) * m_excluded_names_count; }
 
+    Vector<Register*> read_registers_impl()
+    {
+        Vector<Register*> regs = { &m_from_object };
+        for (size_t i = 0; i < m_excluded_names_count; ++i) {
+            regs.append(&(m_excluded_names[i]));
+        }
+        return regs;
+    }
+
 private:
     Register m_from_object;
     size_t m_excluded_names_count { 0 };
@@ -246,6 +261,15 @@ public:
         return sizeof(*this) + sizeof(Register) * m_element_count;
     }
 
+    Vector<Register*> read_registers_impl()
+    {
+        Vector<Register*> regs;
+        for (size_t i = 0; i < m_element_count; ++i) {
+            regs.append(&(m_elements[i]));
+        }
+        return regs;
+    }
+
 private:
     size_t m_element_count { 0 };
     Register m_elements[];
@@ -274,6 +298,8 @@ public:
     void execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+    Vector<Register*> read_registers_impl() { return { &m_lhs }; }
 
 private:
     Register m_lhs;
@@ -340,6 +366,8 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
+    Vector<Register*> read_registers_impl() { return { &m_base }; }
+
 private:
     Register m_base;
     StringTableIndex m_property;
@@ -357,6 +385,8 @@ public:
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
 
+    Vector<Register*> read_registers_impl() { return { &m_base }; }
+
 private:
     Register m_base;
 };
@@ -373,6 +403,8 @@ public:
     void execute_impl(Bytecode::Interpreter&) const;
     String to_string_impl(Bytecode::Executable const&) const;
     void replace_references_impl(BasicBlock const&, BasicBlock const&) { }
+
+    Vector<Register*> read_registers_impl() { return { &m_base, &m_property }; }
 
 private:
     Register m_base;
@@ -474,6 +506,17 @@ public:
     size_t length_impl() const
     {
         return sizeof(*this) + sizeof(Register) * m_argument_count;
+    }
+
+    Vector<Register*> read_registers_impl()
+    {
+        Vector<Register*> regs = { &m_callee, &m_this_value };
+
+        for (size_t i = 0; i < m_argument_count; ++i) {
+            regs.append(&(m_arguments[i]));
+        }
+
+        return regs;
     }
 
 private:
@@ -768,4 +811,40 @@ ALWAYS_INLINE bool Instruction::is_terminator() const
 #undef __BYTECODE_OP
 }
 
+ALWAYS_INLINE Vector<Register*> Instruction::write_registers()
+{
+    if (type() == Type::Store)
+        return static_cast<Op::Store&>(*this).write_registers_impl();
+
+    return {};
+}
+
+ALWAYS_INLINE Vector<Register*> Instruction::read_registers()
+{
+#define __BINARY_OP(OpTitleCase, op_snake_case) \
+    case Type::OpTitleCase:                     \
+        return static_cast<Op::OpTitleCase&>(*this).read_registers_impl();
+
+    switch (type()) {
+        JS_ENUMERATE_COMMON_BINARY_OPS(__BINARY_OP)
+    case Type::Load:
+        return static_cast<Op::Load&>(*this).read_registers_impl();
+    case Type::Call:
+        return static_cast<Op::Call&>(*this).read_registers_impl();
+    case Type::CopyObjectExcludingProperties:
+        return static_cast<Op::CopyObjectExcludingProperties&>(*this).read_registers_impl();
+    case Type::NewArray:
+        return static_cast<Op::NewArray&>(*this).read_registers_impl();
+    case Type::ConcatString:
+        return static_cast<Op::ConcatString&>(*this).read_registers_impl();
+    case Type::PutById:
+        return static_cast<Op::PutById&>(*this).read_registers_impl();
+    case Type::GetByValue:
+        return static_cast<Op::GetByValue&>(*this).read_registers_impl();
+    case Type::PutByValue:
+        return static_cast<Op::PutByValue&>(*this).read_registers_impl();
+    default:
+        return {};
+    }
+}
 }

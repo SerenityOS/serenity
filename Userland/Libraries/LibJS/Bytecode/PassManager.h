@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/Ordering.h>
 #include <LibJS/Bytecode/BasicBlock.h>
 #include <LibJS/Bytecode/Generator.h>
 #include <sys/time.h>
@@ -136,6 +137,52 @@ private:
     FILE* m_file { nullptr };
 };
 
-}
+class AllocateRegisters : public Pass {
+public:
+    AllocateRegisters() = default;
+    ~AllocateRegisters() override = default;
 
+private:
+    struct InstructionAddr {
+        size_t basic_block;
+        size_t offset;
+
+        StrongOrdering operator<=>(const InstructionAddr& other) const
+        {
+            auto primary = basic_block <=> other.basic_block;
+            if (primary != 0)
+                return primary;
+
+            return offset <=> other.offset;
+        }
+    };
+
+    struct LiveRange {
+        size_t reg;
+        InstructionAddr start;
+        InstructionAddr finish;
+    };
+
+    virtual void perform(PassPipelineExecutable&) override;
+
+    PassPipelineExecutable* m_executable;
+
+    void id_basic_blocks();
+
+    HashMap<BasicBlock const*, size_t> m_basic_block_ids;
+
+    size_t block_id(const BasicBlock* basic_block) const { return m_basic_block_ids.get(basic_block).value(); }
+
+    void find_block_range(const BasicBlock* basic_block, size_t max_bb);
+    void find_live_ranges(const BasicBlock* basic_block, size_t max_bb);
+
+    Vector<const BasicBlock*> m_live_range_path;
+    Vector<bool> m_is_live;
+    Vector<bool> m_has_been_written;
+    Vector<LiveRange> m_live_ranges;
+
+    Vector<Register> rename_registers();
+    void apply_register_rename(Vector<Register> const& rename);
+};
+}
 }

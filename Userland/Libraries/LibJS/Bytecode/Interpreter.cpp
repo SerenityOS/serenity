@@ -191,6 +191,8 @@ Bytecode::PassManager& Interpreter::optimization_pipeline(Interpreter::Optimizat
         pm->add<Passes::MergeBlocks>();
         pm->add<Passes::GenerateCFG>();
         pm->add<Passes::PlaceBlocks>();
+        pm->add<Passes::GenerateCFG>();
+        pm->add<Passes::AllocateRegisters>();
     } else {
         VERIFY_NOT_REACHED();
     }

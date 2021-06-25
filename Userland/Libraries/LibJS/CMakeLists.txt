@@ -6,6 +6,7 @@ set(SOURCES
     Bytecode/Instruction.cpp
     Bytecode/Interpreter.cpp
     Bytecode/Op.cpp
+    Bytecode/Pass/AllocateRegisters.cpp
     Bytecode/Pass/DumpCFG.cpp
     Bytecode/Pass/GenerateCFG.cpp
     Bytecode/Pass/MergeBlocks.cpp
