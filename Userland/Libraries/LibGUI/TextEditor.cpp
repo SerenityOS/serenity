@@ -216,25 +216,21 @@ void TextEditor::doubleclick_event(MouseEvent& event)
     m_triple_click_timer.start();
     m_in_drag_select = false;
 
-    auto start = text_position_at(event.position());
-    auto end = start;
+    auto position = text_position_at(event.position());
 
-    if (!document().has_spans()) {
-        start = document().first_word_break_before(start, false);
-        end = document().first_word_break_after(end);
-    } else {
+    if (document().has_spans()) {
         for (auto& span : document().spans()) {
-            if (!span.range.contains(start))
-                continue;
-            start = span.range.start();
-            end = span.range.end();
-            end.set_column(end.column() + 1);
-            break;
+            if (span.range.contains(position)) {
+                m_selection = span.range;
+                break;
+            }
         }
+    } else {
+        m_selection.set_start(document().first_word_break_before(position, false));
+        m_selection.set_end(document().first_word_break_after(position));
     }
 
-    m_selection.set(start, end);
-    set_cursor(end);
+    set_cursor(m_selection.end());
     update();
     did_update_selection();
 }
@@ -253,22 +249,8 @@ void TextEditor::mousedown_event(MouseEvent& event)
 
     if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
         m_triple_click_timer = Core::ElapsedTimer();
-
-        TextPosition start;
-        TextPosition end;
-
-        if (is_multi_line()) {
-            // select *current* line
-            start = TextPosition(m_cursor.line(), 0);
-            end = TextPosition(m_cursor.line(), line(m_cursor.line()).length());
-        } else {
-            // select *whole* line
-            start = TextPosition(0, 0);
-            end = TextPosition(line_count() - 1, line(line_count() - 1).length());
-        }
-
-        m_selection.set(start, end);
-        set_cursor(end);
+        m_selection = document().range_for_entire_line(m_cursor.line());
+        set_cursor(m_selection.end());
         update();
         did_update_selection();
         return;
