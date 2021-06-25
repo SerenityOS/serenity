@@ -70,7 +70,7 @@ Value FunctionEnvironmentRecord::get_this_binding(GlobalObject& global_object) c
 // 9.1.1.3.1 BindThisValue ( V ), https://tc39.es/ecma262/#sec-bindthisvalue
 Value FunctionEnvironmentRecord::bind_this_value(GlobalObject& global_object, Value this_value)
 {
-    VERIFY(has_this_binding());
+    VERIFY(this_binding_status() != ThisBindingStatus::Lexical);
     if (this_binding_status() == ThisBindingStatus::Initialized) {
         vm().throw_exception<ReferenceError>(global_object, ErrorType::ThisIsAlreadyInitialized);
         return {};
