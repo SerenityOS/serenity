@@ -5,12 +5,12 @@
  */
 
 #include <Kernel/ACPI/Parser.h>
+#include <Kernel/Bus/PCI/IOAccess.h>
+#include <Kernel/Bus/PCI/Initializer.h>
+#include <Kernel/Bus/PCI/MMIOAccess.h>
+#include <Kernel/Bus/PCI/WindowedMMIOAccess.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/IO.h>
-#include <Kernel/PCI/IOAccess.h>
-#include <Kernel/PCI/Initializer.h>
-#include <Kernel/PCI/MMIOAccess.h>
-#include <Kernel/PCI/WindowedMMIOAccess.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Sections.h>
 

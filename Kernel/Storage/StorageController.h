@@ -8,11 +8,11 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 #include <Kernel/Devices/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/DeviceController.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/Random.h>
 #include <Kernel/VM/PhysicalPage.h>

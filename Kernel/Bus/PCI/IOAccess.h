@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <Kernel/PCI/Access.h>
+#include <Kernel/Bus/PCI/Access.h>
 
 namespace Kernel {
 namespace PCI {

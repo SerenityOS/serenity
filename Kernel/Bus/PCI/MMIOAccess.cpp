@@ -7,8 +7,8 @@
 #include <AK/Optional.h>
 #include <AK/StringView.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
+#include <Kernel/Bus/PCI/MMIOAccess.h>
 #include <Kernel/Debug.h>
-#include <Kernel/PCI/MMIOAccess.h>
 #include <Kernel/Sections.h>
 #include <Kernel/VM/MemoryManager.h>
 

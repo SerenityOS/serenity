@@ -7,8 +7,8 @@
 #pragma once
 
 #include <AK/Types.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/PCI/Definitions.h>
 
 namespace Kernel {
 class PCI::Device : public IRQHandler {

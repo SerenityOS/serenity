@@ -10,6 +10,8 @@
 #include <Kernel/ACPI/MultiProcessorParser.h>
 #include <Kernel/Arch/PC/BIOS.h>
 #include <Kernel/Arch/x86/Processor.h>
+#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Initializer.h>
 #include <Kernel/CMOS.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Devices/FullDevice.h>
@@ -36,8 +38,6 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/NetworkingManagement.h>
-#include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Initializer.h>
 #include <Kernel/Panic.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>

@@ -26,6 +26,13 @@ set(KERNEL_SOURCES
     AddressSanitizer.cpp
     Arch/PC/BIOS.cpp
     Arch/x86/SmapDisabler.h
+    Bus/PCI/Access.cpp
+    Bus/PCI/Device.cpp
+    Bus/PCI/DeviceController.cpp
+    Bus/PCI/IOAccess.cpp
+    Bus/PCI/MMIOAccess.cpp
+    Bus/PCI/Initializer.cpp
+    Bus/PCI/WindowedMMIOAccess.cpp
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp
@@ -139,13 +146,6 @@ set(KERNEL_SOURCES
     Net/Socket.cpp
     Net/TCPSocket.cpp
     Net/UDPSocket.cpp
-    PCI/Access.cpp
-    PCI/Device.cpp
-    PCI/DeviceController.cpp
-    PCI/IOAccess.cpp
-    PCI/MMIOAccess.cpp
-    PCI/Initializer.cpp
-    PCI/WindowedMMIOAccess.cpp
     Panic.cpp
     PerformanceEventBuffer.cpp
     Process.cpp

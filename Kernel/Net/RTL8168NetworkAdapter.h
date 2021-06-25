@@ -8,10 +8,10 @@
 
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
 #include <Kernel/Random.h>
 
 namespace Kernel {

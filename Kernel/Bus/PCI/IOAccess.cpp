@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Bus/PCI/IOAccess.h>
 #include <Kernel/Debug.h>
 #include <Kernel/IO.h>
-#include <Kernel/PCI/IOAccess.h>
 #include <Kernel/Sections.h>
 
 namespace Kernel {

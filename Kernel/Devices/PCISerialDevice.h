@@ -6,10 +6,10 @@
 
 #pragma once
 
+#include <Kernel/Bus/PCI/Device.h>
+#include <Kernel/Bus/PCI/IDs.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
-#include <Kernel/PCI/Device.h>
-#include <Kernel/PCI/IDs.h>
 
 namespace Kernel {
 

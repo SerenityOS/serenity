@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <Kernel/PCI/Definitions.h>
+#include <Kernel/Bus/PCI/Definitions.h>
 
 namespace Kernel {
 class PCI::DeviceController {

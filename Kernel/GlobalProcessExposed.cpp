@@ -9,6 +9,7 @@
 #include <Kernel/Arch/x86/CPU.h>
 #include <Kernel/Arch/x86/InterruptDisabler.h>
 #include <Kernel/Arch/x86/ProcessorInfo.h>
+#include <Kernel/Bus/PCI/Access.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/ConsoleDevice.h>
 #include <Kernel/Devices/HID/HIDManagement.h>
@@ -26,7 +27,6 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
-#include <Kernel/PCI/Access.h>
 #include <Kernel/ProcessExposed.h>
 #include <Kernel/Sections.h>
 
