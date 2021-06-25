@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/PCI/DeviceController.h>
+#include <Kernel/Bus/PCI/DeviceController.h>
 
 namespace Kernel {
 namespace PCI {

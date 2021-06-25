@@ -7,10 +7,10 @@
 #pragma once
 
 #include <AK/NonnullOwnPtrVector.h>
+#include <Kernel/Bus/PCI/Access.h>
+#include <Kernel/Bus/PCI/Device.h>
 #include <Kernel/IO.h>
 #include <Kernel/Interrupts/IRQHandler.h>
-#include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VirtIO/VirtIOQueue.h>
 
