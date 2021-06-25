@@ -144,8 +144,8 @@ public:
 
     void set_at(u8 index) const
     {
-        VERIFY(((1 << index) & m_bit_mask) != 0);
-        m_bitfield = m_bitfield | ((1 << index) & m_bit_mask);
+        VERIFY(((1u << index) & m_bit_mask) != 0);
+        m_bitfield = m_bitfield | ((1u << index) & m_bit_mask);
     }
 
     void set_all() const
@@ -153,9 +153,9 @@ public:
         m_bitfield = m_bitfield | (0xffffffff & m_bit_mask);
     }
 
-    bool is_set_at(u32 port_index) const
+    bool is_set_at(u8 port_index) const
     {
-        return m_bitfield & ((1 << port_index) & m_bit_mask);
+        return m_bitfield & ((1u << port_index) & m_bit_mask);
     }
 
     bool is_zeroed() const
