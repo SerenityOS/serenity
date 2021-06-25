@@ -30,6 +30,7 @@ ALWAYS_INLINE FlatPtr cpu_flags()
     return flags;
 }
 
+#if ARCH(I386)
 ALWAYS_INLINE void set_fs(u16 segment)
 {
     asm volatile(
@@ -59,6 +60,7 @@ ALWAYS_INLINE u16 get_gs()
         : "=a"(gs));
     return gs;
 }
+#endif
 
 ALWAYS_INLINE u32 read_fs_u32(u32 offset)
 {

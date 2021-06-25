@@ -19,6 +19,11 @@
 
 namespace Kernel {
 
+#if ARCH(X86_64)
+#    define MSR_FS_BASE 0xc0000100
+#    define MSR_GS_BASE 0xc0000102
+#endif
+
 class Thread;
 class SchedulerPerProcessorData;
 struct MemoryManagerData;
@@ -241,7 +246,11 @@ public:
 
     ALWAYS_INLINE static bool is_initialized()
     {
-        return get_fs() == GDT_SELECTOR_PROC && read_fs_u32(__builtin_offsetof(Processor, m_self)) != 0;
+        return
+#if ARCH(I386)
+            get_fs() == GDT_SELECTOR_PROC &&
+#endif
+            read_fs_u32(__builtin_offsetof(Processor, m_self)) != 0;
     }
 
     ALWAYS_INLINE void set_scheduler_data(SchedulerPerProcessorData& scheduler_data)
