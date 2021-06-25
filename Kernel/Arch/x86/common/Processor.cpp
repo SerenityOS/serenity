@@ -355,7 +355,7 @@ void Processor::write_raw_gdt_entry(u16 selector, u32 low, u32 high)
     u16 i = (selector & 0xfffc) >> 3;
     u32 prev_gdt_length = m_gdt_length;
 
-    if (i > m_gdt_length) {
+    if (i >= m_gdt_length) {
         m_gdt_length = i + 1;
         VERIFY(m_gdt_length <= sizeof(m_gdt) / sizeof(m_gdt[0]));
         m_gdtr.limit = (m_gdt_length + 1) * 8 - 1;
