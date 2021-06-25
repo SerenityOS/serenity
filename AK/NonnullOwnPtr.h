@@ -33,7 +33,7 @@ public:
         : m_ptr(&ptr)
     {
         static_assert(
-            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
+            requires { requires typename T::AllowOwnPtr()(); } || !requires { requires !typename T::AllowOwnPtr()(); declval<T>().ref(); declval<T>().unref(); },
             "Use NonnullRefPtr<> for RefCounted types");
     }
     NonnullOwnPtr(NonnullOwnPtr&& other)

@@ -184,8 +184,7 @@ protected:
         : m_ptr(ptr)
     {
         static_assert(
-            requires { requires typename T::AllowOwnPtr()(); } || !requires(T obj) { requires !typename T::AllowOwnPtr()(); obj.ref(); obj.unref(); },
-            "Use RefPtr<> for RefCounted types");
+            requires { requires typename T::AllowOwnPtr()(); } || !requires { requires !typename T::AllowOwnPtr()(); declval<T>().ref(); declval<T>().unref(); }, "Use RefPtr<> for RefCounted types");
     }
 
 private:
