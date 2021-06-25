@@ -65,6 +65,7 @@ public:
     template<typename LanguageServerType>
     static ServerConnectionWrapper& get_or_create(const String& project_path);
 
+    Language language() const { return m_language; }
     ServerConnection* connection();
     void on_crash();
     void try_respawn_connection();
@@ -120,6 +121,7 @@ public:
             m_connection_wrapper.set_active_client(*m_previous_client);
     }
 
+    Language language() const { return m_connection_wrapper.language(); }
     void set_active_client();
     virtual void open_file(const String& path, int fd);
     virtual void set_file_content(const String& path, const String& content);
