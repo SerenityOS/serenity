@@ -1074,7 +1074,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 
     Descriptor fs_descriptor {};
     fs_descriptor.set_base(VirtualAddress { this });
-    fs_descriptor.set_limit(sizeof(Processor));
+    fs_descriptor.set_limit(sizeof(Processor) - 1);
     fs_descriptor.dpl = 0;
     fs_descriptor.segment_present = 1;
     fs_descriptor.granularity = 0;
@@ -1086,7 +1086,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 
     Descriptor tss_descriptor {};
     tss_descriptor.set_base(VirtualAddress { &m_tss });
-    tss_descriptor.set_limit(sizeof(TSS32));
+    tss_descriptor.set_limit(sizeof(TSS32) - 1);
     tss_descriptor.dpl = 0;
     tss_descriptor.segment_present = 1;
     tss_descriptor.granularity = 0;
