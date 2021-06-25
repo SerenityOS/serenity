@@ -408,26 +408,26 @@ Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
-    ExecutionContext execution_context;
-    execution_context.function = &function;
+    ExecutionContext callee_context;
+    callee_context.function = &function;
     if (auto* interpreter = interpreter_if_exists())
-        execution_context.current_node = interpreter->current_node();
-    execution_context.is_strict_mode = function.is_strict_mode();
+        callee_context.current_node = interpreter->current_node();
+    callee_context.is_strict_mode = function.is_strict_mode();
 
-    push_execution_context(execution_context, global_object);
+    push_execution_context(callee_context, global_object);
     if (exception())
         return {};
     ArmedScopeGuard pop_guard = [&] {
         pop_execution_context();
     };
 
-    execution_context.function_name = function.name();
-    execution_context.arguments = function.bound_arguments();
+    callee_context.function_name = function.name();
+    callee_context.arguments = function.bound_arguments();
     if (arguments.has_value())
-        execution_context.arguments.extend(arguments.value().values());
+        callee_context.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    execution_context.lexical_environment = environment;
-    execution_context.variable_environment = environment;
+    callee_context.lexical_environment = environment;
+    callee_context.variable_environment = environment;
     if (environment)
         environment->set_new_target(&new_target);
 
@@ -450,7 +450,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
     // If we are a Derived constructor, |this| has not been constructed before super is called.
     Value this_value = function.constructor_kind() == Function::ConstructorKind::Base ? new_object : Value {};
-    execution_context.this_value = this_value;
+    callee_context.this_value = this_value;
     auto result = function.construct(new_target);
 
     if (environment)
@@ -519,29 +519,29 @@ Value VM::call_internal(Function& function, Value this_value, Optional<MarkedVal
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());
 
-    ExecutionContext execution_context;
-    execution_context.function = &function;
+    ExecutionContext callee_context;
+    callee_context.function = &function;
     if (auto* interpreter = interpreter_if_exists())
-        execution_context.current_node = interpreter->current_node();
-    execution_context.is_strict_mode = function.is_strict_mode();
-    execution_context.function_name = function.name();
-    execution_context.this_value = function.bound_this().value_or(this_value);
-    execution_context.arguments = function.bound_arguments();
+        callee_context.current_node = interpreter->current_node();
+    callee_context.is_strict_mode = function.is_strict_mode();
+    callee_context.function_name = function.name();
+    callee_context.this_value = function.bound_this().value_or(this_value);
+    callee_context.arguments = function.bound_arguments();
     if (arguments.has_value())
-        execution_context.arguments.extend(arguments.value().values());
+        callee_context.arguments.extend(arguments.value().values());
     auto* environment = function.create_environment_record();
-    execution_context.lexical_environment = environment;
-    execution_context.variable_environment = environment;
+    callee_context.lexical_environment = environment;
+    callee_context.variable_environment = environment;
 
     if (environment) {
         VERIFY(environment->this_binding_status() == FunctionEnvironmentRecord::ThisBindingStatus::Uninitialized);
-        environment->bind_this_value(function.global_object(), execution_context.this_value);
+        environment->bind_this_value(function.global_object(), callee_context.this_value);
     }
 
     if (exception())
         return {};
 
-    push_execution_context(execution_context, function.global_object());
+    push_execution_context(callee_context, function.global_object());
     if (exception())
         return {};
     auto result = function.call();
