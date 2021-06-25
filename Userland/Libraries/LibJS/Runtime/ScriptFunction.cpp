@@ -55,7 +55,7 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
-    , m_parent_scope(parent_scope)
+    , m_environment(parent_scope)
     , m_function_length(function_length)
     , m_kind(kind)
     , m_is_strict(is_strict)
@@ -98,7 +98,7 @@ ScriptFunction::~ScriptFunction()
 void ScriptFunction::visit_edges(Visitor& visitor)
 {
     Function::visit_edges(visitor);
-    visitor.visit(m_parent_scope);
+    visitor.visit(m_environment);
 }
 
 FunctionEnvironmentRecord* ScriptFunction::create_environment_record(Function& function_being_invoked)
@@ -130,11 +130,11 @@ FunctionEnvironmentRecord* ScriptFunction::create_environment_record(Function& f
         }
     }
 
-    auto* environment = heap().allocate<FunctionEnvironmentRecord>(global_object(), m_parent_scope, variables);
+    auto* environment = heap().allocate<FunctionEnvironmentRecord>(global_object(), m_environment, variables);
     environment->set_function_object(function_being_invoked);
     if (m_is_arrow_function) {
-        if (is<FunctionEnvironmentRecord>(m_parent_scope))
-            environment->set_new_target(static_cast<FunctionEnvironmentRecord*>(m_parent_scope)->new_target());
+        if (is<FunctionEnvironmentRecord>(m_environment))
+            environment->set_new_target(static_cast<FunctionEnvironmentRecord*>(m_environment)->new_target());
     }
     return environment;
 }
