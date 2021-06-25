@@ -130,7 +130,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
     if (is<MemberExpression>(*m_callee)) {
         auto& member_expression = static_cast<MemberExpression const&>(*m_callee);
         Value callee;
-        Object* this_value = nullptr;
+        Value this_value;
 
         if (is<SuperExpression>(member_expression.object())) {
             auto super_base = interpreter.current_function_environment_record()->get_super_base();
@@ -141,7 +141,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             auto property_name = member_expression.computed_property_name(interpreter, global_object);
             if (!property_name.is_valid())
                 return {};
-            auto reference = Reference(super_base, property_name);
+            auto reference = Reference { super_base, property_name, super_base };
             callee = reference.get(global_object);
             if (vm.exception())
                 return {};
@@ -153,9 +153,7 @@ CallExpression::ThisAndCallee CallExpression::compute_this_and_callee(Interprete
             callee = reference.get(global_object);
             if (vm.exception())
                 return {};
-            this_value = reference.base().to_object(global_object);
-            if (vm.exception())
-                return {};
+            this_value = reference.get_this_value();
         }
 
         return { this_value, callee };
@@ -667,9 +665,9 @@ Reference Expression::to_reference(Interpreter&, GlobalObject&) const
     return {};
 }
 
-Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject&) const
+Reference Identifier::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
 {
-    return interpreter.vm().resolve_binding(string());
+    return interpreter.vm().resolve_binding(global_object, string());
 }
 
 Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject& global_object) const
@@ -677,10 +675,16 @@ Reference MemberExpression::to_reference(Interpreter& interpreter, GlobalObject&
     auto object_value = m_object->execute(interpreter, global_object);
     if (interpreter.exception())
         return {};
+
+    object_value = require_object_coercible(global_object, object_value);
+    if (interpreter.exception())
+        return {};
+
     auto property_name = computed_property_name(interpreter, global_object);
     if (!property_name.is_valid())
-        return {};
-    return { object_value, property_name };
+        return Reference {};
+
+    return Reference { object_value, property_name, object_value };
 }
 
 Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -701,12 +705,10 @@ Value UnaryExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
         if (interpreter.exception()) {
             return {};
         }
-        // FIXME: standard recommends checking with is_unresolvable but it ALWAYS return false here
-        if (reference.is_local_variable() || reference.is_global_variable()) {
-            const auto& name = reference.name();
-            lhs_result = interpreter.vm().get_variable(name.to_string(), global_object).value_or(js_undefined());
-            if (interpreter.exception())
-                return {};
+        if (reference.is_unresolvable()) {
+            lhs_result = js_undefined();
+        } else {
+            lhs_result = reference.get(global_object, false);
         }
     } else {
         lhs_result = m_lhs->execute(interpreter, global_object);
@@ -1477,6 +1479,7 @@ Value UpdateExpression::execute(Interpreter& interpreter, GlobalObject& global_o
     InterpreterNodeScope node_scope { interpreter, *this };
 
     auto reference = m_argument->to_reference(interpreter, global_object);
+
     if (interpreter.exception())
         return {};
     auto old_value = reference.get(global_object);

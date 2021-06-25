@@ -18,12 +18,9 @@ test("basic functionality", () => {
     [null, undefined].forEach(primitive => {
         expect(() => {
             primitive.foo = "bar";
-        }).toThrowWithMessage(TypeError, `Cannot set property 'foo' of ${primitive}`);
+        }).toThrowWithMessage(TypeError, `${primitive} cannot be converted to an object`);
         expect(() => {
             primitive[Symbol.hasInstance] = 123;
-        }).toThrowWithMessage(
-            TypeError,
-            `Cannot set property 'Symbol(Symbol.hasInstance)' of ${primitive}`
-        );
+        }).toThrowWithMessage(TypeError, `${primitive} cannot be converted to an object`);
     });
 });
