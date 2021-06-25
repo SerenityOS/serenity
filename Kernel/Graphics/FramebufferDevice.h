@@ -20,6 +20,8 @@ namespace Kernel {
 class FramebufferDevice : public BlockDevice {
     AK_MAKE_ETERNAL
 public:
+    static unsigned allocate_device_id();
+
     static NonnullRefPtr<FramebufferDevice> create(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
 
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
@@ -47,6 +49,8 @@ private:
     virtual KResultOr<size_t> write(FileDescription&, u64, const UserOrKernelBuffer&, size_t) override { return -EINVAL; }
 
     FramebufferDevice(const GraphicsDevice&, size_t, PhysicalAddress, size_t, size_t, size_t);
+
+    const unsigned m_device_id;
 
     PhysicalAddress m_framebuffer_address;
     size_t m_framebuffer_pitch { 0 };

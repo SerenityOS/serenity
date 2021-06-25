@@ -33,7 +33,9 @@ private:
     virtual void start_request(AsyncBlockDeviceRequest& request) override { request.complete(AsyncDeviceRequest::Failure); }
 
     virtual mode_t required_mode() const override { return 0666; }
-    virtual String device_name() const override { return String::formatted("fb{}", minor()); }
+    virtual String device_name() const override { return String::formatted("fb{}", m_device_id); }
+
+    const unsigned m_device_id;
 
     RefPtr<VirtIOGPU> m_gpu;
     RefPtr<VMObject> m_framebuffer_sink_vmobject;

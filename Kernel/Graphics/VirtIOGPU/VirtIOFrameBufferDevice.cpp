@@ -12,6 +12,7 @@ namespace Kernel::Graphics {
 
 VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(RefPtr<VirtIOGPU> virtio_gpu)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
+    , m_device_id(FramebufferDevice::allocate_device_id())
     , m_gpu(virtio_gpu)
 {
     auto write_sink_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No).release_nonnull();

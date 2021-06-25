@@ -23,6 +23,12 @@
 
 namespace Kernel {
 
+unsigned FramebufferDevice::allocate_device_id()
+{
+    static Atomic<unsigned, AK::memory_order_relaxed> s_next_device_id;
+    return s_next_device_id.fetch_add(1);
+}
+
 NonnullRefPtr<FramebufferDevice> FramebufferDevice::create(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress paddr, size_t width, size_t height, size_t pitch)
 {
     return adopt_ref(*new FramebufferDevice(adapter, output_port_index, paddr, width, height, pitch));
@@ -96,7 +102,7 @@ void FramebufferDevice::activate_writes()
 
 String FramebufferDevice::device_name() const
 {
-    return String::formatted("fb{}", minor());
+    return String::formatted("fb{}", m_device_id);
 }
 
 UNMAP_AFTER_INIT void FramebufferDevice::initialize()
@@ -113,6 +119,7 @@ UNMAP_AFTER_INIT void FramebufferDevice::initialize()
 
 UNMAP_AFTER_INIT FramebufferDevice::FramebufferDevice(const GraphicsDevice& adapter, size_t output_port_index, PhysicalAddress addr, size_t width, size_t height, size_t pitch)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
+    , m_device_id(allocate_device_id())
     , m_framebuffer_address(addr)
     , m_framebuffer_pitch(pitch)
     , m_framebuffer_width(width)
