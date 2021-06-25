@@ -8,6 +8,7 @@
 
 #include <AK/IntrusiveList.h>
 #include <AK/Vector.h>
+#include <AK/WeakPtr.h>
 #include <LibGfx/Painter.h>
 #include <WindowServer/MultiScaleBitmaps.h>
 #include <WindowServer/Screen.h>
@@ -15,6 +16,7 @@
 namespace WindowServer {
 
 class Screen;
+class Window;
 
 class Overlay {
     friend class Compositor;
@@ -122,6 +124,23 @@ private:
     Screen& m_screen;
 
     static Gfx::Font const* s_font;
+};
+
+class WindowGeometryOverlay : public RectangularOverlay {
+public:
+    WindowGeometryOverlay(Window&);
+
+    void window_rect_changed();
+
+    virtual ZOrder zorder() const override { return ZOrder::WindowGeometry; }
+    virtual void render_overlay_bitmap(Gfx::Painter&) override;
+
+private:
+    void update_rect();
+
+    WeakPtr<Window> m_window;
+    String m_label;
+    Gfx::IntRect m_label_rect;
 };
 
 }
