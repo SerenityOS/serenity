@@ -49,6 +49,7 @@ public:
 
     const TextDocument& document() const { return *m_document; }
     TextDocument& document() { return *m_document; }
+    bool has_document() const { return !!m_document; }
 
     virtual void set_document(TextDocument&);
 
