@@ -408,6 +408,14 @@ Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name
 Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
+
+    Value this_argument;
+    if (function.constructor_kind() == Function::ConstructorKind::Base) {
+        this_argument = ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype);
+        if (exception())
+            return {};
+    }
+
     ExecutionContext callee_context;
     callee_context.function = &function;
     if (auto* interpreter = interpreter_if_exists())
@@ -428,31 +436,20 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
     auto* environment = function.create_environment_record(function);
     callee_context.lexical_environment = environment;
     callee_context.variable_environment = environment;
-    if (environment)
+    if (environment) {
         environment->set_new_target(&new_target);
-
-    Object* new_object = nullptr;
-    if (function.constructor_kind() == Function::ConstructorKind::Base) {
-        new_object = Object::create(global_object, nullptr);
-        if (environment)
-            environment->bind_this_value(global_object, new_object);
-        if (exception())
-            return {};
-        auto prototype = new_target.get(names.prototype);
-        if (exception())
-            return {};
-        if (prototype.is_object()) {
-            new_object->set_prototype(&prototype.as_object());
+        if (!this_argument.is_empty()) {
+            environment->bind_this_value(global_object, this_argument);
             if (exception())
                 return {};
         }
     }
 
     // If we are a Derived constructor, |this| has not been constructed before super is called.
-    Value this_value = function.constructor_kind() == Function::ConstructorKind::Base ? new_object : Value {};
-    callee_context.this_value = this_value;
+    callee_context.this_value = this_argument;
     auto result = function.construct(new_target);
 
+    Value this_value = this_argument;
     if (environment)
         this_value = environment->get_this_binding(global_object);
     pop_execution_context();
