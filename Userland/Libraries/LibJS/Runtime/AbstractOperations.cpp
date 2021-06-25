@@ -181,7 +181,6 @@ ObjectEnvironmentRecord* new_object_environment(Object& object, bool is_with_env
 // 9.4.3 GetThisEnvironment ( ), https://tc39.es/ecma262/#sec-getthisenvironment
 EnvironmentRecord& get_this_environment(VM& vm)
 {
-    // FIXME: Should be the *lexical* environment.
     for (auto* env = vm.lexical_environment(); env; env = env->outer_environment()) {
         if (env->has_this_binding())
             return *env;
