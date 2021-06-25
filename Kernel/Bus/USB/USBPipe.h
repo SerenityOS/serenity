@@ -8,7 +8,7 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/USB/USBDescriptors.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
 #include <Kernel/VM/Region.h>
 
 namespace Kernel::USB {

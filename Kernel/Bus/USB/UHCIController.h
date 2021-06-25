@@ -11,9 +11,9 @@
 
 #include <AK/NonnullOwnPtr.h>
 #include <Kernel/Bus/PCI/Device.h>
-#include <Kernel/Devices/USB/UHCIDescriptorTypes.h>
-#include <Kernel/Devices/USB/USBDevice.h>
-#include <Kernel/Devices/USB/USBTransfer.h>
+#include <Kernel/Bus/USB/UHCIDescriptorTypes.h>
+#include <Kernel/Bus/USB/USBDevice.h>
+#include <Kernel/Bus/USB/USBTransfer.h>
 #include <Kernel/IO.h>
 #include <Kernel/Process.h>
 #include <Kernel/Time/TimeManagement.h>

@@ -8,8 +8,8 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <Kernel/Devices/USB/PacketTypes.h>
-#include <Kernel/Devices/USB/USBPipe.h>
+#include <Kernel/Bus/USB/PacketTypes.h>
+#include <Kernel/Bus/USB/USBPipe.h>
 #include <Kernel/VM/ContiguousVMObject.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>

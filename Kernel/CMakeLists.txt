@@ -33,6 +33,10 @@ set(KERNEL_SOURCES
     Bus/PCI/MMIOAccess.cpp
     Bus/PCI/Initializer.cpp
     Bus/PCI/WindowedMMIOAccess.cpp
+    Bus/USB/UHCIController.cpp
+    Bus/USB/USBDevice.cpp
+    Bus/USB/USBPipe.cpp
+    Bus/USB/USBTransfer.cpp
     CMOS.cpp
     CommandLine.cpp
     ConsoleDevice.cpp
@@ -49,13 +53,9 @@ set(KERNEL_SOURCES
     Devices/RandomDevice.cpp
     Devices/SB16.cpp
     Devices/SerialDevice.cpp
-    Devices/USB/UHCIController.cpp
     VirtIO/VirtIO.cpp
     VirtIO/VirtIOQueue.cpp
     VirtIO/VirtIOConsole.cpp
-    Devices/USB/USBDevice.cpp
-    Devices/USB/USBPipe.cpp
-    Devices/USB/USBTransfer.cpp
     Devices/VMWareBackdoor.cpp
     Devices/ZeroDevice.cpp
     Devices/HID/I8042Controller.cpp

@@ -7,10 +7,10 @@
 #include <AK/OwnPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <Kernel/Devices/USB/UHCIController.h>
-#include <Kernel/Devices/USB/USBDescriptors.h>
-#include <Kernel/Devices/USB/USBDevice.h>
-#include <Kernel/Devices/USB/USBRequest.h>
+#include <Kernel/Bus/USB/UHCIController.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
+#include <Kernel/Bus/USB/USBDevice.h>
+#include <Kernel/Bus/USB/USBRequest.h>
 
 static u32 s_next_usb_address = 1; // Next address we hand out to a device once it's plugged into the machine
 

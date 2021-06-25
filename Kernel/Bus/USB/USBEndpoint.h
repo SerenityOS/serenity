@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include <Kernel/Devices/USB/USBDescriptors.h>
-#include <Kernel/Devices/USB/USBPipe.h>
+#include <Kernel/Bus/USB/USBDescriptors.h>
+#include <Kernel/Bus/USB/USBPipe.h>
 
 namespace Kernel::USB {
 

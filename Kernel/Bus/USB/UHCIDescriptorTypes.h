@@ -9,7 +9,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Ptr32.h>
 #include <AK/Types.h>
-#include <Kernel/Devices/USB/USBTransfer.h>
+#include <Kernel/Bus/USB/USBTransfer.h>
 
 namespace Kernel::USB {
 

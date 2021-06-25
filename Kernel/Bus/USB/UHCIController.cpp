@@ -8,10 +8,10 @@
 #include <AK/JsonArraySerializer.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/Platform.h>
+#include <Kernel/Bus/USB/UHCIController.h>
+#include <Kernel/Bus/USB/USBRequest.h>
 #include <Kernel/CommandLine.h>
 #include <Kernel/Debug.h>
-#include <Kernel/Devices/USB/UHCIController.h>
-#include <Kernel/Devices/USB/USBRequest.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessExposed.h>

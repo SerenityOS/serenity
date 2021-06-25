@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <Kernel/Devices/USB/USBTransfer.h>
+#include <Kernel/Bus/USB/USBTransfer.h>
 #include <Kernel/VM/MemoryManager.h>
 
 namespace Kernel::USB {
