@@ -113,7 +113,6 @@ private:
     void recompute_occlusions();
     bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
     void change_cursor(const Cursor*);
-    void draw_geometry_label(Screen&);
     void flush(Screen&);
 
     RefPtr<Core::Timer> m_compose_timer;
@@ -183,7 +182,6 @@ private:
     Gfx::DisjointRectSet m_opaque_wallpaper_rects;
 
     Gfx::IntRect m_last_dnd_rect;
-    Gfx::IntRect m_last_geometry_label_damage_rect;
 
     String m_wallpaper_path { "" };
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
