@@ -27,7 +27,7 @@ void SetIteratorPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.next, next, 0, Attribute::Configurable | Attribute::Writable);
 
     // 24.2.5.2.2 %SetIteratorPrototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-%setiteratorprototype%-@@tostringtag
-    define_property(vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Set Iterator"), Attribute::Configurable);
+    define_property(*vm.well_known_symbol_to_string_tag(), js_string(global_object.heap(), "Set Iterator"), Attribute::Configurable);
 }
 
 SetIteratorPrototype::~SetIteratorPrototype()

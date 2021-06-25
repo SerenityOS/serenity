@@ -30,8 +30,8 @@ void RegExpPrototype::initialize(GlobalObject& global_object)
     define_native_function(vm.names.test, test, 1, attr);
     define_native_function(vm.names.exec, exec, 1, attr);
 
-    define_native_function(vm.well_known_symbol_match(), symbol_match, 1, attr);
-    define_native_function(vm.well_known_symbol_replace(), symbol_replace, 2, attr);
+    define_native_function(*vm.well_known_symbol_match(), symbol_match, 1, attr);
+    define_native_function(*vm.well_known_symbol_replace(), symbol_replace, 2, attr);
 
     define_native_accessor(vm.names.flags, flags, {}, Attribute::Configurable);
     define_native_accessor(vm.names.source, source, {}, Attribute::Configurable);

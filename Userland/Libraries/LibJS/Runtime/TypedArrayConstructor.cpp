@@ -33,7 +33,7 @@ void TypedArrayConstructor::initialize(GlobalObject& global_object)
     u8 attr = Attribute::Writable | Attribute::Configurable;
     define_native_function(vm.names.of, of, 0, attr);
 
-    define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 TypedArrayConstructor::~TypedArrayConstructor()

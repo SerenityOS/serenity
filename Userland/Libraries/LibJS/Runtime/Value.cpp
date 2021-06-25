@@ -252,8 +252,9 @@ bool Value::is_regexp(GlobalObject& global_object) const
     if (!is_object())
         return false;
 
-    auto matcher = as_object().get(global_object.vm().well_known_symbol_match());
-    if (global_object.vm().exception())
+    auto& vm = global_object.vm();
+    auto matcher = as_object().get(*vm.well_known_symbol_match());
+    if (vm.exception())
         return false;
     if (!matcher.is_empty() && !matcher.is_undefined())
         return matcher.to_boolean();
@@ -412,7 +413,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
     };
     if (is_object()) {
         auto& vm = global_object.vm();
-        auto to_primitive_method = get_method(global_object, *this, vm.well_known_symbol_to_primitive());
+        auto to_primitive_method = get_method(global_object, *this, *vm.well_known_symbol_to_primitive());
         if (vm.exception())
             return {};
         if (to_primitive_method) {
@@ -1187,7 +1188,7 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
-    auto has_instance_method = get_method(global_object, Value(&rhs.as_object()), vm.well_known_symbol_has_instance());
+    auto has_instance_method = get_method(global_object, Value(&rhs.as_object()), *vm.well_known_symbol_has_instance());
     if (vm.exception())
         return {};
     if (has_instance_method) {

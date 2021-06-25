@@ -21,7 +21,7 @@ Object* get_iterator(GlobalObject& global_object, Value value, IteratorHint hint
         auto object = value.to_object(global_object);
         if (!object)
             return {};
-        method = object->get(global_object.vm().well_known_symbol_iterator());
+        method = object->get(*vm.well_known_symbol_iterator());
         if (vm.exception())
             return {};
     }

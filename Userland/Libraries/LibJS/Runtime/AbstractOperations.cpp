@@ -112,7 +112,7 @@ Function* species_constructor(GlobalObject& global_object, Object const& object,
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAConstructor, constructor.to_string_without_side_effects());
         return nullptr;
     }
-    auto species = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
+    auto species = constructor.as_object().get(*vm.well_known_symbol_species()).value_or(js_undefined());
     if (species.is_nullish())
         return &default_constructor;
     if (species.is_constructor())

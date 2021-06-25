@@ -39,7 +39,7 @@ void PromiseConstructor::initialize(GlobalObject& global_object)
     define_native_function(vm.names.reject, reject, 1, attr);
     define_native_function(vm.names.resolve, resolve, 1, attr);
 
-    define_native_accessor(vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
+    define_native_accessor(*vm.well_known_symbol_species(), symbol_species_getter, {}, Attribute::Configurable);
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor

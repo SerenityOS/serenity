@@ -76,7 +76,7 @@ JS_DEFINE_NATIVE_FUNCTION(ObjectPrototype::to_string)
     VERIFY(this_object);
 
     String tag;
-    auto to_string_tag = this_object->get(vm.well_known_symbol_to_string_tag());
+    auto to_string_tag = this_object->get(*vm.well_known_symbol_to_string_tag());
 
     if (to_string_tag.is_string()) {
         tag = to_string_tag.as_string().string();

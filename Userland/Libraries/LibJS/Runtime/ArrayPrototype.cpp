@@ -73,7 +73,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     // Object.is(Array.prototype[Symbol.iterator], Array.prototype.values)
     // evaluates to true
     // 23.1.3.33 Array.prototype [ @@iterator ] ( ), https://tc39.es/ecma262/#sec-array.prototype-@@iterator
-    define_property(vm.well_known_symbol_iterator(), get(vm.names.values), attr);
+    define_property(*vm.well_known_symbol_iterator(), get(vm.names.values), attr);
 
     // 23.1.3.34 Array.prototype [ @@unscopables ], https://tc39.es/ecma262/#sec-array.prototype-@@unscopables
     auto* unscopable_list = Object::create(global_object, nullptr);
@@ -88,7 +88,7 @@ void ArrayPrototype::initialize(GlobalObject& global_object)
     unscopable_list->define_property(vm.names.keys, Value(true));
     unscopable_list->define_property(vm.names.values, Value(true));
 
-    define_property(vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
+    define_property(*vm.well_known_symbol_unscopables(), unscopable_list, Attribute::Configurable);
 }
 
 ArrayPrototype::~ArrayPrototype()
@@ -161,7 +161,7 @@ static Object* array_species_create(GlobalObject& global_object, Object& origina
     }
 
     if (constructor.is_object()) {
-        constructor = constructor.as_object().get(vm.well_known_symbol_species()).value_or(js_undefined());
+        constructor = constructor.as_object().get(*vm.well_known_symbol_species()).value_or(js_undefined());
         if (vm.exception())
             return {};
         if (constructor.is_null())
@@ -524,7 +524,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::concat)
         if (vm.exception())
             return false;
 
-        auto spreadable = object->get(vm.well_known_symbol_is_concat_spreadable()).value_or(js_undefined());
+        auto spreadable = object->get(*vm.well_known_symbol_is_concat_spreadable()).value_or(js_undefined());
         if (vm.exception())
             return false;
 
