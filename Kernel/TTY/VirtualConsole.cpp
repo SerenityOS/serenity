@@ -126,7 +126,6 @@ UNMAP_AFTER_INIT void VirtualConsole::initialize()
     for (size_t row = 0; row < rows(); row++) {
         m_lines.append({ true, 0 });
     }
-    clear();
     VERIFY(m_cells);
 }
 

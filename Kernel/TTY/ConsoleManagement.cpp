@@ -61,6 +61,8 @@ UNMAP_AFTER_INIT void ConsoleManagement::initialize()
     m_active_console = m_consoles[tty_number];
     ScopedSpinLock lock(m_lock);
     m_active_console->set_active(true);
+    if (!m_active_console->is_graphical())
+        m_active_console->clear();
 }
 
 void ConsoleManagement::switch_to(unsigned index)
