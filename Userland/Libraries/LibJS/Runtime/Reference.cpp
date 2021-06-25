@@ -11,7 +11,8 @@
 
 namespace JS {
 
-void Reference::put(GlobalObject& global_object, Value value)
+// 6.2.4.6 PutValue ( V, W ), https://tc39.es/ecma262/#sec-putvalue
+void Reference::put_value(GlobalObject& global_object, Value value)
 {
     auto& vm = global_object.vm();
 
@@ -71,7 +72,8 @@ void Reference::throw_reference_error(GlobalObject& global_object)
         vm.throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, m_name.to_string_or_symbol().to_display_string());
 }
 
-Value Reference::get(GlobalObject& global_object, bool throw_if_undefined)
+// 6.2.4.5 GetValue ( V ), https://tc39.es/ecma262/#sec-getvalue
+Value Reference::get_value(GlobalObject& global_object, bool throw_if_undefined)
 {
     if (is_unresolvable()) {
         throw_reference_error(global_object);
