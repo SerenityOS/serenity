@@ -88,25 +88,33 @@ String sample_format_name(PcmSampleFormat format);
 // Small helper to resample from one playback rate to another
 // This isn't really "smart", in that we just insert (or drop) samples.
 // Should do better...
+template<typename SampleType>
 class ResampleHelper {
 public:
     ResampleHelper(double source, double target);
 
-    void process_sample(double sample_l, double sample_r);
-    bool read_sample(double& next_l, double& next_r);
+    // To be used as follows:
+    // while the resampler doesn't need a new sample, read_sample(current) and store the resulting samples.
+    // as long as the resampler needs a new sample, process_sample(current)
+
+    // Stores a new sample
+    void process_sample(SampleType sample_l, SampleType sample_r);
+    // Assigns the given sample to its correct value and returns false if there is a new sample required
+    bool read_sample(SampleType& next_l, SampleType& next_r);
+    Vector<SampleType> resample(Vector<SampleType> to_resample);
 
 private:
     const double m_ratio;
     double m_current_ratio { 0 };
-    double m_last_sample_l { 0 };
-    double m_last_sample_r { 0 };
+    SampleType m_last_sample_l;
+    SampleType m_last_sample_r;
 };
 
 // A buffer of audio samples, normalized to 44100hz.
 class Buffer : public RefCounted<Buffer> {
 public:
-    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format);
-    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples);
+    static RefPtr<Buffer> from_pcm_data(ReadonlyBytes data, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format);
+    static RefPtr<Buffer> from_pcm_stream(InputMemoryStream& stream, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples);
     static NonnullRefPtr<Buffer> create_with_samples(Vector<Frame>&& samples)
     {
         return adopt_ref(*new Buffer(move(samples)));
