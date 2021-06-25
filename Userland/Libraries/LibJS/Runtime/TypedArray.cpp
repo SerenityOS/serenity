@@ -266,7 +266,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
             } else {                                                                                                                   \
-                auto iterator = first_argument.as_object().get(vm.well_known_symbol_iterator());                                       \
+                auto iterator = first_argument.as_object().get(*vm.well_known_symbol_iterator());                                      \
                 if (vm.exception())                                                                                                    \
                     return {};                                                                                                         \
                 if (iterator.is_function()) {                                                                                          \
