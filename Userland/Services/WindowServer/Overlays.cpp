@@ -205,4 +205,52 @@ Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& scre
     return calculate_frame_rect(content_rect);
 }
 
+WindowGeometryOverlay::WindowGeometryOverlay(Window& window)
+    : m_window(window)
+{
+    update_rect();
+}
+
+void WindowGeometryOverlay::update_rect()
+{
+    if (auto* window = m_window.ptr()) {
+        auto& wm = WindowManager::the();
+        if (!window->size_increment().is_null()) {
+            int width_steps = (window->width() - window->base_size().width()) / window->size_increment().width();
+            int height_steps = (window->height() - window->base_size().height()) / window->size_increment().height();
+            m_label = String::formatted("{} ({}x{})", window->rect(), width_steps, height_steps);
+        } else {
+            m_label = window->rect().to_string();
+        }
+        m_label_rect = Gfx::IntRect { 0, 0, wm.font().width(m_label) + 16, wm.font().glyph_height() + 10 };
+
+        auto rect = calculate_frame_rect(m_label_rect);
+        rect.center_within(window->frame().rect());
+        auto desktop_rect = wm.desktop_rect(ScreenInput::the().cursor_location_screen());
+        if (rect.left() < desktop_rect.left())
+            rect.set_left(desktop_rect.left());
+        if (rect.top() < desktop_rect.top())
+            rect.set_top(desktop_rect.top());
+        if (rect.right() > desktop_rect.right())
+            rect.set_right_without_resize(desktop_rect.right());
+        if (rect.bottom() > desktop_rect.bottom())
+            rect.set_bottom_without_resize(desktop_rect.bottom());
+
+        set_rect(rect);
+    } else {
+        set_enabled(false);
+    }
+}
+
+void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
+{
+    painter.draw_text({ {}, rect().size() }, m_label, WindowManager::the().font(), Gfx::TextAlignment::Center, Color::White);
+}
+
+void WindowGeometryOverlay::window_rect_changed()
+{
+    update_rect();
+    invalidate();
+}
+
 }

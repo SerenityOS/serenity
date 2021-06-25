@@ -37,6 +37,7 @@ class Window;
 class ClientConnection;
 class WindowSwitcher;
 class Button;
+class WindowGeometryOverlay;
 
 enum class ResizeDirection {
     None,
@@ -159,6 +160,8 @@ public:
     void tell_wms_super_key_pressed();
 
     bool is_active_window_or_accessory(Window&) const;
+
+    void check_hide_geometry_overlay(Window&);
 
     void start_window_resize(Window&, Gfx::IntPoint const&, MouseButton);
     void start_window_resize(Window&, MouseEvent const&);
@@ -319,6 +322,7 @@ private:
     WeakPtr<Window> m_active_input_tracking_window;
     WeakPtr<Window> m_window_with_active_menu;
 
+    OwnPtr<WindowGeometryOverlay> m_geometry_overlay;
     WeakPtr<Window> m_move_window;
     Gfx::IntPoint m_move_origin;
     Gfx::IntPoint m_move_window_origin;

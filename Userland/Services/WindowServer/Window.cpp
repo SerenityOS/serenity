@@ -502,6 +502,8 @@ void Window::set_visible(bool b)
         return;
     m_visible = b;
 
+    if (!m_visible)
+        WindowManager::the().check_hide_geometry_overlay(*this);
     Compositor::the().invalidate_occlusions();
     if (m_visible)
         invalidate(true);
