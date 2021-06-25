@@ -30,7 +30,7 @@ public:
         if (value.is_empty())
             return {};
         if (value.is_symbol())
-            return &value.as_symbol();
+            return value.as_symbol();
         if (value.is_integral_number() && value.as_i32() >= 0)
             return value.as_i32();
         auto string = value.to_string(global_object);
@@ -69,11 +69,10 @@ public:
         VERIFY(!string.is_null());
     }
 
-    PropertyName(Symbol* symbol)
+    PropertyName(Symbol& symbol)
         : m_type(Type::Symbol)
-        , m_symbol(symbol)
+        , m_symbol(&symbol)
     {
-        VERIFY(symbol);
     }
 
     PropertyName(StringOrSymbol const& string_or_symbol)

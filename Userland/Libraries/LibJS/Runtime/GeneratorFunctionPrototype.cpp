@@ -23,7 +23,7 @@ void GeneratorFunctionPrototype::initialize(GlobalObject& global_object)
     // 27.3.3.2 %GeneratorFunction.prototype% prototype, https://tc39.es/ecma262/#sec-generatorfunction.prototype.prototype
     define_property(vm.names.prototype, global_object.generator_object_prototype(), Attribute::Configurable);
     // 27.3.3.3 %GeneratorFunction.prototype% [ @@toStringTag ], https://tc39.es/ecma262/#sec-generatorfunction.prototype-@@tostringtag
-    define_property(vm.well_known_symbol_to_string_tag(), js_string(vm, "GeneratorFunction"), Attribute::Configurable);
+    define_property(*vm.well_known_symbol_to_string_tag(), js_string(vm, "GeneratorFunction"), Attribute::Configurable);
 }
 
 GeneratorFunctionPrototype::~GeneratorFunctionPrototype()
