@@ -47,6 +47,16 @@ public:
     // Used as the outer environment when evaluating the code of the function.
     virtual EnvironmentRecord* environment() { return nullptr; }
 
+    enum class ThisMode : u8 {
+        Lexical,
+        Strict,
+        Global,
+    };
+
+    // [[ThisMode]]
+    ThisMode this_mode() const { return m_this_mode; }
+    void set_this_mode(ThisMode this_mode) { m_this_mode = this_mode; }
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
@@ -59,6 +69,7 @@ private:
     Vector<Value> m_bound_arguments;
     Value m_home_object;
     ConstructorKind m_constructor_kind = ConstructorKind::Base;
+    ThisMode m_this_mode { ThisMode::Global };
 };
 
 }
