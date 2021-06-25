@@ -71,7 +71,7 @@ private:
     //
     // It would avoid duplicate resampling code and would allow clients
     // to be agnostic of the destination audio device's sample rate.
-    OwnPtr<ResampleHelper> m_resampler;
+    OwnPtr<ResampleHelper<double>> m_resampler;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
