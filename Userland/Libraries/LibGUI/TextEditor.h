@@ -176,6 +176,9 @@ public:
     bool should_autocomplete_automatically() const { return m_autocomplete_timer; }
     void set_should_autocomplete_automatically(bool);
 
+    u32 substitution_code_point() const { return m_substitution_code_point; }
+    void set_substitution_code_point(u32 code_point);
+
     bool is_in_drag_select() const { return m_in_drag_select; }
 
     TextRange* selection() { return &m_selection; };
@@ -274,6 +277,9 @@ private:
         TextEditor& m_editor;
     };
 
+    int text_width_for_font(auto const& text_view, Gfx::Font const&) const;
+    Utf32View substitution_code_point_view(size_t length) const;
+
     Gfx::IntRect line_content_rect(size_t item_index) const;
     Gfx::IntRect line_widget_rect(size_t line_index) const;
     void delete_selection();
@@ -321,6 +327,11 @@ private:
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 3 };
     TextRange m_selection;
+
+    // NOTE: If non-zero, all glyphs will be substituted with this one.
+    u32 m_substitution_code_point { 0 };
+    mutable OwnPtr<Vector<u32>> m_substitution_string_data; // Used to avoid repeated String construction.
+
     RefPtr<Menu> m_context_menu;
     RefPtr<Action> m_undo_action;
     RefPtr<Action> m_redo_action;
