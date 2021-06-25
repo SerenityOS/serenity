@@ -53,14 +53,22 @@ SERENITY_QEMU_MIN_REQ_VERSION=5
 installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/QEMU emulator version ([1-9][0-9]*|0).*/\1/')
 [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
 
+SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
+SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
+if [ "$SERENITY_SCREENS" -gt 1 ]; then
+    SERENITY_QEMU_DISPLAY_DEVICE="virtio-gpu,max_outputs=$SERENITY_SCREENS "
+else
+    SERENITY_QEMU_DISPLAY_DEVICE="VGA,vgamem_mb=64 "
+fi
+
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
 -cpu $SERENITY_QEMU_CPU
 -d guest_errors
 -smp 2
--display sdl,gl=on
--vga virtio
+-display $SERENITY_QEMU_DISPLAY_BACKEND
+-device $SERENITY_QEMU_DISPLAY_DEVICE
 -drive file=${SERENITY_DISK_IMAGE},format=raw,index=0,media=disk
 -usb
 -device virtio-serial
@@ -83,8 +91,8 @@ $SERENITY_EXTRA_QEMU_ARGS
 -machine q35
 -d guest_errors
 -smp 2
--display sdl,gl=on
--vga virtio
+-display $SERENITY_QEMU_DISPLAY_BACKEND
+-device $SERENITY_QEMU_DISPLAY_DEVICE
 -device piix3-ide
 -drive file=${SERENITY_DISK_IMAGE},id=disk,if=none
 -device ahci,id=ahci
