@@ -438,11 +438,13 @@ Value Object::get_own_property_descriptor_object(const PropertyName& property_na
     if (descriptor.is_data_descriptor()) {
         descriptor_object->define_property(vm.names.value, descriptor.value.value_or(js_undefined()));
         descriptor_object->define_property(vm.names.writable, Value(descriptor.attributes.is_writable()));
-    } else {
-        VERIFY(descriptor.is_accessor_descriptor());
+    }
+
+    if (descriptor.is_accessor_descriptor()) {
         descriptor_object->define_property(vm.names.get, descriptor.getter ? Value(descriptor.getter) : js_undefined());
         descriptor_object->define_property(vm.names.set, descriptor.setter ? Value(descriptor.setter) : js_undefined());
     }
+
     descriptor_object->define_property(vm.names.enumerable, Value(descriptor.attributes.is_enumerable()));
     descriptor_object->define_property(vm.names.configurable, Value(descriptor.attributes.is_configurable()));
     return descriptor_object;
@@ -491,7 +493,8 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         Function* getter_function { nullptr };
         Function* setter_function { nullptr };
 
-        auto existing_property = get_without_side_effects(property_name).value_or(js_undefined());
+        // We should only take previous getters for our own object not from any prototype
+        auto existing_property = get_own_property(property_name, {}, AllowSideEffects::No).value_or(js_undefined());
 
         if (getter.is_function()) {
             getter_function = &getter.as_function();
