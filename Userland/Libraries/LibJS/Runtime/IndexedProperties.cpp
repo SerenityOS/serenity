@@ -168,13 +168,32 @@ ValueAndAttributes GenericIndexedPropertyStorage::take_last()
 
 void GenericIndexedPropertyStorage::set_array_like_size(size_t new_size)
 {
-    m_array_size = new_size;
+    if (new_size == m_array_size)
+        return;
+
+    if (new_size >= m_array_size) {
+        m_array_size = new_size;
+        return;
+    }
+
+    size_t highest_index = 0;
+    bool any_left = false;
 
     HashMap<u32, ValueAndAttributes> new_sparse_elements;
     for (auto& entry : m_sparse_elements) {
-        if (entry.key < new_size)
+        if (entry.key < new_size || !entry.value.attributes.is_configurable()) {
             new_sparse_elements.set(entry.key, entry.value);
+            any_left = true;
+            highest_index = max(highest_index, (size_t)entry.key);
+        }
     }
+
+    if (any_left) {
+        m_array_size = max(highest_index + 1, new_size);
+    } else {
+        m_array_size = new_size;
+    }
+
     m_sparse_elements = move(new_sparse_elements);
 }
 
