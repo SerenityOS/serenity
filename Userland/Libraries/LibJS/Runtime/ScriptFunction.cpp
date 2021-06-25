@@ -61,6 +61,13 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
     , m_is_strict(is_strict)
     , m_is_arrow_function(is_arrow_function)
 {
+    // NOTE: This logic is from OrdinaryFunctionCreate, https://tc39.es/ecma262/#sec-ordinaryfunctioncreate
+    if (m_is_arrow_function)
+        set_this_mode(ThisMode::Lexical);
+    else if (m_is_strict)
+        set_this_mode(ThisMode::Strict);
+    else
+        set_this_mode(ThisMode::Global);
 }
 
 void ScriptFunction::initialize(GlobalObject& global_object)
