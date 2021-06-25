@@ -55,3 +55,63 @@ describe("normal behavior", () => {
         expect(a[1]).toEqual(2);
     });
 });
+
+describe("behavior when obj has Array prototype", () => {
+    function ArrExtend() {}
+    ArrExtend.prototype = [10, 11, 12];
+
+    test("Has the properties from prototype", () => {
+        var arr = new ArrExtend();
+        expect(arr.length).toEqual(3);
+        expect(arr[0]).toEqual(10);
+        expect(arr[1]).toEqual(11);
+        expect(arr[2]).toEqual(12);
+    });
+
+    test("Can override length to any value", () => {
+        [null, "Hello friends :^)", -6, 0].forEach(value => {
+            var arr = new ArrExtend();
+            arr.length = value;
+            expect(arr.length).toEqual(value);
+
+            // should not wipe high values
+            expect(arr[0]).toEqual(10);
+            expect(arr[1]).toEqual(11);
+            expect(arr[2]).toEqual(12);
+        });
+    });
+
+    test("Can call array methods", () => {
+        var arr = new ArrExtend();
+        arr.push(1);
+        expect(arr.length).toEqual(4);
+        expect(arr[3]).toEqual(1);
+    });
+
+    test("If length overwritten uses that value", () => {
+        [null, "Hello friends :^)", -6, 0].forEach(value => {
+            var arr = new ArrExtend();
+            arr.length = value;
+            expect(arr.length).toEqual(value);
+
+            arr.push(99);
+            expect(arr.length).toEqual(1);
+            expect(arr[0]).toEqual(99);
+
+            // should not wipe higher value
+            expect(arr[1]).toEqual(11);
+            expect(arr[2]).toEqual(12);
+
+            arr.push(100);
+
+            expect(arr.length).toEqual(2);
+            expect(arr[1]).toEqual(100);
+
+            arr.length = 0;
+            // should not wipe values since we are not an array
+            expect(arr[0]).toEqual(99);
+            expect(arr[1]).toEqual(100);
+            expect(arr[2]).toEqual(12);
+        });
+    });
+});
