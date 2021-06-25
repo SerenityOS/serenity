@@ -189,6 +189,7 @@ private:
     void clear(bool may_defer = true)
     {
         bool called_from_inside_function = m_call_nesting_level > 0;
+        // NOTE: This VERIFY could fail because a Function is destroyed from within itself.
         VERIFY(may_defer || !called_from_inside_function);
         if (called_from_inside_function && may_defer) {
             m_deferred_clear = true;
