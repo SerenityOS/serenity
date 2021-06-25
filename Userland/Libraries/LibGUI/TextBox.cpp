@@ -72,4 +72,12 @@ void TextBox::add_input_to_history(String input)
     m_history_index++;
 }
 
+PasswordBox::PasswordBox()
+    : TextBox()
+{
+    set_substitution_code_point('*');
+    undo_action().set_enabled(false);
+    redo_action().set_enabled(false);
+}
+
 }
