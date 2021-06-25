@@ -5,10 +5,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "Buffer.h"
 #include <AK/Atomic.h>
 #include <AK/Debug.h>
 #include <AK/String.h>
-#include <LibAudio/Buffer.h>
 
 namespace Audio {
 
@@ -44,7 +44,7 @@ i32 Buffer::allocate_id()
 }
 
 template<typename SampleReader>
-static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Frame>& samples, ResampleHelper& resampler, int num_channels)
+static void read_samples_from_stream(InputMemoryStream& stream, SampleReader read_sample, Vector<Frame>& samples, ResampleHelper<double>& resampler, int num_channels)
 {
     double norm_l = 0;
     double norm_r = 0;
@@ -127,13 +127,13 @@ static double read_norm_sample_8(InputMemoryStream& stream)
     return double(sample) / NumericLimits<u8>::max();
 }
 
-RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format)
+RefPtr<Buffer> Buffer::from_pcm_data(ReadonlyBytes data, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format)
 {
     InputMemoryStream stream { data };
     return from_pcm_stream(stream, resampler, num_channels, sample_format, data.size() / (pcm_bits_per_sample(sample_format) / 8));
 }
 
-RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples)
+RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper<double>& resampler, int num_channels, PcmSampleFormat sample_format, int num_samples)
 {
     Vector<Frame> fdata;
     fdata.ensure_capacity(num_samples);
@@ -165,5 +165,55 @@ RefPtr<Buffer> Buffer::from_pcm_stream(InputMemoryStream& stream, ResampleHelper
 
     return Buffer::create_with_samples(move(fdata));
 }
+
+template<typename SampleType>
+ResampleHelper<SampleType>::ResampleHelper(double source, double target)
+    : m_ratio(source / target)
+{
+}
+template ResampleHelper<i32>::ResampleHelper(double, double);
+template ResampleHelper<double>::ResampleHelper(double, double);
+
+template<typename SampleType>
+Vector<SampleType> ResampleHelper<SampleType>::resample(Vector<SampleType> to_resample)
+{
+    Vector<SampleType> resampled;
+    resampled.ensure_capacity(to_resample.size() * m_ratio);
+    for (auto sample : to_resample) {
+        process_sample(sample, sample);
+
+        while (read_sample(sample, sample))
+            resampled.unchecked_append(sample);
+    }
+
+    return resampled;
+}
+template Vector<i32> ResampleHelper<i32>::resample(Vector<i32>);
+template Vector<double> ResampleHelper<double>::resample(Vector<double>);
+
+template<typename SampleType>
+void ResampleHelper<SampleType>::process_sample(SampleType sample_l, SampleType sample_r)
+{
+    m_last_sample_l = sample_l;
+    m_last_sample_r = sample_r;
+    m_current_ratio += 1;
+}
+template void ResampleHelper<i32>::process_sample(i32, i32);
+template void ResampleHelper<double>::process_sample(double, double);
+
+template<typename SampleType>
+bool ResampleHelper<SampleType>::read_sample(SampleType& next_l, SampleType& next_r)
+{
+    if (m_current_ratio > 0) {
+        m_current_ratio -= m_ratio;
+        next_l = m_last_sample_l;
+        next_r = m_last_sample_r;
+        return true;
+    }
+
+    return false;
+}
+template bool ResampleHelper<i32>::read_sample(i32&, i32&);
+template bool ResampleHelper<double>::read_sample(double&, double&);
 
 }

@@ -5,11 +5,11 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include "WavLoader.h"
+#include "Buffer.h"
 #include <AK/Debug.h>
 #include <AK/NumericLimits.h>
 #include <AK/OwnPtr.h>
-#include <LibAudio/Buffer.h>
-#include <LibAudio/WavLoader.h>
 #include <LibCore/File.h>
 #include <LibCore/FileStream.h>
 
@@ -30,7 +30,7 @@ WavLoaderPlugin::WavLoaderPlugin(const StringView& path)
     if (!valid)
         return;
 
-    m_resampler = make<ResampleHelper>(m_sample_rate, m_device_sample_rate);
+    m_resampler = make<ResampleHelper<double>>(m_sample_rate, m_device_sample_rate);
 }
 
 WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
@@ -46,7 +46,7 @@ WavLoaderPlugin::WavLoaderPlugin(const ByteBuffer& buffer)
     if (!valid)
         return;
 
-    m_resampler = make<ResampleHelper>(m_sample_rate, m_device_sample_rate);
+    m_resampler = make<ResampleHelper<double>>(m_sample_rate, m_device_sample_rate);
 }
 
 RefPtr<Buffer> WavLoaderPlugin::get_more_samples(size_t max_bytes_to_read_from_input)
@@ -282,30 +282,6 @@ bool WavLoaderPlugin::parse_header()
 
     m_byte_offset_of_data_samples = bytes_read;
     return true;
-}
-
-ResampleHelper::ResampleHelper(double source, double target)
-    : m_ratio(source / target)
-{
-}
-
-void ResampleHelper::process_sample(double sample_l, double sample_r)
-{
-    m_last_sample_l = sample_l;
-    m_last_sample_r = sample_r;
-    m_current_ratio += 1;
-}
-
-bool ResampleHelper::read_sample(double& next_l, double& next_r)
-{
-    if (m_current_ratio > 0) {
-        m_current_ratio -= m_ratio;
-        next_l = m_last_sample_l;
-        next_r = m_last_sample_r;
-        return true;
-    }
-
-    return false;
 }
 
 }
