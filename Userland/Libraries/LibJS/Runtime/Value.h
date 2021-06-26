@@ -287,6 +287,8 @@ public:
     double to_integer_or_infinity(GlobalObject&) const;
     bool to_boolean() const;
 
+    Value get(GlobalObject&, PropertyName const&) const;
+
     String to_string_without_side_effects() const;
 
     Value value_or(Value fallback) const
