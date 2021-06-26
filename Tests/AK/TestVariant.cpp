@@ -80,14 +80,14 @@ TEST_CASE(move_moves)
 TEST_CASE(verify_cast)
 {
     Variant<i8, i16, i32, i64> one_integer_to_rule_them_all { static_cast<i32>(42) };
-    auto fake_integer = one_integer_to_rule_them_all.verify_cast<i8, i32>();
+    auto fake_integer = one_integer_to_rule_them_all.downcast<i8, i32>();
     EXPECT(fake_integer.has<i32>());
     EXPECT(one_integer_to_rule_them_all.has<i32>());
     EXPECT_EQ(fake_integer.get<i32>(), 42);
     EXPECT_EQ(one_integer_to_rule_them_all.get<i32>(), 42);
 
     fake_integer = static_cast<i8>(60);
-    one_integer_to_rule_them_all = fake_integer.verify_cast<i8, i16>().verify_cast<i8, i32, float>().verify_cast<i8, i16, i32, i64>();
+    one_integer_to_rule_them_all = fake_integer.downcast<i8, i16>().downcast<i8, i32, float>().downcast<i8, i16, i32, i64>();
     EXPECT(fake_integer.has<i8>());
     EXPECT(one_integer_to_rule_them_all.has<i8>());
     EXPECT_EQ(fake_integer.get<i8>(), 60);
