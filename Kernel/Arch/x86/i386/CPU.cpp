@@ -30,8 +30,8 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
     Processor::set_current_thread(*to_thread);
 
-    auto& from_tss = from_thread->tss();
-    auto& to_tss = to_thread->tss();
+    auto& from_regs = from_thread->regs();
+    auto& to_regs = to_thread->regs();
 
     if (has_fxsr)
         asm volatile("fxsave %0"
@@ -40,10 +40,10 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
         asm volatile("fnsave %0"
                      : "=m"(from_thread->fpu_state()));
 
-    from_tss.fs = get_fs();
-    from_tss.gs = get_gs();
-    set_fs(to_tss.fs);
-    set_gs(to_tss.gs);
+    from_regs.fs = get_fs();
+    from_regs.gs = get_gs();
+    set_fs(to_regs.fs);
+    set_gs(to_regs.gs);
 
     if (from_thread->process().is_traced())
         read_debug_registers_into(from_thread->debug_register_state());
@@ -59,8 +59,8 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     tls_descriptor.set_base(to_thread->thread_specific_data());
     tls_descriptor.set_limit(to_thread->thread_specific_region_size());
 
-    if (from_tss.cr3 != to_tss.cr3)
-        write_cr3(to_tss.cr3);
+    if (from_regs.cr3 != to_regs.cr3)
+        write_cr3(to_regs.cr3);
 
     to_thread->set_cpu(processor.get_id());
     processor.restore_in_critical(to_thread->saved_critical());
@@ -96,7 +96,7 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
 extern "C" u32 do_init_context(Thread* thread, u32 flags)
 {
     VERIFY_INTERRUPTS_DISABLED();
-    thread->tss().eflags = flags;
+    thread->regs().eflags = flags;
     return Processor::current().init_context(*thread, true);
 }
 

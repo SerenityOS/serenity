@@ -84,48 +84,51 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
 
     m_fpu_state = (FPUState*)kmalloc_aligned<16>(sizeof(FPUState));
     reset_fpu_state();
-    m_tss.iomapbase = sizeof(TSS32);
 
 #if ARCH(I386)
     // Only IF is set when a process boots.
-    m_tss.eflags = 0x0202;
+    m_regs.eflags = 0x0202;
 
     if (m_process->is_kernel_process()) {
-        m_tss.cs = GDT_SELECTOR_CODE0;
-        m_tss.ds = GDT_SELECTOR_DATA0;
-        m_tss.es = GDT_SELECTOR_DATA0;
-        m_tss.fs = GDT_SELECTOR_PROC;
-        m_tss.ss = GDT_SELECTOR_DATA0;
-        m_tss.gs = 0;
+        m_regs.cs = GDT_SELECTOR_CODE0;
+        m_regs.ds = GDT_SELECTOR_DATA0;
+        m_regs.es = GDT_SELECTOR_DATA0;
+        m_regs.fs = GDT_SELECTOR_PROC;
+        m_regs.ss = GDT_SELECTOR_DATA0;
+        m_regs.gs = 0;
     } else {
-        m_tss.cs = GDT_SELECTOR_CODE3 | 3;
-        m_tss.ds = GDT_SELECTOR_DATA3 | 3;
-        m_tss.es = GDT_SELECTOR_DATA3 | 3;
-        m_tss.fs = GDT_SELECTOR_DATA3 | 3;
-        m_tss.ss = GDT_SELECTOR_DATA3 | 3;
-        m_tss.gs = GDT_SELECTOR_TLS | 3;
+        m_regs.cs = GDT_SELECTOR_CODE3 | 3;
+        m_regs.ds = GDT_SELECTOR_DATA3 | 3;
+        m_regs.es = GDT_SELECTOR_DATA3 | 3;
+        m_regs.fs = GDT_SELECTOR_DATA3 | 3;
+        m_regs.ss = GDT_SELECTOR_DATA3 | 3;
+        m_regs.gs = GDT_SELECTOR_TLS | 3;
     }
-
-    m_tss.cr3 = m_process->space().page_directory().cr3();
 #else
-    PANIC("Thread::Thread() not implemented");
+    m_regs.rflags = 0x0202;
 #endif
+
+    m_regs.cr3 = m_process->space().page_directory().cr3();
 
     m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
     m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
 
-#if ARCH(I386)
     if (m_process->is_kernel_process()) {
-        m_tss.esp = m_tss.esp0 = m_kernel_stack_top;
+#if ARCH(I386)
+        m_regs.esp = m_regs.esp0 = m_kernel_stack_top;
+#else
+        m_regs.rsp = m_regs.rsp0 = m_kernel_stack_top;
+#endif
     } else {
         // Ring 3 processes get a separate stack for ring 0.
         // The ring 3 stack will be assigned by exec().
-        m_tss.ss0 = GDT_SELECTOR_DATA0;
-        m_tss.esp0 = m_kernel_stack_top;
-    }
+#if ARCH(I386)
+        m_regs.ss0 = GDT_SELECTOR_DATA0;
+        m_regs.esp0 = m_kernel_stack_top;
 #else
-    PANIC("Thread::Thread() not implemented");
+        m_regs.rsp0 = m_kernel_stack_top;
 #endif
+    }
 
     // We need to add another reference if we could successfully create
     // all the resources needed for this thread. The reason for this is that
@@ -864,9 +867,9 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 #endif
 
 #if ARCH(I386)
-    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_regs.cs, m_regs.eip, signal);
 #else
-    PANIC("Thread:dispatch_signal() not implemented");
+    dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:16x} to deliver {}", state_string(), m_regs.cs, m_regs.rip, signal);
 #endif
 
     return DispatchSignalResult::Continue;

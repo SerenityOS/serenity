@@ -21,11 +21,7 @@ ProcessPagingScope::ProcessPagingScope(Process& process)
 ProcessPagingScope::~ProcessPagingScope()
 {
     InterruptDisabler disabler;
-#if ARCH(I386)
-    Thread::current()->tss().cr3 = m_previous_cr3;
-#else
-    PANIC("ProcessPagingScope::~ProcessPagingScope() not implemented");
-#endif
+    Thread::current()->regs().cr3 = m_previous_cr3;
     write_cr3(m_previous_cr3);
 }
 

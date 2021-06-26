@@ -733,13 +733,8 @@ void MemoryManager::enter_space(Space& space)
     VERIFY(current_thread != nullptr);
     ScopedSpinLock lock(s_mm_lock);
 
-#if ARCH(I386)
-    current_thread->tss().cr3 = space.page_directory().cr3();
+    current_thread->regs().cr3 = space.page_directory().cr3();
     write_cr3(space.page_directory().cr3());
-#else
-    (void)space;
-    PANIC("MemoryManager::enter_space not implemented");
-#endif
 }
 
 void MemoryManager::flush_tlb_local(VirtualAddress vaddr, size_t page_count)
