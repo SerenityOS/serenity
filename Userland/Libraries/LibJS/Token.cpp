@@ -53,7 +53,16 @@ TokenCategory Token::category() const
 double Token::double_value() const
 {
     VERIFY(type() == TokenType::NumericLiteral);
-    String value_string(m_value);
+
+    StringBuilder builder;
+
+    for (auto ch : m_value) {
+        if (ch == '_')
+            continue;
+        builder.append(ch);
+    }
+
+    String value_string = builder.to_string();
     if (value_string[0] == '0' && value_string.length() >= 2) {
         if (value_string[1] == 'x' || value_string[1] == 'X') {
             // hexadecimal

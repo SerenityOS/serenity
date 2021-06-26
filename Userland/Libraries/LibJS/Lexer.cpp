@@ -193,6 +193,17 @@ void Lexer::consume()
     m_current_char = m_source[m_position++];
 }
 
+bool Lexer::consume_decimal_number()
+{
+    if (!is_ascii_digit(m_current_char))
+        return false;
+
+    while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit)) {
+        consume();
+    }
+    return true;
+}
+
 bool Lexer::consume_exponent()
 {
     consume();
@@ -202,21 +213,22 @@ bool Lexer::consume_exponent()
     if (!is_ascii_digit(m_current_char))
         return false;
 
-    while (is_ascii_digit(m_current_char)) {
-        consume();
-    }
-    return true;
+    return consume_decimal_number();
+}
+
+static constexpr bool is_octal_digit(char ch)
+{
+    return ch >= '0' && ch <= '7';
 }
 
 bool Lexer::consume_octal_number()
 {
     consume();
-    if (!(m_current_char >= '0' && m_current_char <= '7'))
+    if (!is_octal_digit(m_current_char))
         return false;
 
-    while (m_current_char >= '0' && m_current_char <= '7') {
+    while (is_octal_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_octal_digit))
         consume();
-    }
 
     return true;
 }
@@ -227,22 +239,36 @@ bool Lexer::consume_hexadecimal_number()
     if (!is_ascii_hex_digit(m_current_char))
         return false;
 
-    while (is_ascii_hex_digit(m_current_char))
+    while (is_ascii_hex_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_hex_digit))
         consume();
 
     return true;
 }
 
+static constexpr bool is_binary_digit(char ch)
+{
+    return ch == '0' || ch == '1';
+}
+
 bool Lexer::consume_binary_number()
 {
     consume();
-    if (!(m_current_char == '0' || m_current_char == '1'))
+    if (!is_binary_digit(m_current_char))
         return false;
 
-    while (m_current_char == '0' || m_current_char == '1')
+    while (is_binary_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_binary_digit))
         consume();
 
     return true;
+}
+
+template<typename Callback>
+bool Lexer::match_numeric_literal_separator_followed_by(Callback callback) const
+{
+    if (m_position >= m_source.length())
+        return false;
+    return m_current_char == '_'
+        && callback(m_source[m_position]);
 }
 
 bool Lexer::match(char a, char b) const
@@ -460,7 +486,7 @@ Token Lexer::next()
             if (m_current_char == '.') {
                 // decimal
                 consume();
-                while (is_ascii_digit(m_current_char))
+                while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit))
                     consume();
                 if (m_current_char == 'e' || m_current_char == 'E')
                     is_invalid_numeric_literal = !consume_exponent();
@@ -494,11 +520,11 @@ Token Lexer::next()
                 // octal without '0o' prefix. Forbidden in 'strict mode'
                 do {
                     consume();
-                } while (is_ascii_digit(m_current_char));
+                } while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit));
             }
         } else {
             // 1...9 or period
-            while (is_ascii_digit(m_current_char))
+            while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit))
                 consume();
             if (m_current_char == 'n') {
                 consume();
@@ -506,7 +532,7 @@ Token Lexer::next()
             } else {
                 if (m_current_char == '.') {
                     consume();
-                    while (is_ascii_digit(m_current_char))
+                    while (is_ascii_digit(m_current_char) || match_numeric_literal_separator_followed_by(is_ascii_digit))
                         consume();
                 }
                 if (m_current_char == 'e' || m_current_char == 'E')
