@@ -41,10 +41,14 @@ public:
         TreeSelectionValue m_value;
     };
 
+    /* (9.3.3) */
     template<typename T = int>
     T parse_tree(SyntaxElementType type);
+    /* (9.3.1) */
     TreeSelection select_tree(SyntaxElementType type);
+    /* (9.3.2) */
     u8 select_tree_probability(SyntaxElementType type, u8 node);
+    /* (9.3.4) */
     void count_syntax_element(SyntaxElementType type, int value);
 
     void set_default_intra_mode_variables(u8 idx, u8 idy)
