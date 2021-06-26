@@ -21,7 +21,6 @@ class Decoder {
 
 public:
     Decoder();
-    ~Decoder();
     bool parse_frame(ByteBuffer const&);
     void dump_info();
 
@@ -39,6 +38,10 @@ private:
             return FullSwing;
         return StudioSwing;
     }
+
+    /* Utilities */
+    void clear_context(Vector<u8>& context, size_t size);
+    void clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size);
 
     /* (6.2) Uncompressed Header Syntax */
     bool uncompressed_header();
@@ -158,12 +161,12 @@ private:
     i8 m_loop_filter_ref_deltas[MAX_REF_FRAMES];
     i8 m_loop_filter_mode_deltas[2];
 
-    u8** m_above_nonzero_context { nullptr };
-    u8** m_left_nonzero_context { nullptr };
-    u8* m_above_seg_pred_context { nullptr };
-    u8* m_left_seg_pred_context { nullptr };
-    u8* m_above_partition_context { nullptr };
-    u8* m_left_partition_context { nullptr };
+    Vector<Vector<u8>> m_above_nonzero_context;
+    Vector<Vector<u8>> m_left_nonzero_context;
+    Vector<u8> m_above_seg_pred_context;
+    Vector<u8> m_left_seg_pred_context;
+    Vector<u8> m_above_partition_context;
+    Vector<u8> m_left_partition_context;
     u32 m_mi_row_start { 0 };
     u32 m_mi_row_end { 0 };
     u32 m_mi_col_start { 0 };
