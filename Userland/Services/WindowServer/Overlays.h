@@ -100,14 +100,11 @@ protected:
     void clear_bitmaps();
     virtual void rect_changed(Gfx::IntRect const&) override;
 
-    void rerender_on_location_change(bool value)
-    {
-        m_rerender_on_location_change = value;
-    }
+    void invalidate_content();
 
 private:
     RefPtr<MultiScaleBitmaps> m_rendered_bitmaps;
-    bool m_rerender_on_location_change { false };
+    bool m_content_invalidated { false };
 };
 
 class ScreenNumberOverlay : public RectangularOverlay {
