@@ -1691,7 +1691,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
 
         declarations.append(create_ast_node<VariableDeclarator>(
             { m_state.current_token.filename(), rule_start.position(), position() },
-            move(target).verify_cast<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>(),
+            move(target).downcast<NonnullRefPtr<Identifier>, NonnullRefPtr<BindingPattern>>(),
             move(init)));
 
         if (match(TokenType::Comma)) {

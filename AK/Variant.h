@@ -319,7 +319,7 @@ public:
     }
 
     template<typename... NewTs>
-    Variant<NewTs...> verify_cast() &&
+    Variant<NewTs...> downcast() &&
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
         visit([&](auto& value) {
@@ -331,7 +331,7 @@ public:
     }
 
     template<typename... NewTs>
-    Variant<NewTs...> verify_cast() &
+    Variant<NewTs...> downcast() &
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
         visit([&](const auto& value) {

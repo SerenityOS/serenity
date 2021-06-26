@@ -397,7 +397,7 @@ Optional<InstantiationError> AbstractMachine::allocate_all_initial_phase(Module 
 
             module_instance.exports().append(ExportInstance {
                 entry.name(),
-                move(address).verify_cast<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress>(),
+                move(address).downcast<FunctionAddress, TableAddress, MemoryAddress, GlobalAddress>(),
             });
         }
     });
