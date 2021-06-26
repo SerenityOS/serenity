@@ -29,7 +29,7 @@ class SchedulerPerProcessorData;
 struct MemoryManagerData;
 struct ProcessorMessageEntry;
 
-class TrapFrame;
+struct TrapFrame;
 class ProcessorInfo;
 
 struct [[gnu::aligned(16)]] FPUState
