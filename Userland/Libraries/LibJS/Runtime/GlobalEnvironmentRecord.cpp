@@ -14,7 +14,6 @@ namespace JS {
 
 GlobalEnvironmentRecord::GlobalEnvironmentRecord(GlobalObject& global_object)
     : EnvironmentRecord(nullptr)
-    , m_global_object(global_object)
 {
     m_object_record = global_object.heap().allocate<ObjectEnvironmentRecord>(global_object, global_object, ObjectEnvironmentRecord::IsWithEnvironment::No, nullptr);
     m_declarative_record = global_object.heap().allocate<DeclarativeEnvironmentRecord>(global_object);
@@ -47,12 +46,12 @@ bool GlobalEnvironmentRecord::delete_from_environment_record(FlyString const& na
 
 Value GlobalEnvironmentRecord::get_this_binding(GlobalObject&) const
 {
-    return &m_global_object;
+    return &global_object();
 }
 
 Value GlobalEnvironmentRecord::global_this_value() const
 {
-    return &m_global_object;
+    return &global_object();
 }
 
 // 9.1.1.4.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n
@@ -144,7 +143,7 @@ bool GlobalEnvironmentRecord::has_lexical_declaration(FlyString const& name) con
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironmentRecord::has_restricted_global_property(FlyString const& name) const
 {
-    auto existing_prop = m_global_object.get_own_property_descriptor(name);
+    auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
     if (!existing_prop.has_value() || existing_prop.value().value.is_undefined())
         return false;
     if (existing_prop.value().attributes.is_configurable())
