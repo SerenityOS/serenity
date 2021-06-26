@@ -38,6 +38,7 @@ public:
     void normalize();
     bool load_config(const Core::ConfigFile& config_file, String* error_msg = nullptr);
     bool save_config(Core::ConfigFile& config_file, bool sync = true) const;
+    bool try_auto_add_framebuffer(String const&);
 
     // TODO: spaceship operator
     bool operator!=(const ScreenLayout& other) const;
