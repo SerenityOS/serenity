@@ -15,7 +15,7 @@
 namespace Kernel {
 
 struct TrapFrame {
-    u32 prev_irq_level;
+    FlatPtr prev_irq_level;
     TrapFrame* next_trap;
     RegisterState* regs; // must be last
 
