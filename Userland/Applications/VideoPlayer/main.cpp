@@ -43,8 +43,10 @@ int main(int argc, char** argv)
 
             auto const& frame = block.frame(0);
             dbgln("Reading frame 0 from block @ {}", block.timestamp());
-            vp9_decoder.decode_frame(frame);
+            bool failed = !vp9_decoder.decode_frame(frame);
             vp9_decoder.dump_frame_info();
+            if (failed)
+                return 1;
         }
     }
 
