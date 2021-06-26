@@ -1120,9 +1120,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 #if ARCH(X86_64)
     MSR fs_base(MSR_FS_BASE);
     fs_base.set((size_t)this & 0xffffffff, (size_t)this >> 32);
-#endif
-
-#if ARCH(I386)
+#else
     asm volatile(
         "mov %%ax, %%ds\n"
         "mov %%ax, %%es\n"
@@ -1130,7 +1128,9 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
         "mov %%ax, %%ss\n" ::"a"(GDT_SELECTOR_DATA0)
         : "memory");
     set_fs(GDT_SELECTOR_PROC);
+#endif
 
+#if ARCH(I386)
     // Make sure CS points to the kernel code descriptor.
     // clang-format off
     asm volatile(
