@@ -88,7 +88,7 @@ RectangularOverlay::RectangularOverlay()
 
 void RectangularOverlay::rect_changed(Gfx::IntRect const& previous_rect)
 {
-    if (m_rerender_on_location_change || rect().size() != previous_rect.size())
+    if (rect().size() != previous_rect.size())
         clear_bitmaps();
 }
 
@@ -99,6 +99,10 @@ void RectangularOverlay::clear_bitmaps()
 
 void RectangularOverlay::render(Gfx::Painter& painter, Screen const& screen)
 {
+    if (m_content_invalidated) {
+        clear_bitmaps();
+        m_content_invalidated = false;
+    }
     auto scale_factor = screen.scale_factor();
     auto* bitmap = m_rendered_bitmaps->find_bitmap(scale_factor);
     if (!bitmap) {
@@ -134,6 +138,12 @@ Gfx::IntRect RectangularOverlay::calculate_frame_rect(Gfx::IntRect const& rect)
 void RectangularOverlay::set_content_rect(Gfx::IntRect const& rect)
 {
     set_rect(calculate_frame_rect(rect));
+}
+
+void RectangularOverlay::invalidate_content()
+{
+    m_content_invalidated = true;
+    invalidate();
 }
 
 Gfx::Font const* ScreenNumberOverlay::s_font { nullptr };
@@ -211,7 +221,6 @@ Gfx::IntRect ScreenNumberOverlay::calculate_content_rect_for_screen(Screen& scre
 WindowGeometryOverlay::WindowGeometryOverlay(Window& window)
     : m_window(window)
 {
-    rerender_on_location_change(true);
     update_rect();
 }
 
@@ -254,7 +263,7 @@ void WindowGeometryOverlay::render_overlay_bitmap(Gfx::Painter& painter)
 void WindowGeometryOverlay::window_rect_changed()
 {
     update_rect();
-    invalidate();
+    invalidate_content();
 }
 
 DndOverlay::DndOverlay(String const& text, Gfx::Bitmap const* bitmap)
