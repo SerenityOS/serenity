@@ -181,12 +181,11 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     if (!first_thread || !process)
         return {};
 #if ARCH(I386)
-    first_thread->tss().eip = (FlatPtr)entry;
-    first_thread->tss().esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
+    first_thread->regs().eip = (FlatPtr)entry;
+    first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
 #else
-    (void)entry;
-    (void)entry_data;
-    PANIC("Process::create_kernel_process() not implemented");
+    first_thread->regs().rip = (FlatPtr)entry;
+    first_thread->regs().rsp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
 #endif
 
     if (process->pid() != 0) {
@@ -645,14 +644,13 @@ RefPtr<Thread> Process::create_kernel_thread(void (*entry)(void*), void* entry_d
     if (!joinable)
         thread->detach();
 
+    auto& regs = thread->regs();
 #if ARCH(I386)
-    auto& tss = thread->tss();
-    tss.eip = (FlatPtr)entry;
-    tss.esp = FlatPtr(entry_data); // entry function argument is expected to be in tss.esp
+    regs.eip = (FlatPtr)entry;
+    regs.esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
 #else
-    (void)entry;
-    (void)entry_data;
-    PANIC("Process::create_kernel_thread() not implemented");
+    regs.rip = (FlatPtr)entry;
+    regs.rsp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
 #endif
 
     ScopedSpinLock lock(g_scheduler_lock);

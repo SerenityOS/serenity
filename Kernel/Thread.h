@@ -62,6 +62,53 @@ struct ThreadSpecificData {
 
 #define THREAD_AFFINITY_DEFAULT 0xffffffff
 
+struct ThreadRegisters {
+#if ARCH(I386)
+    FlatPtr ss;
+    FlatPtr gs;
+    FlatPtr fs;
+    FlatPtr es;
+    FlatPtr ds;
+    FlatPtr edi;
+    FlatPtr esi;
+    FlatPtr ebp;
+    FlatPtr esp;
+    FlatPtr ebx;
+    FlatPtr edx;
+    FlatPtr ecx;
+    FlatPtr eax;
+    FlatPtr eip;
+    FlatPtr esp0;
+    FlatPtr ss0;
+#else
+    FlatPtr rdi;
+    FlatPtr rsi;
+    FlatPtr rbp;
+    FlatPtr rsp;
+    FlatPtr rbx;
+    FlatPtr rdx;
+    FlatPtr rcx;
+    FlatPtr rax;
+    FlatPtr r8;
+    FlatPtr r9;
+    FlatPtr r10;
+    FlatPtr r11;
+    FlatPtr r12;
+    FlatPtr r13;
+    FlatPtr r14;
+    FlatPtr r15;
+    FlatPtr rip;
+    FlatPtr rsp0;
+#endif
+    FlatPtr cs;
+#if ARCH(I386)
+    FlatPtr eflags;
+#else
+    FlatPtr rflags;
+#endif
+    FlatPtr cr3;
+};
+
 class Thread
     : public RefCounted<Thread>
     , public Weakable<Thread> {
@@ -748,8 +795,9 @@ public:
     DebugRegisterState& debug_register_state() { return m_debug_register_state; }
     const DebugRegisterState& debug_register_state() const { return m_debug_register_state; }
 
-    TSS& tss() { return m_tss; }
-    const TSS& tss() const { return m_tss; }
+    ThreadRegisters& regs() { return m_regs; }
+    ThreadRegisters const& regs() const { return m_regs; }
+
     State state() const { return m_state; }
     const char* state_string() const;
 
@@ -1210,7 +1258,7 @@ private:
     mutable RecursiveSpinLock m_block_lock;
     NonnullRefPtr<Process> m_process;
     ThreadID m_tid { -1 };
-    TSS m_tss {};
+    ThreadRegisters m_regs;
     DebugRegisterState m_debug_register_state {};
     TrapFrame* m_current_trap { nullptr };
     u32 m_saved_critical { 1 };

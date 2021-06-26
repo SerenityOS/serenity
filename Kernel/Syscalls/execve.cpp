@@ -597,7 +597,7 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     auto make_stack_result = make_userspace_stack_for_main_thread(*load_result.stack_region.unsafe_ptr(), move(arguments), move(environment), move(auxv));
     if (make_stack_result.is_error())
         return make_stack_result.error();
-    u32 new_userspace_esp = make_stack_result.value();
+    FlatPtr new_userspace_esp = make_stack_result.value();
 
     if (wait_for_tracer_at_next_execve()) {
         // Make sure we release the ptrace lock here or the tracer will block forever.
@@ -636,22 +636,21 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     }
     new_main_thread->reset_fpu_state();
 
+    auto& regs = new_main_thread->m_regs;
 #if ARCH(I386)
-    auto& tss = new_main_thread->m_tss;
-    tss.cs = GDT_SELECTOR_CODE3 | 3;
-    tss.ds = GDT_SELECTOR_DATA3 | 3;
-    tss.es = GDT_SELECTOR_DATA3 | 3;
-    tss.ss = GDT_SELECTOR_DATA3 | 3;
-    tss.fs = GDT_SELECTOR_DATA3 | 3;
-    tss.gs = GDT_SELECTOR_TLS | 3;
-    tss.eip = load_result.entry_eip;
-    tss.esp = new_userspace_esp;
-    tss.cr3 = space().page_directory().cr3();
-    tss.ss2 = pid().value();
+    regs.cs = GDT_SELECTOR_CODE3 | 3;
+    regs.ds = GDT_SELECTOR_DATA3 | 3;
+    regs.es = GDT_SELECTOR_DATA3 | 3;
+    regs.ss = GDT_SELECTOR_DATA3 | 3;
+    regs.fs = GDT_SELECTOR_DATA3 | 3;
+    regs.gs = GDT_SELECTOR_TLS | 3;
+    regs.eip = load_result.entry_eip;
+    regs.esp = new_userspace_esp;
 #else
-    (void)new_userspace_esp;
-    PANIC("Process::do_exec() not implemented");
+    regs.rip = load_result.entry_eip;
+    regs.rsp = new_userspace_esp;
 #endif
+    regs.cr3 = space().page_directory().cr3();
 
     {
         TemporaryChange profiling_disabler(m_profiling, was_profiling);

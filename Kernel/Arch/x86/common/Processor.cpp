@@ -489,14 +489,10 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
             // pushed the callee-saved registers, and the last of them happens
             // to be ebp.
             ProcessPagingScope paging_scope(thread.process());
-            auto& tss = thread.tss();
-            u32* stack_top;
 #if ARCH(I386)
-            stack_top = reinterpret_cast<u32*>(tss.esp);
-#else
-            (void)tss;
-            TODO();
-#endif
+            auto& regs = thread.regs();
+            u32* stack_top;
+            stack_top = reinterpret_cast<u32*>(regs.esp);
             if (is_user_range(VirtualAddress(stack_top), sizeof(FlatPtr))) {
                 if (!copy_from_user(&frame_ptr, &((FlatPtr*)stack_top)[0]))
                     frame_ptr = 0;
@@ -505,8 +501,7 @@ Vector<FlatPtr> Processor::capture_stack_trace(Thread& thread, size_t max_frames
                 if (!safe_memcpy(&frame_ptr, &((FlatPtr*)stack_top)[0], sizeof(FlatPtr), fault_at))
                     frame_ptr = 0;
             }
-#if ARCH(I386)
-            eip = tss.eip;
+            eip = regs.eip;
 #else
             TODO();
 #endif
