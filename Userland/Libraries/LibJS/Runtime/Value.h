@@ -288,6 +288,7 @@ public:
     bool to_boolean() const;
 
     Value get(GlobalObject&, PropertyName const&) const;
+    Function* get_method(GlobalObject&, PropertyName const&) const;
 
     String to_string_without_side_effects() const;
 

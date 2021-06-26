@@ -413,7 +413,7 @@ Value Value::to_primitive(GlobalObject& global_object, PreferredType preferred_t
     };
     if (is_object()) {
         auto& vm = global_object.vm();
-        auto to_primitive_method = get_method(global_object, *this, *vm.well_known_symbol_to_primitive());
+        auto to_primitive_method = get_method(global_object, *vm.well_known_symbol_to_primitive());
         if (vm.exception())
             return {};
         if (to_primitive_method) {
@@ -803,6 +803,32 @@ Value Value::get(GlobalObject& global_object, PropertyName const& property_name)
 
     // 3. Return ? O.[[Get]](P, V).
     return object->get(property_name, *this);
+}
+
+// 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
+Function* Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: IsPropertyKey(P) is true.
+
+    // 2. Let func be ? GetV(V, P).
+    auto function = get(global_object, property_name).value_or(js_undefined());
+    if (vm.exception())
+        return nullptr;
+
+    // 3. If func is either undefined or null, return undefined.
+    if (function.is_nullish())
+        return nullptr;
+
+    // 4. If IsCallable(func) is false, throw a TypeError exception.
+    if (!function.is_function()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, function.to_string_without_side_effects());
+        return nullptr;
+    }
+
+    // 5. Return func.
+    return &function.as_function();
 }
 
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
@@ -1204,7 +1230,7 @@ Value instance_of(GlobalObject& global_object, Value lhs, Value rhs)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAnObject, rhs.to_string_without_side_effects());
         return {};
     }
-    auto has_instance_method = get_method(global_object, Value(&rhs.as_object()), *vm.well_known_symbol_has_instance());
+    auto has_instance_method = rhs.get_method(global_object, *vm.well_known_symbol_has_instance());
     if (vm.exception())
         return {};
     if (has_instance_method) {

@@ -262,7 +262,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_match)
         return {};
     bool global = global_value.to_boolean();
     // FIXME: Implement and use RegExpExec, this does something different - https://tc39.es/ecma262/#sec-regexpexec
-    auto* exec = get_method(global_object, rx, vm.names.exec);
+    auto* exec = Value(rx).get_method(global_object, vm.names.exec);
     if (!exec)
         return js_undefined();
     // FIXME end
@@ -295,7 +295,7 @@ JS_DEFINE_NATIVE_FUNCTION(RegExpPrototype::symbol_replace)
         rx->regex().start_offset = 0;
 
     // FIXME: Implement and use RegExpExec - https://tc39.es/ecma262/#sec-regexpexec
-    auto* exec = get_method(global_object, rx, vm.names.exec);
+    auto* exec = Value(rx).get_method(global_object, vm.names.exec);
     if (!exec)
         return {};
 

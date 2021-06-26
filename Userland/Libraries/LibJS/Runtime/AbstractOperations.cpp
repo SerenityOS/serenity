@@ -39,25 +39,6 @@ Value require_object_coercible(GlobalObject& global_object, Value value)
     return value;
 }
 
-// 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-Function* get_method(GlobalObject& global_object, Value value, PropertyName const& property_name)
-{
-    auto& vm = global_object.vm();
-    auto* object = value.to_object(global_object);
-    if (vm.exception())
-        return nullptr;
-    auto property_value = object->get(property_name);
-    if (vm.exception())
-        return nullptr;
-    if (property_value.is_empty() || property_value.is_nullish())
-        return nullptr;
-    if (!property_value.is_function()) {
-        vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunction, property_value.to_string_without_side_effects());
-        return nullptr;
-    }
-    return &property_value.as_function();
-}
-
 // 7.3.18 LengthOfArrayLike ( obj ), https://tc39.es/ecma262/#sec-lengthofarraylike
 size_t length_of_array_like(GlobalObject& global_object, Object const& object)
 {
