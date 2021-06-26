@@ -170,9 +170,6 @@ Value ScriptFunction::execute_function_body()
                         argument_value = js_undefined();
                     }
 
-                    if (i >= execution_context_arguments.size())
-                        execution_context_arguments.resize(i + 1);
-                    execution_context_arguments[i] = argument_value;
                     vm.assign(param, argument_value, global_object(), true, vm.lexical_environment());
                 });
 
