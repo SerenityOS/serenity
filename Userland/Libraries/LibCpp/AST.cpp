@@ -75,7 +75,7 @@ void Type::dump(FILE* output, size_t indent) const
     outln(output, "{}", to_string());
 }
 
-String Type::to_string() const
+String NamedType::to_string() const
 {
     String qualifiers_string;
     if (!m_qualifiers.is_empty())
