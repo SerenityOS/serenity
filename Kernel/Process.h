@@ -109,7 +109,10 @@ protected:
 
 class ProcessBase : public ProtectedProcessBase {
 protected:
-    u8 m_process_base_padding[PAGE_SIZE - sizeof(ProtectedProcessBase)];
+    // Without the alignas specifier here the compiler places this class into
+    // the parent class' padding which then causes the members for the RefCounted
+    // class to be placed within the first page of the Process class.
+    alignas(ProtectedProcessBase) u8 m_process_base_padding[PAGE_SIZE - sizeof(ProtectedProcessBase)];
 };
 
 static_assert(sizeof(ProcessBase) == PAGE_SIZE);
