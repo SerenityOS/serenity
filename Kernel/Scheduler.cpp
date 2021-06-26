@@ -232,7 +232,7 @@ bool Scheduler::pick_next()
         dbgln("Scheduler[{}]: Switch to {} @ {:04x}:{:08x}",
             Processor::id(),
             thread_to_schedule,
-            thread_to_schedule.tss().cs, thread_to_schedule.tss().eip);
+            thread_to_schedule.regs().cs, thread_to_schedule.regs().eip);
 #else
         PANIC("Scheduler::pick_next() not implemented");
 #endif
@@ -354,7 +354,8 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(), thread->tid().value(), thread->priority(), thread->tss().cs, thread->tss().eip);
+        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(),
+            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().eip);
 #endif
     }
 
@@ -583,7 +584,7 @@ void dump_thread_list()
     auto get_cs = [](Thread& thread) -> u16 {
 #if ARCH(I386)
         if (!thread.current_trap())
-            return thread.tss().cs;
+            return thread.regs().cs;
 #else
         PANIC("get_cs() not implemented");
 #endif
@@ -593,7 +594,7 @@ void dump_thread_list()
     auto get_eip = [](Thread& thread) -> u32 {
 #if ARCH(I386)
         if (!thread.current_trap())
-            return thread.tss().eip;
+            return thread.regs().eip;
         return thread.get_register_dump_from_stack().eip;
 #else
         PANIC("get_eip() not implemented");

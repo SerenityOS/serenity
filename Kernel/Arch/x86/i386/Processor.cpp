@@ -54,7 +54,7 @@ asm(
 "    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
 "    pushl %ebx \n" // push to_thread
 "    pushl %ebx \n" // push from_thread
-"    pushl $thread_context_first_enter \n" // should be same as tss.eip
+"    pushl $thread_context_first_enter \n" // should be same as regs.eip
 "    jmp enter_thread_context \n"
 );
 // clang-format on
@@ -86,8 +86,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // TODO: handle NT?
     VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
 
-    auto& tss = thread.tss();
-    bool return_to_user = (tss.cs & 3) != 0;
+    auto& regs = thread.regs();
+    bool return_to_user = (regs.cs & 3) != 0;
 
     // make room for an interrupt frame
     if (!return_to_user) {
@@ -96,10 +96,10 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
         stack_top -= sizeof(RegisterState) - 2 * sizeof(u32);
 
         // For kernel threads we'll push the thread function argument
-        // which should be in tss.esp and exit_kernel_thread as return
+        // which should be in regs.esp and exit_kernel_thread as return
         // address.
         stack_top -= 2 * sizeof(u32);
-        *reinterpret_cast<u32*>(kernel_stack_top - 2 * sizeof(u32)) = tss.esp;
+        *reinterpret_cast<u32*>(kernel_stack_top - 2 * sizeof(u32)) = regs.esp;
         *reinterpret_cast<u32*>(kernel_stack_top - 3 * sizeof(u32)) = FlatPtr(&exit_kernel_thread);
     } else {
         stack_top -= sizeof(RegisterState);
@@ -113,25 +113,25 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // we will end up either in kernel mode or user mode, depending on how the thread is set up
     // However, the first step is to always start in kernel mode with thread_context_first_enter
     RegisterState& iretframe = *reinterpret_cast<RegisterState*>(stack_top);
-    iretframe.ss = tss.ss;
-    iretframe.gs = tss.gs;
-    iretframe.fs = tss.fs;
-    iretframe.es = tss.es;
-    iretframe.ds = tss.ds;
-    iretframe.edi = tss.edi;
-    iretframe.esi = tss.esi;
-    iretframe.ebp = tss.ebp;
+    iretframe.ss = regs.ss;
+    iretframe.gs = regs.gs;
+    iretframe.fs = regs.fs;
+    iretframe.es = regs.es;
+    iretframe.ds = regs.ds;
+    iretframe.edi = regs.edi;
+    iretframe.esi = regs.esi;
+    iretframe.ebp = regs.ebp;
     iretframe.esp = 0;
-    iretframe.ebx = tss.ebx;
-    iretframe.edx = tss.edx;
-    iretframe.ecx = tss.ecx;
-    iretframe.eax = tss.eax;
-    iretframe.eflags = tss.eflags;
-    iretframe.eip = tss.eip;
-    iretframe.cs = tss.cs;
+    iretframe.ebx = regs.ebx;
+    iretframe.edx = regs.edx;
+    iretframe.ecx = regs.ecx;
+    iretframe.eax = regs.eax;
+    iretframe.eflags = regs.eflags;
+    iretframe.eip = regs.eip;
+    iretframe.cs = regs.cs;
     if (return_to_user) {
-        iretframe.userspace_esp = tss.esp;
-        iretframe.userspace_ss = tss.ss;
+        iretframe.userspace_esp = regs.esp;
+        iretframe.userspace_ss = regs.ss;
     }
 
     // make space for a trap frame
@@ -149,8 +149,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
             dbgln("init_context {} ({}) set up to execute at eip={}:{}, esp={}, stack_top={}, user_top={}:{}",
                 thread,
                 VirtualAddress(&thread),
-                iretframe.cs, tss.eip,
-                VirtualAddress(tss.esp),
+                iretframe.cs, regs.eip,
+                VirtualAddress(regs.esp),
                 VirtualAddress(stack_top),
                 iretframe.userspace_ss,
                 iretframe.userspace_esp);
@@ -158,8 +158,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
             dbgln("init_context {} ({}) set up to execute at eip={}:{}, esp={}, stack_top={}",
                 thread,
                 VirtualAddress(&thread),
-                iretframe.cs, tss.eip,
-                VirtualAddress(tss.esp),
+                iretframe.cs, regs.eip,
+                VirtualAddress(regs.esp),
                 VirtualAddress(stack_top));
         }
     }
@@ -168,15 +168,15 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // in kernel mode, so set up these values so that we end up popping iretframe
     // off the stack right after the context switch completed, at which point
     // control is transferred to what iretframe is pointing to.
-    tss.eip = FlatPtr(&thread_context_first_enter);
-    tss.esp0 = kernel_stack_top;
-    tss.esp = stack_top;
-    tss.cs = GDT_SELECTOR_CODE0;
-    tss.ds = GDT_SELECTOR_DATA0;
-    tss.es = GDT_SELECTOR_DATA0;
-    tss.gs = GDT_SELECTOR_DATA0;
-    tss.ss = GDT_SELECTOR_DATA0;
-    tss.fs = GDT_SELECTOR_PROC;
+    regs.eip = FlatPtr(&thread_context_first_enter);
+    regs.esp0 = kernel_stack_top;
+    regs.esp = stack_top;
+    regs.cs = GDT_SELECTOR_CODE0;
+    regs.ds = GDT_SELECTOR_DATA0;
+    regs.es = GDT_SELECTOR_DATA0;
+    regs.gs = GDT_SELECTOR_DATA0;
+    regs.ss = GDT_SELECTOR_DATA0;
+    regs.fs = GDT_SELECTOR_PROC;
     return stack_top;
 }
 
@@ -218,14 +218,14 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
         "popl %%esi \n"
         "popl %%ebx \n"
         "popfl \n"
-        : [from_esp] "=m" (from_thread->tss().esp),
-          [from_eip] "=m" (from_thread->tss().eip),
+        : [from_esp] "=m" (from_thread->regs().esp),
+          [from_eip] "=m" (from_thread->regs().eip),
           [tss_esp0] "=m" (m_tss.esp0),
           "=d" (from_thread), // needed so that from_thread retains the correct value
           "=a" (to_thread) // needed so that to_thread retains the correct value
-        : [to_esp] "g" (to_thread->tss().esp),
-          [to_esp0] "g" (to_thread->tss().esp0),
-          [to_eip] "c" (to_thread->tss().eip),
+        : [to_esp] "g" (to_thread->regs().esp),
+          [to_esp0] "g" (to_thread->regs().esp0),
+          [to_eip] "c" (to_thread->regs().eip),
           [from_thread] "d" (from_thread),
           [to_thread] "a" (to_thread)
         : "memory"
@@ -256,13 +256,10 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
 {
     VERIFY(initial_thread.process().is_kernel_process());
 
-    auto& tss = initial_thread.tss();
-    m_tss = tss;
-    m_tss.esp0 = tss.esp0;
+    auto& regs = initial_thread.regs();
+    m_tss.iomapbase = sizeof(m_tss);
+    m_tss.esp0 = regs.esp0;
     m_tss.ss0 = GDT_SELECTOR_DATA0;
-    // user mode needs to be able to switch to kernel mode:
-    m_tss.cs = m_tss.ds = m_tss.es = m_tss.gs = m_tss.ss = GDT_SELECTOR_CODE0 | 3;
-    m_tss.fs = GDT_SELECTOR_PROC | 3;
 
     m_scheduler_initialized = true;
 
@@ -285,8 +282,8 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
         "call enter_trap_no_irq \n"
         "addl $4, %%esp \n"
         "lret \n"
-        :: [new_esp] "g" (tss.esp),
-           [new_eip] "a" (tss.eip),
+        :: [new_esp] "g" (regs.esp),
+           [new_eip] "a" (regs.eip),
            [from_to_thread] "b" (&initial_thread),
            [cpu] "c" (id())
     );

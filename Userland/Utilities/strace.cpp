@@ -140,7 +140,6 @@ int main(int argc, char** argv)
         u64 arg3 = regs.rbx;
 #endif
 
-
         if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
             perror("syscall");
             return 1;

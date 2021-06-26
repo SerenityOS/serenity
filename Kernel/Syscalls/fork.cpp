@@ -45,25 +45,26 @@ KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
     child->space().set_enforces_syscall_regions(space().enforces_syscall_regions());
 
 #if ARCH(I386)
-    auto& child_tss = child_first_thread->m_tss;
-    child_tss.eax = 0; // fork() returns 0 in the child :^)
-    child_tss.ebx = regs.ebx;
-    child_tss.ecx = regs.ecx;
-    child_tss.edx = regs.edx;
-    child_tss.ebp = regs.ebp;
-    child_tss.esp = regs.userspace_esp;
-    child_tss.esi = regs.esi;
-    child_tss.edi = regs.edi;
-    child_tss.eflags = regs.eflags;
-    child_tss.eip = regs.eip;
-    child_tss.cs = regs.cs;
-    child_tss.ds = regs.ds;
-    child_tss.es = regs.es;
-    child_tss.fs = regs.fs;
-    child_tss.gs = regs.gs;
-    child_tss.ss = regs.userspace_ss;
+    auto& child_regs = child_first_thread->m_regs;
+    child_regs.eax = 0; // fork() returns 0 in the child :^)
+    child_regs.ebx = regs.ebx;
+    child_regs.ecx = regs.ecx;
+    child_regs.edx = regs.edx;
+    child_regs.ebp = regs.ebp;
+    child_regs.esp = regs.userspace_esp;
+    child_regs.esi = regs.esi;
+    child_regs.edi = regs.edi;
+    child_regs.eflags = regs.eflags;
+    child_regs.eip = regs.eip;
+    child_regs.cs = regs.cs;
+    child_regs.ds = regs.ds;
+    child_regs.es = regs.es;
+    child_regs.fs = regs.fs;
+    child_regs.gs = regs.gs;
+    child_regs.ss = regs.userspace_ss;
 
-    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
+    dbgln_if(FORK_DEBUG, "fork: child will begin executing at {:04x}:{:08x} with stack {:04x}:{:08x}, kstack {:04x}:{:08x}",
+        child_regs.cs, child_regs.eip, child_regs.ss, child_regs.esp, child_regs.ss0, child_regs.esp0);
 #else
     (void)regs;
     PANIC("Process::sys$fork() not implemented.");
