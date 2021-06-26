@@ -117,7 +117,7 @@ bool GlobalEnvironmentRecord::delete_binding(GlobalObject& global_object, FlyStr
     if (m_declarative_record->has_binding(name))
         return m_declarative_record->delete_binding(global_object, name);
 
-    bool existing_prop = m_object_record->object().has_own_property(name);
+    bool existing_prop = m_object_record->binding_object().has_own_property(name);
     if (existing_prop) {
         bool status = m_object_record->delete_binding(global_object, name);
         if (status) {
@@ -143,7 +143,7 @@ bool GlobalEnvironmentRecord::has_lexical_declaration(FlyString const& name) con
 // 9.1.1.4.14 HasRestrictedGlobalProperty ( N ), https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty
 bool GlobalEnvironmentRecord::has_restricted_global_property(FlyString const& name) const
 {
-    auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
+    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
     if (!existing_prop.has_value() || existing_prop.value().value.is_undefined())
         return false;
     if (existing_prop.value().attributes.is_configurable())
@@ -154,18 +154,18 @@ bool GlobalEnvironmentRecord::has_restricted_global_property(FlyString const& na
 // 9.1.1.4.15 CanDeclareGlobalVar ( N ), https://tc39.es/ecma262/#sec-candeclareglobalvar
 bool GlobalEnvironmentRecord::can_declare_global_var(FlyString const& name) const
 {
-    bool has_property = m_object_record->object().has_own_property(name);
+    bool has_property = m_object_record->binding_object().has_own_property(name);
     if (has_property)
         return true;
-    return m_object_record->object().is_extensible();
+    return m_object_record->binding_object().is_extensible();
 }
 
 // 9.1.1.4.16 CanDeclareGlobalFunction ( N ), https://tc39.es/ecma262/#sec-candeclareglobalfunction
 bool GlobalEnvironmentRecord::can_declare_global_function(FlyString const& name) const
 {
-    auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
+    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
     if (!existing_prop.has_value() || existing_prop.value().value.is_undefined())
-        return m_object_record->object().is_extensible();
+        return m_object_record->binding_object().is_extensible();
     if (existing_prop.value().attributes.is_configurable())
         return true;
     if (existing_prop.value().is_data_descriptor() && existing_prop.value().attributes.is_writable() && existing_prop.value().attributes.is_enumerable())
@@ -176,10 +176,10 @@ bool GlobalEnvironmentRecord::can_declare_global_function(FlyString const& name)
 // 9.1.1.4.17 CreateGlobalVarBinding ( N, D ), https://tc39.es/ecma262/#sec-createglobalvarbinding
 void GlobalEnvironmentRecord::create_global_var_binding(FlyString const& name, bool can_be_deleted)
 {
-    bool has_property = m_object_record->object().has_own_property(name);
-    bool extensible = m_object_record->object().is_extensible();
+    bool has_property = m_object_record->binding_object().has_own_property(name);
+    bool extensible = m_object_record->binding_object().is_extensible();
     if (!has_property && extensible) {
-        m_object_record->create_mutable_binding(static_cast<GlobalObject&>(m_object_record->object()), name, can_be_deleted);
+        m_object_record->create_mutable_binding(static_cast<GlobalObject&>(m_object_record->binding_object()), name, can_be_deleted);
         m_object_record->initialize_binding(m_object_record->global_object(), name, js_undefined());
     }
     if (!m_var_names.contains_slow(name))
@@ -189,7 +189,7 @@ void GlobalEnvironmentRecord::create_global_var_binding(FlyString const& name, b
 // 9.1.1.4.18 CreateGlobalFunctionBinding ( N, V, D ), https://tc39.es/ecma262/#sec-createglobalfunctionbinding
 void GlobalEnvironmentRecord::create_global_function_binding(FlyString const& name, Value value, bool can_be_deleted)
 {
-    auto existing_prop = m_object_record->object().get_own_property_descriptor(name);
+    auto existing_prop = m_object_record->binding_object().get_own_property_descriptor(name);
     PropertyDescriptor desc;
     if (!existing_prop.has_value() || existing_prop.value().value.is_undefined() || existing_prop.value().attributes.is_configurable()) {
         desc.value = value;
@@ -204,7 +204,7 @@ void GlobalEnvironmentRecord::create_global_function_binding(FlyString const& na
         desc.value = value;
     }
     // FIXME: This should be DefinePropertyOrThrow, followed by Set
-    m_object_record->object().define_property(name, value, desc.attributes);
+    m_object_record->binding_object().define_property(name, value, desc.attributes);
     if (vm().exception())
         return;
     if (!m_var_names.contains_slow(name))

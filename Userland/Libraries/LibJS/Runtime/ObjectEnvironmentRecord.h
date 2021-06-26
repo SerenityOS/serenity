@@ -18,7 +18,7 @@ public:
         No,
         Yes,
     };
-    ObjectEnvironmentRecord(Object&, IsWithEnvironment, EnvironmentRecord* parent_scope);
+    ObjectEnvironmentRecord(Object& binding_object, IsWithEnvironment, EnvironmentRecord* outer_environment);
 
     virtual Optional<Variable> get_from_environment_record(FlyString const&) const override;
     virtual void put_into_environment_record(FlyString const&, Variable) override;
@@ -36,18 +36,20 @@ public:
     virtual Object* with_base_object() const override
     {
         if (is_with_environment())
-            return &m_object;
+            return &m_binding_object;
         return nullptr;
     }
 
-    bool is_with_environment() const { return m_with_environment; }
+    // [[BindingObject]], The binding object of this Environment Record.
+    Object& binding_object() { return m_binding_object; }
 
-    Object& object() { return m_object; }
+    // [[IsWithEnvironment]], Indicates whether this Environment Record is created for a with statement.
+    bool is_with_environment() const { return m_with_environment; }
 
 private:
     virtual void visit_edges(Visitor&) override;
 
-    Object& m_object;
+    Object& m_binding_object;
     bool m_with_environment { false };
 };
 
