@@ -10,12 +10,34 @@
 
 namespace Kernel::Graphics {
 
-VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(RefPtr<VirtIOGPU> virtio_gpu)
+VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGPUScanoutID scanout)
     : BlockDevice(29, GraphicsManagement::the().allocate_minor_device_number())
     , m_gpu(virtio_gpu)
+    , m_scanout(scanout)
 {
+    auto& info = display_info();
+
+    Locker locker(m_gpu.operation_lock());
+
+    // 1. Allocate frame buffer
+    // FIXME: We really should be trying to allocate a small amount of pages initially, with ensure_backing_storage increasing the backing memory of the region as needed
+    size_t buffer_length = calculate_framebuffer_size(MAX_VIRTIOGPU_RESOLUTION_WIDTH, MAX_VIRTIOGPU_RESOLUTION_HEIGHT);
+    m_framebuffer = MM.allocate_kernel_region(page_round_up(buffer_length), String::formatted("VirtGPU FrameBuffer #{}", scanout.value()), Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+    // 2. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
+    m_resource_id = m_gpu.create_2d_resource(info.rect);
+    // 3. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
+    m_gpu.ensure_backing_storage(*m_framebuffer, buffer_length, m_resource_id);
+    // 4. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
+    m_gpu.set_scanout_resource(m_scanout.value(), m_resource_id, info.rect);
+    // 5. Render our test pattern
+    draw_ntsc_test_pattern();
+    // 6. Use VIRTIO_GPU_CMD_TRANSFER_TO_HOST_2D to update the host resource from guest memory.
+    transfer_framebuffer_data_to_host(info.rect);
+    // 7. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
+    flush_displayed_image(info.rect);
+
     auto write_sink_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No).release_nonnull();
-    auto num_needed_pages = m_gpu->framebuffer_vm_object().page_count();
+    auto num_needed_pages = m_framebuffer->vmobject().page_count();
     NonnullRefPtrVector<PhysicalPage> pages;
     for (auto i = 0u; i < num_needed_pages; ++i) {
         pages.append(write_sink_page);
@@ -27,13 +49,66 @@ VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
 {
 }
 
+VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& VirtIOFrameBufferDevice::display_info() const
+{
+    return m_gpu.display_info(m_scanout);
+}
+
+VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& VirtIOFrameBufferDevice::display_info()
+{
+    return m_gpu.display_info(m_scanout);
+}
+
+size_t VirtIOFrameBufferDevice::size_in_bytes() const
+{
+    auto& info = display_info();
+    return info.rect.width * info.rect.height * sizeof(u32);
+}
+
+void VirtIOFrameBufferDevice::flush_dirty_window(VirtIOGPURect const& dirty_rect)
+{
+    m_gpu.flush_dirty_window(m_scanout, dirty_rect, m_resource_id);
+}
+
+void VirtIOFrameBufferDevice::transfer_framebuffer_data_to_host(VirtIOGPURect const& rect)
+{
+    m_gpu.transfer_framebuffer_data_to_host(m_scanout, rect, m_resource_id);
+}
+
+void VirtIOFrameBufferDevice::flush_displayed_image(VirtIOGPURect const& dirty_rect)
+{
+    m_gpu.flush_displayed_image(dirty_rect, m_resource_id);
+}
+
+bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
+{
+    if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
+        return false;
+    Locker locker(m_gpu.operation_lock());
+    VirtIOGPURect rect = {
+        .x = 0,
+        .y = 0,
+        .width = (u32)width,
+        .height = (u32)height,
+    };
+    auto old_resource_id = m_resource_id;
+    auto new_resource_id = m_gpu.create_2d_resource(rect);
+    m_gpu.ensure_backing_storage(*m_framebuffer, calculate_framebuffer_size(width, height), new_resource_id);
+    m_gpu.set_scanout_resource(m_scanout.value(), new_resource_id, rect);
+    m_gpu.detach_backing_storage(old_resource_id);
+    m_gpu.delete_resource(old_resource_id);
+    m_resource_id = new_resource_id;
+    display_info().rect = rect;
+    return true;
+}
+
 int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
 {
     REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
-        size_t value = m_gpu->framebuffer_size_in_bytes();
+        size_t value = size_in_bytes();
         if (!copy_to_user(out, &value))
             return -EFAULT;
         return 0;
@@ -43,9 +118,9 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
         FBResolution resolution;
         if (!copy_from_user(&resolution, user_resolution))
             return -EFAULT;
-        if (!m_gpu->try_to_set_resolution(resolution.width, resolution.height))
+        if (!try_to_set_resolution(resolution.width, resolution.height))
             return -EINVAL;
-        resolution.pitch = m_gpu->framebuffer_pitch();
+        resolution.pitch = pitch();
         if (!copy_to_user(user_resolution, &resolution))
             return -EFAULT;
         return 0;
@@ -53,9 +128,9 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
     case FB_IOCTL_GET_RESOLUTION: {
         auto* user_resolution = (FBResolution*)arg;
         FBResolution resolution;
-        resolution.pitch = m_gpu->framebuffer_pitch();
-        resolution.width = m_gpu->framebuffer_width();
-        resolution.height = m_gpu->framebuffer_height();
+        resolution.pitch = pitch();
+        resolution.width = width();
+        resolution.height = height();
         if (!copy_to_user(user_resolution, &resolution))
             return -EFAULT;
         return 0;
@@ -71,7 +146,7 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
             .height = user_dirty_rect.height
         };
         if (m_are_writes_active)
-            m_gpu->flush_dirty_window(dirty_rect);
+            flush_dirty_window(dirty_rect);
         return 0;
     }
     default:
@@ -86,14 +161,14 @@ KResultOr<Region*> VirtIOFrameBufferDevice::mmap(Process& process, FileDescripti
         return ENODEV;
     if (offset != 0)
         return ENXIO;
-    if (range.size() != page_round_up(m_gpu->framebuffer_size_in_bytes()))
+    if (range.size() != page_round_up(size_in_bytes()))
         return EOVERFLOW;
 
     // We only allow one process to map the region
     if (m_userspace_mmap_region)
         return ENOMEM;
 
-    auto vmobject = m_are_writes_active ? m_gpu->framebuffer_vm_object().clone() : m_framebuffer_sink_vmobject;
+    auto vmobject = m_are_writes_active ? m_framebuffer->vmobject().clone() : m_framebuffer_sink_vmobject;
     if (vmobject.is_null())
         return ENOMEM;
 
@@ -127,9 +202,80 @@ void VirtIOFrameBufferDevice::activate_writes()
     m_are_writes_active = true;
     if (m_userspace_mmap_region) {
         auto* region = m_userspace_mmap_region.unsafe_ptr();
-        region->set_vmobject(m_gpu->framebuffer_vm_object());
+        region->set_vmobject(m_framebuffer->vmobject());
         region->remap();
     }
+}
+
+void VirtIOFrameBufferDevice::clear_to_black()
+{
+    auto& info = display_info();
+    size_t width = info.rect.width;
+    size_t height = info.rect.height;
+    u8* data = m_framebuffer->vaddr().as_ptr();
+    for (size_t i = 0; i < width * height; ++i) {
+        data[4 * i + 0] = 0x00;
+        data[4 * i + 1] = 0x00;
+        data[4 * i + 2] = 0x00;
+        data[4 * i + 3] = 0xff;
+    }
+}
+
+void VirtIOFrameBufferDevice::draw_ntsc_test_pattern()
+{
+    static constexpr u8 colors[12][4] = {
+        { 0xff, 0xff, 0xff, 0xff }, // White
+        { 0x00, 0xff, 0xff, 0xff }, // Primary + Composite colors
+        { 0xff, 0xff, 0x00, 0xff },
+        { 0x00, 0xff, 0x00, 0xff },
+        { 0xff, 0x00, 0xff, 0xff },
+        { 0x00, 0x00, 0xff, 0xff },
+        { 0xff, 0x00, 0x00, 0xff },
+        { 0xba, 0x01, 0x5f, 0xff }, // Dark blue
+        { 0x8d, 0x3d, 0x00, 0xff }, // Purple
+        { 0x22, 0x22, 0x22, 0xff }, // Shades of gray
+        { 0x10, 0x10, 0x10, 0xff },
+        { 0x00, 0x00, 0x00, 0xff },
+    };
+    auto& info = display_info();
+    size_t width = info.rect.width;
+    size_t height = info.rect.height;
+    u8* data = m_framebuffer->vaddr().as_ptr();
+    // Draw NTSC test card
+    for (size_t y = 0; y < height; ++y) {
+        for (size_t x = 0; x < width; ++x) {
+            size_t color = 0;
+            if (3 * y < 2 * height) {
+                // Top 2/3 of image is 7 vertical stripes of color spectrum
+                color = (7 * x) / width;
+            } else if (4 * y < 3 * height) {
+                // 2/3 mark to 3/4 mark  is backwards color spectrum alternating with black
+                auto segment = (7 * x) / width;
+                color = segment % 2 ? 10 : 6 - segment;
+            } else {
+                if (28 * x < 5 * width) {
+                    color = 8;
+                } else if (28 * x < 10 * width) {
+                    color = 0;
+                } else if (28 * x < 15 * width) {
+                    color = 7;
+                } else if (28 * x < 20 * width) {
+                    color = 10;
+                } else if (7 * x < 6 * width) {
+                    // Grayscale gradient
+                    color = 26 - ((21 * x) / width);
+                } else {
+                    // Solid black
+                    color = 10;
+                }
+            }
+            u8* pixel = &data[4 * (y * width + x)];
+            for (int i = 0; i < 4; ++i) {
+                pixel[i] = colors[color][i];
+            }
+        }
+    }
+    dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
 }
 
 }
