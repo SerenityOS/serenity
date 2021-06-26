@@ -128,10 +128,18 @@ int main(int argc, char** argv)
             perror("getregs");
             return 1;
         }
+#if ARCH(I386)
         u32 syscall_index = regs.eax;
         u32 arg1 = regs.edx;
         u32 arg2 = regs.ecx;
         u32 arg3 = regs.ebx;
+#else
+        u64 syscall_index = regs.rax;
+        u64 arg1 = regs.rdx;
+        u64 arg2 = regs.rcx;
+        u64 arg3 = regs.rbx;
+#endif
+
 
         if (ptrace(PT_SYSCALL, g_pid, 0, 0) == -1) {
             perror("syscall");
@@ -147,7 +155,11 @@ int main(int argc, char** argv)
             return 1;
         }
 
+#if ARCH(I386)
         u32 res = regs.eax;
+#else
+        u64 res = regs.rax;
+#endif
 
         auto string = String::formatted("{}({:#08x}, {:#08x}, {:#08x})\t={}\n",
             Syscall::to_string((Syscall::Function)syscall_index),

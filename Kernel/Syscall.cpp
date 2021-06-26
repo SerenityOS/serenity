@@ -90,7 +90,11 @@ KResultOr<FlatPtr> handle(RegisterState& regs, FlatPtr function, FlatPtr arg1, F
         // These syscalls need special handling since they never return to the caller.
 
         if (auto* tracer = process.tracer(); tracer && tracer->is_tracing_syscalls()) {
+#if ARCH(I386)
             regs.eax = 0;
+#else
+            regs.rax = 0;
+#endif
             tracer->set_trace_syscalls(false);
             process.tracer_trap(*current_thread, regs); // this triggers SIGTRAP and stops the thread!
         }
@@ -165,26 +169,46 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
 
     static constexpr FlatPtr iopl_mask = 3u << 12;
 
-    if ((regs.eflags & (iopl_mask)) != 0) {
+    FlatPtr flags;
+#if ARCH(I386)
+    flags = regs.eflags;
+#else
+    flags = regs.rflags;
+#endif
+
+    if ((flags & (iopl_mask)) != 0) {
         PANIC("Syscall from process with IOPL != 0");
     }
 
     // NOTE: We take the big process lock before inspecting memory regions.
     process.big_lock().lock();
 
-    if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
-        dbgln("Invalid stack pointer: {:p}", regs.userspace_esp);
+    VirtualAddress userspace_sp;
+#if ARCH(I386)
+    userspace_sp = VirtualAddress { regs.userspace_esp };
+#else
+    userspace_sp = VirtualAddress { regs.userspace_rsp };
+#endif
+    if (!MM.validate_user_stack(process, userspace_sp)) {
+        dbgln("Invalid stack pointer: {:p}", userspace_sp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
     }
 
-    auto* calling_region = MM.find_user_region_from_vaddr(process.space(), VirtualAddress(regs.eip));
+    VirtualAddress ip;
+#if ARCH(I386)
+    ip = VirtualAddress { regs.eip };
+#else
+    ip = VirtualAddress { regs.rip };
+#endif
+
+    auto* calling_region = MM.find_user_region_from_vaddr(process.space(), ip);
     if (!calling_region) {
-        dbgln("Syscall from {:p} which has no associated region", regs.eip);
+        dbgln("Syscall from {:p} which has no associated region", ip);
         handle_crash(regs, "Syscall from unknown region", SIGSEGV);
     }
 
     if (calling_region->is_writable()) {
-        dbgln("Syscall from writable memory at {:p}", regs.eip);
+        dbgln("Syscall from writable memory at {:p}", ip);
         handle_crash(regs, "Syscall from writable memory", SIGSEGV);
     }
 
@@ -193,16 +217,32 @@ NEVER_INLINE void syscall_handler(TrapFrame* trap)
         handle_crash(regs, "Syscall from non-syscall region", SIGSEGV);
     }
 
+#if ARCH(I386)
     auto function = regs.eax;
     auto arg1 = regs.edx;
     auto arg2 = regs.ecx;
     auto arg3 = regs.ebx;
+#else
+    auto function = regs.rax;
+    auto arg1 = regs.rdx;
+    auto arg2 = regs.rcx;
+    auto arg3 = regs.rbx;
+#endif
 
     auto result = Syscall::handle(regs, function, arg1, arg2, arg3);
-    if (result.is_error())
+    if (result.is_error()) {
+#if ARCH(I386)
         regs.eax = result.error();
-    else
+#else
+        regs.rax = result.error();
+#endif
+    } else {
+#if ARCH(I386)
         regs.eax = result.value();
+#else
+        regs.rax = result.value();
+#endif
+    }
 
     process.big_lock().unlock();
 
