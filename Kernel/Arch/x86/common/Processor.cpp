@@ -109,6 +109,8 @@ UNMAP_AFTER_INIT void Processor::cpu_detect()
             set_feature(CPUFeature::NX);
         if (extended_processor_info.edx() & (1 << 27))
             set_feature(CPUFeature::RDTSCP);
+        if (extended_processor_info.edx() & (1 << 29))
+            set_feature(CPUFeature::LM);
         if (extended_processor_info.edx() & (1 << 11)) {
             // Only available in 64 bit mode
             set_feature(CPUFeature::SYSCALL);
@@ -260,6 +262,8 @@ String Processor::features_string() const
             return "xsave";
         case CPUFeature::AVX:
             return "avx";
+        case CPUFeature::LM:
+            return "lm";
             // no default statement here intentionally so that we get
             // a warning if a new feature is forgotten to be added here
         }

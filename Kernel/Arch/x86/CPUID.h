@@ -53,6 +53,7 @@ enum class CPUFeature : u32 {
     XSAVE = (1 << 21),
     AVX = (1 << 22),
     FXSR = (1 << 23),
+    LM = (1 << 24),
 };
 
 }
