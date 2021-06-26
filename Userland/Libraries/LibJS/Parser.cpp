@@ -1667,7 +1667,7 @@ NonnullRefPtr<VariableDeclaration> Parser::parse_variable_declaration(bool for_l
         }
 
         if (target.has<Empty>()) {
-            syntax_error("Expected an identifer or a binding pattern");
+            syntax_error("Expected an identifier or a binding pattern");
             if (match(TokenType::Comma)) {
                 consume();
                 continue;
