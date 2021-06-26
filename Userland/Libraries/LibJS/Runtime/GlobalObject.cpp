@@ -99,7 +99,7 @@ void GlobalObject::initialize_global_object()
     m_object_prototype = heap().allocate_without_global_object<ObjectPrototype>(*this);
     m_function_prototype = heap().allocate_without_global_object<FunctionPrototype>(*this);
 
-    m_environment_record = heap().allocate_without_global_object<GlobalEnvironmentRecord>(*this);
+    m_environment_record = heap().allocate<GlobalEnvironmentRecord>(*this, *this);
 
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
