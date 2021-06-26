@@ -201,6 +201,8 @@ private:
     InterMode m_near_mv[2];
     InterMode m_nearest_mv[2];
     Vector<Vector<Vector<IntraMode>>> m_sub_modes; // FIXME: Can we make these fixed sized allocations?
+    u32 m_ref_frame_width[NUM_REF_FRAMES];
+    u32 m_ref_frame_height[NUM_REF_FRAMES];
 
     bool m_use_hp { false };
 

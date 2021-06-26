@@ -31,9 +31,6 @@ bool Decoder::parse_frame(ByteBuffer const& frame_data)
     dbgln("Finished reading uncompressed header");
     SAFE_CALL(trailing_bits());
     if (m_header_size_in_bytes == 0) {
-        // FIXME: Do we really need to read all of these bits?
-        // while (m_bit_stream->get_position() < m_start_bit_pos + (8 * frame_data.size()))
-        //     RESERVED_ZERO;
         dbgln("No header");
         return true;
     }
@@ -218,9 +215,8 @@ bool Decoder::frame_size_with_refs()
     for (auto i = 0; i < 3; i++) {
         found_ref = m_bit_stream->read_bit();
         if (found_ref) {
-            // TODO:
-            //  - FrameWidth = RefFrameWidth[ref_frame_idx[ i] ];
-            //  - FrameHeight = RefFrameHeight[ref_frame_idx[ i] ];
+            m_frame_width = m_ref_frame_width[m_ref_frame_idx[i]];
+            m_frame_height = m_ref_frame_height[m_ref_frame_idx[i]];
             break;
         }
     }
@@ -262,14 +258,12 @@ bool Decoder::loop_filter_params()
     if (m_loop_filter_delta_enabled) {
         if (m_bit_stream->read_bit()) {
             for (auto i = 0; i < 4; i++) {
-                if (m_bit_stream->read_bit()) {
-                    // TODO: loop_filter_ref_deltas[i] = s(6);
-                }
+                if (m_bit_stream->read_bit())
+                    m_loop_filter_ref_deltas[i] = m_bit_stream->read_s(6);
             }
             for (auto i = 0; i < 2; i++) {
-                if (m_bit_stream->read_bit()) {
-                    // TODO: loop_filter_mode_deltas[i] = s(6);
-                }
+                if (m_bit_stream->read_bit())
+                    m_loop_filter_mode_deltas[i] = m_bit_stream->read_s(6);
             }
         }
     }
@@ -380,10 +374,15 @@ bool Decoder::setup_past_independence()
         }
     }
     m_segmentation_abs_or_delta_update = false;
+    m_prev_segment_ids.clear();
+    m_prev_segment_ids.ensure_capacity(m_mi_rows);
     for (auto row = 0u; row < m_mi_rows; row++) {
+        Vector<u8> sub_vector = {};
+        sub_vector.ensure_capacity(m_mi_cols);
         for (auto col = 0u; col < m_mi_cols; col++) {
-            // TODO: m_prev_segment_ids[row][col] = 0;
+            sub_vector.append(0);
         }
+        m_prev_segment_ids.append(sub_vector);
     }
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
@@ -712,7 +711,6 @@ bool Decoder::decode_tiles()
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
             auto last_tile = (tile_row == tile_rows - 1) && (tile_col == tile_cols - 1);
-            // FIXME: Spec has `sz -= tile_size + 4`, but I think we don't need this because our bit stream manages how much data we have left?
             auto tile_size = last_tile ? m_bit_stream->bytes_remaining() : m_bit_stream->read_f(32);
             m_mi_row_start = get_tile_offset(tile_row, m_mi_rows, m_tile_rows_log2);
             m_mi_row_end = get_tile_offset(tile_row + 1, m_mi_rows, m_tile_rows_log2);
@@ -790,11 +788,24 @@ bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
         SAFE_CALL(decode_block(row, col, subsize));
     } else if (partition == PartitionHorizontal) {
         SAFE_CALL(decode_block(row, col, subsize));
-        // FIXME: if (hasRows)
-        //            decode_block(r + halfBlock8x8, c, subsize)
+        if (m_has_rows)
+            SAFE_CALL(decode_block(row + half_block_8x8, col, subsize));
+    } else if (partition == PartitionVertical) {
+        SAFE_CALL(decode_block(row, col, subsize));
+        if (m_has_cols)
+            SAFE_CALL(decode_block(row, col + half_block_8x8, subsize));
+    } else {
+        SAFE_CALL(decode_partition(row, col, subsize));
+        SAFE_CALL(decode_partition(row, col + half_block_8x8, subsize));
+        SAFE_CALL(decode_partition(row + half_block_8x8, col, subsize));
+        SAFE_CALL(decode_partition(row + half_block_8x8, col + half_block_8x8, subsize));
     }
-    // FIXME: Finish implementing partition decoding
-
+    if (block_subsize == Block_8x8 || partition != PartitionSplit) {
+        for (size_t i = 0; i < m_num_8x8; i++) {
+            m_above_partition_context[col + i] = 15 >> b_width_log2_lookup[subsize];
+            m_left_partition_context[row + i] = 15 >> b_width_log2_lookup[subsize];
+        }
+    }
     return true;
 }
 
