@@ -44,6 +44,7 @@ enum class SyntaxElementType {
 
 class SyntaxElementCounter final {
 public:
+    /* (8.3) Clear Counts Process */
     void clear_counts();
 
     u8 m_counts_intra_mode[BLOCK_SIZE_GROUPS][INTRA_MODES];
