@@ -27,6 +27,9 @@ private:
     /* (8.6) Reconstruction and Dequantization */
     bool reconstruct(size_t plane, u32 x, u32 y, TXSize size);
 
+    /* (8.10) Reference Frame Update Process */
+    bool update_reference_frames();
+
     NonnullOwnPtr<Parser> m_parser;
 };
 

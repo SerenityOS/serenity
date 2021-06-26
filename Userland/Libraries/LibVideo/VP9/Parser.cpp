@@ -6,15 +6,12 @@
 
 #include "Parser.h"
 #include "Decoder.h"
+#include "Utilities.h"
 
 namespace Video::VP9 {
 
 #define RESERVED_ZERO                  \
     if (m_bit_stream->read_bit() != 0) \
-    return false
-
-#define SAFE_CALL(call)       \
-    if (!(call)) [[unlikely]] \
     return false
 
 Parser::Parser(Decoder& decoder)
@@ -220,6 +217,7 @@ bool Parser::frame_size_with_refs()
     for (auto frame_index : m_ref_frame_idx) {
         found_ref = m_bit_stream->read_bit();
         if (found_ref) {
+            dbgln("Reading size from ref frame {}", frame_index);
             m_frame_width = m_ref_frame_width[frame_index];
             m_frame_height = m_ref_frame_height[frame_index];
             break;
@@ -1203,10 +1201,10 @@ bool Parser::append_sub8x8_mvs(u8, u8)
 
 void Parser::dump_info()
 {
-    dbgln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
-    dbgln("Render dimensions: {}x{}", m_render_width, m_render_height);
-    dbgln("Bit depth: {}", m_bit_depth);
-    dbgln("Interpolation filter: {}", (u8)m_interpolation_filter);
+    outln("Frame dimensions: {}x{}", m_frame_width, m_frame_height);
+    outln("Render dimensions: {}x{}", m_render_width, m_render_height);
+    outln("Bit depth: {}", m_bit_depth);
+    outln("Interpolation filter: {}", (u8)m_interpolation_filter);
 }
 
 }
