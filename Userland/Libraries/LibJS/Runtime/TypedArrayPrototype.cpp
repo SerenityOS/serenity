@@ -35,6 +35,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.join, join, 1, attr);
     define_native_function(vm.names.keys, keys, 0, attr);
+    define_native_function(vm.names.values, values, 0, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -247,6 +248,15 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
     if (!typed_array)
         return {};
     return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
+}
+
+// 23.2.3.30 %TypedArray%.prototype.values ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.values
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::values)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+    return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Value);
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
