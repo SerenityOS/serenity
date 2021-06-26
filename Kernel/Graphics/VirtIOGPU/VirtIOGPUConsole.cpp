@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/Graphics/VirtIOGPU/VirtIOFrameBufferDevice.h>
 #include <Kernel/Graphics/VirtIOGPU/VirtIOGPUConsole.h>
 #include <Kernel/WorkQueue.h>
 
@@ -29,22 +30,22 @@ void DirtyRect::union_rect(size_t x, size_t y, size_t width, size_t height)
     }
 }
 
-NonnullRefPtr<VirtIOGPUConsole> VirtIOGPUConsole::initialize(RefPtr<VirtIOGPU> gpu)
+NonnullRefPtr<VirtIOGPUConsole> VirtIOGPUConsole::initialize(RefPtr<VirtIOFrameBufferDevice> const& framebuffer_device)
 {
-    return adopt_ref(*new VirtIOGPUConsole(gpu));
+    return adopt_ref(*new VirtIOGPUConsole(framebuffer_device));
 }
 
-VirtIOGPUConsole::VirtIOGPUConsole(RefPtr<VirtIOGPU> gpu)
-    : GenericFramebufferConsole(gpu->framebuffer_width(), gpu->framebuffer_height(), gpu->framebuffer_pitch())
-    , m_gpu(gpu)
+VirtIOGPUConsole::VirtIOGPUConsole(RefPtr<VirtIOFrameBufferDevice> const& framebuffer_device)
+    : GenericFramebufferConsole(framebuffer_device->width(), framebuffer_device->height(), framebuffer_device->pitch())
+    , m_framebuffer_device(framebuffer_device)
 {
-    m_framebuffer_region = gpu->framebuffer_region();
+    m_framebuffer_region = m_framebuffer_device->region();
     enqueue_refresh_timer();
 }
 
 void VirtIOGPUConsole::set_resolution(size_t width, size_t height, size_t)
 {
-    auto did_set_resolution = m_gpu->try_to_set_resolution(width, height);
+    auto did_set_resolution = m_framebuffer_device->try_to_set_resolution(width, height);
     VERIFY(did_set_resolution);
 }
 
@@ -66,7 +67,7 @@ void VirtIOGPUConsole::enqueue_refresh_timer()
                 .height = (u32)rect.height(),
             };
             g_io_work->queue([this, dirty_rect]() {
-                m_gpu->flush_dirty_window(dirty_rect);
+                m_framebuffer_device->flush_dirty_window(dirty_rect);
                 m_dirty_rect.clear();
             });
         }
@@ -78,9 +79,9 @@ void VirtIOGPUConsole::enqueue_refresh_timer()
 void VirtIOGPUConsole::enable()
 {
     GenericFramebufferConsole::enable();
-    m_width = m_gpu->framebuffer_width();
-    m_height = m_gpu->framebuffer_height();
-    m_pitch = m_gpu->framebuffer_pitch();
+    m_width = m_framebuffer_device->width();
+    m_height = m_framebuffer_device->height();
+    m_pitch = m_framebuffer_device->pitch();
     m_dirty_rect.union_rect(0, 0, m_width, m_height);
 }
 

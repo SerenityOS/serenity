@@ -26,6 +26,9 @@
 
 namespace Kernel::Graphics {
 
+class VirtIOGPUConsole;
+class VirtIOFrameBufferDevice;
+
 TYPEDEF_DISTINCT_ORDERED_ID(u32, VirtIOGPUResourceID);
 TYPEDEF_DISTINCT_ORDERED_ID(u32, VirtIOGPUScanoutID);
 
@@ -158,31 +161,53 @@ struct VirtIOGPUResourceFlush {
 class VirtIOGPU final
     : public VirtIODevice
     , public RefCounted<VirtIOGPU> {
+    friend class VirtIOFrameBufferDevice;
+
 public:
     VirtIOGPU(PCI::Address);
     virtual ~VirtIOGPU() override;
 
-    bool try_to_set_resolution(size_t width, size_t height);
-    void clear_to_black();
+    void flush_dirty_window(VirtIOGPUScanoutID, VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID);
 
-    VMObject& framebuffer_vm_object() { return m_framebuffer->vmobject(); }
-    Region& framebuffer_region() { return *m_framebuffer; }
-
-    size_t framebuffer_width() { return m_display_info.rect.width; }
-    size_t framebuffer_height() { return m_display_info.rect.height; }
-    size_t framebuffer_pitch() { return m_display_info.rect.width * 4; }
-
-    size_t framebuffer_size_in_bytes() const;
-    size_t calculate_framebuffer_size(size_t width, size_t height) const
+    auto& display_info(VirtIOGPUScanoutID scanout) const
     {
-        return sizeof(u32) * width * height;
+        VERIFY(scanout.value() < VIRTIO_GPU_MAX_SCANOUTS);
+        return m_scanouts[scanout.value()].display_info;
+    }
+    auto& display_info(VirtIOGPUScanoutID scanout)
+    {
+        VERIFY(scanout.value() < VIRTIO_GPU_MAX_SCANOUTS);
+        return m_scanouts[scanout.value()].display_info;
     }
 
-    void flush_dirty_window(VirtIOGPURect dirty_rect);
+    void create_framebuffer_devices();
+
+    template<typename F>
+    IterationDecision for_each_framebuffer(F f)
+    {
+        for (size_t i = 0; i < VIRTIO_GPU_MAX_SCANOUTS; i++) {
+            auto& scanout = m_scanouts[i];
+            if (!scanout.framebuffer)
+                continue;
+            IterationDecision decision = f(*scanout.framebuffer, *scanout.console);
+            if (decision != IterationDecision::Continue)
+                return decision;
+        }
+        return IterationDecision::Continue;
+    }
+
+    RefPtr<VirtIOGPUConsole> default_console()
+    {
+        if (m_default_scanout.has_value())
+            return m_scanouts[m_default_scanout.value().value()].console;
+        return {};
+    }
 
 private:
     virtual bool handle_device_config_change() override;
     virtual void handle_queue_update(u16 queue_index) override;
+
+    auto& operation_lock() { return m_operation_lock; }
 
     u32 get_pending_events();
     void clear_pending_events(u32 event_bitmask);
@@ -198,16 +223,20 @@ private:
     void ensure_backing_storage(Region& region, size_t buffer_length, VirtIOGPUResourceID resource_id);
     void detach_backing_storage(VirtIOGPUResourceID resource_id);
     void set_scanout_resource(VirtIOGPUScanoutID scanout, VirtIOGPUResourceID resource_id, VirtIOGPURect rect);
-    void draw_ntsc_test_pattern();
-    void transfer_framebuffer_data_to_host(VirtIOGPURect rect);
-    void flush_displayed_image(VirtIOGPURect dirty_rect);
+    void transfer_framebuffer_data_to_host(VirtIOGPUScanoutID scanout, VirtIOGPURect const& rect, VirtIOGPUResourceID resource_id);
+    void flush_displayed_image(VirtIOGPURect const& dirty_rect, VirtIOGPUResourceID resource_id);
 
-    VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne m_display_info;
-    Optional<VirtIOGPUScanoutID> m_chosen_scanout;
-    VirtIOGPUResourceID m_framebuffer_id { 0 };
-    Configuration const* m_device_configuration { nullptr };
+    struct Scanout {
+        RefPtr<VirtIOFrameBufferDevice> framebuffer;
+        RefPtr<VirtIOGPUConsole> console;
+        VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne display_info {};
+    };
+    Optional<VirtIOGPUScanoutID> m_default_scanout;
     size_t m_num_scanouts { 0 };
-    OwnPtr<Region> m_framebuffer;
+    Scanout m_scanouts[VIRTIO_GPU_MAX_SCANOUTS];
+
+    Configuration const* m_device_configuration { nullptr };
+
     VirtIOGPUResourceID m_resource_id_counter { 0 };
 
     // Synchronous commands

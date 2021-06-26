@@ -32,7 +32,7 @@ private:
 
 class VirtIOGPUConsole final : public GenericFramebufferConsole {
 public:
-    static NonnullRefPtr<VirtIOGPUConsole> initialize(RefPtr<VirtIOGPU>);
+    static NonnullRefPtr<VirtIOGPUConsole> initialize(RefPtr<VirtIOFrameBufferDevice> const&);
 
     virtual void set_resolution(size_t width, size_t height, size_t pitch) override;
     virtual void flush(size_t x, size_t y, size_t width, size_t height) override;
@@ -45,9 +45,9 @@ private:
         return m_framebuffer_region.unsafe_ptr()->vaddr().as_ptr();
     }
 
-    VirtIOGPUConsole(RefPtr<VirtIOGPU>);
+    VirtIOGPUConsole(RefPtr<VirtIOFrameBufferDevice> const&);
     WeakPtr<Region> m_framebuffer_region;
-    RefPtr<VirtIOGPU> m_gpu;
+    RefPtr<VirtIOFrameBufferDevice> m_framebuffer_device;
     DirtyRect m_dirty_rect;
 };
 

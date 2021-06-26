@@ -18,7 +18,7 @@ class VirtIOGraphicsAdapter final : public GraphicsDevice {
 public:
     static NonnullRefPtr<VirtIOGraphicsAdapter> initialize(PCI::Address);
 
-    virtual bool framebuffer_devices_initialized() const override { return !m_framebuffer_device.is_null(); }
+    virtual bool framebuffer_devices_initialized() const override { return m_created_framebuffer_devices; }
 
 private:
     explicit VirtIOGraphicsAdapter(PCI::Address base_address);
@@ -36,8 +36,7 @@ private:
     virtual bool set_y_offset(size_t, size_t) override { return false; }
 
     RefPtr<VirtIOGPU> m_gpu_device;
-    RefPtr<VirtIOFrameBufferDevice> m_framebuffer_device;
-    RefPtr<VirtIOGPUConsole> m_framebuffer_console;
+    bool m_created_framebuffer_devices { false };
 };
 
 }

@@ -20,35 +20,38 @@ VirtIOGraphicsAdapter::VirtIOGraphicsAdapter(PCI::Address base_address)
     : GraphicsDevice(base_address)
 {
     m_gpu_device = adopt_ref(*new VirtIOGPU(base_address)).leak_ref();
-    m_framebuffer_console = Kernel::Graphics::VirtIOGPUConsole::initialize(m_gpu_device);
-    // FIXME: This is a very wrong way to do this...
-    GraphicsManagement::the().m_console = m_framebuffer_console;
 }
 
 void VirtIOGraphicsAdapter::initialize_framebuffer_devices()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Initializing framebuffer devices");
-    VERIFY(m_framebuffer_device.is_null());
-    m_framebuffer_device = adopt_ref(*new VirtIOFrameBufferDevice(m_gpu_device)).leak_ref();
+    VERIFY(!m_created_framebuffer_devices);
+    m_gpu_device->create_framebuffer_devices();
+    m_created_framebuffer_devices = true;
+
+    // FIXME: This is a very wrong way to do this...
+    GraphicsManagement::the().m_console = m_gpu_device->default_console();
 }
 
 void VirtIOGraphicsAdapter::enable_consoles()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Enabling consoles");
-    VERIFY(m_framebuffer_console);
-    if (m_framebuffer_device)
-        m_framebuffer_device->deactivate_writes();
-    m_gpu_device->clear_to_black();
-    m_framebuffer_console->enable();
+    m_gpu_device->for_each_framebuffer([&](auto& framebuffer, auto& console) {
+        framebuffer.deactivate_writes();
+        framebuffer.clear_to_black();
+        console.enable();
+        return IterationDecision::Continue;
+    });
 }
 
 void VirtIOGraphicsAdapter::disable_consoles()
 {
     dbgln_if(VIRTIO_DEBUG, "VirtIOGPU: Disabling consoles");
-    VERIFY(m_framebuffer_device);
-    VERIFY(m_framebuffer_console);
-    m_framebuffer_console->disable();
-    m_framebuffer_device->activate_writes();
+    m_gpu_device->for_each_framebuffer([&](auto& framebuffer, auto& console) {
+        console.disable();
+        framebuffer.activate_writes();
+        return IterationDecision::Continue;
+    });
 }
 
 }
