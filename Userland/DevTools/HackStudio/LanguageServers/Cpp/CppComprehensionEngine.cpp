@@ -206,8 +206,8 @@ Vector<GUI::AutocompleteProvider::Entry> CppComprehensionEngine::autocomplete_pr
 
     Vector<GUI::AutocompleteProvider::Entry> suggestions;
     for (auto& prop : properties_of_type(document, type)) {
-        if (prop.name.starts_with(partial_text)) {
-            suggestions.append({ prop.name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
+        if (prop.name.name.starts_with(partial_text)) {
+            suggestions.append({ prop.name.name, partial_text.length(), GUI::AutocompleteProvider::CompletionKind::Identifier });
         }
     }
     return suggestions;
@@ -227,8 +227,18 @@ String CppComprehensionEngine::type_of_property(const DocumentData& document, co
     auto& parent = (const MemberExpression&)(*identifier.parent());
     auto properties = properties_of_type(document, type_of(document, *parent.m_object));
     for (auto& prop : properties) {
-        if (prop.name == identifier.m_name && prop.type->is_named_type())
-            return ((NamedType&)prop.type).m_name->full_name();
+        if (prop.name.name != identifier.m_name)
+            continue;
+        Type* type { nullptr };
+        if (prop.declaration->is_variable_declaration()) {
+            type = ((VariableDeclaration&)*prop.declaration).m_type.ptr();
+        }
+        if (!type)
+            continue;
+        if (!type->is_named_type())
+            continue;
+
+        return ((NamedType&)*type).m_name->full_name();
     }
     return {};
 }
@@ -275,9 +285,10 @@ String CppComprehensionEngine::type_of(const DocumentData& document, const Expre
     return type_of_variable(*identifier);
 }
 
-Vector<CppComprehensionEngine::PropertyInfo> CppComprehensionEngine::properties_of_type(const DocumentData& document, const String& type) const
+Vector<CppComprehensionEngine::Symbol> CppComprehensionEngine::properties_of_type(const DocumentData& document, const String& type) const
 {
-    auto decl = find_declaration_of(document, SymbolName::create(type, {}));
+    auto type_symbol = SymbolName::create(type);
+    auto decl = find_declaration_of(document, type_symbol);
     if (!decl) {
         dbgln("Couldn't find declaration of type: {}", type);
         return {};
@@ -289,13 +300,14 @@ Vector<CppComprehensionEngine::PropertyInfo> CppComprehensionEngine::properties_
     }
 
     auto& struct_or_class = (StructOrClassDeclaration&)*decl;
-    VERIFY(struct_or_class.m_name == type); // FIXME: this won't work with scoped types
+    VERIFY(struct_or_class.name() == type_symbol.name);
 
-    Vector<PropertyInfo> properties;
+    Vector<Symbol> properties;
     for (auto& member : struct_or_class.m_members) {
-        if (!member.is_variable_declaration())
-            continue;
-        properties.append({ member.m_name, ((VariableDeclaration&)member).m_type });
+        Vector<StringView> scope(type_symbol.scope);
+        scope.append(type_symbol.name);
+        // FIXME: We don't have to create the Symbol here, it should already exist in the 'm_symbol' table of some DocumentData we already parsed.
+        properties.append(Symbol::create(member.m_name, scope, member, Symbol::IsLocal::No));
     }
     return properties;
 }
@@ -679,6 +691,14 @@ String CppComprehensionEngine::SymbolName::scope_as_string() const
 CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(StringView name, Vector<StringView>&& scope)
 {
     return { name, move(scope) };
+}
+
+CppComprehensionEngine::SymbolName CppComprehensionEngine::SymbolName::create(StringView qualified_name)
+{
+    auto parts = qualified_name.split_view("::");
+    VERIFY(!parts.is_empty());
+    auto name = parts.take_last();
+    return SymbolName::create(name, move(parts));
 }
 
 String CppComprehensionEngine::SymbolName::to_string() const
