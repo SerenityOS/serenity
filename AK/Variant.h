@@ -331,7 +331,7 @@ public:
     }
 
     template<typename... NewTs>
-    Variant<NewTs...> downcast() &
+    Variant<NewTs...> downcast() const&
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
         visit([&](const auto& value) {
@@ -340,6 +340,18 @@ public:
         });
         VERIFY(instance.m_index != instance.invalid_index);
         return instance;
+    }
+
+    template<typename... NewTs>
+    explicit operator Variant<NewTs...>() &&
+    {
+        return downcast<NewTs...>();
+    }
+
+    template<typename... NewTs>
+    explicit operator Variant<NewTs...>() const&
+    {
+        return downcast<NewTs...>();
     }
 
 private:
