@@ -265,6 +265,13 @@ start:
 
 .code64
 1:
+    mov $0, %ax
+    mov %ax, %ss
+    mov %ax, %ds
+    mov %ax, %es
+    mov %ax, %fs
+    mov %ax, %gs
+
     call init
     add $4, %rsp
 
