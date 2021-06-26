@@ -44,9 +44,10 @@ bool Decoder::parse_frame(ByteBuffer const& frame_data)
     SAFE_CALL(compressed_header());
     dbgln("Finished reading compressed header");
     SAFE_CALL(m_bit_stream->exit_bool());
-    dbgln("Finished reading frame!");
 
     SAFE_CALL(decode_tiles());
+
+    dbgln("Finished reading frame!");
     return true;
 }
 
@@ -354,7 +355,7 @@ bool Decoder::tile_info()
 u16 Decoder::calc_min_log2_tile_cols()
 {
     auto min_log_2 = 0u;
-    while ((u8)(MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
+    while ((u32)(MAX_TILE_WIDTH_B64 << min_log_2) < m_sb64_cols)
         min_log_2++;
     return min_log_2;
 }
@@ -780,8 +781,6 @@ bool Decoder::decode_partition(u32 row, u32 col, u8 block_subsize)
     m_has_cols = (col + half_block_8x8) < m_mi_cols;
 
     auto partition = m_tree_parser->parse_tree(SyntaxElementType::Partition);
-    dbgln("Parsed partition value {}", partition);
-
     auto subsize = subsize_lookup[partition][block_subsize];
     if (subsize < Block_8x8 || partition == PartitionNone) {
         SAFE_CALL(decode_block(row, col, subsize));
@@ -816,7 +815,10 @@ bool Decoder::decode_block(u32 row, u32 col, u8 subsize)
     m_available_u = row > 0;
     m_available_l = col > m_mi_col_start;
     SAFE_CALL(mode_info());
+    m_eob_total = 0;
+    SAFE_CALL(residual());
     // FIXME: Finish implementing
+    //  note: when finished, re-enable calculate_default_intra_mode_probability's usage of m_sub_modes
     return true;
 }
 
@@ -1104,6 +1106,81 @@ bool Decoder::read_mv(u8)
     return true;
 }
 
+bool Decoder::residual()
+{
+    auto block_size = m_mi_size < Block_8x8 ? Block_8x8 : static_cast<BlockSubsize>(m_mi_size);
+    for (size_t plane = 0; plane < 3; plane++) {
+        auto tx_size = (plane > 0) ? get_uv_tx_size() : m_tx_size;
+        auto step = 1 << tx_size;
+        auto plane_size = get_plane_block_size(block_size, plane);
+        auto num_4x4_w = num_4x4_blocks_wide_lookup[plane_size];
+        auto num_4x4_h = num_4x4_blocks_high_lookup[plane_size];
+        auto sub_x = (plane > 0) ? m_subsampling_x : 0;
+        auto sub_y = (plane > 0) ? m_subsampling_y : 0;
+        auto base_x = (m_mi_col * 8) >> sub_x;
+        auto base_y = (m_mi_row * 8) >> sub_y;
+        if (m_is_inter) {
+            if (m_mi_size < Block_8x8) {
+                for (auto y = 0; y < num_4x4_h; y++) {
+                    for (auto x = 0; x < num_4x4_w; x++) {
+                        SAFE_CALL(predict_inter(plane, base_x + (4 * x), base_y + (4 * y), 4, 4, (y * num_4x4_w) + x));
+                    }
+                }
+            } else {
+                SAFE_CALL(predict_inter(plane, base_x, base_y, num_4x4_w * 4, num_4x4_h * 4, 0));
+            }
+        }
+        auto max_x = (m_mi_cols * 8) >> sub_x;
+        auto max_y = (m_mi_rows * 8) >> sub_y;
+        auto block_index = 0;
+        for (auto y = 0; y < num_4x4_h; y += step) {
+            for (auto x = 0; x < num_4x4_w; x += step) {
+                auto start_x = base_x + (4 * x);
+                auto start_y = base_y + (4 * y);
+                auto non_zero = false;
+                if (start_x < max_x && start_y < max_y) {
+                    if (!m_is_inter)
+                        SAFE_CALL(predict_intra(plane, start_x, start_y, m_available_l || x > 0, m_available_u || y > 0, (x + step) < num_4x4_w, tx_size, block_index));
+                    if (!m_skip) {
+                        non_zero = tokens(plane, start_x, start_y, tx_size, block_index);
+                        SAFE_CALL(reconstruct(plane, start_x, start_y, tx_size));
+                    }
+                }
+                auto above_sub_context = m_above_nonzero_context[plane];
+                auto left_sub_context = m_left_nonzero_context[plane];
+                above_sub_context.resize_and_keep_capacity((start_x >> 2) + step);
+                left_sub_context.resize_and_keep_capacity((start_y >> 2) + step);
+                for (auto i = 0; i < step; i++) {
+                    above_sub_context[(start_x >> 2) + i] = non_zero;
+                    left_sub_context[(start_y >> 2) + i] = non_zero;
+                }
+                block_index++;
+            }
+        }
+    }
+    return true;
+}
+
+TXSize Decoder::get_uv_tx_size()
+{
+    if (m_mi_size < Block_8x8)
+        return TX_4x4;
+    return min(m_tx_size, max_txsize_lookup[get_plane_block_size(m_mi_size, 1)]);
+}
+
+BlockSubsize Decoder::get_plane_block_size(u32 subsize, u8 plane)
+{
+    auto sub_x = (plane > 0) ? m_subsampling_x : 0;
+    auto sub_y = (plane > 0) ? m_subsampling_y : 0;
+    return ss_size_lookup[subsize][sub_x][sub_y];
+}
+
+bool Decoder::tokens(size_t, u32, u32, TXSize, u32)
+{
+    // TODO: Implement
+    return true;
+}
+
 bool Decoder::find_mv_refs(ReferenceFrame, int)
 {
     // TODO: Implement
@@ -1117,6 +1194,24 @@ bool Decoder::find_best_ref_mvs(int)
 }
 
 bool Decoder::append_sub8x8_mvs(u8, u8)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Decoder::predict_intra(size_t, u32, u32, bool, bool, bool, TXSize, u32)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Decoder::predict_inter(size_t, u32, u32, u32, u32, u32)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Decoder::reconstruct(size_t, u32, u32, TXSize)
 {
     // TODO: Implement
     return true;
