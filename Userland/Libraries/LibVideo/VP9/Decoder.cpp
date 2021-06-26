@@ -212,11 +212,11 @@ bool Decoder::render_size()
 bool Decoder::frame_size_with_refs()
 {
     bool found_ref;
-    for (auto i = 0; i < 3; i++) {
+    for (auto frame_index : m_ref_frame_idx) {
         found_ref = m_bit_stream->read_bit();
         if (found_ref) {
-            m_frame_width = m_ref_frame_width[m_ref_frame_idx[i]];
-            m_frame_height = m_ref_frame_height[m_ref_frame_idx[i]];
+            m_frame_width = m_ref_frame_width[frame_index];
+            m_frame_height = m_ref_frame_height[frame_index];
             break;
         }
     }
@@ -257,13 +257,13 @@ bool Decoder::loop_filter_params()
     m_loop_filter_delta_enabled = m_bit_stream->read_bit();
     if (m_loop_filter_delta_enabled) {
         if (m_bit_stream->read_bit()) {
-            for (auto i = 0; i < 4; i++) {
+            for (auto& loop_filter_ref_delta : m_loop_filter_ref_deltas) {
                 if (m_bit_stream->read_bit())
-                    m_loop_filter_ref_deltas[i] = m_bit_stream->read_s(6);
+                    loop_filter_ref_delta = m_bit_stream->read_s(6);
             }
-            for (auto i = 0; i < 2; i++) {
+            for (auto& loop_filter_mode_delta : m_loop_filter_mode_deltas) {
                 if (m_bit_stream->read_bit())
-                    m_loop_filter_mode_deltas[i] = m_bit_stream->read_s(6);
+                    loop_filter_mode_delta = m_bit_stream->read_s(6);
             }
         }
     }
@@ -295,11 +295,11 @@ bool Decoder::segmentation_params()
 
     m_segmentation_update_map = m_bit_stream->read_bit();
     if (m_segmentation_update_map) {
-        for (auto i = 0; i < 7; i++)
-            m_segmentation_tree_probs[i] = read_prob();
+        for (auto& segmentation_tree_prob : m_segmentation_tree_probs)
+            segmentation_tree_prob = read_prob();
         m_segmentation_temporal_update = m_bit_stream->read_bit();
-        for (auto i = 0; i < 3; i++)
-            m_segmentation_pred_prob[i] = m_segmentation_temporal_update ? read_prob() : 255;
+        for (auto& segmentation_pred_prob : m_segmentation_pred_prob)
+            segmentation_pred_prob = m_segmentation_temporal_update ? read_prob() : 255;
     }
 
     SAFE_CALL(m_bit_stream->read_bit());
@@ -379,9 +379,8 @@ bool Decoder::setup_past_independence()
     for (auto row = 0u; row < m_mi_rows; row++) {
         Vector<u8> sub_vector = {};
         sub_vector.ensure_capacity(m_mi_cols);
-        for (auto col = 0u; col < m_mi_cols; col++) {
+        for (auto col = 0u; col < m_mi_cols; col++)
             sub_vector.append(0);
-        }
         m_prev_segment_ids.append(sub_vector);
     }
     m_loop_filter_delta_enabled = true;
@@ -389,9 +388,8 @@ bool Decoder::setup_past_independence()
     m_loop_filter_ref_deltas[LastFrame] = 0;
     m_loop_filter_ref_deltas[GoldenFrame] = -1;
     m_loop_filter_ref_deltas[AltRefFrame] = -1;
-    for (auto i = 0; i < 2; i++) {
-        m_loop_filter_mode_deltas[i] = 0;
-    }
+    for (auto& loop_filter_mode_delta : m_loop_filter_mode_deltas)
+        loop_filter_mode_delta = 0;
     m_probability_tables->reset_probs();
     return true;
 }
@@ -406,16 +404,14 @@ bool Decoder::trailing_bits()
 bool Decoder::compressed_header()
 {
     SAFE_CALL(read_tx_mode());
-    if (m_tx_mode == TXModeSelect) {
+    if (m_tx_mode == TXModeSelect)
         SAFE_CALL(tx_mode_probs());
-    }
     SAFE_CALL(read_coef_probs());
     SAFE_CALL(read_skip_prob());
     if (!m_frame_is_intra) {
         SAFE_CALL(read_inter_mode_probs());
-        if (m_interpolation_filter == Switchable) {
+        if (m_interpolation_filter == Switchable)
             SAFE_CALL(read_interp_filter_probs());
-        }
         SAFE_CALL(read_is_inter_probs());
         SAFE_CALL(frame_reference_mode());
         SAFE_CALL(frame_reference_mode_probs());
@@ -432,9 +428,8 @@ bool Decoder::read_tx_mode()
         m_tx_mode = Only_4x4;
     } else {
         auto tx_mode = m_bit_stream->read_literal(2);
-        if (tx_mode == Allow_32x32) {
+        if (tx_mode == Allow_32x32)
             tx_mode += m_bit_stream->read_literal(1);
-        }
         m_tx_mode = static_cast<TXMode>(tx_mode);
     }
     return true;
@@ -444,19 +439,16 @@ bool Decoder::tx_mode_probs()
 {
     auto& tx_probs = m_probability_tables->tx_probs();
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
-        for (auto j = 0; j < TX_SIZES - 3; j++) {
+        for (auto j = 0; j < TX_SIZES - 3; j++)
             tx_probs[TX_8x8][i][j] = diff_update_prob(tx_probs[TX_8x8][i][j]);
-        }
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
-        for (auto j = 0; j < TX_SIZES - 2; j++) {
+        for (auto j = 0; j < TX_SIZES - 2; j++)
             tx_probs[TX_16x16][i][j] = diff_update_prob(tx_probs[TX_16x16][i][j]);
-        }
     }
     for (auto i = 0; i < TX_SIZE_CONTEXTS; i++) {
-        for (auto j = 0; j < TX_SIZES - 1; j++) {
+        for (auto j = 0; j < TX_SIZES - 1; j++)
             tx_probs[TX_32x32][i][j] = diff_update_prob(tx_probs[TX_32x32][i][j]);
-        }
     }
     return true;
 }
@@ -839,8 +831,8 @@ bool Decoder::intra_frame_mode_info()
     if (m_mi_size >= Block_8x8) {
         m_default_intra_mode = m_tree_parser->parse_tree<IntraMode>(SyntaxElementType::DefaultIntraMode);
         m_y_mode = m_default_intra_mode;
-        for (auto b = 0; b < 4; b++)
-            m_block_sub_modes[b] = m_y_mode;
+        for (auto& block_sub_mode : m_block_sub_modes)
+            block_sub_mode = m_y_mode;
     } else {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
@@ -866,21 +858,19 @@ bool Decoder::intra_frame_mode_info()
 
 bool Decoder::intra_segment_id()
 {
-    if (m_segmentation_enabled && m_segmentation_update_map) {
+    if (m_segmentation_enabled && m_segmentation_update_map)
         m_segment_id = m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID);
-    } else {
+    else
         m_segment_id = 0;
-    }
     return true;
 }
 
 bool Decoder::read_skip()
 {
-    if (seg_feature_active(SEG_LVL_SKIP)) {
+    if (seg_feature_active(SEG_LVL_SKIP))
         m_skip = true;
-    } else {
+    else
         m_skip = m_tree_parser->parse_tree<bool>(SyntaxElementType::Skip);
-    }
     return true;
 }
 
@@ -892,11 +882,10 @@ bool Decoder::seg_feature_active(u8 feature)
 bool Decoder::read_tx_size(bool allow_select)
 {
     m_max_tx_size = max_txsize_lookup[m_mi_size];
-    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8) {
+    if (allow_select && m_tx_mode == TXModeSelect && m_mi_size >= Block_8x8)
         m_tx_size = m_tree_parser->parse_tree<TXSize>(SyntaxElementType::TXSize);
-    } else {
+    else
         m_tx_size = min(m_max_tx_size, tx_mode_to_biggest_tx_size[m_tx_mode]);
-    }
     return true;
 }
 
@@ -943,9 +932,9 @@ bool Decoder::inter_segment_id()
         m_segment_id = predicted_segment_id;
     else
         m_segment_id = m_tree_parser->parse_tree<u8>(SyntaxElementType::SegmentID);
-    for (auto i = 0u; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++)
+    for (size_t i = 0; i < num_8x8_blocks_wide_lookup[m_mi_size]; i++)
         m_above_seg_pred_context[m_mi_col + i] = seg_id_predicted;
-    for (auto i = 0u; i < num_8x8_blocks_high_lookup[m_mi_size]; i++)
+    for (size_t i = 0; i < num_8x8_blocks_high_lookup[m_mi_size]; i++)
         m_left_seg_pred_context[m_mi_row + i] = seg_id_predicted;
     return true;
 }
@@ -957,8 +946,8 @@ u8 Decoder::get_segment_id()
     auto xmis = min(m_mi_cols - m_mi_col, (u32)bw);
     auto ymis = min(m_mi_rows - m_mi_row, (u32)bh);
     u8 segment = 7;
-    for (auto y = 0u; y < ymis; y++) {
-        for (auto x = 0u; x < xmis; x++) {
+    for (size_t y = 0; y < ymis; y++) {
+        for (size_t x = 0; x < xmis; x++) {
             segment = min(segment, m_prev_segment_ids[m_mi_row + y][m_mi_col + x]);
         }
     }
@@ -980,8 +969,8 @@ bool Decoder::intra_block_mode_info()
     m_ref_frame[1] = None;
     if (m_mi_size >= Block_8x8) {
         m_y_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::IntraMode);
-        for (auto b = 0; b < 4; b++)
-            m_block_sub_modes[b] = m_y_mode;
+        for (auto& block_sub_mode : m_block_sub_modes)
+            block_sub_mode = m_y_mode;
     } else {
         m_num_4x4_w = num_4x4_blocks_wide_lookup[m_mi_size];
         m_num_4x4_h = num_4x4_blocks_high_lookup[m_mi_size];
@@ -990,9 +979,8 @@ bool Decoder::intra_block_mode_info()
             for (auto idx = 0; idx < 2; idx += m_num_4x4_w) {
                 sub_intra_mode = m_tree_parser->parse_tree<u8>(SyntaxElementType::SubIntraMode);
                 for (auto y = 0; y < m_num_4x4_h; y++) {
-                    for (auto x = 0; x < m_num_4x4_w; x++) {
+                    for (auto x = 0; x < m_num_4x4_w; x++)
                         m_block_sub_modes[(idy + y) * 2 + idx + x] = sub_intra_mode;
-                    }
                 }
             }
         }
