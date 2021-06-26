@@ -719,20 +719,25 @@ bool Decoder::decode_tiles()
     return true;
 }
 
-template<typename T>
-void clear_context(T* context, size_t size)
+void Decoder::clear_context(Vector<u8>& context, size_t size)
 {
-    if (!(*context))
-        *context = static_cast<T>(malloc(size));
-    else
-        __builtin_memset(*context, 0, size);
+    context.resize_and_keep_capacity(size);
+    __builtin_memset(context.data(), 0, sizeof(u8) * size);
+}
+
+void Decoder::clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size)
+{
+    if (context.size() < outer_size)
+        context.resize(outer_size);
+    for (auto& sub_vector : context)
+        clear_context(sub_vector, inner_size);
 }
 
 bool Decoder::clear_above_context()
 {
-    clear_context(&m_above_nonzero_context, sizeof(u8) * 3 * m_mi_cols * 2);
-    clear_context(&m_above_seg_pred_context, sizeof(u8) * m_mi_cols);
-    clear_context(&m_above_partition_context, sizeof(u8) * m_sb64_cols * 8);
+    clear_context(m_above_nonzero_context, 2 * m_mi_cols, 3);
+    clear_context(m_above_seg_pred_context, m_mi_cols);
+    clear_context(m_above_partition_context, m_sb64_cols * 8);
     return true;
 }
 
@@ -758,9 +763,9 @@ bool Decoder::decode_tile()
 
 bool Decoder::clear_left_context()
 {
-    clear_context(&m_left_nonzero_context, sizeof(u8) * 3 * m_mi_rows * 2);
-    clear_context(&m_left_seg_pred_context, sizeof(u8) * m_mi_rows);
-    clear_context(&m_left_partition_context, sizeof(u8) * m_sb64_rows * 8);
+    clear_context(m_left_nonzero_context, 2 * m_mi_rows, 3);
+    clear_context(m_left_seg_pred_context, m_mi_rows);
+    clear_context(m_left_partition_context, m_sb64_rows * 8);
     return true;
 }
 
@@ -1123,22 +1128,6 @@ void Decoder::dump_info()
     dbgln("Render dimensions: {}x{}", m_render_width, m_render_height);
     dbgln("Bit depth: {}", m_bit_depth);
     dbgln("Interpolation filter: {}", (u8)m_interpolation_filter);
-}
-
-Decoder::~Decoder()
-{
-    if (m_above_nonzero_context)
-        free(m_above_nonzero_context);
-    if (m_left_nonzero_context)
-        free(m_left_nonzero_context);
-    if (m_above_seg_pred_context)
-        free(m_above_seg_pred_context);
-    if (m_left_seg_pred_context)
-        free(m_left_seg_pred_context);
-    if (m_above_partition_context)
-        free(m_above_partition_context);
-    if (m_left_partition_context)
-        free(m_left_partition_context);
 }
 
 }
