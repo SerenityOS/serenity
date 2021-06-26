@@ -21,19 +21,24 @@ public:
 
     u8 read_byte();
     bool read_bit();
+
+    /* (9.1) */
     u8 read_f(size_t n);
-    i8 read_s(size_t n);
     u8 read_f8();
     u16 read_f16();
+
+    /* (9.2) */
+    bool init_bool(size_t bytes);
+    bool read_bool(u8 probability);
+    bool exit_bool();
     u8 read_literal(size_t n);
+
+    /* (4.9.2) */
+    i8 read_s(size_t n);
 
     u64 get_position();
     size_t bytes_remaining();
     size_t bits_remaining();
-
-    bool init_bool(size_t bytes);
-    bool read_bool(u8 probability);
-    bool exit_bool();
 
 private:
     u8 const* m_data_ptr { nullptr };

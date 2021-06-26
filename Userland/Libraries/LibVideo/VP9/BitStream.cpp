@@ -37,13 +37,6 @@ u8 BitStream::read_f(size_t n)
     return result;
 }
 
-i8 BitStream::read_s(size_t n)
-{
-    auto value = read_f(n);
-    auto sign = read_bit();
-    return sign ? -value : value;
-}
-
 u8 BitStream::read_f8()
 {
     if (!m_current_byte.has_value())
@@ -61,30 +54,6 @@ u8 BitStream::read_f8()
 u16 BitStream::read_f16()
 {
     return (read_f8() << 8u) | read_f8();
-}
-
-u8 BitStream::read_literal(size_t n)
-{
-    u8 return_value = 0;
-    for (size_t i = 0; i < n; i++) {
-        return_value = (2 * return_value) + read_bool(128);
-    }
-    return return_value;
-}
-
-u64 BitStream::get_position()
-{
-    return (m_bytes_read * 8) + (7 - m_current_bit_position);
-}
-
-size_t BitStream::bytes_remaining()
-{
-    return m_bytes_remaining;
-}
-
-size_t BitStream::bits_remaining()
-{
-    return (bytes_remaining() * 8) + m_current_bit_position + 1;
 }
 
 /* 9.2.1 */
@@ -137,6 +106,37 @@ bool BitStream::exit_bool()
     // FIXME: It is a requirement of bitstream conformance that enough padding bits are inserted to ensure that the final coded byte of a frame is not equal to a superframe marker.
     //  A byte b is equal to a superframe marker if and only if (b & 0xe0)is equal to 0xc0, i.e. if the most significant 3 bits are equal to 0b110.
     return padding_element == 0;
+}
+
+u8 BitStream::read_literal(size_t n)
+{
+    u8 return_value = 0;
+    for (size_t i = 0; i < n; i++) {
+        return_value = (2 * return_value) + read_bool(128);
+    }
+    return return_value;
+}
+
+i8 BitStream::read_s(size_t n)
+{
+    auto value = read_f(n);
+    auto sign = read_bit();
+    return sign ? -value : value;
+}
+
+u64 BitStream::get_position()
+{
+    return (m_bytes_read * 8) + (7 - m_current_bit_position);
+}
+
+size_t BitStream::bytes_remaining()
+{
+    return m_bytes_remaining;
+}
+
+size_t BitStream::bits_remaining()
+{
+    return (bytes_remaining() * 8) + m_current_bit_position + 1;
 }
 
 }

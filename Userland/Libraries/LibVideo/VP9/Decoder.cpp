@@ -22,6 +22,7 @@ Decoder::Decoder()
 {
 }
 
+/* (6.1) */
 bool Decoder::parse_frame(ByteBuffer const& frame_data)
 {
     m_bit_stream = make<BitStream>(frame_data.data(), frame_data.size());
@@ -49,6 +50,7 @@ bool Decoder::parse_frame(ByteBuffer const& frame_data)
     return true;
 }
 
+/* (6.2) */
 bool Decoder::uncompressed_header()
 {
     auto frame_marker = m_bit_stream->read_f(2);

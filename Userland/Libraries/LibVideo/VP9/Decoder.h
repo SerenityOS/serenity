@@ -40,6 +40,7 @@ private:
         return StudioSwing;
     }
 
+    /* (6.2) Uncompressed Header Syntax */
     bool uncompressed_header();
     bool frame_sync_code();
     bool color_config();
@@ -59,6 +60,7 @@ private:
     bool setup_past_independence();
     bool trailing_bits();
 
+    /* (6.3) Compressed Header Syntax */
     bool compressed_header();
     bool read_tx_mode();
     bool tx_mode_probs();
@@ -79,6 +81,7 @@ private:
     u8 update_mv_prob(u8 prob);
     bool setup_compound_reference_mode();
 
+    /* (6.4) Decode Tiles Syntax */
     bool decode_tiles();
     bool clear_above_context();
     u32 get_tile_offset(u32 tile_num, u32 mis, u32 tile_size_log2);
