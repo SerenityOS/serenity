@@ -107,11 +107,22 @@ private:
     bool read_ref_frames();
     bool assign_mv(bool is_compound);
     bool read_mv(u8 ref);
+    bool residual();
+    TXSize get_uv_tx_size();
+    BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
+    bool tokens(size_t plane, u32 x, u32 y, TXSize size, u32 index);
 
     /* (6.5) Motion Vector Prediction */
     bool find_mv_refs(ReferenceFrame, int block);
     bool find_best_ref_mvs(int ref_list);
     bool append_sub8x8_mvs(u8 block, u8 ref_list);
+
+    /* (8.5) Prediction Processes */
+    bool predict_intra(size_t plane, u32 x, u32 y, bool have_left, bool have_above, bool not_on_right, TXSize tx_size, u32 block_index);
+    bool predict_inter(size_t plane, u32 x, u32 y, u32 w, u32 h, u32 block_index);
+
+    /* (8.6) Reconstruction and Dequantization */
+    bool reconstruct(size_t plane, u32 x, u32 y, TXSize size);
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -209,6 +220,7 @@ private:
     Vector<Vector<Vector<IntraMode>>> m_sub_modes; // FIXME: Can we make these fixed sized allocations?
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
+    u32 m_eob_total { 0 };
 
     bool m_use_hp { false };
 

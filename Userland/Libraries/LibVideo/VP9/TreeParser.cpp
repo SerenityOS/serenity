@@ -207,17 +207,17 @@ u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
 {
     u32 above_mode, left_mode;
     if (m_decoder.m_mi_size >= Block_8x8) {
-        above_mode = AVAIL_U
+        above_mode = false // FIXME: AVAIL_U
             ? m_decoder.m_sub_modes[m_decoder.m_mi_row - 1][m_decoder.m_mi_col][2]
             : DcPred;
-        left_mode = AVAIL_L
+        left_mode = false // FIXME: AVAIL_L
             ? m_decoder.m_sub_modes[m_decoder.m_mi_row][m_decoder.m_mi_col - 1][1]
             : DcPred;
     } else {
         if (m_idy) {
             above_mode = m_decoder.m_block_sub_modes[m_idx];
         } else {
-            above_mode = AVAIL_U
+            above_mode = false // FIXME: AVAIL_U
                 ? m_decoder.m_sub_modes[m_decoder.m_mi_row - 1][m_decoder.m_mi_col][2 + m_idx]
                 : DcPred;
         }
@@ -225,7 +225,7 @@ u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
         if (m_idx) {
             left_mode = m_decoder.m_block_sub_modes[m_idy * 2];
         } else {
-            left_mode = AVAIL_L
+            left_mode = false // FIXME: AVAIL_L
                 ? m_decoder.m_sub_modes[m_decoder.m_mi_row][m_decoder.m_mi_col - 1][1 + m_idy * 2]
                 : DcPred;
         }

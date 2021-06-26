@@ -200,4 +200,20 @@ static constexpr TXSize max_txsize_lookup[BLOCK_SIZES] = {
     TX_32x32,
 };
 
+static constexpr BlockSubsize ss_size_lookup[BLOCK_SIZES][2][2] = {
+    { { Block_4x4, Block_Invalid }, { Block_Invalid, Block_Invalid } },
+    { { Block_4x8, Block_4x4 }, { Block_Invalid, Block_Invalid } },
+    { { Block_8x4, Block_Invalid }, { Block_4x4, Block_Invalid } },
+    { { Block_8x8, Block_8x4 }, { Block_4x8, Block_4x4 } },
+    { { Block_8x16, Block_8x8 }, { Block_Invalid, Block_4x8 } },
+    { { Block_16x8, Block_Invalid }, { Block_8x8, Block_8x4 } },
+    { { Block_16x16, Block_16x8 }, { Block_8x16, Block_8x8 } },
+    { { Block_16x32, Block_16x16 }, { Block_Invalid, Block_8x16 } },
+    { { Block_32x16, Block_Invalid }, { Block_16x16, Block_16x8 } },
+    { { Block_32x32, Block_32x16 }, { Block_16x32, Block_16x16 } },
+    { { Block_32x64, Block_32x32 }, { Block_Invalid, Block_16x32 } },
+    { { Block_64x32, Block_Invalid }, { Block_32x32, Block_32x16 } },
+    { { Block_64x64, Block_64x32 }, { Block_32x64, Block_32x32 } },
+};
+
 }
