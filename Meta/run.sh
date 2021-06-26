@@ -56,7 +56,7 @@ installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
 if [ "$SERENITY_SCREENS" -gt 1 ]; then
-    SERENITY_QEMU_DISPLAY_DEVICE="virtio-gpu,max_outputs=$SERENITY_SCREENS "
+    SERENITY_QEMU_DISPLAY_DEVICE="virtio-vga,max_outputs=$SERENITY_SCREENS "
     # QEMU appears to always relay absolute mouse coordinates relative to the screen that the mouse is
     # pointed to, without any way for us to know what screen it was. So, when dealing with multiple
     # displays force using relative coordinates only
