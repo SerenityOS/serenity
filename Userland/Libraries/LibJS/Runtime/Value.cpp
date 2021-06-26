@@ -789,6 +789,22 @@ double Value::to_integer_or_infinity(GlobalObject& global_object) const
     return integer;
 }
 
+// 7.3.3 GetV ( V, P ), https://tc39.es/ecma262/#sec-getv
+Value Value::get(GlobalObject& global_object, PropertyName const& property_name) const
+{
+    auto& vm = global_object.vm();
+
+    // 1. Assert: IsPropertyKey(P) is true.
+
+    // 2. Let O be ? ToObject(V).
+    auto* object = to_object(global_object);
+    if (vm.exception())
+        return {};
+
+    // 3. Return ? O.[[Get]](P, V).
+    return object->get(property_name, *this);
+}
+
 // 13.10 Relational Operators, https://tc39.es/ecma262/#sec-relational-operators
 Value greater_than(GlobalObject& global_object, Value lhs, Value rhs)
 {
