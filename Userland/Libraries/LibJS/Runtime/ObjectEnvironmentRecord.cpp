@@ -10,9 +10,9 @@
 
 namespace JS {
 
-ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& object, IsWithEnvironment is_with_environment, EnvironmentRecord* parent_scope)
-    : EnvironmentRecord(parent_scope)
-    , m_object(object)
+ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& binding_object, IsWithEnvironment is_with_environment, EnvironmentRecord* outer_environment)
+    : EnvironmentRecord(outer_environment)
+    , m_binding_object(binding_object)
     , m_with_environment(is_with_environment == IsWithEnvironment::Yes)
 {
 }
@@ -20,12 +20,12 @@ ObjectEnvironmentRecord::ObjectEnvironmentRecord(Object& object, IsWithEnvironme
 void ObjectEnvironmentRecord::visit_edges(Cell::Visitor& visitor)
 {
     Base::visit_edges(visitor);
-    visitor.visit(&m_object);
+    visitor.visit(&m_binding_object);
 }
 
 Optional<Variable> ObjectEnvironmentRecord::get_from_environment_record(FlyString const& name) const
 {
-    auto value = m_object.get(name);
+    auto value = m_binding_object.get(name);
     if (value.is_empty())
         return {};
     return Variable { value, DeclarationKind::Var };
@@ -33,18 +33,18 @@ Optional<Variable> ObjectEnvironmentRecord::get_from_environment_record(FlyStrin
 
 void ObjectEnvironmentRecord::put_into_environment_record(FlyString const& name, Variable variable)
 {
-    m_object.put(name, variable.value);
+    m_binding_object.put(name, variable.value);
 }
 
 bool ObjectEnvironmentRecord::delete_from_environment_record(FlyString const& name)
 {
-    return m_object.delete_property(name);
+    return m_binding_object.delete_property(name);
 }
 
 // 9.1.1.2.1 HasBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n
 bool ObjectEnvironmentRecord::has_binding(FlyString const& name) const
 {
-    bool found_binding = m_object.has_property(name);
+    bool found_binding = m_binding_object.has_property(name);
     if (!found_binding)
         return false;
 
@@ -64,7 +64,7 @@ void ObjectEnvironmentRecord::create_mutable_binding(GlobalObject&, FlyString co
     attributes.set_has_configurable();
     if (can_be_deleted)
         attributes.set_configurable();
-    m_object.define_property(name, js_undefined(), attributes, true);
+    m_binding_object.define_property(name, js_undefined(), attributes, true);
 }
 
 // 9.1.1.2.3 CreateImmutableBinding ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s
@@ -83,20 +83,20 @@ void ObjectEnvironmentRecord::initialize_binding(GlobalObject& global_object, Fl
 // 9.1.1.2.5 SetMutableBinding ( N, V, S ), https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s
 void ObjectEnvironmentRecord::set_mutable_binding(GlobalObject& global_object, FlyString const& name, Value value, bool strict)
 {
-    bool still_exists = m_object.has_property(name);
+    bool still_exists = m_binding_object.has_property(name);
     if (!still_exists && strict) {
         global_object.vm().throw_exception<ReferenceError>(global_object, ErrorType::UnknownIdentifier, name);
         return;
     }
     // FIXME: This should use the Set abstract operation.
     // FIXME: Set returns a bool, so this may need to return a bool as well.
-    m_object.put(name, value);
+    m_binding_object.put(name, value);
 }
 
 // 9.1.1.2.6 GetBindingValue ( N, S ), https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s
 Value ObjectEnvironmentRecord::get_binding_value(GlobalObject& global_object, FlyString const& name, bool strict)
 {
-    if (!m_object.has_property(name)) {
+    if (!m_binding_object.has_property(name)) {
         if (!strict)
             return js_undefined();
 
@@ -104,13 +104,13 @@ Value ObjectEnvironmentRecord::get_binding_value(GlobalObject& global_object, Fl
         return {};
     }
     // FIXME: This should use the Get abstract operation.
-    return m_object.get(name);
+    return m_binding_object.get(name);
 }
 
 // 9.1.1.2.7 DeleteBinding ( N ), https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n
 bool ObjectEnvironmentRecord::delete_binding(GlobalObject&, FlyString const& name)
 {
-    return m_object.delete_property(name);
+    return m_binding_object.delete_property(name);
 }
 
 }
