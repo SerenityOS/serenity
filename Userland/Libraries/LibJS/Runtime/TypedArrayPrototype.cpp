@@ -5,6 +5,7 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/TypedArrayPrototype.h>
@@ -33,6 +34,7 @@ void TypedArrayPrototype::initialize(GlobalObject& object)
     define_native_function(vm.names.forEach, for_each, 1, attr);
     define_native_function(vm.names.some, some, 1, attr);
     define_native_function(vm.names.join, join, 1, attr);
+    define_native_function(vm.names.keys, keys, 0, attr);
 
     define_native_accessor(*vm.well_known_symbol_to_string_tag(), to_string_tag_getter, nullptr, Attribute::Configurable);
 
@@ -236,6 +238,15 @@ JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::join)
     }
 
     return js_string(vm, builder.to_string());
+}
+
+// 23.2.3.16 %TypedArray%.prototype.keys ( ), https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys
+JS_DEFINE_NATIVE_FUNCTION(TypedArrayPrototype::keys)
+{
+    auto typed_array = typed_array_from(vm, global_object);
+    if (!typed_array)
+        return {};
+    return ArrayIterator::create(global_object, typed_array, Object::PropertyKind::Key);
 }
 
 // 23.2.3.1 get %TypedArray%.prototype.buffer, https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer
