@@ -29,6 +29,21 @@ Error::Error(Object& prototype)
 {
 }
 
+// 20.5.8.1 InstallErrorCause ( O, options ), https://tc39.es/proposal-error-cause/#sec-errorobjects-install-error-cause
+void Error::install_error_cause(Value options)
+{
+    auto& vm = this->vm();
+    if (!options.is_object())
+        return;
+    auto& options_object = options.as_object();
+    if (!options_object.has_property(vm.names.cause))
+        return;
+    auto cause = options_object.get(vm.names.cause).value_or(js_undefined());
+    if (vm.exception())
+        return;
+    define_property(vm.names.cause, cause, Attribute::Writable | Attribute::Configurable);
+}
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType)                         \
     ClassName* ClassName::create(GlobalObject& global_object)                                                    \
     {                                                                                                            \

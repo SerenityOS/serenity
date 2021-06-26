@@ -21,6 +21,8 @@ public:
 
     explicit Error(Object& prototype);
     virtual ~Error() override = default;
+
+    void install_error_cause(Value options);
 };
 
 // NOTE: Making these inherit from Error is not required by the spec but
