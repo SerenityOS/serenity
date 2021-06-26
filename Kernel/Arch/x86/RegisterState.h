@@ -15,6 +15,7 @@
 namespace Kernel {
 
 struct [[gnu::packed]] RegisterState {
+#if ARCH(I386)
     FlatPtr ss;
     FlatPtr gs;
     FlatPtr fs;
@@ -28,27 +29,55 @@ struct [[gnu::packed]] RegisterState {
     FlatPtr edx;
     FlatPtr ecx;
     FlatPtr eax;
+#else
+    FlatPtr rdi;
+    FlatPtr rsi;
+    FlatPtr rbp;
+    FlatPtr rsp;
+    FlatPtr rbx;
+    FlatPtr rdx;
+    FlatPtr rcx;
+    FlatPtr rax;
+    FlatPtr r8;
+    FlatPtr r9;
+    FlatPtr r10;
+    FlatPtr r11;
+    FlatPtr r12;
+    FlatPtr r13;
+    FlatPtr r14;
+    FlatPtr r15;
+#endif
     u16 exception_code;
     u16 isr_number;
 #if ARCH(X86_64)
     u32 padding;
 #endif
+#if ARCH(I386)
     FlatPtr eip;
+#else
+    FlatPtr rip;
+#endif
     FlatPtr cs;
+#if ARCH(I386)
     FlatPtr eflags;
     FlatPtr userspace_esp;
     FlatPtr userspace_ss;
+#else
+    FlatPtr rflags;
+    FlatPtr userspace_rsp;
+#endif
 };
 
 #if ARCH(I386)
 #    define REGISTER_STATE_SIZE (19 * 4)
 #else
-#    define REGISTER_STATE_SIZE (19 * 8)
+#    define REGISTER_STATE_SIZE (21 * 8)
 #endif
 static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
 
 inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_regs, const RegisterState& kernel_regs)
 {
+#if ARCH(I386)
     ptrace_regs.eax = kernel_regs.eax,
     ptrace_regs.ecx = kernel_regs.ecx,
     ptrace_regs.edx = kernel_regs.edx,
@@ -59,6 +88,26 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
     ptrace_regs.edi = kernel_regs.edi,
     ptrace_regs.eip = kernel_regs.eip,
     ptrace_regs.eflags = kernel_regs.eflags,
+#else
+    ptrace_regs.rax = kernel_regs.rax,
+    ptrace_regs.rcx = kernel_regs.rcx,
+    ptrace_regs.rdx = kernel_regs.rdx,
+    ptrace_regs.rbx = kernel_regs.rbx,
+    ptrace_regs.rsp = kernel_regs.userspace_rsp,
+    ptrace_regs.rbp = kernel_regs.rbp,
+    ptrace_regs.rsi = kernel_regs.rsi,
+    ptrace_regs.rdi = kernel_regs.rdi,
+    ptrace_regs.rip = kernel_regs.rip,
+    ptrace_regs.r8 = kernel_regs.r8;
+    ptrace_regs.r9 = kernel_regs.r9;
+    ptrace_regs.r10 = kernel_regs.r10;
+    ptrace_regs.r11 = kernel_regs.r11;
+    ptrace_regs.r12 = kernel_regs.r12;
+    ptrace_regs.r13 = kernel_regs.r13;
+    ptrace_regs.r14 = kernel_regs.r14;
+    ptrace_regs.r15 = kernel_regs.r15;
+    ptrace_regs.rflags = kernel_regs.rflags,
+#endif
     ptrace_regs.cs = 0;
     ptrace_regs.ss = 0;
     ptrace_regs.ds = 0;
@@ -69,6 +118,7 @@ inline void copy_kernel_registers_into_ptrace_registers(PtraceRegisters& ptrace_
 
 inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_regs, const PtraceRegisters& ptrace_regs)
 {
+#if ARCH(I386)
     kernel_regs.eax = ptrace_regs.eax;
     kernel_regs.ecx = ptrace_regs.ecx;
     kernel_regs.edx = ptrace_regs.edx;
@@ -79,6 +129,27 @@ inline void copy_ptrace_registers_into_kernel_registers(RegisterState& kernel_re
     kernel_regs.edi = ptrace_regs.edi;
     kernel_regs.eip = ptrace_regs.eip;
     kernel_regs.eflags = (kernel_regs.eflags & ~safe_eflags_mask) | (ptrace_regs.eflags & safe_eflags_mask);
+#else
+    kernel_regs.rax = ptrace_regs.rax;
+    kernel_regs.rcx = ptrace_regs.rcx;
+    kernel_regs.rdx = ptrace_regs.rdx;
+    kernel_regs.rbx = ptrace_regs.rbx;
+    kernel_regs.rsp = ptrace_regs.rsp;
+    kernel_regs.rbp = ptrace_regs.rbp;
+    kernel_regs.rsi = ptrace_regs.rsi;
+    kernel_regs.rdi = ptrace_regs.rdi;
+    kernel_regs.rip = ptrace_regs.rip;
+    kernel_regs.r8 = ptrace_regs.r8;
+    kernel_regs.r9 = ptrace_regs.r9;
+    kernel_regs.r10 = ptrace_regs.r10;
+    kernel_regs.r11 = ptrace_regs.r11;
+    kernel_regs.r12 = ptrace_regs.r12;
+    kernel_regs.r13 = ptrace_regs.r13;
+    kernel_regs.r14 = ptrace_regs.r14;
+    kernel_regs.r15 = ptrace_regs.r15;
+    // FIXME: do we need a separate safe_rflags_mask here?
+    kernel_regs.rflags = (kernel_regs.rflags & ~safe_eflags_mask) | (ptrace_regs.rflags & safe_eflags_mask);
+#endif
 }
 
 struct [[gnu::packed]] DebugRegisterState {

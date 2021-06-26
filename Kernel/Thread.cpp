@@ -812,7 +812,8 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
 
         dbgln_if(SIGNAL_DEBUG, "Setting up user stack to return to EIP {:p}, ESP {:p}", ret_eip, old_esp);
 #elif ARCH(X86_64)
-        FlatPtr* stack = &state.userspace_esp;
+        FlatPtr* stack = &state.userspace_rsp;
+        TODO();
 #endif
 
 #if ARCH(I386)
@@ -855,7 +856,12 @@ DispatchSignalResult Thread::dispatch_signal(u8 signal)
     // valid (fork, exec etc) but the tss will, so we use that instead.
     auto& regs = get_register_dump_from_stack();
     setup_stack(regs);
-    regs.eip = process.signal_trampoline().get();
+    auto signal_trampoline_addr = process.signal_trampoline().get();
+#if ARCH(I386)
+    regs.eip = signal_trampoline_addr;
+#else
+    regs.rip = signal_trampoline_addr;
+#endif
 
 #if ARCH(I386)
     dbgln_if(SIGNAL_DEBUG, "Thread in state '{}' has been primed with signal handler {:04x}:{:08x} to deliver {}", state_string(), m_tss.cs, m_tss.eip, signal);
