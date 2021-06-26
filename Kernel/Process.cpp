@@ -315,8 +315,8 @@ void signal_trampoline_dummy()
 #endif
 }
 
-extern "C" void asm_signal_trampoline(void) __attribute__((used));
-extern "C" void asm_signal_trampoline_end(void);
+extern "C" char const asm_signal_trampoline[];
+extern "C" char const asm_signal_trampoline_end[];
 
 void create_signal_trampoline()
 {
@@ -324,12 +324,10 @@ void create_signal_trampoline()
     g_signal_trampoline_region = MM.allocate_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write).leak_ptr();
     g_signal_trampoline_region->set_syscall_region(true);
 
-    u8* trampoline = (u8*)asm_signal_trampoline;
-    u8* trampoline_end = (u8*)asm_signal_trampoline_end;
-    size_t trampoline_size = trampoline_end - trampoline;
+    size_t trampoline_size = asm_signal_trampoline_end - asm_signal_trampoline;
 
     u8* code_ptr = (u8*)g_signal_trampoline_region->vaddr().as_ptr();
-    memcpy(code_ptr, trampoline, trampoline_size);
+    memcpy(code_ptr, asm_signal_trampoline, trampoline_size);
 
     g_signal_trampoline_region->set_writable(false);
     g_signal_trampoline_region->remap();
