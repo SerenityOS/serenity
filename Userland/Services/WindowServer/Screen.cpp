@@ -319,8 +319,8 @@ void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
 void Screen::flush_display(const Gfx::IntRect& flush_region)
 {
     FBRect rect {
-        .x = static_cast<unsigned>(flush_region.x()) * scale_factor(),
-        .y = static_cast<unsigned>(flush_region.y()) * scale_factor(),
+        .x = (static_cast<unsigned>(flush_region.x()) - m_virtual_rect.left()) * scale_factor(),
+        .y = (static_cast<unsigned>(flush_region.y()) - m_virtual_rect.top()) * scale_factor(),
         .width = static_cast<unsigned>(flush_region.width()) * scale_factor(),
         .height = static_cast<unsigned>(flush_region.height() * scale_factor())
     };
