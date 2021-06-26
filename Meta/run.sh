@@ -54,7 +54,13 @@ installed_major_version=$("$SERENITY_QEMU_BIN" -version | head -n 1 | sed -E 's/
 [ "$installed_major_version" -lt "$SERENITY_QEMU_MIN_REQ_VERSION" ] && die "Required QEMU >= 5.0! Found $($SERENITY_QEMU_BIN -version | head -n 1)"
 
 SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
-SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
+if uname -a | grep -iq WSL; then
+    # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
+else
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
+fi
+
 if [ "$SERENITY_SCREENS" -gt 1 ]; then
     SERENITY_QEMU_DISPLAY_DEVICE="virtio-vga,max_outputs=$SERENITY_SCREENS "
     # QEMU appears to always relay absolute mouse coordinates relative to the screen that the mouse is
