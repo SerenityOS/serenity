@@ -702,7 +702,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match)
         return {};
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* matcher = get_method(global_object, regexp, *vm.well_known_symbol_match()))
+        if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match()))
             return vm.call(*matcher, regexp, this_object);
     }
     auto s = this_object.to_string(global_object);
@@ -740,7 +740,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::match_all)
                 return {};
             }
         }
-        if (auto* matcher = get_method(global_object, regexp, *vm.well_known_symbol_match_all()))
+        if (auto* matcher = regexp.get_method(global_object, *vm.well_known_symbol_match_all()))
             return vm.call(*matcher, regexp, this_object);
         if (vm.exception())
             return {};
@@ -764,7 +764,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::replace)
     auto replace_value = vm.argument(1);
 
     if (!search_value.is_nullish()) {
-        if (auto* replacer = get_method(global_object, search_value, *vm.well_known_symbol_replace()))
+        if (auto* replacer = search_value.get_method(global_object, *vm.well_known_symbol_replace()))
             return vm.call(*replacer, search_value, this_object, replace_value);
     }
 
@@ -812,7 +812,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::search)
         return {};
     auto regexp = vm.argument(0);
     if (!regexp.is_nullish()) {
-        if (auto* searcher = get_method(global_object, regexp, *vm.well_known_symbol_search()))
+        if (auto* searcher = regexp.get_method(global_object, *vm.well_known_symbol_search()))
             return vm.call(*searcher, regexp, this_object);
         if (vm.exception())
             return {};

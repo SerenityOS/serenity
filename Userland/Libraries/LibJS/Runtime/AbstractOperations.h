@@ -18,7 +18,6 @@ ObjectEnvironmentRecord* new_object_environment(Object&, bool is_with_environmen
 EnvironmentRecord& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 Value require_object_coercible(GlobalObject&, Value);
-Function* get_method(GlobalObject& global_object, Value, PropertyName const&);
 size_t length_of_array_like(GlobalObject&, Object const&);
 MarkedValueList create_list_from_array_like(GlobalObject&, Value, AK::Function<Result<void, ErrorType>(Value)> = {});
 Function* species_constructor(GlobalObject&, Object const&, Function& default_constructor);
