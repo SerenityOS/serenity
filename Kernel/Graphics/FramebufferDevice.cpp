@@ -215,6 +215,8 @@ int FramebufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr arg)
             return -EFAULT;
         return 0;
     }
+    case FB_IOCTL_FLUSH_BUFFERS:
+        return -ENOTSUP;
     default:
         return -EINVAL;
     };

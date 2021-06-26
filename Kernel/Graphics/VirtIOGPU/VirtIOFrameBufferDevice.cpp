@@ -147,18 +147,26 @@ int VirtIOFrameBufferDevice::ioctl(FileDescription&, unsigned request, FlatPtr a
             return -EFAULT;
         return 0;
     }
-    case FB_IOCTL_FLUSH_BUFFER: {
-        FBRect user_dirty_rect;
-        if (!copy_from_user(&user_dirty_rect, (FBRect*)arg))
+    case FB_IOCTL_FLUSH_BUFFERS: {
+        FBRects user_dirty_rects;
+        if (!copy_from_user(&user_dirty_rects, (FBRects*)arg))
             return -EFAULT;
-        VirtIOGPURect dirty_rect {
-            .x = user_dirty_rect.x,
-            .y = user_dirty_rect.y,
-            .width = user_dirty_rect.width,
-            .height = user_dirty_rect.height
-        };
-        if (m_are_writes_active)
-            flush_dirty_window(dirty_rect);
+        if (Checked<unsigned>::multiplication_would_overflow(user_dirty_rects.count, sizeof(FBRect)))
+            return -EFAULT;
+        for (unsigned i = 0; i < user_dirty_rects.count; i++) {
+            FBRect user_dirty_rect;
+            if (!copy_from_user(&user_dirty_rect, &user_dirty_rects.rects[i]))
+                return -EFAULT;
+            if (m_are_writes_active) {
+                VirtIOGPURect dirty_rect {
+                    .x = user_dirty_rect.x,
+                    .y = user_dirty_rect.y,
+                    .width = user_dirty_rect.width,
+                    .height = user_dirty_rect.height
+                };
+                flush_dirty_window(dirty_rect);
+            }
+        }
         return 0;
     }
     default:
