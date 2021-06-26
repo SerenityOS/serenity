@@ -60,7 +60,7 @@ describe("behavior when obj has Array prototype", () => {
     function ArrExtend() {}
     ArrExtend.prototype = [10, 11, 12];
 
-    test("Has the properties from prototype", () => {
+    test.skip("Has the properties from prototype", () => {
         var arr = new ArrExtend();
         expect(arr.length).toEqual(3);
         expect(arr[0]).toEqual(10);
@@ -81,7 +81,7 @@ describe("behavior when obj has Array prototype", () => {
         });
     });
 
-    test("Can call array methods", () => {
+    test.skip("Can call array methods", () => {
         var arr = new ArrExtend();
         arr.push(1);
         expect(arr.length).toEqual(4);
