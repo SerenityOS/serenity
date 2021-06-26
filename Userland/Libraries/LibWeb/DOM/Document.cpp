@@ -224,7 +224,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
     if (existing_body) {
         auto replace_result = existing_body->parent()->replace_child(new_body, *existing_body);
         if (replace_result.is_exception())
-            return NonnullRefPtr<DOMException>(replace_result.exception());
+            return replace_result.exception();
         return {};
     }
 
@@ -234,7 +234,7 @@ ExceptionOr<void> Document::set_body(HTML::HTMLElement& new_body)
 
     auto append_result = document_element->append_child(new_body);
     if (append_result.is_exception())
-        return NonnullRefPtr<DOMException>(append_result.exception());
+        return append_result.exception();
     return {};
 }
 

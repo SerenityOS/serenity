@@ -24,7 +24,10 @@ template<typename T>
 ALWAYS_INLINE bool throw_dom_exception(JS::VM& vm, JS::GlobalObject& global_object, DOM::ExceptionOr<T>& result)
 {
     if (result.is_exception()) {
-        vm.throw_exception(global_object, DOMExceptionWrapper::create(global_object, const_cast<DOM::DOMException&>(result.exception())));
+        result.materialized_exception(global_object)
+            .visit(
+                [&](NonnullRefPtr<DOM::DOMException> dom_exception) { vm.throw_exception(global_object, DOMExceptionWrapper::create(global_object, move(dom_exception))); },
+                [&](auto* js_exception) { vm.throw_exception(global_object, js_exception); });
         return true;
     }
     return false;
@@ -44,6 +47,11 @@ struct ExtractExceptionOrValueType<DOM::ExceptionOr<T>> {
 
 template<>
 struct ExtractExceptionOrValueType<void> {
+    using Type = JS::Value;
+};
+
+template<>
+struct ExtractExceptionOrValueType<DOM::ExceptionOr<Empty>> {
     using Type = JS::Value;
 };
 
