@@ -594,10 +594,11 @@ void dump_thread_list()
 #if ARCH(I386)
         if (!thread.current_trap())
             return thread.tss().eip;
+        return thread.get_register_dump_from_stack().eip;
 #else
         PANIC("get_eip() not implemented");
+        return thread.get_register_dump_from_stack().rip;
 #endif
-        return thread.get_register_dump_from_stack().eip;
     };
 
     Thread::for_each([&](Thread& thread) {

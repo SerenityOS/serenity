@@ -324,7 +324,11 @@ void* DebugSession::single_step()
 
     auto regs = get_registers();
     constexpr u32 TRAP_FLAG = 0x100;
+#if ARCH(I386)
     regs.eflags |= TRAP_FLAG;
+#else
+    regs.rflags |= TRAP_FLAG;
+#endif
     set_registers(regs);
 
     continue_debuggee();
@@ -335,7 +339,11 @@ void* DebugSession::single_step()
     }
 
     regs = get_registers();
+#if ARCH(I386)
     regs.eflags &= ~(TRAP_FLAG);
+#else
+    regs.rflags &= ~(TRAP_FLAG);
+#endif
     set_registers(regs);
 #if ARCH(I386)
     return (void*)regs.eip;

@@ -167,7 +167,13 @@ NonnullOwnPtrVector<DebugInfo::VariableInfo> DebugInfo::get_variables_in_current
 
     // TODO: We can store the scopes in a better data structure
     for (const auto& scope : m_scopes) {
-        if (regs.eip - m_base_address < scope.address_low || regs.eip - m_base_address >= scope.address_high)
+        FlatPtr ip;
+#if ARCH(I386)
+        ip = regs.eip;
+#else
+        ip = regs.rip;
+#endif
+        if (ip - m_base_address < scope.address_low || ip - m_base_address >= scope.address_high)
             continue;
 
         for (const auto& die_entry : scope.dies_of_variables) {

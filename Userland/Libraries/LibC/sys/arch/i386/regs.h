@@ -9,6 +9,7 @@
 #include <AK/Types.h>
 
 struct [[gnu::packed]] PtraceRegisters {
+#if ARCH(I386)
     u32 eax;
     u32 ecx;
     u32 edx;
@@ -19,6 +20,26 @@ struct [[gnu::packed]] PtraceRegisters {
     u32 edi;
     u32 eip;
     u32 eflags;
+#else
+    u64 rax;
+    u64 rcx;
+    u64 rdx;
+    u64 rbx;
+    u64 rsp;
+    u64 rbp;
+    u64 rsi;
+    u64 rdi;
+    u64 rip;
+    u64 r8;
+    u64 r9;
+    u64 r10;
+    u64 r11;
+    u64 r12;
+    u64 r13;
+    u64 r14;
+    u64 r15;
+    u64 rflags;
+#endif
     u32 cs;
     u32 ss;
     u32 ds;
