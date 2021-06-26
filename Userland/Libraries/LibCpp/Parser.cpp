@@ -230,6 +230,11 @@ NonnullRefPtr<BlockStatement> Parser::parse_block_statement(ASTNode& parent)
 
 bool Parser::match_type()
 {
+    return match_named_type();
+}
+
+bool Parser::match_named_type()
+{
     save_state();
     ScopeGuard state_guard = [this] { load_state(); };
 
@@ -258,7 +263,7 @@ bool Parser::match_template_arguments()
     consume();
 
     while (!eof() && peek().type() != Token::Type::Greater) {
-        if (!match_type())
+        if (!match_named_type())
             return false;
         parse_type(get_dummy_node());
     }
@@ -1148,35 +1153,38 @@ bool Parser::match_boolean_literal()
 
 NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
 {
-    ScopeLogger<CPP_DEBUG> logger;
+    LOG_SCOPE();
 
-    if (!match_type()) {
+    if (!match_named_type()) {
+        error("expected named named_type");
         auto token = consume();
-        return create_ast_node<Type>(parent, token.start(), token.end());
+        return create_ast_node<NamedType>(parent, token.start(), token.end());
     }
 
-    auto type = create_ast_node<Type>(parent, position(), {});
+    auto named_type = create_ast_node<NamedType>(parent, position(), {});
 
     auto qualifiers = parse_type_qualifiers();
-    type->m_qualifiers = move(qualifiers);
+    named_type->m_qualifiers = move(qualifiers);
 
     if (match_keyword("auto")) {
         consume(Token::Type::Keyword);
-        type->m_is_auto = true;
-    } else {
-
-        if (match_keyword("struct")) {
-            consume(Token::Type::Keyword); // Consume struct prefix
-        }
-
-        if (!match_name()) {
-            type->set_end(position());
-            error(String::formatted("expected name instead of: {}", peek().text()));
-            return type;
-        }
-        type->m_name = parse_name(*type);
+        named_type->m_is_auto = true;
+        named_type->set_end(position());
+        return named_type;
     }
 
+    if (match_keyword("struct")) {
+        consume(Token::Type::Keyword); // Consume struct prefix
+    }
+
+    if (!match_name()) {
+        named_type->set_end(position());
+        error(String::formatted("expected name instead of: {}", peek().text()));
+        return named_type;
+    }
+    named_type->m_name = parse_name(*named_type);
+
+    NonnullRefPtr<Type> type = named_type;
     while (!eof() && peek().type() == Token::Type::Asterisk) {
         type->set_end(position());
         auto asterisk = consume();
@@ -1184,7 +1192,7 @@ NonnullRefPtr<Type> Parser::parse_type(ASTNode& parent)
         type->set_parent(*ptr);
         ptr->m_pointee = type;
         ptr->set_end(position());
-        return ptr;
+        type = ptr;
     }
 
     type->set_end(position());

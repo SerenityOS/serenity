@@ -86,6 +86,7 @@ private:
     bool match_sizeof_expression();
     bool match_braced_init_list();
     bool match_type();
+    bool match_named_type();
     bool match_access_specifier();
     bool match_constructor(const StringView& class_name);
     bool match_destructor(const StringView& class_name);
@@ -111,6 +112,7 @@ private:
     NonnullRefPtr<UnaryExpression> parse_unary_expression(ASTNode& parent);
     NonnullRefPtr<BooleanLiteral> parse_boolean_literal(ASTNode& parent);
     NonnullRefPtr<Type> parse_type(ASTNode& parent);
+    NonnullRefPtr<NamedType> parse_named_type(ASTNode& parent);
     NonnullRefPtr<BinaryExpression> parse_binary_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, BinaryOp);
     NonnullRefPtr<AssignmentExpression> parse_assignment_expression(ASTNode& parent, NonnullRefPtr<Expression> lhs, AssignmentOp);
     NonnullRefPtr<ForStatement> parse_for_statement(ASTNode& parent);

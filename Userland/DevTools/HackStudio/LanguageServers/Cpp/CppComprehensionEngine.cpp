@@ -227,8 +227,8 @@ String CppComprehensionEngine::type_of_property(const DocumentData& document, co
     auto& parent = (const MemberExpression&)(*identifier.parent());
     auto properties = properties_of_type(document, type_of(document, *parent.m_object));
     for (auto& prop : properties) {
-        if (prop.name == identifier.m_name)
-            return prop.type->m_name->full_name();
+        if (prop.name == identifier.m_name && prop.type->is_named_type())
+            return ((NamedType&)prop.type).m_name->full_name();
     }
     return {};
 }
@@ -240,8 +240,8 @@ String CppComprehensionEngine::type_of_variable(const Identifier& identifier) co
         for (auto& decl : current->declarations()) {
             if (decl.is_variable_or_parameter_declaration()) {
                 auto& var_or_param = (VariableOrParameterDeclaration&)decl;
-                if (var_or_param.m_name == identifier.m_name) {
-                    return var_or_param.m_type->m_name->full_name();
+                if (var_or_param.m_name == identifier.m_name && var_or_param.m_type->is_named_type()) {
+                    return ((NamedType&)(*var_or_param.m_type)).m_name->full_name();
                 }
             }
         }
