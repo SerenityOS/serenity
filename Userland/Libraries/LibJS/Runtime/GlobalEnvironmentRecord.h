@@ -50,8 +50,6 @@ private:
     virtual bool is_global_environment_record() const override { return true; }
     virtual void visit_edges(Visitor&) override;
 
-    GlobalObject& m_global_object;
-
     ObjectEnvironmentRecord* m_object_record { nullptr };
     DeclarativeEnvironmentRecord* m_declarative_record { nullptr };
 
