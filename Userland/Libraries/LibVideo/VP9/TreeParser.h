@@ -13,11 +13,11 @@
 
 namespace Video::VP9 {
 
-class Decoder;
+class Parser;
 
 class TreeParser {
 public:
-    explicit TreeParser(Decoder& decoder)
+    explicit TreeParser(Parser& decoder)
         : m_decoder(decoder)
     {
     }
@@ -76,7 +76,7 @@ private:
     u8 calculate_inter_mode_probability(u8 node);
     u8 calculate_interp_filter_probability(u8 node);
 
-    Decoder& m_decoder;
+    Parser& m_decoder;
     // m_ctx is a member variable because it is required for syntax element counting (section 9.3.4)
     u8 m_ctx { 0 };
 
