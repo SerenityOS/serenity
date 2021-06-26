@@ -5,8 +5,8 @@
  */
 
 #include "TreeParser.h"
-#include "Decoder.h"
 #include "LookupTables.h"
+#include "Parser.h"
 
 namespace Video::VP9 {
 
