@@ -4,7 +4,10 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <Kernel/API/FB.h>
 #include <Services/WindowServer/ScreenLayout.h>
+#include <errno.h>
+#include <fcntl.h>
 
 // Must be included after LibIPC/Forward.h
 #include <LibIPC/Decoder.h>
@@ -180,6 +183,79 @@ bool ScreenLayout::operator!=(const ScreenLayout& other) const
         if (screens[i] != other.screens[i])
             return true;
     }
+    return false;
+}
+
+bool ScreenLayout::try_auto_add_framebuffer(String const& device_path)
+{
+    int framebuffer_fd = open(device_path.characters(), O_RDWR | O_CLOEXEC);
+    if (framebuffer_fd < 0) {
+        int err = errno;
+        dbgln("Error ({}) opening framebuffer device {}", err, device_path);
+        return false;
+    }
+    ScopeGuard fd_guard([&] {
+        close(framebuffer_fd);
+    });
+    FBResolution resolution {};
+    if (fb_get_resolution(framebuffer_fd, &resolution) < 0) {
+        int err = errno;
+        dbgln("Error ({}) querying resolution from framebuffer device {}", err, device_path);
+        return false;
+    }
+    if (resolution.width == 0 || resolution.height == 0) {
+        // Looks like the display is not turned on. Since we don't know what the desired
+        // resolution should be, use the main display as reference.
+        if (screens.is_empty())
+            return false;
+        auto& main_screen = screens[main_screen_index];
+        resolution.width = main_screen.resolution.width();
+        resolution.height = main_screen.resolution.height();
+    }
+
+    auto original_screens = move(screens);
+    screens = original_screens;
+    ArmedScopeGuard screens_guard([&] {
+        screens = move(original_screens);
+    });
+    // Now that we know the current resolution, try to find a location that we can add onto
+    // TODO: make this a little more sophisticated in case a more complex layout is already configured
+    for (auto& screen : screens) {
+        auto screen_rect = screen.virtual_rect();
+        Gfx::IntRect new_screen_rect {
+            screen_rect.right() + 1,
+            screen_rect.top(),
+            (int)resolution.width,
+            (int)resolution.height
+        };
+
+        bool collision = false;
+        for (auto& other_screen : screens) {
+            if (&screen == &other_screen)
+                continue;
+            if (other_screen.virtual_rect().intersects(new_screen_rect)) {
+                collision = true;
+                break;
+            }
+        }
+
+        if (!collision) {
+            screens.append({
+                device : device_path,
+                location : new_screen_rect.location(),
+                resolution : new_screen_rect.size(),
+                scale_factor : 1
+            });
+
+            if (is_valid()) {
+                // We got lucky!
+                screens_guard.disarm();
+                return true;
+            }
+        }
+    }
+
+    dbgln("Failed to add framebuffer device {} with resolution {}x{} to screen layout", device_path, resolution.width, resolution.height);
     return false;
 }
 

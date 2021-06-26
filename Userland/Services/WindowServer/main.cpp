@@ -10,6 +10,8 @@
 #include "Screen.h"
 #include "WindowManager.h"
 #include <LibCore/ConfigFile.h>
+#include <LibCore/DirIterator.h>
+#include <LibCore/File.h>
 #include <LibGfx/Palette.h>
 #include <LibGfx/SystemTheme.h>
 #include <signal.h>
@@ -88,7 +90,20 @@ int main(int, char**)
         for (auto& screen_info : screen_layout.screens)
             fb_devices_configured.set(screen_info.device);
 
-        // TODO: Enumerate the /dev/fbX devices and set up any ones we find that we haven't already used
+        // Enumerate the /dev/fbX devices and try to set up any ones we find that we haven't already used
+        Core::DirIterator di("/dev", Core::DirIterator::SkipParentAndBaseDir);
+        while (di.has_next()) {
+            auto path = di.next_path();
+            if (!path.starts_with("fb"))
+                continue;
+            auto full_path = String::formatted("/dev/{}", path);
+            if (!Core::File::is_device(full_path))
+                continue;
+            if (fb_devices_configured.find(full_path) != fb_devices_configured.end())
+                continue;
+            if (!screen_layout.try_auto_add_framebuffer(full_path))
+                dbgln("Could not auto-add framebuffer device {} to screen layout", full_path);
+        }
 
         if (!WindowServer::Screen::apply_layout(move(screen_layout), error_msg)) {
             dbgln("Error applying screen layout: {}", error_msg);
