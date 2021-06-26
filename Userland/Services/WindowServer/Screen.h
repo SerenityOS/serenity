@@ -8,6 +8,7 @@
 
 #include "ScreenLayout.h"
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/OwnPtr.h>
 #include <Kernel/API/KeyCode.h>
 #include <LibGfx/Bitmap.h>
 #include <LibGfx/Color.h>
@@ -56,6 +57,8 @@ private:
     double m_acceleration_factor { 1.0 };
     unsigned m_scroll_step_size { 1 };
 };
+
+struct ScreenFBData;
 
 class Screen {
 public:
@@ -160,7 +163,9 @@ public:
     Gfx::IntSize size() const { return { m_virtual_rect.width(), m_virtual_rect.height() }; }
     Gfx::IntRect rect() const { return m_virtual_rect; }
 
-    void flush_display(const Gfx::IntRect& rect);
+    bool can_device_flush_buffers() const { return m_can_device_flush_buffers; }
+    void queue_flush_display_rect(Gfx::IntRect const& rect);
+    void flush_display();
 
 private:
     Screen(ScreenLayout::Screen&);
@@ -189,10 +194,12 @@ private:
 
     Gfx::RGBA32* m_framebuffer { nullptr };
     bool m_can_set_buffer { false };
+    bool m_can_device_flush_buffers { true }; // If the device can't do it we revert to false
 
     int m_pitch { 0 };
     Gfx::IntRect m_virtual_rect;
     int m_framebuffer_fd { -1 };
+    NonnullOwnPtr<ScreenFBData> m_framebuffer_data;
 
     ScreenLayout::Screen& m_info;
 };

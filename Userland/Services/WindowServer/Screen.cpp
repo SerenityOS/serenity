@@ -25,6 +25,11 @@ Gfx::IntRect Screen::s_bounding_screens_rect {};
 ScreenLayout Screen::s_layout;
 Vector<int, default_scale_factors_in_use_count> Screen::s_scale_factors_in_use;
 
+struct ScreenFBData {
+    Vector<FBRect, 32> pending_flush_rects;
+    bool too_many_pending_flush_rects { false };
+};
+
 ScreenInput& ScreenInput::the()
 {
     static ScreenInput s_the;
@@ -105,6 +110,7 @@ void Screen::update_scale_factors_in_use()
 
 Screen::Screen(ScreenLayout::Screen& screen_info)
     : m_virtual_rect(screen_info.location, { screen_info.resolution.width() / screen_info.scale_factor, screen_info.resolution.height() / screen_info.scale_factor })
+    , m_framebuffer_data(adopt_own(*new ScreenFBData()))
     , m_info(screen_info)
 {
     open_device();
@@ -130,6 +136,7 @@ bool Screen::open_device()
     }
 
     m_can_set_buffer = (fb_set_buffer(m_framebuffer_fd, 0) == 0);
+    m_can_device_flush_buffers = true; // If the device can't do it we revert to false
     set_resolution(true);
     return true;
 }
@@ -316,14 +323,72 @@ void ScreenInput::on_receive_keyboard_data(::KeyEvent kernel_event)
     Core::EventLoop::current().post_event(WindowManager::the(), move(message));
 }
 
-void Screen::flush_display(const Gfx::IntRect& flush_region)
+void Screen::queue_flush_display_rect(Gfx::IntRect const& flush_region)
 {
-    FBRect rect {
-        .x = (static_cast<unsigned>(flush_region.x()) - m_virtual_rect.left()) * scale_factor(),
-        .y = (static_cast<unsigned>(flush_region.y()) - m_virtual_rect.top()) * scale_factor(),
-        .width = static_cast<unsigned>(flush_region.width()) * scale_factor(),
-        .height = static_cast<unsigned>(flush_region.height() * scale_factor())
-    };
-    fb_flush_buffer(m_framebuffer_fd, &rect);
+    // NOTE: we don't scale until in Screen::flush_display so that when
+    // there are too many rectangles that we end up throwing away, we didn't
+    // waste accounting for scale factor!
+    auto& fb_data = *m_framebuffer_data;
+    if (fb_data.too_many_pending_flush_rects) {
+        // We already have too many, just make sure we extend it if needed
+        VERIFY(!fb_data.pending_flush_rects.is_empty());
+        if (fb_data.pending_flush_rects.size() == 1) {
+            auto& union_rect = fb_data.pending_flush_rects[0];
+            auto new_union = flush_region.united(Gfx::IntRect((int)union_rect.x, (int)union_rect.y, (int)union_rect.width, (int)union_rect.height));
+            union_rect.x = new_union.left();
+            union_rect.y = new_union.top();
+            union_rect.width = new_union.width();
+            union_rect.height = new_union.height();
+        } else {
+            // Convert all the rectangles into one union
+            auto new_union = flush_region;
+            for (auto& flush_rect : fb_data.pending_flush_rects)
+                new_union = new_union.united(Gfx::IntRect((int)flush_rect.x, (int)flush_rect.y, (int)flush_rect.width, (int)flush_rect.height));
+            fb_data.pending_flush_rects.resize(1, true);
+            auto& union_rect = fb_data.pending_flush_rects[0];
+            union_rect.x = new_union.left();
+            union_rect.y = new_union.top();
+            union_rect.width = new_union.width();
+            union_rect.height = new_union.height();
+        }
+        return;
+    }
+    VERIFY(fb_data.pending_flush_rects.size() < fb_data.pending_flush_rects.capacity());
+    fb_data.pending_flush_rects.append({ (unsigned)flush_region.left(),
+        (unsigned)flush_region.top(),
+        (unsigned)flush_region.width(),
+        (unsigned)flush_region.height() });
+    if (fb_data.pending_flush_rects.size() == fb_data.pending_flush_rects.capacity()) {
+        // If we get one more rectangle then we need to convert it to a single union rectangle
+        fb_data.too_many_pending_flush_rects = true;
+    }
+}
+
+void Screen::flush_display()
+{
+    VERIFY(m_can_device_flush_buffers);
+    auto& fb_data = *m_framebuffer_data;
+    if (fb_data.pending_flush_rects.is_empty())
+        return;
+
+    // Now that we have a final set of rects, apply the scale factor
+    auto scale_factor = this->scale_factor();
+    for (auto& flush_rect : fb_data.pending_flush_rects) {
+        flush_rect.x *= scale_factor;
+        flush_rect.y *= scale_factor;
+        flush_rect.width *= scale_factor;
+        flush_rect.height *= scale_factor;
+    }
+
+    if (fb_flush_buffers(m_framebuffer_fd, fb_data.pending_flush_rects.data(), (unsigned)fb_data.pending_flush_rects.size()) < 0) {
+        int err = errno;
+        if (err == ENOTSUP)
+            m_can_device_flush_buffers = false;
+        else
+            dbgln("Screen #{}: Error ({}) flushing display: {}", index(), err, strerror(err));
+    }
+
+    fb_data.too_many_pending_flush_rects = false;
+    fb_data.pending_flush_rects.clear_with_capacity();
 }
 }

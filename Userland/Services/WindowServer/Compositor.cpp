@@ -537,7 +537,7 @@ void Compositor::compose()
     if (need_to_draw_cursor) {
         auto& screen_data = m_screen_data[cursor_screen.index()];
         screen_data.draw_cursor(cursor_screen, cursor_rect);
-        screen_data.m_flush_rects.add(cursor_rect);
+        screen_data.m_flush_rects.add(cursor_rect.intersected(cursor_screen.rect()));
         if (previous_cursor_screen && cursor_rect != previous_cursor_rect)
             m_screen_data[previous_cursor_screen->index()].m_flush_rects.add(previous_cursor_rect);
     }
@@ -563,10 +563,9 @@ void Compositor::flush(Screen& screen)
         screen_data.flip_buffers(screen);
 
     auto screen_rect = screen.rect();
-    auto do_flush = [&](const Gfx::IntRect& a_rect) {
-        auto rect = Gfx::IntRect::intersection(a_rect, screen_rect);
-        if (rect.is_empty())
-            return;
+    bool device_can_flush_buffers = screen.can_device_flush_buffers();
+    auto do_flush = [&](Gfx::IntRect rect) {
+        VERIFY(screen_rect.contains(rect));
         rect.translate_by(-screen_rect.location());
 
         // Almost everything in Compositor is in logical coordinates, with the painters having
@@ -602,7 +601,8 @@ void Compositor::flush(Screen& screen)
             from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
             to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
         }
-        screen.flush_display(a_rect.intersected(screen.rect()));
+        if (device_can_flush_buffers)
+            screen.queue_flush_display_rect(rect);
     };
     for (auto& rect : screen_data.m_flush_rects.rects())
         do_flush(rect);
@@ -610,6 +610,8 @@ void Compositor::flush(Screen& screen)
         do_flush(rect);
     for (auto& rect : screen_data.m_flush_special_rects.rects())
         do_flush(rect);
+    if (device_can_flush_buffers)
+        screen.flush_display();
 }
 
 void Compositor::invalidate_screen()
@@ -738,7 +740,7 @@ bool Compositor::render_animation_frame(Screen& screen, Gfx::DisjointRectSet& fl
             dbgln_if(MINIMIZE_ANIMATION_DEBUG, "Minimize animation from {} to {} frame# {} {} on screen #{}", from_rect, to_rect, animation_index, rect, screen.index());
 
             painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
-            flush_rects.add(rect);
+            flush_rects.add(rect.intersected(screen.rect()));
             invalidate_screen(rect);
 
             did_render_any = true;
