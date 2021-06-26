@@ -1067,8 +1067,8 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00cffa00); // code3
     write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x00cff200); // data3
 #else
-    write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00ef9a00); // code0
-    write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00effa00); // code3
+    write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00af9a00); // code0
+    write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00affa00); // code3
 #endif
 
 #if ARCH(I386)
