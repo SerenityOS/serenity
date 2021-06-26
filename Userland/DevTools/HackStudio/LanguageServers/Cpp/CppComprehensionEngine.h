@@ -36,6 +36,7 @@ private:
         Vector<StringView> scope;
 
         static SymbolName create(StringView, Vector<StringView>&&);
+        static SymbolName create(StringView);
         String scope_as_string() const;
         String to_string() const;
 
@@ -106,11 +107,7 @@ private:
         Yes
     };
 
-    struct PropertyInfo {
-        StringView name;
-        RefPtr<Type> type;
-    };
-    Vector<PropertyInfo> properties_of_type(const DocumentData& document, const String& type) const;
+    Vector<Symbol> properties_of_type(const DocumentData& document, const String& type) const;
     Vector<Symbol> get_child_symbols(const ASTNode&) const;
     Vector<Symbol> get_child_symbols(const ASTNode&, const Vector<StringView>& scope, Symbol::IsLocal) const;
 
