@@ -50,7 +50,7 @@ public:
 private:
     static inline size_t m_depth = 0;
     SourceLocation m_location;
-    StringView m_extra;
+    String m_extra;
 };
 
 template<>
