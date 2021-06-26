@@ -585,18 +585,16 @@ void unregister_generic_interrupt_handler(u8 interrupt_number, GenericInterruptH
 
 UNMAP_AFTER_INIT void register_interrupt_handler(u8 index, void (*handler)())
 {
-    // FIXME: Why is that with selector 8?
     // FIXME: Is the Gate Type really required to be an Interrupt
     // FIXME: What's up with that storage segment 0?
-    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::InterruptGate32, 0, 0);
+    s_idt[index] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::InterruptGate32, 0, 0);
 }
 
 UNMAP_AFTER_INIT void register_user_callable_interrupt_handler(u8 index, void (*handler)())
 {
-    // FIXME: Why is that with selector 8?
     // FIXME: Is the Gate Type really required to be a Trap
     // FIXME: What's up with that storage segment 0?
-    s_idt[index] = IDTEntry((FlatPtr)handler, 8, IDTEntryType::TrapGate32, 0, 3);
+    s_idt[index] = IDTEntry((FlatPtr)handler, GDT_SELECTOR_CODE0, IDTEntryType::TrapGate32, 0, 3);
 }
 
 UNMAP_AFTER_INIT void flush_idt()
