@@ -911,10 +911,11 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
 {
     auto callee_reg = generator.allocate_register();
     auto this_reg = generator.allocate_register();
-    generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
-    generator.emit<Bytecode::Op::Store>(this_reg);
 
     if (is<NewExpression>(this)) {
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        generator.emit<Bytecode::Op::Store>(this_reg);
+
         m_callee->generate_bytecode(generator);
         generator.emit<Bytecode::Op::Store>(callee_reg);
     } else if (is<SuperExpression>(*m_callee)) {
@@ -934,6 +935,9 @@ void CallExpression::generate_bytecode(Bytecode::Generator& generator) const
             generator.emit<Bytecode::Op::Store>(callee_reg);
         }
     } else {
+        generator.emit<Bytecode::Op::LoadImmediate>(js_undefined());
+        generator.emit<Bytecode::Op::Store>(this_reg);
+
         // FIXME: this = global object in sloppy mode.
         m_callee->generate_bytecode(generator);
         generator.emit<Bytecode::Op::Store>(callee_reg);
