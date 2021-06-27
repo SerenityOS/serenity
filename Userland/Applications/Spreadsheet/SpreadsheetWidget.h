@@ -32,10 +32,10 @@ public:
     Workbook& workbook() { return *m_workbook; }
     const Workbook& workbook() const { return *m_workbook; }
 
-    const GUI::ModelIndex* current_selection_cursor() const
+    GUI::ModelIndex current_selection_cursor() const
     {
         if (!m_selected_view)
-            return nullptr;
+            return {};
 
         return m_selected_view->cursor();
     }

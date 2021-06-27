@@ -92,9 +92,9 @@ public:
 
     Sheet* sheet_if_available() { return m_sheet; }
 
-    const GUI::ModelIndex* cursor() const
+    GUI::ModelIndex cursor() const
     {
-        return &m_table_view->cursor_index();
+        return m_table_view->cursor_index();
     }
 
     Function<void(Vector<Position>&&)> on_selection_changed;

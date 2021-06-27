@@ -4,22 +4,27 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
+#include <AK/Badge.h>
 #include <LibGUI/AbstractView.h>
 #include <LibGUI/Model.h>
 #include <LibGUI/ModelSelection.h>
+#include <LibGUI/PersistentModelIndex.h>
 
 namespace GUI {
 
 void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 {
-    Vector<ModelIndex> to_remove;
-    for (auto& index : m_indices) {
-        if (filter(index))
-            to_remove.append(index);
-    }
-    if (!to_remove.is_empty()) {
-        for (auto& index : to_remove)
-            m_indices.remove(index);
+    bool did_remove = false;
+    m_indices.remove_all_matching([&](PersistentModelIndex& index) -> bool {
+        if (filter(index)) {
+            did_remove = true;
+            return true;
+        }
+
+        return false;
+    });
+
+    if (did_remove) {
         notify_selection_changed();
     }
 }
@@ -27,19 +32,25 @@ void ModelSelection::remove_matching(Function<bool(const ModelIndex&)> filter)
 void ModelSelection::set(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indices.size() == 1 && m_indices.contains(index))
+
+    PersistentModelIndex persistent_index { index };
+    if (m_indices.size() == 1 && m_indices.contains(persistent_index))
         return;
+
     m_indices.clear();
-    m_indices.set(index);
+    m_indices.set(move(persistent_index));
     notify_selection_changed();
 }
 
 void ModelSelection::add(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indices.contains(index))
+
+    PersistentModelIndex persistent_index { index };
+    if (m_indices.contains(persistent_index))
         return;
-    m_indices.set(index);
+
+    m_indices.set(move(persistent_index));
     notify_selection_changed();
 }
 
@@ -58,19 +69,24 @@ void ModelSelection::add_all(const Vector<ModelIndex>& indices)
 void ModelSelection::toggle(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (m_indices.contains(index))
-        m_indices.remove(index);
+
+    PersistentModelIndex persistent_index { index };
+    if (m_indices.contains(persistent_index))
+        m_indices.remove(persistent_index);
     else
-        m_indices.set(index);
+        m_indices.set(move(persistent_index));
     notify_selection_changed();
 }
 
 bool ModelSelection::remove(const ModelIndex& index)
 {
     VERIFY(index.is_valid());
-    if (!m_indices.contains(index))
+
+    PersistentModelIndex persistent_index { index };
+    if (!m_indices.contains(persistent_index))
         return false;
-    m_indices.remove(index);
+
+    m_indices.remove(persistent_index);
     notify_selection_changed();
     return true;
 }

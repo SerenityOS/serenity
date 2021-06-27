@@ -156,14 +156,14 @@ int main(int argc, char* argv[])
         url_builder.append(is_cut ? "cut\n" : "copy\n");
         bool first = true;
         auto cursor = spreadsheet_widget.current_selection_cursor();
-        if (cursor) {
-            Spreadsheet::Position position { (size_t)cursor->column(), (size_t)cursor->row() };
+        if (cursor.is_valid()) {
+            Spreadsheet::Position position { (size_t)cursor.column(), (size_t)cursor.row() };
             url_builder.append(position.to_url(worksheet).to_string());
             url_builder.append('\n');
         }
 
         for (auto& cell : cells) {
-            if (first && !cursor) {
+            if (first && !cursor.is_valid()) {
                 url_builder.append(cell.to_url(worksheet).to_string());
                 url_builder.append('\n');
             }
