@@ -118,12 +118,29 @@ void Menu::redraw()
     menu_window()->invalidate();
 }
 
-Window& Menu::ensure_menu_window()
+Window& Menu::ensure_menu_window(Gfx::IntPoint const& position)
 {
-    if (m_menu_window)
-        return *m_menu_window;
-
+    auto& screen = Screen::closest_to_location(position);
     int width = this->content_width();
+
+    auto calculate_window_rect = [&]() -> Gfx::IntRect {
+        int window_height_available = screen.height() - frame_thickness() * 2;
+        int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
+        int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
+        int window_height = min(max_window_height, content_height);
+        if (window_height < content_height) {
+            m_scrollable = true;
+            m_max_scroll_offset = item_count() - window_height / item_height() + 2;
+        }
+        return { position, { width, window_height } };
+    };
+
+    if (m_menu_window) {
+        // We might be on a different screen than previously, so recalculate the
+        // menu's rectangle as we have more or less screen available now
+        m_menu_window->set_rect(calculate_window_rect());
+        return *m_menu_window;
+    }
 
     Gfx::IntPoint next_item_location(frame_thickness(), frame_thickness());
     for (auto& item : m_items) {
@@ -136,18 +153,9 @@ Window& Menu::ensure_menu_window()
         next_item_location.translate_by(0, height);
     }
 
-    int window_height_available = Screen::main().height() - frame_thickness() * 2; // TODO: we don't know yet on what screen!
-    int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
-    int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
-    int window_height = min(max_window_height, content_height);
-    if (window_height < content_height) {
-        m_scrollable = true;
-        m_max_scroll_offset = item_count() - window_height / item_height() + 2;
-    }
-
     auto window = Window::construct(*this, WindowType::Menu);
     window->set_visible(false);
-    window->set_rect(0, 0, width, window_height);
+    window->set_rect(calculate_window_rect());
     m_menu_window = move(window);
     draw();
     return *m_menu_window;
@@ -287,7 +295,7 @@ void Menu::update_for_new_hovered_item(bool make_input)
             hovered_item->submenu()->do_popup(hovered_item->rect().top_right().translated(menu_window()->rect().location()), make_input, true);
         } else {
             MenuManager::the().close_everyone_not_in_lineage(*this);
-            ensure_menu_window();
+            VERIFY(menu_window());
             set_visible(true);
         }
     }
@@ -580,19 +588,19 @@ void Menu::do_popup(const Gfx::IntPoint& position, bool make_input, bool as_subm
         return;
     }
 
-    auto& window = ensure_menu_window();
+    auto& screen = Screen::closest_to_location(position);
+    auto& window = ensure_menu_window(position);
     redraw_if_theme_changed();
 
     const int margin = 30;
-    auto& screen = Screen::closest_to_location(position);
     Gfx::IntPoint adjusted_pos = position;
 
-    if (adjusted_pos.x() + window.width() >= screen.width() - margin) {
+    if (adjusted_pos.x() + window.width() > screen.rect().right() - margin) {
         adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     } else {
         adjusted_pos.set_x(adjusted_pos.x() + 1);
     }
-    if (adjusted_pos.y() + window.height() >= screen.height() - margin) {
+    if (adjusted_pos.y() + window.height() > screen.rect().bottom() - margin) {
         adjusted_pos = adjusted_pos.translated(0, -min(window.height(), adjusted_pos.y()));
         if (as_submenu)
             adjusted_pos = adjusted_pos.translated(0, item_height());

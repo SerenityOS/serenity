@@ -75,7 +75,7 @@ public:
     void set_rect_in_window_menubar(const Gfx::IntRect& rect) { m_rect_in_window_menubar = rect; }
 
     Window* menu_window() { return m_menu_window.ptr(); }
-    Window& ensure_menu_window();
+    Window& ensure_menu_window(Gfx::IntPoint const&);
 
     Window* window_menu_of() { return m_window_menu_of; }
     void set_window_menu_of(Window& window) { m_window_menu_of = window; }

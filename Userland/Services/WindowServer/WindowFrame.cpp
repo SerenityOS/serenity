@@ -845,7 +845,7 @@ void WindowFrame::open_menubar_menu(Menu& menu)
 {
     auto menubar_rect = this->menubar_rect();
     MenuManager::the().close_everyone();
-    menu.ensure_menu_window().move_to(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
+    menu.ensure_menu_window(menu.rect_in_window_menubar().bottom_left().translated(rect().location()).translated(menubar_rect.location()));
     MenuManager::the().open_menu(menu);
     WindowManager::the().set_window_with_active_menu(&m_window);
     invalidate(menubar_rect);
