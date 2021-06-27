@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/EventListener.h>
 
 namespace Web::DOM {
 
-JS::Function& EventListener::function()
+JS::FunctionObject& EventListener::function()
 {
     VERIFY(m_function.cell());
     return *m_function.cell();

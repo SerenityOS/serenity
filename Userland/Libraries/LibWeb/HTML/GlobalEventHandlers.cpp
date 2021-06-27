@@ -51,7 +51,7 @@ void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTM
         }
         auto* function = JS::ScriptFunction::create(self.script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
         VERIFY(function);
-        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::Function*>(function))));
+        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
     }
     if (listener) {
         for (auto& registered_listener : self.listeners()) {

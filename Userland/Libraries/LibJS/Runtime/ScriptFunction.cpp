@@ -51,7 +51,7 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
 }
 
 ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
-    : Function(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
+    : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
     , m_parameters(move(parameters))
@@ -73,7 +73,7 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
 void ScriptFunction::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
-    Function::initialize(global_object);
+    Base::initialize(global_object);
     if (!m_is_arrow_function) {
         auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
         switch (m_kind) {
@@ -97,11 +97,11 @@ ScriptFunction::~ScriptFunction()
 
 void ScriptFunction::visit_edges(Visitor& visitor)
 {
-    Function::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(m_environment);
 }
 
-FunctionEnvironmentRecord* ScriptFunction::create_environment_record(Function& function_being_invoked)
+FunctionEnvironmentRecord* ScriptFunction::create_environment_record(FunctionObject& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -225,7 +225,7 @@ Value ScriptFunction::call()
     return execute_function_body();
 }
 
-Value ScriptFunction::construct(Function&)
+Value ScriptFunction::construct(FunctionObject&)
 {
     if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);

@@ -5,7 +5,7 @@
  */
 
 #include <LibGUI/DisplayLink.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/Event.h>
 #include <LibWeb/DOM/EventDispatcher.h>
@@ -60,14 +60,14 @@ String Window::prompt(const String& message, const String& default_)
     return {};
 }
 
-i32 Window::set_interval(JS::Function& callback, i32 interval)
+i32 Window::set_interval(JS::FunctionObject& callback, i32 interval)
 {
     auto timer = Timer::create_interval(*this, interval, callback);
     m_timers.set(timer->id(), timer);
     return timer->id();
 }
 
-i32 Window::set_timeout(JS::Function& callback, i32 interval)
+i32 Window::set_timeout(JS::FunctionObject& callback, i32 interval)
 {
     auto timer = Timer::create_timeout(*this, interval, callback);
     m_timers.set(timer->id(), timer);
@@ -112,13 +112,13 @@ void Window::clear_interval(i32 timer_id)
     m_timers.remove(timer_id);
 }
 
-i32 Window::request_animation_frame(JS::Function& callback)
+i32 Window::request_animation_frame(JS::FunctionObject& callback)
 {
     // FIXME: This is extremely fake!
     static double fake_timestamp = 0;
 
     i32 link_id = GUI::DisplayLink::register_callback([handle = make_handle(&callback)](i32 link_id) {
-        auto& function = const_cast<JS::Function&>(static_cast<const JS::Function&>(*handle.cell()));
+        auto& function = const_cast<JS::FunctionObject&>(static_cast<const JS::FunctionObject&>(*handle.cell()));
         auto& vm = function.vm();
         fake_timestamp += 10;
         [[maybe_unused]] auto rc = vm.call(function, JS::js_undefined(), JS::Value(fake_timestamp));

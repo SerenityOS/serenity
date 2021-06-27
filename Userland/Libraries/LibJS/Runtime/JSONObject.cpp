@@ -446,7 +446,7 @@ Array* JSONObject::parse_json_array(GlobalObject& global_object, const JsonArray
 }
 
 // 25.5.1.1 InternalizeJSONProperty ( holder, name, reviver ), https://tc39.es/ecma262/#sec-internalizejsonproperty
-Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, const PropertyName& name, Function& reviver)
+Value JSONObject::internalize_json_property(GlobalObject& global_object, Object* holder, PropertyName const& name, FunctionObject& reviver)
 {
     auto& vm = global_object.vm();
     auto value = holder->get(name);

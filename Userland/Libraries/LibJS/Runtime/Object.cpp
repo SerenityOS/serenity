@@ -490,8 +490,8 @@ bool Object::define_property(const StringOrSymbol& property_name, const Object& 
         if (vm.exception())
             return {};
 
-        Function* getter_function { nullptr };
-        Function* setter_function { nullptr };
+        FunctionObject* getter_function { nullptr };
+        FunctionObject* setter_function { nullptr };
 
         // We should only take previous getters for our own object not from any prototype
         auto existing_property = get_own_property(property_name, {}, AllowSideEffects::No).value_or(js_undefined());
@@ -564,7 +564,7 @@ bool Object::define_native_accessor(PropertyName const& property_name, AK::Funct
     } else {
         formatted_property_name = String::formatted("[{}]", property_name.as_symbol()->description());
     }
-    Function* getter_function = nullptr;
+    FunctionObject* getter_function = nullptr;
     if (getter) {
         auto name = String::formatted("get {}", formatted_property_name);
         getter_function = NativeFunction::create(global_object(), name, move(getter));
@@ -575,7 +575,7 @@ bool Object::define_native_accessor(PropertyName const& property_name, AK::Funct
         if (vm.exception())
             return {};
     }
-    Function* setter_function = nullptr;
+    FunctionObject* setter_function = nullptr;
     if (setter) {
         auto name = String::formatted("set {}", formatted_property_name);
         setter_function = NativeFunction::create(global_object(), name, move(setter));
@@ -589,7 +589,7 @@ bool Object::define_native_accessor(PropertyName const& property_name, AK::Funct
     return define_accessor(property_name, getter_function, setter_function, attribute);
 }
 
-bool Object::define_accessor(const PropertyName& property_name, Function* getter, Function* setter, PropertyAttributes attributes, bool throw_exceptions)
+bool Object::define_accessor(const PropertyName& property_name, FunctionObject* getter, FunctionObject* setter, PropertyAttributes attributes, bool throw_exceptions)
 {
     VERIFY(property_name.is_valid());
 

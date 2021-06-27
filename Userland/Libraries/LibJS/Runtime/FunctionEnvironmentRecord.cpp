@@ -5,8 +5,8 @@
  */
 
 #include <LibJS/Interpreter.h>
-#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {

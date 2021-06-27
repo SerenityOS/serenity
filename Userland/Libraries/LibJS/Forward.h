@@ -35,7 +35,7 @@
     __JS_ENUMERATE(Date, date, DatePrototype, DateConstructor, void)                                                                  \
     __JS_ENUMERATE(Error, error, ErrorPrototype, ErrorConstructor, void)                                                              \
     __JS_ENUMERATE(FinalizationRegistry, finalization_registry, FinalizationRegistryPrototype, FinalizationRegistryConstructor, void) \
-    __JS_ENUMERATE(Function, function, FunctionPrototype, FunctionConstructor, void)                                                  \
+    __JS_ENUMERATE(FunctionObject, function, FunctionPrototype, FunctionConstructor, void)                                            \
     __JS_ENUMERATE(GeneratorFunction, generator_function, GeneratorFunctionPrototype, GeneratorFunctionConstructor, void)             \
     __JS_ENUMERATE(Map, map, MapPrototype, MapConstructor, void)                                                                      \
     __JS_ENUMERATE(NumberObject, number, NumberPrototype, NumberConstructor, void)                                                    \

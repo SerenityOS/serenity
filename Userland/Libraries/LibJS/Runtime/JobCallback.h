@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/VM.h>
 
 namespace JS {
 
 // 9.5.1 JobCallback Records, https://tc39.es/ecma262/#sec-jobcallback-records
 struct JobCallback {
-    Function* callback;
+    FunctionObject* callback { nullptr };
 };
 
 // 9.5.2 HostMakeJobCallback ( callback ), https://tc39.es/ecma262/#sec-hostmakejobcallback
-inline JobCallback make_job_callback(Function& callback)
+inline JobCallback make_job_callback(FunctionObject& callback)
 {
     return { &callback };
 }

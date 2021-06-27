@@ -20,7 +20,7 @@ public:
     virtual ~ObjectConstructor() override;
 
     virtual Value call() override;
-    virtual Value construct(Function& new_target) override;
+    virtual Value construct(FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <AK/SinglyLinkedList.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
 #include <LibJS/Runtime/Value.h>
@@ -21,21 +21,21 @@ class FinalizationRegistry final
     JS_OBJECT(FinalizationRegistry, Object);
 
 public:
-    static FinalizationRegistry* create(GlobalObject&, Function&);
+    static FinalizationRegistry* create(GlobalObject&, FunctionObject&);
 
-    explicit FinalizationRegistry(Function&, Object& prototype);
+    explicit FinalizationRegistry(FunctionObject&, Object& prototype);
     virtual ~FinalizationRegistry() override;
 
     void add_finalization_record(Cell& target, Value held_value, Object* unregister_token);
     bool remove_by_token(Object& unregister_token);
-    void cleanup(Function* callback = nullptr);
+    void cleanup(FunctionObject* callback = nullptr);
 
     virtual void remove_sweeped_cells(Badge<Heap>, Vector<Cell*>&) override;
 
 private:
     virtual void visit_edges(Visitor& visitor) override;
 
-    Function* m_cleanup_callback { nullptr };
+    FunctionObject* m_cleanup_callback { nullptr };
 
     struct FinalizationRecord {
         Cell* target { nullptr };

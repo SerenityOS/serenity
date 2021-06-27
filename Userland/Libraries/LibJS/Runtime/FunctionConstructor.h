@@ -14,14 +14,14 @@ class FunctionConstructor final : public NativeFunction {
     JS_OBJECT(FunctionConstructor, NativeFunction);
 
 public:
-    static RefPtr<FunctionExpression> create_dynamic_function_node(GlobalObject& global_object, Function& new_target, FunctionKind kind);
+    static RefPtr<FunctionExpression> create_dynamic_function_node(GlobalObject& global_object, FunctionObject& new_target, FunctionKind kind);
 
     explicit FunctionConstructor(GlobalObject&);
     virtual void initialize(GlobalObject&) override;
     virtual ~FunctionConstructor() override;
 
     virtual Value call() override;
-    virtual Value construct(Function& new_target) override;
+    virtual Value construct(FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

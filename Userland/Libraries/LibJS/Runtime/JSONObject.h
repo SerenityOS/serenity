@@ -24,7 +24,7 @@ public:
 
 private:
     struct StringifyState {
-        Function* replacer_function { nullptr };
+        FunctionObject* replacer_function { nullptr };
         HashTable<Object*> seen_objects;
         String indent { String::empty() };
         String gap;
@@ -41,7 +41,7 @@ private:
     static Object* parse_json_object(GlobalObject&, const JsonObject&);
     static Array* parse_json_array(GlobalObject&, const JsonArray&);
     static Value parse_json_value(GlobalObject&, const JsonValue&);
-    static Value internalize_json_property(GlobalObject&, Object* holder, const PropertyName& name, Function& reviver);
+    static Value internalize_json_property(GlobalObject&, Object* holder, PropertyName const& name, FunctionObject& reviver);
 
     JS_DECLARE_NATIVE_FUNCTION(stringify);
     JS_DECLARE_NATIVE_FUNCTION(parse);

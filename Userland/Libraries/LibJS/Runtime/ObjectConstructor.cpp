@@ -67,7 +67,7 @@ Value ObjectConstructor::call()
 }
 
 // 20.1.1.1 Object ( [ value ] ), https://tc39.es/ecma262/#sec-object-value
-Value ObjectConstructor::construct(Function& new_target)
+Value ObjectConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

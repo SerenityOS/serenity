@@ -66,7 +66,7 @@ TESTJS_GLOBAL_FUNCTION(after_initial_page_load, afterInitialPageLoad)
     }
 
     after_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {
-        [[maybe_unused]] auto unused = vm.call(const_cast<JS::Function&>(*fn.cell()), JS::js_undefined(), &page_object);
+        [[maybe_unused]] auto unused = vm.call(const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
     });
     return JS::js_undefined();
 }
@@ -81,7 +81,7 @@ TESTJS_GLOBAL_FUNCTION(before_initial_page_load, beforeInitialPageLoad)
     }
 
     before_initial_load_hooks.append([fn = JS::make_handle(&function.as_function()), &vm](auto& page_object) {
-        [[maybe_unused]] auto unused = vm.call(const_cast<JS::Function&>(*fn.cell()), JS::js_undefined(), &page_object);
+        [[maybe_unused]] auto unused = vm.call(const_cast<JS::FunctionObject&>(*fn.cell()), JS::js_undefined(), &page_object);
     });
     return JS::js_undefined();
 }

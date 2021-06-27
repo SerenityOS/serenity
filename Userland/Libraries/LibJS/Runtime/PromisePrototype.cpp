@@ -92,8 +92,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
     } else {
         // 27.2.5.3.1 Then Finally Functions, https://tc39.es/ecma262/#sec-thenfinallyfunctions
         auto* then_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> Value {
-            auto& constructor = const_cast<Function&>(*constructor_handle.cell());
-            auto& on_finally = const_cast<Function&>(*on_finally_handle.cell());
+            auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
+            auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto value = vm.argument(0);
             auto result = vm.call(on_finally, js_undefined());
             if (vm.exception())
@@ -110,8 +110,8 @@ JS_DEFINE_NATIVE_FUNCTION(PromisePrototype::finally)
 
         // 27.2.5.3.2 Catch Finally Functions, https://tc39.es/ecma262/#sec-catchfinallyfunctions
         auto* catch_finally_function = NativeFunction::create(global_object, "", [constructor_handle = make_handle(constructor), on_finally_handle = make_handle(&on_finally.as_function())](auto& vm, auto& global_object) -> Value {
-            auto& constructor = const_cast<Function&>(*constructor_handle.cell());
-            auto& on_finally = const_cast<Function&>(*on_finally_handle.cell());
+            auto& constructor = const_cast<FunctionObject&>(*constructor_handle.cell());
+            auto& on_finally = const_cast<FunctionObject&>(*on_finally_handle.cell());
             auto reason = vm.argument(0);
             auto result = vm.call(on_finally, js_undefined());
             if (vm.exception())

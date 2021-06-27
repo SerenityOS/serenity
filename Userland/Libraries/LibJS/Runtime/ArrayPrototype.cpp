@@ -16,7 +16,7 @@
 #include <LibJS/Runtime/ArrayIterator.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/ObjectPrototype.h>
 #include <LibJS/Runtime/Value.h>
@@ -95,7 +95,7 @@ ArrayPrototype::~ArrayPrototype()
 {
 }
 
-static Function* callback_from_args(GlobalObject& global_object, const String& name)
+static FunctionObject* callback_from_args(GlobalObject& global_object, const String& name)
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1) {
@@ -872,7 +872,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::reverse)
     return this_object;
 }
 
-static void array_merge_sort(VM& vm, GlobalObject& global_object, Function* compare_func, MarkedValueList& arr_to_sort)
+static void array_merge_sort(VM& vm, GlobalObject& global_object, FunctionObject* compare_func, MarkedValueList& arr_to_sort)
 {
     // FIXME: it would probably be better to switch to insertion sort for small arrays for
     // better performance
@@ -1360,7 +1360,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayPrototype::keys)
 }
 
 // 23.1.3.10.1 FlattenIntoArray ( target, source, sourceLen, start, depth [ , mapperFunction [ , thisArg ] ] ), https://tc39.es/ecma262/#sec-flattenintoarray
-static size_t flatten_into_array(GlobalObject& global_object, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, Function* mapper_func = {}, Value this_arg = {})
+static size_t flatten_into_array(GlobalObject& global_object, Object& new_array, Object& array, size_t array_length, size_t target_index, double depth, FunctionObject* mapper_func = {}, Value this_arg = {})
 {
     VERIFY(!mapper_func || (!this_arg.is_empty() && depth == 1));
     auto& vm = global_object.vm();

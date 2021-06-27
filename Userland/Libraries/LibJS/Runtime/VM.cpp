@@ -405,12 +405,12 @@ Reference VM::resolve_binding(GlobalObject& global_object, FlyString const& name
     return Reference { global_object.environment_record(), name };
 }
 
-Value VM::construct(Function& function, Function& new_target, Optional<MarkedValueList> arguments)
+Value VM::construct(FunctionObject& function, FunctionObject& new_target, Optional<MarkedValueList> arguments)
 {
     auto& global_object = function.global_object();
 
     Value this_argument;
-    if (function.constructor_kind() == Function::ConstructorKind::Base) {
+    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base) {
         this_argument = ordinary_create_from_constructor<Object>(global_object, new_target, &GlobalObject::object_prototype);
         if (exception())
             return {};
@@ -457,7 +457,7 @@ Value VM::construct(Function& function, Function& new_target, Optional<MarkedVal
 
     // If we are constructing an instance of a derived class,
     // set the prototype on objects created by constructors that return an object (i.e. NativeFunction subclasses).
-    if (function.constructor_kind() == Function::ConstructorKind::Base && new_target.constructor_kind() == Function::ConstructorKind::Derived && result.is_object()) {
+    if (function.constructor_kind() == FunctionObject::ConstructorKind::Base && new_target.constructor_kind() == FunctionObject::ConstructorKind::Derived && result.is_object()) {
         if (environment) {
             verify_cast<FunctionEnvironmentRecord>(lexical_environment())->replace_this_binding(result);
         }
@@ -511,7 +511,7 @@ Value VM::get_new_target()
     return verify_cast<FunctionEnvironmentRecord>(env).new_target();
 }
 
-Value VM::call_internal(Function& function, Value this_value, Optional<MarkedValueList> arguments)
+Value VM::call_internal(FunctionObject& function, Value this_value, Optional<MarkedValueList> arguments)
 {
     VERIFY(!exception());
     VERIFY(!this_value.is_empty());

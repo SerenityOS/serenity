@@ -9,8 +9,8 @@
 #include <LibJS/Lexer.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionConstructor.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
@@ -36,7 +36,7 @@ FunctionConstructor::~FunctionConstructor()
 }
 
 // 20.2.1.1.1 CreateDynamicFunction ( constructor, newTarget, kind, args ), https://tc39.es/ecma262/#sec-createdynamicfunction
-RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(GlobalObject& global_object, Function&, FunctionKind kind)
+RefPtr<FunctionExpression> FunctionConstructor::create_dynamic_function_node(GlobalObject& global_object, FunctionObject&, FunctionKind kind)
 {
     auto& vm = global_object.vm();
     String parameters_source = "";
@@ -80,7 +80,7 @@ Value FunctionConstructor::call()
 }
 
 // 20.2.1.1 Function ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-function-p1-p2-pn-body
-Value FunctionConstructor::construct(Function& new_target)
+Value FunctionConstructor::construct(FunctionObject& new_target)
 {
     auto function = create_dynamic_function_node(global_object(), new_target, FunctionKind::Regular);
     if (!function)

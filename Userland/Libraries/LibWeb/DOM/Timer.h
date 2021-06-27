@@ -9,7 +9,7 @@
 #include <AK/Forward.h>
 #include <LibCore/Forward.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Forward.h>
 
 namespace Web::DOM {
@@ -21,24 +21,24 @@ public:
         Timeout,
     };
 
-    static NonnullRefPtr<Timer> create_interval(Window&, int milliseconds, JS::Function&);
-    static NonnullRefPtr<Timer> create_timeout(Window&, int milliseconds, JS::Function&);
+    static NonnullRefPtr<Timer> create_interval(Window&, int milliseconds, JS::FunctionObject&);
+    static NonnullRefPtr<Timer> create_timeout(Window&, int milliseconds, JS::FunctionObject&);
 
     ~Timer();
 
     i32 id() const { return m_id; }
     Type type() const { return m_type; }
 
-    JS::Function& callback() { return *m_callback.cell(); }
+    JS::FunctionObject& callback() { return *m_callback.cell(); }
 
 private:
-    Timer(Window&, Type, int ms, JS::Function&);
+    Timer(Window&, Type, int ms, JS::FunctionObject&);
 
     Window& m_window;
     RefPtr<Core::Timer> m_timer;
     Type m_type;
     int m_id { 0 };
-    JS::Handle<JS::Function> m_callback;
+    JS::Handle<JS::FunctionObject> m_callback;
 };
 
 }

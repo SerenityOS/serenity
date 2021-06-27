@@ -20,9 +20,9 @@ Object* get_super_constructor(VM&);
 Value require_object_coercible(GlobalObject&, Value);
 size_t length_of_array_like(GlobalObject&, Object const&);
 MarkedValueList create_list_from_array_like(GlobalObject&, Value, AK::Function<Result<void, ErrorType>(Value)> = {});
-Function* species_constructor(GlobalObject&, Object const&, Function& default_constructor);
-GlobalObject* get_function_realm(GlobalObject&, Function const&);
-Object* get_prototype_from_constructor(GlobalObject&, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
+FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
+GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
+Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 
 enum class CallerMode {
     Strict,
@@ -36,7 +36,7 @@ Value perform_eval(Value, GlobalObject&, CallerMode, EvalMode);
 
 // 10.1.13 OrdinaryCreateFromConstructor ( constructor, intrinsicDefaultProto [ , internalSlotsList ] ), https://tc39.es/ecma262/#sec-ordinarycreatefromconstructor
 template<typename T, typename... Args>
-T* ordinary_create_from_constructor(GlobalObject& global_object, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
+T* ordinary_create_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)(), Args&&... args)
 {
     auto& vm = global_object.vm();
     auto* prototype = get_prototype_from_constructor(global_object, constructor, intrinsic_default_prototype);

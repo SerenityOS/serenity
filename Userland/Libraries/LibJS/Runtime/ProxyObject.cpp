@@ -45,7 +45,7 @@ ProxyObject* ProxyObject::create(GlobalObject& global_object, Object& target, Ob
 }
 
 ProxyObject::ProxyObject(Object& target, Object& handler, Object& prototype)
-    : Function(prototype)
+    : FunctionObject(prototype)
     , m_target(target)
     , m_handler(handler)
 {
@@ -406,7 +406,7 @@ bool ProxyObject::delete_property(PropertyName const& name, bool force_throw_exc
 
 void ProxyObject::visit_edges(Cell::Visitor& visitor)
 {
-    Function::visit_edges(visitor);
+    Base::visit_edges(visitor);
     visitor.visit(&m_target);
     visitor.visit(&m_handler);
 }
@@ -426,7 +426,7 @@ Value ProxyObject::call()
     if (vm.exception())
         return {};
     if (!trap)
-        return static_cast<Function&>(m_target).call();
+        return static_cast<FunctionObject&>(m_target).call();
     MarkedValueList arguments(heap());
     arguments.append(Value(&m_target));
     arguments.append(Value(&m_handler));
@@ -440,7 +440,7 @@ Value ProxyObject::call()
     return vm.call(*trap, Value(&m_handler), move(arguments));
 }
 
-Value ProxyObject::construct(Function& new_target)
+Value ProxyObject::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     if (!is_function()) {
@@ -455,7 +455,7 @@ Value ProxyObject::construct(Function& new_target)
     if (vm.exception())
         return {};
     if (!trap)
-        return static_cast<Function&>(m_target).construct(new_target);
+        return static_cast<FunctionObject&>(m_target).construct(new_target);
     MarkedValueList arguments(vm.heap());
     arguments.append(Value(&m_target));
     auto arguments_array = Array::create(global_object());
@@ -475,13 +475,13 @@ Value ProxyObject::construct(Function& new_target)
 const FlyString& ProxyObject::name() const
 {
     VERIFY(is_function());
-    return static_cast<Function&>(m_target).name();
+    return static_cast<FunctionObject&>(m_target).name();
 }
 
-FunctionEnvironmentRecord* ProxyObject::create_environment_record(Function& function_being_invoked)
+FunctionEnvironmentRecord* ProxyObject::create_environment_record(FunctionObject& function_being_invoked)
 {
     VERIFY(is_function());
-    return static_cast<Function&>(m_target).create_environment_record(function_being_invoked);
+    return static_cast<FunctionObject&>(m_target).create_environment_record(function_being_invoked);
 }
 
 }

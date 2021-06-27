@@ -68,7 +68,7 @@ Value ArrayConstructor::call()
 }
 
 // 23.1.1.1 Array ( ...values ), https://tc39.es/ecma262/#sec-array
-Value ArrayConstructor::construct(Function&)
+Value ArrayConstructor::construct(FunctionObject&)
 {
     return call();
 }
@@ -83,7 +83,7 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::from)
 
     auto* array = Array::create(global_object);
 
-    Function* map_fn = nullptr;
+    FunctionObject* map_fn = nullptr;
     if (!vm.argument(1).is_undefined()) {
         auto callback = vm.argument(1);
         if (!callback.is_function()) {

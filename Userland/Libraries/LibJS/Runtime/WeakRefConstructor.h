@@ -19,7 +19,7 @@ public:
     virtual ~WeakRefConstructor() override;
 
     virtual Value call() override;
-    virtual Value construct(Function&) override;
+    virtual Value construct(FunctionObject&) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

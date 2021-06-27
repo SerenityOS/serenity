@@ -43,7 +43,7 @@ Value GeneratorFunctionConstructor::call()
 }
 
 // 27.3.1.1 GeneratorFunction ( p1, p2, … , pn, body ), https://tc39.es/ecma262/#sec-generatorfunction
-Value GeneratorFunctionConstructor::construct(Function& new_target)
+Value GeneratorFunctionConstructor::construct(FunctionObject& new_target)
 {
     auto function = FunctionConstructor::create_dynamic_function_node(global_object(), new_target, FunctionKind::Generator);
     if (!function)

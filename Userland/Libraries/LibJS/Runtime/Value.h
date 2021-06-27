@@ -252,7 +252,7 @@ public:
     }
 
     Array& as_array();
-    Function& as_function();
+    FunctionObject& as_function();
 
     i32 as_i32() const;
     u32 as_u32() const;
@@ -288,7 +288,7 @@ public:
     bool to_boolean() const;
 
     Value get(GlobalObject&, PropertyName const&) const;
-    Function* get_method(GlobalObject&, PropertyName const&) const;
+    FunctionObject* get_method(GlobalObject&, PropertyName const&) const;
 
     String to_string_without_side_effects() const;
 

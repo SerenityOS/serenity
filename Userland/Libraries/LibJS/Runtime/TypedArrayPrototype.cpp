@@ -65,7 +65,7 @@ static TypedArrayBase* typed_array_from(VM& vm, GlobalObject& global_object)
     return typed_array;
 }
 
-static Function* callback_from_args(GlobalObject& global_object, const String& name)
+static FunctionObject* callback_from_args(GlobalObject& global_object, const String& name)
 {
     auto& vm = global_object.vm();
     if (vm.argument_count() < 1) {

@@ -22,6 +22,7 @@ namespace JS {
     P(Boolean)                               \
     P(E)                                     \
     P(EPSILON)                               \
+    P(Function)                              \
     P(Infinity)                              \
     P(JSON)                                  \
     P(LN10)                                  \

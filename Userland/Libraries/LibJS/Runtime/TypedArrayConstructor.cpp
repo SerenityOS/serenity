@@ -47,14 +47,14 @@ Value TypedArrayConstructor::call()
 }
 
 // 23.2.1.1 %TypedArray% ( ), https://tc39.es/ecma262/#sec-%typedarray%
-Value TypedArrayConstructor::construct(Function&)
+Value TypedArrayConstructor::construct(FunctionObject&)
 {
     vm().throw_exception<TypeError>(global_object(), ErrorType::ClassIsAbstract, "TypedArray");
     return {};
 }
 
 // 23.2.4.2 TypedArrayCreate ( constructor, argumentList ), https://tc39.es/ecma262/#typedarray-create
-static TypedArrayBase* typed_array_create(GlobalObject& global_object, Function& constructor, MarkedValueList arguments)
+static TypedArrayBase* typed_array_create(GlobalObject& global_object, FunctionObject& constructor, MarkedValueList arguments)
 {
     auto& vm = global_object.vm();
 

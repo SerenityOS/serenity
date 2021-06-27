@@ -95,7 +95,7 @@ Value NumberConstructor::call()
 }
 
 // 21.1.1.1 Number ( value ), https://tc39.es/ecma262/#sec-number-constructor-number-value
-Value NumberConstructor::construct(Function& new_target)
+Value NumberConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

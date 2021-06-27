@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 
 namespace JS {
 
-class ProxyObject final : public Function {
-    JS_OBJECT(ProxyObject, Function);
+class ProxyObject final : public FunctionObject {
+    JS_OBJECT(ProxyObject, FunctionObject);
 
 public:
     static ProxyObject* create(GlobalObject&, Object& target, Object& handler);
@@ -20,9 +20,9 @@ public:
     virtual ~ProxyObject() override;
 
     virtual Value call() override;
-    virtual Value construct(Function& new_target) override;
+    virtual Value construct(FunctionObject& new_target) override;
     virtual const FlyString& name() const override;
-    virtual FunctionEnvironmentRecord* create_environment_record(Function&) override;
+    virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) override;
 
     const Object& target() const { return m_target; }
     const Object& handler() const { return m_handler; }
