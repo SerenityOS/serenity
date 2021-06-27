@@ -204,6 +204,10 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     ClassName::ClassName(u32 length, Object& prototype)                                                                                \
         : TypedArray(length, prototype)                                                                                                \
     {                                                                                                                                  \
+        if constexpr (StringView { #ClassName }.is_one_of("BigInt64Array", "BigUint64Array"))                                          \
+            m_content_type = ContentType::BigInt;                                                                                      \
+        else                                                                                                                           \
+            m_content_type = ContentType::Number;                                                                                      \
     }                                                                                                                                  \
                                                                                                                                        \
     ClassName::~ClassName() { }                                                                                                        \
