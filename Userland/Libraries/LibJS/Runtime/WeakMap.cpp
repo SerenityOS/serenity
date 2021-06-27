@@ -23,7 +23,7 @@ WeakMap::~WeakMap()
 {
 }
 
-void WeakMap::remove_sweeped_cells(Badge<Heap>, Vector<Cell*>& cells)
+void WeakMap::remove_swept_cells(Badge<Heap>, Vector<Cell*>& cells)
 {
     for (auto* cell : cells)
         m_values.remove(cell);
