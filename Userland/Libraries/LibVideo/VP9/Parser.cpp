@@ -1191,10 +1191,93 @@ BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
     return ss_size_lookup[subsize][sub_x][sub_y];
 }
 
-bool Parser::tokens(size_t, u32, u32, TXSize, u32)
+bool Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
-    // TODO: Implement
-    return true;
+    m_tree_parser->set_more_coefs_variables(start_x, start_y);
+    size_t segment_eob = 16 << (tx_size << 1);
+    auto scan = get_scan(plane, tx_size, block_index);
+    auto check_eob = true;
+    size_t c = 0;
+    for (; c < segment_eob; c++) {
+        auto pos = scan[c];
+        auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
+        m_tree_parser->set_band(band);
+        if (check_eob) {
+            auto more_coefs = m_tree_parser->parse_tree<bool>(SyntaxElementType::MoreCoefs);
+            if (!more_coefs)
+                break;
+        }
+        auto token = m_tree_parser->parse_tree<Token>(SyntaxElementType::Token);
+        m_token_cache[pos] = energy_class[token];
+        if (token == ZeroToken) {
+            m_tokens[pos] = 0;
+            check_eob = false;
+        } else {
+            i32 coef = static_cast<i32>(read_coef(token));
+            auto sign_bit = m_bit_stream->read_literal(1);
+            m_tokens[pos] = sign_bit ? -coef : coef;
+            check_eob = true;
+        }
+    }
+    auto non_zero = c > 0;
+    m_eob_total += non_zero;
+    for (size_t i = c; i < segment_eob; i++)
+        m_tokens[scan[i]] = 0;
+    return non_zero;
+}
+
+u32 const* Parser::get_scan(size_t plane, TXSize tx_size, u32 block_index)
+{
+    if (plane > 0 || tx_size == TX_32x32) {
+        m_tx_type = DCT_DCT;
+    } else if (tx_size == TX_4x4) {
+        if (m_lossless || m_is_inter)
+            m_tx_type = DCT_DCT;
+        else
+            m_tx_type = mode_to_txfm_map[m_mi_size < Block_8x8 ? m_block_sub_modes[block_index] : m_y_mode];
+    } else {
+        m_tx_type = mode_to_txfm_map[m_y_mode];
+    }
+    if (tx_size == TX_4x4) {
+        if (m_tx_type == ADST_DCT)
+            return row_scan_4x4;
+        if (m_tx_type == DCT_ADST)
+            return col_scan_4x4;
+        return default_scan_4x4;
+    }
+    if (tx_size == TX_8x8) {
+        if (m_tx_type == ADST_DCT)
+            return row_scan_8x8;
+        if (m_tx_type == DCT_ADST)
+            return col_scan_8x8;
+        return default_scan_8x8;
+    }
+    if (tx_size == TX_16x16) {
+        if (m_tx_type == ADST_DCT)
+            return row_scan_16x16;
+        if (m_tx_type == DCT_ADST)
+            return col_scan_16x16;
+        return default_scan_16x16;
+    }
+    return default_scan_32x32;
+}
+
+u32 Parser::read_coef(Token token)
+{
+    auto cat = extra_bits[token][0];
+    auto num_extra = extra_bits[token][1];
+    auto coef = extra_bits[token][2];
+    if (token == DctValCat6) {
+        for (size_t e = 0; e < (u8)(m_bit_depth - 8); e++) {
+            auto high_bit = m_bit_stream->read_bool(255);
+            coef += high_bit << (5 + m_bit_depth - e);
+        }
+    }
+    for (size_t e = 0; e < num_extra; e++) {
+        auto coef_bit = m_bit_stream->read_bool(cat_probs[cat][e]);
+        coef += coef_bit << (num_extra - 1 - e);
+    }
+    return coef;
 }
 
 bool Parser::find_mv_refs(ReferenceFrame, int)
