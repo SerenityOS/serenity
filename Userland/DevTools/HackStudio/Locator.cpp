@@ -115,7 +115,7 @@ Locator::Locator(Core::Object* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (m_suggestion_view->model()->is_valid(new_index)) {
+        if (m_suggestion_view->model()->is_within_range(new_index)) {
             m_suggestion_view->selection().set(new_index);
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
@@ -127,7 +127,7 @@ Locator::Locator(Core::Object* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (m_suggestion_view->model()->is_valid(new_index)) {
+        if (m_suggestion_view->model()->is_within_range(new_index)) {
             m_suggestion_view->selection().set(new_index);
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
