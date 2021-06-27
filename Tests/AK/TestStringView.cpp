@@ -177,3 +177,28 @@ TEST_CASE(split_view)
     EXPECT_EQ(test_string_view.split_view_if(predicate), Vector<StringView>({ "a", "b", "c", "d" }));
     EXPECT_EQ(test_string_view.split_view_if(predicate, true), Vector<StringView>({ "a", "", "b", "c", "d" }));
 }
+
+TEST_CASE(constexpr_stuff)
+{
+#define do_test()                                                       \
+    static_assert(test_constexpr.length() == 3);                        \
+    static_assert(!test_constexpr.is_empty());                          \
+    static_assert(test_constexpr.is_one_of("foo", "bar", "baz"));       \
+    static_assert(test_constexpr.is_one_of("foo"sv, "bar"sv, "baz"sv)); \
+    static_assert(test_constexpr != "fob"sv);                           \
+    static_assert(test_constexpr != "fob");                             \
+    static_assert(test_constexpr.substring_view(1).is_one_of("oo"sv));
+
+    {
+        // Can initialize from ""sv.
+        constexpr StringView test_constexpr { "foo"sv };
+        do_test();
+    }
+
+    {
+        // Can initialize from char const*.
+        constexpr StringView test_constexpr { "foo" };
+        do_test();
+    }
+#undef do_test
+}
