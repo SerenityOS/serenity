@@ -30,6 +30,7 @@
 #include <LibJS/Runtime/WeakMap.h>
 #include <LibJS/Runtime/WeakSet.h>
 #include <LibTest/Results.h>
+#include <LibTest/TestRunner.h>
 #include <fcntl.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -109,7 +110,6 @@ extern bool g_collect_on_every_allocation;
 extern bool g_run_bytecode;
 extern bool g_dump_bytecode;
 extern String g_currently_running_test;
-extern String g_test_glob;
 struct FunctionWithLength {
     JS::Value (*function)(JS::VM&, JS::GlobalObject&);
     size_t length { 0 };
@@ -146,51 +146,24 @@ enum class RunFileHookResult {
 using IntermediateRunFileResult = AK::Result<JSFileResult, RunFileHookResult>;
 extern IntermediateRunFileResult (*g_run_file)(const String&, JS::Interpreter&);
 
-class TestRunner {
+class TestRunner : public ::Test::TestRunner {
 public:
-    static TestRunner* the()
-    {
-        return s_the;
-    }
-
     TestRunner(String test_root, String common_path, bool print_times, bool print_progress, bool print_json)
-        : m_common_path(move(common_path))
-        , m_test_root(move(test_root))
-        , m_print_times(print_times)
-        , m_print_progress(print_progress)
-        , m_print_json(print_json)
+        : ::Test::TestRunner(move(test_root), print_times, print_progress, print_json)
+        , m_common_path(move(common_path))
     {
-        VERIFY(!s_the);
-        s_the = this;
         g_test_root = m_test_root;
     }
 
     virtual ~TestRunner() = default;
 
-    void run();
-
-    const Test::Counts& counts() const { return m_counts; }
-
-    bool is_printing_progress() const { return m_print_progress; }
-
 protected:
-    static TestRunner* s_the;
-
-    virtual Vector<String> get_test_paths() const;
+    virtual void do_run_single_test(const String& test_path) override;
+    virtual Vector<String> get_test_paths() const override;
     virtual JSFileResult run_file_test(const String& test_path);
     void print_file_result(const JSFileResult& file_result) const;
-    void print_test_results() const;
-    void print_test_results_as_json() const;
 
     String m_common_path;
-    String m_test_root;
-    bool m_print_times;
-    bool m_print_progress;
-    bool m_print_json;
-
-    double m_total_elapsed_time_in_ms { 0 };
-    Test::Counts m_counts;
-
     RefPtr<JS::Program> m_test_program;
 };
 
@@ -215,84 +188,6 @@ inline void TestRunnerGlobalObject::initialize_global_object()
             },
             entry.value.length);
     }
-}
-
-inline void cleanup()
-{
-    // Clear the taskbar progress.
-    if (TestRunner::the() && TestRunner::the()->is_printing_progress())
-        warn("\033]9;-1;\033\\");
-}
-
-inline void cleanup_and_exit()
-{
-    cleanup();
-    exit(1);
-}
-
-inline double get_time_in_ms()
-{
-    struct timeval tv1;
-    auto return_code = gettimeofday(&tv1, nullptr);
-    VERIFY(return_code >= 0);
-    return static_cast<double>(tv1.tv_sec) * 1000.0 + static_cast<double>(tv1.tv_usec) / 1000.0;
-}
-
-template<typename Callback>
-inline void iterate_directory_recursively(const String& directory_path, Callback callback)
-{
-    Core::DirIterator directory_iterator(directory_path, Core::DirIterator::Flags::SkipDots);
-
-    while (directory_iterator.has_next()) {
-        auto name = directory_iterator.next_path();
-        struct stat st = {};
-        if (fstatat(directory_iterator.fd(), name.characters(), &st, AT_SYMLINK_NOFOLLOW) < 0)
-            continue;
-        bool is_directory = S_ISDIR(st.st_mode);
-        auto full_path = String::formatted("{}/{}", directory_path, name);
-        if (is_directory && name != "/Fixtures"sv) {
-            iterate_directory_recursively(full_path, callback);
-        } else if (!is_directory) {
-            callback(full_path);
-        }
-    }
-}
-
-inline Vector<String> TestRunner::get_test_paths() const
-{
-    Vector<String> paths;
-    iterate_directory_recursively(m_test_root, [&](const String& file_path) {
-        if (!file_path.ends_with(".js"))
-            return;
-        if (!file_path.ends_with("test-common.js"))
-            paths.append(file_path);
-    });
-    quick_sort(paths);
-    return paths;
-}
-
-inline void TestRunner::run()
-{
-    size_t progress_counter = 0;
-    auto test_paths = get_test_paths();
-    for (auto& path : test_paths) {
-        if (!path.matches(g_test_glob))
-            continue;
-        ++progress_counter;
-        auto file_result = run_file_test(path);
-        if (!m_print_json)
-            print_file_result(file_result);
-        if (m_print_progress)
-            warn("\033]9;{};{};\033\\", progress_counter, test_paths.size());
-    }
-
-    if (m_print_progress)
-        warn("\033]9;-1;\033\\");
-
-    if (!m_print_json)
-        print_test_results();
-    else
-        print_test_results_as_json();
 }
 
 inline AK::Result<NonnullRefPtr<JS::Program>, ParserError> parse_file(const String& file_path)
@@ -329,6 +224,26 @@ inline Optional<JsonValue> get_test_results(JS::Interpreter& interpreter)
         return {};
 
     return json.value();
+}
+
+inline void TestRunner::do_run_single_test(const String& test_path)
+{
+    auto file_result = run_file_test(test_path);
+    if (!m_print_json)
+        print_file_result(file_result);
+}
+
+inline Vector<String> TestRunner::get_test_paths() const
+{
+    Vector<String> paths;
+    iterate_directory_recursively(m_test_root, [&](const String& file_path) {
+        if (!file_path.ends_with(".js"))
+            return;
+        if (!file_path.ends_with("test-common.js"))
+            paths.append(file_path);
+    });
+    quick_sort(paths);
+    return paths;
 }
 
 inline JSFileResult TestRunner::run_file_test(const String& test_path)
@@ -501,51 +416,6 @@ inline JSFileResult TestRunner::run_file_test(const String& test_path)
     return file_result;
 }
 
-enum Modifier {
-    BG_RED,
-    BG_GREEN,
-    FG_RED,
-    FG_GREEN,
-    FG_ORANGE,
-    FG_GRAY,
-    FG_BLACK,
-    FG_BOLD,
-    ITALIC,
-    CLEAR,
-};
-
-inline void print_modifiers(Vector<Modifier> modifiers)
-{
-    for (auto& modifier : modifiers) {
-        auto code = [&] {
-            switch (modifier) {
-            case BG_RED:
-                return "\033[48;2;255;0;102m";
-            case BG_GREEN:
-                return "\033[48;2;102;255;0m";
-            case FG_RED:
-                return "\033[38;2;255;0;102m";
-            case FG_GREEN:
-                return "\033[38;2;102;255;0m";
-            case FG_ORANGE:
-                return "\033[38;2;255;102;0m";
-            case FG_GRAY:
-                return "\033[38;2;135;139;148m";
-            case FG_BLACK:
-                return "\033[30m";
-            case FG_BOLD:
-                return "\033[1m";
-            case ITALIC:
-                return "\033[3m";
-            case CLEAR:
-                return "\033[0m";
-            }
-            VERIFY_NOT_REACHED();
-        }();
-        out("{}", code);
-    }
-}
-
 inline void TestRunner::print_file_result(const JSFileResult& file_result) const
 {
     if (file_result.most_severe_test_result == Test::Result::Fail || file_result.error.has_value()) {
@@ -662,75 +532,6 @@ inline void TestRunner::print_file_result(const JSFileResult& file_result) const
             }
         }
     }
-}
-
-inline void TestRunner::print_test_results() const
-{
-    out("\nTest Suites: ");
-    if (m_counts.suites_failed) {
-        print_modifiers({ FG_RED });
-        out("{} failed, ", m_counts.suites_failed);
-        print_modifiers({ CLEAR });
-    }
-    if (m_counts.suites_passed) {
-        print_modifiers({ FG_GREEN });
-        out("{} passed, ", m_counts.suites_passed);
-        print_modifiers({ CLEAR });
-    }
-    outln("{} total", m_counts.suites_failed + m_counts.suites_passed);
-
-    out("Tests:       ");
-    if (m_counts.tests_failed) {
-        print_modifiers({ FG_RED });
-        out("{} failed, ", m_counts.tests_failed);
-        print_modifiers({ CLEAR });
-    }
-    if (m_counts.tests_skipped) {
-        print_modifiers({ FG_ORANGE });
-        out("{} skipped, ", m_counts.tests_skipped);
-        print_modifiers({ CLEAR });
-    }
-    if (m_counts.tests_passed) {
-        print_modifiers({ FG_GREEN });
-        out("{} passed, ", m_counts.tests_passed);
-        print_modifiers({ CLEAR });
-    }
-    outln("{} total", m_counts.tests_failed + m_counts.tests_skipped + m_counts.tests_passed);
-
-    outln("Files:       {} total", m_counts.files_total);
-
-    out("Time:        ");
-    if (m_total_elapsed_time_in_ms < 1000.0) {
-        outln("{}ms", static_cast<int>(m_total_elapsed_time_in_ms));
-    } else {
-        outln("{:>.3}s", m_total_elapsed_time_in_ms / 1000.0);
-    }
-    outln();
-}
-
-inline void TestRunner::print_test_results_as_json() const
-{
-    JsonObject suites;
-    suites.set("failed", m_counts.suites_failed);
-    suites.set("passed", m_counts.suites_passed);
-    suites.set("total", m_counts.suites_failed + m_counts.suites_passed);
-
-    JsonObject tests;
-    tests.set("failed", m_counts.tests_failed);
-    tests.set("passed", m_counts.tests_passed);
-    tests.set("skipped", m_counts.tests_skipped);
-    tests.set("total", m_counts.tests_failed + m_counts.tests_passed + m_counts.tests_skipped);
-
-    JsonObject results;
-    results.set("suites", suites);
-    results.set("tests", tests);
-
-    JsonObject root;
-    root.set("results", results);
-    root.set("files_total", m_counts.files_total);
-    root.set("duration", m_total_elapsed_time_in_ms / 1000.0);
-
-    outln("{}", root.to_string());
 }
 
 }
