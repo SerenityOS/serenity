@@ -12,6 +12,7 @@
 #include <AK/TemporaryChange.h>
 #include <AK/Vector.h>
 #include <LibGUI/ModelIndex.h>
+#include <LibGUI/PersistentModelIndex.h>
 
 namespace GUI {
 
@@ -27,11 +28,11 @@ public:
 
     int size() const { return m_indices.size(); }
     bool is_empty() const { return m_indices.is_empty(); }
-    bool contains(const ModelIndex& index) const { return m_indices.contains(index); }
+    bool contains(const ModelIndex& index) const { return m_indices.contains(PersistentModelIndex(index)); }
     bool contains_row(int row) const
     {
         for (auto& index : m_indices) {
-            if (index.row() == row)
+            if (index.is_valid() && index.row() == row)
                 return true;
         }
         return false;
@@ -47,23 +48,38 @@ public:
     template<typename Callback>
     void for_each_index(Callback callback)
     {
-        for (auto& index : indices())
+        m_indices.remove_all_matching([&](PersistentModelIndex& index) -> bool {
+            if (!index.is_valid())
+                return true;
+
             callback(index);
+            return false;
+        });
     }
 
     template<typename Callback>
     void for_each_index(Callback callback) const
     {
-        for (auto& index : indices())
+        m_indices.remove_all_matching([&](PersistentModelIndex& index) -> bool {
+            if (!index.is_valid())
+                return true;
+
             callback(index);
+            return false;
+        });
     }
 
     Vector<ModelIndex> indices() const
     {
         Vector<ModelIndex> selected_indices;
 
-        for (auto& index : m_indices)
+        m_indices.remove_all_matching([&](PersistentModelIndex& index) -> bool {
+            if (!index.is_valid())
+                return true;
+
             selected_indices.append(index);
+            return false;
+        });
 
         return selected_indices;
     }
@@ -82,7 +98,7 @@ private:
     void notify_selection_changed();
 
     AbstractView& m_view;
-    HashTable<ModelIndex> m_indices;
+    mutable HashTable<PersistentModelIndex> m_indices;
     bool m_disable_notify { false };
     bool m_notify_pending { false };
 };

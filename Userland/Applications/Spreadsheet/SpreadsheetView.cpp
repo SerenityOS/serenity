@@ -241,7 +241,7 @@ SpreadsheetView::SpreadsheetView(Sheet& sheet)
         }
 
         if (positions.is_empty()) {
-            auto& index = m_table_view->cursor_index();
+            auto index = m_table_view->cursor_index();
             Position position { (size_t)index.column(), (size_t)index.row() };
             positions.append(move(position));
         }

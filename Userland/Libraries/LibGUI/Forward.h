@@ -43,6 +43,7 @@ class MenuItem;
 class Model;
 class ModelEditingDelegate;
 class ModelIndex;
+class ModelSelection;
 class MouseEvent;
 class MultiPaintEvent;
 class MultiView;
