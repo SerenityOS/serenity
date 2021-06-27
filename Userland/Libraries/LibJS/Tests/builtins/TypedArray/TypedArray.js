@@ -158,7 +158,7 @@ test("typed array from TypedArray", () => {
     BIGINT_TYPED_ARRAYS.forEach(T => {
         expect(() => {
             const newTypedArray = new T(u8Array);
-        }).toThrowWithMessage(TypeError, "Cannot convert number to BigInt");
+        }).toThrowWithMessage(TypeError, `Can't create ${T.name} from Uint8Array`);
 
         const newBigIntTypedArray = new T(bigU64Array);
         expect(newBigIntTypedArray[0]).toBe(1n);
