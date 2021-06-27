@@ -752,8 +752,8 @@ void Parser::allocate_tile_data()
     m_segment_ids = static_cast<u8*>(malloc(sizeof(u8) * dimensions));
     m_ref_frames = static_cast<ReferenceFrame*>(malloc(sizeof(ReferenceFrame) * dimensions * 2));
     m_interp_filters = static_cast<InterpolationFilter*>(malloc(sizeof(InterpolationFilter) * dimensions));
-    m_mvs = static_cast<InterMode*>(malloc(sizeof(InterMode) * dimensions * 2));
-    m_sub_mvs = static_cast<InterMode*>(malloc(sizeof(InterMode) * dimensions * 2 * 4));
+    m_mvs = static_cast<MV*>(malloc(sizeof(MV) * dimensions * 2));
+    m_sub_mvs = static_cast<MV*>(malloc(sizeof(MV) * dimensions * 2 * 4));
     m_sub_modes = static_cast<IntraMode*>(malloc(sizeof(IntraMode) * dimensions * 4));
     m_allocated_dimensions = dimensions;
 }
@@ -892,10 +892,10 @@ bool Parser::decode_block(u32 row, u32 col, u8 subsize)
             if (m_is_inter) {
                 m_interp_filters[pos] = m_interp_filter;
                 for (size_t ref_list = 0; ref_list < 2; ref_list++) {
-                    auto pos_with_ref_list = pos * 2 + ref_list;
+                    auto pos_with_ref_list = (pos * 2 + ref_list) * sizeof(MV);
                     m_mvs[pos_with_ref_list] = m_block_mvs[ref_list][3];
                     for (size_t b = 0; b < 4; b++)
-                        m_sub_mvs[pos_with_ref_list * 4 + b] = m_block_mvs[ref_list][b];
+                        m_sub_mvs[pos_with_ref_list * 4 + b * sizeof(MV)] = m_block_mvs[ref_list][b];
                 }
             } else {
                 for (size_t b = 0; b < 4; b++)
@@ -1168,7 +1168,7 @@ bool Parser::read_ref_frames()
 
 bool Parser::assign_mv(bool is_compound)
 {
-    m_mv[1] = ZeroMv;
+    m_mv[1] = 0;
     for (auto i = 0; i < 1 + is_compound; i++) {
         if (m_y_mode == NewMv) {
             SAFE_CALL(read_mv(i));
@@ -1177,16 +1177,47 @@ bool Parser::assign_mv(bool is_compound)
         } else if (m_y_mode == NearMv) {
             m_mv[i] = m_near_mv[i];
         } else {
-            m_mv[i] = ZeroMv;
+            m_mv[i] = 0;
         }
     }
     return true;
 }
 
-bool Parser::read_mv(u8)
+bool Parser::read_mv(u8 ref)
 {
-    // TODO: Implement
+    m_use_hp = m_allow_high_precision_mv && use_mv_hp(m_best_mv[ref]);
+    MV diff_mv;
+    auto mv_joint = m_tree_parser->parse_tree<MvJoint>(SyntaxElementType::MVJoint);
+    if (mv_joint == MvJointHzvnz || mv_joint == MvJointHnzvnz)
+        diff_mv.set_row(read_mv_component(0));
+    if (mv_joint == MvJointHnzvz || mv_joint == MvJointHnzvnz)
+        diff_mv.set_col(read_mv_component(1));
+    m_mv[ref] = m_best_mv[ref] + diff_mv;
     return true;
+}
+
+i32 Parser::read_mv_component(u8)
+{
+    auto mv_sign = m_tree_parser->parse_tree<bool>(SyntaxElementType::MVSign);
+    auto mv_class = m_tree_parser->parse_tree<MvClass>(SyntaxElementType::MVClass);
+    u32 mag;
+    if (mv_class == MvClass0) {
+        auto mv_class0_bit = m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0Bit);
+        auto mv_class0_fr = m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0FR);
+        auto mv_class0_hp = m_tree_parser->parse_tree<u32>(SyntaxElementType::MVClass0HP);
+        mag = ((mv_class0_bit << 3) | (mv_class0_fr << 1) | mv_class0_hp) + 1;
+    } else {
+        auto d = 0;
+        for (size_t i = 0; i < mv_class; i++) {
+            auto mv_bit = m_tree_parser->parse_tree<bool>(SyntaxElementType::MVBit);
+            d |= mv_bit << i;
+        }
+        mag = CLASS0_SIZE << (mv_class + 2);
+        auto mv_fr = m_tree_parser->parse_tree<u32>(SyntaxElementType::MVFR);
+        auto mv_hp = m_tree_parser->parse_tree<u32>(SyntaxElementType::MVHP);
+        mag += ((d << 3) | (mv_fr << 1) | mv_hp) + 1;
+    }
+    return mv_sign ? -static_cast<i32>(mag) : static_cast<i32>(mag);
 }
 
 bool Parser::residual()
@@ -1360,6 +1391,12 @@ bool Parser::find_best_ref_mvs(int)
 }
 
 bool Parser::append_sub8x8_mvs(u8, u8)
+{
+    // TODO: Implement
+    return true;
+}
+
+bool Parser::use_mv_hp(const MV&)
 {
     // TODO: Implement
     return true;

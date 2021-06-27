@@ -8,6 +8,7 @@
 
 #include "BitStream.h"
 #include "LookupTables.h"
+#include "MV.h"
 #include "ProbabilityTables.h"
 #include "SyntaxElementCounter.h"
 #include "TreeParser.h"
@@ -116,6 +117,7 @@ private:
     bool read_ref_frames();
     bool assign_mv(bool is_compound);
     bool read_mv(u8 ref);
+    i32 read_mv_component(u8 component);
     bool residual();
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
@@ -127,6 +129,7 @@ private:
     bool find_mv_refs(ReferenceFrame, int block);
     bool find_best_ref_mvs(int ref_list);
     bool append_sub8x8_mvs(u8 block, u8 ref_list);
+    bool use_mv_hp(MV const& delta_mv);
 
     u8 m_profile { 0 };
     u8 m_frame_to_show_map_index { 0 };
@@ -216,9 +219,10 @@ private:
     bool m_left_single { false };
     bool m_above_single { false };
     InterpolationFilter m_interp_filter { EightTap };
-    InterMode m_mv[2];
-    InterMode m_near_mv[2];
-    InterMode m_nearest_mv[2];
+    MV m_mv[2];
+    MV m_near_mv[2];
+    MV m_nearest_mv[2];
+    MV m_best_mv[2];
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
     u32 m_eob_total { 0 };
@@ -230,7 +234,7 @@ private:
     ReferenceMode m_reference_mode;
     ReferenceFrame m_comp_fixed_ref;
     ReferenceFrame m_comp_var_ref[2];
-    InterMode m_block_mvs[2][4];
+    MV m_block_mvs[2][4];
     u8* m_prev_segment_ids { nullptr };
 
     u32 m_allocated_dimensions { 0 };
@@ -241,8 +245,8 @@ private:
     u8* m_segment_ids { nullptr };
     ReferenceFrame* m_ref_frames { nullptr };
     InterpolationFilter* m_interp_filters { nullptr };
-    InterMode* m_mvs { nullptr };
-    InterMode* m_sub_mvs { nullptr };
+    MV* m_mvs { nullptr };
+    MV* m_sub_mvs { nullptr };
     IntraMode* m_sub_modes { nullptr };
 
     OwnPtr<BitStream> m_bit_stream;
