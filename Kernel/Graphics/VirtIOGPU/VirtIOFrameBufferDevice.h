@@ -24,9 +24,6 @@ public:
     bool try_to_set_resolution(size_t width, size_t height);
     void clear_to_black();
 
-    VMObject& vm_object() { return m_framebuffer->vmobject(); }
-    Region& region() { return *m_framebuffer; }
-
     size_t width() const { return display_info().rect.width; }
     size_t height() const { return display_info().rect.height; }
     size_t pitch() const { return display_info().rect.width * 4; }
@@ -43,11 +40,15 @@ public:
 
     void draw_ntsc_test_pattern();
 
+    u8* framebuffer_data();
+
 private:
     virtual const char* class_name() const override { return "VirtIOFrameBuffer"; }
 
     VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& display_info() const;
     VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne& display_info();
+
+    void create_framebuffer();
 
     virtual int ioctl(FileDescription&, unsigned request, FlatPtr arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, const Range&, u64 offset, int prot, bool shared) override;

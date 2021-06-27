@@ -40,13 +40,9 @@ public:
 
 private:
     void enqueue_refresh_timer();
-    virtual u8* framebuffer_data() override
-    {
-        return m_framebuffer_region.unsafe_ptr()->vaddr().as_ptr();
-    }
+    virtual u8* framebuffer_data() override;
 
     VirtIOGPUConsole(RefPtr<VirtIOFrameBufferDevice> const&);
-    WeakPtr<Region> m_framebuffer_region;
     RefPtr<VirtIOFrameBufferDevice> m_framebuffer_device;
     DirtyRect m_dirty_rect;
 };

@@ -39,7 +39,6 @@ VirtIOGPUConsole::VirtIOGPUConsole(RefPtr<VirtIOFrameBufferDevice> const& frameb
     : GenericFramebufferConsole(framebuffer_device->width(), framebuffer_device->height(), framebuffer_device->pitch())
     , m_framebuffer_device(framebuffer_device)
 {
-    m_framebuffer_region = m_framebuffer_device->region();
     enqueue_refresh_timer();
 }
 
@@ -83,6 +82,11 @@ void VirtIOGPUConsole::enable()
     m_height = m_framebuffer_device->height();
     m_pitch = m_framebuffer_device->pitch();
     m_dirty_rect.union_rect(0, 0, m_width, m_height);
+}
+
+u8* VirtIOGPUConsole::framebuffer_data()
+{
+    return m_framebuffer_device->framebuffer_data();
 }
 
 }

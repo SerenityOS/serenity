@@ -15,16 +15,41 @@ VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGP
     , m_gpu(virtio_gpu)
     , m_scanout(scanout)
 {
+    if (display_info().enabled) {
+        Locker locker(m_gpu.operation_lock());
+        create_framebuffer();
+    }
+}
+
+VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
+{
+}
+
+void VirtIOFrameBufferDevice::create_framebuffer()
+{
     auto& info = display_info();
 
-    Locker locker(m_gpu.operation_lock());
+    size_t buffer_length = page_round_up(calculate_framebuffer_size(info.rect.width, info.rect.height));
+
+    // First delete any existing framebuffers to free the memory first
+    m_framebuffer = nullptr;
+    m_framebuffer_sink_vmobject = nullptr;
 
     // 1. Allocate frame buffer
-    // FIXME: We really should be trying to allocate a small amount of pages initially, with ensure_backing_storage increasing the backing memory of the region as needed
-    size_t buffer_length = calculate_framebuffer_size(MAX_VIRTIOGPU_RESOLUTION_WIDTH, MAX_VIRTIOGPU_RESOLUTION_HEIGHT);
-    m_framebuffer = MM.allocate_kernel_region(page_round_up(buffer_length), String::formatted("VirtGPU FrameBuffer #{}", scanout.value()), Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+    m_framebuffer = MM.allocate_kernel_region(buffer_length, String::formatted("VirtGPU FrameBuffer #{}", m_scanout.value()), Region::Access::Read | Region::Access::Write, AllocationStrategy::AllocateNow);
+    auto write_sink_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No).release_nonnull();
+    auto num_needed_pages = m_framebuffer->vmobject().page_count();
+    NonnullRefPtrVector<PhysicalPage> pages;
+    for (auto i = 0u; i < num_needed_pages; ++i) {
+        pages.append(write_sink_page);
+    }
+    m_framebuffer_sink_vmobject = AnonymousVMObject::create_with_physical_pages(move(pages));
+
     // 2. Create BUFFER using VIRTIO_GPU_CMD_RESOURCE_CREATE_2D
+    if (m_resource_id.value() != 0)
+        m_gpu.delete_resource(m_resource_id);
     m_resource_id = m_gpu.create_2d_resource(info.rect);
+
     // 3. Attach backing storage using  VIRTIO_GPU_CMD_RESOURCE_ATTACH_BACKING
     m_gpu.ensure_backing_storage(*m_framebuffer, buffer_length, m_resource_id);
     // 4. Use VIRTIO_GPU_CMD_SET_SCANOUT to link the framebuffer to a display scanout.
@@ -36,17 +61,7 @@ VirtIOFrameBufferDevice::VirtIOFrameBufferDevice(VirtIOGPU& virtio_gpu, VirtIOGP
     // 7. Use VIRTIO_GPU_CMD_RESOURCE_FLUSH to flush the updated resource to the display.
     flush_displayed_image(info.rect);
 
-    auto write_sink_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No).release_nonnull();
-    auto num_needed_pages = m_framebuffer->vmobject().page_count();
-    NonnullRefPtrVector<PhysicalPage> pages;
-    for (auto i = 0u; i < num_needed_pages; ++i) {
-        pages.append(write_sink_page);
-    }
-    m_framebuffer_sink_vmobject = AnonymousVMObject::create_with_physical_pages(move(pages));
-}
-
-VirtIOFrameBufferDevice::~VirtIOFrameBufferDevice()
-{
+    info.enabled = 1;
 }
 
 VirtIOGPURespDisplayInfo::VirtIOGPUDisplayOne const& VirtIOFrameBufferDevice::display_info() const
@@ -84,21 +99,18 @@ bool VirtIOFrameBufferDevice::try_to_set_resolution(size_t width, size_t height)
 {
     if (width > MAX_VIRTIOGPU_RESOLUTION_WIDTH || height > MAX_VIRTIOGPU_RESOLUTION_HEIGHT)
         return false;
+
+    auto& info = display_info();
+
     Locker locker(m_gpu.operation_lock());
-    VirtIOGPURect rect = {
+
+    info.rect = {
         .x = 0,
         .y = 0,
         .width = (u32)width,
         .height = (u32)height,
     };
-    auto old_resource_id = m_resource_id;
-    auto new_resource_id = m_gpu.create_2d_resource(rect);
-    m_gpu.ensure_backing_storage(*m_framebuffer, calculate_framebuffer_size(width, height), new_resource_id);
-    m_gpu.set_scanout_resource(m_scanout.value(), new_resource_id, rect);
-    m_gpu.detach_backing_storage(old_resource_id);
-    m_gpu.delete_resource(old_resource_id);
-    m_resource_id = new_resource_id;
-    display_info().rect = rect;
+    create_framebuffer();
     return true;
 }
 
@@ -276,6 +288,11 @@ void VirtIOFrameBufferDevice::draw_ntsc_test_pattern()
         }
     }
     dbgln_if(VIRTIO_DEBUG, "Finish drawing the pattern");
+}
+
+u8* VirtIOFrameBufferDevice::framebuffer_data()
+{
+    return m_framebuffer->vaddr().as_ptr();
 }
 
 }
