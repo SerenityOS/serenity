@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <AK/Types.h>
+
 namespace Video::VP9 {
 
 #define SAFE_CALL(call)             \
@@ -15,5 +17,8 @@ namespace Video::VP9 {
             return false;           \
         }                           \
     } while (0)
+
+u8 clip_3(u8 x, u8 y, u8 z);
+u8 round_2(u8 x, u8 n);
 
 }
