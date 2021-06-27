@@ -103,11 +103,15 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         return;
     }
 
-    // FIXME: 17.c If src_array.[[ContentType]] != dest_array.[[ContentType]], throw a TypeError exception.
     auto data = ArrayBuffer::create(global_object, byte_length.value());
 
     if (src_data->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return;
+    }
+
+    if (src_array.content_type() != dest_array.content_type()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::TypedArrayContentTypeMismatch, dest_array.class_name(), src_array.class_name());
         return;
     }
 
