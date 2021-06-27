@@ -141,7 +141,7 @@ void AutocompleteBox::next_suggestion()
     else
         new_index = m_suggestion_view->model()->index(0);
 
-    if (m_suggestion_view->model()->is_valid(new_index)) {
+    if (m_suggestion_view->model()->is_within_range(new_index)) {
         m_suggestion_view->selection().set(new_index);
         m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
     }
@@ -155,7 +155,7 @@ void AutocompleteBox::previous_suggestion()
     else
         new_index = m_suggestion_view->model()->index(0);
 
-    if (m_suggestion_view->model()->is_valid(new_index)) {
+    if (m_suggestion_view->model()->is_within_range(new_index)) {
         m_suggestion_view->selection().set(new_index);
         m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
     }
@@ -170,7 +170,7 @@ void AutocompleteBox::apply_suggestion()
         return;
 
     auto selected_index = m_suggestion_view->selection().first();
-    if (!selected_index.is_valid() || !m_suggestion_view->model()->is_valid(selected_index))
+    if (!selected_index.is_valid() || !m_suggestion_view->model()->is_within_range(selected_index))
         return;
 
     auto suggestion_index = m_suggestion_view->model()->index(selected_index.row(), AutocompleteSuggestionModel::Column::Name);

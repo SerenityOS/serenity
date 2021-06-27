@@ -295,8 +295,8 @@ void ColumnsView::move_cursor(CursorMovement movement, SelectionUpdate selection
         break;
     case CursorMovement::Right:
         new_index = model.index(0, m_model_column, cursor_index());
-        if (model.is_valid(new_index)) {
-            if (model.is_valid(cursor_index()))
+        if (model.is_within_range(new_index)) {
+            if (model.is_within_range(cursor_index()))
                 push_column(cursor_index());
             update();
         }

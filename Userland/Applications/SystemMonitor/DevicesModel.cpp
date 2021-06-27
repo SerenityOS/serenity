@@ -54,7 +54,7 @@ String DevicesModel::column_name(int column) const
 
 GUI::Variant DevicesModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    VERIFY(is_valid(index));
+    VERIFY(is_within_range(index));
 
     if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
