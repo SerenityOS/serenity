@@ -568,9 +568,9 @@ void Compositor::flush(Screen& screen)
         // Almost everything in Compositor is in logical coordinates, with the painters having
         // a scale applied. But this routine accesses the backbuffer pixels directly, so it
         // must work in physical coordinates.
-        rect = rect * screen.scale_factor();
-        Gfx::RGBA32* front_ptr = screen_data.m_front_bitmap->scanline(rect.y()) + rect.x();
-        Gfx::RGBA32* back_ptr = screen_data.m_back_bitmap->scanline(rect.y()) + rect.x();
+        auto scaled_rect = rect * screen.scale_factor();
+        Gfx::RGBA32* front_ptr = screen_data.m_front_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
+        Gfx::RGBA32* back_ptr = screen_data.m_back_bitmap->scanline(scaled_rect.y()) + scaled_rect.x();
         size_t pitch = screen_data.m_back_bitmap->pitch();
 
         // NOTE: The meaning of a flush depends on whether we can flip buffers or not.
@@ -593,8 +593,8 @@ void Compositor::flush(Screen& screen)
             from_ptr = back_ptr;
         }
 
-        for (int y = 0; y < rect.height(); ++y) {
-            fast_u32_copy(to_ptr, from_ptr, rect.width());
+        for (int y = 0; y < scaled_rect.height(); ++y) {
+            fast_u32_copy(to_ptr, from_ptr, scaled_rect.width());
             from_ptr = (const Gfx::RGBA32*)((const u8*)from_ptr + pitch);
             to_ptr = (Gfx::RGBA32*)((u8*)to_ptr + pitch);
         }
