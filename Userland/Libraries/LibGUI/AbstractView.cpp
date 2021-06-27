@@ -61,17 +61,17 @@ void AbstractView::model_did_update(unsigned int flags)
     } else {
         // FIXME: These may no longer point to whatever they did before,
         //        but let's be optimistic until we can be sure about it.
-        if (!model()->is_valid(m_edit_index)) {
+        if (!model()->is_within_range(m_edit_index)) {
             stop_editing();
             m_edit_index = {};
         }
-        if (!model()->is_valid(m_hovered_index))
+        if (!model()->is_within_range(m_hovered_index))
             m_hovered_index = {};
-        if (!model()->is_valid(m_cursor_index))
+        if (!model()->is_within_range(m_cursor_index))
             m_cursor_index = {};
-        if (!model()->is_valid(m_drop_candidate_index))
+        if (!model()->is_within_range(m_drop_candidate_index))
             m_drop_candidate_index = {};
-        selection().remove_matching([this](auto& index) { return !model()->is_valid(index); });
+        selection().remove_matching([this](auto& index) { return !model()->is_within_range(index); });
     }
     m_selection_start_index = {};
 }
@@ -442,7 +442,7 @@ void AbstractView::set_cursor(ModelIndex index, SelectionUpdate selection_update
     if (selection_mode() == SelectionMode::SingleSelection && (selection_update == SelectionUpdate::Ctrl || selection_update == SelectionUpdate::Shift))
         selection_update = SelectionUpdate::Set;
 
-    if (model()->is_valid(index)) {
+    if (model()->is_within_range(index)) {
         if (selection_update == SelectionUpdate::Set) {
             set_selection(index);
             set_selection_start_index(index);

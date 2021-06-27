@@ -69,7 +69,7 @@ public:
     virtual bool is_column_sortable([[maybe_unused]] int column_index) const { return true; }
     virtual void sort([[maybe_unused]] int column, SortOrder) { }
 
-    bool is_valid(const ModelIndex& index) const
+    bool is_within_range(const ModelIndex& index) const
     {
         auto parent_index = this->parent_index(index);
         return index.row() >= 0 && index.row() < row_count(parent_index) && index.column() >= 0 && index.column() < column_count(parent_index);

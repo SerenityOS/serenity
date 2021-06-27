@@ -220,7 +220,7 @@ void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_u
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
-        if (model.is_valid(new_index))
+        if (model.is_within_range(new_index))
             set_cursor(new_index, selection_update);
         break;
     }
@@ -228,7 +228,7 @@ void TableView::move_cursor(CursorMovement movement, SelectionUpdate selection_u
         int items_per_page = visible_content_rect().height() / row_height();
         auto old_index = selection().first();
         auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
-        if (model.is_valid(new_index))
+        if (model.is_within_range(new_index))
             set_cursor(new_index, selection_update);
         break;
     }
