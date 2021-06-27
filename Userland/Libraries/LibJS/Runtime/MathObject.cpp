@@ -146,18 +146,11 @@ JS_DEFINE_NATIVE_FUNCTION(MathObject::round)
     auto number = vm.argument(0).to_number(global_object);
     if (vm.exception())
         return {};
-    if (number.is_nan())
-        return js_nan();
-    double intpart = 0;
-    double frac = modf(number.as_double(), &intpart);
-    if (intpart >= 0) {
-        if (frac >= 0.5)
-            intpart += 1.0;
-    } else {
-        if (frac < -0.5)
-            intpart -= 1.0;
-    }
-    return Value(intpart);
+    auto value = number.as_double();
+    double integer = ::ceil(value);
+    if (integer - 0.5 > value)
+        integer--;
+    return Value(integer);
 }
 
 // 21.3.2.24 Math.max ( ...args ), https://tc39.es/ecma262/#sec-math.max
