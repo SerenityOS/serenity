@@ -17,6 +17,7 @@ enum class Result {
     Pass,
     Fail,
     Skip,
+    Crashed,
 };
 
 struct Case {
