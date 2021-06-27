@@ -63,7 +63,7 @@ TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
     if (!test262_parser_tests)
         return Test::JS::RunFileHookResult::RunAsNormal;
 
-    auto start_time = Test::JS::get_time_in_ms();
+    auto start_time = Test::get_time_in_ms();
 
     LexicalPath path(test_file);
     auto& dirname = path.dirname();
@@ -112,7 +112,7 @@ TESTJS_RUN_FILE_FUNCTION(const String& test_file, JS::Interpreter&)
     return Test::JS::JSFileResult {
         LexicalPath::relative_path(test_file, Test::JS::g_test_root),
         {},
-        Test::JS::get_time_in_ms() - start_time,
+        Test::get_time_in_ms() - start_time,
         test_result,
         { Test::Suite { "Parse file", test_result, { { expectation_string, test_result, message } } } }
     };
