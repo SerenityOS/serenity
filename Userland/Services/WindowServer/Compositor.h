@@ -16,6 +16,7 @@
 
 namespace WindowServer {
 
+class Animation;
 class ClientConnection;
 class Cursor;
 class MultiScaleBitmaps;
@@ -95,11 +96,12 @@ public:
     const Gfx::Bitmap* cursor_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
     const Gfx::Bitmap& front_bitmap_for_screenshot(Badge<ClientConnection>, Screen&) const;
 
+    void register_animation(Badge<Animation>, Animation&);
+    void unregister_animation(Badge<Animation>, Animation&);
+
 private:
     Compositor();
     void init_bitmaps();
-    bool render_animation_frame(Screen&, Gfx::DisjointRectSet&);
-    void step_animations();
     void invalidate_current_screen_number_rects();
     void overlays_theme_changed();
 
@@ -114,6 +116,7 @@ private:
     bool any_opaque_window_above_this_one_contains_rect(const Window&, const Gfx::IntRect&);
     void change_cursor(const Cursor*);
     void flush(Screen&);
+    void update_animations(Screen&, Gfx::DisjointRectSet& flush_rects);
 
     RefPtr<Core::Timer> m_compose_timer;
     RefPtr<Core::Timer> m_immediate_compose_timer;
@@ -195,6 +198,8 @@ private:
 
     size_t m_show_screen_number_count { 0 };
     Optional<Gfx::Color> m_custom_background_color;
+
+    HashTable<Animation*> m_animations;
 };
 
 }

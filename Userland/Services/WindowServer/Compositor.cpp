@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Compositor.h"
+#include "Animation.h"
 #include "ClientConnection.h"
 #include "Event.h"
 #include "EventLoop.h"
@@ -527,10 +528,9 @@ void Compositor::compose()
     m_invalidated_window = false;
     m_invalidated_cursor = false;
 
-    bool did_render_animation = false;
     Screen::for_each([&](auto& screen) {
         auto& screen_data = m_screen_data[screen.index()];
-        did_render_animation |= render_animation_frame(screen, screen_data.m_flush_special_rects);
+        update_animations(screen, screen_data.m_flush_special_rects);
         return IterationDecision::Continue;
     });
 
@@ -546,9 +546,6 @@ void Compositor::compose()
         flush(screen);
         return IterationDecision::Continue;
     });
-
-    if (did_render_animation)
-        step_animations();
 }
 
 void Compositor::flush(Screen& screen)
@@ -707,60 +704,6 @@ void Compositor::ScreenData::flip_buffers(Screen& screen)
     swap(m_front_painter, m_back_painter);
     screen.set_buffer(m_buffers_are_flipped ? 0 : 1);
     m_buffers_are_flipped = !m_buffers_are_flipped;
-}
-
-static const int minimize_animation_steps = 10;
-
-bool Compositor::render_animation_frame(Screen& screen, Gfx::DisjointRectSet& flush_rects)
-{
-    bool did_render_any = false;
-    auto& painter = *m_screen_data[screen.index()].m_back_painter;
-    Gfx::PainterStateSaver saver(painter);
-    painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
-
-    WindowManager::the().window_stack().for_each_window([&](Window& window) {
-        if (window.in_minimize_animation()) {
-            int animation_index = window.minimize_animation_index();
-
-            auto from_rect = window.is_minimized() ? window.frame().rect() : window.taskbar_rect();
-            auto to_rect = window.is_minimized() ? window.taskbar_rect() : window.frame().rect();
-
-            float x_delta_per_step = (float)(from_rect.x() - to_rect.x()) / minimize_animation_steps;
-            float y_delta_per_step = (float)(from_rect.y() - to_rect.y()) / minimize_animation_steps;
-            float width_delta_per_step = (float)(from_rect.width() - to_rect.width()) / minimize_animation_steps;
-            float height_delta_per_step = (float)(from_rect.height() - to_rect.height()) / minimize_animation_steps;
-
-            Gfx::IntRect rect {
-                from_rect.x() - (int)(x_delta_per_step * animation_index),
-                from_rect.y() - (int)(y_delta_per_step * animation_index),
-                from_rect.width() - (int)(width_delta_per_step * animation_index),
-                from_rect.height() - (int)(height_delta_per_step * animation_index)
-            };
-
-            dbgln_if(MINIMIZE_ANIMATION_DEBUG, "Minimize animation from {} to {} frame# {} {} on screen #{}", from_rect, to_rect, animation_index, rect, screen.index());
-
-            painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
-            flush_rects.add(rect.intersected(screen.rect()));
-            invalidate_screen(rect);
-
-            did_render_any = true;
-        }
-        return IterationDecision::Continue;
-    });
-
-    return did_render_any;
-}
-
-void Compositor::step_animations()
-{
-    WindowManager::the().window_stack().for_each_window([&](Window& window) {
-        if (window.in_minimize_animation()) {
-            window.step_minimize_animation();
-            if (window.minimize_animation_index() >= minimize_animation_steps)
-                window.end_minimize_animation();
-        }
-        return IterationDecision::Continue;
-    });
 }
 
 void Compositor::screen_resolution_changed()
@@ -1258,6 +1201,26 @@ void Compositor::recompute_occlusions()
         VERIFY(!w.transparency_wallpaper_rects().intersects(m_opaque_wallpaper_rects));
         return IterationDecision::Continue;
     });
+}
+
+void Compositor::register_animation(Badge<Animation>, Animation& animation)
+{
+    auto result = m_animations.set(&animation);
+    VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+}
+
+void Compositor::unregister_animation(Badge<Animation>, Animation& animation)
+{
+    bool was_removed = m_animations.remove(&animation);
+    VERIFY(was_removed);
+}
+
+void Compositor::update_animations(Screen& screen, Gfx::DisjointRectSet& flush_rects)
+{
+    auto& painter = *m_screen_data[screen.index()].m_back_painter;
+    for (RefPtr<Animation> animation : m_animations) {
+        animation->update({}, painter, screen, flush_rects);
+    }
 }
 
 }
