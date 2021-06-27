@@ -1,6 +1,6 @@
 TranslationUnit[0:0->144:0]
   VariableDeclaration[0:0->2:0]
-    Type[0:0->0:11]
+    NamedType[0:0->0:11]
       [static] int
     g_pid
     UnaryExpression[0:19->0:20]
@@ -9,12 +9,12 @@ TranslationUnit[0:0->144:0]
       1
   FunctionDeclaration[2:0->10:0]
     [static]
-    Type[2:7->2:12]
+    NamedType[2:7->2:12]
       void
     handle_sigint
     (
     Parameter[2:26->2:29]
-      Type[2:26->2:29]
+      NamedType[2:26->2:29]
         int
     )
     FunctionDefinition[3:0->10:0]
@@ -59,19 +59,19 @@ TranslationUnit[0:0->144:0]
               "detach"
     }
   FunctionDeclaration[12:0->144:0]
-    Type[12:0->12:4]
+    NamedType[12:0->12:4]
       int
     main
     (
     Parameter[12:9->12:16]
     argc
-      Type[12:9->12:13]
+      NamedType[12:9->12:13]
         int
     Parameter[12:24->12:29]
     argv
       Pointer[12:24->12:26]
         Pointer[12:23->12:24]
-          Type[12:19->12:23]
+          NamedType[12:19->12:23]
             char
     )
     FunctionDefinition[13:0->144:0]
@@ -99,24 +99,24 @@ TranslationUnit[0:0->144:0]
             NumericLiteral[16:15->16:15]
             1
       VariableDeclaration[19:4->19:34]
-        Type[19:4->19:24]
+        NamedType[19:4->19:24]
           Vector<[const] char*>
         child_argv
       VariableDeclaration[21:4->21:41]
         Pointer[21:14->21:16]
-          Type[21:4->21:14]
+          NamedType[21:4->21:14]
             [const] char
         output_filename
         NullPointerLiteral[21:34->21:40]
       VariableDeclaration[22:4->22:50]
-        Type[22:4->22:9]
+        NamedType[22:4->22:9]
           auto
         trace_file
         FunctionCall[22:22->22:50]
           Name[22:22->22:48]
           Core::File::standard_error
       VariableDeclaration[24:4->24:27]
-        Type[24:4->24:21]
+        NamedType[24:4->24:21]
           Core::ArgsParser
         parser
       FunctionCall[25:4->26:47]
@@ -193,7 +193,7 @@ TranslationUnit[0:0->144:0]
         Then:
         BlockStatement[33:36->42:4]
           VariableDeclaration[34:8->34:87]
-            Type[34:8->34:13]
+            NamedType[34:8->34:13]
               auto
             open_result
             FunctionCall[34:27->34:87]
@@ -262,7 +262,7 @@ TranslationUnit[0:0->144:0]
             NumericLiteral[44:15->44:15]
             1
       VariableDeclaration[47:4->47:14]
-        Type[47:4->47:8]
+        NamedType[47:4->47:8]
           int
         status
       IfStatement[48:4->81:4]
@@ -305,7 +305,7 @@ TranslationUnit[0:0->144:0]
               append
             NullPointerLiteral[54:26->54:32]
           VariableDeclaration[55:8->55:24]
-            Type[55:8->55:12]
+            NamedType[55:8->55:12]
               int
             pid
             FunctionCall[55:18->55:24]
@@ -367,7 +367,7 @@ TranslationUnit[0:0->144:0]
                     NumericLiteral[64:23->64:23]
                     1
               VariableDeclaration[66:12->66:86]
-                Type[66:12->66:16]
+                NamedType[66:12->66:16]
                   int
                 rc
                 FunctionCall[66:21->66:86]
@@ -384,7 +384,7 @@ TranslationUnit[0:0->144:0]
                     <
                     Pointer[66:64->66:65]
                       Pointer[66:63->66:64]
-                        Type[66:59->66:63]
+                        NamedType[66:59->66:63]
                           char
                     >
                     FunctionCall[66:67->66:84]
@@ -463,7 +463,7 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[77:19->77:19]
                 1
       VariableDeclaration[81:4->81:23]
-        Type[81:4->81:21]
+        NamedType[81:4->81:21]
           sigaction
         sa
       FunctionCall[82:4->82:44]
@@ -476,7 +476,7 @@ TranslationUnit[0:0->144:0]
         NumericLiteral[82:16->82:16]
         0
         SizeofExpression[82:19->82:43]
-          Type[82:26->82:42]
+          NamedType[82:26->82:42]
             sigaction
       AssignmentExpression[83:4->83:33]
         MemberExpression[83:4->83:18]
@@ -638,7 +638,7 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[102:19->102:19]
                 1
           VariableDeclaration[104:8->104:33]
-            Type[104:8->104:24]
+            NamedType[104:8->104:24]
               PtraceRegisters
             regs
             BracedInitList[104:31->104:33]
@@ -674,7 +674,7 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[107:19->107:19]
                 1
           VariableDeclaration[109:8->109:36]
-            Type[109:8->109:12]
+            NamedType[109:8->109:12]
               u32
             syscall_index
             MemberExpression[109:28->109:36]
@@ -683,7 +683,7 @@ TranslationUnit[0:0->144:0]
               Identifier[109:33->109:35]
               eax
           VariableDeclaration[110:8->110:27]
-            Type[110:8->110:12]
+            NamedType[110:8->110:12]
               u32
             arg1
             MemberExpression[110:19->110:27]
@@ -692,7 +692,7 @@ TranslationUnit[0:0->144:0]
               Identifier[110:24->110:26]
               edx
           VariableDeclaration[111:8->111:27]
-            Type[111:8->111:12]
+            NamedType[111:8->111:12]
               u32
             arg2
             MemberExpression[111:19->111:27]
@@ -701,7 +701,7 @@ TranslationUnit[0:0->144:0]
               Identifier[111:24->111:26]
               ecx
           VariableDeclaration[112:8->112:27]
-            Type[112:8->112:12]
+            NamedType[112:8->112:12]
               u32
             arg3
             MemberExpression[112:19->112:27]
@@ -810,7 +810,7 @@ TranslationUnit[0:0->144:0]
                 NumericLiteral[125:19->125:19]
                 1
           VariableDeclaration[128:8->128:26]
-            Type[128:8->128:12]
+            NamedType[128:8->128:12]
               u32
             res
             MemberExpression[128:18->128:26]
@@ -819,7 +819,7 @@ TranslationUnit[0:0->144:0]
               Identifier[128:23->128:25]
               eax
           VariableDeclaration[130:8->135:16]
-            Type[130:8->130:13]
+            NamedType[130:8->130:13]
               auto
             string
             FunctionCall[130:22->135:16]
@@ -831,7 +831,7 @@ TranslationUnit[0:0->144:0]
                 Name[131:12->131:30]
                 Syscall::to_string
                 CStyleCastExpression[131:31->131:63]
-                  Type[131:32->131:49]
+                  NamedType[131:32->131:49]
                     Syscall::Function
                   Name[131:50->131:63]
                   syscall_index
