@@ -159,9 +159,9 @@ u8 TreeParser::select_tree_probability(SyntaxElementType type, u8 node)
     case SyntaxElementType::MVHP:
         break;
     case SyntaxElementType::Token:
-        break;
+        return calculate_token_probability(node);
     case SyntaxElementType::MoreCoefs:
-        break;
+        return calculate_more_coefs_probability();
     }
     TODO();
 }
@@ -561,6 +561,67 @@ u8 TreeParser::calculate_interp_filter_probability(u8 node)
     return m_decoder.m_probability_tables->interp_filter_probs()[m_ctx][node];
 }
 
+u8 TreeParser::calculate_token_probability(u8 node)
+{
+    auto prob = m_decoder.m_probability_tables->coef_probs()[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, 1 + node)];
+    if (node < 2)
+        return prob;
+    auto x = (prob - 1) / 2;
+    auto& pareto_table = m_decoder.m_probability_tables->pareto_table();
+    if (prob & 1)
+        return pareto_table[x][node - 2];
+    return (pareto_table[x][node - 2] + pareto_table[x + 1][node - 2]) >> 1;
+}
+
+u8 TreeParser::calculate_more_coefs_probability()
+{
+    if (m_c == 0) {
+        auto sx = m_plane > 0 ? m_decoder.m_subsampling_x : 0;
+        auto sy = m_plane > 0 ? m_decoder.m_subsampling_y : 0;
+        auto max_x = (2 * m_decoder.m_mi_cols) >> sx;
+        auto max_y = (2 * m_decoder.m_mi_rows) >> sy;
+        u8 numpts = 1 << m_tx_size;
+        auto x4 = m_start_x >> 2;
+        auto y4 = m_start_y >> 2;
+        u32 above = 0;
+        u32 left = 0;
+        for (size_t i = 0; i < numpts; i++) {
+            if (x4 + i < max_x)
+                above |= m_decoder.m_above_nonzero_context[m_plane][x4 + i];
+            if (y4 + i < max_y)
+                left |= m_decoder.m_left_nonzero_context[m_plane][y4 + i];
+        }
+        m_ctx = above + left;
+    } else {
+        u32 neighbor_0, neighbor_1;
+        auto n = 4 << m_tx_size;
+        auto i = m_pos / n;
+        auto j = m_pos % n;
+        auto a = (i - 1) * n + j;
+        auto a2 = i * n + j - 1;
+        if (i > 0 && j > 0) {
+            if (m_decoder.m_tx_type == DCT_ADST) {
+                neighbor_0 = a;
+                neighbor_1 = a;
+            } else if (m_decoder.m_tx_type == ADST_DCT) {
+                neighbor_0 = a2;
+                neighbor_1 = a2;
+            } else {
+                neighbor_0 = a;
+                neighbor_1 = a2;
+            }
+        } else if (i > 0) {
+            neighbor_0 = a;
+            neighbor_1 = a;
+        } else {
+            neighbor_0 = a2;
+            neighbor_1 = a2;
+        }
+        m_ctx = (1 + m_decoder.m_token_cache[neighbor_0] + m_decoder.m_token_cache[neighbor_1]) >> 1;
+    }
+    return m_decoder.m_probability_tables->coef_probs()[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][0];
+}
+
 void TreeParser::count_syntax_element(SyntaxElementType type, int value)
 {
     switch (type) {
@@ -621,9 +682,11 @@ void TreeParser::count_syntax_element(SyntaxElementType type, int value)
     case SyntaxElementType::MVHP:
         break;
     case SyntaxElementType::Token:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_token[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][min(2, value)]++;
+        return;
     case SyntaxElementType::MoreCoefs:
-        break;
+        m_decoder.m_syntax_element_counter->m_counts_more_coefs[m_tx_size][m_plane > 0][m_decoder.m_is_inter][m_band][m_ctx][value]++;
+        return;
     case SyntaxElementType::DefaultIntraMode:
     case SyntaxElementType::DefaultUVMode:
     case SyntaxElementType::SegmentID:
