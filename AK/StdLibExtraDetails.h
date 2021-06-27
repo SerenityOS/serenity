@@ -196,6 +196,9 @@ template<typename T>
 using RemoveReference = typename __RemoveReference<T>::Type;
 
 template<typename T>
+using RemoveCVReference = RemoveCV<RemoveReference<T>>;
+
+template<typename T>
 struct __MakeUnsigned {
     using Type = void;
 };
@@ -478,6 +481,7 @@ using AK::Detail::MakeSigned;
 using AK::Detail::MakeUnsigned;
 using AK::Detail::RemoveConst;
 using AK::Detail::RemoveCV;
+using AK::Detail::RemoveCVReference;
 using AK::Detail::RemovePointer;
 using AK::Detail::RemoveReference;
 using AK::Detail::RemoveVolatile;

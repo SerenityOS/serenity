@@ -105,3 +105,11 @@ TEST_CASE(UnderlyingType)
 
     STATIC_EXPECT_EQ(Type, u8);
 }
+
+TEST_CASE(RemoveCVReference)
+{
+    using TestTypeList = TypeList<int, int&, int const&, int volatile&, int const volatile&, int&&, int const&&, int volatile&&, int const volatile&&>;
+    using ResultTypeList = TypeList<int, int, int, int, int, int, int, int, int>;
+
+    EXPECT_EQ_WITH_TRAIT(RemoveCVReference, TestTypeList, ResultTypeList);
+}
