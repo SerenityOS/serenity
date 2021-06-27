@@ -193,8 +193,7 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     // Switch to new thread context, passing from_thread and to_thread
     // through to the new context using registers edx and eax
     asm volatile(
-        // NOTE: changing how much we push to the stack affects
-        //       SWITCH_CONTEXT_TO_STACK_SIZE and thread_context_first_enter()!
+        // NOTE: changing how much we push to the stack affects thread_context_first_enter()!
         "pushfl \n"
         "pushl %%ebx \n"
         "pushl %%esi \n"

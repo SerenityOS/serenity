@@ -91,9 +91,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     auto& regs = thread.regs();
     bool return_to_user = (regs.cs & 3) != 0;
 
-    stack_top -= 2 * sizeof(u64);
-    *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = regs.rsp;
-    *reinterpret_cast<u64*>(kernel_stack_top - 3 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
+    stack_top -= 1 * sizeof(u64);
+    *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
 
     stack_top -= sizeof(RegisterState);
 
@@ -167,7 +166,71 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context --> switching out of: {} {}", VirtualAddress(from_thread), *from_thread);
     from_thread->save_critical(m_in_critical);
 
-    PANIC("Context switching not implemented.");
+    // clang-format off
+    // Switch to new thread context, passing from_thread and to_thread
+    // through to the new context using registers rdx and rax
+    asm volatile(
+        // NOTE: changing how much we push to the stack affects thread_context_first_enter()!
+        "pushfq \n"
+        "pushq %%rbx \n"
+        "pushq %%rcx \n"
+        "pushq %%rbp \n"
+        "pushq %%rsi \n"
+        "pushq %%rdi \n"
+        "pushq %%r8 \n"
+        "pushq %%r9 \n"
+        "pushq %%r10 \n"
+        "pushq %%r11 \n"
+        "pushq %%r12 \n"
+        "pushq %%r13 \n"
+        "pushq %%r14 \n"
+        "pushq %%r15 \n"
+        "movq %%rsp, %[from_rsp] \n"
+        "movabs $1f, %%rbx \n"
+        "movq %%rbx, %[from_rip] \n"
+        "movq %[to_rsp0], %%rbx \n"
+        "movl %%ebx, %[tss_rsp0l] \n"
+        "shrq $32, %%rbx \n"
+        "movl %%ebx, %[tss_rsp0h] \n"
+        "movq %[to_rsp], %%rsp \n"
+        "pushq %[to_thread] \n"
+        "pushq %[from_thread] \n"
+        "pushq %[to_rip] \n"
+        "cld \n"
+        "movq 16(%%rsp), %%rsi \n"
+        "movq 8(%%rsp), %%rdi \n"
+        "jmp enter_thread_context \n"
+        "1: \n"
+        "popq %%rdx \n"
+        "popq %%rax \n"
+        "popq %%r15 \n"
+        "popq %%r14 \n"
+        "popq %%r13 \n"
+        "popq %%r12 \n"
+        "popq %%r11 \n"
+        "popq %%r10 \n"
+        "popq %%r9 \n"
+        "popq %%r8 \n"
+        "popq %%rdi \n"
+        "popq %%rsi \n"
+        "popq %%rbp \n"
+        "popq %%rcx \n"
+        "popq %%rbx \n"
+        "popfq \n"
+        : [from_rsp] "=m" (from_thread->regs().rsp),
+        [from_rip] "=m" (from_thread->regs().rip),
+        [tss_rsp0l] "=m" (m_tss.rsp0l),
+        [tss_rsp0h] "=m" (m_tss.rsp0h),
+        "=d" (from_thread), // needed so that from_thread retains the correct value
+        "=a" (to_thread) // needed so that to_thread retains the correct value
+        : [to_rsp] "g" (to_thread->regs().rsp),
+        [to_rsp0] "g" (to_thread->regs().rsp0),
+        [to_rip] "c" (to_thread->regs().rip),
+        [from_thread] "d" (from_thread),
+        [to_thread] "a" (to_thread)
+        : "memory", "rbx"
+    );
+    // clang-format on
 
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
