@@ -6,7 +6,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibWeb/DOM/Document.h>
 #include <LibWeb/DOM/EventListener.h>
 #include <LibWeb/HTML/EventHandler.h>
@@ -49,7 +49,7 @@ void GlobalEventHandlers::set_event_handler_attribute(const FlyString& name, HTM
             dbgln("Failed to parse script in event handler attribute '{}'", name);
             return;
         }
-        auto* function = JS::ScriptFunction::create(self.script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
+        auto* function = JS::OrdinaryFunctionObject::create(self.script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
         VERIFY(function);
         listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
     }

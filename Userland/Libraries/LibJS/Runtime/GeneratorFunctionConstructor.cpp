@@ -12,7 +12,7 @@
 #include <LibJS/Runtime/FunctionConstructor.h>
 #include <LibJS/Runtime/GeneratorFunctionConstructor.h>
 #include <LibJS/Runtime/GlobalObject.h>
-#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 
 namespace JS {
 
@@ -62,7 +62,7 @@ Value GeneratorFunctionConstructor::construct(FunctionObject& new_target)
             block.dump(executable);
     }
 
-    return ScriptFunction::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().lexical_environment(), FunctionKind::Generator, function->is_strict_mode(), false);
+    return OrdinaryFunctionObject::create(global_object(), function->name(), function->body(), function->parameters(), function->function_length(), vm().lexical_environment(), FunctionKind::Generator, function->is_strict_mode(), false);
 }
 
 }

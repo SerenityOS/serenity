@@ -242,7 +242,7 @@ bool Value::is_constructor() const
         return false;
     if (is<NativeFunction>(as_object()))
         return static_cast<const NativeFunction&>(as_object()).has_constructor();
-    // ScriptFunction or BoundFunction
+    // OrdinaryFunctionObject or BoundFunction
     return true;
 }
 

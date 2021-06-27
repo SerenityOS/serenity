@@ -28,7 +28,7 @@ public:
     Shape* empty_object_shape() { return m_empty_object_shape; }
 
     Shape* new_object_shape() { return m_new_object_shape; }
-    Shape* new_script_function_prototype_object_shape() { return m_new_script_function_prototype_object_shape; }
+    Shape* new_ordinary_function_prototype_object_shape() { return m_new_ordinary_function_prototype_object_shape; }
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* proxy_constructor() { return m_proxy_constructor; }
@@ -77,7 +77,7 @@ private:
 
     Shape* m_empty_object_shape { nullptr };
     Shape* m_new_object_shape { nullptr };
-    Shape* m_new_script_function_prototype_object_shape { nullptr };
+    Shape* m_new_ordinary_function_prototype_object_shape { nullptr };
 
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct prototype
     ProxyConstructor* m_proxy_constructor { nullptr };

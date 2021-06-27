@@ -19,12 +19,12 @@
 #include <LibJS/Runtime/GeneratorObjectPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS {
 
-static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
+static OrdinaryFunctionObject* typed_this(VM& vm, GlobalObject& global_object)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)
@@ -33,10 +33,10 @@ static ScriptFunction* typed_this(VM& vm, GlobalObject& global_object)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotAFunctionNoParam);
         return nullptr;
     }
-    return static_cast<ScriptFunction*>(this_object);
+    return static_cast<OrdinaryFunctionObject*>(this_object);
 }
 
-ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject* OrdinaryFunctionObject::create(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 m_function_length, EnvironmentRecord* parent_scope, FunctionKind kind, bool is_strict, bool is_arrow_function)
 {
     Object* prototype = nullptr;
     switch (kind) {
@@ -47,10 +47,10 @@ ScriptFunction* ScriptFunction::create(GlobalObject& global_object, const FlyStr
         prototype = global_object.generator_function_prototype();
         break;
     }
-    return global_object.heap().allocate<ScriptFunction>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
+    return global_object.heap().allocate<OrdinaryFunctionObject>(global_object, global_object, name, body, move(parameters), m_function_length, parent_scope, *prototype, kind, is_strict, is_arrow_function);
 }
 
-ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
+OrdinaryFunctionObject::OrdinaryFunctionObject(GlobalObject& global_object, const FlyString& name, const Statement& body, Vector<FunctionNode::Parameter> parameters, i32 function_length, EnvironmentRecord* parent_scope, Object& prototype, FunctionKind kind, bool is_strict, bool is_arrow_function)
     : FunctionObject(is_arrow_function ? vm().this_value(global_object) : Value(), {}, prototype)
     , m_name(name)
     , m_body(body)
@@ -70,12 +70,12 @@ ScriptFunction::ScriptFunction(GlobalObject& global_object, const FlyString& nam
         set_this_mode(ThisMode::Global);
 }
 
-void ScriptFunction::initialize(GlobalObject& global_object)
+void OrdinaryFunctionObject::initialize(GlobalObject& global_object)
 {
     auto& vm = this->vm();
     Base::initialize(global_object);
     if (!m_is_arrow_function) {
-        auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_script_function_prototype_object_shape());
+        auto* prototype = vm.heap().allocate<Object>(global_object, *global_object.new_ordinary_function_prototype_object_shape());
         switch (m_kind) {
         case FunctionKind::Regular:
             prototype->define_property(vm.names.constructor, this, Attribute::Writable | Attribute::Configurable);
@@ -91,17 +91,17 @@ void ScriptFunction::initialize(GlobalObject& global_object)
     define_native_property(vm.names.name, name_getter, {}, Attribute::Configurable);
 }
 
-ScriptFunction::~ScriptFunction()
+OrdinaryFunctionObject::~OrdinaryFunctionObject()
 {
 }
 
-void ScriptFunction::visit_edges(Visitor& visitor)
+void OrdinaryFunctionObject::visit_edges(Visitor& visitor)
 {
     Base::visit_edges(visitor);
     visitor.visit(m_environment);
 }
 
-FunctionEnvironmentRecord* ScriptFunction::create_environment_record(FunctionObject& function_being_invoked)
+FunctionEnvironmentRecord* OrdinaryFunctionObject::create_environment_record(FunctionObject& function_being_invoked)
 {
     HashMap<FlyString, Variable> variables;
     for (auto& parameter : m_parameters) {
@@ -139,7 +139,7 @@ FunctionEnvironmentRecord* ScriptFunction::create_environment_record(FunctionObj
     return environment;
 }
 
-Value ScriptFunction::execute_function_body()
+Value OrdinaryFunctionObject::execute_function_body()
 {
     auto& vm = this->vm();
 
@@ -216,7 +216,7 @@ Value ScriptFunction::execute_function_body()
     }
 }
 
-Value ScriptFunction::call()
+Value OrdinaryFunctionObject::call()
 {
     if (m_is_class_constructor) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::ClassConstructorWithoutNew, m_name);
@@ -225,7 +225,7 @@ Value ScriptFunction::call()
     return execute_function_body();
 }
 
-Value ScriptFunction::construct(FunctionObject&)
+Value OrdinaryFunctionObject::construct(FunctionObject&)
 {
     if (m_is_arrow_function || m_kind == FunctionKind::Generator) {
         vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, m_name);
@@ -234,7 +234,7 @@ Value ScriptFunction::construct(FunctionObject&)
     return execute_function_body();
 }
 
-JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
+JS_DEFINE_NATIVE_GETTER(OrdinaryFunctionObject::length_getter)
 {
     auto* function = typed_this(vm, global_object);
     if (!function)
@@ -242,7 +242,7 @@ JS_DEFINE_NATIVE_GETTER(ScriptFunction::length_getter)
     return Value(static_cast<i32>(function->m_function_length));
 }
 
-JS_DEFINE_NATIVE_GETTER(ScriptFunction::name_getter)
+JS_DEFINE_NATIVE_GETTER(OrdinaryFunctionObject::name_getter)
 {
     auto* function = typed_this(vm, global_object);
     if (!function)

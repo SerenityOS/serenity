@@ -16,7 +16,7 @@
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
-#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 
 namespace JS {
 
@@ -120,11 +120,11 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
     String function_parameters;
     String function_body;
 
-    if (is<ScriptFunction>(this_object)) {
-        auto& script_function = static_cast<ScriptFunction&>(*this_object);
+    if (is<OrdinaryFunctionObject>(this_object)) {
+        auto& ordinary_function = static_cast<OrdinaryFunctionObject&>(*this_object);
         StringBuilder parameters_builder;
         auto first = true;
-        for (auto& parameter : script_function.parameters()) {
+        for (auto& parameter : ordinary_function.parameters()) {
             // FIXME: Also stringify binding patterns.
             if (auto* name_ptr = parameter.binding.get_pointer<FlyString>()) {
                 if (!first)
@@ -137,10 +137,10 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::to_string)
                 }
             }
         }
-        function_name = script_function.name();
+        function_name = ordinary_function.name();
         function_parameters = parameters_builder.build();
         // FIXME: ASTNodes should be able to dump themselves to source strings - something like this:
-        // auto& body = static_cast<ScriptFunction*>(this_object)->body();
+        // auto& body = static_cast<OrdinaryFunctionObject*>(this_object)->body();
         // function_body = body.to_source();
         function_body = "  ???";
     } else {
