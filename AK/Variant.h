@@ -251,7 +251,7 @@ public:
 
     using Detail::MergeAndDeduplicatePacks<Detail::VariantConstructors<Ts, Variant<Ts...>>...>::MergeAndDeduplicatePacks;
 
-    template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
+    template<typename T, typename StrippedT = RemoveCVReference<T>>
     void set(T&& t) requires(can_contain<StrippedT>())
     {
         constexpr auto new_index = index_of<StrippedT>();
@@ -260,7 +260,7 @@ public:
         m_index = new_index;
     }
 
-    template<typename T, typename StrippedT = RemoveCV<RemoveReference<T>>>
+    template<typename T, typename StrippedT = RemoveCVReference<T>>
     void set(T&& t, Detail::VariantNoClearTag) requires(can_contain<StrippedT>())
     {
         constexpr auto new_index = index_of<StrippedT>();
@@ -323,7 +323,7 @@ public:
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
         visit([&](auto& value) {
-            if constexpr (Variant<NewTs...>::template can_contain<RemoveCV<RemoveReference<decltype(value)>>>())
+            if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
                 instance.set(move(value), Detail::VariantNoClearTag {});
         });
         VERIFY(instance.m_index != instance.invalid_index);
@@ -335,7 +335,7 @@ public:
     {
         Variant<NewTs...> instance { Variant<NewTs...>::invalid_index, Detail::VariantConstructTag {} };
         visit([&](const auto& value) {
-            if constexpr (Variant<NewTs...>::template can_contain<RemoveCV<RemoveReference<decltype(value)>>>())
+            if constexpr (Variant<NewTs...>::template can_contain<RemoveCVReference<decltype(value)>>())
                 instance.set(value, Detail::VariantNoClearTag {});
         });
         VERIFY(instance.m_index != instance.invalid_index);
