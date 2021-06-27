@@ -24,6 +24,7 @@ class Parser {
 
 public:
     explicit Parser(Decoder&);
+    ~Parser();
     bool parse_frame(ByteBuffer const&);
     void dump_info();
 
@@ -45,6 +46,8 @@ private:
     /* Utilities */
     void clear_context(Vector<u8>& context, size_t size);
     void clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size);
+    void allocate_tile_data();
+    void cleanup_tile_allocations();
 
     /* (6.1) Frame Syntax */
     bool trailing_bits();
@@ -208,30 +211,39 @@ private:
     u8 m_uv_mode { 0 }; // FIXME: Is u8 the right size?
     ReferenceFrame m_left_ref_frame[2];
     ReferenceFrame m_above_ref_frame[2];
-    Vector<Vector<Vector<ReferenceFrame>>> m_ref_frames; // TODO: Can we make these fixed sized allocations?
     bool m_left_intra { false };
     bool m_above_intra { false };
     bool m_left_single { false };
     bool m_above_single { false };
-    Vector<Vector<u8>> m_prev_segment_ids;
     InterpolationFilter m_interp_filter { EightTap };
     InterMode m_mv[2];
     InterMode m_near_mv[2];
     InterMode m_nearest_mv[2];
-    Vector<Vector<Vector<IntraMode>>> m_sub_modes; // FIXME: Can we make these fixed sized allocations?
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
     u32 m_eob_total { 0 };
     u8 m_tx_type { 0 };
     u8 m_token_cache[1024];
     i32 m_tokens[1024];
-
     bool m_use_hp { false };
-
     TXMode m_tx_mode;
     ReferenceMode m_reference_mode;
     ReferenceFrame m_comp_fixed_ref;
     ReferenceFrame m_comp_var_ref[2];
+    InterMode m_block_mvs[2][4];
+    u8* m_prev_segment_ids { nullptr };
+
+    u32 m_allocated_dimensions { 0 };
+    bool* m_skips { nullptr };
+    TXSize* m_tx_sizes { nullptr };
+    u32* m_mi_sizes { nullptr };
+    u8* m_y_modes { nullptr };
+    u8* m_segment_ids { nullptr };
+    ReferenceFrame* m_ref_frames { nullptr };
+    InterpolationFilter* m_interp_filters { nullptr };
+    InterMode* m_mvs { nullptr };
+    InterMode* m_sub_mvs { nullptr };
+    IntraMode* m_sub_modes { nullptr };
 
     OwnPtr<BitStream> m_bit_stream;
     OwnPtr<ProbabilityTables> m_probability_tables;

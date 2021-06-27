@@ -21,6 +21,37 @@ Parser::Parser(Decoder& decoder)
 {
 }
 
+Parser::~Parser()
+{
+    cleanup_tile_allocations();
+    if (m_prev_segment_ids)
+        free(m_prev_segment_ids);
+}
+
+void Parser::cleanup_tile_allocations()
+{
+    if (m_skips)
+        free(m_skips);
+    if (m_tx_sizes)
+        free(m_tx_sizes);
+    if (m_mi_sizes)
+        free(m_mi_sizes);
+    if (m_y_modes)
+        free(m_y_modes);
+    if (m_segment_ids)
+        free(m_segment_ids);
+    if (m_ref_frames)
+        free(m_ref_frames);
+    if (m_interp_filters)
+        free(m_interp_filters);
+    if (m_mvs)
+        free(m_mvs);
+    if (m_sub_mvs)
+        free(m_sub_mvs);
+    if (m_sub_modes)
+        free(m_sub_modes);
+}
+
 /* (6.1) */
 bool Parser::parse_frame(ByteBuffer const& frame_data)
 {
@@ -400,15 +431,9 @@ bool Parser::setup_past_independence()
         }
     }
     m_segmentation_abs_or_delta_update = false;
-    m_prev_segment_ids.clear();
-    m_prev_segment_ids.ensure_capacity(m_mi_rows);
-    for (auto row = 0u; row < m_mi_rows; row++) {
-        Vector<u8> sub_vector = {};
-        sub_vector.ensure_capacity(m_mi_cols);
-        for (auto col = 0u; col < m_mi_cols; col++)
-            sub_vector.append(0);
-        m_prev_segment_ids.append(sub_vector);
-    }
+    if (m_prev_segment_ids)
+        free(m_prev_segment_ids);
+    m_prev_segment_ids = static_cast<u8*>(malloc(m_mi_rows * m_mi_cols));
     m_loop_filter_delta_enabled = true;
     m_loop_filter_ref_deltas[IntraFrame] = 1;
     m_loop_filter_ref_deltas[LastFrame] = 0;
@@ -714,10 +739,30 @@ bool Parser::setup_compound_reference_mode()
     return true;
 }
 
+void Parser::allocate_tile_data()
+{
+    auto dimensions = m_mi_rows * m_mi_cols;
+    if (dimensions == m_allocated_dimensions)
+        return;
+    cleanup_tile_allocations();
+    m_skips = static_cast<bool*>(malloc(sizeof(bool) * dimensions));
+    m_tx_sizes = static_cast<TXSize*>(malloc(sizeof(TXSize) * dimensions));
+    m_mi_sizes = static_cast<u32*>(malloc(sizeof(u32) * dimensions));
+    m_y_modes = static_cast<u8*>(malloc(sizeof(u8) * dimensions));
+    m_segment_ids = static_cast<u8*>(malloc(sizeof(u8) * dimensions));
+    m_ref_frames = static_cast<ReferenceFrame*>(malloc(sizeof(ReferenceFrame) * dimensions * 2));
+    m_interp_filters = static_cast<InterpolationFilter*>(malloc(sizeof(InterpolationFilter) * dimensions));
+    m_mvs = static_cast<InterMode*>(malloc(sizeof(InterMode) * dimensions * 2));
+    m_sub_mvs = static_cast<InterMode*>(malloc(sizeof(InterMode) * dimensions * 2 * 4));
+    m_sub_modes = static_cast<IntraMode*>(malloc(sizeof(IntraMode) * dimensions * 4));
+    m_allocated_dimensions = dimensions;
+}
+
 bool Parser::decode_tiles()
 {
     auto tile_cols = 1 << m_tile_cols_log2;
     auto tile_rows = 1 << m_tile_rows_log2;
+    allocate_tile_data();
     SAFE_CALL(clear_above_context());
     for (auto tile_row = 0; tile_row < tile_rows; tile_row++) {
         for (auto tile_col = 0; tile_col < tile_cols; tile_col++) {
@@ -732,7 +777,6 @@ bool Parser::decode_tiles()
             SAFE_CALL(m_bit_stream->exit_bool());
         }
     }
-
     return true;
 }
 
@@ -833,8 +877,32 @@ bool Parser::decode_block(u32 row, u32 col, u8 subsize)
     SAFE_CALL(mode_info());
     m_eob_total = 0;
     SAFE_CALL(residual());
-    // FIXME: Finish implementing
-    //  note: when finished, re-enable calculate_default_intra_mode_probability's usage of m_sub_modes
+    if (m_is_inter && subsize >= Block_8x8 && m_eob_total == 0)
+        m_skip = true;
+    for (size_t y = 0; y < num_8x8_blocks_high_lookup[subsize]; y++) {
+        for (size_t x = 0; x < num_8x8_blocks_wide_lookup[subsize]; x++) {
+            auto pos = (row + y) * m_mi_cols + (col + x);
+            m_skips[pos] = m_skip;
+            m_tx_sizes[pos] = m_tx_size;
+            m_mi_sizes[pos] = m_mi_size;
+            m_y_modes[pos] = m_y_mode;
+            m_segment_ids[pos] = m_segment_id;
+            for (size_t ref_list = 0; ref_list < 2; ref_list++)
+                m_ref_frames[(pos * 2) + ref_list] = m_ref_frame[ref_list];
+            if (m_is_inter) {
+                m_interp_filters[pos] = m_interp_filter;
+                for (size_t ref_list = 0; ref_list < 2; ref_list++) {
+                    auto pos_with_ref_list = pos * 2 + ref_list;
+                    m_mvs[pos_with_ref_list] = m_block_mvs[ref_list][3];
+                    for (size_t b = 0; b < 4; b++)
+                        m_sub_mvs[pos_with_ref_list * 4 + b] = m_block_mvs[ref_list][b];
+                }
+            } else {
+                for (size_t b = 0; b < 4; b++)
+                    m_sub_modes[pos * 4 + b] = static_cast<IntraMode>(m_block_sub_modes[b]);
+            }
+        }
+    }
     return true;
 }
 
@@ -916,10 +984,10 @@ bool Parser::read_tx_size(bool allow_select)
 
 bool Parser::inter_frame_mode_info()
 {
-    m_left_ref_frame[0] = m_available_l ? m_ref_frames[m_mi_row][m_mi_col - 1][0] : IntraFrame;
-    m_above_ref_frame[0] = m_available_u ? m_ref_frames[m_mi_row - 1][m_mi_col][0] : IntraFrame;
-    m_left_ref_frame[1] = m_available_l ? m_ref_frames[m_mi_row][m_mi_col - 1][1] : None;
-    m_above_ref_frame[1] = m_available_u ? m_ref_frames[m_mi_row - 1][m_mi_col][1] : None;
+    m_left_ref_frame[0] = m_available_l ? m_ref_frames[m_mi_row * m_mi_cols + (m_mi_col - 1)] : IntraFrame;
+    m_above_ref_frame[0] = m_available_u ? m_ref_frames[(m_mi_row - 1) * m_mi_cols + m_mi_col] : IntraFrame;
+    m_left_ref_frame[1] = m_available_l ? m_ref_frames[m_mi_row * m_mi_cols + (m_mi_col - 1) + 1] : None;
+    m_above_ref_frame[1] = m_available_u ? m_ref_frames[(m_mi_row - 1) * m_mi_cols + m_mi_col + 1] : None;
     m_left_intra = m_left_ref_frame[0] <= IntraFrame;
     m_above_intra = m_above_ref_frame[0] <= IntraFrame;
     m_left_single = m_left_ref_frame[1] <= None;
@@ -973,7 +1041,7 @@ u8 Parser::get_segment_id()
     u8 segment = 7;
     for (size_t y = 0; y < ymis; y++) {
         for (size_t x = 0; x < xmis; x++) {
-            segment = min(segment, m_prev_segment_ids[m_mi_row + y][m_mi_col + x]);
+            segment = min(segment, m_prev_segment_ids[(m_mi_row + y) + (m_mi_col + x)]);
         }
     }
     return segment;
@@ -1051,8 +1119,7 @@ bool Parser::inter_block_mode_info()
                     for (auto x = 0; x < m_num_4x4_w; x++) {
                         auto block = (idy + y) * 2 + idx + x;
                         for (auto ref_list = 0; ref_list < 1 + is_compound; ref_list++) {
-                            (void)block;
-                            // TODO: m_block_mvs[ref_list][block] = m_mv[ref_list];
+                            m_block_mvs[ref_list][block] = m_mv[ref_list];
                         }
                     }
                 }
@@ -1063,7 +1130,7 @@ bool Parser::inter_block_mode_info()
     SAFE_CALL(assign_mv(is_compound));
     for (auto ref_list = 0; ref_list < 1 + is_compound; ref_list++) {
         for (auto block = 0; block < 4; block++) {
-            // TODO: m_block_mvs[ref_list][block] = m_mv[ref_list];
+            m_block_mvs[ref_list][block] = m_mv[ref_list];
         }
     }
     return true;

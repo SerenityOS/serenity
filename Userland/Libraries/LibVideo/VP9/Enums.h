@@ -32,7 +32,7 @@ enum ColorRange {
     FullSwing
 };
 
-enum InterpolationFilter {
+enum InterpolationFilter : u8 {
     EightTap = 0,
     EightTapSmooth = 1,
     EightTapSharp = 2,
@@ -40,7 +40,7 @@ enum InterpolationFilter {
     Switchable = 4
 };
 
-enum ReferenceFrame {
+enum ReferenceFrame : u8 {
     // 0 is both INTRA_FRAME and NONE because the value's meaning changes depending on which index they're in on the ref_frame array
     None = 0,
     IntraFrame = 0,
@@ -49,7 +49,7 @@ enum ReferenceFrame {
     AltRefFrame = 3,
 };
 
-enum TXMode {
+enum TXMode : u8 {
     Only_4x4 = 0,
     Allow_8x8 = 1,
     Allow_16x16 = 2,
@@ -57,14 +57,14 @@ enum TXMode {
     TXModeSelect = 4,
 };
 
-enum TXSize {
+enum TXSize : u8 {
     TX_4x4 = 0,
     TX_8x8 = 1,
     TX_16x16 = 2,
     TX_32x32 = 3,
 };
 
-enum ReferenceMode {
+enum ReferenceMode : u8 {
     SingleReference = 0,
     CompoundReference = 1,
     ReferenceModeSelect = 2,

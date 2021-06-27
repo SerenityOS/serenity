@@ -208,26 +208,26 @@ u8 TreeParser::calculate_default_intra_mode_probability(u8 node)
 {
     u32 above_mode, left_mode;
     if (m_decoder.m_mi_size >= Block_8x8) {
-        above_mode = false // FIXME: AVAIL_U
-            ? m_decoder.m_sub_modes[m_decoder.m_mi_row - 1][m_decoder.m_mi_col][2]
+        above_mode = AVAIL_U
+            ? m_decoder.m_sub_modes[(m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols * 4 + m_decoder.m_mi_col * 4 + 2]
             : DcPred;
-        left_mode = false // FIXME: AVAIL_L
-            ? m_decoder.m_sub_modes[m_decoder.m_mi_row][m_decoder.m_mi_col - 1][1]
+        left_mode = AVAIL_L
+            ? m_decoder.m_sub_modes[m_decoder.m_mi_row * m_decoder.m_mi_cols * 4 + (m_decoder.m_mi_col - 1) * 4 + 1]
             : DcPred;
     } else {
         if (m_idy) {
             above_mode = m_decoder.m_block_sub_modes[m_idx];
         } else {
-            above_mode = false // FIXME: AVAIL_U
-                ? m_decoder.m_sub_modes[m_decoder.m_mi_row - 1][m_decoder.m_mi_col][2 + m_idx]
+            above_mode = AVAIL_U
+                ? m_decoder.m_sub_modes[(m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols * 4 + m_decoder.m_mi_col * 4 + 2 + m_idx]
                 : DcPred;
         }
 
         if (m_idx) {
             left_mode = m_decoder.m_block_sub_modes[m_idy * 2];
         } else {
-            left_mode = false // FIXME: AVAIL_L
-                ? m_decoder.m_sub_modes[m_decoder.m_mi_row][m_decoder.m_mi_col - 1][1 + m_idy * 2]
+            left_mode = AVAIL_L
+                ? m_decoder.m_sub_modes[m_decoder.m_mi_row * m_decoder.m_mi_cols * 4 + (m_decoder.m_mi_col - 1) * 4 + 1 + m_idy * 2]
                 : DcPred;
         }
     }
@@ -265,12 +265,10 @@ u8 TreeParser::calculate_segment_id_probability(u8 node)
 u8 TreeParser::calculate_skip_probability()
 {
     m_ctx = 0;
-    if (AVAIL_U) {
-        // FIXME: m_ctx += m_skips[m_mi_row - 1][m_mi_col];
-    }
-    if (AVAIL_L) {
-        // FIXME: m_ctx += m_skips[m_mi_row][m_mi_col - 1];
-    }
+    if (AVAIL_U)
+        m_ctx += m_decoder.m_skips[(m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols + m_decoder.m_mi_col];
+    if (AVAIL_L)
+        m_ctx += m_decoder.m_skips[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1];
     return m_decoder.m_probability_tables->skip_prob()[m_ctx];
 }
 
@@ -543,7 +541,16 @@ u8 TreeParser::calculate_tx_size_probability(u8 node)
 {
     auto above = m_decoder.m_max_tx_size;
     auto left = m_decoder.m_max_tx_size;
-    // FIXME: Fix varying above/left when Skips is implemented
+    auto u_pos = (m_decoder.m_mi_row - 1) * m_decoder.m_mi_cols + m_decoder.m_mi_col;
+    if (AVAIL_U && !m_decoder.m_skips[u_pos])
+        above = m_decoder.m_tx_sizes[u_pos];
+    auto l_pos = m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1;
+    if (AVAIL_L && !m_decoder.m_skips[l_pos])
+        left = m_decoder.m_tx_sizes[l_pos];
+    if (!AVAIL_L)
+        left = above;
+    if (!AVAIL_U)
+        above = left;
     m_ctx = (above + left) > m_decoder.m_max_tx_size;
     return m_decoder.m_probability_tables->tx_probs()[m_decoder.m_max_tx_size][m_ctx][node];
 }
@@ -557,7 +564,18 @@ u8 TreeParser::calculate_inter_mode_probability(u8 node)
 
 u8 TreeParser::calculate_interp_filter_probability(u8 node)
 {
-    // FIXME: Implement ctx calculation when InterpFilters is implemented
+    auto left_interp = (AVAIL_L && m_decoder.m_left_ref_frame[0] > IntraFrame)
+        ? m_decoder.m_interp_filters[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1]
+        : 3;
+    auto above_interp = (AVAIL_U && m_decoder.m_above_ref_frame[0] > IntraFrame)
+        ? m_decoder.m_interp_filters[m_decoder.m_mi_row * m_decoder.m_mi_cols + m_decoder.m_mi_col - 1]
+        : 3;
+    if (left_interp == above_interp || (left_interp != 3 && above_interp == 3))
+        m_ctx = left_interp;
+    else if (left_interp == 3 && above_interp != 3)
+        m_ctx = above_interp;
+    else
+        m_ctx = 3;
     return m_decoder.m_probability_tables->interp_filter_probs()[m_ctx][node];
 }
 
