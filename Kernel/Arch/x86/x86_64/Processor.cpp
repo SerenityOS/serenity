@@ -91,21 +91,11 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     auto& regs = thread.regs();
     bool return_to_user = (regs.cs & 3) != 0;
 
-    // make room for an interrupt frame
-    if (!return_to_user) {
-        // userspace_rsp is not popped off by iretq
-        // unless we're switching back to user mode
-        stack_top -= sizeof(RegisterState) - 2 * sizeof(FlatPtr);
+    stack_top -= 2 * sizeof(u64);
+    *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = regs.rsp;
+    *reinterpret_cast<u64*>(kernel_stack_top - 3 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
 
-        // For kernel threads we'll push the thread function argument
-        // which should be in regs.rsp and exit_kernel_thread as return
-        // address.
-        stack_top -= 2 * sizeof(u64);
-        *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = regs.rsp;
-        *reinterpret_cast<u64*>(kernel_stack_top - 3 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
-    } else {
-        stack_top -= sizeof(RegisterState);
-    }
+    stack_top -= sizeof(RegisterState);
 
     // we want to end up 16-byte aligned, %rsp + 8 should be aligned
     stack_top -= sizeof(u64);
@@ -126,8 +116,8 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     iretframe.rflags = regs.rflags;
     iretframe.rip = regs.rip;
     iretframe.cs = regs.cs;
-    if (return_to_user)
-        iretframe.userspace_rsp = regs.rsp;
+    iretframe.userspace_rsp = kernel_stack_top;
+    iretframe.userspace_ss = 0;
 
     // make space for a trap frame
     stack_top -= sizeof(TrapFrame);
