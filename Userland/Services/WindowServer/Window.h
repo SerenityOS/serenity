@@ -20,6 +20,7 @@
 
 namespace WindowServer {
 
+class Animation;
 class ClientConnection;
 class Cursor;
 class KeyEvent;
@@ -256,11 +257,7 @@ public:
     Gfx::DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
     bool has_taskbar_rect() const { return m_have_taskbar_rect; };
-    bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
-    int minimize_animation_index() const { return m_minimize_animation_step; }
-    void step_minimize_animation() { m_minimize_animation_step += 1; }
     void start_minimize_animation();
-    void end_minimize_animation() { m_minimize_animation_step = -1; }
 
     Gfx::IntRect tiled_rect(Screen*, WindowTileType) const;
     void recalculate_rect();
@@ -408,10 +405,10 @@ private:
     MenuItem* m_window_menu_move_item { nullptr };
     MenuItem* m_window_menu_close_item { nullptr };
     MenuItem* m_window_menu_menubar_visibility_item { nullptr };
-    int m_minimize_animation_step { -1 };
     Optional<int> m_progress;
     bool m_should_show_menubar { true };
     WindowStack* m_outer_stack { nullptr };
+    RefPtr<Animation> m_animation;
 
 public:
     using List = IntrusiveList<Window, RawPtr<Window>, &Window::m_list_node>;

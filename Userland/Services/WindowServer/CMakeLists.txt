@@ -10,6 +10,7 @@ compile_ipc(WindowManagerServer.ipc WindowManagerServerEndpoint.h)
 compile_ipc(WindowManagerClient.ipc WindowManagerClientEndpoint.h)
 
 set(SOURCES
+    Animation.cpp
     AppletManager.cpp
     Button.cpp
     ClientConnection.cpp

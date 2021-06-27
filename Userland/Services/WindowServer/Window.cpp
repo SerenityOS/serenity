@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2018-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include "Window.h"
+#include "Animation.h"
 #include "AppletManager.h"
 #include "ClientConnection.h"
 #include "Compositor.h"
@@ -306,6 +307,21 @@ void Window::set_taskbar_rect(const Gfx::IntRect& rect)
     m_have_taskbar_rect = !m_taskbar_rect.is_empty();
 }
 
+static Gfx::IntRect interpolate_rect(Gfx::IntRect const& from_rect, Gfx::IntRect const& to_rect, float progress)
+{
+    auto dx = to_rect.x() - from_rect.x();
+    auto dy = to_rect.y() - from_rect.y();
+    auto dw = to_rect.width() - from_rect.width();
+    auto dh = to_rect.height() - from_rect.height();
+
+    return Gfx::IntRect {
+        from_rect.x() + ((float)dx * progress),
+        from_rect.y() + ((float)dy * progress),
+        from_rect.width() + ((float)dw * progress),
+        from_rect.height() + ((float)dh * progress),
+    };
+}
+
 void Window::start_minimize_animation()
 {
     if (!m_have_taskbar_rect) {
@@ -327,7 +343,26 @@ void Window::start_minimize_animation()
             return IterationDecision::Continue;
         });
     }
-    m_minimize_animation_step = 0;
+
+    m_animation = Animation::create();
+    m_animation->set_length(150);
+    m_animation->on_update = [this](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
+        Gfx::PainterStateSaver saver(painter);
+        painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
+
+        auto from_rect = is_minimized() ? frame().rect() : taskbar_rect();
+        auto to_rect = is_minimized() ? taskbar_rect() : frame().rect();
+
+        auto rect = interpolate_rect(from_rect, to_rect, progress);
+
+        painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
+        flush_rects.add(rect.intersected(screen.rect()));
+        Compositor::the().invalidate_screen(rect);
+    };
+    m_animation->on_stop = [this] {
+        m_animation = nullptr;
+    };
+    m_animation->start();
 }
 
 void Window::set_opacity(float opacity)
@@ -1071,5 +1106,4 @@ String Window::computed_title() const
         return String::formatted("{} (Not responding)", title);
     return title;
 }
-
 }
