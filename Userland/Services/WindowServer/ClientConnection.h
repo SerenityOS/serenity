@@ -101,7 +101,7 @@ private:
     virtual void update_menu_item(i32, i32, i32, String const&, bool, bool, bool, bool, String const&) override;
     virtual void create_window(i32, Gfx::IntRect const&, bool, bool, bool,
         bool, bool, bool, bool, bool, float, float, Gfx::IntSize const&, Gfx::IntSize const&, Gfx::IntSize const&,
-        Optional<Gfx::IntSize> const&, i32, String const&, i32) override;
+        Optional<Gfx::IntSize> const&, i32, String const&, i32, Gfx::IntRect const&) override;
     virtual Messages::WindowServer::DestroyWindowResponse destroy_window(i32) override;
     virtual void set_window_title(i32, String const&) override;
     virtual Messages::WindowServer::GetWindowTitleResponse get_window_title(i32) override;

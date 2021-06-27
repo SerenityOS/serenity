@@ -365,6 +365,26 @@ void Window::start_minimize_animation()
     m_animation->start();
 }
 
+void Window::start_launch_animation(Gfx::IntRect const& launch_origin_rect)
+{
+    m_animation = Animation::create();
+    m_animation->set_length(150);
+    m_animation->on_update = [this, launch_origin_rect](float progress, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects) {
+        Gfx::PainterStateSaver saver(painter);
+        painter.set_draw_op(Gfx::Painter::DrawOp::Invert);
+
+        auto rect = interpolate_rect(launch_origin_rect, frame().rect(), progress);
+
+        painter.draw_rect(rect, Color::Transparent); // Color doesn't matter, we draw inverted
+        flush_rects.add(rect.intersected(screen.rect()));
+        Compositor::the().invalidate_screen(rect);
+    };
+    m_animation->on_stop = [this] {
+        m_animation = nullptr;
+    };
+    m_animation->start();
+}
+
 void Window::set_opacity(float opacity)
 {
     if (m_opacity == opacity)
