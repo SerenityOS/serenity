@@ -575,23 +575,34 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::slice)
 // 22.1.3.21 String.prototype.split ( separator, limit ), https://tc39.es/ecma262/#sec-string.prototype.split
 JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
 {
-    // FIXME Implement the @@split part
+    auto separator_argument = vm.argument(0);
+    auto limit_argument = vm.argument(1);
 
-    auto string = ak_string_from(vm, global_object);
-    if (!string.has_value())
+    auto this_value = require_object_coercible(global_object, vm.this_value(global_object));
+    if (vm.exception())
         return {};
+
+    if (!separator_argument.is_nullish()) {
+        auto splitter = separator_argument.get_method(global_object, *vm.well_known_symbol_split());
+        if (vm.exception())
+            return {};
+        if (splitter)
+            return vm.call(*splitter, separator_argument, this_value, limit_argument);
+    }
+
+    auto string = this_value.to_string(global_object);
 
     auto* result = Array::create(global_object);
     size_t result_len = 0;
 
     auto limit = NumericLimits<u32>::max();
     if (!vm.argument(1).is_undefined()) {
-        limit = vm.argument(1).to_u32(global_object);
+        limit = limit_argument.to_u32(global_object);
         if (vm.exception())
             return {};
     }
 
-    auto separator = vm.argument(0).to_string(global_object);
+    auto separator = separator_argument.to_string(global_object);
     if (vm.exception())
         return {};
 
@@ -599,15 +610,15 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         return result;
 
     if (vm.argument(0).is_undefined()) {
-        result->define_property(0, js_string(vm, *string));
+        result->define_property(0, js_string(vm, string));
         return result;
     }
 
-    auto len = string->length();
+    auto len = string.length();
     auto separator_len = separator.length();
     if (len == 0) {
         if (separator_len > 0)
-            result->define_property(0, js_string(vm, *string));
+            result->define_property(0, js_string(vm, string));
         return result;
     }
 
@@ -615,18 +626,18 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
     auto pos = start;
     if (separator_len == 0) {
         for (pos = 0; pos < len; pos++)
-            result->define_property(pos, js_string(vm, string->substring(pos, 1)));
+            result->define_property(pos, js_string(vm, string.substring(pos, 1)));
         return result;
     }
 
     while (pos != len) {
-        auto e = split_match(*string, pos, separator);
+        auto e = split_match(string, pos, separator);
         if (!e.has_value()) {
             pos += 1;
             continue;
         }
 
-        auto segment = string->substring_view(start, pos - start);
+        auto segment = string.substring_view(start, pos - start);
         result->define_property(result_len, js_string(vm, segment));
         result_len++;
         if (result_len == limit)
@@ -635,7 +646,7 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::split)
         pos = start;
     }
 
-    auto rest = string->substring(start, len - start);
+    auto rest = string.substring(start, len - start);
     result->define_property(result_len, js_string(vm, rest));
 
     return result;
