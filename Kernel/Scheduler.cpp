@@ -354,8 +354,13 @@ bool Scheduler::context_switch(Thread* thread)
             from_thread->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
+#    if ARCH(I386)
         dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:08x}", Processor::id(), from_thread->tid().value(),
             thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().eip);
+#    else
+        dbgln("Scheduler[{}]: {} -> {} [prio={}] {:04x}:{:16x}", Processor::id(), from_thread->tid().value(),
+            thread->tid().value(), thread->priority(), thread->regs().cs, thread->regs().rip);
+#    endif
 #endif
     }
 
@@ -375,14 +380,19 @@ bool Scheduler::context_switch(Thread* thread)
     enter_current(*from_thread, false);
     VERIFY(thread == Thread::current());
 
-#if ARCH(I386)
     if (thread->process().is_user_process()) {
-        auto iopl = get_iopl_from_eflags(Thread::current()->get_register_dump_from_stack().eflags);
+        FlatPtr flags;
+        auto& regs = Thread::current()->get_register_dump_from_stack();
+#if ARCH(I386)
+        flags = regs.eflags;
+#else
+        flags = regs.rflags;
+#endif
+        auto iopl = get_iopl_from_eflags(flags);
         if (iopl != 0) {
             PANIC("Switched to thread {} with non-zero IOPL={}", Thread::current()->tid().value(), iopl);
         }
     }
-#endif
 
     return true;
 }

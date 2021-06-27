@@ -185,7 +185,7 @@ RefPtr<Process> Process::create_kernel_process(RefPtr<Thread>& first_thread, Str
     first_thread->regs().esp = FlatPtr(entry_data); // entry function argument is expected to be in regs.esp
 #else
     first_thread->regs().rip = (FlatPtr)entry;
-    first_thread->regs().rsp = FlatPtr(entry_data); // entry function argument is expected to be in regs.rsp
+    first_thread->regs().rdi = FlatPtr(entry_data); // entry function argument is expected to be in regs.rdi
 #endif
 
     if (process->pid() != 0) {
