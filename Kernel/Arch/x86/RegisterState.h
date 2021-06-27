@@ -47,11 +47,11 @@ struct [[gnu::packed]] RegisterState {
     FlatPtr r14;
     FlatPtr r15;
 #endif
-    u16 exception_code;
-    u16 isr_number;
 #if ARCH(X86_64)
     u32 padding;
 #endif
+    u16 exception_code;
+    u16 isr_number;
 #if ARCH(I386)
     FlatPtr eip;
 #else
