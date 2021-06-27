@@ -51,8 +51,12 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, voi
         size_t size_ts = n / sizeof(size_t);
         asm volatile(
             "safe_memcpy_ins_1: \n"
+#if ARCH(I386)
             "rep movsl \n"
-            "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
+#else
+            "rep movsq \n"
+#endif
+            "safe_memcpy_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
             : "=S"(src),
             "=D"(dest),
             "=c"(remainder),
@@ -72,7 +76,7 @@ NEVER_INLINE bool safe_memcpy(void* dest_ptr, const void* src_ptr, size_t n, voi
     asm volatile(
         "safe_memcpy_ins_2: \n"
         "rep movsb \n"
-        "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
+        "safe_memcpy_2_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
         : "=c"(remainder),
         [fault_at] "=d"(fault_at)
         : "S"(src),
@@ -100,7 +104,7 @@ NEVER_INLINE ssize_t safe_strnlen(const char* str, size_t max_n, void*& fault_at
         "je 2f \n"
         "inc %[count] \n"
         "jmp 1b \n"
-        "safe_strnlen_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
+        "safe_strnlen_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
         "xor %[count_on_error], %[count_on_error] \n"
         "dec %[count_on_error] \n" // return -1 on fault
         "2:"
@@ -128,8 +132,12 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
         expanded_c |= expanded_c << 16;
         asm volatile(
             "safe_memset_ins_1: \n"
+#if ARCH(I386)
             "rep stosl \n"
-            "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
+#else
+            "rep stosq \n"
+#endif
+            "safe_memset_1_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
             : "=D"(dest),
             "=c"(remainder),
             [fault_at] "=d"(fault_at)
@@ -148,7 +156,7 @@ NEVER_INLINE bool safe_memset(void* dest_ptr, int c, size_t n, void*& fault_at)
     asm volatile(
         "safe_memset_ins_2: \n"
         "rep stosb \n"
-        "safe_memset_2_faulted: \n" // handle_safe_access_fault() set edx to the fault address!
+        "safe_memset_2_faulted: \n" // handle_safe_access_fault() set edx/rdx to the fault address!
         : "=D"(dest),
         "=c"(remainder),
         [fault_at] "=d"(fault_at)
@@ -251,45 +259,63 @@ NEVER_INLINE Optional<bool> safe_atomic_compare_exchange_relaxed(volatile u32* v
     return did_exchange;
 }
 
-bool handle_safe_access_fault(RegisterState& regs, u32 fault_address)
+bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address)
 {
-    if (regs.eip >= (FlatPtr)&start_of_safemem_text && regs.eip < (FlatPtr)&end_of_safemem_text) {
+    FlatPtr ip;
+#if ARCH(I386)
+    ip = regs.eip;
+#else
+    ip = regs.rip;
+#endif
+    if (ip >= (FlatPtr)&start_of_safemem_text && ip < (FlatPtr)&end_of_safemem_text) {
         // If we detect that the fault happened in safe_memcpy() safe_strnlen(),
         // or safe_memset() then resume at the appropriate _faulted label
-        if (regs.eip == (FlatPtr)&safe_memcpy_ins_1)
-            regs.eip = (FlatPtr)&safe_memcpy_1_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memcpy_ins_2)
-            regs.eip = (FlatPtr)&safe_memcpy_2_faulted;
-        else if (regs.eip == (FlatPtr)&safe_strnlen_ins)
-            regs.eip = (FlatPtr)&safe_strnlen_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memset_ins_1)
-            regs.eip = (FlatPtr)&safe_memset_1_faulted;
-        else if (regs.eip == (FlatPtr)&safe_memset_ins_2)
-            regs.eip = (FlatPtr)&safe_memset_2_faulted;
+        if (ip == (FlatPtr)&safe_memcpy_ins_1)
+            ip = (FlatPtr)&safe_memcpy_1_faulted;
+        else if (ip == (FlatPtr)&safe_memcpy_ins_2)
+            ip = (FlatPtr)&safe_memcpy_2_faulted;
+        else if (ip == (FlatPtr)&safe_strnlen_ins)
+            ip = (FlatPtr)&safe_strnlen_faulted;
+        else if (ip == (FlatPtr)&safe_memset_ins_1)
+            ip = (FlatPtr)&safe_memset_1_faulted;
+        else if (ip == (FlatPtr)&safe_memset_ins_2)
+            ip = (FlatPtr)&safe_memset_2_faulted;
         else
             return false;
 
+#if ARCH(I386)
+        regs.eip = ip;
         regs.edx = fault_address;
+#else
+        regs.rip = ip;
+        regs.rdx = fault_address;
+#endif
         return true;
     }
-    if (regs.eip >= (FlatPtr)&start_of_safemem_atomic_text && regs.eip < (FlatPtr)&end_of_safemem_atomic_text) {
+    if (ip >= (FlatPtr)&start_of_safemem_atomic_text && ip < (FlatPtr)&end_of_safemem_atomic_text) {
         // If we detect that a fault happened in one of the atomic safe_
         // functions, resume at the appropriate _faulted label and set
-        // the edx register to 1 to indicate an error
-        if (regs.eip == (FlatPtr)&safe_atomic_fetch_add_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_fetch_add_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_exchange_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_exchange_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_load_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_load_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_store_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_store_relaxed_faulted;
-        else if (regs.eip == (FlatPtr)&safe_atomic_compare_exchange_relaxed_ins)
-            regs.eip = (FlatPtr)&safe_atomic_compare_exchange_relaxed_faulted;
+        // the edx/rdx register to 1 to indicate an error
+        if (ip == (FlatPtr)&safe_atomic_fetch_add_relaxed_ins)
+            ip = (FlatPtr)&safe_atomic_fetch_add_relaxed_faulted;
+        else if (ip == (FlatPtr)&safe_atomic_exchange_relaxed_ins)
+            ip = (FlatPtr)&safe_atomic_exchange_relaxed_faulted;
+        else if (ip == (FlatPtr)&safe_atomic_load_relaxed_ins)
+            ip = (FlatPtr)&safe_atomic_load_relaxed_faulted;
+        else if (ip == (FlatPtr)&safe_atomic_store_relaxed_ins)
+            ip = (FlatPtr)&safe_atomic_store_relaxed_faulted;
+        else if (ip == (FlatPtr)&safe_atomic_compare_exchange_relaxed_ins)
+            ip = (FlatPtr)&safe_atomic_compare_exchange_relaxed_faulted;
         else
             return false;
 
+#if ARCH(I386)
+        regs.eip = ip;
         regs.edx = 1;
+#else
+        regs.rip = ip;
+        regs.rdx = 1;
+#endif
         return true;
     }
     return false;
