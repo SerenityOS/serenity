@@ -82,6 +82,7 @@ public:
     template<typename T>
     ALWAYS_INLINE T in()
     {
+        static_assert(sizeof(T) <= 4);
         if constexpr (sizeof(T) == 4)
             return IO::in32(get());
         if constexpr (sizeof(T) == 2)
@@ -94,6 +95,7 @@ public:
     template<typename T>
     ALWAYS_INLINE void out(T value)
     {
+        static_assert(sizeof(T) <= 4);
         if constexpr (sizeof(T) == 4) {
             IO::out32(get(), value);
             return;
