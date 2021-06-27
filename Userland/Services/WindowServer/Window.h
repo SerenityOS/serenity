@@ -259,6 +259,8 @@ public:
     bool has_taskbar_rect() const { return m_have_taskbar_rect; };
     void start_minimize_animation();
 
+    void start_launch_animation(Gfx::IntRect const&);
+
     Gfx::IntRect tiled_rect(Screen*, WindowTileType) const;
     void recalculate_rect();
 

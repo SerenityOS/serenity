@@ -122,6 +122,20 @@ void Window::show()
 
     m_window_id = s_window_id_allocator.allocate();
 
+    Gfx::IntRect launch_origin_rect;
+    if (auto* launch_origin_rect_string = getenv("__libgui_launch_origin_rect")) {
+        auto parts = StringView(launch_origin_rect_string).split_view(',');
+        if (parts.size() == 4) {
+            launch_origin_rect = Gfx::IntRect {
+                parts[0].to_int().value_or(0),
+                parts[1].to_int().value_or(0),
+                parts[2].to_int().value_or(0),
+                parts[3].to_int().value_or(0),
+            };
+        }
+        unsetenv("__libgui_launch_origin_rect");
+    }
+
     WindowServerConnection::the().async_create_window(
         m_window_id,
         m_rect_when_windowless,
@@ -141,7 +155,8 @@ void Window::show()
         m_resize_aspect_ratio,
         (i32)m_window_type,
         m_title_when_windowless,
-        parent_window ? parent_window->window_id() : 0);
+        parent_window ? parent_window->window_id() : 0,
+        launch_origin_rect);
     m_visible = true;
 
     apply_icon();

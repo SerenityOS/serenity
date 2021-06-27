@@ -496,7 +496,8 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     bool auto_position, bool has_alpha_channel, bool modal, bool minimizable, bool resizable,
     bool fullscreen, bool frameless, bool accessory, float opacity, float alpha_hit_threshold,
     Gfx::IntSize const& base_size, Gfx::IntSize const& size_increment, Gfx::IntSize const& minimum_size,
-    Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, String const& title, i32 parent_window_id)
+    Optional<Gfx::IntSize> const& resize_aspect_ratio, i32 type, String const& title, i32 parent_window_id,
+    Gfx::IntRect const& launch_origin_rect)
 {
     Window* parent_window = nullptr;
     if (parent_window_id) {
@@ -518,6 +519,9 @@ void ClientConnection::create_window(i32 window_id, Gfx::IntRect const& rect,
     }
 
     auto window = Window::construct(*this, (WindowType)type, window_id, modal, minimizable, frameless, resizable, fullscreen, accessory, parent_window);
+
+    if (!launch_origin_rect.is_empty())
+        window->start_launch_animation(launch_origin_rect);
 
     window->set_has_alpha_channel(has_alpha_channel);
     window->set_title(title);
