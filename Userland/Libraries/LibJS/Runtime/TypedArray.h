@@ -17,9 +17,15 @@ class TypedArrayBase : public Object {
     JS_OBJECT(TypedArrayBase, Object);
 
 public:
+    enum class ContentType {
+        BigInt,
+        Number,
+    };
+
     u32 array_length() const { return m_array_length; }
     u32 byte_length() const { return m_byte_length; }
     u32 byte_offset() const { return m_byte_offset; }
+    ContentType content_type() const { return m_content_type; }
     ArrayBuffer* viewed_array_buffer() const { return m_viewed_array_buffer; }
 
     void set_array_length(u32 length) { m_array_length = length; }
@@ -39,6 +45,7 @@ protected:
     u32 m_array_length { 0 };
     u32 m_byte_length { 0 };
     u32 m_byte_offset { 0 };
+    ContentType m_content_type { ContentType::Number };
     ArrayBuffer* m_viewed_array_buffer { nullptr };
 
 private:
