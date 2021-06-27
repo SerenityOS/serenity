@@ -158,7 +158,7 @@ public:
     [[nodiscard]] StringView substring_view_starting_from_substring(const StringView& substring) const;
     [[nodiscard]] StringView substring_view_starting_after_substring(const StringView& substring) const;
 
-    bool operator==(const char* cstring) const
+    constexpr bool operator==(char const* cstring) const
     {
         if (is_null())
             return !cstring;
