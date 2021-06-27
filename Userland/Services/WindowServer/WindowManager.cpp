@@ -661,14 +661,18 @@ bool WindowManager::process_ongoing_window_resize(MouseEvent const& event)
     if (event.type() == Event::MouseUp && event.button() == m_resizing_mouse_button) {
         dbgln_if(RESIZE_DEBUG, "[WM] Finish resizing Window({})", m_resize_window);
 
-        auto max_rect = maximized_window_rect(*m_resize_window);
-        if (event.y() > max_rect.bottom()) {
-            dbgln_if(RESIZE_DEBUG, "Should Maximize vertically");
-            m_resize_window->set_vertically_maximized();
-            m_resize_window = nullptr;
-            m_geometry_overlay = nullptr;
-            m_resizing_mouse_button = MouseButton::None;
-            return true;
+        const int vertical_maximize_deadzone = 5;
+        auto& cursor_screen = ScreenInput::the().cursor_location_screen();
+        if (&cursor_screen == &Screen::closest_to_rect(m_resize_window->rect())) {
+            auto desktop_rect = this->desktop_rect(cursor_screen);
+            if (event.y() >= desktop_rect.bottom() - vertical_maximize_deadzone + 1 || event.y() <= desktop_rect.top() + vertical_maximize_deadzone - 1) {
+                dbgln_if(RESIZE_DEBUG, "Should Maximize vertically");
+                m_resize_window->set_vertically_maximized();
+                m_resize_window = nullptr;
+                m_geometry_overlay = nullptr;
+                m_resizing_mouse_button = MouseButton::None;
+                return true;
+            }
         }
 
         Core::EventLoop::current().post_event(*m_resize_window, make<ResizeEvent>(m_resize_window->rect()));
