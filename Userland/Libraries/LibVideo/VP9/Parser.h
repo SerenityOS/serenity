@@ -116,7 +116,9 @@ private:
     bool residual();
     TXSize get_uv_tx_size();
     BlockSubsize get_plane_block_size(u32 subsize, u8 plane);
-    bool tokens(size_t plane, u32 x, u32 y, TXSize size, u32 index);
+    bool tokens(size_t plane, u32 x, u32 y, TXSize tx_size, u32 block_index);
+    u32 const* get_scan(size_t plane, TXSize tx_size, u32 block_index);
+    u32 read_coef(Token token);
 
     /* (6.5) Motion Vector Prediction */
     bool find_mv_refs(ReferenceFrame, int block);
@@ -220,6 +222,9 @@ private:
     u32 m_ref_frame_width[NUM_REF_FRAMES];
     u32 m_ref_frame_height[NUM_REF_FRAMES];
     u32 m_eob_total { 0 };
+    u8 m_tx_type { 0 };
+    u8 m_token_cache[1024];
+    i32 m_tokens[1024];
 
     bool m_use_hp { false };
 

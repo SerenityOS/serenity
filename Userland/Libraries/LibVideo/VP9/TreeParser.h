@@ -57,6 +57,14 @@ public:
         m_idy = idy;
     }
 
+    void set_band(u8 band) { m_band = band; }
+
+    void set_more_coefs_variables(u32 start_x, u32 start_y)
+    {
+        m_start_x = start_x;
+        m_start_y = start_y;
+    }
+
 private:
     u8 calculate_partition_probability(u8 node);
     u8 calculate_default_intra_mode_probability(u8 node);
@@ -84,6 +92,9 @@ private:
     // not stored in the Decoder itself.
     u8 m_idx { 0 };
     u8 m_idy { 0 };
+    u8 m_band { 0 };
+    u32 m_start_x { 0 };
+    u32 m_start_y { 0 };
 };
 
 }

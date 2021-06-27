@@ -36,6 +36,7 @@ template IntraMode TreeParser::parse_tree(SyntaxElementType);
 template TXSize TreeParser::parse_tree(SyntaxElementType);
 template InterpolationFilter TreeParser::parse_tree(SyntaxElementType);
 template ReferenceMode TreeParser::parse_tree(SyntaxElementType);
+template Token TreeParser::parse_tree(SyntaxElementType);
 
 /*
  * Select a tree value based on the type of syntax element being parsed, as well as some parser state, as specified in section 9.3.1
