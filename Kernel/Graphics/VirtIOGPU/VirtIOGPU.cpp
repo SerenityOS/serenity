@@ -100,14 +100,8 @@ void VirtIOGPU::query_display_information()
         auto& scanout = m_scanouts[i].display_info;
         scanout = response.scanout_modes[i];
         dbgln_if(VIRTIO_DEBUG, "Scanout {}: enabled: {} x: {}, y: {}, width: {}, height: {}", i, !!scanout.enabled, scanout.rect.x, scanout.rect.y, scanout.rect.width, scanout.rect.height);
-        if (scanout.enabled && !m_default_scanout.has_value()) {
+        if (scanout.enabled && !m_default_scanout.has_value())
             m_default_scanout = i;
-        } else if (i < m_num_scanouts) {
-            // TODO: We should not enable all displays until the first resolution set
-            scanout.rect.width = 1024;
-            scanout.rect.height = 768;
-            scanout.enabled = true;
-        }
     }
     VERIFY(m_default_scanout.has_value());
 }
