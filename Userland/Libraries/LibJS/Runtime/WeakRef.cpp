@@ -25,7 +25,7 @@ WeakRef::~WeakRef()
 {
 }
 
-void WeakRef::remove_sweeped_cells(Badge<Heap>, Vector<Cell*>& cells)
+void WeakRef::remove_swept_cells(Badge<Heap>, Vector<Cell*>& cells)
 {
     VERIFY(m_value);
     for (auto* cell : cells) {

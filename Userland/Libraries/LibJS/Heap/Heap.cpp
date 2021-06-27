@@ -183,22 +183,22 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     dbgln_if(HEAP_DEBUG, "sweep_dead_cells:");
     Vector<HeapBlock*, 32> empty_blocks;
     Vector<HeapBlock*, 32> full_blocks_that_became_usable;
-    Vector<Cell*> sweeped_cells;
+    Vector<Cell*> swept_cells;
 
     size_t collected_cells = 0;
     size_t live_cells = 0;
     size_t collected_cell_bytes = 0;
     size_t live_cell_bytes = 0;
 
-    auto should_store_sweeped_cells = !m_weak_containers.is_empty();
+    auto should_store_swept_cells = !m_weak_containers.is_empty();
     for_each_block([&](auto& block) {
         bool block_has_live_cells = false;
         bool block_was_full = block.is_full();
         block.template for_each_cell_in_state<Cell::State::Live>([&](Cell* cell) {
             if (!cell->is_marked()) {
                 dbgln_if(HEAP_DEBUG, "  ~ {}", cell);
-                if (should_store_sweeped_cells)
-                    sweeped_cells.append(cell);
+                if (should_store_swept_cells)
+                    swept_cells.append(cell);
                 block.deallocate(cell);
                 ++collected_cells;
                 collected_cell_bytes += block.cell_size();
@@ -227,7 +227,7 @@ void Heap::sweep_dead_cells(bool print_report, const Core::ElapsedTimer& measure
     }
 
     for (auto* weak_container : m_weak_containers)
-        weak_container->remove_sweeped_cells({}, sweeped_cells);
+        weak_container->remove_swept_cells({}, swept_cells);
 
     if constexpr (HEAP_DEBUG) {
         for_each_block([&](auto& block) {
