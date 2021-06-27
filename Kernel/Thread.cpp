@@ -105,7 +105,13 @@ Thread::Thread(NonnullRefPtr<Process> process, NonnullOwnPtr<Region> kernel_stac
         m_regs.gs = GDT_SELECTOR_TLS | 3;
     }
 #else
+    // Only IF is set when a process boots.
     m_regs.rflags = 0x0202;
+
+    if (m_process->is_kernel_process())
+        m_regs.cs = GDT_SELECTOR_CODE0;
+    else
+        m_regs.cs = GDT_SELECTOR_CODE3 | 3;
 #endif
 
     m_regs.cr3 = m_process->space().page_directory().cr3();

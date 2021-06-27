@@ -15,7 +15,6 @@
 
 namespace Kernel {
 
-#define ENTER_THREAD_CONTEXT_ARGS_SIZE (2 * 4) //  to_thread, from_thread
 extern "C" void thread_context_first_enter(void);
 extern "C" void do_assume_context(Thread* thread, u32 flags);
 extern "C" void exit_kernel_thread(void);
@@ -28,11 +27,11 @@ asm(
 // switch_context will have pushed from_thread and to_thread to our new
 // stack prior to thread_context_first_enter() being called, and the
 // pointer to TrapFrame was the top of the stack before that
-"    movl 8(%esp), %ebx \n" // save pointer to TrapFrame
+"    popq %rdi \n" // from_thread (argument 0)
+"    popq %rsi \n" // to_thread (argument 1)
+"    popq %rdx \n" // pointer to TrapFrame (argument 2)
 "    cld \n"
 "    call context_first_init \n"
-"    addl $" __STRINGIFY(ENTER_THREAD_CONTEXT_ARGS_SIZE) ", %esp \n"
-"    movl %ebx, 0(%esp) \n" // push pointer to TrapFrame
 "    jmp common_trap_exit \n"
 );
 // clang-format on
@@ -79,12 +78,12 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
         VERIFY(in_critical() == 1);
     }
 
-    u32 kernel_stack_top = thread.kernel_stack_top();
+    u64 kernel_stack_top = thread.kernel_stack_top();
 
     // Add a random offset between 0-256 (16-byte aligned)
     kernel_stack_top -= round_up_to_power_of_two(get_fast_random<u8>(), 16);
 
-    u32 stack_top = kernel_stack_top;
+    u64 stack_top = kernel_stack_top;
 
     // TODO: handle NT?
     VERIFY((cpu_flags() & 0x24000) == 0); // Assume !(NT | VM)
@@ -102,13 +101,13 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
         // which should be in regs.rsp and exit_kernel_thread as return
         // address.
         stack_top -= 2 * sizeof(u64);
-        *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u32)) = regs.rsp;
-        *reinterpret_cast<u32*>(kernel_stack_top - 3 * sizeof(u32)) = FlatPtr(&exit_kernel_thread);
+        *reinterpret_cast<u64*>(kernel_stack_top - 2 * sizeof(u64)) = regs.rsp;
+        *reinterpret_cast<u64*>(kernel_stack_top - 3 * sizeof(u64)) = FlatPtr(&exit_kernel_thread);
     } else {
         stack_top -= sizeof(RegisterState);
     }
 
-    // we want to end up 16-byte aligned, %esp + 4 should be aligned
+    // we want to end up 16-byte aligned, %rsp + 8 should be aligned
     stack_top -= sizeof(u64);
     *reinterpret_cast<u64*>(kernel_stack_top - sizeof(u64)) = 0;
 
@@ -116,7 +115,19 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     // we will end up either in kernel mode or user mode, depending on how the thread is set up
     // However, the first step is to always start in kernel mode with thread_context_first_enter
     RegisterState& iretframe = *reinterpret_cast<RegisterState*>(stack_top);
-    // FIXME: copy state to be recovered through TSS
+    iretframe.rdi = regs.rdi;
+    iretframe.rsi = regs.rsi;
+    iretframe.rbp = regs.rbp;
+    iretframe.rsp = 0;
+    iretframe.rbx = regs.rbx;
+    iretframe.rdx = regs.rdx;
+    iretframe.rcx = regs.rcx;
+    iretframe.rax = regs.rax;
+    iretframe.rflags = regs.rflags;
+    iretframe.rip = regs.rip;
+    iretframe.cs = regs.cs;
+    if (return_to_user)
+        iretframe.userspace_rsp = regs.rsp;
 
     // make space for a trap frame
     stack_top -= sizeof(TrapFrame);
@@ -205,21 +216,15 @@ UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_th
         "movq %[new_rsp], %%rsp \n" // switch to new stack
         "pushq %[from_to_thread] \n" // to_thread
         "pushq %[from_to_thread] \n" // from_thread
-        "pushq $" __STRINGIFY(GDT_SELECTOR_CODE0) " \n"
         "pushq %[new_rip] \n" // save the entry rip to the stack
-        "movq %%rsp, %%rbx \n"
-        "addq $40, %%rbx \n" // calculate pointer to TrapFrame
-        "pushq %%rbx \n"
         "cld \n"
         "pushq %[cpu] \n" // push argument for init_finished before register is clobbered
         "call pre_init_finished \n"
         "pop %%rdi \n" // move argument for init_finished into place
         "call init_finished \n"
-        "addq $8, %%rsp \n"
         "call post_init_finished \n"
-        "pop %%rdi \n" // move pointer to TrapFrame into place
+        "movq 24(%%rsp), %%rdi \n" // move pointer to TrapFrame into place
         "call enter_trap_no_irq \n"
-        "addq $8, %%rsp \n"
         "retq \n"
         :: [new_rsp] "g" (regs.rsp),
         [new_rip] "a" (regs.rip),
