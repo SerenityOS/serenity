@@ -88,16 +88,16 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
     if (vm.exception())
         return;
 
-    auto* source_array_buffer = src_array.viewed_array_buffer();
-    VERIFY(source_array_buffer);
-    if (source_array_buffer->is_detached()) {
+    auto* src_data = src_array.viewed_array_buffer();
+    VERIFY(src_data);
+    if (src_data->is_detached()) {
         vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
         return;
     }
 
-    auto src_array_length = src_array.array_length();
-    auto dest_element_size = dest_array.element_size();
-    Checked byte_length = src_array_length * dest_element_size;
+    auto element_length = src_array.array_length();
+    auto element_size = dest_array.element_size();
+    Checked byte_length = element_size * element_length;
     if (byte_length.has_overflow()) {
         vm.throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
         return;
@@ -105,13 +105,14 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
 
     // FIXME: 17.b If IsDetachedBuffer(array_buffer) is true, throw a TypeError exception.
     // FIXME: 17.c If src_array.[[ContentType]] != dest_array.[[ContentType]], throw a TypeError exception.
-    auto array_buffer = ArrayBuffer::create(global_object, byte_length.value());
-    dest_array.set_array_length(src_array_length);
-    dest_array.set_viewed_array_buffer(array_buffer);
-    dest_array.set_byte_offset(0);
-    dest_array.set_byte_length(array_buffer->byte_length());
+    auto data = ArrayBuffer::create(global_object, byte_length.value());
 
-    for (u32 i = 0; i < src_array_length; i++) {
+    dest_array.set_viewed_array_buffer(data);
+    dest_array.set_byte_length(byte_length.value());
+    dest_array.set_byte_offset(0);
+    dest_array.set_array_length(element_length);
+
+    for (u32 i = 0; i < element_length; i++) {
         Value v;
 #undef __JS_ENUMERATE
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
