@@ -25,10 +25,10 @@
 #include <LibJS/Runtime/MarkedValueList.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ObjectEnvironmentRecord.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Reference.h>
 #include <LibJS/Runtime/RegExpObject.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Shape.h>
 #include <typeinfo>
 
@@ -68,8 +68,8 @@ static void update_function_name(Value value, FlyString const& name)
     if (!value.is_function())
         return;
     auto& function = value.as_function();
-    if (is<ScriptFunction>(function) && function.name().is_empty())
-        static_cast<ScriptFunction&>(function).set_name(name);
+    if (is<OrdinaryFunctionObject>(function) && function.name().is_empty())
+        static_cast<OrdinaryFunctionObject&>(function).set_name(name);
 }
 
 static String get_function_name(GlobalObject& global_object, Value value)
@@ -102,7 +102,7 @@ Value FunctionDeclaration::execute(Interpreter& interpreter, GlobalObject&) cons
 Value FunctionExpression::execute(Interpreter& interpreter, GlobalObject& global_object) const
 {
     InterpreterNodeScope node_scope { interpreter, *this };
-    return ScriptFunction::create(global_object, name(), body(), parameters(), function_length(), interpreter.lexical_environment(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
+    return OrdinaryFunctionObject::create(global_object, name(), body(), parameters(), function_length(), interpreter.lexical_environment(), kind(), is_strict_mode() || interpreter.vm().in_strict_mode(), is_arrow_function());
 }
 
 Value ExpressionStatement::execute(Interpreter& interpreter, GlobalObject& global_object) const
@@ -761,8 +761,8 @@ Value ClassExpression::execute(Interpreter& interpreter, GlobalObject& global_ob
 
     update_function_name(class_constructor_value, m_name);
 
-    VERIFY(class_constructor_value.is_function() && is<ScriptFunction>(class_constructor_value.as_function()));
-    auto* class_constructor = static_cast<ScriptFunction*>(&class_constructor_value.as_function());
+    VERIFY(class_constructor_value.is_function() && is<OrdinaryFunctionObject>(class_constructor_value.as_function()));
+    auto* class_constructor = static_cast<OrdinaryFunctionObject*>(&class_constructor_value.as_function());
     class_constructor->set_is_class_constructor();
     Value super_constructor = js_undefined();
     if (!m_super_class.is_null()) {

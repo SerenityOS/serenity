@@ -33,11 +33,11 @@
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
 #include <LibJS/Runtime/Object.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/PrimitiveString.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/ProxyObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Set.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibJS/Runtime/StringObject.h>
@@ -237,8 +237,8 @@ static void print_object(JS::Object& object, HashTable<JS::Object*>& seen_object
 static void print_function(const JS::Object& object, HashTable<JS::Object*>&)
 {
     print_type(object.class_name());
-    if (is<JS::ScriptFunction>(object))
-        out(" {}", static_cast<const JS::ScriptFunction&>(object).name());
+    if (is<JS::OrdinaryFunctionObject>(object))
+        out(" {}", static_cast<const JS::OrdinaryFunctionObject&>(object).name());
     else if (is<JS::NativeFunction>(object))
         out(" {}", static_cast<const JS::NativeFunction&>(object).name());
 }

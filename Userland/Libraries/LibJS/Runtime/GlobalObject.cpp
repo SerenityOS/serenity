@@ -104,9 +104,9 @@ void GlobalObject::initialize_global_object()
     m_new_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
     m_new_object_shape->set_prototype_without_transition(m_object_prototype);
 
-    m_new_script_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
-    m_new_script_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
-    m_new_script_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
+    m_new_ordinary_function_prototype_object_shape = vm.heap().allocate_without_global_object<Shape>(*this);
+    m_new_ordinary_function_prototype_object_shape->set_prototype_without_transition(m_object_prototype);
+    m_new_ordinary_function_prototype_object_shape->add_property_without_transition(vm.names.constructor, Attribute::Writable | Attribute::Configurable);
 
     static_cast<FunctionPrototype*>(m_function_prototype)->initialize(*this);
     static_cast<ObjectPrototype*>(m_object_prototype)->initialize(*this);
@@ -209,7 +209,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
 
     visitor.visit(m_empty_object_shape);
     visitor.visit(m_new_object_shape);
-    visitor.visit(m_new_script_function_prototype_object_shape);
+    visitor.visit(m_new_ordinary_function_prototype_object_shape);
     visitor.visit(m_proxy_constructor);
     visitor.visit(m_generator_object_prototype);
     visitor.visit(m_environment_record);

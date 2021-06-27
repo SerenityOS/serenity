@@ -16,8 +16,8 @@
 #include <LibJS/Runtime/EnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/IteratorOperations.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 #include <LibJS/Runtime/RegExpObject.h>
-#include <LibJS/Runtime/ScriptFunction.h>
 #include <LibJS/Runtime/Value.h>
 
 namespace JS::Bytecode {
@@ -312,7 +312,7 @@ void Call::execute_impl(Bytecode::Interpreter& interpreter) const
 void NewFunction::execute_impl(Bytecode::Interpreter& interpreter) const
 {
     auto& vm = interpreter.vm();
-    interpreter.accumulator() = ScriptFunction::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.is_arrow_function());
+    interpreter.accumulator() = OrdinaryFunctionObject::create(interpreter.global_object(), m_function_node.name(), m_function_node.body(), m_function_node.parameters(), m_function_node.function_length(), vm.lexical_environment(), m_function_node.kind(), m_function_node.is_strict_mode(), m_function_node.is_arrow_function());
 }
 
 void Return::execute_impl(Bytecode::Interpreter& interpreter) const

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <LibJS/Runtime/Object.h>
-#include <LibJS/Runtime/ScriptFunction.h>
+#include <LibJS/Runtime/OrdinaryFunctionObject.h>
 
 namespace JS {
 
@@ -15,7 +15,7 @@ class GeneratorObject final : public Object {
     JS_OBJECT(GeneratorObject, Object);
 
 public:
-    static GeneratorObject* create(GlobalObject&, Value, ScriptFunction*, EnvironmentRecord*, Bytecode::RegisterWindow);
+    static GeneratorObject* create(GlobalObject&, Value, OrdinaryFunctionObject*, EnvironmentRecord*, Bytecode::RegisterWindow);
     GeneratorObject(GlobalObject&, Object& prototype);
     virtual void initialize(GlobalObject&) override;
     virtual ~GeneratorObject() override;
@@ -26,7 +26,7 @@ public:
 
 private:
     EnvironmentRecord* m_environment_record { nullptr };
-    ScriptFunction* m_generating_function { nullptr };
+    OrdinaryFunctionObject* m_generating_function { nullptr };
     Value m_previous_value;
     Bytecode::RegisterWindow m_frame;
     bool m_done { false };
