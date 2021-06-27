@@ -110,7 +110,7 @@ static FunctionObject* callback_from_args(GlobalObject& global_object, const Str
     return &callback.as_function();
 }
 
-static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, AK::Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
+static void for_each_item(VM& vm, GlobalObject& global_object, const String& name, Function<IterationDecision(size_t index, Value value, Value callback_result)> callback, bool skip_empty = true)
 {
     auto* this_object = vm.this_value(global_object).to_object(global_object);
     if (!this_object)

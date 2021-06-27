@@ -143,7 +143,7 @@ MarkedValueList iterable_to_list(GlobalObject& global_object, Value iterable, Va
     return values;
 }
 
-void get_iterator_values(GlobalObject& global_object, Value value, AK::Function<IterationDecision(Value)> callback, Value method, CloseOnAbrupt close_on_abrupt)
+void get_iterator_values(GlobalObject& global_object, Value value, Function<IterationDecision(Value)> callback, Value method, CloseOnAbrupt close_on_abrupt)
 {
     auto& vm = global_object.vm();
 

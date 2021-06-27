@@ -50,7 +50,7 @@ size_t length_of_array_like(GlobalObject& global_object, Object const& object)
 }
 
 // 7.3.19 CreateListFromArrayLike ( obj [ , elementTypes ] ), https://tc39.es/ecma262/#sec-createlistfromarraylike
-MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value value, AK::Function<Result<void, ErrorType>(Value)> check_value)
+MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value value, Function<Result<void, ErrorType>(Value)> check_value)
 {
     auto& vm = global_object.vm();
     auto& heap = global_object.heap();

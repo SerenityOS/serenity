@@ -9,7 +9,7 @@
 
 namespace JS {
 
-NativeProperty::NativeProperty(AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter)
+NativeProperty::NativeProperty(Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter)
     : m_getter(move(getter))
     , m_setter(move(setter))
 {

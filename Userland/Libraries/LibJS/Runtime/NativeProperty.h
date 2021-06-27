@@ -13,7 +13,7 @@ namespace JS {
 
 class NativeProperty final : public Cell {
 public:
-    NativeProperty(AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter);
+    NativeProperty(Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter);
     virtual ~NativeProperty() override;
 
     Value get(VM&, GlobalObject&) const;
@@ -22,8 +22,8 @@ public:
 private:
     virtual const char* class_name() const override { return "NativeProperty"; }
 
-    AK::Function<Value(VM&, GlobalObject&)> m_getter;
-    AK::Function<void(VM&, GlobalObject&, Value)> m_setter;
+    Function<Value(VM&, GlobalObject&)> m_getter;
+    Function<void(VM&, GlobalObject&, Value)> m_setter;
 };
 
 }

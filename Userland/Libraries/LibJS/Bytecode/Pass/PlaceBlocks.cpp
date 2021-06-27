@@ -19,7 +19,7 @@ void PlaceBlocks::perform(PassPipelineExecutable& executable)
     HashTable<BasicBlock const*> reachable_blocks;
 
     // Visit the blocks in CFG order
-    AK::Function<void(BasicBlock const*)> visit = [&](auto* block) {
+    Function<void(BasicBlock const*)> visit = [&](auto* block) {
         if (reachable_blocks.contains(block))
             return;
 
