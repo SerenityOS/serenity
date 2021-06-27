@@ -65,13 +65,14 @@ struct [[gnu::packed]] RegisterState {
 #else
     FlatPtr rflags;
     FlatPtr userspace_rsp;
+    FlatPtr userspace_ss;
 #endif
 };
 
 #if ARCH(I386)
 #    define REGISTER_STATE_SIZE (19 * 4)
 #else
-#    define REGISTER_STATE_SIZE (21 * 8)
+#    define REGISTER_STATE_SIZE (22 * 8)
 #endif
 static_assert(REGISTER_STATE_SIZE == sizeof(RegisterState));
 
