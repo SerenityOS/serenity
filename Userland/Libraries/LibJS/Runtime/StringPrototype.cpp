@@ -284,7 +284,14 @@ JS_DEFINE_NATIVE_FUNCTION(StringPrototype::index_of)
     auto needle = vm.argument(0).to_string(global_object);
     if (vm.exception())
         return {};
-    return Value((i32)string->find(needle).value_or(-1));
+    size_t from = 0;
+    if (vm.argument_count() > 1) {
+        double from_argument = vm.argument(1).to_integer_or_infinity(global_object);
+        if (vm.exception())
+            return {};
+        from = clamp(from_argument, static_cast<double>(0), static_cast<double>(string->length()));
+    }
+    return Value((i32)string->find(needle, from).value_or(-1));
 }
 
 // 22.1.3.26 String.prototype.toLowerCase ( ), https://tc39.es/ecma262/#sec-string.prototype.tolowercase
