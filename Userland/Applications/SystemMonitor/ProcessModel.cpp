@@ -130,7 +130,7 @@ static String pretty_byte_size(size_t size)
 
 GUI::Variant ProcessModel::data(const GUI::ModelIndex& index, GUI::ModelRole role) const
 {
-    VERIFY(is_valid(index));
+    VERIFY(is_within_range(index));
 
     if (role == GUI::ModelRole::TextAlignment) {
         switch (index.column()) {
