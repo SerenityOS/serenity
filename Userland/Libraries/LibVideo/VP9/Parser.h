@@ -46,6 +46,10 @@ private:
     void clear_context(Vector<u8>& context, size_t size);
     void clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_t inner_size);
 
+    /* (6.1) Frame Syntax */
+    bool trailing_bits();
+    bool refresh_probs();
+
     /* (6.2) Uncompressed Header Syntax */
     bool uncompressed_header();
     bool frame_sync_code();
@@ -64,7 +68,6 @@ private:
     u16 calc_min_log2_tile_cols();
     u16 calc_max_log2_tile_cols();
     bool setup_past_independence();
-    bool trailing_bits();
 
     /* (6.3) Compressed Header Syntax */
     bool compressed_header();

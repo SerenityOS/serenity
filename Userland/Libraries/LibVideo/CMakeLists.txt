@@ -10,7 +10,7 @@ set(SOURCES
     VP9/Symbols.h
     VP9/SyntaxElementCounter.cpp
     VP9/TreeParser.cpp
-    VP9/Utilities.h
+    VP9/Utilities.cpp
 )
 
 serenity_lib(LibVideo video)

@@ -216,4 +216,10 @@ static constexpr BlockSubsize ss_size_lookup[BLOCK_SIZES][2][2] = {
     { { Block_64x64, Block_64x32 }, { Block_32x64, Block_32x32 } },
 };
 
+static constexpr int small_token_tree[6] = {
+    0, 0, // Unused
+    -ZeroToken, 4,
+    -OneToken, -TwoToken
+};
+
 }

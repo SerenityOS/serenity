@@ -45,8 +45,31 @@ bool Parser::parse_frame(ByteBuffer const& frame_data)
     SAFE_CALL(m_bit_stream->exit_bool());
 
     SAFE_CALL(decode_tiles());
+    SAFE_CALL(refresh_probs());
 
     dbgln("Finished reading frame!");
+    return true;
+}
+
+bool Parser::trailing_bits()
+{
+    while (m_bit_stream->get_position() & 7u)
+        RESERVED_ZERO;
+    return true;
+}
+
+bool Parser::refresh_probs()
+{
+    if (!m_error_resilient_mode && !m_frame_parallel_decoding_mode) {
+        m_probability_tables->load_probs(m_frame_context_idx);
+        SAFE_CALL(m_decoder.adapt_coef_probs());
+        if (!m_frame_is_intra) {
+            m_probability_tables->load_probs2(m_frame_context_idx);
+            SAFE_CALL(m_decoder.adapt_non_coef_probs());
+        }
+    }
+    if (m_refresh_frame_context)
+        m_probability_tables->save_probs(m_frame_context_idx);
     return true;
 }
 
@@ -394,13 +417,6 @@ bool Parser::setup_past_independence()
     for (auto& loop_filter_mode_delta : m_loop_filter_mode_deltas)
         loop_filter_mode_delta = 0;
     m_probability_tables->reset_probs();
-    return true;
-}
-
-bool Parser::trailing_bits()
-{
-    while (m_bit_stream->get_position() & 7u)
-        RESERVED_ZERO;
     return true;
 }
 
