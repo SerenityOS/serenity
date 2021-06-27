@@ -40,6 +40,10 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 
+// The compiler can't see the calls to this function inside assembly.
+// Declare it, to avoid dead code warnings.
+extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
+
 UNMAP_AFTER_INIT static void sse_init()
 {
     write_cr0((read_cr0() & 0xfffffffbu) | 0x2);
@@ -1134,4 +1138,31 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
     // clang-format on
 #endif
 }
+
+extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe_unused]] Thread* to_thread, [[maybe_unused]] TrapFrame* trap)
+{
+    VERIFY(!are_interrupts_enabled());
+    VERIFY(is_kernel_mode());
+
+    dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {} (context_first_init)", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
+
+    VERIFY(to_thread == Thread::current());
+
+    Scheduler::enter_current(*from_thread, true);
+
+    // Since we got here and don't have Scheduler::context_switch in the
+    // call stack (because this is the first time we switched into this
+    // context), we need to notify the scheduler so that it can release
+    // the scheduler lock. We don't want to enable interrupts at this point
+    // as we're still in the middle of a context switch. Doing so could
+    // trigger a context switch within a context switch, leading to a crash.
+    FlatPtr flags;
+#if ARCH(I386)
+    flags = trap->regs->eflags;
+#else
+    flags = trap->regs->rflags;
+#endif
+    Scheduler::leave_on_first_switch(flags & ~0x200);
+}
+
 }
