@@ -95,6 +95,6 @@ struct RegisterState;
     }
 }
 
-bool handle_safe_access_fault(RegisterState& regs, u32 fault_address);
+bool handle_safe_access_fault(RegisterState& regs, FlatPtr fault_address);
 
 }
