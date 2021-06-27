@@ -57,9 +57,16 @@ public:
         m_idy = idy;
     }
 
-    void set_band(u8 band) { m_band = band; }
+    void set_tokens_variables(u8 band, u32 c, u32 plane, TXSize tx_size, u32 pos)
+    {
+        m_band = band;
+        m_c = c;
+        m_plane = plane;
+        m_tx_size = tx_size;
+        m_pos = pos;
+    }
 
-    void set_more_coefs_variables(u32 start_x, u32 start_y)
+    void set_start_x_and_y(u32 start_x, u32 start_y)
     {
         m_start_x = start_x;
         m_start_y = start_y;
@@ -83,6 +90,8 @@ private:
     u8 calculate_tx_size_probability(u8 node);
     u8 calculate_inter_mode_probability(u8 node);
     u8 calculate_interp_filter_probability(u8 node);
+    u8 calculate_token_probability(u8 node);
+    u8 calculate_more_coefs_probability();
 
     Parser& m_decoder;
     // m_ctx is a member variable because it is required for syntax element counting (section 9.3.4)
@@ -95,6 +104,10 @@ private:
     u8 m_band { 0 };
     u32 m_start_x { 0 };
     u32 m_start_y { 0 };
+    u32 m_c { 0 };
+    u32 m_plane { 0 };
+    TXSize m_tx_size;
+    u32 m_pos { 0 };
 };
 
 }

@@ -752,7 +752,7 @@ void Parser::clear_context(Vector<Vector<u8>>& context, size_t outer_size, size_
 
 bool Parser::clear_above_context()
 {
-    clear_context(m_above_nonzero_context, 2 * m_mi_cols, 3);
+    clear_context(m_above_nonzero_context, 3, 2 * m_mi_cols);
     clear_context(m_above_seg_pred_context, m_mi_cols);
     clear_context(m_above_partition_context, m_sb64_cols * 8);
     return true;
@@ -780,7 +780,7 @@ bool Parser::decode_tile()
 
 bool Parser::clear_left_context()
 {
-    clear_context(m_left_nonzero_context, 2 * m_mi_rows, 3);
+    clear_context(m_left_nonzero_context, 3, 2 * m_mi_rows);
     clear_context(m_left_seg_pred_context, m_mi_rows);
     clear_context(m_left_partition_context, m_sb64_rows * 8);
     return true;
@@ -1193,7 +1193,7 @@ BlockSubsize Parser::get_plane_block_size(u32 subsize, u8 plane)
 
 bool Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 block_index)
 {
-    m_tree_parser->set_more_coefs_variables(start_x, start_y);
+    m_tree_parser->set_start_x_and_y(start_x, start_y);
     size_t segment_eob = 16 << (tx_size << 1);
     auto scan = get_scan(plane, tx_size, block_index);
     auto check_eob = true;
@@ -1201,7 +1201,7 @@ bool Parser::tokens(size_t plane, u32 start_x, u32 start_y, TXSize tx_size, u32 
     for (; c < segment_eob; c++) {
         auto pos = scan[c];
         auto band = (tx_size == TX_4x4) ? coefband_4x4[c] : coefband_8x8plus[c];
-        m_tree_parser->set_band(band);
+        m_tree_parser->set_tokens_variables(band, c, plane, tx_size, pos);
         if (check_eob) {
             auto more_coefs = m_tree_parser->parse_tree<bool>(SyntaxElementType::MoreCoefs);
             if (!more_coefs)
