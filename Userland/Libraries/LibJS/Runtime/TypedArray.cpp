@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
- * Copyright (c) 2020, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -103,9 +103,13 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         return;
     }
 
-    // FIXME: 17.b If IsDetachedBuffer(array_buffer) is true, throw a TypeError exception.
     // FIXME: 17.c If src_array.[[ContentType]] != dest_array.[[ContentType]], throw a TypeError exception.
     auto data = ArrayBuffer::create(global_object, byte_length.value());
+
+    if (src_data->is_detached()) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::DetachedArrayBuffer);
+        return;
+    }
 
     dest_array.set_viewed_array_buffer(data);
     dest_array.set_byte_length(byte_length.value());
