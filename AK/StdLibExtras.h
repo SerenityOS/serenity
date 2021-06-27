@@ -116,6 +116,15 @@ constexpr decltype(auto) to_underlying(V value) requires(IsEnum<V>)
     return static_cast<UnderlyingType<V>>(value);
 }
 
+constexpr bool is_constant_evaluated()
+{
+#if __has_builtin(__builtin_is_constant_evaluated)
+    return __builtin_is_constant_evaluated();
+#else
+    return false;
+#endif
+}
+
 }
 
 using AK::array_size;
@@ -123,6 +132,7 @@ using AK::ceil_div;
 using AK::clamp;
 using AK::exchange;
 using AK::forward;
+using AK::is_constant_evaluated;
 using AK::max;
 using AK::min;
 using AK::RawPtr;

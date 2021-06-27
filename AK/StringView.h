@@ -24,7 +24,8 @@ public:
         : m_characters(characters)
         , m_length(length)
     {
-        VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
+        if (!is_constant_evaluated())
+            VERIFY(!Checked<uintptr_t>::addition_would_overflow((uintptr_t)characters, length));
     }
     ALWAYS_INLINE StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
@@ -93,7 +94,8 @@ public:
 
     [[nodiscard]] constexpr StringView substring_view(size_t start, size_t length) const
     {
-        VERIFY(start + length <= m_length);
+        if (!is_constant_evaluated())
+            VERIFY(start + length <= m_length);
         return { m_characters + start, length };
     }
 
@@ -158,7 +160,7 @@ public:
     [[nodiscard]] StringView substring_view_starting_from_substring(const StringView& substring) const;
     [[nodiscard]] StringView substring_view_starting_after_substring(const StringView& substring) const;
 
-    bool operator==(const char* cstring) const
+    constexpr bool operator==(const char* cstring) const
     {
         if (is_null())
             return !cstring;
@@ -175,7 +177,7 @@ public:
         return !*cp;
     }
 
-    bool operator!=(const char* cstring) const
+    constexpr bool operator!=(const char* cstring) const
     {
         return !(*this == cstring);
     }
