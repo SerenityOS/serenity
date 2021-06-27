@@ -555,7 +555,7 @@ bool Object::define_property(const PropertyName& property_name, Value value, Pro
     return put_own_property(property_name.to_string_or_symbol(), value, attributes, PutOwnPropertyMode::DefineProperty, throw_exceptions);
 }
 
-bool Object::define_native_accessor(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
+bool Object::define_native_accessor(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<Value(VM&, GlobalObject&)> setter, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String formatted_property_name;
@@ -990,7 +990,7 @@ bool Object::put(const PropertyName& property_name, Value value, Value receiver)
     return put_own_property(string_or_symbol, value, default_attributes, PutOwnPropertyMode::Put, vm().in_strict_mode());
 }
 
-bool Object::define_native_function(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
+bool Object::define_native_function(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> native_function, i32 length, PropertyAttributes attribute)
 {
     auto& vm = this->vm();
     String function_name;
@@ -1009,7 +1009,7 @@ bool Object::define_native_function(PropertyName const& property_name, AK::Funct
     return define_property(property_name, function, attribute);
 }
 
-bool Object::define_native_property(PropertyName const& property_name, AK::Function<Value(VM&, GlobalObject&)> getter, AK::Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
+bool Object::define_native_property(PropertyName const& property_name, Function<Value(VM&, GlobalObject&)> getter, Function<void(VM&, GlobalObject&, Value)> setter, PropertyAttributes attribute)
 {
     return define_property(property_name, heap().allocate_without_global_object<NativeProperty>(move(getter), move(setter)), attribute);
 }

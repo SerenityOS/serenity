@@ -19,7 +19,7 @@ EnvironmentRecord& get_this_environment(VM&);
 Object* get_super_constructor(VM&);
 Value require_object_coercible(GlobalObject&, Value);
 size_t length_of_array_like(GlobalObject&, Object const&);
-MarkedValueList create_list_from_array_like(GlobalObject&, Value, AK::Function<Result<void, ErrorType>(Value)> = {});
+MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<Result<void, ErrorType>(Value)> = {});
 FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());

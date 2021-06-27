@@ -30,6 +30,6 @@ enum class CloseOnAbrupt {
     No,
     Yes
 };
-void get_iterator_values(GlobalObject&, Value value, AK::Function<IterationDecision(Value)> callback, Value method = {}, CloseOnAbrupt close_on_abrupt = CloseOnAbrupt::Yes);
+void get_iterator_values(GlobalObject&, Value value, Function<IterationDecision(Value)> callback, Value method = {}, CloseOnAbrupt close_on_abrupt = CloseOnAbrupt::Yes);
 
 }

@@ -252,9 +252,9 @@ public:
 
     void promise_rejection_tracker(const Promise&, Promise::RejectionOperation) const;
 
-    AK::Function<void()> on_call_stack_emptied;
-    AK::Function<void(const Promise&)> on_promise_unhandled_rejection;
-    AK::Function<void(const Promise&)> on_promise_rejection_handled;
+    Function<void()> on_call_stack_emptied;
+    Function<void(const Promise&)> on_promise_unhandled_rejection;
+    Function<void(const Promise&)> on_promise_rejection_handled;
 
 private:
     VM();
