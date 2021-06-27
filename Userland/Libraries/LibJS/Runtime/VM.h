@@ -48,7 +48,7 @@ struct ExecutionContext {
     FunctionObject* function { nullptr };
     Value this_value;
     Vector<Value> arguments;
-    Array* arguments_object { nullptr };
+    Object* arguments_object { nullptr };
     EnvironmentRecord* lexical_environment { nullptr };
     EnvironmentRecord* variable_environment { nullptr };
     bool is_strict_mode { false };

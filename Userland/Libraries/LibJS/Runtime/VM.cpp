@@ -369,10 +369,16 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             if (possible_match.has_value())
                 return possible_match.value().value;
             if (!context.arguments_object) {
-                context.arguments_object = Array::create(global_object);
-                context.arguments_object->put(names.callee, context.function);
-                for (auto argument : context.arguments) {
-                    context.arguments_object->indexed_properties().append(argument);
+                if (context.function->is_strict_mode()) {
+                    context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments);
+                } else {
+                    // FIXME: This code path is completely ad-hoc.
+                    context.arguments_object = Array::create(global_object);
+                    context.arguments_object->put(names.callee, context.function);
+
+                    for (auto argument : context.arguments) {
+                        context.arguments_object->indexed_properties().append(argument);
+                    }
                 }
             }
             return context.arguments_object;

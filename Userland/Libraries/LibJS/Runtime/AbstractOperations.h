@@ -23,6 +23,7 @@ MarkedValueList create_list_from_array_like(GlobalObject&, Value, Function<Resul
 FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject& default_constructor);
 GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
+Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
 
 enum class CallerMode {
     Strict,

@@ -11,6 +11,8 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/Array.h>
+#include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
@@ -202,6 +204,38 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
 
     TemporaryChange scope_change(vm.running_execution_context().lexical_environment, static_cast<EnvironmentRecord*>(&caller_realm.environment_record()));
     return interpreter.execute_statement(caller_realm, program).value_or(js_undefined());
+}
+
+// 10.4.4.6 CreateUnmappedArgumentsObject ( argumentsList ), https://tc39.es/ecma262/#sec-createunmappedargumentsobject
+Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Value> const& arguments)
+{
+    auto& vm = global_object.vm();
+    // FIXME: This should use OrdinaryObjectCreate
+    auto* object = Object::create(global_object, global_object.object_prototype());
+    if (vm.exception())
+        return nullptr;
+
+    // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    auto length = arguments.size();
+    object->define_property(vm.names.length, Value(length), Attribute::Writable | Attribute::Configurable);
+    if (vm.exception())
+        return nullptr;
+
+    object->define_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get(vm.names.values), Attribute::Writable | Attribute::Configurable);
+
+    for (auto& argument : arguments)
+        object->indexed_properties().append(argument);
+
+    // FIXME: 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
+    PropertyAttributes attributes;
+    attributes.set_has_configurable();
+    attributes.set_has_enumerable();
+
+    object->define_property(vm.names.callee, js_undefined(), attributes);
+    if (vm.exception())
+        return nullptr;
+
+    return object;
 }
 
 }
