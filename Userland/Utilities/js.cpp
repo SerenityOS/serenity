@@ -27,7 +27,7 @@
 #include <LibJS/Runtime/DataView.h>
 #include <LibJS/Runtime/Date.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Map.h>
 #include <LibJS/Runtime/NativeFunction.h>

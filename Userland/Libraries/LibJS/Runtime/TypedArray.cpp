@@ -260,7 +260,7 @@ void TypedArrayBase::visit_edges(Visitor& visitor)
     }                                                                                                                                  \
                                                                                                                                        \
     /* 23.2.5.1 TypedArray ( ...args ), https://tc39.es/ecma262/#sec-typedarray */                                                     \
-    Value ConstructorName::construct(Function&)                                                                                        \
+    Value ConstructorName::construct(FunctionObject&)                                                                                  \
     {                                                                                                                                  \
         auto& vm = this->vm();                                                                                                         \
         if (vm.argument_count() == 0)                                                                                                  \

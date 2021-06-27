@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020-2021, Andreas Kling <kling@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -11,7 +11,7 @@
 
 namespace JS {
 
-class Function : public Object {
+class FunctionObject : public Object {
     JS_OBJECT(Function, Object);
 
 public:
@@ -20,13 +20,13 @@ public:
         Derived,
     };
 
-    virtual ~Function();
+    virtual ~FunctionObject();
     virtual void initialize(GlobalObject&) override { }
 
     virtual Value call() = 0;
-    virtual Value construct(Function& new_target) = 0;
+    virtual Value construct(FunctionObject& new_target) = 0;
     virtual const FlyString& name() const = 0;
-    virtual FunctionEnvironmentRecord* create_environment_record(Function&) = 0;
+    virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) = 0;
 
     BoundFunction* bind(Value bound_this_value, Vector<Value> arguments);
 
@@ -60,8 +60,8 @@ public:
 protected:
     virtual void visit_edges(Visitor&) override;
 
-    explicit Function(Object& prototype);
-    Function(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
+    explicit FunctionObject(Object& prototype);
+    FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
 
 private:
     virtual bool is_function() const override { return true; }

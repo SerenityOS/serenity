@@ -11,7 +11,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/FunctionPrototype.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/MarkedValueList.h>
@@ -53,7 +53,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::apply)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
-    auto& function = static_cast<Function&>(*this_object);
+    auto& function = static_cast<FunctionObject&>(*this_object);
     auto this_arg = vm.argument(0);
     auto arg_array = vm.argument(1);
     if (arg_array.is_nullish())
@@ -74,7 +74,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::bind)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
-    auto& this_function = static_cast<Function&>(*this_object);
+    auto& this_function = static_cast<FunctionObject&>(*this_object);
     auto bound_this_arg = vm.argument(0);
 
     Vector<Value> arguments;
@@ -96,7 +96,7 @@ JS_DEFINE_NATIVE_FUNCTION(FunctionPrototype::call)
         vm.throw_exception<TypeError>(global_object, ErrorType::NotA, "Function");
         return {};
     }
-    auto& function = static_cast<Function&>(*this_object);
+    auto& function = static_cast<FunctionObject&>(*this_object);
     auto this_arg = vm.argument(0);
     MarkedValueList arguments(vm.heap());
     if (vm.argument_count() > 1) {

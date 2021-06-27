@@ -7,7 +7,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Promise.h>
 #include <LibJS/Runtime/PromiseConstructor.h>
@@ -51,7 +51,7 @@ Value PromiseConstructor::call()
 }
 
 // 27.2.3.1 Promise ( executor ), https://tc39.es/ecma262/#sec-promise-executor
-Value PromiseConstructor::construct(Function& new_target)
+Value PromiseConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

@@ -8,12 +8,12 @@
 
 namespace JS {
 
-FinalizationRegistry* FinalizationRegistry::create(GlobalObject& global_object, Function& cleanup_callback)
+FinalizationRegistry* FinalizationRegistry::create(GlobalObject& global_object, FunctionObject& cleanup_callback)
 {
     return global_object.heap().allocate<FinalizationRegistry>(global_object, cleanup_callback, *global_object.finalization_registry_prototype());
 }
 
-FinalizationRegistry::FinalizationRegistry(Function& cleanup_callback, Object& prototype)
+FinalizationRegistry::FinalizationRegistry(FunctionObject& cleanup_callback, Object& prototype)
     : Object(prototype)
     , WeakContainer(heap())
     , m_cleanup_callback(&cleanup_callback)
@@ -59,7 +59,7 @@ void FinalizationRegistry::remove_sweeped_cells(Badge<Heap>, Vector<Cell*>& cell
 }
 
 // 9.13 CleanupFinalizationRegistry ( finalizationRegistry ), https://tc39.es/ecma262/#sec-cleanup-finalization-registry
-void FinalizationRegistry::cleanup(Function* callback)
+void FinalizationRegistry::cleanup(FunctionObject* callback)
 {
     auto& vm = this->vm();
     auto cleanup_callback = callback ?: m_cleanup_callback;

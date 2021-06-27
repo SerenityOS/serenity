@@ -53,7 +53,7 @@ Value StringConstructor::call()
 }
 
 // 22.1.1.1 String ( value ), https://tc39.es/ecma262/#sec-string-constructor-string-value
-Value StringConstructor::construct(Function&)
+Value StringConstructor::construct(FunctionObject&)
 {
     PrimitiveString* primitive_string = nullptr;
     if (!vm().argument_count())

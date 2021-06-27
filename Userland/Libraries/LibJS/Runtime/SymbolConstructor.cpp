@@ -48,7 +48,7 @@ Value SymbolConstructor::call()
 }
 
 // 20.4.1.1 Symbol ( [ description ] ), https://tc39.es/ecma262/#sec-symbol-description
-Value SymbolConstructor::construct(Function&)
+Value SymbolConstructor::construct(FunctionObject&)
 {
     vm().throw_exception<TypeError>(global_object(), ErrorType::NotAConstructor, "Symbol");
     return {};

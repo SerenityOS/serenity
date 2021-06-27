@@ -7,7 +7,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Value.h>
 

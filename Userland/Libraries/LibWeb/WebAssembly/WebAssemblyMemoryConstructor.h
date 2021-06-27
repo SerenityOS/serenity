@@ -19,7 +19,7 @@ public:
     virtual ~WebAssemblyMemoryConstructor() override;
 
     virtual JS::Value call() override;
-    virtual JS::Value construct(JS::Function& new_target) override;
+    virtual JS::Value construct(JS::FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }

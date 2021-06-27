@@ -40,7 +40,7 @@ JS::Value ImageConstructor::call()
 }
 
 // https://html.spec.whatwg.org/multipage/embedded-content.html#dom-image
-JS::Value ImageConstructor::construct(Function&)
+JS::Value ImageConstructor::construct(FunctionObject&)
 {
     auto& window = static_cast<WindowObject&>(global_object());
     auto& document = window.impl().document();

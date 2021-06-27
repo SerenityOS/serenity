@@ -8,7 +8,7 @@
 
 #include <AK/String.h>
 #include <LibJS/Heap/Handle.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 
 namespace Web::HTML {
 
@@ -22,13 +22,13 @@ struct EventHandler {
     {
     }
 
-    EventHandler(JS::Handle<JS::Function> c)
+    EventHandler(JS::Handle<JS::FunctionObject> c)
         : callback(move(c))
     {
     }
 
     String string;
-    JS::Handle<JS::Function> callback;
+    JS::Handle<JS::FunctionObject> callback;
 };
 
 }

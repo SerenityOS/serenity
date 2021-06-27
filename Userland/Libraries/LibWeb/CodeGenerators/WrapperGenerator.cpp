@@ -854,7 +854,7 @@ void generate_implementation(const IDL::Interface& interface)
 #include <AK/FlyString.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibJS/Runtime/Value.h>
@@ -968,7 +968,7 @@ public:
     virtual ~@constructor_class@() override;
 
     virtual JS::Value call() override;
-    virtual JS::Value construct(JS::Function& new_target) override;
+    virtual JS::Value construct(JS::FunctionObject& new_target) override;
 
 private:
     virtual bool has_constructor() const override { return true; }
@@ -1040,7 +1040,7 @@ JS::Value @constructor_class@::call()
     return {};
 }
 
-JS::Value @constructor_class@::construct(Function&)
+JS::Value @constructor_class@::construct(FunctionObject&)
 {
 )~~~");
 
@@ -1198,7 +1198,7 @@ void generate_prototype_implementation(const IDL::Interface& interface)
 #include <AK/Function.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/TypedArray.h>
 #include <LibWeb/Bindings/@prototype_class@.h>

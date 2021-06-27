@@ -55,7 +55,7 @@ Value ProxyConstructor::call()
 }
 
 // 28.2.1.1 Proxy ( target, handler ), https://tc39.es/ecma262/#sec-proxy-target-handler
-Value ProxyConstructor::construct(Function&)
+Value ProxyConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     return proxy_create(global_object(), vm.argument(0), vm.argument(1));

@@ -21,7 +21,7 @@
 #include <LibJS/Runtime/BooleanObject.h>
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/NumberObject.h>
@@ -229,10 +229,10 @@ bool Value::is_function() const
     return is_object() && as_object().is_function();
 }
 
-Function& Value::as_function()
+FunctionObject& Value::as_function()
 {
     VERIFY(is_function());
-    return static_cast<Function&>(as_object());
+    return static_cast<FunctionObject&>(as_object());
 }
 
 // 7.2.4 IsConstructor ( argument ), https://tc39.es/ecma262/#sec-isconstructor
@@ -808,7 +808,7 @@ Value Value::get(GlobalObject& global_object, PropertyName const& property_name)
 }
 
 // 7.3.10 GetMethod ( V, P ), https://tc39.es/ecma262/#sec-getmethod
-Function* Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
+FunctionObject* Value::get_method(GlobalObject& global_object, PropertyName const& property_name) const
 {
     auto& vm = global_object.vm();
 

@@ -36,8 +36,8 @@ public:
     Value result() const { return m_result; }
 
     struct ResolvingFunctions {
-        Function& resolve;
-        Function& reject;
+        FunctionObject& resolve;
+        FunctionObject& reject;
     };
     ResolvingFunctions create_resolving_functions();
 

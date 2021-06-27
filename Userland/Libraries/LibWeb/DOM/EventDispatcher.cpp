@@ -6,7 +6,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/TypeCasts.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibWeb/Bindings/EventTargetWrapper.h>
 #include <LibWeb/Bindings/EventTargetWrapperFactory.h>
 #include <LibWeb/Bindings/EventWrapper.h>

@@ -18,13 +18,13 @@ class EventListener
 public:
     using WrapperType = Bindings::EventListenerWrapper;
 
-    explicit EventListener(JS::Handle<JS::Function> function, bool is_attribute = false)
+    explicit EventListener(JS::Handle<JS::FunctionObject> function, bool is_attribute = false)
         : m_function(move(function))
         , m_attribute(is_attribute)
     {
     }
 
-    JS::Function& function();
+    JS::FunctionObject& function();
 
     const FlyString& type() const { return m_type; }
     void set_type(const FlyString& type) { m_type = type; }
@@ -45,7 +45,7 @@ public:
 
 private:
     FlyString m_type;
-    JS::Handle<JS::Function> m_function;
+    JS::Handle<JS::FunctionObject> m_function;
     bool m_capture { false };
     bool m_passive { false };
     bool m_once { false };

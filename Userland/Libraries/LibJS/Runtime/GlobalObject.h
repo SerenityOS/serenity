@@ -36,7 +36,7 @@ public:
     // Not included in JS_ENUMERATE_NATIVE_OBJECTS due to missing distinct constructor
     GeneratorObjectPrototype* generator_object_prototype() { return m_generator_object_prototype; }
 
-    Function* eval_function() const { return m_eval_function; }
+    FunctionObject* eval_function() const { return m_eval_function; }
 
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
@@ -98,7 +98,7 @@ private:
     JS_ENUMERATE_ITERATOR_PROTOTYPES
 #undef __JS_ENUMERATE
 
-    Function* m_eval_function;
+    FunctionObject* m_eval_function;
 };
 
 template<typename ConstructorType>

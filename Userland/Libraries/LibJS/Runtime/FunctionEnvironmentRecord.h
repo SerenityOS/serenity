@@ -35,9 +35,9 @@ public:
     void set_this_binding_status(ThisBindingStatus status) { m_this_binding_status = status; }
 
     // [[FunctionObject]]
-    Function& function_object() { return *m_function_object; }
-    Function const& function_object() const { return *m_function_object; }
-    void set_function_object(Function& function) { m_function_object = &function; }
+    FunctionObject& function_object() { return *m_function_object; }
+    FunctionObject const& function_object() const { return *m_function_object; }
+    void set_function_object(FunctionObject& function) { m_function_object = &function; }
 
     // [[NewTarget]]
     Value new_target() const { return m_new_target; }
@@ -56,7 +56,7 @@ private:
 
     Value m_this_value;
     ThisBindingStatus m_this_binding_status { ThisBindingStatus::Uninitialized };
-    Function* m_function_object { nullptr };
+    FunctionObject* m_function_object { nullptr };
     Value m_new_target;
 };
 

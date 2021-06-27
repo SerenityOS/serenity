@@ -40,7 +40,7 @@ Value RegExpConstructor::call()
 }
 
 // 22.2.3.1 RegExp ( pattern, flags ), https://tc39.es/ecma262/#sec-regexp-pattern-flags
-Value RegExpConstructor::construct(Function&)
+Value RegExpConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     String pattern = "";

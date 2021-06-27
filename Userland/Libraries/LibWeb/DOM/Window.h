@@ -39,11 +39,11 @@ public:
     void alert(const String&);
     bool confirm(const String&);
     String prompt(const String&, const String&);
-    i32 request_animation_frame(JS::Function&);
+    i32 request_animation_frame(JS::FunctionObject&);
     void cancel_animation_frame(i32);
 
-    i32 set_timeout(JS::Function&, i32);
-    i32 set_interval(JS::Function&, i32);
+    i32 set_timeout(JS::FunctionObject&, i32);
+    i32 set_interval(JS::FunctionObject&, i32);
     void clear_timeout(i32);
     void clear_interval(i32);
 

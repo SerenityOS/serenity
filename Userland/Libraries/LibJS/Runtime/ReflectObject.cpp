@@ -8,7 +8,7 @@
 #include <LibJS/Runtime/AbstractOperations.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/NativeFunction.h>
 #include <LibJS/Runtime/ReflectObject.h>
@@ -26,7 +26,7 @@ static Object* get_target_object_from(GlobalObject& global_object, const String&
     return static_cast<Object*>(&target.as_object());
 }
 
-static Function* get_target_function_from(GlobalObject& global_object, const String& name)
+static FunctionObject* get_target_function_from(GlobalObject& global_object, const String& name)
 {
     auto& vm = global_object.vm();
     auto target = vm.argument(0);

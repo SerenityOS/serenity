@@ -6,7 +6,7 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/ScriptFunction.h>
 #include <LibProtocol/WebSocket.h>
 #include <LibProtocol/WebSocketClient.h>
@@ -248,7 +248,7 @@ void WebSocket::set_event_handler_attribute(const FlyString& name, HTML::EventHa
         }
         auto* function = JS::ScriptFunction::create(script_execution_context()->interpreter().global_object(), name, program->body(), program->parameters(), program->function_length(), nullptr, JS::FunctionKind::Regular, false, false);
         VERIFY(function);
-        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::Function*>(function))));
+        listener = adopt_ref(*new DOM::EventListener(JS::make_handle(static_cast<JS::FunctionObject*>(function))));
     }
     if (listener) {
         for (auto& registered_listener : listeners()) {

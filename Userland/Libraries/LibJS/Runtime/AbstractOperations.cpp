@@ -14,8 +14,8 @@
 #include <LibJS/Runtime/BoundFunction.h>
 #include <LibJS/Runtime/DeclarativeEnvironmentRecord.h>
 #include <LibJS/Runtime/ErrorTypes.h>
-#include <LibJS/Runtime/Function.h>
 #include <LibJS/Runtime/FunctionEnvironmentRecord.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalEnvironmentRecord.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Object.h>
@@ -81,7 +81,7 @@ MarkedValueList create_list_from_array_like(GlobalObject& global_object, Value v
 }
 
 // 7.3.22 SpeciesConstructor ( O, defaultConstructor ), https://tc39.es/ecma262/#sec-speciesconstructor
-Function* species_constructor(GlobalObject& global_object, Object const& object, Function& default_constructor)
+FunctionObject* species_constructor(GlobalObject& global_object, Object const& object, FunctionObject& default_constructor)
 {
     auto& vm = global_object.vm();
     auto constructor = object.get(vm.names.constructor).value_or(js_undefined());
@@ -103,7 +103,7 @@ Function* species_constructor(GlobalObject& global_object, Object const& object,
 }
 
 // 7.3.24 GetFunctionRealm ( obj ), https://tc39.es/ecma262/#sec-getfunctionrealm
-GlobalObject* get_function_realm(GlobalObject& global_object, Function const& function)
+GlobalObject* get_function_realm(GlobalObject& global_object, FunctionObject const& function)
 {
     auto& vm = global_object.vm();
 
@@ -123,14 +123,14 @@ GlobalObject* get_function_realm(GlobalObject& global_object, Function const& fu
         }
         auto& proxy_target = proxy.target();
         VERIFY(proxy_target.is_function());
-        return get_function_realm(global_object, static_cast<Function const&>(proxy_target));
+        return get_function_realm(global_object, static_cast<FunctionObject const&>(proxy_target));
     }
     // 5. Return the current Realm Record.
     return &global_object;
 }
 
 // 10.1.14 GetPrototypeFromConstructor ( constructor, intrinsicDefaultProto )
-Object* get_prototype_from_constructor(GlobalObject& global_object, Function const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
+Object* get_prototype_from_constructor(GlobalObject& global_object, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)())
 {
     auto& vm = global_object.vm();
     auto prototype = constructor.get(vm.names.prototype);

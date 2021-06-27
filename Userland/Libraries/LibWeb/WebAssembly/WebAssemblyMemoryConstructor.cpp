@@ -28,7 +28,7 @@ JS::Value WebAssemblyMemoryConstructor::call()
     return {};
 }
 
-JS::Value WebAssemblyMemoryConstructor::construct(Function&)
+JS::Value WebAssemblyMemoryConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

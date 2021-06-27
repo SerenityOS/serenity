@@ -8,7 +8,7 @@
 #include <AK/String.h>
 #include <AK/Utf8View.h>
 #include <LibJS/Runtime/Error.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/Shape.h>
 #include <LibTextCodec/Decoder.h>
 #include <LibWeb/Bindings/DocumentWrapper.h>
@@ -192,7 +192,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_interval)
             interval = 0;
     }
 
-    auto timer_id = impl->set_interval(*static_cast<JS::Function*>(callback_object), interval);
+    auto timer_id = impl->set_interval(*static_cast<JS::FunctionObject*>(callback_object), interval);
     return JS::Value(timer_id);
 }
 
@@ -221,7 +221,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::set_timeout)
             interval = 0;
     }
 
-    auto timer_id = impl->set_timeout(*static_cast<JS::Function*>(callback_object), interval);
+    auto timer_id = impl->set_timeout(*static_cast<JS::FunctionObject*>(callback_object), interval);
     return JS::Value(timer_id);
 }
 
@@ -273,7 +273,7 @@ JS_DEFINE_NATIVE_FUNCTION(WindowObject::request_animation_frame)
         vm.throw_exception<JS::TypeError>(global_object, JS::ErrorType::NotAFunctionNoParam);
         return {};
     }
-    return JS::Value(impl->request_animation_frame(*static_cast<JS::Function*>(callback_object)));
+    return JS::Value(impl->request_animation_frame(*static_cast<JS::FunctionObject*>(callback_object)));
 }
 
 JS_DEFINE_NATIVE_FUNCTION(WindowObject::cancel_animation_frame)

@@ -14,9 +14,9 @@ namespace JS {
 
 // 27.2.1.1 PromiseCapability Records, https://tc39.es/ecma262/#sec-promisecapability-records
 struct PromiseCapability {
-    Object* promise;
-    Function* resolve;
-    Function* reject;
+    Object* promise { nullptr };
+    FunctionObject* resolve { nullptr };
+    FunctionObject* reject { nullptr };
 };
 
 // 27.2.1.5 NewPromiseCapability ( C ), https://tc39.es/ecma262/#sec-newpromisecapability

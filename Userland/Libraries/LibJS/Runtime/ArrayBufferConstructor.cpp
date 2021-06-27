@@ -47,7 +47,7 @@ Value ArrayBufferConstructor::call()
 }
 
 // 25.1.3.1 ArrayBuffer ( length ), https://tc39.es/ecma262/#sec-arraybuffer-length
-Value ArrayBufferConstructor::construct(Function&)
+Value ArrayBufferConstructor::construct(FunctionObject&)
 {
     auto& vm = this->vm();
     auto byte_length = vm.argument(0).to_index(global_object());

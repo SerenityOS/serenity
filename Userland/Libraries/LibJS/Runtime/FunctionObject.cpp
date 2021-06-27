@@ -6,31 +6,31 @@
 
 #include <LibJS/Interpreter.h>
 #include <LibJS/Runtime/BoundFunction.h>
-#include <LibJS/Runtime/Function.h>
+#include <LibJS/Runtime/FunctionObject.h>
 #include <LibJS/Runtime/GlobalObject.h>
 
 namespace JS {
 
-Function::Function(Object& prototype)
-    : Function({}, {}, prototype)
+FunctionObject::FunctionObject(Object& prototype)
+    : FunctionObject({}, {}, prototype)
 {
 }
 
-Function::Function(Value bound_this, Vector<Value> bound_arguments, Object& prototype)
+FunctionObject::FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype)
     : Object(prototype)
     , m_bound_this(bound_this)
     , m_bound_arguments(move(bound_arguments))
 {
 }
 
-Function::~Function()
+FunctionObject::~FunctionObject()
 {
 }
 
-BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
+BoundFunction* FunctionObject::bind(Value bound_this_value, Vector<Value> arguments)
 {
     auto& vm = this->vm();
-    Function& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).target_function() : *this;
+    FunctionObject& target_function = is<BoundFunction>(*this) ? static_cast<BoundFunction&>(*this).target_function() : *this;
 
     auto bound_this_object = [&vm, bound_this_value, this]() -> Value {
         if (!m_bound_this.is_empty())
@@ -66,7 +66,7 @@ BoundFunction* Function::bind(Value bound_this_value, Vector<Value> arguments)
     return heap().allocate<BoundFunction>(global_object(), global_object(), target_function, bound_this_object, move(all_bound_arguments), computed_length, constructor_prototype);
 }
 
-void Function::visit_edges(Visitor& visitor)
+void FunctionObject::visit_edges(Visitor& visitor)
 {
     Object::visit_edges(visitor);
 

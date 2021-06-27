@@ -44,7 +44,7 @@ Value MapConstructor::call()
 }
 
 // 24.1.1.1 Map ( [ iterable ] ), https://tc39.es/ecma262/#sec-map-iterable
-Value MapConstructor::construct(Function& new_target)
+Value MapConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();

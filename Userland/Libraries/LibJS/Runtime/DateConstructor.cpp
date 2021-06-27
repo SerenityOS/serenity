@@ -168,7 +168,7 @@ Value DateConstructor::call()
 }
 
 // 21.4.2.1 Date ( ...values ), https://tc39.es/ecma262/#sec-date
-Value DateConstructor::construct(Function& new_target)
+Value DateConstructor::construct(FunctionObject& new_target)
 {
     auto& vm = this->vm();
     auto& global_object = this->global_object();
