@@ -40,9 +40,11 @@ Atomic<u32> Processor::s_idle_cpu_mask { 0 };
 extern "C" void thread_context_first_enter(void);
 extern "C" void exit_kernel_thread(void);
 
-// The compiler can't see the calls to this function inside assembly.
-// Declare it, to avoid dead code warnings.
+// The compiler can't see the calls to these functions inside assembly.
+// Declare them, to avoid dead code warnings.
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
+extern "C" u32 do_init_context(Thread* thread, u32 flags) __attribute__((used));
 
 UNMAP_AFTER_INIT static void sse_init()
 {
@@ -1165,4 +1167,69 @@ extern "C" void context_first_init([[maybe_unused]] Thread* from_thread, [[maybe
     Scheduler::leave_on_first_switch(flags & ~0x200);
 }
 
+extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
+{
+    VERIFY(from_thread == to_thread || from_thread->state() != Thread::Running);
+    VERIFY(to_thread->state() == Thread::Running);
+
+    bool has_fxsr = Processor::current().has_feature(CPUFeature::FXSR);
+    Processor::set_current_thread(*to_thread);
+
+    auto& from_regs = from_thread->regs();
+    auto& to_regs = to_thread->regs();
+
+    if (has_fxsr)
+        asm volatile("fxsave %0"
+                     : "=m"(from_thread->fpu_state()));
+    else
+        asm volatile("fnsave %0"
+                     : "=m"(from_thread->fpu_state()));
+
+#if ARCH(I386)
+    from_regs.fs = get_fs();
+    from_regs.gs = get_gs();
+    set_fs(to_regs.fs);
+    set_gs(to_regs.gs);
+#endif
+
+    if (from_thread->process().is_traced())
+        read_debug_registers_into(from_thread->debug_register_state());
+
+    if (to_thread->process().is_traced()) {
+        write_debug_registers_from(to_thread->debug_register_state());
+    } else {
+        clear_debug_registers();
+    }
+
+    auto& processor = Processor::current();
+#if ARCH(I386)
+    auto& tls_descriptor = processor.get_gdt_entry(GDT_SELECTOR_TLS);
+    tls_descriptor.set_base(to_thread->thread_specific_data());
+    tls_descriptor.set_limit(to_thread->thread_specific_region_size());
+#endif
+
+    if (from_regs.cr3 != to_regs.cr3)
+        write_cr3(to_regs.cr3);
+
+    to_thread->set_cpu(processor.get_id());
+    processor.restore_in_critical(to_thread->saved_critical());
+
+    if (has_fxsr)
+        asm volatile("fxrstor %0" ::"m"(to_thread->fpu_state()));
+    else
+        asm volatile("frstor %0" ::"m"(to_thread->fpu_state()));
+
+    // TODO: ioperm?
+}
+
+extern "C" u32 do_init_context(Thread* thread, u32 flags)
+{
+    VERIFY_INTERRUPTS_DISABLED();
+#if ARCH(I386)
+    thread->regs().eflags = flags;
+#else
+    thread->regs().rflags = flags;
+#endif
+    return Processor::current().init_context(*thread, true);
+}
 }
