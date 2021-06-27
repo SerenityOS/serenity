@@ -15,10 +15,9 @@
 
 namespace JS {
 
+// 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
 static void initialize_typed_array_from_array_buffer(GlobalObject& global_object, TypedArrayBase& typed_array, ArrayBuffer& array_buffer, Value byte_offset, Value length)
 {
-    // 22.2.5.1.3 InitializeTypedArrayFromArrayBuffer, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer
-
     auto& vm = global_object.vm();
     auto element_size = typed_array.element_size();
     auto offset = byte_offset.to_index(global_object);
@@ -80,6 +79,8 @@ static void initialize_typed_array_from_array_buffer(GlobalObject& global_object
     typed_array.set_byte_offset(offset);
     typed_array.set_array_length(new_byte_length.value() / element_size);
 }
+
+// 23.2.5.1.2 InitializeTypedArrayFromTypedArray ( O, srcArray ), https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray
 template<typename T>
 static void initialize_typed_array_from_typed_array(GlobalObject& global_object, TypedArray<T>& dest_array, TypedArrayBase& src_array)
 {
@@ -126,11 +127,11 @@ static void initialize_typed_array_from_typed_array(GlobalObject& global_object,
         dest_array.put_by_index(i, v);
     }
 }
+
+// 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
 template<typename T>
 static void initialize_typed_array_from_array_like(GlobalObject& global_object, TypedArray<T>& typed_array, const Object& array_like)
 {
-    // 23.2.5.1.5 InitializeTypedArrayFromArrayLike, https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike
-
     auto& vm = global_object.vm();
     auto length = length_of_array_like(global_object, array_like);
     if (vm.exception())
@@ -157,11 +158,11 @@ static void initialize_typed_array_from_array_like(GlobalObject& global_object, 
             return;
     }
 }
+
+// 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
 template<typename T>
 static void initialize_typed_array_from_list(GlobalObject& global_object, TypedArray<T>& typed_array, const MarkedValueList& list)
 {
-    // 23.2.5.1.4 InitializeTypedArrayFromList, https://tc39.es/ecma262/#sec-initializetypedarrayfromlist
-
     auto element_size = typed_array.element_size();
     if (Checked<size_t>::multiplication_would_overflow(element_size, list.size())) {
         global_object.vm().throw_exception<RangeError>(global_object, ErrorType::InvalidLength, "typed array");
