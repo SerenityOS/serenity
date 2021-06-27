@@ -212,7 +212,7 @@ void BMIDEChannel::ata_read_sectors(bool slave_request, u16 capabilities)
     m_io_group.bus_master_base().value().out<u8>(0);
 
     // Write the PRDT location
-    m_io_group.bus_master_base().value().offset(4).out(m_prdt_page->paddr().get());
+    m_io_group.bus_master_base().value().offset(4).out<u32>(m_prdt_page->paddr().get());
 
     // Set transfer direction
     m_io_group.bus_master_base().value().out<u8>(0x8);
