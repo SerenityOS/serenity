@@ -154,8 +154,12 @@ void DirectoryView::handle_activation(const GUI::ModelIndex& index)
     auto url = URL::create_with_file_protocol(path);
     auto launcher_handlers = get_launch_handlers(url);
     auto default_launcher = get_default_launch_handler(launcher_handlers);
+
     if (default_launcher) {
+        auto launch_origin_rect = current_view().to_widget_rect(current_view().content_rect(index)).translated(current_view().screen_relative_rect().location());
+        setenv("__libgui_launch_origin_rect", String::formatted("{},{},{},{}", launch_origin_rect.x(), launch_origin_rect.y(), launch_origin_rect.width(), launch_origin_rect.height()).characters(), 1);
         launch(url, *default_launcher);
+        unsetenv("__libgui_launch_origin_rect");
     } else {
         auto error_message = String::formatted("Could not open {}", path);
         GUI::MessageBox::show(window(), error_message, "File Manager", GUI::MessageBox::Type::Error);
