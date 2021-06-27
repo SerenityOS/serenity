@@ -19,6 +19,7 @@ CodeComprehensionEngine::~CodeComprehensionEngine()
 }
 void CodeComprehensionEngine::set_declarations_of_document(const String& filename, Vector<GUI::AutocompleteProvider::Declaration>&& declarations)
 {
+    // Callback may not be configured if we're running tests
     if (!set_declarations_of_document_callback)
         return;
 
@@ -34,7 +35,9 @@ void CodeComprehensionEngine::set_declarations_of_document(const String& filenam
 
 void CodeComprehensionEngine::set_todo_entries_of_document(String const& filename, Vector<Cpp::Parser::TodoEntry>&& todo_entries)
 {
-    VERIFY(set_todo_entries_of_document_callback);
+    // Callback may not be configured if we're running tests
+    if (!set_todo_entries_of_document_callback)
+        return;
     set_todo_entries_of_document_callback(filename, move(todo_entries));
 }
 
