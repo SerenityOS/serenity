@@ -100,6 +100,8 @@ public:
 
     WindowTileType tiled() const { return m_tiled; }
     void set_tiled(Screen*, WindowTileType);
+    WindowTileType tile_type_based_on_rect(Gfx::IntRect const&) const;
+    void check_untile_due_to_resize(Gfx::IntRect const&);
     bool set_untiled(Optional<Gfx::IntPoint> fixed_point = {});
 
     bool is_occluded() const { return m_occluded; }
