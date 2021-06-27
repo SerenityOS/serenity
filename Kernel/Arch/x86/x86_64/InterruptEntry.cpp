@@ -12,7 +12,35 @@
 asm(
     ".globl interrupt_common_asm_entry\n"
     "interrupt_common_asm_entry: \n"
-    "    hlt \n" // FIXME
+    // add the padding field in RegisterState
+    "    subq $4, %rsp\n"
+    "    movl $0, 0(%rsp)\n"
+    // save all the other registers
+    "    pushq %r15\n"
+    "    pushq %r14\n"
+    "    pushq %r13\n"
+    "    pushq %r12\n"
+    "    pushq %r11\n"
+    "    pushq %r10\n"
+    "    pushq %r9\n"
+    "    pushq %r8\n"
+    "    pushq %rax\n"
+    "    pushq %rcx\n"
+    "    pushq %rdx\n"
+    "    pushq %rbx\n"
+    "    pushq %rsp\n"
+    "    pushq %rbp\n"
+    "    pushq %rsi\n"
+    "    pushq %rdi\n"
+    "    pushq %rsp \n" /* set TrapFrame::regs */
+    "    subq $" __STRINGIFY(TRAP_FRAME_SIZE - 8) ", %rsp \n"
+    "    subq $0x8, %rsp\n" /* align stack */
+    "    lea 0x8(%rsp), %rdi \n"
+    "    cld\n"
+    "    call enter_trap \n"
+    "    lea 0x8(%rsp), %rdi \n"
+    "    call handle_interrupt \n"
+    "    addq $0x8, %rsp\n" /* undo alignment */
     ".globl common_trap_exit \n"
     "common_trap_exit: \n"
     // another thread may have handled this trap at this point, so don't
