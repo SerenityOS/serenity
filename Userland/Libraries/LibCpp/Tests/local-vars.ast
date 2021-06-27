@@ -1,6 +1,6 @@
 TranslationUnit[1:0->7:0]
   FunctionDeclaration[1:0->7:0]
-    Type[1:0->1:4]
+    NamedType[1:0->1:4]
       int
     foo
     (
@@ -8,17 +8,17 @@ TranslationUnit[1:0->7:0]
     FunctionDefinition[2:0->7:0]
     {
       VariableDeclaration[3:4->3:9]
-        Type[3:4->3:8]
+        NamedType[3:4->3:8]
           int
         x
       VariableDeclaration[4:4->4:16]
-        Type[4:4->4:11]
+        NamedType[4:4->4:11]
           double
         y
         NumericLiteral[4:15->4:15]
         2
       VariableDeclaration[5:4->5:20]
-        Type[5:4->5:11]
+        NamedType[5:4->5:11]
           double
         z
         BinaryExpression[5:15->5:20]

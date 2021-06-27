@@ -2,16 +2,16 @@ TranslationUnit[1:0->12:0]
   StructOrClassDeclaration[1:7->7:0]
   MyStruct
     VariableDeclaration[3:4->4:4]
-      Type[3:4->3:8]
+      NamedType[3:4->3:8]
         int
       x
     VariableDeclaration[4:4->5:0]
       Pointer[4:12->4:14]
-        Type[4:4->4:12]
+        NamedType[4:4->4:12]
           s
       next
   FunctionDeclaration[7:0->12:0]
-    Type[7:0->7:4]
+    NamedType[7:0->7:4]
       int
     foo
     (
@@ -19,7 +19,7 @@ TranslationUnit[1:0->12:0]
     FunctionDefinition[8:0->12:0]
     {
       VariableDeclaration[9:4->9:14]
-        Type[9:4->9:13]
+        NamedType[9:4->9:13]
           MyStruct
         s
       FunctionCall[10:4->10:23]
