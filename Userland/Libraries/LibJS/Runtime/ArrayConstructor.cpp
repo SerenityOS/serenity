@@ -51,13 +51,14 @@ Value ArrayConstructor::call()
         return Array::create(global_object());
 
     if (vm().argument_count() == 1 && vm().argument(0).is_number()) {
-        auto array_length_value = vm().argument(0);
-        if (!array_length_value.is_integral_number() || array_length_value.as_i32() < 0) {
+        auto length = vm().argument(0);
+        auto int_length = length.to_u32(global_object());
+        if (int_length != length.as_double()) {
             vm().throw_exception<RangeError>(global_object(), ErrorType::InvalidLength, "array");
             return {};
         }
         auto* array = Array::create(global_object());
-        array->indexed_properties().set_array_like_size(array_length_value.as_i32());
+        array->indexed_properties().set_array_like_size(int_length);
         return array;
     }
 
