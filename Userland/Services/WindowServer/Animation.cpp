@@ -29,6 +29,7 @@ void Animation::start()
 {
     m_running = true;
     m_timer.start();
+    Compositor::the().animation_started({});
 }
 
 void Animation::stop()
