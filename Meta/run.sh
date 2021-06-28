@@ -57,8 +57,13 @@ SERENITY_SCREENS="${SERENITY_SCREENS:-1}"
 if uname -a | grep -iq WSL; then
     # QEMU for windows does not like gl=on, so detect if we are building in wsl, and if so, disable it
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=off}"
-else
+elif ("${SERENITY_QEMU_BIN}" --display help | grep -iq sdl) && (ldconfig -p | grep -iq virglrenderer); then
     SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-sdl,gl=on}"
+elif "${SERENITY_QEMU_BIN}" --display help | grep -iq cocoa; then
+    # QEMU for OSX seems to only support cocoa
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-cocoa,gl=off}"
+else
+    SERENITY_QEMU_DISPLAY_BACKEND="${SERENITY_QEMU_DISPLAY_BACKEND:-gtk,gl=off}"
 fi
 
 if [ "$SERENITY_SCREENS" -gt 1 ]; then
