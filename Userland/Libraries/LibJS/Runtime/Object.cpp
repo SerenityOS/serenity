@@ -1023,7 +1023,9 @@ bool Object::define_native_accessor(PropertyName const& property_name, Function<
 {
     auto& vm = this->vm();
     String formatted_property_name;
-    if (property_name.is_string()) {
+    if (property_name.is_number()) {
+        formatted_property_name = property_name.to_string();
+    } else if (property_name.is_string()) {
         formatted_property_name = property_name.as_string();
     } else {
         formatted_property_name = String::formatted("[{}]", property_name.as_symbol()->description());

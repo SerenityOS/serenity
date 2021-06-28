@@ -450,32 +450,30 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
 }
 
 // 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
-Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Vector<Value> const& arguments, Environment&)
+Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Vector<Value> const& arguments, Environment& environment)
 {
-    // FIXME: This implementation is incomplete and doesn't support the actual identifier mappings yet.
-    (void)formals;
-
     auto& vm = global_object.vm();
 
     // 1. Assert: formals does not contain a rest parameter, any binding patterns, or any initializers. It may contain duplicate identifiers.
 
     // 2. Let len be the number of elements in argumentsList.
-    auto length = arguments.size();
+    VERIFY(arguments.size() <= NumericLimits<i32>::max());
+    i32 length = static_cast<i32>(arguments.size());
 
     // 3. Let obj be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[ParameterMap]] »).
-    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object);
-    VERIFY(!vm.exception());
-
     // 4. Set obj.[[GetOwnProperty]] as specified in 10.4.4.1.
     // 5. Set obj.[[DefineOwnProperty]] as specified in 10.4.4.2.
     // 6. Set obj.[[Get]] as specified in 10.4.4.3.
     // 7. Set obj.[[Set]] as specified in 10.4.4.4.
     // 8. Set obj.[[Delete]] as specified in 10.4.4.5.
     // 9. Set obj.[[Prototype]] to %Object.prototype%.
+    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object, environment);
+    if (vm.exception())
+        return nullptr;
 
     // 14. Let index be 0.
     // 15. Repeat, while index < len,
-    for (size_t index = 0; index < length; ++index) {
+    for (i32 index = 0; index < length; ++index) {
         // a. Let val be argumentsList[index].
         auto value = arguments[index];
 
@@ -489,6 +487,45 @@ Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObje
     // 16. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     object->define_property_or_throw(vm.names.length, { .value = Value(length), .writable = true, .enumerable = false, .configurable = true });
     VERIFY(!vm.exception());
+
+    // 17. Let mappedNames be a new empty List.
+    HashTable<FlyString> mapped_names;
+
+    // 18. Set index to numberOfParameters - 1.
+    // 19. Repeat, while index ≥ 0,
+    VERIFY(formals.size() <= NumericLimits<i32>::max());
+    for (i32 index = static_cast<i32>(formals.size()) - 1; index >= 0; --index) {
+        // a. Let name be parameterNames[index].
+        auto const& name = formals[index].binding.get<FlyString>();
+
+        // b. If name is not an element of mappedNames, then
+        if (mapped_names.contains(name))
+            continue;
+
+        // i. Add name as an element of the list mappedNames.
+        mapped_names.set(name);
+
+        // ii. If index < len, then
+        if (index < length) {
+            // 1. Let g be MakeArgGetter(name, env).
+            // 2. Let p be MakeArgSetter(name, env).
+            // 3. Perform map.[[DefineOwnProperty]](! ToString(𝔽(index)), PropertyDescriptor { [[Set]]: p, [[Get]]: g, [[Enumerable]]: false, [[Configurable]]: true }).
+            object->parameter_map().define_native_accessor(
+                String::number(index),
+                [&environment, name](VM&, GlobalObject&) -> Value {
+                    auto variable = environment.get_from_environment(name);
+                    if (!variable.has_value())
+                        return {};
+                    return variable->value;
+                },
+                [&environment, name](VM& vm, GlobalObject&) {
+                    auto value = vm.argument(0);
+                    environment.put_into_environment(name, Variable { value, DeclarationKind::Var });
+                    return js_undefined();
+                },
+                Attribute::Configurable);
+        }
+    }
 
     // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     // FIXME: This is not guaranteed to be %Array.prototype.values%!
