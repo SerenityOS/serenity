@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Forward.h>
+#include <LibJS/AST.h>
 #include <LibJS/Forward.h>
 #include <LibJS/Runtime/GlobalObject.h>
 #include <LibJS/Runtime/Value.h>
@@ -24,6 +25,7 @@ FunctionObject* species_constructor(GlobalObject&, Object const&, FunctionObject
 GlobalObject* get_function_realm(GlobalObject&, FunctionObject const&);
 Object* get_prototype_from_constructor(GlobalObject&, FunctionObject const& constructor, Object* (GlobalObject::*intrinsic_default_prototype)());
 Object* create_unmapped_arguments_object(GlobalObject&, Vector<Value> const& arguments);
+Object* create_mapped_arguments_object(GlobalObject&, FunctionObject&, Vector<FunctionNode::Parameter> const&, Vector<Value> const& arguments, EnvironmentRecord&);
 
 enum class CallerMode {
     Strict,
