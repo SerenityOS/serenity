@@ -356,12 +356,12 @@ void page_fault_handler(TrapFrame* trap)
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             VirtualAddress(fault_address));
-        u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
-        u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
-        u32 kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
-        u32 kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
-        u32 slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
-        u32 slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
+        FlatPtr malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        FlatPtr free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        FlatPtr kmalloc_scrub_pattern = explode_byte(KMALLOC_SCRUB_BYTE);
+        FlatPtr kfree_scrub_pattern = explode_byte(KFREE_SCRUB_BYTE);
+        FlatPtr slab_alloc_scrub_pattern = explode_byte(SLAB_ALLOC_SCRUB_BYTE);
+        FlatPtr slab_dealloc_scrub_pattern = explode_byte(SLAB_DEALLOC_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             dbgln("Note: Address {} looks like it may be uninitialized malloc() memory", VirtualAddress(fault_address));
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
