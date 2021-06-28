@@ -78,6 +78,64 @@ public:
         return m_members.contains(key);
     }
 
+    bool has_null(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_null();
+    }
+    bool has_bool(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_bool();
+    }
+    bool has_string(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_string();
+    }
+    bool has_i32(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_i32();
+    }
+    bool has_u32(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_u32();
+    }
+    bool has_i64(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_i64();
+    }
+    bool has_u64(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_u64();
+    }
+    bool has_number(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_number();
+    }
+    bool has_array(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_array();
+    }
+    bool has_object(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_object();
+    }
+#ifndef KERNEL
+    bool has_double(String const& key) const
+    {
+        auto* value = get_ptr(key);
+        return value && value->is_double();
+    }
+#endif
+
     void set(String const& key, JsonValue value)
     {
         m_members.set(key, move(value));
