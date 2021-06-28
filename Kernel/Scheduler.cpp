@@ -583,7 +583,7 @@ void Scheduler::dump_scheduler_state()
 
 bool Scheduler::is_initialized()
 {
-    // The scheduler is initalized iff the idle thread exists
+    // The scheduler is initialized iff the idle thread exists
     return Processor::idle_thread() != nullptr;
 }
 
