@@ -64,6 +64,7 @@ protected:
     Optional<size_t> m_current_chunk_total_size;
     bool m_can_stream_response { true };
     bool m_should_read_chunk_ending_line { false };
+    bool m_has_scheduled_finish { false };
 };
 
 }
