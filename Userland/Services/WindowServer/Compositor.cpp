@@ -528,11 +528,16 @@ void Compositor::compose()
     m_invalidated_window = false;
     m_invalidated_cursor = false;
 
-    Screen::for_each([&](auto& screen) {
-        auto& screen_data = m_screen_data[screen.index()];
-        update_animations(screen, screen_data.m_flush_special_rects);
-        return IterationDecision::Continue;
-    });
+    if (!m_animations.is_empty()) {
+        Screen::for_each([&](auto& screen) {
+            auto& screen_data = m_screen_data[screen.index()];
+            update_animations(screen, screen_data.m_flush_special_rects);
+            return IterationDecision::Continue;
+        });
+        // As long as animations are running make sure we keep rendering frames
+        m_invalidated_any = true;
+        start_compose_async_timer();
+    }
 
     if (need_to_draw_cursor) {
         auto& screen_data = m_screen_data[cursor_screen.index()];
@@ -1205,8 +1210,17 @@ void Compositor::recompute_occlusions()
 
 void Compositor::register_animation(Badge<Animation>, Animation& animation)
 {
+    bool was_empty = m_animations.is_empty();
     auto result = m_animations.set(&animation);
     VERIFY(result == AK::HashSetResult::InsertedNewEntry);
+    if (was_empty)
+        start_compose_async_timer();
+}
+
+void Compositor::animation_started(Badge<Animation>)
+{
+    m_invalidated_any = true;
+    start_compose_async_timer();
 }
 
 void Compositor::unregister_animation(Badge<Animation>, Animation& animation)

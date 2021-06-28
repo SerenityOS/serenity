@@ -71,6 +71,7 @@ public:
         invalidate_screen();
     }
 
+    void animation_started(Badge<Animation>);
     void invalidate_occlusions() { m_occlusions_dirty = true; }
     void overlay_rects_changed();
 
