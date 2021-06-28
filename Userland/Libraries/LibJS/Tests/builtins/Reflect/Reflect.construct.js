@@ -9,7 +9,7 @@ describe("errors", () => {
                 Reflect.construct(value);
             }).toThrowWithMessage(
                 TypeError,
-                "First argument of Reflect.construct() must be a function"
+                "First argument of Reflect.construct() must be a constructor"
             );
         });
     });
