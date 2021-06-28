@@ -20,7 +20,7 @@
         }
 
         @GUI::Frame {
-            background_color: "white"
+            background_role: "Base"
             fill_with_background_color: true
 
             layout: @GUI::VerticalBoxLayout {
@@ -53,7 +53,7 @@
         }
 
         @GUI::Frame {
-            background_color: "white"
+            background_role: "Base"
             fill_with_background_color: true
 
             layout: @GUI::VerticalBoxLayout {
