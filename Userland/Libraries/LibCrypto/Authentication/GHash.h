@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <AK/ByteReader.h>
 #include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCrypto/Hash/HashFunction.h>
@@ -35,8 +36,10 @@ public:
 
     explicit GHash(const ReadonlyBytes& key)
     {
-        for (size_t i = 0; i < 16; i += 4)
-            m_key[i / 4] = AK::convert_between_host_and_big_endian(*(const u32*)(key.offset(i)));
+        VERIFY(key.size() >= 16);
+        for (size_t i = 0; i < 16; i += 4) {
+            m_key[i / 4] = AK::convert_between_host_and_big_endian(ByteReader::load32(key.offset(i)));
+        }
     }
 
     constexpr static size_t digest_size() { return TagType::Size; }
