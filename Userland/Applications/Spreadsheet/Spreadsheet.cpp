@@ -376,7 +376,7 @@ RefPtr<Sheet> Sheet::from_json(const JsonObject& object, Workbook& workbook)
             format.background_color = Color::from_string(value.as_string());
     };
 
-    cells.for_each_member([&](auto& name, JsonValue& value) {
+    cells.for_each_member([&](auto& name, JsonValue const& value) {
         auto position_option = sheet->parse_cell_name(name);
         if (!position_option.has_value())
             return IterationDecision::Continue;

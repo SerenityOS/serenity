@@ -21,32 +21,26 @@ public:
     ~JsonObject() = default;
 
     JsonObject(JsonObject const& other)
-        : m_order(other.m_order)
-        , m_members(other.m_members)
+        : m_members(other.m_members)
     {
     }
 
     JsonObject(JsonObject&& other)
-        : m_order(move(other.m_order))
-        , m_members(move(other.m_members))
+        : m_members(move(other.m_members))
     {
     }
 
     JsonObject& operator=(JsonObject const& other)
     {
-        if (this != &other) {
+        if (this != &other)
             m_members = other.m_members;
-            m_order = other.m_order;
-        }
         return *this;
     }
 
     JsonObject& operator=(JsonObject&& other)
     {
-        if (this != &other) {
+        if (this != &other)
             m_members = move(other.m_members);
-            m_order = move(other.m_order);
-        }
         return *this;
     }
 
@@ -80,27 +74,19 @@ public:
 
     void set(String const& key, JsonValue value)
     {
-        if (m_members.set(key, move(value)) == HashSetResult::ReplacedExistingEntry)
-            m_order.remove(m_order.find_first_index(key).value());
-        m_order.append(key);
+        m_members.set(key, move(value));
     }
 
     template<typename Callback>
     void for_each_member(Callback callback) const
     {
-        for (size_t i = 0; i < m_order.size(); ++i) {
-            auto property = m_order[i];
-            callback(property, m_members.get(property).value());
-        }
+        for (auto& member : m_members)
+            callback(member.key, member.value);
     }
 
     bool remove(String const& key)
     {
-        if (m_members.remove(key)) {
-            m_order.remove(m_order.find_first_index(key).value());
-            return true;
-        }
-        return false;
+        return m_members.remove(key);
     }
 
     template<typename Builder>
@@ -112,8 +98,7 @@ public:
     String to_string() const { return serialized<StringBuilder>(); }
 
 private:
-    Vector<String> m_order;
-    HashMap<String, JsonValue> m_members;
+    OrderedHashMap<String, JsonValue> m_members;
 };
 
 template<typename Builder>
