@@ -13,7 +13,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/Object.h>
-#include <LibSQL/AST/AST.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/Key.h>
 #include <LibSQL/Type.h>
@@ -90,11 +89,11 @@ class KeyPartDef : public ColumnDef {
     C_OBJECT(KeyPartDef);
 
 public:
-    KeyPartDef(IndexDef*, String, SQLType, AST::Order = AST::Order::Ascending);
-    AST::Order sort_order() const { return m_sort_order; }
+    KeyPartDef(IndexDef*, String, SQLType, Order = Order::Ascending);
+    Order sort_order() const { return m_sort_order; }
 
 private:
-    AST::Order m_sort_order { AST::Order::Ascending };
+    Order m_sort_order { Order::Ascending };
 };
 
 class IndexDef : public Relation {
@@ -106,7 +105,7 @@ public:
     NonnullRefPtrVector<KeyPartDef> key_definition() const { return m_key_definition; }
     bool unique() const { return m_unique; }
     [[nodiscard]] size_t size() const { return m_key_definition.size(); }
-    void append_column(String, SQLType, AST::Order = AST::Order::Ascending);
+    void append_column(String, SQLType, Order = Order::Ascending);
     Key key() const override;
     [[nodiscard]] TupleDescriptor to_tuple_descriptor() const;
     static NonnullRefPtr<IndexDef> index_def();
