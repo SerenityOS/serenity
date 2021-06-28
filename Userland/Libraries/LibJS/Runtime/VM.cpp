@@ -369,7 +369,7 @@ Value VM::get_variable(const FlyString& name, GlobalObject& global_object)
             if (possible_match.has_value())
                 return possible_match.value().value;
             if (!context.arguments_object) {
-                if (context.function->is_strict_mode()) {
+                if (context.function->is_strict_mode() || !context.function->has_simple_parameter_list()) {
                     context.arguments_object = create_unmapped_arguments_object(global_object, context.arguments);
                 } else {
                     // FIXME: This code path is completely ad-hoc.

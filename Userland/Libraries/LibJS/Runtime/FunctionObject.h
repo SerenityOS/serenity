@@ -57,11 +57,16 @@ public:
     ThisMode this_mode() const { return m_this_mode; }
     void set_this_mode(ThisMode this_mode) { m_this_mode = this_mode; }
 
+    // This is for IsSimpleParameterList (static semantics)
+    bool has_simple_parameter_list() const { return m_has_simple_parameter_list; }
+
 protected:
     virtual void visit_edges(Visitor&) override;
 
     explicit FunctionObject(Object& prototype);
     FunctionObject(Value bound_this, Vector<Value> bound_arguments, Object& prototype);
+
+    void set_has_simple_parameter_list(bool b) { m_has_simple_parameter_list = b; }
 
 private:
     virtual bool is_function() const override { return true; }
@@ -70,6 +75,7 @@ private:
     Value m_home_object;
     ConstructorKind m_constructor_kind = ConstructorKind::Base;
     ThisMode m_this_mode { ThisMode::Global };
+    bool m_has_simple_parameter_list { false };
 };
 
 }
