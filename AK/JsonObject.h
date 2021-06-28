@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2021, Max Wipfli <mail@maxwipfli.ch>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -19,7 +20,7 @@ public:
     JsonObject() = default;
     ~JsonObject() = default;
 
-    JsonObject(const JsonObject& other)
+    JsonObject(JsonObject const& other)
         : m_order(other.m_order)
         , m_members(other.m_members)
     {
@@ -31,7 +32,7 @@ public:
     {
     }
 
-    JsonObject& operator=(const JsonObject& other)
+    JsonObject& operator=(JsonObject const& other)
     {
         if (this != &other) {
             m_members = other.m_members;
@@ -52,19 +53,19 @@ public:
     int size() const { return m_members.size(); }
     bool is_empty() const { return m_members.is_empty(); }
 
-    JsonValue get(const String& key) const
+    JsonValue get(String const& key) const
     {
         auto* value = get_ptr(key);
         return value ? *value : JsonValue(JsonValue::Type::Null);
     }
 
-    JsonValue get_or(const String& key, const JsonValue& alternative) const
+    JsonValue get_or(String const& key, JsonValue const& alternative) const
     {
         auto* value = get_ptr(key);
         return value ? *value : alternative;
     }
 
-    const JsonValue* get_ptr(const String& key) const
+    JsonValue const* get_ptr(String const& key) const
     {
         auto it = m_members.find(key);
         if (it == m_members.end())
@@ -72,12 +73,12 @@ public:
         return &(*it).value;
     }
 
-    bool has(const String& key) const
+    bool has(String const& key) const
     {
         return m_members.contains(key);
     }
 
-    void set(const String& key, JsonValue value)
+    void set(String const& key, JsonValue value)
     {
         if (m_members.set(key, move(value)) == HashSetResult::ReplacedExistingEntry)
             m_order.remove(m_order.find_first_index(key).value());
@@ -93,7 +94,7 @@ public:
         }
     }
 
-    bool remove(const String& key)
+    bool remove(String const& key)
     {
         if (m_members.remove(key)) {
             m_order.remove(m_order.find_first_index(key).value());
