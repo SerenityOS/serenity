@@ -44,7 +44,7 @@ public:
         return *this;
     }
 
-    int size() const { return m_members.size(); }
+    size_t size() const { return m_members.size(); }
     bool is_empty() const { return m_members.is_empty(); }
 
     JsonValue const& get(String const& key) const
