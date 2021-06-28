@@ -138,6 +138,7 @@
     M(ReferenceNullishSetProperty, "Cannot set property '{}' of {}")                                                                    \
     M(ReferencePrimitiveSetProperty, "Cannot set property '{}' of {} '{}'")                                                             \
     M(ReferenceUnresolvable, "Unresolvable reference")                                                                                  \
+    M(ReflectArgumentMustBeAConstructor, "First argument of Reflect.{}() must be a constructor")                                        \
     M(ReflectArgumentMustBeAFunction, "First argument of Reflect.{}() must be a function")                                              \
     M(ReflectArgumentMustBeAnObject, "First argument of Reflect.{}() must be an object")                                                \
     M(ReflectBadNewTarget, "Optional third argument of Reflect.construct() must be a constructor")                                      \
