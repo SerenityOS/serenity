@@ -37,7 +37,7 @@ NonnullRefPtr<IndexDef> SchemaDef::index_def()
 {
     NonnullRefPtr<IndexDef> s_index_def = IndexDef::construct("$schema", true, 0);
     if (!s_index_def->size()) {
-        s_index_def->append_column("schema_name", SQLType::Text, AST::Order::Ascending);
+        s_index_def->append_column("schema_name", SQLType::Text, Order::Ascending);
     }
     return s_index_def;
 }
@@ -70,15 +70,15 @@ NonnullRefPtr<IndexDef> ColumnDef::index_def()
 {
     NonnullRefPtr<IndexDef> s_index_def = IndexDef::construct("$column", true, 0);
     if (!s_index_def->size()) {
-        s_index_def->append_column("table_hash", SQLType::Integer, AST::Order::Ascending);
-        s_index_def->append_column("column_number", SQLType::Integer, AST::Order::Ascending);
-        s_index_def->append_column("column_name", SQLType::Text, AST::Order::Ascending);
-        s_index_def->append_column("column_type", SQLType::Integer, AST::Order::Ascending);
+        s_index_def->append_column("table_hash", SQLType::Integer, Order::Ascending);
+        s_index_def->append_column("column_number", SQLType::Integer, Order::Ascending);
+        s_index_def->append_column("column_name", SQLType::Text, Order::Ascending);
+        s_index_def->append_column("column_type", SQLType::Integer, Order::Ascending);
     }
     return s_index_def;
 }
 
-KeyPartDef::KeyPartDef(IndexDef* index, String name, SQLType sql_type, AST::Order sort_order)
+KeyPartDef::KeyPartDef(IndexDef* index, String name, SQLType sql_type, Order sort_order)
     : ColumnDef(index, index->size(), move(name), sql_type)
     , m_sort_order(sort_order)
 {
@@ -96,7 +96,7 @@ IndexDef::IndexDef(String name, bool unique, u32 pointer)
 {
 }
 
-void IndexDef::append_column(String name, SQLType sql_type, AST::Order sort_order)
+void IndexDef::append_column(String name, SQLType sql_type, Order sort_order)
 {
     auto part = KeyPartDef::construct(this, move(name), sql_type, sort_order);
     m_key_definition.append(part);
@@ -131,9 +131,9 @@ NonnullRefPtr<IndexDef> IndexDef::index_def()
 {
     NonnullRefPtr<IndexDef> s_index_def = IndexDef::construct("$index", true, 0);
     if (!s_index_def->size()) {
-        s_index_def->append_column("table_hash", SQLType::Integer, AST::Order::Ascending);
-        s_index_def->append_column("index_name", SQLType::Text, AST::Order::Ascending);
-        s_index_def->append_column("unique", SQLType::Integer, AST::Order::Ascending);
+        s_index_def->append_column("table_hash", SQLType::Integer, Order::Ascending);
+        s_index_def->append_column("index_name", SQLType::Text, Order::Ascending);
+        s_index_def->append_column("unique", SQLType::Integer, Order::Ascending);
     }
     return s_index_def;
 }
@@ -149,7 +149,7 @@ TupleDescriptor TableDef::to_tuple_descriptor() const
 {
     TupleDescriptor ret;
     for (auto& part : m_columns) {
-        ret.append({ part.name(), part.type(), AST::Order::Ascending });
+        ret.append({ part.name(), part.type(), Order::Ascending });
     }
     return ret;
 }
@@ -192,8 +192,8 @@ NonnullRefPtr<IndexDef> TableDef::index_def()
 {
     NonnullRefPtr<IndexDef> s_index_def = IndexDef::construct("$table", true, 0);
     if (!s_index_def->size()) {
-        s_index_def->append_column("schema_hash", SQLType::Integer, AST::Order::Ascending);
-        s_index_def->append_column("table_name", SQLType::Text, AST::Order::Ascending);
+        s_index_def->append_column("schema_hash", SQLType::Integer, Order::Ascending);
+        s_index_def->append_column("table_name", SQLType::Text, Order::Ascending);
     }
     return s_index_def;
 }

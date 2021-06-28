@@ -7,6 +7,7 @@
 #pragma once
 
 #include <AK/Debug.h>
+#include <AK/Vector.h>
 #include <LibSQL/Forward.h>
 #include <LibSQL/TupleDescriptor.h>
 #include <LibSQL/Value.h>
@@ -42,6 +43,7 @@ public:
 
     [[nodiscard]] String to_string() const;
     explicit operator String() const { return to_string(); }
+    [[nodiscard]] Vector<String> to_string_vector() const;
 
     bool operator<(Tuple const& other) const { return compare(other) < 0; }
     bool operator<=(Tuple const& other) const { return compare(other) <= 0; }

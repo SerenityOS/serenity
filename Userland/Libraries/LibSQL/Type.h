@@ -37,4 +37,14 @@ inline static size_t size_of(SQLType t)
     }
 }
 
+enum class Order {
+    Ascending,
+    Descending,
+};
+
+enum class Nulls {
+    First,
+    Last,
+};
+
 }

@@ -136,8 +136,8 @@ TEST_CASE(order_int_values)
 TEST_CASE(tuple)
 {
     SQL::TupleDescriptor descriptor;
-    descriptor.append({ "col1", SQL::SQLType::Text, SQL::AST::Order::Ascending });
-    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::AST::Order::Descending });
+    descriptor.append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -149,8 +149,8 @@ TEST_CASE(tuple)
 TEST_CASE(serialize_tuple)
 {
     SQL::TupleDescriptor descriptor;
-    descriptor.append({ "col1", SQL::SQLType::Text, SQL::AST::Order::Ascending });
-    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::AST::Order::Descending });
+    descriptor.append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -170,8 +170,8 @@ TEST_CASE(serialize_tuple)
 TEST_CASE(copy_tuple)
 {
     SQL::TupleDescriptor descriptor;
-    descriptor.append({ "col1", SQL::SQLType::Text, SQL::AST::Order::Ascending });
-    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::AST::Order::Descending });
+    descriptor.append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
     SQL::Tuple tuple(descriptor);
 
     tuple["col1"] = "Test";
@@ -188,8 +188,8 @@ TEST_CASE(copy_tuple)
 TEST_CASE(compare_tuples)
 {
     SQL::TupleDescriptor descriptor;
-    descriptor.append({ "col1", SQL::SQLType::Text, SQL::AST::Order::Ascending });
-    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::AST::Order::Descending });
+    descriptor.append({ "col1", SQL::SQLType::Text, SQL::Order::Ascending });
+    descriptor.append({ "col2", SQL::SQLType::Integer, SQL::Order::Descending });
 
     SQL::Tuple tuple1(descriptor);
     tuple1["col1"] = "Test";

@@ -567,8 +567,8 @@ TEST_CASE(select)
 
     struct Ordering {
         String collation_name;
-        SQL::AST::Order order;
-        SQL::AST::Nulls nulls;
+        SQL::Order order;
+        SQL::Nulls nulls;
     };
 
     auto validate = [](StringView sql, Vector<Type> expected_columns, Vector<From> expected_from_list, bool expect_where_clause, size_t expected_group_by_size, bool expect_having_clause, Vector<Ordering> expected_ordering, bool expect_limit_clause, bool expect_offset_clause) {
@@ -674,13 +674,13 @@ TEST_CASE(select)
     validate("SELECT * FROM table_name GROUP BY column1, column2, column3;", all, from, false, 3, false, {}, false, false);
     validate("SELECT * FROM table_name GROUP BY column_name HAVING 'abc';", all, from, false, 1, true, {}, false, false);
 
-    validate("SELECT * FROM table_name ORDER BY column_name;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column_name COLLATE collation;", all, from, false, 0, false, { { "COLLATION", SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column_name ASC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column_name DESC;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column_name ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column_name DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::First } }, false, false);
-    validate("SELECT * FROM table_name ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::First }, { {}, SQL::AST::Order::Descending, SQL::AST::Nulls::Last }, { {}, SQL::AST::Order::Ascending, SQL::AST::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name COLLATE collation;", all, from, false, 0, false, { { "COLLATION", SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name ASC;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name DESC;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name ASC NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column_name DESC NULLS FIRST;", all, from, false, 0, false, { { {}, SQL::Order::Descending, SQL::Nulls::First } }, false, false);
+    validate("SELECT * FROM table_name ORDER BY column1, column2 DESC, column3 NULLS LAST;", all, from, false, 0, false, { { {}, SQL::Order::Ascending, SQL::Nulls::First }, { {}, SQL::Order::Descending, SQL::Nulls::Last }, { {}, SQL::Order::Ascending, SQL::Nulls::Last } }, false, false);
 
     validate("SELECT * FROM table_name LIMIT 15;", all, from, false, 0, false, {}, true, false);
     validate("SELECT * FROM table_name LIMIT 15 OFFSET 16;", all, from, false, 0, false, {}, true, true);
