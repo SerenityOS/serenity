@@ -138,6 +138,7 @@ namespace SQL::AST {
     __ENUMERATE_SQL_TOKEN("ROW", Row, Keyword)                            \
     __ENUMERATE_SQL_TOKEN("ROWS", Rows, Keyword)                          \
     __ENUMERATE_SQL_TOKEN("SAVEPOINT", Savepoint, Keyword)                \
+    __ENUMERATE_SQL_TOKEN("SCHEMA", Schema, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("SELECT", Select, Keyword)                      \
     __ENUMERATE_SQL_TOKEN("SET", Set, Keyword)                            \
     __ENUMERATE_SQL_TOKEN("TABLE", Table, Keyword)                        \

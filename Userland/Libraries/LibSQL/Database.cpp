@@ -32,6 +32,11 @@ Database::Database(String name)
     m_table_columns->on_new_root = [&]() {
         m_heap->set_table_columns_root(m_table_columns->root());
     };
+    auto default_schema = get_schema("default");
+    if (!default_schema) {
+        default_schema = SchemaDef::construct("default");
+        add_schema(*default_schema);
+    }
 }
 
 void Database::add_schema(SchemaDef const& schema)
@@ -54,7 +59,6 @@ RefPtr<SchemaDef> Database::get_schema(String const& schema_name)
         return schema_def_opt.value();
     auto schema_iterator = m_schemas->find(key);
     if (schema_iterator.is_end() || (*schema_iterator != key)) {
-        warnln("Schema {} not found", schema_name);
         return nullptr;
     }
     auto ret = SchemaDef::construct(*schema_iterator);
@@ -85,7 +89,6 @@ RefPtr<TableDef> Database::get_table(String const& schema, String const& name)
         return table_def_opt.value();
     auto table_iterator = m_tables->find(key);
     if (table_iterator.is_end() || (*table_iterator != key)) {
-        warnln("Table {} not found", name);
         return nullptr;
     }
     auto schema_def = get_schema(schema);

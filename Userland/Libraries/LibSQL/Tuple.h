@@ -15,20 +15,15 @@
 namespace SQL {
 
 /**
- * A Key is an element of a random-access data structure persisted in a Heap.
- * Key objects stored in such a structure have a definition controlling the
- * number of parts or columns the key has, the types of the parts, and the
- * sort order of these parts. Besides having an optional definition, a Key
- * consists of one Value object per part. In addition, keys have a u32 pointer
+ * A Tuple is an element of a random-access data structure persisted in a Heap.
+ * Tuple objects stored in such a structure have a definition controlling the
+ * number of parts or columns the tuple has, the types of the parts, and the
+ * sort order of these parts. Besides having an optional definition, a Tuple
+ * consists of one Value object per part. In addition, tuples have a u32 pointer
  * member which points to a Heap location.
  *
- * Key objects without a definition can be used to locate/find objects in
- * a searchable data collection.
- *
- * FIXME Currently the Key definition is passed as an `IndexDefinition` meta
- * data object, meaning that names are associated with both the definition
- * and the parts of the key. These names are not used, meaning that key
- * definitions should probably be constructed in a different way.
+ * Tuple is a base class; concrete subclasses are Key, which implements the
+ * elements of an index, and Row, which implements the rows in a table.
  */
 class Tuple {
 public:

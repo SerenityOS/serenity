@@ -55,6 +55,7 @@ private:
 
     NonnullRefPtr<Statement> parse_statement();
     NonnullRefPtr<Statement> parse_statement_with_expression_list(RefPtr<CommonTableExpressionList>);
+    NonnullRefPtr<CreateSchema> parse_create_schema_statement();
     NonnullRefPtr<CreateTable> parse_create_table_statement();
     NonnullRefPtr<AlterTable> parse_alter_table_statement();
     NonnullRefPtr<DropTable> parse_drop_table_statement();
