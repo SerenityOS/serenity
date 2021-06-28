@@ -592,12 +592,8 @@ void dump_thread_list()
     dbgln("Scheduler thread list for processor {}:", Processor::id());
 
     auto get_cs = [](Thread& thread) -> u16 {
-#if ARCH(I386)
         if (!thread.current_trap())
             return thread.regs().cs;
-#else
-        PANIC("get_cs() not implemented");
-#endif
         return thread.get_register_dump_from_stack().cs;
     };
 
@@ -607,7 +603,8 @@ void dump_thread_list()
             return thread.regs().eip;
         return thread.get_register_dump_from_stack().eip;
 #else
-        PANIC("get_eip() not implemented");
+        if (!thread.current_trap())
+            return thread.regs().rip;
         return thread.get_register_dump_from_stack().rip;
 #endif
     };
