@@ -96,7 +96,7 @@ struct DeferredCallEntry {
 };
 
 class Processor;
-// Note: We only support processors at most at the moment,
+// Note: We only support 8 processors at most at the moment,
 // so allocate 8 slots of inline capacity in the container.
 using ProcessorContainer = Array<Processor*, 8>;
 
