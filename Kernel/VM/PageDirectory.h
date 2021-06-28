@@ -28,11 +28,11 @@ public:
         return page_directory;
     }
     static NonnullRefPtr<PageDirectory> create_kernel_page_directory() { return adopt_ref(*new PageDirectory); }
-    static RefPtr<PageDirectory> find_by_cr3(u32);
+    static RefPtr<PageDirectory> find_by_cr3(FlatPtr);
 
     ~PageDirectory();
 
-    u32 cr3() const
+    FlatPtr cr3() const
     {
 #if ARCH(X86_64)
         return m_pml4t->paddr().get();
