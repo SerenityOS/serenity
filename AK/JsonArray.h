@@ -48,11 +48,11 @@ public:
         return *this;
     }
 
-    size_t size() const { return m_values.size(); }
-    bool is_empty() const { return m_values.is_empty(); }
+    [[nodiscard]] size_t size() const { return m_values.size(); }
+    [[nodiscard]] bool is_empty() const { return m_values.is_empty(); }
 
-    JsonValue const& at(size_t index) const { return m_values.at(index); }
-    JsonValue const& operator[](size_t index) const { return at(index); }
+    [[nodiscard]] JsonValue const& at(size_t index) const { return m_values.at(index); }
+    [[nodiscard]] JsonValue const& operator[](size_t index) const { return at(index); }
 
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
@@ -64,7 +64,7 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
-    String to_string() const { return serialized<StringBuilder>(); }
+    [[nodiscard]] String to_string() const { return serialized<StringBuilder>(); }
 
     template<typename Callback>
     void for_each(Callback callback) const
@@ -73,7 +73,7 @@ public:
             callback(value);
     }
 
-    Vector<JsonValue> const& values() const { return m_values; }
+    [[nodiscard]] Vector<JsonValue> const& values() const { return m_values; }
 
     void ensure_capacity(size_t capacity) { m_values.ensure_capacity(capacity); }
 
