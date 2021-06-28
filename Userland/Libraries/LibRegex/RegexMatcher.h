@@ -77,6 +77,8 @@ public:
 
     explicit Regex(StringView pattern, typename ParserTraits<Parser>::OptionsType regex_options = {});
     ~Regex() = default;
+    Regex(Regex&&) = default;
+    Regex& operator=(Regex&&) = default;
 
     typename ParserTraits<Parser>::OptionsType options() const;
     void print_bytecode(FILE* f = stdout) const;
