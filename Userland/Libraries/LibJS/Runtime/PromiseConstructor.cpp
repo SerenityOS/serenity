@@ -16,7 +16,7 @@
 namespace JS {
 
 PromiseConstructor::PromiseConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Promise, *global_object.function_prototype())
+    : NativeFunction(vm().names.Promise.as_string(), *global_object.function_prototype())
 {
 }
 
