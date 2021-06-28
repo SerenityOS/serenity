@@ -12,7 +12,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
+KResultOr<FlatPtr> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
@@ -25,7 +25,7 @@ KResultOr<int> Process::sys$fstat(int fd, Userspace<stat*> user_statbuf)
     return rc;
 }
 
-KResultOr<int> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
+KResultOr<FlatPtr> Process::sys$stat(Userspace<const Syscall::SC_stat_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
     Syscall::SC_stat_params params;

@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$seteuid(uid_t new_euid)
+KResultOr<FlatPtr> Process::sys$seteuid(uid_t new_euid)
 {
     REQUIRE_PROMISE(id);
 
@@ -24,7 +24,7 @@ KResultOr<int> Process::sys$seteuid(uid_t new_euid)
     return 0;
 }
 
-KResultOr<int> Process::sys$setegid(gid_t new_egid)
+KResultOr<FlatPtr> Process::sys$setegid(gid_t new_egid)
 {
     REQUIRE_PROMISE(id);
 
@@ -39,7 +39,7 @@ KResultOr<int> Process::sys$setegid(gid_t new_egid)
     return 0;
 }
 
-KResultOr<int> Process::sys$setuid(uid_t new_uid)
+KResultOr<FlatPtr> Process::sys$setuid(uid_t new_uid)
 {
     REQUIRE_PROMISE(id);
 
@@ -56,7 +56,7 @@ KResultOr<int> Process::sys$setuid(uid_t new_uid)
     return 0;
 }
 
-KResultOr<int> Process::sys$setgid(gid_t new_gid)
+KResultOr<FlatPtr> Process::sys$setgid(gid_t new_gid)
 {
     REQUIRE_PROMISE(id);
 
@@ -73,7 +73,7 @@ KResultOr<int> Process::sys$setgid(gid_t new_gid)
     return 0;
 }
 
-KResultOr<int> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
+KResultOr<FlatPtr> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
 {
     REQUIRE_PROMISE(id);
 
@@ -98,7 +98,7 @@ KResultOr<int> Process::sys$setreuid(uid_t new_ruid, uid_t new_euid)
     return 0;
 }
 
-KResultOr<int> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
+KResultOr<FlatPtr> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_suid)
 {
     REQUIRE_PROMISE(id);
 
@@ -123,7 +123,7 @@ KResultOr<int> Process::sys$setresuid(uid_t new_ruid, uid_t new_euid, uid_t new_
     return 0;
 }
 
-KResultOr<int> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_sgid)
+KResultOr<FlatPtr> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_sgid)
 {
     REQUIRE_PROMISE(id);
 
@@ -148,7 +148,7 @@ KResultOr<int> Process::sys$setresgid(gid_t new_rgid, gid_t new_egid, gid_t new_
     return 0;
 }
 
-KResultOr<int> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
+KResultOr<FlatPtr> Process::sys$setgroups(size_t count, Userspace<const gid_t*> user_gids)
 {
     REQUIRE_PROMISE(id);
     if (!is_superuser())

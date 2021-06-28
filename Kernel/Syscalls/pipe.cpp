@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$pipe(int pipefd[2], int flags)
+KResultOr<FlatPtr> Process::sys$pipe(int pipefd[2], int flags)
 {
     REQUIRE_PROMISE(stdio);
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())

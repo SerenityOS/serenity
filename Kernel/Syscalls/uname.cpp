@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$uname(Userspace<utsname*> user_buf)
+KResultOr<FlatPtr> Process::sys$uname(Userspace<utsname*> user_buf)
 {
     extern String* g_hostname;
     extern Lock* g_hostname_lock;
