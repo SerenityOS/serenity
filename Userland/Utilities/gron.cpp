@@ -112,7 +112,7 @@ static void print(const String& name, const JsonValue& value, Vector<String>& tr
     if (value.is_array()) {
         outln("{}[]{};", color_brace, color_off);
         trail.append(String::formatted("{}{}{}", color_name, name, color_off));
-        for (int i = 0; i < value.as_array().size(); ++i) {
+        for (size_t i = 0; i < value.as_array().size(); ++i) {
             auto element_name = String::formatted("{}{}[{}{}{}{}{}]{}", color_off, color_brace, color_off, color_index, i, color_off, color_brace, color_off);
             print(element_name, value.as_array()[i], trail);
         }

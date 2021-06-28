@@ -59,7 +59,7 @@ private:
 static Vector<Quote> parse_all(const JsonArray& array)
 {
     Vector<Quote> quotes;
-    for (int i = 0; i < array.size(); ++i) {
+    for (size_t i = 0; i < array.size(); ++i) {
         Optional<Quote> q = Quote::try_parse(array[i]);
         if (!q.has_value()) {
             warnln("WARNING: Could not parse quote #{}!", i);

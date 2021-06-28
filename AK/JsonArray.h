@@ -48,7 +48,7 @@ public:
         return *this;
     }
 
-    int size() const { return m_values.size(); }
+    size_t size() const { return m_values.size(); }
     bool is_empty() const { return m_values.is_empty(); }
 
     JsonValue const& at(size_t index) const { return m_values.at(index); }
@@ -56,7 +56,7 @@ public:
 
     void clear() { m_values.clear(); }
     void append(JsonValue value) { m_values.append(move(value)); }
-    void set(int index, JsonValue value) { m_values[index] = move(value); }
+    void set(size_t index, JsonValue value) { m_values[index] = move(value); }
 
     template<typename Builder>
     typename Builder::OutputType serialized() const;
@@ -75,7 +75,7 @@ public:
 
     Vector<JsonValue> const& values() const { return m_values; }
 
-    void ensure_capacity(int capacity) { m_values.ensure_capacity(capacity); }
+    void ensure_capacity(size_t capacity) { m_values.ensure_capacity(capacity); }
 
 private:
     Vector<JsonValue> m_values;
