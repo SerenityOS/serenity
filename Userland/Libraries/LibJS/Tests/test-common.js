@@ -210,7 +210,9 @@ class ExpectationError extends Error {
                 this.__expect(
                     this.target === false,
                     () =>
-                        `toBeTrue: expected target to be false, got _${valueToString(this.target)}_`
+                        `toBeFalse: expected target to be false, got _${valueToString(
+                            this.target
+                        )}_`
                 );
             });
         }
