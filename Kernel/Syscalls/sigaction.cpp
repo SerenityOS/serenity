@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
+KResultOr<FlatPtr> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set, Userspace<sigset_t*> old_set)
 {
     REQUIRE_PROMISE(sigaction);
     auto current_thread = Thread::current();
@@ -41,7 +41,7 @@ KResultOr<int> Process::sys$sigprocmask(int how, Userspace<const sigset_t*> set,
     return 0;
 }
 
-KResultOr<int> Process::sys$sigpending(Userspace<sigset_t*> set)
+KResultOr<FlatPtr> Process::sys$sigpending(Userspace<sigset_t*> set)
 {
     REQUIRE_PROMISE(stdio);
     auto pending_signals = Thread::current()->pending_signals();
@@ -50,7 +50,7 @@ KResultOr<int> Process::sys$sigpending(Userspace<sigset_t*> set)
     return 0;
 }
 
-KResultOr<int> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
+KResultOr<FlatPtr> Process::sys$sigaction(int signum, Userspace<const sigaction*> user_act, Userspace<sigaction*> user_old_act)
 {
     REQUIRE_PROMISE(sigaction);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
@@ -75,7 +75,7 @@ KResultOr<int> Process::sys$sigaction(int signum, Userspace<const sigaction*> us
     return 0;
 }
 
-KResultOr<int> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
+KResultOr<FlatPtr> Process::sys$sigreturn([[maybe_unused]] RegisterState& registers)
 {
     REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;

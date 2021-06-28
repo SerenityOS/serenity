@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
+KResultOr<FlatPtr> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec*> user_ts)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -24,7 +24,7 @@ KResultOr<int> Process::sys$clock_gettime(clockid_t clock_id, Userspace<timespec
     return 0;
 }
 
-KResultOr<int> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
+KResultOr<FlatPtr> Process::sys$clock_settime(clockid_t clock_id, Userspace<const timespec*> user_ts)
 {
     REQUIRE_PROMISE(settime);
 
@@ -45,7 +45,7 @@ KResultOr<int> Process::sys$clock_settime(clockid_t clock_id, Userspace<const ti
     return 0;
 }
 
-KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
+KResultOr<FlatPtr> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_nanosleep_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -87,7 +87,7 @@ KResultOr<int> Process::sys$clock_nanosleep(Userspace<const Syscall::SC_clock_na
     return 0;
 }
 
-KResultOr<int> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
+KResultOr<FlatPtr> Process::sys$adjtime(Userspace<const timeval*> user_delta, Userspace<timeval*> user_old_delta)
 {
     if (user_old_delta) {
         timespec old_delta_ts = TimeManagement::the().remaining_epoch_time_adjustment();
@@ -112,7 +112,7 @@ KResultOr<int> Process::sys$adjtime(Userspace<const timeval*> user_delta, Usersp
     return 0;
 }
 
-KResultOr<int> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
+KResultOr<FlatPtr> Process::sys$gettimeofday(Userspace<timeval*> user_tv)
 {
     REQUIRE_PROMISE(stdio);
     auto tv = kgettimeofday().to_timeval();

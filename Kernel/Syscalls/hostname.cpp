@@ -11,7 +11,7 @@ namespace Kernel {
 extern String* g_hostname;
 extern Lock* g_hostname_lock;
 
-KResultOr<int> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
+KResultOr<FlatPtr> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(stdio);
     if (size > NumericLimits<ssize_t>::max())
@@ -24,7 +24,7 @@ KResultOr<int> Process::sys$gethostname(Userspace<char*> buffer, size_t size)
     return 0;
 }
 
-KResultOr<int> Process::sys$sethostname(Userspace<const char*> hostname, size_t length)
+KResultOr<FlatPtr> Process::sys$sethostname(Userspace<const char*> hostname, size_t length)
 {
     REQUIRE_NO_PROMISES;
     if (!is_superuser())

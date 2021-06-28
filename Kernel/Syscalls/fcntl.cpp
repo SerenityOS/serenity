@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$fcntl(int fd, int cmd, u32 arg)
+KResultOr<FlatPtr> Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
     dbgln_if(IO_DEBUG, "sys$fcntl: fd={}, cmd={}, arg={}", fd, cmd, arg);

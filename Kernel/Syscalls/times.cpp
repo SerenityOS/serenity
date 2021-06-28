@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<clock_t> Process::sys$times(Userspace<tms*> user_times)
+KResultOr<FlatPtr> Process::sys$times(Userspace<tms*> user_times)
 {
     REQUIRE_PROMISE(stdio);
     tms times = {};

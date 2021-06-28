@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
+KResultOr<FlatPtr> Process::sys$pledge(Userspace<const Syscall::SC_pledge_params*> user_params)
 {
     Syscall::SC_pledge_params params;
     if (!copy_from_user(&params, user_params))
