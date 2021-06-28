@@ -20,9 +20,9 @@ Animation::~Animation()
     Compositor::the().unregister_animation({}, *this);
 }
 
-void Animation::set_length(int length_in_ms)
+void Animation::set_duration(int duration_in_ms)
 {
-    m_length = length_in_ms;
+    m_duration = duration_in_ms;
 }
 
 void Animation::start()
@@ -41,7 +41,7 @@ void Animation::stop()
 void Animation::update(Badge<Compositor>, Gfx::Painter& painter, Screen& screen, Gfx::DisjointRectSet& flush_rects)
 {
     int elapsed_ms = m_timer.elapsed();
-    float progress = min((float)elapsed_ms / (float)m_length, 1.0f);
+    float progress = min((float)elapsed_ms / (float)m_duration, 1.0f);
 
     if (on_update)
         on_update(progress, painter, screen, flush_rects);
