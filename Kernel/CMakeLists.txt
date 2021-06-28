@@ -356,7 +356,7 @@ if (NOT ${CMAKE_HOST_SYSTEM_NAME} MATCHES SerenityOS)
 endif()
 
 if ("${SERENITY_ARCH}" STREQUAL "x86_64")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone -z max-page-size=0x1000")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mcmodel=large -fno-pic -mno-red-zone")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pie -fPIE")
 endif()
