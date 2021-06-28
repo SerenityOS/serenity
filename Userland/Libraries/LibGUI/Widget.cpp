@@ -21,6 +21,7 @@
 #include <LibGfx/Font.h>
 #include <LibGfx/FontDatabase.h>
 #include <LibGfx/Palette.h>
+#include <LibGfx/SystemTheme.h>
 #include <unistd.h>
 
 REGISTER_CORE_OBJECT(GUI, Widget)
@@ -134,6 +135,50 @@ Widget::Widget()
                 set_palette(_palette);
                 return true;
             }
+            return false;
+        });
+
+    register_property(
+        "foreground_role", [this]() -> JsonValue { return Gfx::to_string(foreground_role()); },
+        [this](auto& value) {
+            if (!value.is_string())
+                return false;
+            auto str = value.as_string();
+            if (str == "NoRole") {
+                set_foreground_role(Gfx::ColorRole::NoRole);
+                return true;
+            }
+#undef __ENUMERATE_COLOR_ROLE
+#define __ENUMERATE_COLOR_ROLE(role)               \
+    else if (str == #role)                         \
+    {                                              \
+        set_foreground_role(Gfx::ColorRole::role); \
+        return true;                               \
+    }
+            ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
+            return false;
+        });
+
+    register_property(
+        "background_role", [this]() -> JsonValue { return Gfx::to_string(background_role()); },
+        [this](auto& value) {
+            if (!value.is_string())
+                return false;
+            auto str = value.as_string();
+            if (str == "NoRole") {
+                set_background_role(Gfx::ColorRole::NoRole);
+                return true;
+            }
+#undef __ENUMERATE_COLOR_ROLE
+#define __ENUMERATE_COLOR_ROLE(role)               \
+    else if (str == #role)                         \
+    {                                              \
+        set_background_role(Gfx::ColorRole::role); \
+        return true;                               \
+    }
+            ENUMERATE_COLOR_ROLES(__ENUMERATE_COLOR_ROLE)
+#undef __ENUMERATE_COLOR_ROLE
             return false;
         });
 }
