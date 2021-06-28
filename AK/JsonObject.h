@@ -47,10 +47,16 @@ public:
     int size() const { return m_members.size(); }
     bool is_empty() const { return m_members.is_empty(); }
 
-    JsonValue get(String const& key) const
+    JsonValue const& get(String const& key) const
     {
         auto* value = get_ptr(key);
-        return value ? *value : JsonValue(JsonValue::Type::Null);
+        static JsonValue* s_null_value { nullptr };
+        if (!value) {
+            if (!s_null_value)
+                s_null_value = new JsonValue;
+            return *s_null_value;
+        }
+        return *value;
     }
 
     JsonValue get_or(String const& key, JsonValue const& alternative) const
