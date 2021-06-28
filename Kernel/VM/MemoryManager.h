@@ -22,13 +22,13 @@ namespace Kernel {
 
 constexpr bool page_round_up_would_wrap(FlatPtr x)
 {
-    return x > 0xfffff000u;
+    return x > (explode_byte(0xFF) & ~0xFFF);
 }
 
 constexpr FlatPtr page_round_up(FlatPtr x)
 {
     FlatPtr rounded = (((FlatPtr)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1));
-    // Rounding up >0xffff0000 wraps back to 0. That's never what we want.
+    // Rounding up >0xfffff000 wraps back to 0. That's never what we want.
     VERIFY(x == 0 || rounded != 0);
     return rounded;
 }
