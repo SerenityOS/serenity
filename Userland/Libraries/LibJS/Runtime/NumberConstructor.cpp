@@ -24,7 +24,7 @@ constexpr const double MIN_SAFE_INTEGER_VALUE { -(__builtin_pow(2, 53) - 1) };
 namespace JS {
 
 NumberConstructor::NumberConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Number, *global_object.function_prototype())
+    : NativeFunction(vm().names.Number.as_string(), *global_object.function_prototype())
 {
 }
 
