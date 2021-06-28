@@ -10,7 +10,7 @@
 using namespace AK::UBSanitizer;
 
 // FIXME: Parse option from UBSAN_OPTIONS: halt_on_error=0 or 1
-bool AK::UBSanitizer::g_ubsan_is_deadly { false }; // FIXME: Make true!!
+bool AK::UBSanitizer::g_ubsan_is_deadly { false };
 
 #define WARNLN_AND_DBGLN(fmt, ...) \
     warnln(fmt, ##__VA_ARGS__);    \
@@ -28,6 +28,15 @@ static void print_location(const SourceLocation& location)
     // FIXME: Dump backtrace of this process (with symbols? without symbols?) in case the user wants non-deadly UBSAN
     //    Should probably go through the kernel for SC_dump_backtrace, then access the loader's symbol tables rather than
     //    going through the symbolizer service?
+
+    static bool checked_env_for_deadly = false;
+    if (!checked_env_for_deadly) {
+        checked_env_for_deadly = true;
+        StringView options = getenv("UBSAN_OPTIONS");
+        // FIXME: Parse more options and complain about invalid options
+        if (!options.is_null() && options.contains("halt_on_error=1"))
+            g_ubsan_is_deadly = true;
+    }
     if (g_ubsan_is_deadly) {
         WARNLN_AND_DBGLN("UB is configured to be deadly");
         VERIFY_NOT_REACHED();
