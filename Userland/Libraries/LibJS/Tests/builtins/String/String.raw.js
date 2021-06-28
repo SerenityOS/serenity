@@ -27,5 +27,5 @@ test("basic functionality", () => {
 test("passing object with no 'raw' property", () => {
     expect(() => {
         String.raw({});
-    }).toThrowWithMessage(TypeError, "Cannot convert property 'raw' to object from undefined");
+    }).toThrowWithMessage(TypeError, "ToObject on null or undefined");
 });
