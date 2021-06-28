@@ -36,29 +36,25 @@ asm(
 );
 // clang-format on
 
-#if ARCH(I386)
 // clang-format off
 asm(
 ".global do_assume_context \n"
 "do_assume_context: \n"
-"    movl 4(%esp), %ebx \n"
-"    movl 8(%esp), %esi \n"
+"    movq %rdi, %r12 \n" // save thread ptr
+"    movq %rsi, %r13 \n" // save flags
 // We're going to call Processor::init_context, so just make sure
 // we have enough stack space so we don't stomp over it
-"    subl $(" __STRINGIFY(4 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 4) "), %esp \n"
-"    pushl %esi \n"
-"    pushl %ebx \n"
+"    subq $(" __STRINGIFY(16 + REGISTER_STATE_SIZE + TRAP_FRAME_SIZE + 8) "), %rsp \n"
 "    cld \n"
 "    call do_init_context \n"
-"    addl $8, %esp \n"
-"    movl %eax, %esp \n" // move stack pointer to what Processor::init_context set up for us
-"    pushl %ebx \n" // push to_thread
-"    pushl %ebx \n" // push from_thread
-"    pushl $thread_context_first_enter \n" // should be same as tss.eip
+"    movq %rax, %rsp \n" // move stack pointer to what Processor::init_context set up for us
+"    movq %r12, %rdi \n" // to_thread
+"    movq %r12, %rsi \n" // from_thread
+"    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
+"    pushq %r12 \n"
 "    jmp enter_thread_context \n"
 );
 // clang-format on
-#endif
 
 String Processor::platform_string() const
 {
