@@ -13,6 +13,8 @@
 #include <AK/String.h>
 #include <LibSQL/AST/Token.h>
 #include <LibSQL/Forward.h>
+#include <LibSQL/SQLResult.h>
+#include <LibSQL/Type.h>
 
 namespace SQL::AST {
 
@@ -249,16 +251,6 @@ private:
 
     bool m_is_subquery { false };
     NonnullRefPtrVector<TableOrSubquery> m_subqueries {};
-};
-
-enum class Order {
-    Ascending,
-    Descending,
-};
-
-enum class Nulls {
-    First,
-    Last,
 };
 
 class OrderingTerm : public ASTNode {

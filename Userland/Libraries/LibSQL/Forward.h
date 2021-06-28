@@ -22,6 +22,7 @@ class IndexDef;
 class Key;
 class KeyPartDef;
 class Row;
+class SQLResult;
 class TableDef;
 class TreeNode;
 class Tuple;

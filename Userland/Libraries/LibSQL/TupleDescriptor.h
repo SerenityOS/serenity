@@ -7,7 +7,6 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibSQL/AST/AST.h>
 #include <LibSQL/Type.h>
 
 namespace SQL {
@@ -15,7 +14,7 @@ namespace SQL {
 struct TupleElement {
     String name { "" };
     SQLType type { SQLType::Text };
-    AST::Order order { AST::Order::Ascending };
+    Order order { Order::Ascending };
 
     bool operator==(TupleElement const&) const = default;
 };
