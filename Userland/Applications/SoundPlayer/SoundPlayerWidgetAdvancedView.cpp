@@ -302,10 +302,8 @@ void SoundPlayerWidgetAdvancedView::try_fill_missing_info(Vector<M3UEntry>& entr
         if (!entry.extended_info->track_display_title.has_value())
             entry.extended_info->track_display_title = LexicalPath(entry.path).title();
         if (!entry.extended_info->track_length_in_seconds.has_value()) {
-            if (entry_path.has_extension("wav")) {
-                auto wav_reader = Audio::Loader::create(entry.path);
-                entry.extended_info->track_length_in_seconds = wav_reader->total_samples() / wav_reader->sample_rate();
-            }
+            if (auto reader = Audio::Loader::create(entry.path); !reader->has_error())
+                entry.extended_info->track_length_in_seconds = reader->total_samples() / reader->sample_rate();
             //TODO: Implement embedded metadata extractor for other audio formats
         }
         //TODO: Implement a metadata parser for the uncomfortably numerous popular embedded metadata formats
