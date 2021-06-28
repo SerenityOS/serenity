@@ -70,6 +70,8 @@ DynamicLoader::DynamicLoader(int fd, String filename, void* data, size_t size)
     m_valid = validate();
     if (m_valid)
         m_tls_size_of_current_object = calculate_tls_size();
+    else
+        dbgln("Image validation failed for file {}", m_filename);
 }
 
 DynamicLoader::~DynamicLoader()
