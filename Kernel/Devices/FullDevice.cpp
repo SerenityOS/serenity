@@ -15,7 +15,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<FullDevice> FullDevice::must_create()
 {
-    return adopt_ref_if_nonnull(new FullDevice).release_nonnull();
+    return adopt_ref(*new FullDevice);
 }
 
 UNMAP_AFTER_INIT FullDevice::FullDevice()
@@ -45,5 +45,4 @@ KResultOr<size_t> FullDevice::write(FileDescription&, u64, const UserOrKernelBuf
         return 0;
     return ENOSPC;
 }
-
 }
