@@ -14,7 +14,7 @@ namespace Kernel {
 
 UNMAP_AFTER_INIT NonnullRefPtr<ZeroDevice> ZeroDevice::must_create()
 {
-    return adopt_ref_if_nonnull(new ZeroDevice).release_nonnull();
+    return adopt_ref(*new ZeroDevice);
 }
 
 UNMAP_AFTER_INIT ZeroDevice::ZeroDevice()
