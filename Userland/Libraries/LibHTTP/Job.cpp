@@ -360,6 +360,7 @@ void Job::timer_event(Core::TimerEvent& event)
 
 void Job::finish_up()
 {
+    VERIFY(m_state != State::Finished);
     m_state = State::Finished;
     if (!m_can_stream_response) {
         auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
