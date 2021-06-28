@@ -41,6 +41,7 @@ protected:
     virtual bool is_strict_mode() const final { return m_is_strict; }
 
 private:
+    virtual bool is_ordinary_function_object() const { return true; }
     virtual FunctionEnvironmentRecord* create_environment_record(FunctionObject&) override;
     virtual void visit_edges(Visitor&) override;
 

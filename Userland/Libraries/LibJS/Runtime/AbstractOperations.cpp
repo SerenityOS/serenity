@@ -11,6 +11,7 @@
 #include <LibJS/Interpreter.h>
 #include <LibJS/Parser.h>
 #include <LibJS/Runtime/AbstractOperations.h>
+#include <LibJS/Runtime/ArgumentsObject.h>
 #include <LibJS/Runtime/Array.h>
 #include <LibJS/Runtime/ArrayPrototype.h>
 #include <LibJS/Runtime/BoundFunction.h>
@@ -214,6 +215,9 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
     if (vm.exception())
         return nullptr;
 
+    for (auto& argument : arguments)
+        object->indexed_properties().append(argument);
+
     // 4. Perform DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
     auto length = arguments.size();
     object->define_property(vm.names.length, Value(length), Attribute::Writable | Attribute::Configurable);
@@ -222,11 +226,44 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
 
     object->define_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get(vm.names.values), Attribute::Writable | Attribute::Configurable);
 
+    // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
+    object->define_accessor(vm.names.callee, global_object.throw_type_error_function(), global_object.throw_type_error_function(), 0);
+    if (vm.exception())
+        return nullptr;
+
+    return object;
+}
+
+// 10.4.4.7 CreateMappedArgumentsObject ( func, formals, argumentsList, env ), https://tc39.es/ecma262/#sec-createmappedargumentsobject
+Object* create_mapped_arguments_object(GlobalObject& global_object, FunctionObject& function, Vector<FunctionNode::Parameter> const& formals, Vector<Value> const& arguments, EnvironmentRecord&)
+{
+    // FIXME: This implementation is incomplete and doesn't support the actual identifier mappings yet.
+    (void)formals;
+
+    auto& vm = global_object.vm();
+    auto* object = vm.heap().allocate<ArgumentsObject>(global_object, global_object);
+    if (vm.exception())
+        return nullptr;
+
+    // 14. Let index be 0.
+    // 15. Repeat, while index < len,
+    //     a. Let val be argumentsList[index].
+    //     b . Perform ! CreateDataPropertyOrThrow(obj, ! ToString(𝔽(index)), val).
+    //     c. Set index to index + 1.
     for (auto& argument : arguments)
         object->indexed_properties().append(argument);
 
-    // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
-    object->define_accessor(vm.names.callee, global_object.throw_type_error_function(), global_object.throw_type_error_function(), 0);
+    // 16. Perform ! DefinePropertyOrThrow(obj, "length", PropertyDescriptor { [[Value]]: 𝔽(len), [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    auto length = arguments.size();
+    object->define_property(vm.names.length, Value(length), Attribute::Writable | Attribute::Configurable);
+    if (vm.exception())
+        return nullptr;
+
+    // 20. Perform ! DefinePropertyOrThrow(obj, @@iterator, PropertyDescriptor { [[Value]]: %Array.prototype.values%, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    object->define_property(*vm.well_known_symbol_iterator(), global_object.array_prototype()->get(vm.names.values), Attribute::Writable | Attribute::Configurable);
+
+    // 21. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Value]]: func, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }).
+    object->define_property(vm.names.callee, Value(&function), Attribute::Writable | Attribute::Configurable);
     if (vm.exception())
         return nullptr;
 
