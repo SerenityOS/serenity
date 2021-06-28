@@ -267,28 +267,45 @@ void Window::update_window_menu_items()
     if (!m_window_menu)
         return;
 
-    m_window_menu_minimize_item->set_text(m_minimized ? "&Unminimize" : "Mi&nimize");
+    m_window_menu_minimize_item->set_text(m_minimized_state != WindowMinimizedState::None ? "&Unminimize" : "Mi&nimize");
     m_window_menu_minimize_item->set_enabled(m_minimizable);
 
     m_window_menu_maximize_item->set_text(m_maximized ? "&Restore" : "Ma&ximize");
     m_window_menu_maximize_item->set_enabled(m_resizable);
 
-    m_window_menu_move_item->set_enabled(!m_minimized && !m_maximized && !m_fullscreen);
+    m_window_menu_move_item->set_enabled(m_minimized_state == WindowMinimizedState::None && !m_maximized && !m_fullscreen);
 }
 
 void Window::set_minimized(bool minimized)
 {
-    if (m_minimized == minimized)
+    if ((m_minimized_state != WindowMinimizedState::None) == minimized)
         return;
     if (minimized && !m_minimizable)
         return;
-    m_minimized = minimized;
+    m_minimized_state = minimized ? WindowMinimizedState::Minimized : WindowMinimizedState::None;
     update_window_menu_items();
     Compositor::the().invalidate_occlusions();
     Compositor::the().invalidate_screen(frame().render_rect());
     if (!blocking_modal_window())
         start_minimize_animation();
     if (!minimized)
+        request_update({ {}, size() });
+    WindowManager::the().notify_minimization_state_changed(*this);
+}
+
+void Window::set_hidden(bool hidden)
+{
+    if ((m_minimized_state != WindowMinimizedState::None) == hidden)
+        return;
+    if (hidden && !m_minimizable)
+        return;
+    m_minimized_state = hidden ? WindowMinimizedState::Hidden : WindowMinimizedState::None;
+    update_window_menu_items();
+    Compositor::the().invalidate_occlusions();
+    Compositor::the().invalidate_screen(frame().render_rect());
+    if (!blocking_modal_window())
+        start_minimize_animation();
+    if (!hidden)
         request_update({ {}, size() });
     WindowManager::the().notify_minimization_state_changed(*this);
 }
@@ -750,8 +767,8 @@ void Window::handle_window_menu_action(WindowMenuAction action)
 {
     switch (action) {
     case WindowMenuAction::MinimizeOrUnminimize:
-        WindowManager::the().minimize_windows(*this, !m_minimized);
-        if (!m_minimized)
+        WindowManager::the().minimize_windows(*this, m_minimized_state == WindowMinimizedState::None);
+        if (m_minimized_state == WindowMinimizedState::None)
             WindowManager::the().move_to_front_and_make_active(*this);
         break;
     case WindowMenuAction::MaximizeOrRestore:
@@ -791,7 +808,7 @@ void Window::popup_window_menu(const Gfx::IntPoint& position, WindowMenuDefaultA
             default_action = WindowMenuDefaultAction::Minimize;
     }
     m_window_menu_minimize_item->set_default(default_action == WindowMenuDefaultAction::Minimize || default_action == WindowMenuDefaultAction::Unminimize);
-    m_window_menu_minimize_item->set_icon(m_minimized ? nullptr : &minimize_icon());
+    m_window_menu_minimize_item->set_icon(m_minimized_state != WindowMinimizedState::None ? nullptr : &minimize_icon());
     m_window_menu_maximize_item->set_default(default_action == WindowMenuDefaultAction::Maximize || default_action == WindowMenuDefaultAction::Restore);
     m_window_menu_maximize_item->set_icon(m_maximized ? &restore_icon() : &maximize_icon());
     m_window_menu_close_item->set_default(default_action == WindowMenuDefaultAction::Close);

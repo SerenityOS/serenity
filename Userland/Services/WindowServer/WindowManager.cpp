@@ -1981,6 +1981,18 @@ void WindowManager::minimize_windows(Window& window, bool minimized)
     });
 }
 
+void WindowManager::hide_windows(Window& window, bool hidden)
+{
+    for_each_window_in_modal_stack(window, [&](auto& w, bool) {
+        w.set_hidden(hidden);
+
+        if (!hidden)
+            pick_new_active_window(&window);
+
+        return IterationDecision::Continue;
+    });
+}
+
 void WindowManager::maximize_windows(Window& window, bool maximized)
 {
     for_each_window_in_modal_stack(window, [&](auto& w, bool stack_top) {

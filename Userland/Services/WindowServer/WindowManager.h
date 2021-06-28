@@ -221,6 +221,7 @@ public:
     bool is_menu_doubleclick(Window& window, MouseEvent const& event) const;
 
     void minimize_windows(Window&, bool);
+    void hide_windows(Window&, bool);
     void maximize_windows(Window&, bool);
 
     template<typename Function>
