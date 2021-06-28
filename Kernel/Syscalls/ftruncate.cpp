@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
+KResultOr<FlatPtr> Process::sys$ftruncate(int fd, Userspace<off_t*> userspace_length)
 {
     REQUIRE_PROMISE(stdio);
     off_t length;

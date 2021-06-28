@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<FlatPtr> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
     auto description = file_description(fd);
@@ -27,7 +27,7 @@ KResultOr<int> Process::sys$ttyname(int fd, Userspace<char*> buffer, size_t size
     return 0;
 }
 
-KResultOr<int> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
+KResultOr<FlatPtr> Process::sys$ptsname(int fd, Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(tty);
     auto description = file_description(fd);

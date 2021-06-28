@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<pid_t> Process::sys$getsid(pid_t pid)
+KResultOr<FlatPtr> Process::sys$getsid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
@@ -24,7 +24,7 @@ KResultOr<pid_t> Process::sys$getsid(pid_t pid)
     return process->sid().value();
 }
 
-KResultOr<pid_t> Process::sys$setsid()
+KResultOr<FlatPtr> Process::sys$setsid()
 {
     REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
@@ -43,7 +43,7 @@ KResultOr<pid_t> Process::sys$setsid()
     return sid().value();
 }
 
-KResultOr<pid_t> Process::sys$getpgid(pid_t pid)
+KResultOr<FlatPtr> Process::sys$getpgid(pid_t pid)
 {
     REQUIRE_PROMISE(proc);
     if (pid == 0)
@@ -55,7 +55,7 @@ KResultOr<pid_t> Process::sys$getpgid(pid_t pid)
     return process->pgid().value();
 }
 
-KResultOr<pid_t> Process::sys$getpgrp()
+KResultOr<FlatPtr> Process::sys$getpgrp()
 {
     REQUIRE_PROMISE(stdio);
     return pgid().value();
@@ -75,7 +75,7 @@ SessionID Process::get_sid_from_pgid(ProcessGroupID pgid)
     return sid;
 }
 
-KResultOr<int> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
+KResultOr<FlatPtr> Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     REQUIRE_PROMISE(proc);
     ScopedSpinLock lock(g_processes_lock); // FIXME: Use a ProcessHandle

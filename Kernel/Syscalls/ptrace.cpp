@@ -155,7 +155,7 @@ static KResultOr<u32> handle_ptrace(const Kernel::Syscall::SC_ptrace_params& par
     return KSuccess;
 }
 
-KResultOr<int> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
+KResultOr<FlatPtr> Process::sys$ptrace(Userspace<const Syscall::SC_ptrace_params*> user_params)
 {
     REQUIRE_PROMISE(ptrace);
     Syscall::SC_ptrace_params params {};

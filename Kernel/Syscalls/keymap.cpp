@@ -11,7 +11,7 @@ namespace Kernel {
 
 constexpr size_t map_name_max_size = 50;
 
-KResultOr<int> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
+KResultOr<FlatPtr> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_params*> user_params)
 {
     REQUIRE_PROMISE(setkeymap);
 
@@ -45,7 +45,7 @@ KResultOr<int> Process::sys$setkeymap(Userspace<const Syscall::SC_setkeymap_para
     return 0;
 }
 
-KResultOr<int> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
+KResultOr<FlatPtr> Process::sys$getkeymap(Userspace<const Syscall::SC_getkeymap_params*> user_params)
 {
     REQUIRE_PROMISE(getkeymap);
 

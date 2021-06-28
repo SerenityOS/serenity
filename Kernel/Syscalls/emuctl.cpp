@@ -8,7 +8,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$emuctl()
+KResultOr<FlatPtr> Process::sys$emuctl()
 {
     return ENOSYS;
 }

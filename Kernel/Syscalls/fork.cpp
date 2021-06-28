@@ -14,7 +14,7 @@
 
 namespace Kernel {
 
-KResultOr<pid_t> Process::sys$fork(RegisterState& regs)
+KResultOr<FlatPtr> Process::sys$fork(RegisterState& regs)
 {
     REQUIRE_PROMISE(proc);
     RefPtr<Thread> child_first_thread;

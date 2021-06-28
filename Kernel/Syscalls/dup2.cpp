@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$dup2(int old_fd, int new_fd)
+KResultOr<FlatPtr> Process::sys$dup2(int old_fd, int new_fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(old_fd);

@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<long> Process::sys$sysconf(int name)
+KResultOr<FlatPtr> Process::sys$sysconf(int name)
 {
     switch (name) {
     case _SC_MONOTONIC_CLOCK:

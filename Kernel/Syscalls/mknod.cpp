@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
+KResultOr<FlatPtr> Process::sys$mknod(Userspace<const Syscall::SC_mknod_params*> user_params)
 {
     REQUIRE_PROMISE(dpath);
     Syscall::SC_mknod_params params;

@@ -279,7 +279,7 @@ static KResultOr<Range> expand_range_to_page_boundaries(FlatPtr address, size_t 
     return Range { base, end - base.get() };
 }
 
-KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
+KResultOr<FlatPtr> Process::sys$mprotect(Userspace<void*> addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -421,7 +421,7 @@ KResultOr<int> Process::sys$mprotect(Userspace<void*> addr, size_t size, int pro
     return EINVAL;
 }
 
-KResultOr<int> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
+KResultOr<FlatPtr> Process::sys$madvise(Userspace<void*> address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -470,7 +470,7 @@ KResultOr<int> Process::sys$madvise(Userspace<void*> address, size_t size, int a
     return EINVAL;
 }
 
-KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
+KResultOr<FlatPtr> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_name_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -504,7 +504,7 @@ KResultOr<int> Process::sys$set_mmap_name(Userspace<const Syscall::SC_set_mmap_n
     return 0;
 }
 
-KResultOr<int> Process::sys$munmap(Userspace<void*> addr, size_t size)
+KResultOr<FlatPtr> Process::sys$munmap(Userspace<void*> addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
 
@@ -618,7 +618,7 @@ KResultOr<FlatPtr> Process::sys$allocate_tls(Userspace<const char*> initial_data
     return m_master_tls_region.unsafe_ptr()->vaddr().get();
 }
 
-KResultOr<int> Process::sys$msyscall(Userspace<void*> address)
+KResultOr<FlatPtr> Process::sys$msyscall(Userspace<void*> address)
 {
     if (space().enforces_syscall_regions())
         return EPERM;

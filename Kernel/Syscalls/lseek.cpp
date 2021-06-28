@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$lseek(int fd, Userspace<off_t*> userspace_offset, int whence)
+KResultOr<FlatPtr> Process::sys$lseek(int fd, Userspace<off_t*> userspace_offset, int whence)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);

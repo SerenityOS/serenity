@@ -9,7 +9,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$sync()
+KResultOr<FlatPtr> Process::sys$sync()
 {
     REQUIRE_PROMISE(stdio);
     VFS::the().sync();

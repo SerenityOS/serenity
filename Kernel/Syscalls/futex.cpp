@@ -82,7 +82,7 @@ void Process::clear_futex_queues_on_exec()
     m_futex_queues.clear();
 }
 
-KResultOr<int> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
+KResultOr<FlatPtr> Process::sys$futex(Userspace<const Syscall::SC_futex_params*> user_params)
 {
     Syscall::SC_futex_params params;
     if (!copy_from_user(&params, user_params))

@@ -919,7 +919,7 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
     return KSuccess;
 }
 
-KResultOr<int> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
+KResultOr<FlatPtr> Process::sys$execve(Userspace<const Syscall::SC_execve_params*> user_params)
 {
     REQUIRE_PROMISE(exec);
 

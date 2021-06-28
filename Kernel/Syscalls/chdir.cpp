@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
+KResultOr<FlatPtr> Process::sys$chdir(Userspace<const char*> user_path, size_t path_length)
 {
     REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -24,7 +24,7 @@ KResultOr<int> Process::sys$chdir(Userspace<const char*> user_path, size_t path_
     return 0;
 }
 
-KResultOr<int> Process::sys$fchdir(int fd)
+KResultOr<FlatPtr> Process::sys$fchdir(int fd)
 {
     REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
@@ -41,7 +41,7 @@ KResultOr<int> Process::sys$fchdir(int fd)
     return 0;
 }
 
-KResultOr<int> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
+KResultOr<FlatPtr> Process::sys$getcwd(Userspace<char*> buffer, size_t size)
 {
     REQUIRE_PROMISE(rpath);
 

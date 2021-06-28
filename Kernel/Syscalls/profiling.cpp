@@ -17,7 +17,7 @@ bool g_profiling_all_threads;
 PerformanceEventBuffer* g_global_perf_events;
 u64 g_profiling_event_mask;
 
-KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
+KResultOr<FlatPtr> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
 {
     REQUIRE_NO_PROMISES;
 
@@ -66,7 +66,7 @@ KResultOr<int> Process::sys$profiling_enable(pid_t pid, u64 event_mask)
     return 0;
 }
 
-KResultOr<int> Process::sys$profiling_disable(pid_t pid)
+KResultOr<FlatPtr> Process::sys$profiling_disable(pid_t pid)
 {
     REQUIRE_NO_PROMISES;
 
@@ -95,7 +95,7 @@ KResultOr<int> Process::sys$profiling_disable(pid_t pid)
     return 0;
 }
 
-KResultOr<int> Process::sys$profiling_free_buffer(pid_t pid)
+KResultOr<FlatPtr> Process::sys$profiling_free_buffer(pid_t pid)
 {
     REQUIRE_NO_PROMISES;
 

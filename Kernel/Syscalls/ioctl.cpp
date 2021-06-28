@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
+KResultOr<FlatPtr> Process::sys$ioctl(int fd, unsigned request, FlatPtr arg)
 {
     auto description = file_description(fd);
     if (!description)

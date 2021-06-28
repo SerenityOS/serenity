@@ -18,7 +18,7 @@ KResultOr<siginfo_t> Process::do_waitid(idtype_t idtype, int id, int options)
     return result;
 }
 
-KResultOr<pid_t> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
+KResultOr<FlatPtr> Process::sys$waitid(Userspace<const Syscall::SC_waitid_params*> user_params)
 {
     REQUIRE_PROMISE(proc);
 

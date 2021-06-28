@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$readlink(Userspace<const Syscall::SC_readlink_params*> user_params)
+KResultOr<FlatPtr> Process::sys$readlink(Userspace<const Syscall::SC_readlink_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
 

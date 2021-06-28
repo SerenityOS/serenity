@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
+KResultOr<FlatPtr> Process::sys$realpath(Userspace<const Syscall::SC_realpath_params*> user_params)
 {
     REQUIRE_PROMISE(rpath);
 

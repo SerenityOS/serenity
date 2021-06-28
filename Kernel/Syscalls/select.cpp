@@ -14,7 +14,7 @@ namespace Kernel {
 
 using BlockFlags = Thread::FileBlocker::BlockFlags;
 
-KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
+KResultOr<FlatPtr> Process::sys$select(Userspace<const Syscall::SC_select_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
     Syscall::SC_select_params params {};
@@ -127,7 +127,7 @@ KResultOr<int> Process::sys$select(Userspace<const Syscall::SC_select_params*> u
     return marked_fd_count;
 }
 
-KResultOr<int> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
+KResultOr<FlatPtr> Process::sys$poll(Userspace<const Syscall::SC_poll_params*> user_params)
 {
     REQUIRE_PROMISE(stdio);
 
