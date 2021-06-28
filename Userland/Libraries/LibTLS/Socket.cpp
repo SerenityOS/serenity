@@ -195,7 +195,7 @@ bool TLSv12::check_connection_state(bool read)
         return false;
     }
     if (((read && m_context.application_buffer.size() == 0) || !read) && m_context.connection_finished) {
-        if (m_context.application_buffer.size() == 0) {
+        if (m_context.application_buffer.size() == 0 && m_context.connection_status != ConnectionStatus::Disconnected) {
             if (on_tls_finished)
                 on_tls_finished();
         }
