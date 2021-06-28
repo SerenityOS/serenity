@@ -11,7 +11,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$anon_create(size_t size, int options)
+KResultOr<FlatPtr> Process::sys$anon_create(size_t size, int options)
 {
     REQUIRE_PROMISE(stdio);
 

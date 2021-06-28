@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
+KResultOr<FlatPtr> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_link_params params;
@@ -25,7 +25,7 @@ KResultOr<int> Process::sys$link(Userspace<const Syscall::SC_link_params*> user_
     return VFS::the().link(old_path, new_path, current_directory());
 }
 
-KResultOr<int> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
+KResultOr<FlatPtr> Process::sys$symlink(Userspace<const Syscall::SC_symlink_params*> user_params)
 {
     REQUIRE_PROMISE(cpath);
     Syscall::SC_symlink_params params;

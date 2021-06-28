@@ -10,7 +10,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$sendfd(int sockfd, int fd)
+KResultOr<FlatPtr> Process::sys$sendfd(int sockfd, int fd)
 {
     REQUIRE_PROMISE(sendfd);
     auto socket_description = file_description(sockfd);
@@ -32,7 +32,7 @@ KResultOr<int> Process::sys$sendfd(int sockfd, int fd)
     return local_socket.sendfd(*socket_description, *passing_descriptor);
 }
 
-KResultOr<int> Process::sys$recvfd(int sockfd, int options)
+KResultOr<FlatPtr> Process::sys$recvfd(int sockfd, int options)
 {
     REQUIRE_PROMISE(recvfd);
     auto socket_description = file_description(sockfd);

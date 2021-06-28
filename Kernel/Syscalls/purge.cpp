@@ -13,7 +13,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$purge(int mode)
+KResultOr<FlatPtr> Process::sys$purge(int mode)
 {
     REQUIRE_NO_PROMISES;
     if (!is_superuser())

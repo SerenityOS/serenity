@@ -16,7 +16,7 @@
 
 namespace Kernel {
 
-KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
+KResultOr<FlatPtr> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> user_params)
 {
     if (!is_superuser())
         return EPERM;
@@ -111,7 +111,7 @@ KResultOr<int> Process::sys$mount(Userspace<const Syscall::SC_mount_params*> use
     return result;
 }
 
-KResultOr<int> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
+KResultOr<FlatPtr> Process::sys$umount(Userspace<const char*> user_mountpoint, size_t mountpoint_length)
 {
     if (!is_superuser())
         return EPERM;
