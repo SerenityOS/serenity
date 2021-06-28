@@ -14,15 +14,15 @@
 
 namespace Kernel {
 
-static AK::Singleton<HashMap<u32, PageDirectory*>> s_cr3_map;
+static AK::Singleton<HashMap<FlatPtr, PageDirectory*>> s_cr3_map;
 
-static HashMap<u32, PageDirectory*>& cr3_map()
+static HashMap<FlatPtr, PageDirectory*>& cr3_map()
 {
     VERIFY_INTERRUPTS_DISABLED();
     return *s_cr3_map;
 }
 
-RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
+RefPtr<PageDirectory> PageDirectory::find_by_cr3(FlatPtr cr3)
 {
     ScopedSpinLock lock(s_mm_lock);
     return cr3_map().get(cr3).value_or({});
