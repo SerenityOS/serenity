@@ -13,7 +13,7 @@
 namespace JS {
 
 DataViewConstructor::DataViewConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.DataView, *global_object.function_prototype())
+    : NativeFunction(vm().names.DataView.as_string(), *global_object.function_prototype())
 {
 }
 

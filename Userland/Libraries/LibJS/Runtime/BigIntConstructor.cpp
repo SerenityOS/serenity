@@ -15,7 +15,7 @@
 namespace JS {
 
 BigIntConstructor::BigIntConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.BigInt, *global_object.function_prototype())
+    : NativeFunction(vm().names.BigInt.as_string(), *global_object.function_prototype())
 {
 }
 

@@ -15,7 +15,7 @@
 namespace JS {
 
 StringConstructor::StringConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.String, *global_object.function_prototype())
+    : NativeFunction(vm().names.String.as_string(), *global_object.function_prototype())
 {
 }
 

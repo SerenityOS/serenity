@@ -12,7 +12,7 @@
 namespace JS {
 
 RegExpConstructor::RegExpConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.RegExp, *global_object.function_prototype())
+    : NativeFunction(vm().names.RegExp.as_string(), *global_object.function_prototype())
 {
 }
 

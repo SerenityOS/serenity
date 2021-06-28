@@ -29,7 +29,7 @@ static ProxyObject* proxy_create(GlobalObject& global_object, Value target, Valu
 }
 
 ProxyConstructor::ProxyConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Proxy, *global_object.function_prototype())
+    : NativeFunction(vm().names.Proxy.as_string(), *global_object.function_prototype())
 {
 }
 

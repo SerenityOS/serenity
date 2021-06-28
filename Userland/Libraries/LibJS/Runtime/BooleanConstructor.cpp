@@ -12,7 +12,7 @@
 namespace JS {
 
 BooleanConstructor::BooleanConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Boolean, *global_object.function_prototype())
+    : NativeFunction(vm().names.Boolean.as_string(), *global_object.function_prototype())
 {
 }
 

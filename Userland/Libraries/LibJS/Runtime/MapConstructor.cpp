@@ -14,7 +14,7 @@
 namespace JS {
 
 MapConstructor::MapConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Map, *global_object.function_prototype())
+    : NativeFunction(vm().names.Map.as_string(), *global_object.function_prototype())
 {
 }
 

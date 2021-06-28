@@ -11,7 +11,7 @@
 namespace JS {
 
 SymbolConstructor::SymbolConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Symbol, *global_object.function_prototype())
+    : NativeFunction(vm().names.Symbol.as_string(), *global_object.function_prototype())
 {
 }
 

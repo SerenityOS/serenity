@@ -16,7 +16,7 @@
 namespace JS {
 
 FunctionConstructor::FunctionConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Function, *global_object.function_prototype())
+    : NativeFunction(vm().names.Function.as_string(), *global_object.function_prototype())
 {
 }
 

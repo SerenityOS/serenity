@@ -12,7 +12,7 @@
 namespace JS {
 
 ErrorConstructor::ErrorConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Error, *global_object.function_prototype())
+    : NativeFunction(vm().names.Error.as_string(), *global_object.function_prototype())
 {
 }
 

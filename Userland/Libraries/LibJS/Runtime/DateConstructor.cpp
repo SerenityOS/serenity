@@ -121,7 +121,7 @@ static Value parse_simplified_iso8601(const String& iso_8601)
 }
 
 DateConstructor::DateConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Date, *global_object.function_prototype())
+    : NativeFunction(vm().names.Date.as_string(), *global_object.function_prototype())
 {
 }
 
