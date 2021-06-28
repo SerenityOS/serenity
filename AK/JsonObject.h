@@ -59,12 +59,6 @@ public:
         return *value;
     }
 
-    JsonValue get_or(String const& key, JsonValue const& alternative) const
-    {
-        auto* value = get_ptr(key);
-        return value ? *value : alternative;
-    }
-
     JsonValue const* get_ptr(String const& key) const
     {
         auto it = m_members.find(key);
