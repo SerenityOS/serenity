@@ -68,6 +68,12 @@ enum class WindowMenuDefaultAction {
     Restore
 };
 
+enum class WindowMinimizedState : u32 {
+    None = 0,
+    Minimized,
+    Hidden,
+};
+
 class Window final : public Core::Object {
     C_OBJECT(Window);
 
@@ -82,8 +88,11 @@ public:
     void window_menu_activate_default();
     void request_close();
 
-    bool is_minimized() const { return m_minimized; }
+    bool is_minimized() const { return m_minimized_state != WindowMinimizedState::None; }
     void set_minimized(bool);
+    bool is_hidden() const { return m_minimized_state == WindowMinimizedState::Hidden; }
+    void set_hidden(bool);
+    WindowMinimizedState minimized_state() const { return m_minimized_state; }
 
     bool is_minimizable() const { return m_type == WindowType::Normal && m_minimizable; }
     void set_minimizable(bool);
@@ -383,7 +392,7 @@ private:
     bool m_frameless { false };
     bool m_resizable { false };
     Optional<Gfx::IntSize> m_resize_aspect_ratio {};
-    bool m_minimized { false };
+    WindowMinimizedState m_minimized_state { WindowMinimizedState::None };
     bool m_maximized { false };
     bool m_fullscreen { false };
     bool m_accessory { false };
