@@ -90,7 +90,7 @@ bool JsonValue::equals(const JsonValue& other) const
 
     if (is_array() && other.is_array() && as_array().size() == other.as_array().size()) {
         bool result = true;
-        for (int i = 0; i < as_array().size(); ++i) {
+        for (size_t i = 0; i < as_array().size(); ++i) {
             result &= as_array().at(i).equals(other.as_array().at(i));
         }
         return result;
