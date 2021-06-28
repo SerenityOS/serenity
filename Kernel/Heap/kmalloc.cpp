@@ -27,7 +27,7 @@
 
 #define CHUNK_SIZE 32
 #define POOL_SIZE (2 * MiB)
-#define ETERNAL_RANGE_SIZE (2 * MiB)
+#define ETERNAL_RANGE_SIZE (3 * MiB)
 
 namespace std {
 const nothrow_t nothrow;
@@ -228,7 +228,7 @@ UNMAP_AFTER_INIT void kmalloc_init()
     s_lock.initialize();
 
     s_next_eternal_ptr = kmalloc_eternal_heap;
-    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_pool_heap);
+    s_end_of_eternal_range = s_next_eternal_ptr + sizeof(kmalloc_eternal_heap);
 }
 
 void* kmalloc_eternal(size_t size)
