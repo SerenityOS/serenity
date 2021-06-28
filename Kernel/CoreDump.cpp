@@ -73,7 +73,7 @@ RefPtr<FileDescription> CoreDump::create_target_file(const Process& process, con
 
 KResult CoreDump::write_elf_header()
 {
-    Elf32_Ehdr elf_file_header;
+    ElfW(Ehdr) elf_file_header;
     elf_file_header.e_ident[EI_MAG0] = 0x7f;
     elf_file_header.e_ident[EI_MAG1] = 'E';
     elf_file_header.e_ident[EI_MAG2] = 'L';
@@ -93,17 +93,17 @@ KResult CoreDump::write_elf_header()
     elf_file_header.e_machine = EM_386;
     elf_file_header.e_version = 1;
     elf_file_header.e_entry = 0;
-    elf_file_header.e_phoff = sizeof(Elf32_Ehdr);
+    elf_file_header.e_phoff = sizeof(ElfW(Ehdr));
     elf_file_header.e_shoff = 0;
     elf_file_header.e_flags = 0;
-    elf_file_header.e_ehsize = sizeof(Elf32_Ehdr);
-    elf_file_header.e_shentsize = sizeof(Elf32_Shdr);
-    elf_file_header.e_phentsize = sizeof(Elf32_Phdr);
+    elf_file_header.e_ehsize = sizeof(ElfW(Ehdr));
+    elf_file_header.e_shentsize = sizeof(ElfW(Shdr));
+    elf_file_header.e_phentsize = sizeof(ElfW(Phdr));
     elf_file_header.e_phnum = m_num_program_headers;
     elf_file_header.e_shnum = 0;
     elf_file_header.e_shstrndx = SHN_UNDEF;
 
-    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(Elf32_Ehdr));
+    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&elf_file_header)), sizeof(ElfW(Ehdr)));
     if (result.is_error())
         return result.error();
     return KSuccess;
@@ -111,9 +111,9 @@ KResult CoreDump::write_elf_header()
 
 KResult CoreDump::write_program_headers(size_t notes_size)
 {
-    size_t offset = sizeof(Elf32_Ehdr) + m_num_program_headers * sizeof(Elf32_Phdr);
+    size_t offset = sizeof(ElfW(Ehdr)) + m_num_program_headers * sizeof(ElfW(Phdr));
     for (auto& region : m_process->space().regions()) {
-        Elf32_Phdr phdr {};
+        ElfW(Phdr) phdr {};
 
         phdr.p_type = PT_LOAD;
         phdr.p_offset = offset;
@@ -132,10 +132,10 @@ KResult CoreDump::write_program_headers(size_t notes_size)
 
         offset += phdr.p_filesz;
 
-        [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(Elf32_Phdr));
+        [[maybe_unused]] auto rc = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&phdr)), sizeof(ElfW(Phdr)));
     }
 
-    Elf32_Phdr notes_pheader {};
+    ElfW(Phdr) notes_pheader {};
     notes_pheader.p_type = PT_NOTE;
     notes_pheader.p_offset = offset;
     notes_pheader.p_vaddr = 0;
@@ -145,7 +145,7 @@ KResult CoreDump::write_program_headers(size_t notes_size)
     notes_pheader.p_align = 0;
     notes_pheader.p_flags = 0;
 
-    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(Elf32_Phdr));
+    auto result = m_fd->write(UserOrKernelBuffer::for_kernel_buffer(reinterpret_cast<uint8_t*>(&notes_pheader)), sizeof(ElfW(Phdr)));
     if (result.is_error())
         return result.error();
     return KSuccess;

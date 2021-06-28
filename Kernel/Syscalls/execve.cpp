@@ -187,7 +187,7 @@ static KResultOr<RequiredLoadRange> get_required_load_range(FileDescription& pro
     return range;
 };
 
-static KResultOr<FlatPtr> get_load_offset(const Elf32_Ehdr& main_program_header, FileDescription& main_program_description, FileDescription* interpreter_description)
+static KResultOr<FlatPtr> get_load_offset(const ElfW(Ehdr) & main_program_header, FileDescription& main_program_description, FileDescription* interpreter_description)
 {
     constexpr FlatPtr load_range_start = 0x08000000;
     constexpr FlatPtr load_range_size = 65536 * PAGE_SIZE; // 2**16 * PAGE_SIZE = 256MB
@@ -431,7 +431,8 @@ static KResultOr<LoadResult> load_elf_object(NonnullOwnPtr<Space> new_space, Fil
     };
 }
 
-KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header)
+KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_description,
+    RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header)
 {
     auto new_space = Space::create(*this, nullptr);
     if (!new_space)
@@ -471,7 +472,8 @@ KResultOr<LoadResult> Process::load(NonnullRefPtr<FileDescription> main_program_
     return interpreter_load_result;
 }
 
-KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header)
+KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment,
+    RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header)
 {
     VERIFY(is_user_process());
     VERIFY(!Processor::current().in_critical());
@@ -740,7 +742,7 @@ static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const c
     return ENOEXEC;
 }
 
-KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& main_program_header, int nread, size_t file_size)
+KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & main_program_header, int nread, size_t file_size)
 {
     // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
     String interpreter_path;
@@ -763,7 +765,7 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
 
         // Validate the program interpreter as a valid elf binary.
         // If your program interpreter is a #! file or something, it's time to stop playing games :)
-        if (interp_metadata.size < (int)sizeof(Elf32_Ehdr))
+        if (interp_metadata.size < (int)sizeof(ElfW(Ehdr)))
             return ENOEXEC;
 
         char first_page[PAGE_SIZE] = {};
@@ -773,10 +775,10 @@ KResultOr<RefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(
             return ENOEXEC;
         nread = nread_or_error.value();
 
-        if (nread < (int)sizeof(Elf32_Ehdr))
+        if (nread < (int)sizeof(ElfW(Ehdr)))
             return ENOEXEC;
 
-        auto elf_header = (Elf32_Ehdr*)first_page;
+        auto elf_header = (ElfW(Ehdr)*)first_page;
         if (!ELF::validate_elf_header(*elf_header, interp_metadata.size)) {
             dbgln("exec({}): Interpreter ({}) has invalid ELF header", path, interpreter_description->absolute_path());
             return ENOEXEC;
@@ -862,9 +864,9 @@ KResult Process::exec(String path, Vector<String> arguments, Vector<String> envi
 
     // #2) ELF32 for i386
 
-    if (nread_or_error.value() < (int)sizeof(Elf32_Ehdr))
+    if (nread_or_error.value() < (int)sizeof(ElfW(Ehdr)))
         return ENOEXEC;
-    auto main_program_header = (Elf32_Ehdr*)first_page;
+    auto main_program_header = (ElfW(Ehdr)*)first_page;
 
     if (!ELF::validate_elf_header(*main_program_header, metadata.size)) {
         dbgln("exec({}): File has invalid ELF header", path);

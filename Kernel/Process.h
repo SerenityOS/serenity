@@ -448,7 +448,7 @@ public:
 
     KResult exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
-    KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const Elf32_Ehdr& main_program_header);
+    KResultOr<LoadResult> load(NonnullRefPtr<FileDescription> main_program_description, RefPtr<FileDescription> interpreter_description, const ElfW(Ehdr) & main_program_header);
 
     bool is_superuser() const { return euid() == 0; }
 
@@ -531,12 +531,12 @@ private:
     bool create_perf_events_buffer_if_needed();
     void delete_perf_events_buffer();
 
-    KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const Elf32_Ehdr& main_program_header);
+    KResult do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description, Thread*& new_main_thread, u32& prev_flags, const ElfW(Ehdr) & main_program_header);
     KResultOr<size_t> do_write(FileDescription&, const UserOrKernelBuffer&, size_t);
 
     KResultOr<int> do_statvfs(String path, statvfs* buf);
 
-    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const Elf32_Ehdr& elf_header, int nread, size_t file_size);
+    KResultOr<RefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, const ElfW(Ehdr) & elf_header, int nread, size_t file_size);
 
     int alloc_fd(int first_candidate_fd = 0);
 

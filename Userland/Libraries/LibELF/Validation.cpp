@@ -14,7 +14,7 @@
 
 namespace ELF {
 
-bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool verbose)
+bool validate_elf_header(const ElfW(Ehdr) & elf_header, size_t file_size, bool verbose)
 {
     if (!IS_ELF(elf_header)) {
         if (verbose)
@@ -22,9 +22,16 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (ELFCLASS32 != elf_header.e_ident[EI_CLASS]) {
+#if ARCH(I386)
+    auto expected_class = ELFCLASS32;
+    auto expected_bitness = 32;
+#else
+    auto expected_class = ELFCLASS64;
+    auto expected_bitness = 64;
+#endif
+    if (expected_class != elf_header.e_ident[EI_CLASS]) {
         if (verbose)
-            dbgln("File is not a 32 bit ELF file.");
+            dbgln("File is not a {}-bit ELF file.", expected_bitness);
         return false;
     }
 
@@ -52,9 +59,17 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (EM_386 != elf_header.e_machine) {
+#if ARCH(I386)
+    auto expected_machine = EM_386;
+    auto expected_machine_name = "i386";
+#else
+    auto expected_machine = EM_X86_64;
+    auto expected_machine_name = "x86-64";
+#endif
+
+    if (expected_machine != elf_header.e_machine) {
         if (verbose)
-            dbgln("File has unknown machine ({}), expected i386 (3)!", elf_header.e_machine);
+            dbgln("File has unknown machine ({}), expected {} ({})!", elf_header.e_machine, expected_machine_name, expected_machine);
         return false;
     }
 
@@ -70,9 +85,9 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (sizeof(Elf32_Ehdr) != elf_header.e_ehsize) {
+    if (sizeof(ElfW(Ehdr)) != elf_header.e_ehsize) {
         if (verbose)
-            dbgln("File has incorrect ELF header size..? ({}), expected ({})!", elf_header.e_ehsize, sizeof(Elf32_Ehdr));
+            dbgln("File has incorrect ELF header size..? ({}), expected ({})!", elf_header.e_ehsize, sizeof(ElfW(Ehdr)));
         return false;
     }
 
@@ -112,15 +127,15 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
         return false;
     }
 
-    if (0 != elf_header.e_phnum && sizeof(Elf32_Phdr) != elf_header.e_phentsize) {
+    if (0 != elf_header.e_phnum && sizeof(ElfW(Phdr)) != elf_header.e_phentsize) {
         if (verbose)
-            dbgln("File has incorrect program header size..? ({}), expected ({}).", elf_header.e_phentsize, sizeof(Elf32_Phdr));
+            dbgln("File has incorrect program header size..? ({}), expected ({}).", elf_header.e_phentsize, sizeof(ElfW(Phdr)));
         return false;
     }
 
-    if (sizeof(Elf32_Shdr) != elf_header.e_shentsize) {
+    if (sizeof(ElfW(Shdr)) != elf_header.e_shentsize) {
         if (verbose)
-            dbgln("File has incorrect section header size..? ({}), expected ({}).", elf_header.e_shentsize, sizeof(Elf32_Shdr));
+            dbgln("File has incorrect section header size..? ({}), expected ({}).", elf_header.e_shentsize, sizeof(ElfW(Shdr)));
         return false;
     }
 
@@ -177,7 +192,7 @@ bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size, bool ve
     return true;
 }
 
-bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, const u8* buffer, size_t buffer_size, String* interpreter_path, bool verbose)
+bool validate_program_headers(const ElfW(Ehdr) & elf_header, size_t file_size, const u8* buffer, size_t buffer_size, String* interpreter_path, bool verbose)
 {
     Checked<size_t> total_size_of_program_headers = elf_header.e_phnum;
     total_size_of_program_headers *= elf_header.e_phentsize;
@@ -204,7 +219,7 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
     }
 
     size_t num_program_headers = elf_header.e_phnum;
-    auto program_header_begin = (const Elf32_Phdr*)&(buffer[elf_header.e_phoff]);
+    auto program_header_begin = (const ElfW(Phdr)*)&(buffer[elf_header.e_phoff]);
 
     for (size_t header_index = 0; header_index < num_program_headers; ++header_index) {
         auto& program_header = program_header_begin[header_index];
@@ -221,10 +236,18 @@ bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, co
             return false;
         }
 
-        if (program_header.p_type == PT_LOAD && program_header.p_align != PAGE_SIZE) {
+        if (program_header.p_type == PT_LOAD && program_header.p_align % (size_t)PAGE_SIZE != 0) {
             if (elf_header.e_type != ET_CORE) {
                 if (verbose)
-                    dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not equal to page size ({})", header_index, program_header.p_align, PAGE_SIZE);
+                    dbgln("Program header ({}) with p_type PT_LOAD has p_align ({}) not divisible by page size ({})", header_index, program_header.p_align, PAGE_SIZE);
+                return false;
+            }
+        }
+
+        if (program_header.p_type == PT_LOAD && program_header.p_vaddr % program_header.p_align != program_header.p_offset % program_header.p_align) {
+            if (elf_header.e_type != ET_CORE) {
+                if (verbose)
+                    dbgln("Program header ({}) with p_type PT_LOAD has mis-aligned p_vaddr ({:x})", header_index, program_header.p_vaddr);
                 return false;
             }
         }
