@@ -44,7 +44,7 @@ extern "C" void exit_kernel_thread(void);
 // Declare them, to avoid dead code warnings.
 extern "C" void context_first_init(Thread* from_thread, Thread* to_thread, TrapFrame* trap) __attribute__((used));
 extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread) __attribute__((used));
-extern "C" u32 do_init_context(Thread* thread, u32 flags) __attribute__((used));
+extern "C" FlatPtr do_init_context(Thread* thread, u32 flags) __attribute__((used));
 
 UNMAP_AFTER_INIT static void sse_init()
 {
@@ -1223,7 +1223,7 @@ extern "C" void enter_thread_context(Thread* from_thread, Thread* to_thread)
     // TODO: ioperm?
 }
 
-extern "C" u32 do_init_context(Thread* thread, u32 flags)
+extern "C" FlatPtr do_init_context(Thread* thread, u32 flags)
 {
     VERIFY_INTERRUPTS_DISABLED();
 #if ARCH(I386)

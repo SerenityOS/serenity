@@ -65,7 +65,7 @@ String Processor::platform_string() const
     return "i386";
 }
 
-u32 Processor::init_context(Thread& thread, bool leave_crit)
+FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());

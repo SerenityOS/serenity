@@ -67,7 +67,7 @@ String Processor::platform_string() const
 }
 
 // FIXME: For the most part this is a copy of the i386-specific function, get rid of the code duplication
-u32 Processor::init_context(Thread& thread, bool leave_crit)
+FlatPtr Processor::init_context(Thread& thread, bool leave_crit)
 {
     VERIFY(is_kernel_mode());
     VERIFY(g_scheduler_lock.is_locked());
