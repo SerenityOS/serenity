@@ -91,18 +91,18 @@ HelpWindow::HelpWindow(GUI::Window* parent)
             auto& doc = doc_option.as_object();
             const auto& name = url.fragment();
 
-            auto example_data_value = doc.get_or("example_data", JsonObject {});
-            if (!example_data_value.is_object()) {
+            auto* example_data_ptr = doc.get_ptr("example_data");
+            if (!example_data_ptr || !example_data_ptr->is_object()) {
                 GUI::MessageBox::show_error(this, String::formatted("No example data found for '{}'", url.path()));
                 return;
             }
+            auto& example_data = example_data_ptr->as_object();
 
-            auto& example_data = example_data_value.as_object();
-            auto value = example_data.get(name);
-            if (!value.is_object()) {
+            if (!example_data.has_object(name)) {
                 GUI::MessageBox::show_error(this, String::formatted("Example '{}' not found for '{}'", name, url.path()));
                 return;
             }
+            auto& value = example_data.get(name);
 
             auto window = GUI::Window::construct(this);
             window->resize(size());
@@ -138,21 +138,15 @@ HelpWindow::HelpWindow(GUI::Window* parent)
 
 String HelpWindow::render(const StringView& key)
 {
-    auto doc_option = m_docs.get(key);
-    VERIFY(doc_option.is_object());
-
-    auto& doc = doc_option.as_object();
+    VERIFY(m_docs.has_object(key));
+    auto& doc = m_docs.get(key).as_object();
 
     auto name = doc.get("name").to_string();
     auto argc = doc.get("argc").to_u32(0);
-    auto argnames_value = doc.get("argnames");
-    VERIFY(argnames_value.is_array());
-    auto& argnames = argnames_value.as_array();
+    VERIFY(doc.has_array("argnames"));
+    auto& argnames = doc.get("argnames").as_array();
 
     auto docstring = doc.get("doc").to_string();
-    auto examples_value = doc.get_or("examples", JsonObject {});
-    VERIFY(examples_value.is_object());
-    auto& examples = examples_value.as_object();
 
     StringBuilder markdown_builder;
 
@@ -184,9 +178,11 @@ String HelpWindow::render(const StringView& key)
     markdown_builder.append(docstring);
     markdown_builder.append("\n\n");
 
-    if (!examples.is_empty()) {
+    if (doc.has("examples")) {
+        auto& examples = doc.get("examples");
+        VERIFY(examples.is_object());
         markdown_builder.append("# EXAMPLES\n");
-        examples.for_each_member([&](auto& text, auto& description_value) {
+        examples.as_object().for_each_member([&](auto& text, auto& description_value) {
             dbgln("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
             markdown_builder.appendff("- {}\n\n```js\n{}\n```\n", description_value.to_string(), text);
         });
