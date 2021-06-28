@@ -69,49 +69,50 @@ static bool validate_stack_size(const Vector<String>& arguments, const Vector<St
     return true;
 }
 
-static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, Vector<String> arguments, Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
+static KResultOr<FlatPtr> make_userspace_context_for_main_thread([[maybe_unused]] ThreadRegisters& regs, Region& region, Vector<String> arguments,
+    Vector<String> environment, Vector<ELF::AuxiliaryValue> auxiliary_values)
 {
-    FlatPtr new_esp = region.range().end().get();
+    FlatPtr new_sp = region.range().end().get();
 
     // Add some bits of randomness to the user stack pointer.
-    new_esp -= round_up_to_power_of_two(get_fast_random<u32>() % 4096, 16);
+    new_sp -= round_up_to_power_of_two(get_fast_random<u32>() % 4096, 16);
 
-    auto push_on_new_stack = [&new_esp](u32 value) {
-        new_esp -= 4;
-        Userspace<u32*> stack_ptr = new_esp;
+    auto push_on_new_stack = [&new_sp](FlatPtr value) {
+        new_sp -= sizeof(FlatPtr);
+        Userspace<FlatPtr*> stack_ptr = new_sp;
         return copy_to_user(stack_ptr, &value);
     };
 
-    auto push_aux_value_on_new_stack = [&new_esp](auxv_t value) {
-        new_esp -= sizeof(auxv_t);
-        Userspace<auxv_t*> stack_ptr = new_esp;
+    auto push_aux_value_on_new_stack = [&new_sp](auxv_t value) {
+        new_sp -= sizeof(auxv_t);
+        Userspace<auxv_t*> stack_ptr = new_sp;
         return copy_to_user(stack_ptr, &value);
     };
 
-    auto push_string_on_new_stack = [&new_esp](const String& string) {
-        new_esp -= round_up_to_power_of_two(string.length() + 1, 4);
-        Userspace<u32*> stack_ptr = new_esp;
+    auto push_string_on_new_stack = [&new_sp](const String& string) {
+        new_sp -= round_up_to_power_of_two(string.length() + 1, sizeof(FlatPtr));
+        Userspace<FlatPtr*> stack_ptr = new_sp;
         return copy_to_user(stack_ptr, string.characters(), string.length() + 1);
     };
 
     Vector<FlatPtr> argv_entries;
     for (auto& argument : arguments) {
         push_string_on_new_stack(argument);
-        if (!argv_entries.try_append(new_esp))
+        if (!argv_entries.try_append(new_sp))
             return ENOMEM;
     }
 
     Vector<FlatPtr> env_entries;
     for (auto& variable : environment) {
         push_string_on_new_stack(variable);
-        if (!env_entries.try_append(new_esp))
+        if (!env_entries.try_append(new_sp))
             return ENOMEM;
     }
 
     for (auto& value : auxiliary_values) {
         if (!value.optional_string.is_empty()) {
             push_string_on_new_stack(value.optional_string);
-            value.auxv.a_un.a_ptr = (void*)new_esp;
+            value.auxv.a_un.a_ptr = (void*)new_sp;
         }
     }
 
@@ -123,28 +124,35 @@ static KResultOr<FlatPtr> make_userspace_stack_for_main_thread(Region& region, V
     push_on_new_stack(0);
     for (ssize_t i = env_entries.size() - 1; i >= 0; --i)
         push_on_new_stack(env_entries[i]);
-    FlatPtr envp = new_esp;
+    FlatPtr envp = new_sp;
 
     push_on_new_stack(0);
     for (ssize_t i = argv_entries.size() - 1; i >= 0; --i)
         push_on_new_stack(argv_entries[i]);
-    FlatPtr argv = new_esp;
+    FlatPtr argv = new_sp;
 
     // NOTE: The stack needs to be 16-byte aligned.
-    new_esp -= new_esp % 16;
+    new_sp -= new_sp % 16;
+
+#if ARCH(I386)
     // GCC assumes that the return address has been pushed to the stack when it enters the function,
     // so we need to reserve an extra pointer's worth of bytes below this to make GCC's stack alignment
     // calculations work
-    new_esp -= sizeof(void*);
+    new_sp -= sizeof(void*);
 
-    push_on_new_stack((FlatPtr)envp);
-    push_on_new_stack((FlatPtr)argv);
-    push_on_new_stack((FlatPtr)argv_entries.size());
-    push_on_new_stack(0);
+    push_on_new_stack(envp);
+    push_on_new_stack(argv);
+    push_on_new_stack(argv_entries.size());
+#else
+    regs.rdi = argv;
+    regs.rsi = argv_entries.size();
+    regs.rdx = envp;
+#endif
+    push_on_new_stack(0); // return address
 
-    VERIFY((new_esp + sizeof(void*)) % 16 == 0);
+    VERIFY((new_sp + sizeof(void*)) % 16 == 0);
 
-    return new_esp;
+    return new_sp;
 }
 
 struct RequiredLoadRange {
@@ -596,10 +604,10 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
 
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    auto make_stack_result = make_userspace_stack_for_main_thread(*load_result.stack_region.unsafe_ptr(), move(arguments), move(environment), move(auxv));
+    auto make_stack_result = make_userspace_context_for_main_thread(new_main_thread->regs(), *load_result.stack_region.unsafe_ptr(), move(arguments), move(environment), move(auxv));
     if (make_stack_result.is_error())
         return make_stack_result.error();
-    FlatPtr new_userspace_esp = make_stack_result.value();
+    FlatPtr new_userspace_sp = make_stack_result.value();
 
     if (wait_for_tracer_at_next_execve()) {
         // Make sure we release the ptrace lock here or the tracer will block forever.
@@ -647,10 +655,10 @@ KResult Process::do_exec(NonnullRefPtr<FileDescription> main_program_description
     regs.fs = GDT_SELECTOR_DATA3 | 3;
     regs.gs = GDT_SELECTOR_TLS | 3;
     regs.eip = load_result.entry_eip;
-    regs.esp = new_userspace_esp;
+    regs.esp = new_userspace_sp;
 #else
     regs.rip = load_result.entry_eip;
-    regs.rsp = new_userspace_esp;
+    regs.rsp = new_userspace_sp;
 #endif
     regs.cr3 = space().page_directory().cr3();
 
