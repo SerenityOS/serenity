@@ -40,12 +40,12 @@ constexpr FlatPtr page_round_down(FlatPtr x)
 
 inline FlatPtr low_physical_to_virtual(FlatPtr physical)
 {
-    return physical + 0xc0000000;
+    return physical + KERNEL_BASE;
 }
 
 inline FlatPtr virtual_to_low_physical(FlatPtr virtual_)
 {
-    return virtual_ - 0xc0000000;
+    return virtual_ - KERNEL_BASE;
 }
 
 enum class UsedMemoryRangeType {
@@ -260,7 +260,7 @@ void VMObject::for_each_region(Callback callback)
 
 inline bool is_user_address(VirtualAddress vaddr)
 {
-    return vaddr.get() < 0xc0000000;
+    return vaddr.get() < KERNEL_BASE;
 }
 
 inline bool is_user_range(VirtualAddress vaddr, size_t size)

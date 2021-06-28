@@ -13,6 +13,7 @@
 #include <Kernel/Arch/x86/PageFault.h>
 #include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/KString.h>
+#include <Kernel/Sections.h>
 #include <Kernel/VM/PageFaultResponse.h>
 #include <Kernel/VM/PurgeablePageRanges.h>
 #include <Kernel/VM/RangeAllocator.h>
@@ -87,7 +88,7 @@ public:
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
     bool is_user() const { return !is_kernel(); }
-    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= 0xc0000000; }
+    bool is_kernel() const { return vaddr().get() < 0x00800000 || vaddr().get() >= KERNEL_BASE; }
 
     PageFaultResponse handle_fault(const PageFault&, ScopedSpinLock<RecursiveSpinLock>&);
 

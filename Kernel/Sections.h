@@ -10,3 +10,5 @@
 
 #define READONLY_AFTER_INIT __attribute__((section(".ro_after_init")))
 #define UNMAP_AFTER_INIT NEVER_INLINE __attribute__((section(".unmap_after_init")))
+
+#define KERNEL_BASE 0xC000'0000
