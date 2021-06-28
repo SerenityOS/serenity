@@ -12,13 +12,15 @@
 /* Auxiliary Vector types, from Intel386 ABI ver 1.0 section 2.3.3 */
 typedef struct
 {
-    long a_type; /* Note: Extended to long from int, for ease of comaptibility w/64 bit */
+    long a_type; /* Note: Extended to long from int, for ease of compatibility w/64 bit */
     union {
         long a_val;
         void* a_ptr;
         void (*a_fnc)(); /* In spec, not used */
     } a_un;
 } auxv_t;
+
+static_assert(sizeof(auxv_t) % sizeof(FlatPtr) == 0);
 
 #define AT_NULL 0           /* No length, last entry's a_type has this value */
 #define AT_IGNORE 1         /* Entry has no meaning, a_un undefined */
