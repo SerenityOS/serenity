@@ -717,7 +717,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
         return {};
     }
 
-    fast_u32_fill((u32*)page->paddr().offset(0xc0000000).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
+    fast_u32_fill((u32*)page->paddr().offset(KERNEL_BASE).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
     ++m_super_physical_pages_used;
     return page;
 }

@@ -37,7 +37,7 @@ extern "C" PageDirectoryEntry boot_pd3[1024];
 
 UNMAP_AFTER_INIT PageDirectory::PageDirectory()
 {
-    m_range_allocator.initialize_with_range(VirtualAddress(0xc2000000), 0x2f000000);
+    m_range_allocator.initialize_with_range(VirtualAddress(KERNEL_BASE + 0x02000000), 0x2f000000);
     m_identity_range_allocator.initialize_with_range(VirtualAddress(FlatPtr(0x00000000)), 0x00200000);
 
     // Adopt the page tables already set up by boot.S
@@ -89,7 +89,7 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
     m_directory_pages[2] = MM.allocate_user_physical_page();
     if (!m_directory_pages[2])
         return;
-    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=0xc0000000)
+    // Share the top 1 GiB of kernel-only mappings (>=3GiB or >=KERNEL_BASE)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
 #if ARCH(X86_64)
