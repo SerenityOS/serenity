@@ -29,8 +29,8 @@ public:
     void start();
     void stop();
 
-    void set_length(int length_in_ms);
-    int length() const { return m_length; }
+    void set_duration(int duration_in_ms);
+    int duration() const { return m_duration; }
 
     void update(Badge<Compositor>, Gfx::Painter&, Screen&, Gfx::DisjointRectSet& flush_rects);
 
@@ -41,7 +41,7 @@ private:
     Animation();
 
     Core::ElapsedTimer m_timer;
-    int m_length { 0 };
+    int m_duration { 0 };
     bool m_running { false };
 };
 
