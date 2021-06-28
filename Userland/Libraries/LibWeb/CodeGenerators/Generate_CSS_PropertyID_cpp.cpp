@@ -100,10 +100,14 @@ bool is_pseudo_property(PropertyID property_id)
     json.value().as_object().for_each_member([&](auto& name, auto& value) {
         VERIFY(value.is_object());
 
-        auto pseudo = value.as_object().get_or("pseudo", false);
-        VERIFY(pseudo.is_bool());
+        bool pseudo = false;
+        if (value.as_object().has("pseudo")) {
+            auto& pseudo_value = value.as_object().get("pseudo");
+            VERIFY(pseudo_value.is_bool());
+            pseudo = pseudo_value.as_bool();
+        }
 
-        if (pseudo.as_bool()) {
+        if (pseudo) {
             auto member_generator = generator.fork();
             member_generator.set("name:titlecase", title_casify(name));
             member_generator.append(R"~~~(
