@@ -14,7 +14,7 @@
 namespace JS {
 
 SetConstructor::SetConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.Set, *global_object.function_prototype())
+    : NativeFunction(vm().names.Set.as_string(), *global_object.function_prototype())
 {
 }
 

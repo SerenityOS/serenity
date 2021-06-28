@@ -16,7 +16,7 @@ TypedArrayConstructor::TypedArrayConstructor(const FlyString& name, Object& prot
 }
 
 TypedArrayConstructor::TypedArrayConstructor(GlobalObject& global_object)
-    : NativeFunction(vm().names.TypedArray, *global_object.function_prototype())
+    : NativeFunction(vm().names.TypedArray.as_string(), *global_object.function_prototype())
 {
 }
 
