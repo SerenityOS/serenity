@@ -142,6 +142,19 @@ void GlobalObject::initialize_global_object()
     define_native_function(vm.names.eval, eval, 1, attr);
     m_eval_function = &get_without_side_effects(vm.names.eval).as_function();
 
+    // 10.2.4.1 %ThrowTypeError% ( ), https://tc39.es/ecma262/#sec-%throwtypeerror%
+    m_throw_type_error_function = NativeFunction::create(global_object(), {}, [](VM& vm, GlobalObject& global_object) {
+        vm.throw_exception<TypeError>(global_object, ErrorType::RestrictedFunctionPropertiesAccess);
+        return Value();
+    });
+    m_throw_type_error_function->prevent_extensions();
+    m_throw_type_error_function->define_property_without_transition(vm.names.length, Value(0), 0, false);
+    m_throw_type_error_function->define_property_without_transition(vm.names.name, js_string(vm, ""), 0, false);
+
+    // 10.2.4 AddRestrictedFunctionProperties ( F, realm ), https://tc39.es/ecma262/#sec-addrestrictedfunctionproperties
+    m_function_prototype->define_accessor(vm.names.caller, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
+    m_function_prototype->define_accessor(vm.names.arguments, throw_type_error_function(), throw_type_error_function(), Attribute::Configurable);
+
     define_native_function(vm.names.encodeURI, encode_uri, 1, attr);
     define_native_function(vm.names.decodeURI, decode_uri, 1, attr);
     define_native_function(vm.names.encodeURIComponent, encode_uri_component, 1, attr);
@@ -227,6 +240,7 @@ void GlobalObject::visit_edges(Visitor& visitor)
 #undef __JS_ENUMERATE
 
     visitor.visit(m_eval_function);
+    visitor.visit(m_throw_type_error_function);
 }
 
 JS_DEFINE_NATIVE_FUNCTION(GlobalObject::gc)

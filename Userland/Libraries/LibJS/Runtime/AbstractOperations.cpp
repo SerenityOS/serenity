@@ -210,7 +210,6 @@ Value perform_eval(Value x, GlobalObject& caller_realm, CallerMode strict_caller
 Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Value> const& arguments)
 {
     auto& vm = global_object.vm();
-    // FIXME: This should use OrdinaryObjectCreate
     auto* object = Object::create(global_object, global_object.object_prototype());
     if (vm.exception())
         return nullptr;
@@ -226,12 +225,8 @@ Object* create_unmapped_arguments_object(GlobalObject& global_object, Vector<Val
     for (auto& argument : arguments)
         object->indexed_properties().append(argument);
 
-    // FIXME: 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
-    PropertyAttributes attributes;
-    attributes.set_has_configurable();
-    attributes.set_has_enumerable();
-
-    object->define_property(vm.names.callee, js_undefined(), attributes);
+    // 8. Perform ! DefinePropertyOrThrow(obj, "callee", PropertyDescriptor { [[Get]]: %ThrowTypeError%, [[Set]]: %ThrowTypeError%, [[Enumerable]]: false, [[Configurable]]: false }).
+    object->define_accessor(vm.names.callee, global_object.throw_type_error_function(), global_object.throw_type_error_function(), 0);
     if (vm.exception())
         return nullptr;
 
