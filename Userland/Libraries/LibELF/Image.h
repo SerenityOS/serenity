@@ -40,7 +40,7 @@ public:
 
     class Symbol {
     public:
-        Symbol(const Image& image, unsigned index, const Elf32_Sym& sym)
+        Symbol(const Image& image, unsigned index, const ElfW(Sym) & sym)
             : m_image(image)
             , m_sym(sym)
             , m_index(index)
@@ -62,7 +62,7 @@ public:
 
     private:
         const Image& m_image;
-        const Elf32_Sym& m_sym;
+        const ElfW(Sym) & m_sym;
         const unsigned m_index;
     };
 
@@ -88,11 +88,11 @@ public:
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
         const char* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
-        Elf32_Phdr raw_header() const { return m_program_header; }
+        ElfW(Phdr) raw_header() const { return m_program_header; }
 
     private:
         const Image& m_image;
-        const Elf32_Phdr& m_program_header;
+        const ElfW(Phdr) & m_program_header;
         unsigned m_program_header_index { 0 };
     };
 
@@ -123,7 +123,7 @@ public:
     protected:
         friend class RelocationSection;
         const Image& m_image;
-        const Elf32_Shdr& m_section_header;
+        const ElfW(Shdr) & m_section_header;
         unsigned m_section_index;
     };
 
@@ -142,7 +142,7 @@ public:
 
     class Relocation {
     public:
-        Relocation(const Image& image, const Elf32_Rel& rel)
+        Relocation(const Image& image, const ElfW(Rel) & rel)
             : m_image(image)
             , m_rel(rel)
         {
@@ -157,7 +157,7 @@ public:
 
     private:
         const Image& m_image;
-        const Elf32_Rel& m_rel;
+        const ElfW(Rel) & m_rel;
     };
 
     unsigned symbol_count() const;
@@ -207,9 +207,9 @@ public:
 
 private:
     const char* raw_data(unsigned offset) const;
-    const Elf32_Ehdr& header() const;
-    const Elf32_Shdr& section_header(unsigned) const;
-    const Elf32_Phdr& program_header_internal(unsigned) const;
+    const ElfW(Ehdr) & header() const;
+    const ElfW(Shdr) & section_header(unsigned) const;
+    const ElfW(Phdr) & program_header_internal(unsigned) const;
     StringView table_string(unsigned offset) const;
     StringView section_header_table_string(unsigned offset) const;
     StringView section_index_to_string(unsigned index) const;
