@@ -54,9 +54,23 @@ public:
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
-        unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
+#if ARCH(I386)
+        unsigned type() const
+        {
+            return ELF32_ST_TYPE(m_sym.st_info);
+        }
         unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-        Section section() const { return m_image.section(section_index()); }
+#else
+        unsigned type() const
+        {
+            return ELF64_ST_TYPE(m_sym.st_info);
+        }
+        unsigned bind() const { return ELF64_ST_BIND(m_sym.st_info); }
+#endif
+        Section section() const
+        {
+            return m_image.section(section_index());
+        }
         bool is_undefined() const { return section_index() == 0; }
         StringView raw_data() const;
 
@@ -151,9 +165,23 @@ public:
         ~Relocation() { }
 
         unsigned offset() const { return m_rel.r_offset; }
-        unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
+#if ARCH(I386)
+        unsigned type() const
+        {
+            return ELF32_R_TYPE(m_rel.r_info);
+        }
         unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        Symbol symbol() const { return m_image.symbol(symbol_index()); }
+#else
+        unsigned type() const
+        {
+            return ELF64_R_TYPE(m_rel.r_info);
+        }
+        unsigned symbol_index() const { return ELF64_R_SYM(m_rel.r_info); }
+#endif
+        Symbol symbol() const
+        {
+            return m_image.symbol(symbol_index());
+        }
 
     private:
         const Image& m_image;
