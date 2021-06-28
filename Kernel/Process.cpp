@@ -332,7 +332,7 @@ void create_signal_trampoline()
     g_signal_trampoline_region->remap();
 }
 
-void Process::crash(int signal, u32 eip, bool out_of_memory)
+void Process::crash(int signal, FlatPtr ip, bool out_of_memory)
 {
     VERIFY(!is_dead());
     VERIFY(Process::current() == this);
@@ -340,11 +340,11 @@ void Process::crash(int signal, u32 eip, bool out_of_memory)
     if (out_of_memory) {
         dbgln("\033[31;1mOut of memory\033[m, killing: {}", *this);
     } else {
-        if (eip >= 0xc0000000 && g_kernel_symbols_available) {
-            auto* symbol = symbolicate_kernel_address(eip);
-            dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", eip, (symbol ? demangle(symbol->name) : "(k?)"), (symbol ? eip - symbol->address : 0));
+        if (ip >= 0xc0000000 && g_kernel_symbols_available) {
+            auto* symbol = symbolicate_kernel_address(ip);
+            dbgln("\033[31;1m{:p}  {} +{}\033[0m\n", ip, (symbol ? demangle(symbol->name) : "(k?)"), (symbol ? ip - symbol->address : 0));
         } else {
-            dbgln("\033[31;1m{:p}  (?)\033[0m\n", eip);
+            dbgln("\033[31;1m{:p}  (?)\033[0m\n", ip);
         }
         dump_backtrace();
     }
