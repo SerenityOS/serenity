@@ -115,8 +115,13 @@ u32 Processor::init_context(Thread& thread, bool leave_crit)
     iretframe.rflags = regs.rflags;
     iretframe.rip = regs.rip;
     iretframe.cs = regs.cs;
-    iretframe.userspace_rsp = kernel_stack_top;
-    iretframe.userspace_ss = 0;
+    if (return_to_user) {
+        iretframe.userspace_rsp = regs.rsp;
+        iretframe.userspace_ss = GDT_SELECTOR_DATA3 | 3;
+    } else {
+        iretframe.userspace_rsp = kernel_stack_top;
+        iretframe.userspace_ss = 0;
+    }
 
     // make space for a trap frame
     stack_top -= sizeof(TrapFrame);

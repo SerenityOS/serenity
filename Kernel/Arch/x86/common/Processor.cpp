@@ -1070,6 +1070,7 @@ UNMAP_AFTER_INIT void Processor::gdt_init()
 #else
     write_raw_gdt_entry(GDT_SELECTOR_CODE0, 0x0000ffff, 0x00af9a00); // code0
     write_raw_gdt_entry(GDT_SELECTOR_CODE3, 0x0000ffff, 0x00affa00); // code3
+    write_raw_gdt_entry(GDT_SELECTOR_DATA3, 0x0000ffff, 0x008ff200); // data3
 #endif
 
 #if ARCH(I386)
