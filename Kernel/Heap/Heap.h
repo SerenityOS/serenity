@@ -27,6 +27,8 @@ class Heap {
         u8 data[0];
     };
 
+    static_assert(CHUNK_SIZE >= sizeof(AllocationHeader));
+
     static size_t calculate_chunks(size_t memory_size)
     {
         return (sizeof(u8) * memory_size) / (sizeof(u8) * CHUNK_SIZE + 1);
@@ -61,7 +63,7 @@ public:
 
         Optional<size_t> first_chunk;
 
-        // Choose the right politic for allocation.
+        // Choose the right policy for allocation.
         constexpr u32 best_fit_threshold = 128;
         if (chunks_needed < best_fit_threshold) {
             first_chunk = m_bitmap.find_first_fit(chunks_needed);
