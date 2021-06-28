@@ -111,7 +111,6 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
-#if ARCH(I386)
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     void* original_dest = dest_ptr;
@@ -128,11 +127,19 @@ void* memset(void* dest_ptr, int c, size_t n)
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
         size_t expanded_c = explode_byte((u8)c);
+#if ARCH(I386)
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
             : "D"(dest), "c"(size_ts), "a"(expanded_c)
             : "memory");
+#else
+        asm volatile(
+            "rep stosq\n"
+            : "=D"(dest)
+            : "D"(dest), "c"(size_ts), "a"(expanded_c)
+            : "memory");
+#endif
         n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
@@ -144,24 +151,6 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "memory");
     return dest_ptr;
 }
-#else
-void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
-{
-    auto* dest = (u8*)dest_ptr;
-    auto* src = (const u8*)src_ptr;
-    for (size_t i = 0; i < n; ++i)
-        dest[i] = src[i];
-    return dest_ptr;
-}
-
-void* memset(void* dest_ptr, int c, size_t n)
-{
-    auto* dest = (u8*)dest_ptr;
-    for (size_t i = 0; i < n; ++i)
-        dest[i] = (u8)c;
-    return dest_ptr;
-}
-#endif
 
 void* memmove(void* dest, const void* src, size_t n)
 {
