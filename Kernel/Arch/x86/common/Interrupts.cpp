@@ -605,7 +605,7 @@ UNMAP_AFTER_INIT void flush_idt()
 UNMAP_AFTER_INIT void idt_init()
 {
     s_idtr.address = s_idt;
-    s_idtr.limit = 256 * 8 - 1;
+    s_idtr.limit = 256 * sizeof(IDTEntry) - 1;
 
     register_interrupt_handler(0x00, divide_error_asm_entry);
     register_user_callable_interrupt_handler(0x01, debug_asm_entry);
