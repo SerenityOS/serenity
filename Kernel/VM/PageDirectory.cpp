@@ -95,7 +95,7 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
 #if ARCH(X86_64)
     {
         auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_pml4t);
-        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 3;
+        table.raw[0] = (FlatPtr)m_directory_table->paddr().as_ptr() | 7;
         MM.unquickmap_page();
     }
 #endif
@@ -108,10 +108,10 @@ PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
         table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 1;
         table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 1;
 #else
-        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 3;
-        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 3;
-        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 3;
-        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 3;
+        table.raw[0] = (FlatPtr)m_directory_pages[0]->paddr().as_ptr() | 7;
+        table.raw[1] = (FlatPtr)m_directory_pages[1]->paddr().as_ptr() | 7;
+        table.raw[2] = (FlatPtr)m_directory_pages[2]->paddr().as_ptr() | 7;
+        table.raw[3] = (FlatPtr)m_directory_pages[3]->paddr().as_ptr() | 7;
 #endif
 
         // 2 ** MAXPHYADDR - 1

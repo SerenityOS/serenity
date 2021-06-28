@@ -28,8 +28,9 @@ static_assert(GDT_SELECTOR_CODE0 + 24 == GDT_SELECTOR_DATA3); // SS3 = CS0 + 32
 #else
 #    define GDT_SELECTOR_CODE0 0x08
 #    define GDT_SELECTOR_CODE3 0x10
-#    define GDT_SELECTOR_TSS 0x18
-#    define GDT_SELECTOR_TSS_PART2 0x20
+#    define GDT_SELECTOR_DATA3 0x18
+#    define GDT_SELECTOR_TSS 0x20
+#    define GDT_SELECTOR_TSS_PART2 0x28
 #endif
 
 namespace Kernel {
