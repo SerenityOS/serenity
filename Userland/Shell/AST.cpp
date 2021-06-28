@@ -1775,7 +1775,7 @@ RefPtr<Value> IfCond::run(RefPtr<Shell> shell)
 {
     auto cond = m_condition->run(shell)->resolve_without_cast(shell);
     // The condition could be a builtin, in which case it has already run and exited.
-    if (cond && cond->is_job()) {
+    if (cond->is_job()) {
         auto cond_job_value = static_cast<const JobValue*>(cond.ptr());
         auto cond_job = cond_job_value->job();
 
