@@ -37,7 +37,11 @@ NonnullRefPtr<Statement> Parser::parse_statement()
 {
     switch (m_parser_state.m_token.type()) {
     case TokenType::Create:
-        return parse_create_table_statement();
+        consume();
+        if (match(TokenType::Schema))
+            return parse_create_schema_statement();
+        else
+            return parse_create_table_statement();
     case TokenType::Alter:
         return parse_alter_table_statement();
     case TokenType::Drop:
@@ -73,10 +77,24 @@ NonnullRefPtr<Statement> Parser::parse_statement_with_expression_list(RefPtr<Com
     }
 }
 
+NonnullRefPtr<CreateSchema> Parser::parse_create_schema_statement()
+{
+    consume(TokenType::Schema);
+
+    bool is_error_if_exists = true;
+    if (consume_if(TokenType::If)) {
+        consume(TokenType::Not);
+        consume(TokenType::Exists);
+        is_error_if_exists = false;
+    }
+
+    String schema_name = consume(TokenType::Identifier).value();
+    return create_ast_node<CreateSchema>(move(schema_name), is_error_if_exists);
+}
+
 NonnullRefPtr<CreateTable> Parser::parse_create_table_statement()
 {
     // https://sqlite.org/lang_createtable.html
-    consume(TokenType::Create);
 
     bool is_temporary = false;
     if (consume_if(TokenType::Temp) || consume_if(TokenType::Temporary))
