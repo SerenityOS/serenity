@@ -76,6 +76,7 @@ namespace JS {
     P(byteOffset)                            \
     P(call)                                  \
     P(callee)                                \
+    P(caller)                                \
     P(cause)                                 \
     P(cbrt)                                  \
     P(ceil)                                  \

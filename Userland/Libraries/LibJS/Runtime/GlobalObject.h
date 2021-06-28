@@ -38,6 +38,8 @@ public:
 
     FunctionObject* eval_function() const { return m_eval_function; }
 
+    FunctionObject* throw_type_error_function() const { return m_throw_type_error_function; }
+
 #define __JS_ENUMERATE(ClassName, snake_name, PrototypeName, ConstructorName, ArrayType) \
     ConstructorName* snake_name##_constructor() { return m_##snake_name##_constructor; } \
     Object* snake_name##_prototype() { return m_##snake_name##_prototype; }
@@ -99,6 +101,7 @@ private:
 #undef __JS_ENUMERATE
 
     FunctionObject* m_eval_function;
+    FunctionObject* m_throw_type_error_function;
 };
 
 template<typename ConstructorType>
