@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static const char* object_file_type_to_string(Elf32_Half type)
+static const char* object_file_type_to_string(ElfW(Half) type)
 {
     switch (type) {
     case ET_NONE:
@@ -37,7 +37,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
     }
 }
 
-static const char* object_machine_type_to_string(Elf32_Half type)
+static const char* object_machine_type_to_string(ElfW(Half) type)
 {
     switch (type) {
     case ET_NONE:
@@ -63,7 +63,7 @@ static const char* object_machine_type_to_string(Elf32_Half type)
     }
 }
 
-static const char* object_program_header_type_to_string(Elf32_Word type)
+static const char* object_program_header_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case PT_NULL:
@@ -107,7 +107,7 @@ static const char* object_program_header_type_to_string(Elf32_Word type)
     }
 }
 
-static const char* object_section_header_type_to_string(Elf32_Word type)
+static const char* object_section_header_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case SHT_NULL:
@@ -177,7 +177,7 @@ static const char* object_section_header_type_to_string(Elf32_Word type)
     }
 }
 
-static const char* object_symbol_type_to_string(Elf32_Word type)
+static const char* object_symbol_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case STT_NOTYPE:
@@ -201,7 +201,7 @@ static const char* object_symbol_type_to_string(Elf32_Word type)
     }
 }
 
-static const char* object_symbol_binding_to_string(Elf32_Word type)
+static const char* object_symbol_binding_to_string(ElfW(Word) type)
 {
     switch (type) {
     case STB_LOCAL:
@@ -221,7 +221,7 @@ static const char* object_symbol_binding_to_string(Elf32_Word type)
     }
 }
 
-static const char* object_relocation_type_to_string(Elf32_Word type)
+static const char* object_relocation_type_to_string(ElfW(Word) type)
 {
     switch (type) {
     case R_386_NONE:
@@ -251,7 +251,7 @@ static const char* object_relocation_type_to_string(Elf32_Word type)
     }
 }
 
-static const char* object_tag_to_string(Elf32_Sword dt_tag)
+static const char* object_tag_to_string(ElfW(Sword) dt_tag)
 {
     switch (dt_tag) {
     case DT_NULL:
@@ -419,12 +419,12 @@ int main(int argc, char** argv)
 
     String interpreter_path;
 
-    if (!ELF::validate_program_headers(*(const Elf32_Ehdr*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path)) {
+    if (!ELF::validate_program_headers(*(const ElfW(Ehdr)*)elf_image_data.data(), elf_image_data.size(), (const u8*)elf_image_data.data(), elf_image_data.size(), &interpreter_path)) {
         warnln("Invalid ELF headers");
         return -1;
     }
 
-    auto& header = *reinterpret_cast<const Elf32_Ehdr*>(elf_image_data.data());
+    auto& header = *reinterpret_cast<const ElfW(Ehdr)*>(elf_image_data.data());
 
     RefPtr<ELF::DynamicObject> object = nullptr;
 
