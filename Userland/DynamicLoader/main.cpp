@@ -49,11 +49,13 @@ static void perform_self_relocations(auxv_t* auxvp)
     auto dynamic_object = ELF::DynamicObject::create({}, (VirtualAddress(base_address)), (VirtualAddress(dynamic_section_addr)));
 
     dynamic_object->relocation_section().for_each_relocation([base_address](auto& reloc) {
-        if (reloc.type() != R_386_RELATIVE)
-            return IterationDecision::Continue;
+#if ARCH(I386)
+        VERIFY(reloc.type() == R_386_RELATIVE);
+#else
+        VERIFY(reloc.type() == R_X86_64_RELATIVE);
+#endif
 
-        *(u32*)reloc.address().as_ptr() += base_address;
-        return IterationDecision::Continue;
+        *(FlatPtr*)reloc.address().as_ptr() += base_address;
     });
 }
 
