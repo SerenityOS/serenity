@@ -19,7 +19,7 @@
 
 namespace Kernel {
 
-class RegisterState;
+struct RegisterState;
 class GenericInterruptHandler;
 
 static constexpr u32 safe_eflags_mask = 0xdff;
