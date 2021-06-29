@@ -43,7 +43,7 @@ public:
     const String& filename() const { return m_filename; }
     bool document_dirty() const { return m_document_dirty; }
 
-    LexicalPath const& project_root() const { return m_project_root; }
+    Optional<LexicalPath> const& project_root() const { return m_project_root; }
     void set_project_root(LexicalPath const& project_root);
 
     GitRepo const* git_repo() const { return m_git_repo; }
@@ -62,7 +62,7 @@ private:
     RefPtr<Editor> m_editor;
     bool m_document_dirty { false };
 
-    LexicalPath m_project_root;
+    Optional<LexicalPath> m_project_root;
     RefPtr<GitRepo> m_git_repo;
     Vector<Diff::Hunk> m_hunks;
 };
