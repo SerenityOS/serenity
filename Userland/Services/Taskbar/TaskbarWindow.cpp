@@ -88,12 +88,23 @@ TaskbarWindow::TaskbarWindow(NonnullRefPtr<GUI::Menu> start_menu)
 
     main_widget.add<Taskbar::ClockWidget>();
 
+    m_show_desktop_button = GUI::Button::construct();
+    m_show_desktop_button->set_tooltip("Show Desktop");
+    m_show_desktop_button->set_fixed_size(12, 21);
+    m_show_desktop_button->on_click = TaskbarWindow::show_desktop_button_clicked;
+    main_widget.add_child(*m_show_desktop_button);
+
     auto af_path = String::formatted("{}/{}", Desktop::AppFile::APP_FILES_DIRECTORY, "Assistant.af");
     m_assistant_app_file = Desktop::AppFile::open(af_path);
 }
 
 TaskbarWindow::~TaskbarWindow()
 {
+}
+
+void TaskbarWindow::show_desktop_button_clicked(unsigned)
+{
+    GUI::WindowManagerServerConnection::the().async_toggle_show_desktop();
 }
 
 void TaskbarWindow::create_quick_launch_bar()
