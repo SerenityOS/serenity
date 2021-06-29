@@ -121,21 +121,34 @@ String LexicalPath::canonicalized_path(String path)
     return builder.to_string();
 }
 
-String LexicalPath::relative_path(String absolute_path, String const& prefix)
+String LexicalPath::relative_path(StringView const& a_path, StringView const& a_prefix)
 {
-    if (!LexicalPath { absolute_path }.is_absolute() || !LexicalPath { prefix }.is_absolute())
+    if (!a_path.starts_with('/') || !a_prefix.starts_with('/')) {
+        // FIXME: This should probably VERIFY or return an Optional<String>.
         return {};
+    }
 
-    if (!absolute_path.starts_with(prefix))
-        return absolute_path;
+    if (a_path == a_prefix)
+        return ".";
 
-    size_t prefix_length = LexicalPath { prefix }.string().length();
-    if (prefix != "/")
-        prefix_length++;
-    if (prefix_length >= absolute_path.length())
-        return {};
+    // NOTE: Strip optional trailing slashes, except if the full path is only "/".
+    auto path = canonicalized_path(a_path);
+    auto prefix = canonicalized_path(a_prefix);
 
-    return absolute_path.substring(prefix_length);
+    if (path == prefix)
+        return ".";
+
+    // NOTE: Handle this special case first.
+    if (prefix == "/"sv)
+        return path.substring_view(1);
+
+    // NOTE: This means the prefix is a direct child of the path.
+    if (path.starts_with(prefix) && path[prefix.length()] == '/') {
+        return path.substring_view(prefix.length() + 1);
+    }
+
+    // FIXME: It's still possible to generate a relative path in this case, it just needs some "..".
+    return path;
 }
 
 LexicalPath LexicalPath::append(StringView const& value) const
