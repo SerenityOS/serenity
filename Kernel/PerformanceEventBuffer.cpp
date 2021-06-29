@@ -5,7 +5,6 @@
  */
 
 #include <AK/JsonArraySerializer.h>
-#include <AK/JsonObject.h>
 #include <AK/JsonObjectSerializer.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Arch/x86/SmapDisabler.h>
