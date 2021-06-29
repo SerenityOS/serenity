@@ -81,7 +81,11 @@ KResultOr<FlatPtr> Process::sys$create_thread(void* (*entry)(void*), Userspace<c
 
     ScopedSpinLock lock(g_scheduler_lock);
     thread->set_priority(requested_thread_priority);
+#if ARCH(I386)
     thread->set_state(Thread::State::Runnable);
+#else
+    dbgln("FIXME: Not starting thread {} (because it'd crash)", *thread);
+#endif
     return thread->tid().value();
 }
 
