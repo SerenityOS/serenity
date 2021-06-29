@@ -2,13 +2,13 @@
  * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * Copyright (c) 2020, Itamar S. <itamar8910@gmail.com>
  * Copyright (c) 2020-2021, Linus Groh <linusg@serenityos.org>
+ * Copyright (c) 2021, Andreas Kling <klingi@serenityos.org>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
 
 #include <AK/ByteBuffer.h>
-#include <AK/JsonArray.h>
-#include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
 #include <Kernel/CoreDump.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -206,15 +206,26 @@ ByteBuffer CoreDump::create_notes_process_data() const
     info.header.type = ELF::Core::NotesEntryHeader::Type::ProcessInfo;
     process_data.append((void*)&info, sizeof(info));
 
-    JsonObject process_obj;
-    process_obj.set("pid", m_process->pid().value());
-    process_obj.set("termination_signal", m_process->termination_signal());
-    process_obj.set("executable_path", m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
-    process_obj.set("arguments", JsonArray(m_process->arguments()));
-    process_obj.set("environment", JsonArray(m_process->environment()));
+    StringBuilder builder;
+    JsonObjectSerializer process_obj { builder };
+    process_obj.add("pid"sv, m_process->pid().value());
+    process_obj.add("termination_signal"sv, m_process->termination_signal());
+    process_obj.add("executable_path"sv, m_process->executable() ? m_process->executable()->absolute_path() : String::empty());
 
-    auto json_data = process_obj.to_string();
-    process_data.append(json_data.characters(), json_data.length() + 1);
+    {
+        auto arguments_array = process_obj.add_array("arguments"sv);
+        for (auto& argument : m_process->arguments())
+            arguments_array.add(argument);
+    }
+
+    {
+        auto environment_array = process_obj.add_array("environment"sv);
+        for (auto& variable : m_process->environment())
+            environment_array.add(variable);
+    }
+
+    builder.append(0);
+    process_data.append(builder.string_view().characters_without_null_termination(), builder.length());
 
     return process_data;
 }
@@ -275,11 +286,12 @@ ByteBuffer CoreDump::create_notes_metadata_data() const
     metadata.header.type = ELF::Core::NotesEntryHeader::Type::Metadata;
     metadata_data.append((void*)&metadata, sizeof(metadata));
 
-    JsonObject metadata_obj;
+    StringBuilder builder;
+    JsonObjectSerializer metadata_obj { builder };
     for (auto& it : m_process->coredump_metadata())
-        metadata_obj.set(it.key, it.value);
-    auto json_data = metadata_obj.to_string();
-    metadata_data.append(json_data.characters(), json_data.length() + 1);
+        metadata_obj.add(it.key, it.value);
+    builder.append(0);
+    metadata_data.append(builder.string_view().characters_without_null_termination(), builder.length());
 
     return metadata_data;
 }
