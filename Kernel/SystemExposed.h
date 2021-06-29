@@ -31,7 +31,7 @@ public:
 
     virtual NonnullRefPtr<Inode> to_inode(const SysFS& sysfs_instance) const;
 
-    size_t component_index() const { return m_component_index; };
+    InodeIndex component_index() const { return m_component_index; };
 
     virtual ~SystemExposedComponent() = default;
 
@@ -40,7 +40,7 @@ protected:
 
 private:
     NonnullOwnPtr<KString> m_name;
-    size_t m_component_index;
+    InodeIndex m_component_index {};
 };
 
 class SystemExposedFolder : public SystemExposedComponent {
