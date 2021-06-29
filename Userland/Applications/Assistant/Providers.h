@@ -28,17 +28,21 @@ public:
 
     RefPtr<Gfx::Bitmap> bitmap() { return m_bitmap; }
     String const& title() const { return m_title; }
+    String const& subtitle() const { return m_subtitle; }
     Kind kind() const { return m_kind; }
     int score() const { return m_score; }
     bool equals(Result const& other) const
     {
-        return title() == other.title() && kind() == other.kind();
+        return kind() == other.kind()
+            && title() == other.title()
+            && subtitle() == other.subtitle();
     }
 
 protected:
-    Result(RefPtr<Gfx::Bitmap> bitmap, String title, int score = 0, Kind kind = Kind::Unknown)
+    Result(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, int score = 0, Kind kind = Kind::Unknown)
         : m_bitmap(move(bitmap))
         , m_title(move(title))
+        , m_subtitle(move(subtitle))
         , m_score(score)
         , m_kind(kind)
     {
@@ -47,14 +51,15 @@ protected:
 private:
     RefPtr<Gfx::Bitmap> m_bitmap;
     String m_title;
+    String m_subtitle;
     int m_score { 0 };
     Kind m_kind;
 };
 
 class AppResult : public Result {
 public:
-    AppResult(RefPtr<Gfx::Bitmap> bitmap, String title, NonnullRefPtr<Desktop::AppFile> af, int score)
-        : Result(move(bitmap), move(title), score, Kind::App)
+    AppResult(RefPtr<Gfx::Bitmap> bitmap, String title, String subtitle, NonnullRefPtr<Desktop::AppFile> af, int score)
+        : Result(move(bitmap), move(title), move(subtitle), score, Kind::App)
         , m_app_file(move(af))
     {
     }
@@ -68,7 +73,7 @@ private:
 class CalculatorResult : public Result {
 public:
     explicit CalculatorResult(String title)
-        : Result(GUI::Icon::default_icon("app-calculator").bitmap_for_size(16), move(title), 100, Kind::Calculator)
+        : Result(GUI::Icon::default_icon("app-calculator").bitmap_for_size(16), move(title), "'Enter' will copy to clipboard"sv, 100, Kind::Calculator)
     {
     }
     ~CalculatorResult() override = default;
