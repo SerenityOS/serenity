@@ -33,8 +33,14 @@ static constexpr size_t required_stack_alignment = 4 * MiB;
 static constexpr size_t highest_reasonable_guard_size = 32 * PAGE_SIZE;
 static constexpr size_t highest_reasonable_stack_size = 8 * MiB; // That's the default in Ubuntu?
 
-__thread void* s_stack_location;
-__thread size_t s_stack_size;
+#ifndef X86_64_NO_TLS
+__thread
+#endif
+    void* s_stack_location;
+#ifndef X86_64_NO_TLS
+__thread
+#endif
+    size_t s_stack_size;
 
 #define __RETURN_PTHREAD_ERROR(rc) \
     return ((rc) < 0 ? -(rc) : 0)
