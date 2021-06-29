@@ -449,7 +449,11 @@ NonnullRefPtr<DynamicObject> DynamicObject::create(const String& filename, Virtu
 VirtualAddress DynamicObject::patch_plt_entry(u32 relocation_offset)
 {
     auto relocation = plt_relocation_section().relocation_at_offset(relocation_offset);
+#if ARCH(I386)
     VERIFY(relocation.type() == R_386_JMP_SLOT);
+#else
+    VERIFY(relocation.type() == R_X86_64_JUMP_SLOT);
+#endif
     auto symbol = relocation.symbol();
     u8* relocation_address = relocation.address().as_ptr();
 

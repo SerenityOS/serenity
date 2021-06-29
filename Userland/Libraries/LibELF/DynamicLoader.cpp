@@ -506,7 +506,7 @@ DynamicLoader::RelocationResult DynamicLoader::do_relocation(const ELF::DynamicO
             u8* relocation_address = relocation.address().as_ptr();
 
             if (m_elf_image.is_dynamic())
-                *(u32*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
+                *(FlatPtr*)relocation_address += (FlatPtr)m_dynamic_object->base_address().as_ptr();
         }
         break;
     }
