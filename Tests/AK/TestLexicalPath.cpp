@@ -165,11 +165,38 @@ TEST_CASE(join)
     EXPECT_EQ(LexicalPath::join("anon", "foo.txt").string(), "anon/foo.txt");
     EXPECT_EQ(LexicalPath::join("/home", "anon/foo.txt").string(), "/home/anon/foo.txt");
     EXPECT_EQ(LexicalPath::join("/", "foo.txt").string(), "/foo.txt");
+    EXPECT_EQ(LexicalPath::join("/home", "anon", "foo.txt").string(), "/home/anon/foo.txt");
 }
 
 TEST_CASE(append)
 {
-    LexicalPath path("/home/anon");
-    path.append("foo.txt");
-    EXPECT_EQ(path.string(), "/home/anon/foo.txt");
+    LexicalPath path("/home/anon/");
+    auto new_path = path.append("foo.txt");
+    EXPECT_EQ(new_path.string(), "/home/anon/foo.txt");
+}
+
+TEST_CASE(parent)
+{
+    {
+        LexicalPath path("/home/anon/foo.txt");
+        auto parent = path.parent();
+        EXPECT_EQ(parent.string(), "/home/anon");
+    }
+    {
+        LexicalPath path("anon/foo.txt");
+        auto parent = path.parent();
+        EXPECT_EQ(parent.string(), "anon");
+    }
+    {
+        LexicalPath path("foo.txt");
+        auto parent = path.parent();
+        EXPECT_EQ(parent.string(), ".");
+        auto parent_of_parent = parent.parent();
+        EXPECT_EQ(parent_of_parent.string(), "..");
+    }
+    {
+        LexicalPath path("/");
+        auto parent = path.parent();
+        EXPECT_EQ(parent.string(), "/");
+    }
 }
