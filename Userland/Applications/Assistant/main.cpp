@@ -21,7 +21,7 @@
 namespace Assistant {
 
 struct AppState {
-    size_t selected_index { 0 };
+    Optional<size_t> selected_index;
     Vector<NonnullRefPtr<Result>> results;
     size_t visible_result_count { 0 };
 
@@ -218,23 +218,34 @@ int main(int argc, char** argv)
         db.search(text_box.text());
     };
     text_box.on_return_pressed = [&]() {
-        app_state.results[app_state.selected_index]->activate();
+        if (!app_state.selected_index.has_value())
+            return;
+        app_state.results[app_state.selected_index.value()]->activate();
         exit(0);
     };
     text_box.on_up_pressed = [&]() {
-        if (app_state.selected_index == 0)
-            app_state.selected_index = app_state.visible_result_count - 1;
-        else if (app_state.selected_index > 0)
-            app_state.selected_index -= 1;
+        if (!app_state.visible_result_count)
+            return;
+        auto new_selected_index = app_state.selected_index.value_or(0);
+        if (new_selected_index == 0)
+            new_selected_index = app_state.visible_result_count - 1;
+        else if (new_selected_index > 0)
+            new_selected_index -= 1;
 
+        app_state.selected_index = new_selected_index;
         mark_selected_item();
     };
     text_box.on_down_pressed = [&]() {
-        if ((app_state.visible_result_count - 1) == app_state.selected_index)
-            app_state.selected_index = 0;
-        else if (app_state.visible_result_count > app_state.selected_index)
-            app_state.selected_index += 1;
+        if (!app_state.visible_result_count)
+            return;
 
+        auto new_selected_index = app_state.selected_index.value_or(0);
+        if ((app_state.visible_result_count - 1) == new_selected_index)
+            new_selected_index = 0;
+        else if (app_state.visible_result_count > new_selected_index)
+            new_selected_index += 1;
+
+        app_state.selected_index = new_selected_index;
         mark_selected_item();
     };
     text_box.on_escape_pressed = []() {
@@ -242,7 +253,10 @@ int main(int argc, char** argv)
     };
 
     db.on_new_results = [&](auto results) {
-        app_state.selected_index = 0;
+        if (results.is_empty())
+            app_state.selected_index = {};
+        else
+            app_state.selected_index = 0;
         app_state.results = results;
         app_state.visible_result_count = min(results.size(), MAX_SEARCH_RESULTS);
         results_container.remove_all_children();
