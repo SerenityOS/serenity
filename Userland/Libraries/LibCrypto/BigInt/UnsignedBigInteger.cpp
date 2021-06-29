@@ -66,60 +66,23 @@ size_t UnsignedBigInteger::export_data(Bytes data, bool remove_leading_zeros) co
     return out;
 }
 
-UnsignedBigInteger UnsignedBigInteger::from_base10(const String& str)
+UnsignedBigInteger UnsignedBigInteger::from_base(u16 N, const String& str)
 {
+    VERIFY(N <= 36);
     UnsignedBigInteger result;
-    UnsignedBigInteger ten { 10 };
+    UnsignedBigInteger base { N };
 
     for (auto& c : str) {
         if (c == '_')
             continue;
-        result = result.multiplied_by(ten).plus(parse_ascii_digit(c));
+        result = result.multiplied_by(base).plus(parse_ascii_base36_digit(c));
     }
     return result;
 }
 
-UnsignedBigInteger UnsignedBigInteger::from_base2(const String& str)
+String UnsignedBigInteger::to_base(u16 N) const
 {
-    UnsignedBigInteger result;
-    UnsignedBigInteger two { 2 };
-
-    for (auto& c : str) {
-        if (c == '_')
-            continue;
-        result = result.multiplied_by(two).plus(parse_ascii_digit(c));
-    }
-    return result;
-}
-
-UnsignedBigInteger UnsignedBigInteger::from_base8(const String& str)
-{
-    UnsignedBigInteger result;
-    UnsignedBigInteger eight { 8 };
-
-    for (auto& c : str) {
-        if (c == '_')
-            continue;
-        result = result.multiplied_by(eight).plus(parse_ascii_digit(c));
-    }
-    return result;
-}
-
-UnsignedBigInteger UnsignedBigInteger::from_base16(const String& str)
-{
-    UnsignedBigInteger result;
-    UnsignedBigInteger sixteen { 16 };
-
-    for (auto& c : str) {
-        if (c == '_')
-            continue;
-        result = result.multiplied_by(sixteen).plus(parse_ascii_hex_digit(c));
-    }
-    return result;
-}
-
-String UnsignedBigInteger::to_base10() const
-{
+    VERIFY(N <= 36);
     if (*this == UnsignedBigInteger { 0 })
         return "0";
 
@@ -129,19 +92,13 @@ String UnsignedBigInteger::to_base10() const
     UnsignedBigInteger remainder;
 
     while (temp != UnsignedBigInteger { 0 }) {
-        UnsignedBigIntegerAlgorithms::divide_u16_without_allocation(temp, 10, quotient, remainder);
-        VERIFY(remainder.words()[0] < 10);
-        builder.append(static_cast<char>(remainder.words()[0] + '0'));
+        UnsignedBigIntegerAlgorithms::divide_u16_without_allocation(temp, N, quotient, remainder);
+        VERIFY(remainder.words()[0] < N);
+        builder.append(to_ascii_base36_digit(remainder.words()[0]));
         temp.set_to(quotient);
     }
 
-    auto reversed_string = builder.to_string();
-    builder.clear();
-    for (int i = reversed_string.length() - 1; i >= 0; --i) {
-        builder.append(reversed_string[i]);
-    }
-
-    return builder.to_string();
+    return builder.to_string().reverse();
 }
 
 u64 UnsignedBigInteger::to_u64() const

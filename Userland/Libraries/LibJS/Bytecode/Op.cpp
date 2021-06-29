@@ -469,7 +469,7 @@ String Store::to_string_impl(Bytecode::Executable const&) const
 
 String NewBigInt::to_string_impl(Bytecode::Executable const&) const
 {
-    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base10());
+    return String::formatted("NewBigInt \"{}\"", m_bigint.to_base(10));
 }
 
 String NewArray::to_string_impl(Bytecode::Executable const&) const

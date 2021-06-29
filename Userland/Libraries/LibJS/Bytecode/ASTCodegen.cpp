@@ -250,7 +250,7 @@ void NullLiteral::generate_bytecode(Bytecode::Generator& generator) const
 
 void BigIntLiteral::generate_bytecode(Bytecode::Generator& generator) const
 {
-    generator.emit<Bytecode::Op::NewBigInt>(Crypto::SignedBigInteger::from_base10(m_value.substring(0, m_value.length() - 1)));
+    generator.emit<Bytecode::Op::NewBigInt>(Crypto::SignedBigInteger::from_base(10, m_value.substring(0, m_value.length() - 1)));
 }
 
 void StringLiteral::generate_bytecode(Bytecode::Generator& generator) const
