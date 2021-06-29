@@ -155,9 +155,26 @@ JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::is_array)
 // 23.1.2.3 Array.of ( ...items ), https://tc39.es/ecma262/#sec-array.of
 JS_DEFINE_NATIVE_FUNCTION(ArrayConstructor::of)
 {
-    auto* array = Array::create(global_object);
-    for (size_t i = 0; i < vm.argument_count(); ++i)
-        array->indexed_properties().append(vm.argument(i));
+    auto this_value = vm.this_value(global_object);
+    Value array;
+    if (this_value.is_constructor()) {
+        MarkedValueList arguments(vm.heap());
+        arguments.empend(vm.argument_count());
+        array = vm.construct(this_value.as_function(), this_value.as_function(), move(arguments));
+        if (vm.exception())
+            return {};
+    } else {
+        array = Array::create(global_object);
+    }
+    auto& array_object = array.as_object();
+    for (size_t k = 0; k < vm.argument_count(); ++k) {
+        array_object.define_property(k, vm.argument(k));
+        if (vm.exception())
+            return {};
+    }
+    array_object.put(vm.names.length, Value(vm.argument_count()));
+    if (vm.exception())
+        return {};
     return array;
 }
 
