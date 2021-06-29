@@ -44,7 +44,7 @@ int main(int argc, char** argv)
         StringBuilder path_builder;
         if (lexical_path.is_absolute())
             path_builder.append("/");
-        for (auto& part : lexical_path.parts()) {
+        for (auto& part : lexical_path.parts_view()) {
             path_builder.append(part);
             auto path = path_builder.build();
             struct stat st;
