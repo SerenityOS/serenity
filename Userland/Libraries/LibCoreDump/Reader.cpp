@@ -106,7 +106,7 @@ bool Reader::NotesEntryIterator::at_end() const
     return type() == ELF::Core::NotesEntryHeader::Type::Null;
 }
 
-Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
+Optional<FlatPtr> Reader::peek_memory(FlatPtr address) const
 {
     const auto* region = region_containing(address);
     if (!region)
@@ -114,7 +114,7 @@ Optional<uint32_t> Reader::peek_memory(FlatPtr address) const
 
     FlatPtr offset_in_region = address - region->region_start;
     const char* region_data = image().program_header(region->program_header_index).raw_data();
-    return *(const uint32_t*)(&region_data[offset_in_region]);
+    return *(const FlatPtr*)(&region_data[offset_in_region]);
 }
 
 const JsonObject Reader::process_info() const

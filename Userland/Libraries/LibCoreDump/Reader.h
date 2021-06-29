@@ -31,7 +31,7 @@ public:
 
     const ELF::Image& image() const { return m_coredump_image; }
 
-    Optional<uint32_t> peek_memory(FlatPtr address) const;
+    Optional<FlatPtr> peek_memory(FlatPtr address) const;
     const ELF::Core::MemoryRegionInfo* region_containing(FlatPtr address) const;
 
     struct LibraryData {

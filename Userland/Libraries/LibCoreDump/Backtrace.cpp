@@ -43,6 +43,10 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
         return nullptr;
 
     auto image = make<ELF::Image>(file_or_error.value()->bytes());
+#if !ARCH(I386)
+    // FIXME: Fix LibDebug
+    return nullptr;
+#endif
     auto info = make<ELFObjectInfo>(file_or_error.release_value(), make<Debug::DebugInfo>(move(image)));
     auto* info_ptr = info.ptr();
     s_debug_info_cache.set(path, move(info));
@@ -52,30 +56,33 @@ static const ELFObjectInfo* object_info_for_region(const ELF::Core::MemoryRegion
 Backtrace::Backtrace(const Reader& coredump, const ELF::Core::ThreadInfo& thread_info)
     : m_thread_info(move(thread_info))
 {
+    FlatPtr* bp;
+    FlatPtr* ip;
 #if ARCH(I386)
-    uint32_t* ebp = (uint32_t*)m_thread_info.regs.ebp;
-    uint32_t* eip = (uint32_t*)m_thread_info.regs.eip;
+    bp = (FlatPtr*)m_thread_info.regs.ebp;
+    ip = (FlatPtr*)m_thread_info.regs.eip;
+#else
+    bp = (FlatPtr*)m_thread_info.regs.rbp;
+    ip = (FlatPtr*)m_thread_info.regs.rip;
+#endif
+
     bool first_frame = true;
-    while (ebp && eip) {
+    while (bp && ip) {
         // We use eip - 1 because the return address from a function frame
         // is the instruction that comes after the 'call' instruction.
         // However, because the first frame represents the faulting
         // instruction rather than the return address we don't subtract
         // 1 there.
-        VERIFY((FlatPtr)eip > 0);
-        add_entry(coredump, (FlatPtr)eip - (first_frame ? 0 : 1));
+        VERIFY((FlatPtr)ip > 0);
+        add_entry(coredump, (FlatPtr)ip - (first_frame ? 0 : 1));
         first_frame = false;
-        auto next_eip = coredump.peek_memory((FlatPtr)(ebp + 1));
-        auto next_ebp = coredump.peek_memory((FlatPtr)(ebp));
-        if (!next_eip.has_value() || !next_ebp.has_value())
+        auto next_ip = coredump.peek_memory((FlatPtr)(bp + 1));
+        auto next_bp = coredump.peek_memory((FlatPtr)(bp));
+        if (!next_ip.has_value() || !next_bp.has_value())
             break;
-        eip = (uint32_t*)next_eip.value();
-        ebp = (uint32_t*)next_ebp.value();
+        ip = (FlatPtr*)next_ip.value();
+        bp = (FlatPtr*)next_bp.value();
     }
-#else
-    (void)coredump;
-    TODO();
-#endif
 }
 
 Backtrace::~Backtrace()
@@ -96,9 +103,14 @@ void Backtrace::add_entry(const Reader& coredump, FlatPtr eip)
     if (!object_info)
         return;
 
+#if ARCH(I386)
     auto function_name = object_info->debug_info->elf().symbolicate(eip - region->region_start);
     auto source_position = object_info->debug_info->get_source_position_with_inlines(eip - region->region_start);
-
+#else
+    // FIXME: Fix symbolication.
+    auto function_name = "";
+    Debug::DebugInfo::SourcePositionWithInlines source_position;
+#endif
     m_entries.append({ eip, object_name, function_name, source_position });
 }
 
