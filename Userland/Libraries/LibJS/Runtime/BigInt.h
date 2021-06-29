@@ -17,7 +17,7 @@ public:
     virtual ~BigInt();
 
     const Crypto::SignedBigInteger& big_integer() const { return m_big_integer; }
-    const String to_string() const { return String::formatted("{}n", m_big_integer.to_base10()); }
+    const String to_string() const { return String::formatted("{}n", m_big_integer.to_base(10)); }
 
 private:
     virtual const char* class_name() const override { return "BigInt"; }

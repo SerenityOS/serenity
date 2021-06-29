@@ -2429,7 +2429,7 @@ static void bigint_base10()
 {
     {
         I_TEST((BigInteger | From String));
-        auto result = Crypto::UnsignedBigInteger::from_base10("57195071295721390579057195715793");
+        auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793");
         if (result.words() == Vector<u32> { 3806301393, 954919431, 3879607298, 721 }) {
             PASS;
         } else {
@@ -2438,7 +2438,7 @@ static void bigint_base10()
     }
     {
         I_TEST((BigInteger | To String));
-        auto result = Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }.to_base10();
+        auto result = Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }.to_base(10);
         if (result == "57195071295721390579057195715793") {
             PASS;
         } else {
@@ -2551,11 +2551,11 @@ static void bigint_theory_modular_power()
                 PASS;
             } else {
                 FAIL(Wrong result);
-                outln("b: {}", test_case.base.to_base10());
-                outln("e: {}", test_case.exp.to_base10());
-                outln("m: {}", test_case.mod.to_base10());
-                outln("expect: {}", test_case.expected.to_base10());
-                outln("actual: {}", actual.to_base10());
+                outln("b: {}", test_case.base.to_base(10));
+                outln("e: {}", test_case.exp.to_base(10));
+                outln("m: {}", test_case.mod.to_base(10));
+                outln("expect: {}", test_case.expected.to_base(10));
+                outln("actual: {}", actual.to_base(10));
             }
         }
     }
@@ -2593,7 +2593,7 @@ static void bigint_theory_primality()
         } else {
             FAIL(Wrong primality guess);
             outln("The number {} is {}a prime, but the test said it is {}a prime!",
-                test_case.candidate.to_base10(), test_case.expected_result ? "" : "not ", actual_result ? "" : "not ");
+                test_case.candidate.to_base(10), test_case.expected_result ? "" : "not ", actual_result ? "" : "not ");
         }
     }
 }
@@ -2616,10 +2616,10 @@ static void bigint_theory_random_number()
             auto actual_result = Crypto::NumberTheory::random_number(test_case.min, test_case.max);
             if (actual_result < test_case.min) {
                 FAIL(Too small);
-                outln("The generated number {} is smaller than the requested minimum {}. (max = {})", actual_result.to_base10(), test_case.min.to_base10(), test_case.max.to_base10());
+                outln("The generated number {} is smaller than the requested minimum {}. (max = {})", actual_result.to_base(10), test_case.min.to_base(10), test_case.max.to_base(10));
             } else if (!(actual_result < test_case.max)) {
                 FAIL(Too large);
-                outln("The generated number {} is larger-or-equal to the requested maximum {}. (min = {})", actual_result.to_base10(), test_case.max.to_base10(), test_case.min.to_base10());
+                outln("The generated number {} is larger-or-equal to the requested maximum {}. (min = {})", actual_result.to_base(10), test_case.max.to_base(10), test_case.min.to_base(10));
             } else {
                 PASS;
             }
@@ -2632,10 +2632,10 @@ static void bigint_theory_random_number()
             "100000000000000000000000000000"_bigint);         // 10**29
         if (actual_result < "100000000000000000000"_bigint) { // 10**20
             FAIL(Too small);
-            outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
+            outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
         } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
             FAIL(Too large);
-            outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
+            outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
         } else {
             PASS;
         }
@@ -2940,7 +2940,7 @@ static void bigint_signed_base10()
 {
     {
         I_TEST((Signed BigInteger | From String));
-        auto result = Crypto::SignedBigInteger::from_base10("-57195071295721390579057195715793");
+        auto result = Crypto::SignedBigInteger::from_base(10, "-57195071295721390579057195715793");
         if (result.unsigned_value().words() == Vector<u32> { 3806301393, 954919431, 3879607298, 721 } && result.is_negative()) {
             PASS;
         } else {
@@ -2949,7 +2949,7 @@ static void bigint_signed_base10()
     }
     {
         I_TEST((Signed BigInteger | To String));
-        auto result = Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }, true }.to_base10();
+        auto result = Crypto::SignedBigInteger { Crypto::UnsignedBigInteger { Vector<u32> { 3806301393, 954919431, 3879607298, 721 } }, true }.to_base(10);
         if (result == "-57195071295721390579057195715793") {
             PASS;
         } else {

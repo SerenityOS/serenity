@@ -234,7 +234,7 @@ TEST_CASE(test_unsigned_bigint_division_combined_test)
 
 TEST_CASE(test_unsigned_bigint_base10_from_string)
 {
-    auto result = Crypto::UnsignedBigInteger::from_base10("57195071295721390579057195715793");
+    auto result = Crypto::UnsignedBigInteger::from_base(10, "57195071295721390579057195715793");
     Vector<u32> expected_result { 3806301393, 954919431, 3879607298, 721 };
     EXPECT_EQ(result.words(), expected_result);
 }
@@ -243,7 +243,7 @@ TEST_CASE(test_unsigned_bigint_base10_to_string)
 {
     auto result = Crypto::UnsignedBigInteger {
         Vector<u32> { 3806301393, 954919431, 3879607298, 721 }
-    }.to_base10();
+    }.to_base(10);
     EXPECT_EQ(result, "57195071295721390579057195715793");
 }
 
@@ -386,10 +386,10 @@ TEST_CASE(test_bigint_random_distribution)
         "100000000000000000000000000000"_bigint);         // 10**29
     if (actual_result < "100000000000000000000"_bigint) { // 10**20
         FAIL("Too small");
-        outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
+        outln("The generated number {} is extremely small. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
     } else if ("99999999900000000000000000000"_bigint < actual_result) { // 10**29 - 10**20
         FAIL("Too large");
-        outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base10());
+        outln("The generated number {} is extremely large. This *can* happen by pure chance, but should happen only once in a billion times. So it's probably an error.", actual_result.to_base(10));
     }
 }
 

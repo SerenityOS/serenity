@@ -53,11 +53,8 @@ public:
 
     size_t export_data(Bytes, bool remove_leading_zeros = false) const;
 
-    static UnsignedBigInteger from_base2(const String& str);
-    static UnsignedBigInteger from_base8(const String& str);
-    static UnsignedBigInteger from_base10(const String& str);
-    String to_base10() const;
-    static UnsignedBigInteger from_base16(const String& str);
+    static UnsignedBigInteger from_base(u16 N, const String& str);
+    String to_base(u16 N) const;
 
     u64 to_u64() const;
 
@@ -131,5 +128,5 @@ struct AK::Formatter<Crypto::UnsignedBigInteger> : Formatter<StringView> {
 inline Crypto::UnsignedBigInteger
 operator""_bigint(const char* string, size_t length)
 {
-    return Crypto::UnsignedBigInteger::from_base10({ string, length });
+    return Crypto::UnsignedBigInteger::from_base(10, { string, length });
 }

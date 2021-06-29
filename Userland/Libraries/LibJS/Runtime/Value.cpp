@@ -355,7 +355,7 @@ String Value::to_string(GlobalObject& global_object, bool legacy_null_to_empty_s
         global_object.vm().throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "string");
         return {};
     case Type::BigInt:
-        return m_value.as_bigint->big_integer().to_base10();
+        return m_value.as_bigint->big_integer().to_base(10);
     case Type::Object: {
         auto primitive_value = to_primitive(global_object, PreferredType::String);
         if (global_object.vm().exception())
@@ -547,7 +547,7 @@ BigInt* Value::to_bigint(GlobalObject& global_object) const
             vm.throw_exception<SyntaxError>(global_object, ErrorType::BigIntInvalidValue, string);
             return {};
         }
-        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base10(string.trim_whitespace()));
+        return js_bigint(vm.heap(), Crypto::SignedBigInteger::from_base(10, string.trim_whitespace()));
     }
     case Type::Symbol:
         vm.throw_exception<TypeError>(global_object, ErrorType::Convert, "symbol", "BigInt");
@@ -1398,7 +1398,7 @@ bool abstract_eq(GlobalObject& global_object, Value lhs, Value rhs)
         auto& rhs_string = rhs.as_string().string();
         if (!is_valid_bigint_value(rhs_string))
             return false;
-        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base10(rhs_string)));
+        return abstract_eq(global_object, lhs, js_bigint(global_object.heap(), Crypto::SignedBigInteger::from_base(10, rhs_string)));
     }
 
     if (lhs.is_string() && rhs.is_bigint())
@@ -1490,7 +1490,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& y_string = y_primitive.as_string().string();
         if (!is_valid_bigint_value(y_string))
             return TriState::Unknown;
-        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base10(y_string))
+        if (x_primitive.as_bigint().big_integer() < Crypto::SignedBigInteger::from_base(10, y_string))
             return TriState::True;
         else
             return TriState::False;
@@ -1500,7 +1500,7 @@ TriState abstract_relation(GlobalObject& global_object, bool left_first, Value l
         auto& x_string = x_primitive.as_string().string();
         if (!is_valid_bigint_value(x_string))
             return TriState::Unknown;
-        if (Crypto::SignedBigInteger::from_base10(x_string) < y_primitive.as_bigint().big_integer())
+        if (Crypto::SignedBigInteger::from_base(10, x_string) < y_primitive.as_bigint().big_integer())
             return TriState::True;
         else
             return TriState::False;
