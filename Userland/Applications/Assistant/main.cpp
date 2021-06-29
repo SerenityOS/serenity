@@ -197,6 +197,7 @@ int main(int argc, char** argv)
 
     auto app = GUI::Application::construct(argc, argv);
     auto window = GUI::Window::construct();
+    window->set_minimizable(false);
 
     Assistant::AppState app_state;
     Assistant::Database db { app_state };
