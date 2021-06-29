@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020-2021, the SerenityOS developers.
+ * Copyright (c) 2021, Sam Atkins <atkinssj@gmail.com>
  *
  * SPDX-License-Identifier: BSD-2-Clause
  */
@@ -70,7 +71,7 @@ Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
     for (auto& rule : rules) {
         dbgln("PRE:");
         for (auto& pre : rule.m_prelude) {
-            dbgln("{}", pre);
+            dbgln("{}", pre.to_string());
         }
         dbgln("BLOCK:");
         dbgln("{}", rule.m_block.to_string());
@@ -84,13 +85,8 @@ Vector<QualifiedStyleRule> Parser::parse_as_stylesheet()
     return rules;
 }
 
-Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> parts)
+Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<StyleComponentValueRule> parts)
 {
-    // TODO:
-    // This is a mess because the prelude is parsed as a string.
-    // It should really be parsed as its class, but the cpp gods have forsaken me
-    // and I can't make it work due to cyclic includes.
-
     Vector<CSS::Selector::ComplexSelector> selectors;
 
     size_t index = 0;
@@ -99,7 +95,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
             return {};
         }
 
-        auto currentToken = parts.at(index);
+        auto currentToken = parts.at(index).to_string();
         CSS::Selector::SimpleSelector::Type type;
         if (currentToken == "*") {
             type = CSS::Selector::SimpleSelector::Type::Universal;
@@ -134,7 +130,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
             return simple_selector;
         }
 
-        currentToken = parts.at(index);
+        currentToken = parts.at(index).to_string();
         if (currentToken.starts_with('[')) {
             auto adjusted = currentToken.substring(1, currentToken.length() - 2);
 
@@ -176,7 +172,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
                 return {};
             }
 
-            currentToken = parts.at(index);
+            currentToken = parts.at(index).to_string();
             if (currentToken == ":") {
                 is_pseudo = true;
                 index++;
@@ -186,7 +182,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
                 return {};
             }
 
-            currentToken = parts.at(index);
+            currentToken = parts.at(index).to_string();
             auto pseudo_name = currentToken;
             index++;
 
@@ -236,7 +232,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
     auto parse_complex_selector = [&]() -> Optional<CSS::Selector::ComplexSelector> {
         auto relation = CSS::Selector::ComplexSelector::Relation::Descendant;
 
-        auto currentToken = parts.at(index);
+        auto currentToken = parts.at(index).to_string();
         if (is_combinator(currentToken)) {
             if (currentToken == ">") {
                 relation = CSS::Selector::ComplexSelector::Relation::ImmediateChild;
@@ -279,7 +275,7 @@ Vector<CSS::Selector::ComplexSelector> Parser::parse_selectors(Vector<String> pa
             break;
         }
 
-        auto currentToken = parts.at(index);
+        auto currentToken = parts.at(index).to_string();
         if (currentToken != ",") {
             break;
         }
@@ -390,7 +386,7 @@ AtStyleRule Parser::consume_an_at_rule()
                 continue;
             }
         }
-        rule.m_prelude.append(value.to_string());
+        rule.m_prelude.append(value);
     }
 }
 
@@ -420,7 +416,7 @@ Optional<QualifiedStyleRule> Parser::consume_a_qualified_rule()
                 continue;
             }
         }
-        rule.m_prelude.append(value.to_string());
+        rule.m_prelude.append(value);
     }
 
     return rule;
