@@ -70,8 +70,6 @@ public:
     }
 
 private:
-    void canonicalize();
-
     Vector<StringView> m_parts;
     String m_string;
     StringView m_dirname;
