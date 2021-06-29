@@ -16,7 +16,6 @@
 namespace Kernel {
 
 extern "C" void thread_context_first_enter(void);
-extern "C" void do_assume_context(Thread* thread, u32 flags);
 extern "C" void exit_kernel_thread(void);
 
 // clang-format off
@@ -50,6 +49,8 @@ asm(
 "    movq %rax, %rsp \n" // move stack pointer to what Processor::init_context set up for us
 "    movq %r12, %rdi \n" // to_thread
 "    movq %r12, %rsi \n" // from_thread
+"    pushq %r12 \n" // to_thread (for thread_context_first_enter)
+"    pushq %r12 \n" // from_thread (for thread_context_first_enter)
 "    movabs $thread_context_first_enter, %r12 \n" // should be same as regs.rip
 "    pushq %r12 \n"
 "    jmp enter_thread_context \n"
@@ -236,22 +237,6 @@ void Processor::switch_context(Thread*& from_thread, Thread*& to_thread)
     dbgln_if(CONTEXT_SWITCH_DEBUG, "switch_context <-- from {} {} to {} {}", VirtualAddress(from_thread), *from_thread, VirtualAddress(to_thread), *to_thread);
 
     Processor::current().restore_in_critical(to_thread->saved_critical());
-}
-
-void Processor::assume_context(Thread& thread, FlatPtr flags)
-{
-    dbgln_if(CONTEXT_SWITCH_DEBUG, "Assume context for thread {} {}", VirtualAddress(&thread), thread);
-
-    VERIFY_INTERRUPTS_DISABLED();
-    Scheduler::prepare_after_exec();
-    // in_critical() should be 2 here. The critical section in Process::exec
-    // and then the scheduler lock
-    VERIFY(Processor::current().in_critical() == 2);
-
-    (void)flags;
-    TODO();
-
-    VERIFY_NOT_REACHED();
 }
 
 UNMAP_AFTER_INIT void Processor::initialize_context_switching(Thread& initial_thread)
