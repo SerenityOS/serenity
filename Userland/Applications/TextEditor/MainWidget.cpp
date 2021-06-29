@@ -254,7 +254,7 @@ MainWidget::MainWidget()
         }
 
         m_editor->set_text(StringView());
-        set_path(LexicalPath());
+        set_path({});
         update_title();
     });
 
@@ -287,7 +287,7 @@ MainWidget::MainWidget()
         // FIXME: It would be cool if this would propagate from GUI::TextDocument somehow.
         window()->set_modified(false);
 
-        set_path(LexicalPath(save_path.value()));
+        set_path(save_path.value());
         dbgln("Wrote document to {}", save_path.value());
     });
 
@@ -595,11 +595,18 @@ void MainWidget::initialize_menubar(GUI::Menubar& menubar)
     help_menu.add_action(GUI::CommonActions::make_about_action("Text Editor", GUI::Icon::default_icon("app-text-editor"), window()));
 }
 
-void MainWidget::set_path(const LexicalPath& lexical_path)
+void MainWidget::set_path(StringView const& path)
 {
-    m_path = lexical_path.string();
-    m_name = lexical_path.title();
-    m_extension = lexical_path.extension();
+    if (path.is_empty()) {
+        m_path = {};
+        m_name = {};
+        m_extension = {};
+    } else {
+        auto lexical_path = LexicalPath(path);
+        m_path = lexical_path.string();
+        m_name = lexical_path.title();
+        m_extension = lexical_path.extension();
+    }
 
     if (m_extension == "c" || m_extension == "cc" || m_extension == "cxx" || m_extension == "cpp" || m_extension == "h") {
         m_cpp_highlight->activate();
@@ -660,7 +667,7 @@ bool MainWidget::open_file(const String& path)
 
     m_editor->set_text(file->read_all());
 
-    set_path(LexicalPath(path));
+    set_path(path);
 
     m_editor->set_focus(true);
 

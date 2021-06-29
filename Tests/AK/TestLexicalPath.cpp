@@ -150,11 +150,6 @@ TEST_CASE(has_extension)
     }
 
     {
-        LexicalPath path;
-        EXPECT_EQ(path.has_extension(".png"), false);
-    }
-
-    {
         LexicalPath path("png");
         EXPECT_EQ(path.has_extension(".png"), false);
     }

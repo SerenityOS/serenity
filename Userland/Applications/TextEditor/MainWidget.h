@@ -42,7 +42,7 @@ public:
 
 private:
     MainWidget();
-    void set_path(const LexicalPath& file);
+    void set_path(StringView const&);
     void update_preview();
     void update_markdown_preview();
     void update_html_preview();

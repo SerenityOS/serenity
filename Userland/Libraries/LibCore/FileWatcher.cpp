@@ -83,18 +83,19 @@ static Optional<FileWatcherEvent> get_event_from_fd(int fd, HashMap<unsigned, St
     return result;
 }
 
+static String canonicalize_path(String path)
+{
+    if (!path.is_empty() && path[0] == '/')
+        return LexicalPath::canonicalized_path(move(path));
+    char* cwd = getcwd(nullptr, 0);
+    VERIFY(cwd);
+    return LexicalPath::join(cwd, move(path)).string();
+}
+
 Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::Type event_mask)
 {
-    LexicalPath lexical_path;
-    if (path.length() > 0 && path[0] == '/') {
-        lexical_path = LexicalPath { path };
-    } else {
-        char* buf = getcwd(nullptr, 0);
-        lexical_path = LexicalPath::join(String(buf), path);
-        free(buf);
-    }
+    String canonical_path = canonicalize_path(move(path));
 
-    auto const& canonical_path = lexical_path.string();
     if (m_path_to_wd.find(canonical_path) != m_path_to_wd.end()) {
         dbgln_if(FILE_WATCHER_DEBUG, "add_watch: path '{}' is already being watched", canonical_path);
         return false;
@@ -125,16 +126,8 @@ Result<bool, String> FileWatcherBase::add_watch(String path, FileWatcherEvent::T
 
 Result<bool, String> FileWatcherBase::remove_watch(String path)
 {
-    LexicalPath lexical_path;
-    if (path.length() > 0 && path[0] == '/') {
-        lexical_path = LexicalPath { path };
-    } else {
-        char* buf = getcwd(nullptr, 0);
-        lexical_path = LexicalPath::join(String(buf), path);
-        free(buf);
-    }
+    String canonical_path = canonicalize_path(move(path));
 
-    auto const& canonical_path = lexical_path.string();
     auto it = m_path_to_wd.find(canonical_path);
     if (it == m_path_to_wd.end()) {
         dbgln_if(FILE_WATCHER_DEBUG, "remove_watch: path '{}' is not being watched", canonical_path);

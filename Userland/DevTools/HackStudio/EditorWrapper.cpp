@@ -113,8 +113,7 @@ void EditorWrapper::update_diff()
 void EditorWrapper::set_project_root(LexicalPath const& project_root)
 {
     m_project_root = project_root;
-
-    auto result = GitRepo::try_to_create(m_project_root);
+    auto result = GitRepo::try_to_create(*m_project_root);
     switch (result.type) {
     case GitRepo::CreateResult::Type::Success:
         m_git_repo = result.repo;

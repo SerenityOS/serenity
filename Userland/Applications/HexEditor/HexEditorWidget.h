@@ -27,7 +27,7 @@ public:
 
 private:
     HexEditorWidget();
-    void set_path(const LexicalPath& file);
+    void set_path(StringView const&);
     void update_title();
     void set_search_results_visible(bool visible);
 
