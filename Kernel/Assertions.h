@@ -10,7 +10,12 @@
 #define __STRINGIFY(x) __STRINGIFY_HELPER(x)
 
 [[noreturn]] void __assertion_failed(const char* msg, const char* file, unsigned line, const char* func);
-#define VERIFY(expr) (static_cast<bool>(expr) ? void(0) : __assertion_failed(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__))
+#define VERIFY(expr)                                                            \
+    do {                                                                        \
+        if (!static_cast<bool>(expr)) [[unlikely]]                              \
+            __assertion_failed(#expr, __FILE__, __LINE__, __PRETTY_FUNCTION__); \
+    } while (0)
+
 #define VERIFY_NOT_REACHED() VERIFY(false)
 
 extern "C" {
