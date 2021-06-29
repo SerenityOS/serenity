@@ -202,15 +202,16 @@ FileSystemModel::Node const* FileSystemModel::node_for_path(String const& path) 
     if (lexical_path.string() == "/")
         return node;
 
-    for (size_t i = 0; i < lexical_path.parts().size(); ++i) {
-        auto& part = lexical_path.parts()[i];
+    auto& parts = lexical_path.parts_view();
+    for (size_t i = 0; i < parts.size(); ++i) {
+        auto& part = parts[i];
         bool found = false;
         for (auto& child : node->children) {
             if (child.name == part) {
                 const_cast<Node&>(child).reify_if_needed();
                 node = &child;
                 found = true;
-                if (i == lexical_path.parts().size() - 1)
+                if (i == parts.size() - 1)
                     return node;
                 break;
             }

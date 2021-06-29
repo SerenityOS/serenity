@@ -17,15 +17,16 @@ public:
     LexicalPath() = default;
     explicit LexicalPath(String);
 
-    bool is_absolute() const { return m_is_absolute; }
+    bool is_absolute() const { return !m_string.is_empty() && m_string[0] == '/'; }
     String const& string() const { return m_string; }
 
-    String const& dirname() const { return m_dirname; }
-    String const& basename() const { return m_basename; }
-    String const& title() const { return m_title; }
-    String const& extension() const { return m_extension; }
+    StringView const& dirname() const { return m_dirname; }
+    StringView const& basename() const { return m_basename; }
+    StringView const& title() const { return m_title; }
+    StringView const& extension() const { return m_extension; }
 
-    Vector<String> const& parts() const { return m_parts; }
+    Vector<StringView> const& parts_view() const { return m_parts; }
+    Vector<String> parts() const;
 
     bool has_extension(StringView const&) const;
 
@@ -71,13 +72,12 @@ public:
 private:
     void canonicalize();
 
-    Vector<String> m_parts;
+    Vector<StringView> m_parts;
     String m_string;
-    String m_dirname;
-    String m_basename;
-    String m_title;
-    String m_extension;
-    bool m_is_absolute { false };
+    StringView m_dirname;
+    StringView m_basename;
+    StringView m_title;
+    StringView m_extension;
 };
 
 template<>
