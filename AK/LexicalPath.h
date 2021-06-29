@@ -18,16 +18,16 @@ public:
 
     bool is_valid() const { return m_is_valid; }
     bool is_absolute() const { return m_is_absolute; }
-    const String& string() const { return m_string; }
+    String const& string() const { return m_string; }
 
-    const String& dirname() const { return m_dirname; }
-    const String& basename() const { return m_basename; }
-    const String& title() const { return m_title; }
-    const String& extension() const { return m_extension; }
+    String const& dirname() const { return m_dirname; }
+    String const& basename() const { return m_basename; }
+    String const& title() const { return m_title; }
+    String const& extension() const { return m_extension; }
 
-    const Vector<String>& parts() const { return m_parts; }
+    Vector<String> const& parts() const { return m_parts; }
 
-    bool has_extension(const StringView&) const;
+    bool has_extension(StringView const&) const;
 
     void append(String const& component);
 
@@ -59,7 +59,7 @@ private:
 
 template<>
 struct Formatter<LexicalPath> : Formatter<StringView> {
-    void format(FormatBuilder& builder, const LexicalPath& value)
+    void format(FormatBuilder& builder, LexicalPath const& value)
     {
         Formatter<StringView>::format(builder, value.string());
     }
