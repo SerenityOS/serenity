@@ -93,7 +93,7 @@ void LexicalPath::canonicalize()
     m_string = builder.to_string();
 }
 
-bool LexicalPath::has_extension(const StringView& extension) const
+bool LexicalPath::has_extension(StringView const& extension) const
 {
     return m_string.ends_with(extension, CaseSensitivity::CaseInsensitive);
 }
@@ -103,7 +103,7 @@ String LexicalPath::canonicalized_path(String path)
     return LexicalPath(move(path)).string();
 }
 
-String LexicalPath::relative_path(String absolute_path, const String& prefix)
+String LexicalPath::relative_path(String absolute_path, String const& prefix)
 {
     if (!LexicalPath { absolute_path }.is_absolute() || !LexicalPath { prefix }.is_absolute())
         return {};
