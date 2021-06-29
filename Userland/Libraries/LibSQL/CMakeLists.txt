@@ -14,9 +14,15 @@ set(SOURCES
     Key.cpp
     Meta.cpp
     Row.cpp
+    SQLClient.cpp
     TreeNode.cpp
     Tuple.cpp
     Value.cpp
+    )
+
+set(GENERATED_SOURCES
+    ../../Services/SQLServer/SQLClientEndpoint.h
+    ../../Services/SQLServer/SQLServerEndpoint.h
     )
 
 serenity_lib(LibSQL sql)
